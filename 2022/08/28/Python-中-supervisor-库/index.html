@@ -1,0 +1,678 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="John Doe">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="官网参考博客 介绍是用 Python 开发的 client&#x2F;server 服务，为 Linux&#x2F;Unix 系统下的进程管理程序. 安装1pip install supervisor 安装之后(Ubuntu 22.04)，~&#x2F;.local&#x2F;bin 目录下会出现三个程序:  supervisortd supervisorctl echo_supervisord_conf, 用于生成">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Python 中 supervisor 库">
+<meta property="og:url" content="http://example.com/2022/08/28/Python-%E4%B8%AD-supervisor-%E5%BA%93/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="官网参考博客 介绍是用 Python 开发的 client&#x2F;server 服务，为 Linux&#x2F;Unix 系统下的进程管理程序. 安装1pip install supervisor 安装之后(Ubuntu 22.04)，~&#x2F;.local&#x2F;bin 目录下会出现三个程序:  supervisortd supervisorctl echo_supervisord_conf, 用于生成">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-08-28T06:41:26.000Z">
+<meta property="article:modified_time" content="2022-09-04T09:19:36.032Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>Python 中 supervisor 库 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Jie</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/SteinsGate_all.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Python 中 supervisor 库"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-08-28 14:41" pubdate>
+          2022年8月28日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          3.8k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          32 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">Python 中 supervisor 库</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p><a target="_blank" rel="noopener" href="http://supervisord.org/">官网</a><br><a target="_blank" rel="noopener" href="https://www.jb51.net/article/235260.htm">参考博客</a></p>
+<h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>是用 Python 开发的 client&#x2F;server 服务，为 Linux&#x2F;Unix 系统下的进程管理程序.</p>
+<h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cmake">pip <span class="hljs-keyword">install</span> supervisor<br></code></pre></td></tr></table></figure>
+<p>安装之后(Ubuntu 22.04)，<code>~/.local/bin</code> 目录下会出现三个程序:</p>
+<ul>
+<li>supervisortd</li>
+<li>supervisorctl</li>
+<li>echo_supervisord_conf, 用于生成初始化配置文件 <code>/etc/supervisord.conf</code></li>
+</ul>
+<h1 id="组成"><a href="#组成" class="headerlink" title="组成"></a>组成</h1><p>其由两个主要组成部分:</p>
+<ul>
+<li>supervisord, 一个守护进程，负责启动所管理的进程，并将所管理的进程作为自己的子程序启动，在所管理的进程出现崩溃时会自动重启</li>
+<li>supervisorctl, 一个命令行管理工具，用于执行 stop, start, restart 等命令</li>
+</ul>
+<h1 id="创建配置文件"><a href="#创建配置文件" class="headerlink" title="创建配置文件"></a>创建配置文件</h1><p>调用 <code>echo_supervisord_conf</code> 命令，先添加至 <code>PATH</code> 变量:</p>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs jboss-cli"><span class="hljs-keyword">cd</span> ~<br>vim <span class="hljs-string">.bashrc</span><br></code></pre></td></tr></table></figure>
+<p>添加: <code>export PATH=$PATH:~/.local/bin</code></p>
+<p>因为我们以普通用户操作，执行:</p>
+<figure class="highlight crmsh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs crmsh">sudo chown user.<span class="hljs-keyword">user</span> <span class="hljs-title">/etc</span>/supervisord.conf<br></code></pre></td></tr></table></figure>
+<p>开始初始化:</p>
+<figure class="highlight arcade"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs arcade">$ echo_supervisord_conf &gt; <span class="hljs-regexp">/etc/</span>supervisord.conf<br></code></pre></td></tr></table></figure>
+<p>因后续权限问题还是把 <code>/etc/supervisord.conf</code> 的所属改为 root.</p>
+<h2 id="使用-include"><a href="#使用-include" class="headerlink" title="使用 include"></a>使用 include</h2><p><code>/etc/supervisord.conf</code> 文件的最后是:</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs gradle">[<span class="hljs-keyword">include</span>]<br>files = relative<span class="hljs-regexp">/directory/</span>*.ini<br></code></pre></td></tr></table></figure>
+<p>其用来为进程写配置文件.</p>
+<p>此时创建一个目录并添加至 <code>[include]</code>:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">sudo <span class="hljs-built_in">mkdir</span> /etc/supervisor ;<span class="hljs-built_in">cd</span> /etc/supervisor</span><br><span class="hljs-meta prompt_">$ </span><span class="language-bash">sudo <span class="hljs-built_in">touch</span> config.d</span><br></code></pre></td></tr></table></figure>
+<h2 id="配置文件详解"><a href="#配置文件详解" class="headerlink" title="配置文件详解"></a>配置文件详解</h2><ul>
+<li>command：启动程序使用的命令，可以是绝对路径或者相对路径</li>
+<li>process_name：一个python字符串表达式，用来表示supervisor进程启动的这个的名称，默认值是%(program_name)s</li>
+<li>numprocs：Supervisor启动这个程序的多个实例，如果numprocs&gt;1，则process_name的表达式必须包含%(process_num)s，默认是1</li>
+<li>numprocs_start：一个int偏移值，当启动实例的时候用来计算numprocs的值</li>
+<li>priority：权重，可以控制程序启动和关闭时的顺序，权重越低：越早启动，越晚关闭。默认值是999</li>
+<li>autostart：如果设置为true，当supervisord启动的时候，进程会自动重启。</li>
+<li>autorestart：值可以是false、true、unexpected。false：进程不会自动重启，unexpected：当程序退出时的退出码不是exitcodes中定义的时，进程会重启，true：进程会无条件重启当退出的时候。</li>
+<li>startsecs：程序启动后等待多长时间后才认为程序启动成功</li>
+<li>startretries：supervisord尝试启动一个程序时尝试的次数。默认是3</li>
+<li>exitcodes：一个预期的退出返回码，默认是0,2。</li>
+<li>stopsignal：当收到stop请求的时候，发送信号给程序，默认是TERM信号，也可以是 HUP, INT, QUIT, KILL, USR1, or USR2。</li>
+<li>stopwaitsecs：在操作系统给supervisord发送SIGCHILD信号时等待的时间</li>
+<li>stopasgroup：如果设置为true，则会使supervisor发送停止信号到整个进程组</li>
+<li>killasgroup：如果设置为true，则在给程序发送SIGKILL信号的时候，会发送到整个进程组，它的子进程也会受到影响。</li>
+<li>user：如果supervisord以root运行，则会使用这个设置用户启动子程序</li>
+<li>redirect_stderr：如果设置为true，进程则会把标准错误输出到supervisord后台的标准输出文件描述符。</li>
+<li>stdout_logfile：把进程的标准输出写入文件中，如果stdout_logfile没有设置或者设置为AUTO，则supervisor会自动选择一个文件位置。</li>
+<li>stdout_logfile_maxbytes：标准输出log文件达到多少后自动进行轮转，单位是KB、MB、GB。如果设置为0则表示不限制日志文件大小</li>
+<li>stdout_logfile_backups：标准输出日志轮转备份的数量，默认是10，如果设置为0，则不备份</li>
+<li>stdout_capture_maxbytes：当进程处于stderr capture mode模式的时候，写入FIFO队列的最大bytes值，单位可以是KB、MB、GB</li>
+<li>stdout_events_enabled：如果设置为true，当进程在写它的stderr到文件描述符的时候，PROCESS_LOG_STDERR事件会被触发</li>
+<li>stderr_logfile：把进程的错误日志输出一个文件中，除非redirect_stderr参数被设置为true</li>
+<li>stderr_logfile_maxbytes：错误log文件达到多少后自动进行轮转，单位是KB、MB、GB。如果设置为0则表示不限制日志文件大小</li>
+<li>stderr_logfile_backups：错误日志轮转备份的数量，默认是10，如果设置为0，则不备份</li>
+<li>stderr_capture_maxbytes：当进程处于stderr capture mode模式的时候，写入FIFO队列的最大bytes值，单位可以是KB、MB、GB</li>
+<li>stderr_events_enabled：如果设置为true，当进程在写它的stderr到文件描述符的时候，PROCESS_LOG_STDERR事件会被触发</li>
+<li>environment：一个k&#x2F;v对的list列表</li>
+<li>directory：supervisord在生成子进程的时候会切换到该目录</li>
+<li>umask：设置进程的umask</li>
+<li>serverurl：是否允许子进程和内部的HTTP服务通讯，如果设置为AUTO，supervisor会自动的构造一个url</li>
+</ul>
+<h2 id="配置文件实例"><a href="#配置文件实例" class="headerlink" title="配置文件实例"></a>配置文件实例</h2><figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs ini"><span class="hljs-section">[program:sougou]</span>   <span class="hljs-comment">#souogu 为程序的名称</span><br><span class="hljs-attr">command</span>=scrapy crawl sougou <span class="hljs-comment">#需要执行的命令</span><br><span class="hljs-attr">directory</span>=/home/mzj/桌面/sougou/sougou/wechat_name/wechat_name/spiders  <span class="hljs-comment">#命令执行的目录</span><br><span class="hljs-attr">environment</span>=ASPNETCORE__ENVIRONMENT=Production <span class="hljs-comment">#环境变量</span><br><span class="hljs-attr">user</span>=root <span class="hljs-comment">#用户</span><br><span class="hljs-attr">stopsignal</span>=INT<br><span class="hljs-attr">autostart</span>=<span class="hljs-literal">true</span> <span class="hljs-comment">#是否自启动</span><br><span class="hljs-attr">autorestart</span>=<span class="hljs-literal">true</span> <span class="hljs-comment">#是否自动重启</span><br><span class="hljs-attr">startsecs</span>=<span class="hljs-number">3</span> <span class="hljs-comment">#自动重启时间间隔（s）</span><br><span class="hljs-attr">stderr_logfile</span>=/home/mzj/桌面/sougou/sougou/wechat_name/wechat_name/spiders/oss<span class="hljs-literal">off</span>ical.err.log <span class="hljs-comment">#错误日志文件</span><br><span class="hljs-attr">stdout_logfile</span>=/home/mzj/桌面/sougou/sougou/wechat_name/wechat_name/spiders/oss<span class="hljs-literal">off</span>ical.out.log <span class="hljs-comment">#输出日志文件</span><br></code></pre></td></tr></table></figure>
+<h1 id="使用-web-界面管理"><a href="#使用-web-界面管理" class="headerlink" title="使用 web 界面管理"></a>使用 web 界面管理</h1><p>修改 <code>/etc/supervisord.conf</code> :</p>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs pgsql">;[inet_http_server]         ; <span class="hljs-type">inet</span> (tcp) <span class="hljs-keyword">server</span> disabled <span class="hljs-keyword">by</span> <span class="hljs-keyword">default</span><br>;port=<span class="hljs-number">127.0</span><span class="hljs-number">.0</span><span class="hljs-number">.1</span>:<span class="hljs-number">9001</span>        ; ip_address:port specifier, *:port <span class="hljs-keyword">for</span> <span class="hljs-keyword">all</span> iface<br>;username=<span class="hljs-keyword">user</span>              ; <span class="hljs-keyword">default</span> <span class="hljs-keyword">is</span> <span class="hljs-keyword">no</span> username (<span class="hljs-keyword">open</span> <span class="hljs-keyword">server</span>)<br>;<span class="hljs-keyword">password</span>=<span class="hljs-number">123</span>               ; <span class="hljs-keyword">default</span> <span class="hljs-keyword">is</span> <span class="hljs-keyword">no</span> <span class="hljs-keyword">password</span> (<span class="hljs-keyword">open</span> <span class="hljs-keyword">server</span>)<br></code></pre></td></tr></table></figure>
+<p>去掉注释符号:</p>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs pgsql">[inet_http_server]         ; <span class="hljs-type">inet</span> (tcp) <span class="hljs-keyword">server</span> disabled <span class="hljs-keyword">by</span> <span class="hljs-keyword">default</span><br>port=<span class="hljs-number">127.0</span><span class="hljs-number">.0</span><span class="hljs-number">.1</span>:<span class="hljs-number">9001</span>        ; ip_address:port specifier, *:port <span class="hljs-keyword">for</span> <span class="hljs-keyword">all</span> iface<br>username=<span class="hljs-keyword">user</span>              ; <span class="hljs-keyword">default</span> <span class="hljs-keyword">is</span> <span class="hljs-keyword">no</span> username (<span class="hljs-keyword">open</span> <span class="hljs-keyword">server</span>)<br><span class="hljs-keyword">password</span>=<span class="hljs-number">123</span>               ; <span class="hljs-keyword">default</span> <span class="hljs-keyword">is</span> <span class="hljs-keyword">no</span> <span class="hljs-keyword">password</span> (<span class="hljs-keyword">open</span> <span class="hljs-keyword">server</span>)<br></code></pre></td></tr></table></figure>
+<h1 id="用法"><a href="#用法" class="headerlink" title="用法"></a>用法</h1><ul>
+<li>supervisord : 启动supervisor</li>
+<li>supervisorctl reload :修改完配置文件后重新启动supervisor</li>
+<li>supervisorctl status :查看supervisor监管的进程状态</li>
+<li>supervisorctl start 进程名 ：启动XXX进程</li>
+<li>supervisorctl stop 进程名 ：停止XXX进程</li>
+<li>supervisorctl stop all：停止全部进程，注：start、restart、stop都不会载入最新的配置文件。</li>
+<li>supervisorctl update：根据最新的配置文件，启动新配置或有改动的进程，配置没有改动的进程不会受影响而重启</li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Python/" class="category-chain-item">Python</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Python 中 supervisor 库</div>
+      <div>http://example.com/2022/08/28/Python-中-supervisor-库/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>John Doe</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2022年8月28日</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>许可协议</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/08/28/%E4%BF%AE%E6%94%B9-Linux-%E4%B8%BB%E6%9C%BA%E5%90%8D/" title="修改 Linux 主机名">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">修改 Linux 主机名</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/08/28/Python-%E4%B8%AD-psutil-%E5%BA%93/" title="Python 中 psutil 库">
+                        <span class="hidden-mobile">Python 中 psutil 库</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

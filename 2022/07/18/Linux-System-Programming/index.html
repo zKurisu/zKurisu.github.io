@@ -1,0 +1,936 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="John Doe">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="第一章 入门和基本概念1.2 API和ABI1.2.2 ABIABI和体系结构紧密联系，绝大多数ABI表示了机器级概念. 通常通过机器体系结构名称来称呼这些ABI，如Alpha或x86-64。 ABI是操作系统和体系结构共同提供的功能. 1.4 Linux编程的概念1.4.1 文件和文件系统在Linux内核中，文件用一个整数表示(C语言的int类型), 称文件描述符. 普通文件包含以字节流(即线性">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux System Programming">
+<meta property="og:url" content="http://example.com/2022/07/18/Linux-System-Programming/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="第一章 入门和基本概念1.2 API和ABI1.2.2 ABIABI和体系结构紧密联系，绝大多数ABI表示了机器级概念. 通常通过机器体系结构名称来称呼这些ABI，如Alpha或x86-64。 ABI是操作系统和体系结构共同提供的功能. 1.4 Linux编程的概念1.4.1 文件和文件系统在Linux内核中，文件用一个整数表示(C语言的int类型), 称文件描述符. 普通文件包含以字节流(即线性">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-07-18T06:09:39.000Z">
+<meta property="article:modified_time" content="2022-09-04T09:19:36.032Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>Linux System Programming - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Jie</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/SteinsGate_all.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Linux System Programming"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-07-18 14:09" pubdate>
+          2022年7月18日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          11k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          95 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">Linux System Programming</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="第一章-入门和基本概念"><a href="#第一章-入门和基本概念" class="headerlink" title="第一章 入门和基本概念"></a>第一章 入门和基本概念</h1><h2 id="1-2-API和ABI"><a href="#1-2-API和ABI" class="headerlink" title="1.2 API和ABI"></a>1.2 API和ABI</h2><h3 id="1-2-2-ABI"><a href="#1-2-2-ABI" class="headerlink" title="1.2.2 ABI"></a>1.2.2 ABI</h3><p>ABI和体系结构紧密联系，绝大多数ABI表示了机器级概念.</p>
+<p>通常通过机器体系结构名称来称呼这些ABI，如Alpha或x86-64。</p>
+<p>ABI是操作系统和体系结构共同提供的功能.</p>
+<h2 id="1-4-Linux编程的概念"><a href="#1-4-Linux编程的概念" class="headerlink" title="1.4 Linux编程的概念"></a>1.4 Linux编程的概念</h2><h3 id="1-4-1-文件和文件系统"><a href="#1-4-1-文件和文件系统" class="headerlink" title="1.4.1 文件和文件系统"></a>1.4.1 文件和文件系统</h3><p>在Linux内核中，文件用一个整数表示(C语言的int类型), 称文件描述符.</p>
+<p>普通文件包含以字节流(即线性数组)组织的数据.</p>
+<p>索引节点inode(information node). 包含和文件关联的元数据，其中包括文件数据在磁盘上的存储位置.</p>
+<p>索引节点是UNIX文件在磁盘上的实际物理对象，也是在Linux内核中通过数据结构表示的概念实体.</p>
+<h4 id="目录和链接"><a href="#目录和链接" class="headerlink" title="目录和链接"></a>目录和链接</h4><p>目录是可读名称到索引编号之间的映射.</p>
+<p>名称和索引节点之间的配对称为链接(link).</p>
+<p>可以把目录看作普通的文件，其区别在于它包含文件名到索引节点的映射. 内核1直接通过该映射把文件名解析为索引节点.</p>
+<p>Linux内核也采用缓存(denty cache)存储目录的解析结果，以便后续访问更快地提供查询结果.</p>
+<h4 id="链接"><a href="#链接" class="headerlink" title="链接"></a>链接</h4><p>当不同名称的多个链接映射到同一个索引节点时，我们称该链接为硬链接(hard link).</p>
+<p>每个索引节点包含链接计数(link count)， 记录该索引节点在文件系统中的链接数，只有当link count is 0, 索引节点及其相关数据才会从文件系统中真正删除。</p>
+<h5 id="符号链接"><a href="#符号链接" class="headerlink" title="符号链接"></a>符号链接</h5><p>Symbolic links.</p>
+<p>为了实现跨文件系统链接。</p>
+<p>有自己的索引节点和数据块.</p>
+<h5 id="特殊文件"><a href="#特殊文件" class="headerlink" title="特殊文件"></a>特殊文件</h5><p>Special file. 指以文件来表示的内核对象。特殊应该是指访问方式特殊.</p>
+<p>Linux只支持四种special file:</p>
+<pre><code class="hljs">1. 块设备文件
+2. 字符设备文件
+3. 命名管道
+4. UNIX域套接字
+</code></pre>
+<p>字符设备作为线性字节队列来访问。</p>
+<p>块设备作为字节数组来访问。</p>
+<p>命名管道(named pipes), 通过FIFO特殊文件来访问.</p>
+<p>套接字(socket)使用socket文件进行交互.</p>
+<h4 id="文件系统和命名空间"><a href="#文件系统和命名空间" class="headerlink" title="文件系统和命名空间"></a>文件系统和命名空间</h4><p>有些操作系统会把不同的磁盘和驱动划分为独立的命名空间。<br>添加和删除文件系统的操作为挂载(mounting)和卸载(unmounting).</p>
+<p>Linux系统必定有个根文件系统.</p>
+<p>块设备的最小寻址单位是扇区(sector).</p>
+<p>文件系统中的最小逻辑寻址单元是块(block), 其大小一般是2的指数倍乘以扇区大小。</p>
+<p>页(page)是内存的最小寻址单元.</p>
+<h3 id="1-4-2-进程"><a href="#1-4-2-进程" class="headerlink" title="1.4.2 进程"></a>1.4.2 进程</h3><p>进程不仅包含目标代码，它还包括数据、资源、状态和虚拟计算机。</p>
+<p>在Linux下，最常见的格式称”可执行和可链接的格式(Executable and Linkable Format, ELF)”.</p>
+<p>C标准规定了C变量的默认值为0.</p>
+<p>bss的取名存在历史遗留原因，是block started by symbol.</p>
+<p>进程资源以及该进程相关的数据和统计保存在内核中该进程的进程描述符中.</p>
+<h4 id="进程层次结构"><a href="#进程层次结构" class="headerlink" title="进程层次结构"></a>进程层次结构</h4><p>在Linux中，进程树的根是第一个进程，称为init进程，通常为init程序。</p>
+<p>如果父进程先于子进程终止，内核会将init进程指定为它的父进程。</p>
+<p>在Linux内核中，uid是用户的唯一标识.</p>
+<h3 id="1-4-4-权限"><a href="#1-4-4-权限" class="headerlink" title="1.4.4 权限"></a>1.4.4 权限</h3><p>特殊文件忽略执行权限.</p>
+<p>对于目录，读权限表示允许列出目录的内容，写权限表示允许在目录中添加新的链接，执行权限表示允许在路径中输入和使用该目录.</p>
+<h3 id="1-4-5-信号"><a href="#1-4-5-信号" class="headerlink" title="1.4.5 信号"></a>1.4.5 信号</h3><p>信号一般用于通知进程发生了某些事件，如段错误或用户按下Ctrl+C。</p>
+<p>每个信号是由一个数值常量和文本名表示。如SIGHUP用于表示终端挂起，在x86-64体系结构上值为1.</p>
+<h3 id="1-4-6-进程间通信"><a href="#1-4-6-进程间通信" class="headerlink" title="1.4.6 进程间通信"></a>1.4.6 进程间通信</h3><p>Linux支持的进程间通信机制包括管道，命名管道，信号量，消息队列，共享内存和快速用户空间互斥。</p>
+<h3 id="1-4-8-Error-Handling"><a href="#1-4-8-Error-Handling" class="headerlink" title="1.4.8 Error Handling"></a>1.4.8 Error Handling</h3><p>Special variable，errno.</p>
+<p>函数通过特殊返回值(通常为1)来通知函数调用发生错误.</p>
+<p>变量errno用于定位错误的原因。</p>
+<p>errno定义在&lt;errno.h&gt;.</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">extern</span> <span class="hljs-type">int</span> errno;<br></code></pre></td></tr></table></figure>
+<h4 id="把errno值转化为对应的文本"><a href="#把errno值转化为对应的文本" class="headerlink" title="把errno值转化为对应的文本"></a>把errno值转化为对应的文本</h4><p>Using the function <code>perror()</code>:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">perror</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *str)</span></span>;<br></code></pre></td></tr></table></figure>
+<h1 id="CHAPTER-2-File-I-x2F-O"><a href="#CHAPTER-2-File-I-x2F-O" class="headerlink" title="CHAPTER 2 File I&#x2F;O"></a>CHAPTER 2 File I&#x2F;O</h1><p>最简单及最常见的文件交互方式–系统调用。</p>
+<p>内核会为每个进程维护一个打开文件的列表，称文件表(file table)</p>
+<p>每个Linux进程可达开得文件数是有上限的.</p>
+<p>每个进程至少包括三个文件描述符: 0, 1, 2</p>
+<figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs livecodeserver"><span class="hljs-number">0</span>表示<span class="hljs-keyword">stdin</span><br><span class="hljs-number">1</span>表示<span class="hljs-keyword">stdout</span><br><span class="hljs-number">2</span>表示<span class="hljs-keyword">stderr</span><br></code></pre></td></tr></table></figure>
+<p>几乎任何能够读写的东西都可以通过文件描述符来访问.</p>
+<p>关于文件的读写都要判断文件是否成功打开。</p>
+<h3 id="2-1-2-新建文件的所有者"><a href="#2-1-2-新建文件的所有者" class="headerlink" title="2.1.2 新建文件的所有者"></a>2.1.2 新建文件的所有者</h3><p>文件所有者的uid即创建该文件的进程的有效uid.</p>
+<p>文件所属组默认情况下使用创建进程的有效gid.</p>
+<h3 id="2-1-3-文件权限"><a href="#2-1-3-文件权限" class="headerlink" title="2.1.3 文件权限"></a>2.1.3 文件权限</h3><p>创建文件时，参数mode提供了新建文件的权限.</p>
+<h3 id="The-creat-function"><a href="#The-creat-function" class="headerlink" title="The creat() function"></a>The creat() function</h3><figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs aspectj"><span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">crear</span> <span class="hljs-params">(<span class="hljs-keyword">const</span> <span class="hljs-keyword">char</span> *name, <span class="hljs-keyword">int</span> mode)</span></span><br><span class="hljs-function"></span>&#123;<br>    <span class="hljs-function"><span class="hljs-keyword">return</span> <span class="hljs-title">open</span> <span class="hljs-params">(name, O_WRONLY | O_CREAT | O_TRUNC, mode)</span></span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>没有数据可读和到达数据结尾是两个不同的概念。</p>
+<h3 id="Reading-All-the-Bytes"><a href="#Reading-All-the-Bytes" class="headerlink" title="Reading All the Bytes"></a>Reading All the Bytes</h3><figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs stata">ssize_t <span class="hljs-keyword">ret</span>;<br><br><span class="hljs-keyword">while</span> (len != 0 &amp;&amp; (<span class="hljs-keyword">ret</span> = <span class="hljs-keyword">read</span> (fd, buf, len)) != 0) &#123;<br>        <span class="hljs-keyword">if</span> (<span class="hljs-keyword">ret</span> == -1) &#123;<br>                <span class="hljs-keyword">if</span> (errno == EINTR)<br>                        <span class="hljs-keyword">continue</span>;<br>                perror (<span class="hljs-string">&quot;read&quot;</span>);<br>                <span class="hljs-keyword">break</span>;<br>        &#125;<br>        len -= <span class="hljs-keyword">ret</span>;<br>        buf += <span class="hljs-keyword">ret</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="2-2-3-Nonblocking-Reads"><a href="#2-2-3-Nonblocking-Reads" class="headerlink" title="2.2.3 Nonblocking Reads"></a>2.2.3 Nonblocking Reads</h3><p>当以非阻塞模式读文件时，必须检查<code>EAGAIN</code>, 否则可能因为丢失数据导致严重后果.</p>
+<h3 id="2-2-5-read-调用的大小限制"><a href="#2-2-5-read-调用的大小限制" class="headerlink" title="2.2.5 read()调用的大小限制"></a>2.2.5 read()调用的大小限制</h3><p>在32位系统上，size_t和ssize_t对应的C类型通常是unsigned int和int.</p>
+<h2 id="2-3-Writing-with-write"><a href="#2-3-Writing-with-write" class="headerlink" title="2.3 Writing with write()"></a>2.3 Writing with write()</h2><h3 id="2-3-6-write-行为"><a href="#2-3-6-write-行为" class="headerlink" title="2.3.6 write()行为"></a>2.3.6 write()行为</h3><p>内核把写操作推迟到系统空闲时期，批处理很多写操作，称延迟写.</p>
+<p>为了保证数据按时写入，内核设置了”最大缓存时效(maximum buffer age)”</p>
+<h2 id="2-4-同步I-x2F-O"><a href="#2-4-同步I-x2F-O" class="headerlink" title="2.4 同步I&#x2F;O"></a>2.4 同步I&#x2F;O</h2><p>牺牲性能换来同步操作，控制数据何时写到磁盘。</p>
+<h3 id="2-4-1-fsync-and-fdatasync"><a href="#2-4-1-fsync-and-fdatasync" class="headerlink" title="2.4.1 fsync() and fdatasync()"></a>2.4.1 fsync() and fdatasync()</h3><p>fsync():</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">fsync</span><span class="hljs-params">(<span class="hljs-type">int</span> fd)</span></span>;<br></code></pre></td></tr></table></figure>
+<p>fdatasync():</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs arduino"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br></code></pre></td></tr></table></figure>
+<p>这两个函数不能保证已经更新的包含该文件的目录项会同步到磁盘上. 为了保证1对目录项的更新也都同步到磁盘上，必须对文件目录也调用<code>fsync()</code>进行同步。</p>
+<p>返回值和错误码，同时设置<code>errno</code>的值。</p>
+<p>在POSIX标准中，fysnc()是必要的，而fdarasync()是可选的。</p>
+<h3 id="2-4-2-sync"><a href="#2-4-2-sync" class="headerlink" title="2.4.2 sync()"></a>2.4.2 sync()</h3><p><code>sync()</code>系统调用用来对磁盘上的所有缓冲区进行同步。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">sync</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span></span>;<br></code></pre></td></tr></table></figure>
+<p>关于同步时注意数据和元数据是否都写入。</p>
+<h3 id="2-4-3-O-SYNC标志位"><a href="#2-4-3-O-SYNC标志位" class="headerlink" title="2.4.3 O_SYNC标志位"></a>2.4.3 O_SYNC标志位</h3><p>系统调用open()可以使用O_SYNC标志位，表示该文件的所有I&#x2F;O操作都需要同步。</p>
+<h2 id="2-6-关闭文件"><a href="#2-6-关闭文件" class="headerlink" title="2.6 关闭文件"></a>2.6 关闭文件</h2><p>系统调用<code>close()</code>会取消当前进程的文件描述符fd与其关联的文件之间的映射。</p>
+<p>关闭文件操作并非意味着该文件的数据已经被写到磁盘。</p>
+<p>当关闭指向某个文件的最后一个文件描述符时，内核中表示该文件的数据结构就释放了。</p>
+<h2 id="2-7-用lseek-查找"><a href="#2-7-用lseek-查找" class="headerlink" title="2.7 用lseek()查找"></a>2.7 用lseek()查找</h2><p>设置文件位置, 应该就是文件操作的位置.</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;sys/types.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><span class="hljs-function"><span class="hljs-type">off_t</span> <span class="hljs-title">lseek</span><span class="hljs-params">(<span class="hljs-type">int</span> fd, <span class="hljs-type">off_t</span> pos, <span class="hljs-type">int</span> origin)</span></span>;<br></code></pre></td></tr></table></figure>
+<h3 id="2-7-1-在文件末尾后查找"><a href="#2-7-1-在文件末尾后查找" class="headerlink" title="2.7.1 在文件末尾后查找"></a>2.7.1 在文件末尾后查找</h3><p>在UNIX文件系统上，空洞不占用任何物理磁盘空间。</p>
+<h2 id="2-8-定位读写"><a href="#2-8-定位读写" class="headerlink" title="2.8 定位读写"></a>2.8 定位读写</h2><p>在读写操作时，都把文件位置作为参数，在完成时，不会更新文件位置指针。</p>
+<h2 id="2-9-文件截短"><a href="#2-9-文件截短" class="headerlink" title="2.9 文件截短"></a>2.9 文件截短</h2><p>将给定文件截短为参数len指定的长度。</p>
+<p>大多数的行为:</p>
+<figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs erlang">成功时返回<span class="hljs-number">0</span>,出错时返回-<span class="hljs-number">1</span>并设置相应的errno值.<br></code></pre></td></tr></table></figure>
+<h2 id="2-10-Multiplexed-I-x2F-O"><a href="#2-10-Multiplexed-I-x2F-O" class="headerlink" title="2.10 Multiplexed I&#x2F;O"></a>2.10 Multiplexed I&#x2F;O</h2><p>允许应用同时在多个文件描述符上阻塞，可能意思就是，当在一个文件描述符上阻塞时，可以切换到处理另外一个文件描述符。</p>
+<p>设计原则:</p>
+<pre><code class="hljs">1. 当任何一个文件描述符I/O就绪时进行通知
+2. 在有可用文件描述符之前一直就处于睡眠状态
+3. 当有文件描述符可用时唤醒
+4. 处理所有I/O就绪的文件描述符，没有阻塞
+5. 返回第一步，重新开始
+</code></pre>
+<p>Linux有三种方案:select, poll and epoll.</p>
+<h3 id="2-10-1-select"><a href="#2-10-1-select" class="headerlink" title="2.10.1 select()"></a>2.10.1 select()</h3><p>监测readfds集合中的文件描述符是否有可以不阻塞就读取。</p>
+<p>在调用返回时，如果文件描述符比如7还在集合中，它在I&#x2F;O读取时不会阻塞.</p>
+<h2 id="2-11-Kernel-Internals"><a href="#2-11-Kernel-Internals" class="headerlink" title="2.11 Kernel Internals"></a>2.11 Kernel Internals</h2><p>内核中的三个主要子系统: 虚拟文件系统(VFS), 页缓存(page cache), 页回写(page writeback).</p>
+<h3 id="2-11-1-虚拟文件系统"><a href="#2-11-1-虚拟文件系统" class="headerlink" title="2.11.1 虚拟文件系统"></a>2.11.1 虚拟文件系统</h3><p>虚拟文件系统调用文件系统函数并操作文件系统的数据。</p>
+<p>其系统调用可以在任意媒介的任意文件系统上读，工具可以从任何一个文件系统拷贝到另一个上.</p>
+<h3 id="2-11-2-页缓存"><a href="#2-11-2-页缓存" class="headerlink" title="2.11.2 页缓存"></a>2.11.2 页缓存</h3><p>为什么是”页”缓存，”页”是内存寻址的最小单位。</p>
+<p>将最近在磁盘文件系统上访问过的数据放在内存中.</p>
+<p>利用了”时间局限性原理”即刚被访问的资源在不久后再次访问的概率很高。</p>
+<p>“空间局部性”即数据往往是连续访问的。就是在每次读取时多读几个比特.</p>
+<h3 id="2-11-3-页回写"><a href="#2-11-3-页回写" class="headerlink" title="2.11.3 页回写"></a>2.11.3 页回写</h3><p>将磁盘文件和内存数据同步的过程为”回写(writeback)”.</p>
+<p>触发条件:</p>
+<pre><code class="hljs">1. 当空闲内存小于预定的阈值，&quot;脏&quot;缓冲区就会写道磁盘上，这样被清理的缓冲区会被移除，释放内存空间。
+2. 当&quot;脏&quot;缓冲区的时长超过预定的阈值时，该缓冲区就会写到磁盘。通过这种方式，可以避免数据一直是&quot;脏&quot;数据。
+</code></pre>
+<p>延迟写在电源出故障时可能会丢失数据。</p>
+<h1 id="第三章-缓冲I-x2F-O"><a href="#第三章-缓冲I-x2F-O" class="headerlink" title="第三章 缓冲I&#x2F;O"></a>第三章 缓冲I&#x2F;O</h1><p>块是I&#x2F;O中的基本概念。</p>
+<p>也许你只想读取一个字节，实际上要读取整个块.</p>
+<h2 id="3-1-用户缓冲I-x2F-O"><a href="#3-1-用户缓冲I-x2F-O" class="headerlink" title="3.1 用户缓冲I&#x2F;O"></a>3.1 用户缓冲I&#x2F;O</h2><p><mark>只有当数据量大小达到文件系统块大小的整数倍时，才会执行真正的I&#x2F;O操作。</mark></p>
+<p>为了利用性能提升的优势，需要预先了解物理快大小，块大小不是磁盘块的整数倍会导致不对齐操作。</p>
+<h2 id="3-2-标准I-x2F-O"><a href="#3-2-标准I-x2F-O" class="headerlink" title="3.2 标准I&#x2F;O"></a>3.2 标准I&#x2F;O</h2><p>实现了跨平台的用户缓冲解决方案。</p>
+<h3 id="文件指针"><a href="#文件指针" class="headerlink" title="文件指针"></a>文件指针</h3><p>标准I&#x2F;O程序集通过操作文件指针(file pointer)，文件指针和文件描述符是一一映射。</p>
+<p>文件指针是由指向类型定义FILE的指针表示，其定义在&lt;stdio.h&gt;中。</p>
+<h4 id="FILE为什么全部大写"><a href="#FILE为什么全部大写" class="headerlink" title="FILE为什么全部大写"></a>FILE为什么全部大写</h4><p>历史遗留原因，以前通过宏实现。</p>
+<p>在标准I&#x2F;O中，打开的文件称为”流(stream)”. </p>
+<p>输入流，应该看作输入到流。</p>
+<h2 id="3-3-打开文件"><a href="#3-3-打开文件" class="headerlink" title="3.3 打开文件"></a>3.3 打开文件</h2><p>通过<code>fopen()</code>.</p>
+<p><code>fopen()</code>执行成功时，返回一个合法的FILE指针，失败时，返回NULL,并相应设置errno值.</p>
+<h2 id="3-4-通过文件描述符打开流"><a href="#3-4-通过文件描述符打开流" class="headerlink" title="3.4 通过文件描述符打开流"></a>3.4 通过文件描述符打开流</h2><p>通过<code>fdopen()</code>把一个已经打开的文件描述符(fd)转换成流。</p>
+<h2 id="3-5-关闭流"><a href="#3-5-关闭流" class="headerlink" title="3.5 关闭流"></a>3.5 关闭流</h2><p>使用<code>fclose()</code>函数。</p>
+<p>成功时返回0, 失败时返回EOF并且相应的设置errno.</p>
+<p>讨论了三个读写方式: 单个字符，字符串，二进制.</p>
+<h2 id="3-6-向流中写数据"><a href="#3-6-向流中写数据" class="headerlink" title="3.6 向流中写数据"></a>3.6 向流中写数据</h2><h3 id="3-6-1-对齐的讨论"><a href="#3-6-1-对齐的讨论" class="headerlink" title="3.6.1 对齐的讨论"></a>3.6.1 对齐的讨论</h3><p>所有的机器设计都有数据对齐的要求。</p>
+<p>处理器都以特定的粒度来访问内存, 例如2, 4, 8 或 16字节。</p>
+<p>编译器自动对其数据.</p>
+<p>因为变量长度、对齐等等的不同，一个程序写入的二进制数据对于另外一个程序可能是不可读的。</p>
+<h2 id="3-7-定位流"><a href="#3-7-定位流" class="headerlink" title="3.7 定位流"></a>3.7 定位流</h2><p><code>fseek()</code>函数，操纵流指向文件中由offset和whence指定的位置。</p>
+<p><code>rewind()</code>函数，将位置重置到流初始位置.</p>
+<p>理解C函数库维持的缓冲区和内核拥有的缓冲区的区别。前者保留在用户空间中。</p>
+<h2 id="3-10-控制缓冲"><a href="#3-10-控制缓冲" class="headerlink" title="3.10 控制缓冲"></a>3.10 控制缓冲</h2><p>一些选项:</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs">不缓冲，数据直接提交到内核<br><br>行缓冲，每当遇到换行符，缓冲区被提交到内核<br><br>块缓冲，适用于文件，默认的所有的和文件相关的流都是块缓冲<br></code></pre></td></tr></table></figure>
+
+<p>流是不是一个缓冲区。</p>
+<h2 id="3-11-线程安全"><a href="#3-11-线程安全" class="headerlink" title="3.11 线程安全"></a>3.11 线程安全</h2><p>线程的定义是共享统一地址空间的多个进程。</p>
+<p>一个线程要想执行任何I&#x2F;O请求，必须首先获得锁并且成为所有者线程。</p>
+<h1 id="第四章-高级文件I-x2F-O"><a href="#第四章-高级文件I-x2F-O" class="headerlink" title="第四章 高级文件I&#x2F;O"></a>第四章 高级文件I&#x2F;O</h1><p>Linux提供的高级I&#x2F;O系统调用:</p>
+<figure class="highlight mathematica"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs mathematica">散布<span class="hljs-operator">/</span>聚集<span class="hljs-built_in">I</span><span class="hljs-operator">/</span><span class="hljs-built_in">O</span><span class="hljs-punctuation">(</span><span class="hljs-variable">Scatter</span><span class="hljs-operator">/</span><span class="hljs-variable">gather</span> <span class="hljs-built_in">I</span><span class="hljs-operator">/</span><span class="hljs-built_in">O</span><span class="hljs-punctuation">)</span><br><br><span class="hljs-variable">epoll</span><br><br>内存映射<span class="hljs-built_in">I</span><span class="hljs-operator">/</span><span class="hljs-built_in">O</span><br><br>文件<span class="hljs-built_in">I</span><span class="hljs-operator">/</span><span class="hljs-built_in">O</span>提示<br><br>异步<span class="hljs-built_in">I</span><span class="hljs-operator">/</span><span class="hljs-built_in">O</span><br></code></pre></td></tr></table></figure>
+<h2 id="4-1-散步-x2F-聚集I-x2F-O"><a href="#4-1-散步-x2F-聚集I-x2F-O" class="headerlink" title="4.1 散步&#x2F;聚集I&#x2F;O"></a>4.1 散步&#x2F;聚集I&#x2F;O</h2><p>命名原由，数据被散布到一个缓冲区向量，或者从一个缓冲区向量聚集.</p>
+<p>其在单次系统调用中操作多个缓冲区的I&#x2F;O.</p>
+<p>每个iovec结构体描述一个独立的缓冲区，我们称其为段(segment).</p>
+<p>一组segment的集合称为向量(vector). 每个段描述了所要读写的缓冲区的地址和长度。</p>
+<h2 id="4-2-Event-Poll接口"><a href="#4-2-Event-Poll接口" class="headerlink" title="4.2 Event Poll接口"></a>4.2 Event Poll接口</h2><p>Event Poll(epoll)机制。p96</p>
+<h3 id="4-2-4-边沿触发事件和水平触发事件"><a href="#4-2-4-边沿触发事件和水平触发事件" class="headerlink" title="4.2.4 边沿触发事件和水平触发事件"></a>4.2.4 边沿触发事件和水平触发事件</h3><p>水平出发，在一个状态发生时触发。</p>
+<p>边沿触发，状态改变时产生。</p>
+<h2 id="4-3-存储映射"><a href="#4-3-存储映射" class="headerlink" title="4.3 存储映射"></a>4.3 存储映射</h2><p>除标准I&#x2F;O之外的另一种I&#x2F;O方式，应用程序将文件映射到内存中。</p>
+<h3 id="4-3-1-1-页大小"><a href="#4-3-1-1-页大小" class="headerlink" title="4.3.1.1 页大小"></a>4.3.1.1 页大小</h3><p>页是内存映射的基本块，同时也是进程地址空间的基本块。</p>
+<p>mmap()在处理大文件，或者在文件的大小恰好被page大小整除时优势明显。</p>
+<h2 id="4-5-Synchronized-Synchronous-and-Asynchronous-Operations"><a href="#4-5-Synchronized-Synchronous-and-Asynchronous-Operations" class="headerlink" title="4.5 Synchronized, Synchronous, and Asynchronous Operations"></a>4.5 Synchronized, Synchronous, and Asynchronous Operations</h2><p>Synchronous写操作在数据全部写到内核缓冲区之前是不会返回的。</p>
+<p>Asynchronous写操作在用户空间还有数据时可能就返回了。</p>
+<h2 id="4-6-I-x2F-O调度器和I-x2F-O性能"><a href="#4-6-I-x2F-O调度器和I-x2F-O性能" class="headerlink" title="4.6 I&#x2F;O调度器和I&#x2F;O性能"></a>4.6 I&#x2F;O调度器和I&#x2F;O性能</h2><p>硬盘和系统中其他部分的性能差距比较大。</p>
+<p>I&#x2F;O调度器尽力将硬盘访问的性能损失控制在最小。</p>
+<p>硬盘基于柱面(cylinders), 磁头(heads), 和扇区(section)的几何寻址方式，称CHS寻址。</p>
+<p>现代系统通过块号与CHS地址的映射寻址。</p>
+<h3 id="4-6-2-调度器功能"><a href="#4-6-2-调度器功能" class="headerlink" title="4.6.2 调度器功能"></a>4.6.2 调度器功能</h3><p>实现两个基本操作: </p>
+<pre><code class="hljs">1. 合并(merging), 将两个或多个相邻的I/O请求的过程合并为一个。
+2. 排序(sorting), 选取两个操作中相对更重要的一个，并按块号递增的顺序重新安排等待的I/O请求。
+</code></pre>
+<h3 id="4-6-3-改进读请求"><a href="#4-6-3-改进读请求" class="headerlink" title="4.6.3 改进读请求"></a>4.6.3 改进读请求</h3><h4 id="4-6-3-1-Deadline算法"><a href="#4-6-3-1-Deadline算法" class="headerlink" title="4.6.3.1 Deadline算法"></a>4.6.3.1 Deadline算法</h4><p>在I&#x2F;O请求上加入了最后期限，调度器是一个程序。</p>
+<h4 id="4-6-3-2-Anticipatory算法"><a href="#4-6-3-2-Anticipatory算法" class="headerlink" title="4.6.3.2 Anticipatory算法"></a>4.6.3.2 Anticipatory算法</h4><p>和 Deadline 一样开始，但具有预测机制。</p>
+<h4 id="4-6-3-3-CFQ-I-x2F-O调度器"><a href="#4-6-3-3-CFQ-I-x2F-O调度器" class="headerlink" title="4.6.3.3 CFQ I&#x2F;O调度器"></a>4.6.3.3 CFQ I&#x2F;O调度器</h4><h4 id="4-6-3-4-Noop-I-x2F-O调度器"><a href="#4-6-3-4-Noop-I-x2F-O调度器" class="headerlink" title="4.6.3.4 Noop I&#x2F;O调度器"></a>4.6.3.4 Noop I&#x2F;O调度器</h4><h3 id="4-6-4-选择和配置你的I-x2F-O调度器"><a href="#4-6-4-选择和配置你的I-x2F-O调度器" class="headerlink" title="4.6.4 选择和配置你的I&#x2F;O调度器"></a>4.6.4 选择和配置你的I&#x2F;O调度器</h3><p>目录<code>/sys/block/device/queue/iosched</code></p>
+<h3 id="4-6-5-优化I-x2F-O性能"><a href="#4-6-5-优化I-x2F-O性能" class="headerlink" title="4.6.5 优化I&#x2F;O性能"></a>4.6.5 优化I&#x2F;O性能</h3><h4 id="4-6-5-1-用户空间I-x2F-O调度"><a href="#4-6-5-1-用户空间I-x2F-O调度" class="headerlink" title="4.6.5.1 用户空间I&#x2F;O调度"></a>4.6.5.1 用户空间I&#x2F;O调度</h4><p>以有利于寻址操作的顺序提交, 可按照以下方式:</p>
+<pre><code class="hljs">1. 完整路径
+2. inode编号
+3. 文件的物理块
+</code></pre>
+<p>文件i的inode序号 &lt; 文件j的inode号</p>
+<p>通常意味着：</p>
+<p>文件i的物理块 &lt; 文件j的物理块</p>
+<h1 id="第五章-进程管理"><a href="#第五章-进程管理" class="headerlink" title="第五章 进程管理"></a>第五章 进程管理</h1><p>进程是UNIX系统中仅次于文件的基本抽象概念.</p>
+<p>进程不仅仅包含汇编代码，它由数据、资源、状态和一个虚拟的计算机组成。</p>
+<h2 id="5-1-进程ID"><a href="#5-1-进程ID" class="headerlink" title="5.1 进程ID"></a>5.1 进程ID</h2><p>简称pid.</p>
+<p>本质上将，大多数代码会假设内核不会重用已经用过的pid值。</p>
+<p>空闲进程(idle process)，当没有其他进程运行时，内核所运行的进程，其pid是0.</p>
+<p>内核必须寻找一个适合的init程序。<br>查找位置和顺序:</p>
+<pre><code class="hljs">1. /sbin/init
+2. /etc/init
+3. /bin/init
+4. /bin/sh, 当内核没有找到init时，内核会尝试运行它.
+</code></pre>
+<p>所以内核似乎也就是个程序。</p>
+<h3 id="5-1-1-分配进程ID"><a href="#5-1-1-分配进程ID" class="headerlink" title="5.1.1 分配进程ID"></a>5.1.1 分配进程ID</h3><p>缺省最大为32768.</p>
+<p>设置<code>/proc/sys/kernel/pid_max</code>来修改。</p>
+<p>内核不会重用以前已经分配过的值。</p>
+<h3 id="5-1-2-进程体系"><a href="#5-1-2-进程体系" class="headerlink" title="5.1.2 进程体系"></a>5.1.2 进程体系</h3><p>父进程号(ppid).</p>
+<p>每个进程都被一个用户和一个组拥有。</p>
+<p>每个子进程都继承了父进程的用户和组。</p>
+<p>所有与管道相关的命令都属于同一个进程组。</p>
+<h3 id="5-1-3-pid-t"><a href="#5-1-3-pid-t" class="headerlink" title="5.1.3 pid_t"></a>5.1.3 pid_t</h3><p>在Linux通常是C语言中的int类型。</p>
+<p>系统调用似乎就是系统编程中的函数.</p>
+<h2 id="5-2-运行新进程"><a href="#5-2-运行新进程" class="headerlink" title="5.2 运行新进程"></a>5.2 运行新进程</h2><p><code>fork()</code>基本上就是复制父进程。</p>
+<h3 id="5-2-1-exec系列系统调用"><a href="#5-2-1-exec系列系统调用" class="headerlink" title="5.2.1 exec系列系统调用"></a>5.2.1 exec系列系统调用</h3><p>没有单一的exec系统调用，而是一组exec函数构成。</p>
+<p>可变长参数以<code>NULL</code>结尾。</p>
+<h3 id="5-2-2-fork-系统调用"><a href="#5-2-2-fork-系统调用" class="headerlink" title="5.2.2 fork()系统调用"></a>5.2.2 fork()系统调用</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;sys/type.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><span class="hljs-function"><span class="hljs-type">pid_t</span> <span class="hljs-title">fork</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span></span>;<br></code></pre></td></tr></table></figure>
+<p>创建了一个子进程后，父进程会没有任何改变的继续运行下去，<code>execv()</code>会使子进程去运行<code>/bin/windlass</code></p>
+<h4 id="5-2-2-1-写时复制"><a href="#5-2-2-1-写时复制" class="headerlink" title="5.2.2.1 写时复制"></a>5.2.2.1 写时复制</h4><p>早期UNIX系统为逐页复制。</p>
+<p>现代UNIX系统如Linux，采用写时复制。</p>
+<p>如果一个进程要修改自己的那份资源，那就复制一份，修改别的资源时只需要指向那个资源的指针。意思就是并不是完全复制父进程，部分资源就是指向父进程的资源，只有当要使用那份资源时才会复制。</p>
+<p>好处: 如果进程从来就不需要修改资源，则不需要进行复制。</p>
+<p>在<code>fork()</code>调用结束后，父进程和子进程都相信它们有一个自己的地址空间，但实际上它们共享父进程的原始页。</p>
+<p><mark>理解:</mark><br>所以共享地址空间的意思就是是同一段代码。</p>
+<h4 id="5-2-2-2-vfork"><a href="#5-2-2-2-vfork" class="headerlink" title="5.2.2.2 vfork()"></a>5.2.2.2 vfork()</h4><h2 id="5-3-终止进程"><a href="#5-3-终止进程" class="headerlink" title="5.3 终止进程"></a>5.3 终止进程</h2><p>POSIX和C89都定义了终止当前进程的标准函数:</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs awk"><span class="hljs-comment">#include &lt;stdlib.h&gt;</span><br>void <span class="hljs-keyword">exit</span>(int status);<br></code></pre></td></tr></table></figure>
+<p>vfork()的使用者终止进程时必须使用<code>_exit()</code>, 而不是<code>exit()</code>.</p>
+<h3 id="5-3-1-其他终止进程的方式"><a href="#5-3-1-其他终止进程的方式" class="headerlink" title="5.3.1 其他终止进程的方式"></a>5.3.1 其他终止进程的方式</h3><p>在<code>main()</code>函数返回时明确给出一个状态值，或者调用<code>exit()</code>是个良好的变成习惯。</p>
+<h3 id="5-3-2-atexit"><a href="#5-3-2-atexit" class="headerlink" title="5.3.2 atexit()"></a>5.3.2 atexit()</h3><p>用来注册一些在进程结束时要调用的函数。</p>
+<p>函数调用的顺序和注册顺序相反。也就是这些函数存储在栈中。</p>
+<h3 id="5-3-4-SIGCHLD"><a href="#5-3-4-SIGCHLD" class="headerlink" title="5.3.4 SIGCHLD"></a>5.3.4 SIGCHLD</h3><p>当一个子进程终止时，内核会向其父进程发送SIGCHILD信号。</p>
+<h2 id="5-4-等待终止的子进程"><a href="#5-4-等待终止的子进程" class="headerlink" title="5.4 等待终止的子进程"></a>5.4 等待终止的子进程</h2><p>处于这种状态的进程叫做僵死(zombie)进程，保留最小的概要信息。</p>
+<p>只要父进程获取了子进程的信息，子进程就会消失，否则一直保持僵死状态。</p>
+<p><code>wait()</code>返回已i终止子进程的pid.</p>
+<h3 id="5-4-1-等待特定的进程"><a href="#5-4-1-等待特定的进程" class="headerlink" title="5.4.1 等待特定的进程"></a>5.4.1 等待特定的进程</h3><p><code>waitpid()</code>系统调用。</p>
+<h3 id="5-4-1-等待特定进程"><a href="#5-4-1-等待特定进程" class="headerlink" title="5.4.1 等待特定进程"></a>5.4.1 等待特定进程</h3><h3 id="5-4-5-僵死进程"><a href="#5-4-5-僵死进程" class="headerlink" title="5.4.5 僵死进程"></a>5.4.5 僵死进程</h3><p>只要有进程结束了，内核就会遍历它的所有子进程，并且把他们的父进程重新设置为<code>init</code>进程。这保证了系统中没有不存在父进程的进程。</p>
+<h2 id="用户和组"><a href="#用户和组" class="headerlink" title="用户和组"></a>用户和组</h2><p>用户ID和组ID分别用C语言deuid_t和gid_t这两个类型表示。</p>
+<p>数字表示和字符表示是映射关系.</p>
+<p>在Linux中，一个进程的用户ID和组ID代表这个进程可以执行哪些操作。</p>
+<p>最好采用”最小权限”原则。</p>
+<h3 id="5-5-1-实际用户-组-ID、有效用户-组-ID和保护设置用户-组-ID"><a href="#5-5-1-实际用户-组-ID、有效用户-组-ID和保护设置用户-组-ID" class="headerlink" title="5.5.1 实际用户(组)ID、有效用户(组)ID和保护设置用户(组)ID"></a>5.5.1 实际用户(组)ID、有效用户(组)ID和保护设置用户(组)ID</h3><p>与进程相关的用户ID有四个:</p>
+<pre><code class="hljs">1. 实际用户ID, 运行这个进程的那个用户的uid
+2. 有效用户ID, 当前进程所使用的用户ID, 权限验证一般使用的值。
+3. 保存设置用户ID, 是进程原先的有效用户ID
+4. 文件系统用户ID
+</code></pre>
+<h2 id="5-6-会话和进程组"><a href="#5-6-会话和进程组" class="headerlink" title="5.6 会话和进程组"></a>5.6 会话和进程组</h2><p>每个进程都属于某个进程组。</p>
+<p>进程组的主要特征: 信号可以发送给进程中所有进程，这个信号可以使同一个进程组中的所有进程终止、停止或者继续运行。</p>
+<p>每个进程组都由进程组ID(pgid)唯一标识。</p>
+<p>进程组ID就是组长进程的ID. 只要进程组中还有一个进程存在，则该进程组就存在。</p>
+<p>一个会话就是一个或多个进程组，会话的功能和shell差不多。</p>
+<p>进程组提供了向其中所有进程发送信号的机制，会话则将登录与控制终端联系起来。</p>
+<p>进程组中直接与用户打交道并且控制终端为前台进程组，其他都是后台进程组。</p>
+<p>守护进程会创建自己的会话。</p>
+<h2 id="5-7-守护进程"><a href="#5-7-守护进程" class="headerlink" title="5.7 守护进程"></a>5.7 守护进程</h2><p>守护进程运行在后台，不与任何控制终端相关联。</p>
+<p>习惯上守护进程的名字通常以d结尾。</p>
+<p>这个名字来源于麦克斯韦妖(Maxwell’s demon). 希腊神话中的demon是神的助手，做一些奥林匹斯山的居民自己不愿意做的事.</p>
+<p>守护进程的两个基本要求:</p>
+<pre><code class="hljs">1. 必须是init进程的子进程
+2. 不与任何控制终端相关联
+</code></pre>
+<h1 id="第六章-高级进程管理"><a href="#第六章-高级进程管理" class="headerlink" title="第六章 高级进程管理"></a>第六章 高级进程管理</h1><h2 id="6-1-进程调度"><a href="#6-1-进程调度" class="headerlink" title="6.1 进程调度"></a>6.1 进程调度</h2><p>进程调度器是把有限的处理器资源分配给进程的内核子系统，是内核中决定哪个进程可以运行的组件。</p>
+<p>多任务操作系统可以分为两大类:</p>
+<pre><code class="hljs">1. 协同式
+2. 抢占式
+</code></pre>
+<p>Linux实现了后一种形式的多任务，调度器可以要求一个进程停止运行，处理器转而运行另一个程序。</p>
+<p>在协同多任务系统中，一个进程持续运行直到它自发停止。</p>
+<h3 id="6-1-1-大O记法"><a href="#6-1-1-大O记法" class="headerlink" title="6.1.1 大O记法"></a>6.1.1 大O记法</h3><p>形式地定义:</p>
+<figure class="highlight llvm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs llvm">if f(<span class="hljs-keyword">x</span>) is O(g(<span class="hljs-keyword">x</span>))<br><br>then<br><br>存在<span class="hljs-keyword">c</span><span class="hljs-punctuation">,</span><span class="hljs-keyword">x</span><span class="hljs-number">1</span> such that f(<span class="hljs-keyword">x</span>) &lt;<span class="hljs-operator">=</span> <span class="hljs-keyword">c</span> * g(<span class="hljs-keyword">x</span>)<span class="hljs-punctuation">,</span> 对于任意<span class="hljs-keyword">x</span>&gt;<span class="hljs-keyword">x</span><span class="hljs-number">1</span>都成立<br></code></pre></td></tr></table></figure>
+<h3 id="6-1-2-时间片"><a href="#6-1-2-时间片" class="headerlink" title="6.1.2 时间片"></a>6.1.2 时间片</h3><p>进程不一定要在一次运行中耗光所有时间片。</p>
+<h3 id="6-1-3-I-x2F-O约束进程-VS-处理器约束进程"><a href="#6-1-3-I-x2F-O约束进程-VS-处理器约束进程" class="headerlink" title="6.1.3 I&#x2F;O约束进程 VS 处理器约束进程"></a>6.1.3 I&#x2F;O约束进程 VS 处理器约束进程</h3><p>持续地消耗所有可用时间片的进程称为”处理器约束进程”.</p>
+<p>多数时间处于等待资源的阻塞状态的进程称为”I&#x2F;O约束进程”.</p>
+<h3 id="6-1-4-抢占调度"><a href="#6-1-4-抢占调度" class="headerlink" title="6.1.4 抢占调度"></a>6.1.4 抢占调度</h3><p>UNIX调度中一条重要原则: 所有的进程必须运行。</p>
+<h3 id="6-1-5-线程"><a href="#6-1-5-线程" class="headerlink" title="6.1.5 线程"></a>6.1.5 线程</h3><p>本质上，内核没有线程概念，对于Linux内核来说，所有的线程都是独立的进程。</p>
+<p>共享同一地址空间，即同样的动态内存，映射文件，目标代码等。</p>
+<h2 id="6-2-让出处理器"><a href="#6-2-让出处理器" class="headerlink" title="6.2 让出处理器"></a>6.2 让出处理器</h2><h2 id="6-3-进程优先级"><a href="#6-3-进程优先级" class="headerlink" title="6.3 进程优先级"></a>6.3 进程优先级</h2><p>历史上, Unix把这个优先级称为”nice value”.</p>
+<p>Linux调度器基于这样的原则来调度: 高优先级的程序总是先运行。 同时，nice值也指明了进程的时间片长度。</p>
+<p>合法的优先级在-20到19之间，默认为零。nice值越低, 优先级越高，时间片越长.</p>
+<h3 id="6-3-3-I-x2F-O优先级"><a href="#6-3-3-I-x2F-O优先级" class="headerlink" title="6.3.3 I&#x2F;O优先级"></a>6.3.3 I&#x2F;O优先级</h3><h3 id="6-4-处理器亲和度"><a href="#6-4-处理器亲和度" class="headerlink" title="6.4 处理器亲和度"></a>6.4 处理器亲和度</h3><p>进程调度器必须解决两个问题:</p>
+<pre><code class="hljs">1. 必须充分利用系统的处理器
+2. 尽量避免处理器空闲
+</code></pre>
+<p>如果进程曾在某一CPU上运行，进程调度器还应该尽量把它放在同一CPU上。</p>
+<p>处理器亲和度表明一个进程停留在统一处理器上的可能性。</p>
+<p>“软亲和度(soft affinity)”表明调度器持续调度进程到同一处理器上的自然倾向。</p>
+<p>“硬亲和度(hard affinity)”描述了强制内核保证进程到处理器的绑定。</p>
+<h2 id="6-5-实时系统"><a href="#6-5-实时系统" class="headerlink" title="6.5 实时系统"></a>6.5 实时系统</h2><p>如果一个系统受到操作期限(请求与响应之间的最小量和命令次数)的支配，就称该系统是”实时”的。</p>
+<h3 id="6-5-1-软硬实时系统"><a href="#6-5-1-软硬实时系统" class="headerlink" title="6.5.1 软硬实时系统"></a>6.5.1 软硬实时系统</h3><p>硬实时系统对于操作期限要求非常严格，超过期限就会产生失败。</p>
+<p>软实时系统不认为超过期限是一个严重的失败。</p>
+<h3 id="6-5-2-延时，抖动和截止期限"><a href="#6-5-2-延时，抖动和截止期限" class="headerlink" title="6.5.2 延时，抖动和截止期限"></a>6.5.2 延时，抖动和截止期限</h3><h1 id="第七章-文件与目录管理"><a href="#第七章-文件与目录管理" class="headerlink" title="第七章 文件与目录管理"></a>第七章 文件与目录管理</h1><h2 id="7-1-文件及其元数据"><a href="#7-1-文件及其元数据" class="headerlink" title="7.1 文件及其元数据"></a>7.1 文件及其元数据</h2><p>inode存储了与文件有关的元数据, 如文件的访问权限，最后访问时间，所有者，所有组，大小以及文件数据的存储位置。</p>
+<p>结构stat存储了文件信息. </p>
+<h1 id="第八章-内存管理"><a href="#第八章-内存管理" class="headerlink" title="第八章 内存管理"></a>第八章 内存管理</h1><h2 id="8-1-进程地址空间"><a href="#8-1-进程地址空间" class="headerlink" title="8.1 进程地址空间"></a>8.1 进程地址空间</h2><p>虚拟地址空间(virtual address space)是线性的，从0开始，到某个最大值。</p>
+<h3 id="8-1-1-页和页面调度"><a href="#8-1-1-页和页面调度" class="headerlink" title="8.1.1 页和页面调度"></a>8.1.1 页和页面调度</h3><p>虚拟空间由许多页组成。</p>
+<p>每个页面都只有无效(invalid)和有效(valid)两种状态。</p>
+<p>一般来说虚拟存储器总比物理内存大。</p>
+<h3 id="8-1-2-存储器区域"><a href="#8-1-2-存储器区域" class="headerlink" title="8.1.2 存储器区域"></a>8.1.2 存储器区域</h3><p>内核将具有某些相同特征的页组织成块(blocks), 这些块叫做存储器区域(memory regions), 段(segments), 或者映射(mappings).</p>
+<p>在每个进程中都可以见到的存储器区段:</p>
+<pre><code class="hljs">  - 文本段(text segment).
+  - 堆栈段(stack).
+  - 数据段(data segment)，又叫堆(heap).
+  - BSS段(bss segment).
+  - 大多数地址空间含有很多映射文件.
+</code></pre>
+<h2 id="8-2-动态内存分配"><a href="#8-2-动态内存分配" class="headerlink" title="8.2 动态内存分配"></a>8.2 动态内存分配</h2><p>C不支持动态内存的变量。</p>
+<p>C提供了一种机制在动态内存中分配一个足够大的空间保存结构体<code>pirate_ship</code>.</p>
+<p>调用<code>malloc()</code>时，C都会自动地把返回值由void指针转变为需要的类型，但是C++并不提供这种自动转换。</p>
+<p>许多程序都定义和使用封装后的<code>malloc()</code>, 当<code>malloc()</code>返回NULL时就打印错误和终止程序，根据约定，程序员们把这个封装叫做<code>xmalloc()</code>:</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs awk"><span class="hljs-regexp">/* like malloc(), but terminates on failure */</span><br>void *xmalloc(size_t size)<br>&#123;<br>  void *p;<br>  p = malloc(size);<br>  <span class="hljs-keyword">if</span> (!p) &#123;<br>    perror(<span class="hljs-string">&quot;xmalloc&quot;</span>);<br>    <span class="hljs-keyword">exit</span>(EXIT_FAILURE);<br>  &#125;<br>  return p;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="8-2-1-数组分配"><a href="#8-2-1-数组分配" class="headerlink" title="8.2.1 数组分配"></a>8.2.1 数组分配</h3><p><code>calloc</code>将分配区域全部用0进行初始化。</p>
+<p>可定义一个简单的接口:</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs arduino"><span class="hljs-function"><span class="hljs-type">void</span> *<span class="hljs-title">malloc0</span><span class="hljs-params">(<span class="hljs-type">size_t</span> size)</span></span><br><span class="hljs-function"></span>&#123;<br>  <span class="hljs-keyword">return</span> <span class="hljs-built_in">calloc</span>(<span class="hljs-number">1</span>, size);<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="8-2-2-调整已分配内存大小"><a href="#8-2-2-调整已分配内存大小" class="headerlink" title="8.2.2 调整已分配内存大小"></a>8.2.2 调整已分配内存大小</h3><figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs arduino"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdlib.h&gt;</span></span><br><span class="hljs-function"><span class="hljs-type">void</span> *<span class="hljs-title">realloc</span><span class="hljs-params">(<span class="hljs-type">void</span> *ptr, <span class="hljs-type">size_t</span> size)</span></span>;<br></code></pre></td></tr></table></figure>
+<p>如果size是0, 效果就会跟在ptr上调用free()相同。</p>
+<p>如果ptr是NULL，结果就会跟malloc()一样。</p>
+<h3 id="8-2-3-动态内存的释放"><a href="#8-2-3-动态内存的释放" class="headerlink" title="8.2.3 动态内存的释放"></a>8.2.3 动态内存的释放</h3><p>自动内存分配，当栈不在使用，空间被自动释放。</p>
+<p>动态内存将永久占有一个进程地址空间的一部分，直到它被显式地释放。</p>
+<p>当整个进程都退出时，所有动态和静态的存储器都荡然无存。 </p>
+<p>调用free()时并不需要检查ptr是否为NULL.</p>
+<h3 id="8-2-4-对齐"><a href="#8-2-4-对齐" class="headerlink" title="8.2.4 对齐"></a>8.2.4 对齐</h3><p>数据的对齐(alignment)是指数据地址和硬件确定的内存块之间的关系。</p>
+<p>一个变量的地址是它大小的倍数时，就叫做自然对齐(naturally aligned).</p>
+<p>在编写可移植的代码的时候，对齐的问题一定要注意，所有的类型都应该保持自然对齐。</p>
+<h4 id="8-2-4-1-预对齐内存的分配"><a href="#8-2-4-1-预对齐内存的分配" class="headerlink" title="8.2.4.1 预对齐内存的分配"></a>8.2.4.1 预对齐内存的分配</h4><p>大多数情况下，编译器和C库会自动处理对齐问题。</p>
+<h4 id="8-2-4-2-其它对齐问题"><a href="#8-2-4-2-其它对齐问题" class="headerlink" title="8.2.4.2 其它对齐问题"></a>8.2.4.2 其它对齐问题</h4><p>非标准类型，四条有用的规则:</p>
+<pre><code class="hljs">- 一个结构的对齐要求和它成员中最大的那个类型是一样的。
+- 结构体也引入了对填充的要求，以此来保证每一个成员都符合各自的对其要求。注意一下结构体中成员变量的顺序, 来减少填充所导致的空间浪费。
+- 一个联合的对齐和联合里最大的类型一致。
+- 一个数组的对齐和数组里的元素类型一致。
+</code></pre>
+<h2 id="8-3-数据段的管理"><a href="#8-3-数据段的管理" class="headerlink" title="8.3 数据段的管理"></a>8.3 数据段的管理</h2><p>堆和栈的分界线叫做中断(break)或中断点(break point).</p>
+<h2 id="8-4-匿名存储器映射"><a href="#8-4-匿名存储器映射" class="headerlink" title="8.4 匿名存储器映射"></a>8.4 匿名存储器映射</h2><p>实现malloc()最经典方法就是将数据段分为一系列的大小为2的幂的块，返回最小的符合要求的那个块来满足请求。</p>
+<p>释放则是简单的将这块区域标记为未使用.</p>
+<p>一个匿名内存映射只是一块已经用0初始化的大的内存块，以供用户使用，其不基于堆。因其和基于文件的映射相似，但并不基于文件，所以称为匿名。</p>
+<p>匿名内存映射用于满足大的分配。</p>
+<h3 id="8-4-1-创建匿名存储器映射"><a href="#8-4-1-创建匿名存储器映射" class="headerlink" title="8.4.1 创建匿名存储器映射"></a>8.4.1 创建匿名存储器映射</h3><h2 id="8-5-高级存储器分配"><a href="#8-5-高级存储器分配" class="headerlink" title="8.5 高级存储器分配"></a>8.5 高级存储器分配</h2><h2 id="8-6-调试内存分配"><a href="#8-6-调试内存分配" class="headerlink" title="8.6 调试内存分配"></a>8.6 调试内存分配</h2><h2 id="8-7-基于栈的分配"><a href="#8-7-基于栈的分配" class="headerlink" title="8.7 基于栈的分配"></a>8.7 基于栈的分配</h2><p>栈，用来存放程序的自动变量(automatic variables).</p>
+<h2 id="8-9-存储器操作"><a href="#8-9-存储器操作" class="headerlink" title="8.9 存储器操作"></a>8.9 存储器操作</h2><h2 id="8-10-内存锁定"><a href="#8-10-内存锁定" class="headerlink" title="8.10 内存锁定"></a>8.10 内存锁定</h2><h3 id="8-11-1-超量使用和内存耗尽"><a href="#8-11-1-超量使用和内存耗尽" class="headerlink" title="8.11.1 超量使用和内存耗尽"></a>8.11.1 超量使用和内存耗尽</h3><p>分配到的内存比实际物理内存甚至比可用的交换空间多得多叫超量使用(overcommitment).</p>
+<p>当超量使用导致内存不足以满足一个请求时, 我们就说发生了内存耗尽(OOM)(out of memory). 为了处理OOM，内核会使用killer挑选一个进程并终止它。</p>
+<h1 id="第九章-信号"><a href="#第九章-信号" class="headerlink" title="第九章 信号"></a>第九章 信号</h1><p>信号是提供处理异步事件机制的软件中断。</p>
+<h2 id="9-1-信号概念"><a href="#9-1-信号概念" class="headerlink" title="9.1 信号概念"></a>9.1 信号概念</h2><p>信号有一个非常明确的生命周期。</p>
+<h3 id="9-1-1-信号标识符"><a href="#9-1-1-信号标识符" class="headerlink" title="9.1.1 信号标识符"></a>9.1.1 信号标识符</h3><p>每个信号都有一个以<code>SIG</code>为前缀的符号名称。</p>
+<p>这些信号都在<code>&lt;signal.h&gt;</code>头文件中定义的。</p>
+<p>信号被预处理程序简单的定义为正整数，也就是说，每个信号都与一个正整数标识符相关联。</p>
+<p>一个好的程序员因该总是使用信号的可读名称。</p>
+<h2 id="9-2-基本信号管理"><a href="#9-2-基本信号管理" class="headerlink" title="9.2 基本信号管理"></a>9.2 基本信号管理</h2><h2 id="9-9-结论"><a href="#9-9-结论" class="headerlink" title="9.9  结论"></a>9.9  结论</h2><p>信号是从内核接受许多通知的唯一方式。</p>
+<p>信号还是UNIX(Linux)终止进程和管理父&#x2F;子进程关系的方式。</p>
+<h1 id="第十章-时间"><a href="#第十章-时间" class="headerlink" title="第十章 时间"></a>第十章 时间</h1>
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Operate-System/" class="category-chain-item">Operate System</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Linux System Programming</div>
+      <div>http://example.com/2022/07/18/Linux-System-Programming/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>John Doe</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2022年7月18日</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>许可协议</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/07/20/Practical-Vim-Notes/" title="Practical Vim Notes">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Practical Vim Notes</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/07/17/Linux-Command-Line-and-Shell-Scripting-Bible-Notes/" title="Linux Command Line and Shell Scripting Bible Notes">
+                        <span class="hidden-mobile">Linux Command Line and Shell Scripting Bible Notes</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

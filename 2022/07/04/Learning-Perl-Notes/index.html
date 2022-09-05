@@ -1,0 +1,996 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="John Doe">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="第四章 子程序区分子程序和内置函数，子程序是由用户定义的，而函数则不一定. 一般的变量都是全局变量. 要注意检查返回值。  特殊的数组变量@_用于存放参数列表。 my 操作符，创建私有变量。 直接使用数组“名称”来取得数组元素的个数。 pop and push, shift and unshiftpop and push do things to the end of an array. shif">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Learning Perl Notes">
+<meta property="og:url" content="http://example.com/2022/07/04/Learning-Perl-Notes/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="第四章 子程序区分子程序和内置函数，子程序是由用户定义的，而函数则不一定. 一般的变量都是全局变量. 要注意检查返回值。  特殊的数组变量@_用于存放参数列表。 my 操作符，创建私有变量。 直接使用数组“名称”来取得数组元素的个数。 pop and push, shift and unshiftpop and push do things to the end of an array. shif">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-07-04T11:37:10.000Z">
+<meta property="article:modified_time" content="2022-09-04T09:19:36.032Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>Learning Perl Notes - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Jie</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/SteinsGate_all.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Learning Perl Notes"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-07-04 19:37" pubdate>
+          2022年7月4日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          17k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          146 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">Learning Perl Notes</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="第四章-子程序"><a href="#第四章-子程序" class="headerlink" title="第四章 子程序"></a>第四章 子程序</h1><p>区分子程序和内置函数，子程序是由用户定义的，而函数则不一定.</p>
+<p>一般的变量都是全局变量.</p>
+<p>要注意检查返回值。 </p>
+<p>特殊的数组变量<code>@_</code>用于存放参数列表。</p>
+<p><code>my</code> 操作符，创建私有变量。</p>
+<p>直接使用数组“名称”来取得数组元素的个数。</p>
+<h2 id="pop-and-push-shift-and-unshift"><a href="#pop-and-push-shift-and-unshift" class="headerlink" title="pop and push, shift and unshift"></a>pop and push, shift and unshift</h2><p>pop and push do things to the end of an array.</p>
+<p>shift and unshift do things to the start of an array.</p>
+<h2 id="The-if-Control-Structure"><a href="#The-if-Control-Structure" class="headerlink" title="The if Control Structure"></a>The if Control Structure</h2><p>The if control structure must have those block curly braces around the conditional code.</p>
+<p><code>foreach</code> 也必须要有花括号.</p>
+<h2 id="Notes-on-Lexical-my-Variables"><a href="#Notes-on-Lexical-my-Variables" class="headerlink" title="Notes on Lexical (my) Variables"></a>Notes on Lexical (my) Variables</h2><p>Those lexical variables can actully be used in any block.</p>
+<p>区分:</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs stylus"><span class="hljs-function"><span class="hljs-title">my</span><span class="hljs-params">(<span class="hljs-variable">$num</span>)</span></span><br>my <span class="hljs-variable">$num</span><br></code></pre></td></tr></table></figure>
+<p>上下文含义不同。</p>
+<p>最好对每一个新变量都使用my声明,</p>
+<p>Perl中的默认变量<code>$_</code>.</p>
+<p>如果编译器在调用子程序前看到过子程序的定义或者Perl通过语法规则判断它只能是子程序调用，就可以省略<code>&amp;</code>.</p>
+<h2 id="持久性私有变量"><a href="#持久性私有变量" class="headerlink" title="持久性私有变量"></a>持久性私有变量</h2><p>Using <code>state</code> to define.</p>
+<p>不能在列表上下文中初始化数组和哈希类型的state变量.</p>
+<p>Using <code>Ctrl-D</code> to stop getting values from <STDIN>.</p>
+<h2 id="Exercise"><a href="#Exercise" class="headerlink" title="Exercise"></a>Exercise</h2><p>One string can be seen as one element of an array.</p>
+<p>Can’t use defined(@array).</p>
+<p>检查一个变量是否初始化</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-keyword">if</span> (<span class="hljs-keyword">defined</span> <span class="hljs-variable">$var</span>) <br></code></pre></td></tr></table></figure>
+<p>检查一个数组是否为空</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs less"><span class="hljs-selector-tag">if</span> (<span class="hljs-variable">@array</span>) &#123;<span class="hljs-selector-tag">return</span>&#125;;<br></code></pre></td></tr></table></figure>
+<h1 id="CHAPTER-5-Input-and-Output"><a href="#CHAPTER-5-Input-and-Output" class="headerlink" title="CHAPTER 5 Input and Output"></a>CHAPTER 5 Input and Output</h1><p>需要知道那些情况会返回<code>undef</code>.</p>
+<p>判断是否到文件末尾</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-keyword">while</span> (<span class="hljs-keyword">defined</span>(<span class="hljs-variable">$line</span> = &lt;<span class="hljs-variable constant_">STDIN</span>&gt;))<br></code></pre></td></tr></table></figure>
+<p>or </p>
+<figure class="highlight gcode"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs gcode"><span class="hljs-keyword">while</span> <span class="hljs-comment">(&lt;STDIN&gt;)</span><br></code></pre></td></tr></table></figure>
+<p>There is no connection between the line-input operator and Perl’s favorite default variable.</p>
+<h2 id="Input-from-the-Diamond-Operator"><a href="#Input-from-the-Diamond-Operator" class="headerlink" title="Input from the Diamond Operator"></a>Input from the Diamond Operator</h2><p>The diamond operator: &lt;&gt;, it’s actually a special kind of line-input operator.</p>
+<figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs applescript">./mytac <span class="hljs-built_in">file</span><br></code></pre></td></tr></table></figure>
+<p>and the mytac file:</p>
+<figure class="highlight axapta"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs axapta"><span class="hljs-keyword">print</span> <span class="hljs-keyword">reverse</span> &lt;&gt;;<br></code></pre></td></tr></table></figure>
+<p>file:</p>
+<figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs livecodeserver"><span class="hljs-literal">one</span><br><span class="hljs-literal">two</span><br><span class="hljs-literal">three</span><br></code></pre></td></tr></table></figure>
+<p>will print:</p>
+<figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs livecodeserver"><span class="hljs-literal">three</span><br><span class="hljs-literal">two</span><br><span class="hljs-literal">one</span><br></code></pre></td></tr></table></figure>
+<p>The invocation arguments 大抵是命令行参数。</p>
+<p><code>-</code> 连字符通常代表标准输入流。</p>
+<p>钻石操作符从指定位置读取，如命令行参数。</p>
+<p>不加参数时，chomp会直接作用在<code>$_</code>上.</p>
+<p>The invocation arguments 存储在<code>@ARGV</code>中.</p>
+<p>可重新初始化<code>@ARGV</code>:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl">@ARGV = <span class="hljs-keyword">qw</span><span class="hljs-comment"># larry moe curly #;</span><br></code></pre></td></tr></table></figure>
+<p>Perl把数组内插到字符串中时，会在每个元素之间加上空格。</p>
+<p><mark>为何输出结果先发送至缓冲区</mark><br>访问磁盘缓慢且效率低.</p>
+<p><code>print &lt;&gt;;</code> 相当于Unix下的cat命令.</p>
+<p><code>print sort &lt;&gt;;</code> 相当于Unix下的sort命令.</p>
+<p>一条规则：假如它看起来像函数调用，它就是一个函数调用.</p>
+<h3 id="print"><a href="#print" class="headerlink" title="print"></a>print</h3><p>区分：<code>print @array;</code> 和 <code>print &quot;@array&quot;;</code></p>
+<p>The front one print a list of items, the next one print a string. 后者有分隔符.</p>
+<h3 id="用printf格式化输出"><a href="#用printf格式化输出" class="headerlink" title="用printf格式化输出"></a>用printf格式化输出</h3><p>要输出恰当的数字形式，可以使用<code>%g</code>, 可以把<code>g</code>看作”Good conversion for this number”</p>
+<p><code>printf</code>最常用在字段式的数据输出上，指定字段宽度，默认为右对齐。</p>
+<p>A <code>*</code> inside the format string takes the next argument as a width:</p>
+<h3 id="Arrays-and-printf"><a href="#Arrays-and-printf" class="headerlink" title="Arrays and printf"></a>Arrays and printf</h3><figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">printf</span> <span class="hljs-string">&quot;The items are:\n&quot;</span>.(<span class="hljs-string">&quot;%10s\n&quot;</span> <span class="hljs-keyword">x</span> @items), @items;<br><span class="hljs-keyword">printf</span> <span class="hljs-string">&quot;%*s&quot;</span>, <span class="hljs-number">10</span>, <span class="hljs-string">&quot;wilma&quot;</span>;<br></code></pre></td></tr></table></figure>
+<h3 id="Filehandles"><a href="#Filehandles" class="headerlink" title="Filehandles"></a>Filehandles</h3><p>A name of a connection(和文件名区分). The connection is between your Perl process and the outside world.</p>
+<p>感觉可以把这个看作<code>link</code>. 和文件操作符也挺像的.</p>
+<p>Recommend to use all uppercase letters in the name of your filehandle.</p>
+<p>Six special filehandle nemes:</p>
+<figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs ebnf"><span class="hljs-attribute">STDIN</span><br><span class="hljs-attribute">STDOUT</span><br><span class="hljs-attribute">STDERR</span><br><span class="hljs-attribute">DATA</span><br><span class="hljs-attribute">ARGV</span><br><span class="hljs-attribute">ARGVOUT</span><br></code></pre></td></tr></table></figure>
+<h3 id="打开filehandle"><a href="#打开filehandle" class="headerlink" title="打开filehandle"></a>打开filehandle</h3><p>使用<code>open</code> operator.</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs kotlin"><span class="hljs-keyword">open</span> CONFIG, <span class="hljs-string">&#x27;&lt;dino&#x27;</span>;<br></code></pre></td></tr></table></figure>
+<p>or</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $selected_output = <span class="hljs-string">&#x27;my_output&#x27;</span>;<br><span class="hljs-keyword">open</span> LOG, <span class="hljs-string">&quot;&gt; $selected_output&quot;</span>;<br></code></pre></td></tr></table></figure>
+<p>三参数写法：</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">open</span> BEDROCK, <span class="hljs-string">&#x27;&lt;&#x27;</span>, $file_name;<br></code></pre></td></tr></table></figure>
+<p>以特定编码写数据到某个文件：</p>
+<figure class="highlight arcade"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs arcade">open <span class="hljs-built_in">LOG</span>, <span class="hljs-string">&#x27;&gt;&gt;:encoding(UTF-8)&#x27;</span>, <span class="hljs-symbol">$file</span>_name;<br></code></pre></td></tr></table></figure>
+<p>layer, 层的概念和编码转换略有不同，我们可以选择不同的层叠加起来(就是因为能叠加才叫做层)，产生不同的效果.</p>
+<p>判断执行：</p>
+<figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs lasso">my $success = open <span class="hljs-keyword">LOG</span>, <span class="hljs-string">&#x27;&gt;&gt;&#x27;</span>, <span class="hljs-string">&#x27;logfile&#x27;</span>;<br><span class="hljs-keyword">if</span> (! $success) &#123;<br>    <span class="hljs-params">...</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<p><code>open</code>的返回值，如果为真则为成功，为假则为失败。</p>
+<h3 id="关闭filehandle"><a href="#关闭filehandle" class="headerlink" title="关闭filehandle"></a>关闭filehandle</h3><figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs abnf">close BEDROCK<span class="hljs-comment">;</span><br></code></pre></td></tr></table></figure>
+<p><mark>Small Conclusion</mark><br>filehandle, 用于在Perl程序中操作外部文件。</p>
+<h3 id="用die处理致命错误"><a href="#用die处理致命错误" class="headerlink" title="用die处理致命错误"></a>用die处理致命错误</h3><p><code>die</code> 命令能中止程序并发出错误信息告知原因。</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">if</span> (! <span class="hljs-keyword">open</span> LOG, <span class="hljs-string">&#x27;&gt;&gt;&#x27;</span>, <span class="hljs-string">&#x27;logfile&#x27;</span>) &#123;<br>    <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;Cannot create logfile: $!&quot;</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p><code>$!</code> 为特殊变量，存放解释性的系统错误信息。只有在系统服务请求失败后才有用。</p>
+<p>程序名保存在特殊变量<code>$0</code>中。</p>
+<p>若在<code>die</code>后面加上换行符，就不会显示行号和文件名。</p>
+<h3 id="用warn送出警告信息"><a href="#用warn送出警告信息" class="headerlink" title="用warn送出警告信息"></a>用warn送出警告信息</h3><p>产生警告信息，不会中止程序. </p>
+<h3 id="自动检测致命错误"><a href="#自动检测致命错误" class="headerlink" title="自动检测致命错误"></a>自动检测致命错误</h3><figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs abnf">use autodie<span class="hljs-comment">;</span><br></code></pre></td></tr></table></figure>
+<h3 id="使用filehandle"><a href="#使用filehandle" class="headerlink" title="使用filehandle"></a>使用filehandle</h3><figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> @line = &lt;STDIN&gt;;<br><span class="hljs-keyword">if</span> (! <span class="hljs-keyword">open</span> PASSWD, <span class="hljs-string">&quot;/etc/passwd&quot;</span>) &#123;<br>    <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;How did you get logged in? ($!)&quot;</span>;<br>&#125;<br><br><span class="hljs-keyword">while</span> (&lt;PASSWD&gt;) &#123;<br>    <span class="hljs-keyword">chomp</span>;<br>    ...<br>&#125;<br><br></code></pre></td></tr></table></figure>
+<p>Using in <code>print</code>:</p>
+<figure class="highlight monkey"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs monkey"><span class="hljs-built_in">print</span> <span class="hljs-built_in">LOG</span> <span class="hljs-string">&quot;Captain&#x27;s log, stardate 3.14159\n&quot;</span>;<br></code></pre></td></tr></table></figure>
+<h3 id="改变默认的文件输出句柄"><a href="#改变默认的文件输出句柄" class="headerlink" title="改变默认的文件输出句柄"></a>改变默认的文件输出句柄</h3><p>使用<code>select</code>:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> @line = &lt;STDIN&gt;;<br><span class="hljs-keyword">select</span> BEDROCK;<br><span class="hljs-keyword">print</span> <span class="hljs-string">&quot;I hope&quot;</span>;<br><br></code></pre></td></tr></table></figure>
+<p>特殊变量<code>$|</code>设置为1,使默认句柄在每次进行输出操作后立刻刷新缓冲区。</p>
+<h3 id="用say函数输出"><a href="#用say函数输出" class="headerlink" title="用say函数输出"></a>用say函数输出</h3><p>会自动添加换行符。</p>
+<h3 id="标量变量中的filehandle"><a href="#标量变量中的filehandle" class="headerlink" title="标量变量中的filehandle"></a>标量变量中的filehandle</h3><p>裸字bareword, 即像<code>STDIN</code>这种直接使用，而不是存储在变量中.</p>
+<p>使用前需确保变量为空，以用来存放filehandle. 有人喜欢在变量名后面添加<code>_fh</code></p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> @line = &lt;STDIN&gt;;<br><span class="hljs-keyword">my</span> $rocks_fh;<br><span class="hljs-keyword">open</span> $rocks_fh, <span class="hljs-string">&#x27;&lt;&#x27;</span>, <span class="hljs-string">&#x27;rocks.txt&#x27;</span>;<br><br></code></pre></td></tr></table></figure>
+<p>使用花括号，Perl会知道这个变量是filehandle: <code>print &#123; $rock_fh &#125;;</code></p>
+<h3 id="Exercise-1"><a href="#Exercise-1" class="headerlink" title="Exercise"></a>Exercise</h3><p><code>&lt;STDIN&gt;</code> 只接受一行的输入。</p>
+<p>从标准输入中获取多行:</p>
+<figure class="highlight gherkin"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs gherkin">my <span class="hljs-meta">@line</span> = <span class="hljs-variable">&lt;STDIN&gt;</span>;<br></code></pre></td></tr></table></figure>
+<p><code>print</code> 的一种用法:</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs routeros"><span class="hljs-built_in">print</span> <span class="hljs-string">&quot;the first string &quot;</span>, <span class="hljs-string">&quot;, the second string &quot;</span>;<br></code></pre></td></tr></table></figure>
+<h1 id="CHAPTER-6-Hash"><a href="#CHAPTER-6-Hash" class="headerlink" title="CHAPTER 6 Hash"></a>CHAPTER 6 Hash</h1><p>哈希是一种数据结构。<br>和数组的区别：</p>
+<pre><code class="hljs">1. 可以容纳任意多的值
+2. 用名字检索，键和值，键唯一。
+3. 没有顺序。
+</code></pre>
+<p>键总会被转换为字符串。</p>
+<p>哈希是从<code>awk</code>语言中引入的.</p>
+<p>哈希是从键到值的单行道，无法从值反推出其键.</p>
+<h2 id="访问哈希元素"><a href="#访问哈希元素" class="headerlink" title="访问哈希元素"></a>访问哈希元素</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$</span><span class="language-bash"><span class="hljs-built_in">hash</span>&#123;<span class="hljs-variable">$some_key</span>&#125;</span><br></code></pre></td></tr></table></figure>
+<p>注意，使用的是花括号.</p>
+<h3 id="赋值"><a href="#赋值" class="headerlink" title="赋值"></a>赋值</h3><figure class="highlight arcade"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs arcade"><span class="hljs-symbol">$family</span>_name&#123;<span class="hljs-string">&#x27;fred&#x27;</span>&#125; = <span class="hljs-string">&#x27;flintstone&#x27;</span>;<br><span class="hljs-symbol">$family</span>_name&#123;<span class="hljs-string">&#x27;barney&#x27;</span>&#125; = <span class="hljs-string">&#x27;rubble&#x27;</span>;<br></code></pre></td></tr></table></figure>
+<hr>
+<p>哈希有自己的名称空间.</p>
+<p>美元符号和花括号，显示一个哈希元素。</p>
+<p>赋值时会<mark>创建哈希元素</mark>：</p>
+<figure class="highlight arcade"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs arcade"><span class="hljs-symbol">$family</span>_name&#123;<span class="hljs-string">&#x27;wilma&#x27;</span>&#125; = <span class="hljs-string">&#x27;flintstone&#x27;</span>;<br></code></pre></td></tr></table></figure>
+<p>增加了一个新的键值对.</p>
+<h2 id="访问整个哈希"><a href="#访问整个哈希" class="headerlink" title="访问整个哈希"></a>访问整个哈希</h2><p>赋值, 必须是偶数个：</p>
+<figure class="highlight mel"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs mel">%some_hash = (<span class="hljs-string">&#x27;foo&#x27;</span>, <span class="hljs-number">35</span>, <span class="hljs-string">&#x27;bar&#x27;</span>, <span class="hljs-number">12.4</span>);<br></code></pre></td></tr></table></figure>
+<p>在列表上下文中，哈希的值是简单的键-值对列表.</p>
+<p>unwinding the hash – turning it back into a list of key-value pairs.</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs less"><span class="hljs-variable">@any_array</span> = %some_hash;<br></code></pre></td></tr></table></figure>
+<p>顺序可能错乱.</p>
+<h3 id="Hash-Assignment"><a href="#Hash-Assignment" class="headerlink" title="Hash Assignment"></a>Hash Assignment</h3><figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> %new_hash = %old_hash;<br></code></pre></td></tr></table></figure>
+<p>Perl 会先unwind the <code>%old_hash</code> into a list of key-vaule pairs, 然后赋给<code>%new_hash</code>.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> %inverse_hash = <span class="hljs-keyword">reverse</span> %any_hash;<br></code></pre></td></tr></table></figure>
+<p>键值会反转.</p>
+<p>一个Perl的rule: The last in wins.</p>
+<h2 id="The-Big-Arrow"><a href="#The-Big-Arrow" class="headerlink" title="The Big Arrow"></a>The Big Arrow</h2><p>The Big Arrow (&#x3D;&gt;), it’s just a different way to “spell” a comma. 在Perl中，可以使用胖箭头代替逗号.</p>
+<figure class="highlight livescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs livescript">my %last_name = ( <span class="hljs-comment"># a hash may be a lexical variable</span><br>    <span class="hljs-string">&#x27;fred&#x27;</span> =&gt; <span class="hljs-string">&#x27;flintstone&#x27;</span>,<br>    <span class="hljs-string">&#x27;dino&#x27;</span> =&gt; undef,<br>    <span class="hljs-string">&#x27;barney&#x27;</span> =&gt; <span class="hljs-string">&#x27;rubble&#x27;</span>,<br>)<br></code></pre></td></tr></table></figure>
+<p>在使用<code>fat array</code>时，可以省略键两侧的引号：</p>
+<figure class="highlight livescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs livescript">my %last_name = ( <span class="hljs-comment"># a hash may be a lexical variable</span><br>    fred =&gt; <span class="hljs-string">&#x27;flintstone&#x27;</span>,<br>    dino =&gt; undef,<br>    barney =&gt; <span class="hljs-string">&#x27;rubble&#x27;</span>,<br>)<br></code></pre></td></tr></table></figure>
+<p>Simple string without quote marks is called a bareword.</p>
+<h2 id="Hash-Function"><a href="#Hash-Function" class="headerlink" title="Hash Function"></a>Hash Function</h2><p>在数组上下文中：<br><code>keys</code> function, return a list of all the keys in a hash.</p>
+<p><code>values</code> function, return a list of corresponding values.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> %hash = (<span class="hljs-string">&#x27;a&#x27;</span> =&gt; <span class="hljs-number">1</span>, <span class="hljs-string">&#x27;b&#x27;</span> =&gt; <span class="hljs-number">2</span>, <span class="hljs-string">&#x27;c&#x27;</span> =&gt; <span class="hljs-number">3</span>,);<br><span class="hljs-keyword">my</span> @k = <span class="hljs-keyword">keys</span> %hash;<br><span class="hljs-keyword">my</span> @v = <span class="hljs-keyword">values</span> %hash;<br><br></code></pre></td></tr></table></figure>
+<p>在标量上下文中：<br>返回数量。</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $count = <span class="hljs-keyword">keys</span> %hash; <br></code></pre></td></tr></table></figure>
+
+<p>将哈希作为Boolean：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-keyword">if</span> (%<span class="hljs-built_in">hash</span>) [<br>  <span class="hljs-built_in">print</span> <span class="hljs-string">&quot;That was a true value!\n&quot;</span>;<br>]<br></code></pre></td></tr></table></figure>
+<p>当至少有一对时为真.</p>
+<h3 id="The-each-Function"><a href="#The-each-Function" class="headerlink" title="The each Function"></a>The each Function</h3><figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">while</span> ( ($key, $value) = <span class="hljs-keyword">each</span> %hash ) &#123;<br>  <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;$key =&gt; $value\n&quot;</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="The-exists-Function"><a href="#The-exists-Function" class="headerlink" title="The exists Function"></a>The exists Function</h3><p>To see whether a key exists in the hash.</p>
+<figure class="highlight mel"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs mel"><span class="hljs-keyword">if</span> (<span class="hljs-keyword">exists</span> $books&#123;<span class="hljs-string">&quot;dino&quot;</span>&#125;) &#123;<br>  <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;Hey, there&#x27;s a library card for dino!\n&quot;</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="The-delete-Function"><a href="#The-delete-Function" class="headerlink" title="The delete  Function"></a>The delete  Function</h3><p>The delete function removes the given key (and its corresponding value).</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $person = <span class="hljs-string">&quot;betty&quot;</span>;<br><span class="hljs-keyword">delete</span> $books&#123;$person&#125;;<br></code></pre></td></tr></table></figure>
+<h3 id="Hash-Element-Interpolation"><a href="#Hash-Element-Interpolation" class="headerlink" title="Hash Element Interpolation"></a>Hash Element Interpolation</h3><p>The magical charaacters that need blackslashing in double quotes: <code>$</code> and <code>@</code>, <code>&quot;</code> and <code>\</code>.</p>
+<h3 id="The-ENV-hash"><a href="#The-ENV-hash" class="headerlink" title="The %ENV hash"></a>The %ENV hash</h3><p>%ENV hash stores the info of environment.<br>You can see a PATH key in %ENV:</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs routeros"><span class="hljs-built_in">print</span> <span class="hljs-string">&quot;PATH is <span class="hljs-variable">$ENV</span>&#123;PATH&#125;\n&quot;</span>;<br></code></pre></td></tr></table></figure>
+<h2 id="Exercise-2"><a href="#Exercise-2" class="headerlink" title="Exercise"></a>Exercise</h2><p>The <code>chomp</code> function is vital to get input from <code>&lt;STDIN&gt;</code>.</p>
+<p>给哈希赋值使用的是<code>()</code>是列表，使用哈希的时候用<code>&#123;&#125;</code>花括号.</p>
+<p>把未定义的值当成数字使用时，Perl会自动将它转换成0.</p>
+<p>不能对哈希使用<code>push</code>等操作。</p>
+<p>使用<code>my</code>声明多个变量：</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs less"><span class="hljs-selector-tag">my</span>(<span class="hljs-variable">@words</span>, %count, $word);<br></code></pre></td></tr></table></figure>
+
+<h1 id="CHAPTER-7-Regular-Expressions"><a href="#CHAPTER-7-Regular-Expressions" class="headerlink" title="CHAPTER 7 Regular Expressions"></a>CHAPTER 7 Regular Expressions</h1><figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs awk"><span class="hljs-variable">$_</span> = <span class="hljs-string">&quot;yabba dabba doo&quot;</span>;<br><span class="hljs-keyword">if</span> (<span class="hljs-regexp">/abba/</span>) &#123;<br>  print <span class="hljs-string">&quot;It matched!\n&quot;</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>在字符串中匹配到其中的一部分。</p>
+<p><mark>Interpolating</mark> a variable into a pattern:</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs routeros"><span class="hljs-keyword">while</span> ( &lt;STDIN&gt; ) &#123;<br>   chomp;<br>   <span class="hljs-keyword">if</span> ( /<span class="hljs-variable">$ARGV</span>[0]/ ) &#123;<br>     <span class="hljs-built_in">print</span> <span class="hljs-string">&quot;\tMatches\n&quot;</span>;<br>   &#125;<br>   <span class="hljs-keyword">else</span> &#123;<br>     <span class="hljs-built_in">print</span> <span class="hljs-string">&quot;\tDoesn&#x27;t match\n&quot;</span>;<br>   &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="The-Wildcard"><a href="#The-Wildcard" class="headerlink" title="The Wildcard"></a>The Wildcard</h2><p>The dot <code>.</code> matches any single character except a newline. <code>\N</code>也有同样的效果。</p>
+<p>The backslash<code>\</code>也是metacharacter.</p>
+<h2 id="Unicode属性"><a href="#Unicode属性" class="headerlink" title="Unicode属性"></a>Unicode属性</h2><p><mark>匹配属性</mark></p>
+<figure class="highlight crmsh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs crmsh">\p&#123;<span class="hljs-keyword">PROPERTY</span><span class="hljs-title"></span>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><code>p</code> 改为大写表示相反的含义。 </p>
+<h2 id="Quantifier"><a href="#Quantifier" class="headerlink" title="Quantifier"></a>Quantifier</h2><p>如<code>*</code>和<code>+</code>.</p>
+<p><code>?</code>.</p>
+<h2 id="Anchors"><a href="#Anchors" class="headerlink" title="Anchors"></a>Anchors</h2><p><code>\A</code> anchor matches at the absolute beginning of a string.</p>
+<p><code>\z</code> matches the end of the string.<br><code>\Z</code> allows an optional newline after it.</p>
+<p><code>^</code> caret, match the beginning of line.<br><code>$</code> match the end of line.</p>
+<h3 id="Word-Anchors"><a href="#Word-Anchors" class="headerlink" title="Word Anchors"></a>Word Anchors</h3><p><code>\b</code>.</p>
+<p>like:</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs awk"><span class="hljs-regexp">/\bfred\b/</span><br></code></pre></td></tr></table></figure>
+<p>It matches at the start or end of a group of <code>\w</code> characters.</p>
+<p>The <mark>nonword-boundary anchor</mark><br><code>\B</code>.</p>
+<h2 id="模式分组"><a href="#模式分组" class="headerlink" title="模式分组"></a>模式分组</h2><p>使用小括号<code>()</code>. 圆括号也是元字符。</p>
+<p><mark>back reference</mark><br>为什么叫 back reference , 可能是要往回看括号里面的内容，所以是“back”.</p>
+<p>用括号捕获，反斜线加数字引用。引用的含义是再次匹配括号的内容。要忽略嵌套.</p>
+<p>通过左括号判断次序。</p>
+<p>新的写法：<code>\g&#123;N&#125;</code>, N为组号。使用perl5.10。</p>
+<p><mark>relative back reference</mark>相对反向引用。<br>使用负数，从当前位置往前数.</p>
+<h2 id="择一匹配"><a href="#择一匹配" class="headerlink" title="择一匹配"></a>择一匹配</h2><p>竖线<code>|</code>.</p>
+<h2 id="字符集"><a href="#字符集" class="headerlink" title="字符集"></a>字符集</h2><p>character class, <code>[]</code>.</p>
+<p>脱字符<code>^</code>.</p>
+<h2 id="字符集的简写"><a href="#字符集的简写" class="headerlink" title="字符集的简写"></a>字符集的简写</h2><p>如 <code>\d</code> 表示任意一个数字。</p>
+<p><code>\R</code>匹配任意一种断行符。</p>
+<p><code>\w</code>匹配单词字符。</p>
+<p><code>\s</code>匹配空白字符。</p>
+<h2 id="Exercise-3"><a href="#Exercise-3" class="headerlink" title="Exercise"></a>Exercise</h2><p>反向引用引用的是匹配到的值。</p>
+<h1 id="CHAPTER-8-Matching-with-Regular-Expressions"><a href="#CHAPTER-8-Matching-with-Regular-Expressions" class="headerlink" title="CHAPTER 8 Matching with Regular Expressions"></a>CHAPTER 8 Matching with Regular Expressions</h1><h2 id="Matches-with-m-x2F-x2F"><a href="#Matches-with-m-x2F-x2F" class="headerlink" title="Matches with m&#x2F;&#x2F;"></a>Matches with m&#x2F;&#x2F;</h2><p><code>/pattern/</code> is a short cut of <code>m/pattern/</code>, pattern match operator. 模式匹配。</p>
+<p>可以使用不同的分界符：</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs stylus"><span class="hljs-function"><span class="hljs-title">m</span><span class="hljs-params">(fred)</span></span><br>m&lt;fred&gt;<br>m&#123;fred&#125;<br>...<br></code></pre></td></tr></table></figure>
+<p>使用<code>/pattern/</code>可省略<code>m</code>.</p>
+<h2 id="Match-Modifier"><a href="#Match-Modifier" class="headerlink" title="Match Modifier"></a>Match Modifier</h2><p>Sometimes called flags.</p>
+<h3 id="Case-Insentive-Matching-with-i"><a href="#Case-Insentive-Matching-with-i" class="headerlink" title="Case-Insentive Matching with /i"></a>Case-Insentive Matching with <code>/i</code></h3><p>Using <code>/i</code> modifier.</p>
+<h3 id="Matching-Any-Character-with-s"><a href="#Matching-Any-Character-with-s" class="headerlink" title="Matching Any Character with /s"></a>Matching Any Character with <code>/s</code></h3><p>让<code>.</code>能够匹配换行符。Using <code>/s</code>.</p>
+<p>v5.12新增<code>\N</code>代表<code>\n</code>的补集。</p>
+<h3 id="Adding-Whitespace-with-x"><a href="#Adding-Whitespace-with-x" class="headerlink" title="Adding Whitespace with \x"></a>Adding Whitespace with <code>\x</code></h3><p>让正则表达式中的whitespace不起作用:</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs awk"><span class="hljs-regexp">/ -? [0-9]+ \.? [0-9] /</span>x<br></code></pre></td></tr></table></figure>
+<p>不会匹配其中的空格.如果要匹配whitespace可以使用<code>\s</code>或escape a literal space.</p>
+<h3 id="Combining-Option-Modifiers"><a href="#Combining-Option-Modifiers" class="headerlink" title="Combining Option Modifiers"></a>Combining Option Modifiers</h3><p>使用多个modifier, like:</p>
+<figure class="highlight arcade"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs arcade"><span class="hljs-keyword">if</span> (<span class="hljs-regexp">/barney.*fred/i</span>s) &#123;<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="Choosing-a-Character-Interpretation"><a href="#Choosing-a-Character-Interpretation" class="headerlink" title="Choosing a Character Interpretation"></a>Choosing a Character Interpretation</h3><p>在 Perl v5.14 中添加的特性，选择解释方式like:</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs awk"><span class="hljs-regexp">/\w+/</span>a  <span class="hljs-comment">#use the ASCII interpretation of character classes</span><br><span class="hljs-regexp">/\w+/u</span>  <span class="hljs-comment">#use Unicode</span><br><span class="hljs-regexp">/\w+/</span>l  <span class="hljs-comment">#respect the locale</span><br></code></pre></td></tr></table></figure>
+<p><mark>case fold</mark><br>In Unicode, lowercasing is not one-to-one.</p>
+<p>只对应ASCII字符的大小写:</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs awk"><span class="hljs-regexp">/k/</span>aai<br></code></pre></td></tr></table></figure>
+<p>用两个<code>\a</code>modifier.</p>
+<p>使用<code>chr()</code> to ensure we get the right bit pattern regardless of the encoding issues:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl">$_ = &lt;STDIN&gt;;<br><span class="hljs-keyword">my</span> $OE = <span class="hljs-keyword">chr</span>( <span class="hljs-number">0xBC</span> );<br><span class="hljs-keyword">if</span> (<span class="hljs-regexp">/$OE/i</span>) &#123;<br>  <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;Found $OE\n&quot;</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="Beginning-and-End-of-Line-Anchors"><a href="#Beginning-and-End-of-Line-Anchors" class="headerlink" title="Beginning and End-of-Line Anchors"></a>Beginning and End-of-Line Anchors</h3><p>如果没有<code>\m</code>那么<code>^</code>和<code>$</code>就和<code>\A</code>和<code>\Z</code>一样.</p>
+<h2 id="The-Binding-Operator"><a href="#The-Binding-Operator" class="headerlink" title="The Binding Operator =~"></a>The Binding Operator <code>=~</code></h2><p>正则表达式默认作用于<code>$_</code>.</p>
+<p>不再使用 default string , using <code>=~</code> tells Perl to match the pattern on the right against the string on the left:</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs nginx"><span class="hljs-attribute">my</span> <span class="hljs-variable">$some_other</span> = <span class="hljs-string">&quot;I dream of betty rubbls,&quot;</span>;<br><span class="hljs-attribute">if</span> (<span class="hljs-variable">$some_other</span> =<span class="hljs-regexp">~ /\brub\b)</span> &#123;<br>  <span class="hljs-attribute">print</span> <span class="hljs-string">&quot;Aye, there&#x27;s the rub.\n&quot;</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>If there’s no binding operator, the expression uses <code>$_</code> by default.</p>
+<p>只有<code>&lt;STDIN&gt;</code>单独出现在控制语句中，<code>$_</code>才会自动存储.</p>
+<figure class="highlight arcade"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs arcade">my <span class="hljs-symbol">$li</span>kes_perl = &lt;STDIN&gt; =~ <span class="hljs-regexp">/\byes\b/i</span>;<br></code></pre></td></tr></table></figure>
+<h2 id="The-Match-Variables"><a href="#The-Match-Variables" class="headerlink" title="The Match Variables"></a>The Match Variables</h2><p>Each regular expression capture holds part of the original string, not part of the pattern.</p>
+<p>They are named like <code>$1</code>.</p>
+<p><mark>The difference of <code>\4</code> and <code>$4</code></mark><br><code>\4</code> refers back to the capture during the pattern while it is trying to match.</p>
+<p><code>$4</code> refers to the capture of an already completed pattern match.</p>
+<p>Empty string 和 undef 是不同的，if you have three or fewer sets of parentheses in the pattern, $4 will be undef.</p>
+<h2 id="The-Persistence-of-Captures"><a href="#The-Persistence-of-Captures" class="headerlink" title="The Persistence of Captures"></a>The Persistence of Captures</h2><p>These capture variables generally stay around until the next successful pattern match.</p>
+<p>If you need a capture for more than a few lines, it’s generally best to copy it into an ordinary variable.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $wilma_word = $1;<br></code></pre></td></tr></table></figure>
+<h2 id="Noncapturing-Parentheses"><a href="#Noncapturing-Parentheses" class="headerlink" title="Noncapturing Parentheses"></a>Noncapturing Parentheses</h2><p>Adding <code>?:</code> after the opening parenthesis, which tell Perl you only want to use these parenthesis fo grouping.</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs gradle"><span class="hljs-keyword">if</span> (<span class="hljs-regexp">/(?:bronto)?saurus (steak|burger)/</span>) &#123;<br>    <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;Fred wants a $1\n&quot;</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>使用<code>\n</code>flag, which is added in v5.22, 可以把所有括号转换为noncapturing groups.</p>
+<p>命名match variable, adding in Perl v5.10.<br>匹配到的内容存放在hash<code>%+</code>中:</p>
+<p>在regex中用<code>?&lt;LABEL&gt;PATTERN</code></p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs nginx"><span class="hljs-attribute">use</span> v5.<span class="hljs-number">10</span>;<br><br><span class="hljs-attribute">my</span> <span class="hljs-variable">$names</span> = <span class="hljs-string">&#x27;Fred or Barney&#x27;</span>;<br><span class="hljs-attribute">if</span> ( <span class="hljs-variable">$names</span> =<span class="hljs-regexp">~ m/(?&lt;name1&gt;\w+)</span> (?:and|or) (?&lt;name2&gt;\w+)/) &#123;<br>  <span class="hljs-attribute">say</span> <span class="hljs-string">&quot;I saw $+&#123;name1&#125; and $+&#123;name2&#125;&quot;</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>使用<code>\g&#123;lable&#125;</code> to back reference. 因为没有数字标记.</p>
+<h2 id="The-Automatic-Match-Variables"><a href="#The-Automatic-Match-Variables" class="headerlink" title="The Automatic Match Variables"></a>The Automatic Match Variables</h2><p>为了避免和自己命名的容易重合，many of Perl’s build-in variables 具有奇怪的名字.</p>
+<p>Three automatic match variables: <code>$&amp;</code>, <code>$上飘</code> and <code>$&#39;</code>.</p>
+<p><code>$&amp;</code> stores the actually matched pattern.</p>
+<p><code>$上飘</code> stores whatever came before the matched session. </p>
+<p><code>$&#39;</code> stores whatever came after the matched session.</p>
+<p>所以就是前中后. They will stay around until the next successful pattern match. 使用这些automatic match variable 会让程序变慢.</p>
+<p>在 v5.10 或更高版本中，可使用:</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs awk"><span class="hljs-variable">$&#123;^PREMATCH&#125;</span> <span class="hljs-variable">$&#123;^MATCH&#125;</span> <span class="hljs-variable">$&#123;^POSTMATCH&#125;</span><br></code></pre></td></tr></table></figure>
+<h2 id="Precedence"><a href="#Precedence" class="headerlink" title="Precedence"></a>Precedence</h2><p>关于两个之间的结合。</p>
+<p>只有四个level.</p>
+<pre><code class="hljs">1.parentheses () 
+2.quantifier *, + and ?, &#123;n,m&#125;
+3.anchors and sequence \A, \Z, \z, ^, $, \b, \B
+4.vertical bar |
+5.so-called atoms
+</code></pre>
+<h2 id="A-Pattern-Test-Program"><a href="#A-Pattern-Test-Program" class="headerlink" title="A Pattern Test Program"></a>A Pattern Test Program</h2><figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">while</span> (&lt;&gt;) &#123;    <span class="hljs-comment"># take one input line at a time</span><br>  <span class="hljs-keyword">chomp</span>;<br>  <span class="hljs-keyword">if</span> (<span class="hljs-regexp">/YOUR_PATTERN_GOES_HERE/</span>) &#123;<br>     <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;Matched: |$上飘&lt;$&amp;&gt;$&#x27;|\n&quot;</span>;  <span class="hljs-comment"># the special match vars</span><br>  &#125; <span class="hljs-keyword">else</span> &#123;<br>    <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;No match: |$_|\n&quot;</span>;<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="Exercise-4"><a href="#Exercise-4" class="headerlink" title="Exercise"></a>Exercise</h2><h1 id="CHAPTER-9-Processing-Text-with-Regular-Expressions"><a href="#CHAPTER-9-Processing-Text-with-Regular-Expressions" class="headerlink" title="CHAPTER 9 Processing Text with Regular Expressions"></a>CHAPTER 9 Processing Text with Regular Expressions</h1><h2 id="Substitutions-with-s-x2F-x2F-x2F"><a href="#Substitutions-with-s-x2F-x2F-x2F" class="headerlink" title="Substitutions with s&#x2F;&#x2F;&#x2F;"></a>Substitutions with s&#x2F;&#x2F;&#x2F;</h2><p>This simply replaces whatever part of a variable matches the pattern with a replacement string.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl">$_ = <span class="hljs-string">&quot;He&#x27;s out bowing with Barney tonight.&quot;</span>;<br><span class="hljs-regexp">s/Barney/Fred/</span>;<br><span class="hljs-keyword">print</span> <span class="hljs-string">&quot;$_\n&quot;</span>;<br></code></pre></td></tr></table></figure>
+<p>Using Boolean value to judge:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs perl">$_ = <span class="hljs-string">&quot;fred flinnstone&quot;</span>;<br><span class="hljs-keyword">if</span> (<span class="hljs-regexp">s/fred/wilma/</span>) &#123;<br>   <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;Successfully rep;aced fred with wilma.&quot;</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="Globale-Replacements-with-x2F-g"><a href="#Globale-Replacements-with-x2F-g" class="headerlink" title="Globale Replacements with &#x2F;g"></a>Globale Replacements with &#x2F;g</h3><p>like:</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs less"><span class="hljs-selector-tag">s</span>/\<span class="hljs-selector-tag">A</span>\<span class="hljs-selector-tag">s</span>+|\<span class="hljs-selector-tag">s</span>+\<span class="hljs-selector-tag">z</span><span class="hljs-comment">//g</span><br></code></pre></td></tr></table></figure>
+<h3 id="Different-Delimiters"><a href="#Different-Delimiters" class="headerlink" title="Different Delimiters"></a>Different Delimiters</h3><p>Using <code>#</code> like:</p>
+<figure class="highlight 1c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs 1c">s<span class="hljs-meta">#\Ahttps:<span class="hljs-comment">//#http://#</span></span><br></code></pre></td></tr></table></figure>
+<p>使用成对的delimiters需分别括住:</p>
+<figure class="highlight dust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs dust"><span class="language-xml">s</span><span class="hljs-template-variable">&#123;fred&#125;</span><span class="hljs-template-variable">&#123;barney&#125;</span><span class="language-xml">;</span><br></code></pre></td></tr></table></figure>
+<h3 id="Nondestructive-Substitutions"><a href="#Nondestructive-Substitutions" class="headerlink" title="Nondestructive Substitutions"></a>Nondestructive Substitutions</h3><p>复制一份:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $original = <span class="hljs-string">&#x27;Fred ate 1 rid&#x27;</span>;<br><span class="hljs-keyword">my</span> $copy = $original;<br>$copy =~ <span class="hljs-regexp">s/\d+ ribs?/10 ribs/</span>;<br></code></pre></td></tr></table></figure>
+<p>Adding in Perl 5.14, 使用<code>\r</code>modifier可保留original strng alone and return a modified copy of it:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> v5.<span class="hljs-number">14</span>;<br><br><span class="hljs-keyword">my</span> $copy = $original =~ <span class="hljs-regexp">s/\d+ ribs?/10 ribs/r</span>;<br></code></pre></td></tr></table></figure>
+<p><code>=~</code> is higher precedence than the <code>=</code>.</p>
+<h3 id="Case-Shifting"><a href="#Case-Shifting" class="headerlink" title="Case Shifting"></a>Case Shifting</h3><p>Using <code>\U</code> forces what follows to all uppercase:</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs awk"><span class="hljs-variable">$_</span> = <span class="hljs-string">&quot;I saw Barney with Fred,&quot;</span>;<br>s<span class="hljs-regexp">/(fred|barney)/</span>\U<span class="hljs-variable">$1</span>/gi;<br></code></pre></td></tr></table></figure>
+<p>The <code>\L</code> escape forces lowercase.</p>
+<p>Turning off case shifting with <code>\E</code>.</p>
+<p>When written in lowercase (<code>\l</code> and <code>\u</code>), they affect only the next character,</p>
+<p>Using <code>\u</code> with <code>\L</code> means “all lowercase, but capitalize the first letter.”.</p>
+<p>These escape sequences are avaliable in any double-quotish string:</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs routeros"><span class="hljs-built_in">print</span> <span class="hljs-string">&quot;Hello, \L\u<span class="hljs-variable">$name</span>\E, would you like to play a game?\n&quot;</span>;<br></code></pre></td></tr></table></figure>
+<p>Functions <code>lc</code>, <code>uc</code>, <code>fc</code>, <code>lcfirst</code>, and <code>ucfirst</code>. like:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $start = <span class="hljs-string">&quot;Fred&quot;</span>;<br><span class="hljs-keyword">my</span> $uncapp = <span class="hljs-keyword">lc</span>( $start );<br></code></pre></td></tr></table></figure>
+<h3 id="Metaquoting"><a href="#Metaquoting" class="headerlink" title="Metaquoting"></a>Metaquoting</h3><p>太多的backslashes会很乱。Using <code>\Q</code>和<code>\E</code>.</p>
+<p><code>\Q</code> quote everything after it. 也可以用<code>quotemeta</code>function:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $profix = <span class="hljs-keyword">quotemeta</span>( $input_pattern );<br><span class="hljs-keyword">if</span> ( <span class="hljs-regexp">s/$prefix(Fred)/$1/</span> ) &#123;<br>  <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;Replaced $1\n&quot;</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="The-split-Operator"><a href="#The-split-Operator" class="headerlink" title="The split Operator"></a>The split Operator</h2><p>It looks like this:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> @field = <span class="hljs-keyword">split</span> <span class="hljs-regexp">/separator/</span>, $string;<br></code></pre></td></tr></table></figure>
+<p>就是根据指定的分隔符来分割。返回一个list.</p>
+<p>一个rule, leading empty fields are always returned, but trailing empty fields are discarded.</p>
+<p>if you want the trailing empty field, give splite a third argument of -1.</p>
+<p>The dafault for splite is to break up <code>$_</code> on whitespace:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> @fields = <span class="hljs-keyword">split</span>;<br></code></pre></td></tr></table></figure>
+<h2 id="The-join-Function"><a href="#The-join-Function" class="headerlink" title="The join Function"></a>The join Function</h2><p>The join function looks like this:</p>
+<p><code>join</code> 的第一个参数是string.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $result = <span class="hljs-keyword">join</span> $glue, @pieces;<br></code></pre></td></tr></table></figure>
+<p>用<code>$glue</code>中的内容来连接<code>@pieces</code>中的元素. 返回resulting string.</p>
+<p>Using <code>split</code> and <code>join</code> to work together.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> @values = <span class="hljs-keyword">split</span> <span class="hljs-regexp">/:/</span>, $x;<br><span class="hljs-keyword">my</span> $z = <span class="hljs-keyword">join</span> <span class="hljs-string">&quot;-&quot;</span>, @values;<br></code></pre></td></tr></table></figure>
+<h2 id="m-x2F-x2F-in-List-Context"><a href="#m-x2F-x2F-in-List-Context" class="headerlink" title="m&#x2F;&#x2F; in List Context"></a>m&#x2F;&#x2F; in List Context</h2><p>When a pattern match <code>m//</code> is used in a list context, the return value is a list of the capture variables created in the match, or an empty list if the match failed.</p>
+<p>返回捕获组。也可用于分离:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $text = <span class="hljs-string">&quot;Fred dropped a 5 ton granite block on Mr.Slate&quot;</span>;<br><span class="hljs-keyword">my</span> @words = ($text =~ <span class="hljs-regexp">/([a-z]+)/ig</span>);<br><span class="hljs-keyword">print</span> <span class="hljs-string">&quot;Result: @words\n&quot;</span>;<br></code></pre></td></tr></table></figure>
+<h2 id="More-Powerful-Regular-Expressions"><a href="#More-Powerful-Regular-Expressions" class="headerlink" title="More Powerful Regular Expressions"></a>More Powerful Regular Expressions</h2><h3 id="Nongreedy-Quantifier"><a href="#Nongreedy-Quantifier" class="headerlink" title="Nongreedy Quantifier"></a>Nongreedy Quantifier</h3><p>Adding <code>?</code> after the quantifier</p>
+<p>匹配as few as possible, like:</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs nginx"><span class="hljs-attribute">my</span> <span class="hljs-variable">$text</span> = <span class="hljs-string">&#x27;&lt;b&gt;Fred&lt;/b&gt; and &lt;b&gt;Barney&lt;/b&gt;&#x27;</span>;<br><span class="hljs-attribute">my</span> <span class="hljs-variable">$match_count</span> = <span class="hljs-variable">$text</span> =<span class="hljs-regexp">~ s|&lt;b&gt;(.*?)&lt;/b&gt;|\U<span class="hljs-variable">$1</span>|g</span>;<br><span class="hljs-attribute">print</span> <span class="hljs-string">&quot;<span class="hljs-variable">$match_count</span>: <span class="hljs-variable">$text</span>\n&quot;</span>;<br></code></pre></td></tr></table></figure>
+<p>会匹配到两个而不是一个.</p>
+<h3 id="Fancier-Word-Boundaries"><a href="#Fancier-Word-Boundaries" class="headerlink" title="Fancier Word Boundaries"></a>Fancier Word Boundaries</h3><p>Adding in Perl 5.22, adding curly braces to denote:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> v5.<span class="hljs-number">22</span>;<br><br><span class="hljs-keyword">my</span> $string = <span class="hljs-string">&quot;this doesn&#x27;t capitalize correctly.&quot;</span>;<br>$string =~ <span class="hljs-regexp">s/\b&#123;wb&#125;(\w)/\U$1/g</span>;<br><span class="hljs-keyword">print</span> <span class="hljs-string">&quot;$string\n&quot;</span>;<br></code></pre></td></tr></table></figure>
+<p><code>\b&#123;wb&#125;</code> 用于单词.<br><code>\b&#123;sb&#125;</code> 用于句号.<br><code>\b&#123;lb&#125;</code> knows where to insert the newlines.</p>
+<h3 id="Matching-Multiple-Line-Text"><a href="#Matching-Multiple-Line-Text" class="headerlink" title="Matching Multiple-Line Text"></a>Matching Multiple-Line Text</h3><p>Using <code>^</code> and <code>$</code> for whole string.</p>
+<p>Adding <code>\m</code> for one line.</p>
+<h3 id="Updating-Many-Files"><a href="#Updating-Many-Files" class="headerlink" title="Updating Many Files"></a>Updating Many Files</h3><p>Perl’s own <code>localtime</code> function.</p>
+<p>The special variable <code>$^I</code>. By default it’s undef, when there’s a string in <code>$^I</code>, that string is used as a backup filename’s extension. 即该字符串就会变成备份文件的扩展名，新的内容会output到以原来的文件名为名的文件中.</p>
+<p>Perl没有实际修改一个文件, 它创建了一个新文件并传入更新的内容.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-comment">#! /usr/bin/perl -w</span><br><br><span class="hljs-keyword">use</span> strict;<br><br><span class="hljs-keyword">chomp</span>(<span class="hljs-keyword">my</span> $date = <span class="hljs-string">`date`</span>);<br>$^I = <span class="hljs-string">&quot;.bak&quot;</span>;<br><br><span class="hljs-keyword">while</span> (&lt;&gt;) &#123;<br>  <span class="hljs-regexp">s/\AAuthor:.*/Author: Randal L. Schwartz/</span>;<br>  <span class="hljs-regexp">s/\APhone:.*\n//</span>;<br>  <span class="hljs-regexp">s/\ADate:.*/Date: $date/</span>;<br>  <span class="hljs-keyword">print</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="In-Place-Editing-from-the"><a href="#In-Place-Editing-from-the" class="headerlink" title="In-Place Editing from the"></a>In-Place Editing from the</h3><p>Some options:</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs routeros">-p    Telling Perl <span class="hljs-keyword">to</span> write a program <span class="hljs-keyword">for</span> you like:<br><span class="hljs-keyword">while</span> (&lt;&gt;) &#123;<br>   <span class="hljs-built_in">print</span> ;<br>&#125;<br><br>-n    Leaving out the automatic <span class="hljs-built_in">print</span> statement.<br><br>-i.bak    <span class="hljs-keyword">To</span> <span class="hljs-built_in">get</span> a backupfile, <span class="hljs-keyword">if</span> you don<span class="hljs-string">&#x27;t, using -i alone.</span><br><span class="hljs-string"></span><br><span class="hljs-string">-w    Turning on the warnings.</span><br><span class="hljs-string"></span><br><span class="hljs-string">-e    says &quot;executable code follows&quot; 代码会添加到print之前.</span><br></code></pre></td></tr></table></figure>
+<p>for example:</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs stylus">$ perl -<span class="hljs-selector-tag">p</span> -<span class="hljs-selector-tag">i</span><span class="hljs-selector-class">.bak</span> -w -e <span class="hljs-string">&#x27;s/Randall/Randal/g&#x27;</span> fred*.dat<br></code></pre></td></tr></table></figure>
+<h2 id="Exercise-5"><a href="#Exercise-5" class="headerlink" title="Exercise"></a>Exercise</h2><p>打开文件，需要判断是否成功打开。</p>
+<h1 id="CHAPTER-10-More-Control-Structures"><a href="#CHAPTER-10-More-Control-Structures" class="headerlink" title="CHAPTER 10 More Control Structures"></a>CHAPTER 10 More Control Structures</h1><h2 id="The-unless-Control-Structure"><a href="#The-unless-Control-Structure" class="headerlink" title="The unless Control Structure"></a>The unless Control Structure</h2><p>Executing a block of code only whe n the conditional is false:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">unless</span> ($fred =~ <span class="hljs-regexp">/\A[A-Z_]\w*\z/i</span>) &#123;<br>  <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;The value of ...&quot;</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="The-else-Clause-with-unless"><a href="#The-else-Clause-with-unless" class="headerlink" title="The else Clause with unless"></a>The else Clause with unless</h3><p>The syntax is:</p>
+<figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs lasso">unless () &#123;<br>  <span class="hljs-params">...</span><br>&#125; <span class="hljs-keyword">else</span> &#123;<br>  <span class="hljs-params">...</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="The-until-Control-Structure"><a href="#The-until-Control-Structure" class="headerlink" title="The until Control Structure"></a>The until Control Structure</h2><p>Revers  the condition of a while loop.</p>
+<figure class="highlight autoit"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs autoit"><span class="hljs-keyword">until</span> ($j &gt; $i) &#123;<br>  $j *= <span class="hljs-number">2</span><span class="hljs-comment">;</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="Statement-Modifiers"><a href="#Statement-Modifiers" class="headerlink" title="Statement Modifiers"></a>Statement Modifiers</h2><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs routeros"><span class="hljs-built_in">print</span> <span class="hljs-string">&quot;<span class="hljs-variable">$n</span> is a negative number.\n&quot;</span> <span class="hljs-keyword">if</span> <span class="hljs-variable">$n</span> &lt; 0; <br></code></pre></td></tr></table></figure>
+<p>Perl 还是会evaluated first.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs perl">&amp;error(<span class="hljs-string">&quot;Invalid input&quot;</span>) <span class="hljs-keyword">unless</span> &amp;valid($input);<br>$i *= <span class="hljs-number">2</span> <span class="hljs-keyword">until</span> $i &gt; $j;<br><span class="hljs-keyword">print</span> <span class="hljs-string">&quot; &quot;</span>, ($n += <span class="hljs-number">2</span>) <span class="hljs-keyword">while</span> $n &lt; <span class="hljs-number">10</span>;<br>&amp;greet($_) <span class="hljs-keyword">foreach</span> @person;<br></code></pre></td></tr></table></figure>
+<h2 id="The-Naked-Block-Control-Structure"><a href="#The-Naked-Block-Control-Structure" class="headerlink" title="The Naked Block Control Structure"></a>The Naked Block Control Structure</h2><p>The so-called “naked” block  is one without a keyword or condition.</p>
+<p>like:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs perl">&#123;<br>  <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;Please enter a number: &quot;</span>;<br>  <span class="hljs-keyword">chomp</span>(<span class="hljs-keyword">my</span> $n = &lt;STDIN&gt;);<br>  <span class="hljs-keyword">my</span> $root = <span class="hljs-keyword">sqrt</span> $n;<br>  <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;The square root of $n is $root.\n&quot;</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>不是loop，只运行一次.</p>
+<h2 id="The-elsif-Clause"><a href="#The-elsif-Clause" class="headerlink" title="The elsif Clause"></a>The elsif Clause</h2><figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">if</span> ( ! <span class="hljs-keyword">defined</span> $dino ) &#123;<br>  <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;The value is undef.\n&quot;</span>;<br>&#125; <span class="hljs-keyword">elsif</span> ($dino =~ <span class="hljs-regexp">/^-?\d+\.?$/</span>) &#123;<br>  <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;The value is an integer.\n&quot;</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="Autoincrement-and-Autodecrement"><a href="#Autoincrement-and-Autodecrement" class="headerlink" title="Autoincrement and Autodecrement"></a>Autoincrement and Autodecrement</h2><p>The autoincrement operator <code>++</code>.</p>
+<p>The autodecrement operator <code>--</code>.</p>
+<h2 id="The-for-Control-Structure"><a href="#The-for-Control-Structure" class="headerlink" title="The for Control Structure"></a>The for Control Structure</h2><p>like C:</p>
+<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs abnf">for (initialization<span class="hljs-comment">; test; increment) &#123;</span><br>body<span class="hljs-comment">;</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="The-Secret-Connection-Between-foreach-and-for"><a href="#The-Secret-Connection-Between-foreach-and-for" class="headerlink" title="The Secret Connection Between foreach and for"></a>The Secret Connection Between foreach and for</h2><p>Inside the Perl parser, the keyword foreach is exactly equivalent tp the keyword for.</p>
+<p>If it find semicolons, it’s the C-style for.</p>
+<h2 id="The-last-Operator"><a href="#The-last-Operator" class="headerlink" title="The last Operator"></a>The last Operator</h2><p>Like <code>break</code> operator in C.</p>
+<p>The last operator immediately ends execution of the loop.</p>
+<h2 id="The-next-Operator"><a href="#The-next-Operator" class="headerlink" title="The next Operator"></a>The next Operator</h2><p>Like <code>continue</code> operator in C.</p>
+<p>开始下一轮循环.</p>
+<h2 id="The-redo-Operator"><a href="#The-redo-Operator" class="headerlink" title="The redo Operator"></a>The redo Operator</h2><p>重新开始循环.</p>
+<h2 id="Labeled-Block"><a href="#Labeled-Block" class="headerlink" title="Labeled Block"></a>Labeled Block</h2><p>Lables in Perl are like other identifiers.</p>
+<p>Recommending to make them to be all uppercase.</p>
+<p>To lable a loop block, just put the label and a colon in front of the loop:</p>
+<figure class="highlight hsp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs hsp"><span class="hljs-keyword">LINE</span>: <span class="hljs-keyword">while</span> (&lt;&gt;) &#123;<br>  <span class="hljs-keyword">foreach</span> (<span class="hljs-keyword">split</span>) &#123;<br>    last <span class="hljs-keyword">LINE</span> <span class="hljs-keyword">if</span> /__END__/<span class="hljs-comment">;</span><br>    ...<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>You may use lable after <code>lasr</code>, <code>next</code>, or <code>redo</code>.</p>
+<h2 id="The-Conditional-Operator"><a href="#The-Conditional-Operator" class="headerlink" title="The Conditional Operator"></a>The Conditional Operator</h2><p>C语言有的东西，Perl基本上也有.</p>
+<p>The conditional operator: <code>?:</code>.</p>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs jboss-cli">expression ? <span class="hljs-keyword">if</span>_<span class="hljs-literal">true</span>_expr : <span class="hljs-keyword">if</span>_<span class="hljs-literal">false</span>_expr<br></code></pre></td></tr></table></figure>
+<h2 id="Logical-Operators"><a href="#Logical-Operators" class="headerlink" title="Logical Operators"></a>Logical Operators</h2><p>Logical AND operator <code>&amp;&amp;</code> and logical OR operator <code>||</code>.</p>
+<h2 id="The-Value-of-a-Short-Circuit-Operator"><a href="#The-Value-of-a-Short-Circuit-Operator" class="headerlink" title="The Value of a Short-Circuit Operator"></a>The Value of a Short-Circuit Operator</h2><p>Using logical OR operator to selecting a default value:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $last_name = $last_name&#123;$someone&#125; || <span class="hljs-string">&#x27;(No last name)&#x27;</span>;<br></code></pre></td></tr></table></figure>
+<h2 id="The-defined-or-Operator"><a href="#The-defined-or-Operator" class="headerlink" title="The defined-or Operator"></a>The defined-or Operator</h2><p>The defined-or operator <code>//</code>. Adding in perl 5.10:</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs awk">use v5.<span class="hljs-number">10</span>;<br><br>my <span class="hljs-variable">$last_name</span> = <span class="hljs-variable">$last_name</span>&#123;<span class="hljs-variable">$someone</span>&#125; <span class="hljs-regexp">//</span> <span class="hljs-string">&#x27;(No last name)&#x27;</span>;<br></code></pre></td></tr></table></figure>
+<p>Set a value when there isn’t one already:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> v5.<span class="hljs-number">10</span>;<br><span class="hljs-keyword">use</span> warning;<br><br><span class="hljs-keyword">my</span> $name;<br><span class="hljs-keyword">printf</span> <span class="hljs-string">&quot;%s&quot;</span>, $name // <span class="hljs-string">&#x27;&#x27;</span>;<br></code></pre></td></tr></table></figure>
+<h2 id="Control-Structure-Using-Partial-Evaluation-Operators"><a href="#Control-Structure-Using-Partial-Evaluation-Operators" class="headerlink" title="Control Structure Using Partial-Evaluation Operators"></a>Control Structure Using Partial-Evaluation Operators</h2><p><code>&amp;&amp;</code>, <code>||</code>, <code>//</code>, and <code>?:</code> are share a peculiar property: depending upon the value on the left side, they may or may not evaluate an expression. They are sometimes called partial-evaluation operator.</p>
+<h2 id="Exercise-6"><a href="#Exercise-6" class="headerlink" title="Exercise"></a>Exercise</h2><p>使用<code>say</code>函数要添加<code>use v5.10</code>.</p>
+<h1 id="CHAPTER-11-Perl-Modules"><a href="#CHAPTER-11-Perl-Modules" class="headerlink" title="CHAPTER 11 Perl Modules"></a>CHAPTER 11 Perl Modules</h1><h2 id="Finding-Modules"><a href="#Finding-Modules" class="headerlink" title="Finding Modules"></a>Finding Modules</h2><p>Modules come in two types:</p>
+<pre><code class="hljs">  1. Come with Perl
+  2. Get from CAPN
+  3. Vendor modules
+</code></pre>
+<h3 id="Check-if-it-is-already-installed"><a href="#Check-if-it-is-already-installed" class="headerlink" title="Check if it is already installed"></a>Check if it is already installed</h3><p>One way, read with <code>perldoc</code>:</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs elixir"><span class="hljs-variable">$ </span>perldoc <span class="hljs-title class_">Digest</span>::<span class="hljs-title class_">SHA</span><br></code></pre></td></tr></table></figure>
+<h3 id="Give-details-on-a-module"><a href="#Give-details-on-a-module" class="headerlink" title="Give details on a module"></a>Give details on a module</h3><p>Using <code>capn</code> command:</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs elixir"><span class="hljs-variable">$ </span>cpan -D <span class="hljs-title class_">Digest</span>::<span class="hljs-title class_">SHA</span><br></code></pre></td></tr></table></figure>
+<h2 id="Install-Modules"><a href="#Install-Modules" class="headerlink" title="Install Modules"></a>Install Modules</h2><p>If you use <code>ExtUtils::MakeMaker</code>.</p>
+<figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs crystal"><span class="hljs-variable">$ </span>perl Makefile.PL<br><span class="hljs-variable">$ </span>make install<br></code></pre></td></tr></table></figure>
+<p>Special another directory with an <code>INSTALL_BASE</code> argument to Makefile.PL:</p>
+<figure class="highlight arcade"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs arcade">$ perl Makefile.PL INSTALL_BASE=<span class="hljs-regexp">/Users/</span>fred/lib<br></code></pre></td></tr></table></figure>
+
+<p>Using another module <code>Module::Build</code></p>
+<figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs crystal"><span class="hljs-variable">$ </span>perl Build.PL<br><span class="hljs-variable">$ </span>./Build install<br></code></pre></td></tr></table></figure>
+<p>Specify an alternate installation directory:</p>
+<figure class="highlight arcade"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs arcade">$ perl Build.PL --install_base=<span class="hljs-regexp">/Users/</span>fred/lib<br></code></pre></td></tr></table></figure>
+
+<p>The <code>.pm</code> file extension stands for “Perl Module”.</p>
+<p>启用perl自己的shell来满足依赖:</p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs vim">$ <span class="hljs-keyword">perl</span> -MCPAN -<span class="hljs-keyword">e</span> <span class="hljs-keyword">shell</span><br></code></pre></td></tr></table></figure>
+
+<p>使用<code>cpan</code>来下载, 后面跟模块:</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs elixir"><span class="hljs-variable">$ </span>cpan <span class="hljs-title class_">Module</span>::<span class="hljs-title class_">CoreList</span> <span class="hljs-title class_">LWP</span> <span class="hljs-title class_">CGI</span>::<span class="hljs-title class_">Prototype</span><br></code></pre></td></tr></table></figure>
+
+<p>使用 Perl Package Manager (PPM) 来下载:</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs elixir"><span class="hljs-variable">$ </span>ppm time::<span class="hljs-title class_">Moment</span><br></code></pre></td></tr></table></figure>
+
+<p>使用<code>cpanm</code>(for cpanminus):</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs elixir"><span class="hljs-variable">$ </span>cpanm <span class="hljs-title class_">DBI</span> <span class="hljs-title class_">WWW</span>::<span class="hljs-title class_">Mechanize</span><br></code></pre></td></tr></table></figure>
+<h2 id="Using-Your-Own-Directories"><a href="#Using-Your-Own-Directories" class="headerlink" title="Using Your Own Directories"></a>Using Your Own Directories</h2><p>Using <code>local::lib</code>.</p>
+<p>To see what they set by loading the module on the command line:</p>
+<figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs crystal"><span class="hljs-variable">$ </span>perl -<span class="hljs-symbol">Mlocal:</span>:<span class="hljs-class"><span class="hljs-keyword">lib</span></span><br></code></pre></td></tr></table></figure>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Perl/" class="category-chain-item">Perl</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Learning Perl Notes</div>
+      <div>http://example.com/2022/07/04/Learning-Perl-Notes/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>John Doe</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2022年7月4日</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>许可协议</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/07/05/%E5%88%BB%E6%84%8F%E7%BB%83%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="刻意练习笔记">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">刻意练习笔记</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/07/04/Learn-Vim-On-Github/" title="Learn-Vim-On-Github">
+                        <span class="hidden-mobile">Learn-Vim-On-Github</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

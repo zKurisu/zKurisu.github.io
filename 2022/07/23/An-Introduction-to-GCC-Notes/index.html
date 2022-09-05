@@ -1,0 +1,767 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="John Doe">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="Chapter 1: IntroductionChapter 2: Compiling a C programThe -o option is usually given as the last argument on the command line. If the -o option is omitted, the output is written to a default file cal">
+<meta property="og:type" content="article">
+<meta property="og:title" content="An Introduction to GCC Notes">
+<meta property="og:url" content="http://example.com/2022/07/23/An-Introduction-to-GCC-Notes/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="Chapter 1: IntroductionChapter 2: Compiling a C programThe -o option is usually given as the last argument on the command line. If the -o option is omitted, the output is written to a default file cal">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-07-23T01:48:14.000Z">
+<meta property="article:modified_time" content="2022-09-04T09:19:36.029Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>An Introduction to GCC Notes - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Jie</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/SteinsGate_all.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="An Introduction to GCC Notes"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-07-23 09:48" pubdate>
+          2022年7月23日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          8.8k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          74 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">An Introduction to GCC Notes</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="Chapter-1-Introduction"><a href="#Chapter-1-Introduction" class="headerlink" title="Chapter 1: Introduction"></a>Chapter 1: Introduction</h1><h1 id="Chapter-2-Compiling-a-C-program"><a href="#Chapter-2-Compiling-a-C-program" class="headerlink" title="Chapter 2: Compiling a C program"></a>Chapter 2: Compiling a C program</h1><p>The <code>-o</code> option is usually given as the last argument on the command line.</p>
+<p>If the <code>-o</code> option is omitted, the output is written to a default file called ‘a.out’.</p>
+<p>Always using <code>-Wall</code> option.</p>
+<p>The messages produced by GCC always have th  form:</p>
+<figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs livecodeserver"><span class="hljs-built_in">file</span>:<span class="hljs-built_in">line</span>-<span class="hljs-built_in">number</span>:message<br></code></pre></td></tr></table></figure>
+<p>The linker fills in these missing addresses when it produces the executable.</p>
+<h3 id="2-4-1-Creating-object-file-from-source-files"><a href="#2-4-1-Creating-object-file-from-source-files" class="headerlink" title="2.4.1 Creating object file from source files"></a>2.4.1 Creating object file from source files</h3><p>The command-line option <code>-c</code> is used to compile a source file to an object file.</p>
+<h3 id="2-4-2-Creating-executables-from-object-files"><a href="#2-4-2-Creating-executables-from-object-files" class="headerlink" title="2.4.2 Creating executables from object files"></a>2.4.2 Creating executables from object files</h3><p>Use gcc to link the object files together and fill in the missing addresse of external functions.</p>
+<p>A separate program, linker ld.</p>
+<h3 id="2-4-3-Link-order-of-object-files"><a href="#2-4-3-Link-order-of-object-files" class="headerlink" title="2.4.3 Link order of object files"></a>2.4.3 Link order of object files</h3><p>The object file which contains the definition of a function should appear after any files which call that function.</p>
+<h2 id="2-5-Recompiling-and-relinking"><a href="#2-5-Recompiling-and-relinking" class="headerlink" title="2.5 Recompiling and relinking"></a>2.5 Recompiling and relinking</h2><p>Linking is faster than compilation.</p>
+<h2 id="2-6-Linking-with-external-libraries"><a href="#2-6-Linking-with-external-libraries" class="headerlink" title="2.6 Linking with external libraries"></a>2.6 Linking with external libraries</h2><p>A library is a collection of precompiled object files which can be linked into programs.</p>
+<p>Libraries are typically stored in special archive files with the extension <code>.a</code>, refferred to as static libraries.</p>
+<p>They are created from object files with a saparate tool, <mark>the GNU archiver ar</mark>, and used by the linker to resolve references to functions at compile-time.</p>
+<p>The standard system libraries are usually found in the directories <code>/usr/lib</code> and <code>/lib</code>.</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs awk">$ gcc -Wall calc.c <span class="hljs-regexp">/usr/</span>lib/libm.a -o calc<br></code></pre></td></tr></table></figure>
+<p>The library <code>libm.a</code> contains object files for all the mathematical functions.</p>
+<p>使用缩写, the compiler option <code>-lNAME</code> will attempt to link object files with a library file <code>libNAME.a</code> in the standard library directories.</p>
+<figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs crystal"><span class="hljs-variable">$ </span>gcc -Wall calc.c -lm -o calc<br></code></pre></td></tr></table></figure>
+<h3 id="2-6-1-Link-order-of-libraries"><a href="#2-6-1-Link-order-of-libraries" class="headerlink" title="2.6.1 Link order of libraries"></a>2.6.1 Link order of libraries</h3><p>Searching from left to right. 左边缺少的到右边找。</p>
+<h2 id="2-7-Using-library-header-files"><a href="#2-7-Using-library-header-files" class="headerlink" title="2.7 Using library header files"></a>2.7 Using library header files</h2><p>In order to declare function arguments and return values with the correct types. 没有声明，参数的类型会出错。</p>
+<h1 id="Chapter-3-Compilation-options"><a href="#Chapter-3-Compilation-options" class="headerlink" title="Chapter 3: Compilation options"></a>Chapter 3: Compilation options</h1><p>By default, gcc searches the following directories for header files:</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs gradle"><span class="hljs-regexp">/usr/</span>local/<span class="hljs-keyword">include</span><br><span class="hljs-regexp">/usr/i</span>nclude<br></code></pre></td></tr></table></figure>
+<p>For libraries:</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs awk"><span class="hljs-regexp">/usr/</span>local/lib<br><span class="hljs-regexp">/usr/</span>lib<br></code></pre></td></tr></table></figure>
+<p>Local 的优先级更高。</p>
+<p>You should never place the absolute paths of header files in <code>#include</code> statement.</p>
+<p><code>-I</code> option or <code>INCLUDE_PATH</code> variable. 可指定额外的<code>#include</code> 路径。</p>
+<p><code>-L</code> option or <code>LIBRARY_PATH</code> variable. 可指定额外的 link path.</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs awk">$ gcc -Wall -I<span class="hljs-regexp">/opt/g</span>dbm-<span class="hljs-number">1.8</span>.<span class="hljs-number">3</span><span class="hljs-regexp">/include -L/</span>opt<span class="hljs-regexp">/gdbm-1.8.3/</span>lib demain.c -lgdbm<br></code></pre></td></tr></table></figure>
+<p>若设置了<code>C_INCLUDE_PATH</code> 或 <code>CPLUS_INCLUDE_PATH</code> 或 <code>LIBRARY_PATH</code> 就不用使用<code>-I</code>和<code>-L</code>选项。</p>
+<h3 id="3-1-3-Extended-search-paths"><a href="#3-1-3-Extended-search-paths" class="headerlink" title="3.1.3 Extended search paths"></a>3.1.3 Extended search paths</h3><figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs css">DIR1<span class="hljs-selector-pseudo">:DIR</span>2<span class="hljs-selector-pseudo">:DIR</span>3:...<br></code></pre></td></tr></table></figure>
+<p>or</p>
+<figure class="highlight armasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs armasm">$ gcc -I. -I/<span class="hljs-meta">opt</span>/<span class="hljs-meta">include</span><br></code></pre></td></tr></table></figure>
+<p>多次使用<code>-I</code> or <code>-L</code>.</p>
+<p>查找顺序:</p>
+<pre><code class="hljs">1. command-line option `-I` and `-L`, from left to right
+2. directories specified by environment variables, such as C_INLUDE_PATH and LIBRARY_PATH
+3. default system directories
+</code></pre>
+<h2 id="3-2-Shared-libraries-and-static-libraries"><a href="#3-2-Shared-libraries-and-static-libraries" class="headerlink" title="3.2 Shared libraries and static libraries"></a>3.2 Shared libraries and static libraries</h2><p>External libraries are usually provided in two forms:</p>
+<pre><code class="hljs">1. static libraries, &#39;.a&#39; file
+2. shared libries, &#39;.so&#39; file
+</code></pre>
+<p>Dynamic linking makes executable files smaller and saves disk space.</p>
+<p>shared libraries 比 static library 更好。</p>
+<p>Shared object file is used in preference to the static library.</p>
+<p>static library 包含所有的function的machine code, 而 shared object file 只包含一部分。</p>
+<p>By default, the loader searches for shared libraries only in a predefined set of system deirectories.</p>
+<p>Setting load path: use variable <code>LD_LIBRARY_PATH</code></p>
+<p>Adding new:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">LD_LIBRARY_PATH=/opt/gdbm-1.8.3/lib:<span class="hljs-variable">$LD_LIBRARY_PATH</span></span><br></code></pre></td></tr></table></figure>
+
+<p>Option <code>-static</code> to avoid using shared library.</p>
+<h2 id="3-3-C-language-standards"><a href="#3-3-C-language-standards" class="headerlink" title="3.3 C language standards"></a>3.3 C language standards</h2><p>Controling the dialect of C, use <code>-ansi</code> and <code>-pedantic</code>.</p>
+<p>针对与C版本之间的差异。</p>
+<h3 id="3-3-1-ANSI-x2F-ISO"><a href="#3-3-1-ANSI-x2F-ISO" class="headerlink" title="3.3.1 ANSI&#x2F;ISO"></a>3.3.1 ANSI&#x2F;ISO</h3><p>A valid ANSI&#x2F;ISO program may be incompatible with the extention in GNU C.</p>
+<p><code>_GNU_SOURCE</code>, which enable extensions in the GNU C library.</p>
+<figure class="highlight gams"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs gams"><span class="hljs-symbol">$</span> gcc -Wall -ansi -D_GNU_SOURCE <span class="hljs-built_in">pi</span>.c<br></code></pre></td></tr></table></figure>
+<h3 id="3-3-3-Selecting-special-standards"><a href="#3-3-3-Selecting-special-standards" class="headerlink" title="3.3.3 Selecting special standards"></a>3.3.3 Selecting special standards</h3><p>The special language standard used by GCC can be controled with the ‘-std’ option.</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ini"><span class="hljs-attr">-std</span>=c99<br></code></pre></td></tr></table></figure>
+<h2 id="3-4-Warning-options-in-Wall"><a href="#3-4-Warning-options-in-Wall" class="headerlink" title="3.4 Warning options in -Wall"></a>3.4 Warning options in -Wall</h2><p>Warning options can also be selected individually. 如:</p>
+<figure class="highlight diff"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs diff"><span class="hljs-deletion">-Wcomment</span><br><br><span class="hljs-deletion">-Wformat</span><br><br>...<br></code></pre></td></tr></table></figure>
+<h2 id="3-5-Additional-warning-options"><a href="#3-5-Additional-warning-options" class="headerlink" title="3.5 Additional warning options"></a>3.5 Additional warning options</h2><p><code>-W</code> a general option similar to <code>-Wall</code>.</p>
+<h1 id="4-Using-the-preprocessor"><a href="#4-Using-the-preprocessor" class="headerlink" title="4 Using the preprocessor"></a>4 Using the preprocessor</h1><p>The GNU C preprocessor cpp.</p>
+<p>It expands macros in source files before they are compiled.</p>
+<h2 id="4-1-Defining-macro"><a href="#4-1-Defining-macro" class="headerlink" title="4.1 Defining macro"></a>4.1 Defining macro</h2><p>The gcc option <code>-DNAME</code> defines a preprocessor macro NAME from the command line.</p>
+<figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs crystal"><span class="hljs-variable">$ </span>gcc -Wall -DTEST dtest.c<br></code></pre></td></tr></table></figure>
+<p>gcc 自动定义的 macro, with a double-underscore prefix <code>__</code>:</p>
+<p>查看:</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs gradle">$ cpp -dM <span class="hljs-regexp">/dev/</span><span class="hljs-keyword">null</span><br></code></pre></td></tr></table></figure>
+<h2 id="4-2-Macro-with-values"><a href="#4-2-Macro-with-values" class="headerlink" title="4.2 Macro with values"></a>4.2 Macro with values</h2><p><code>-DNAME=VALUE</code>:</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs routeros">$ gcc -Wall <span class="hljs-attribute">-DNUM</span>=100 dtestval.c<br></code></pre></td></tr></table></figure>
+<p>It is a good idea to surround macros by parenthesses.</p>
+<p>When a macro is defined with <code>-D</code> alone, gcc used a default value of 1.</p>
+<p>Empty value:</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ini"><span class="hljs-attr">-DNAME</span>=<span class="hljs-string">&quot;&quot;</span><br></code></pre></td></tr></table></figure>
+<p>Define a macro message:</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ini"><span class="hljs-attr">-DNAME</span>=<span class="hljs-string">&quot;\&quot;Hello, World!\&quot;&quot;</span><br></code></pre></td></tr></table></figure>
+<h2 id="4-3-Preprocessing-source-files"><a href="#4-3-Preprocessing-source-files" class="headerlink" title="4.3 Preprocessing source files"></a>4.3 Preprocessing source files</h2><p>To see the effect of the preprocessor on source file directly, using the <code>-E</code> option.</p>
+<p><code>-save-temps</code> option, the preprocessed output will be available in the file <code>hello.i</code>.</p>
+<h1 id="5-Compiling-for-debugging"><a href="#5-Compiling-for-debugging" class="headerlink" title="5 Compiling for debugging"></a>5 Compiling for debugging</h1><p><code>-g</code> option to store additional debugging information in object files and executables.</p>
+<p>GNU Debugger gdb.</p>
+<p>Storing the names of functions and variables, with their corresponding source code line-numbers.</p>
+<h2 id="5-1-Examining-core-files"><a href="#5-1-Examining-core-files" class="headerlink" title="5.1 Examining core files"></a>5.1 Examining core files</h2><p>The core file can be used to find the line where the program stopped, and the values of its variables at that point.</p>
+<p>A null pointer will only cause a problem at run-time, so the option <code>-Wall</code> does not produce any warning.</p>
+<p>Whenever the error message <code>core dumped</code> is displayed, the operating system should produce a file called <code>core</code> in the current directory.</p>
+<p>The term <code>segmentation fault</code> refers to the fact that the program tried to access a restricted memory <code>segment</code> outside the area of memory which had been allocated to it.</p>
+<p>In the GNU Bash shell the command <code>ulimit -c</code> control the maximum size of core files.</p>
+<p>Any size to be written:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash"><span class="hljs-built_in">ulimit</span> -c unlimited</span><br></code></pre></td></tr></table></figure>
+<p>only apply to the current shell.</p>
+<p>Loading the core file into the GNU Debugger gdb:</p>
+<figure class="highlight gams"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs gams"><span class="hljs-symbol">$</span> gdb EXEECUTABLE-<span class="hljs-keyword">FILE</span> CORE-<span class="hljs-keyword">FILE</span><br></code></pre></td></tr></table></figure>
+<p>both the original executable file and the core file are required for debugging.</p>
+<h1 id="6-Compiling-with-optimization"><a href="#6-Compiling-with-optimization" class="headerlink" title="6 Compiling with optimization"></a>6 Compiling with optimization</h1><h2 id="6-1-Source-level-optimization"><a href="#6-1-Source-level-optimization" class="headerlink" title="6.1 Source-level optimization"></a>6.1 Source-level optimization</h2><p>Two type:</p>
+<pre><code class="hljs">- common subexpression elimination
+- function inlining
+</code></pre>
+<h3 id="6-1-1-Common-subexpression-elimination"><a href="#6-1-1-Common-subexpression-elimination" class="headerlink" title="6.1.1 Common subexpression elimination"></a>6.1.1 Common subexpression elimination</h3><p>Reusing already-computed results.<br>如:</p>
+<figure class="highlight lisp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lisp">x = cos(<span class="hljs-name">v</span>)*(<span class="hljs-number">1</span>+sin(<span class="hljs-name">u/2</span>)) + sin(<span class="hljs-name">w</span>)*(<span class="hljs-number">1</span>-sin(<span class="hljs-name">u/2</span>))<br></code></pre></td></tr></table></figure>
+<p>重写为:</p>
+<figure class="highlight excel"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs excel"><span class="hljs-built_in">t</span> = <span class="hljs-built_in">sin</span>(u/<span class="hljs-number">2</span>);<br>x = <span class="hljs-built_in">cos</span>(v)*(<span class="hljs-number">1</span>+<span class="hljs-built_in">t</span>) + <span class="hljs-built_in">sin</span>(w)*(<span class="hljs-number">1</span>-<span class="hljs-built_in">t</span>);<br></code></pre></td></tr></table></figure>
+<p>可以 increase the speed and reduces the size of the code.</p>
+<h3 id="6-1-2-Function-inlining"><a href="#6-1-2-Function-inlining" class="headerlink" title="6.1.2 Function inlining"></a>6.1.2 Function inlining</h3><p>Increase the efficiency of frequently-called functions.</p>
+<p>Replacing calls to a function by the code of the function itself.</p>
+<p>Eliminating the function call.</p>
+<p>The function being suitably small.</p>
+<h2 id="6-2-Speed-space-tradeoffs"><a href="#6-2-Speed-space-tradeoffs" class="headerlink" title="6.2 Speed-space tradeoffs"></a>6.2 Speed-space tradeoffs</h2><p>Choose between speed and memory is referred to as speed-space tradeoffs.</p>
+<h3 id="6-2-1-Loop-unrolling"><a href="#6-2-1-Loop-unrolling" class="headerlink" title="6.2.1 Loop unrolling"></a>6.2.1 Loop unrolling</h3><p>将循环拆开，这样可以减少测试的时间:</p>
+<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs abnf">for(i <span class="hljs-operator">=</span> <span class="hljs-number">0</span><span class="hljs-comment">; i &lt; 8; i++) &#123;</span><br>  y[i] <span class="hljs-operator">=</span> i<span class="hljs-comment">;</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<p>改为:</p>
+<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs abnf">y[<span class="hljs-number">0</span>] <span class="hljs-operator">=</span> <span class="hljs-number">0</span><span class="hljs-comment">;</span><br>y[<span class="hljs-number">1</span>] <span class="hljs-operator">=</span> <span class="hljs-number">1</span><span class="hljs-comment">;</span><br>y[<span class="hljs-number">2</span>] <span class="hljs-operator">=</span> <span class="hljs-number">2</span><span class="hljs-comment">;</span><br>y[<span class="hljs-number">3</span>] <span class="hljs-operator">=</span> <span class="hljs-number">3</span><span class="hljs-comment">;</span><br>y[<span class="hljs-number">4</span>] <span class="hljs-operator">=</span> <span class="hljs-number">4</span><span class="hljs-comment">;</span><br>y[<span class="hljs-number">5</span>] <span class="hljs-operator">=</span> <span class="hljs-number">5</span><span class="hljs-comment">;</span><br>y[<span class="hljs-number">6</span>] <span class="hljs-operator">=</span> <span class="hljs-number">6</span><span class="hljs-comment">;</span><br>y[<span class="hljs-number">7</span>] <span class="hljs-operator">=</span> <span class="hljs-number">7</span><span class="hljs-comment">;</span><br></code></pre></td></tr></table></figure>
+<h2 id="6-3-Scheduling"><a href="#6-3-Scheduling" class="headerlink" title="6.3 Scheduling"></a>6.3 Scheduling</h2><p>The results become available to later instructions at the right time.</p>
+<h2 id="6-4-Optimization-levels"><a href="#6-4-Optimization-levels" class="headerlink" title="6.4 Optimization levels"></a>6.4 Optimization levels</h2><p>Numbered from 0-3.</p>
+<p>The command line option <code>-oLEVEL</code>.</p>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs pgsql"><span class="hljs-string">&#x27;-o0&#x27;</span> <span class="hljs-keyword">or</span> <span class="hljs-keyword">no</span> <span class="hljs-string">&#x27;-o&#x27;</span>, <span class="hljs-keyword">default</span>: <span class="hljs-keyword">perform</span> <span class="hljs-keyword">no</span> optimization.<br><br> <span class="hljs-string">&#x27;-o1&#x27;</span> <span class="hljs-keyword">or</span> <span class="hljs-string">&#x27;-o&#x27;</span>, <span class="hljs-keyword">do</span> <span class="hljs-keyword">not</span> require <span class="hljs-keyword">any</span> speed-space tradeoffs, smaller <span class="hljs-keyword">and</span> faster than <span class="hljs-keyword">with</span> <span class="hljs-string">&#x27;-o0&#x27;</span><br><br> <span class="hljs-string">&#x27;-o2&#x27;</span>, it provide maximum optimization <span class="hljs-keyword">without</span> increasing the executable size.<br><br> <span class="hljs-string">&#x27;-o3&#x27;</span>, may increase the speed but increase the size.<br><br> <span class="hljs-string">&#x27;-funroll-loops&#x27;</span>, turns <span class="hljs-keyword">on</span> <span class="hljs-keyword">loop</span>-unrolling.<br><br> <span class="hljs-string">&#x27;-os&#x27;</span>, produce the smallest possible executable.<br></code></pre></td></tr></table></figure>
+<p>The cost of optimization includes greater complexity in debugging, and increased time and memory requirements during compilation.</p>
+<h2 id="6-5-Examples"><a href="#6-5-Examples" class="headerlink" title="6.5 Examples"></a>6.5 Examples</h2><p>The run-time of the program can be measured using the <code>time</code> command in the GNU Bash shell.</p>
+<figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs crystal"><span class="hljs-variable">$ </span>time ./a.<span class="hljs-keyword">out</span><br></code></pre></td></tr></table></figure>
+<p>Optimizations may not necessarity make a program faster in every case.</p>
+<h2 id="6-6-Optimization-and-debugging"><a href="#6-6-Optimization-and-debugging" class="headerlink" title="6.6 Optimization and debugging"></a>6.6 Optimization and debugging</h2><h2 id="6-7-Optimization-and-compiler-warning"><a href="#6-7-Optimization-and-compiler-warning" class="headerlink" title="6.7 Optimization and compiler warning"></a>6.7 Optimization and compiler warning</h2><p><code>-Wall</code> 应该看成，<code>-W</code> 和 <code>all</code>.</p>
+<h1 id="7-Compiling-a-C-program"><a href="#7-Compiling-a-C-program" class="headerlink" title="7 Compiling a C++ program"></a>7 Compiling a C++ program</h1><p>It compiles C++ source code directly into assembly language.</p>
+<h2 id="7-1-Compiling-a-simple-C-program"><a href="#7-1-Compiling-a-simple-C-program" class="headerlink" title="7.1 Compiling a simple C++ program"></a>7.1 Compiling a simple C++ program</h2><p>Using <code>g++</code> instead of <code>gcc</code>.<br>p56</p>
+<h1 id="9-Troubleshooting"><a href="#9-Troubleshooting" class="headerlink" title="9 Troubleshooting"></a>9 Troubleshooting</h1><p>To display a complete list of options for gcc and its associated program:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">gcc -v --<span class="hljs-built_in">help</span></span><br></code></pre></td></tr></table></figure>
+<h1 id="10-Compiler-related-tools"><a href="#10-Compiler-related-tools" class="headerlink" title="10 Compiler-related tools"></a>10 Compiler-related tools</h1><p>GNU archiver <mark>ar</mark>, for creating libaries, and the GNU profiling and coverage testing programs, <mark>gprof</mark> and <mark>gcov</mark>.</p>
+<h2 id="10-1-Creating-a-library-with-the-GNU-archiver"><a href="#10-1-Creating-a-library-with-the-GNU-archiver" class="headerlink" title="10.1 Creating a library with the GNU archiver"></a>10.1 Creating a library with the GNU archiver</h2><p>Combining a collection of object files into a single archive file.</p>
+<figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs livecodeserver">$ ar <span class="hljs-literal">cr</span> libhello.<span class="hljs-keyword">a</span> hello_fn.o bye_fn.o<br></code></pre></td></tr></table></figure>
+<p>The option <code>cr</code> stands for “create and replace”. ar does not require a prefix ‘-‘ for its options.</p>
+<p>The first argument ‘libhello.a’ is the name of the library, The remaining arguments are the name of the object files to be copied into the library.</p>
+<p>option <code>t</code>, list the object file in an existing library:</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs stylus">$ ar t libhello<span class="hljs-selector-class">.a</span><br>hello_fn<span class="hljs-selector-class">.o</span><br>bye_fn.o<br></code></pre></td></tr></table></figure>
+<h2 id="10-2-Using-the-profiler-gprof"><a href="#10-2-Using-the-profiler-gprof" class="headerlink" title="10.2 Using the profiler gprof"></a>10.2 Using the profiler gprof</h2><p>Measuring the performance of a program.</p>
+<p>To use profiling, the program must be compiled and linked with the <code>-pg</code> profiling option:</p>
+<figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs crystal"><span class="hljs-variable">$ </span>gcc -Wall -c -pg collatz.c<br><span class="hljs-variable">$ </span>gcc -Wall -pg collatz.o<br></code></pre></td></tr></table></figure>
+<p>If the program consists of more than one source file then the ‘-pg’ option should be used when compiling each source file, and used again when linking the object files to create the final executable.</p>
+<p>The executable must be run to create the profiling data:</p>
+<figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs crystal"><span class="hljs-variable">$ </span>./a.<span class="hljs-keyword">out</span><br></code></pre></td></tr></table></figure>
+<h2 id="10-3-Converage-testing-with-gcov"><a href="#10-3-Converage-testing-with-gcov" class="headerlink" title="10.3 Converage testing with gcov"></a>10.3 Converage testing with gcov</h2><p>It analyses the number of times each line of a program is executed during a run.</p>
+<p>To find areas of the code which are not used, or which are not exercised in testing.</p>
+<h1 id="11-How-the-compiler-works"><a href="#11-How-the-compiler-works" class="headerlink" title="11 How the compiler works"></a>11 How the compiler works</h1><p>The GNU Compiler, gcc or g++.</p>
+<p>The GNU Assembler, as.</p>
+<p>The GNU Linker, ld.</p>
+<h2 id="11-1-An-overview-of-the-compilation-process"><a href="#11-1-An-overview-of-the-compilation-process" class="headerlink" title="11.1 An overview of the compilation process"></a>11.1 An overview of the compilation process</h2><p>The following stages:</p>
+<pre><code class="hljs">- preprocessing (to expand macros)
+- compilation (from source code to assembly language)
+- assembly (from assembly language to machine code)
+- linking (to create the final executable)
+</code></pre>
+<p>Can be seen using the ‘-v’ option described earlier.</p>
+<h2 id="11-2-The-preprocessor"><a href="#11-2-The-preprocessor" class="headerlink" title="11.2 The preprocessor"></a>11.2 The preprocessor</h2><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs powershell"><span class="hljs-variable">$</span> <span class="hljs-built_in">cpp</span> hello.c &gt; hello.i<br></code></pre></td></tr></table></figure>
+<h2 id="11-3-The-compiler"><a href="#11-3-The-compiler" class="headerlink" title="11.3 The compiler"></a>11.3 The compiler</h2><figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs crystal"><span class="hljs-variable">$ </span>gcc -Wall -S hello.i<br></code></pre></td></tr></table></figure>
+<h2 id="11-4-The-assembler"><a href="#11-4-The-assembler" class="headerlink" title="11.4 The assembler"></a>11.4 The assembler</h2><p>Convert assembly language into machine code and generate an object file.</p>
+<p>When there are calls to external functions in the assembly source file, the assembler leaves the addresses of the external functions undefined.</p>
+<figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs crystal"><span class="hljs-variable">$ </span><span class="hljs-keyword">as</span> hello.s -o hello.o<br></code></pre></td></tr></table></figure>
+<h2 id="11-5-The-linker"><a href="#11-5-The-linker" class="headerlink" title="11.5 The linker"></a>11.5 The linker</h2><p>The linking of object files to create an executable.</p>
+<p>The entire linking process is handled transparently by gcc when invoked as follows:</p>
+<figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs crystal"><span class="hljs-variable">$ </span>gcc hello.o<br></code></pre></td></tr></table></figure>
+<h1 id="12-Examining-compiled-files"><a href="#12-Examining-compiled-files" class="headerlink" title="12 Examining compiled files"></a>12 Examining compiled files</h1><h2 id="12-1-Identifying-files"><a href="#12-1-Identifying-files" class="headerlink" title="12.1 Identifying files"></a>12.1 Identifying files</h2><figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs crystal"><span class="hljs-variable">$ </span>file a.<span class="hljs-keyword">out</span><br></code></pre></td></tr></table></figure>
+<h2 id="12-2-Examining-the-symble-table"><a href="#12-2-Examining-the-symble-table" class="headerlink" title="12.2 Examining the symble table"></a>12.2 Examining the symble table</h2><figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs crystal"><span class="hljs-variable">$ </span>nm a.<span class="hljs-keyword">out</span><br></code></pre></td></tr></table></figure>
+<h2 id="12-3-Finding-dynamically-linked-libraries"><a href="#12-3-Finding-dynamically-linked-libraries" class="headerlink" title="12.3 Finding dynamically linked libraries"></a>12.3 Finding dynamically linked libraries</h2><figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs crystal"><span class="hljs-variable">$ </span>ldd a.<span class="hljs-keyword">out</span><br></code></pre></td></tr></table></figure>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/GCC/" class="category-chain-item">GCC</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>An Introduction to GCC Notes</div>
+      <div>http://example.com/2022/07/23/An-Introduction-to-GCC-Notes/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>John Doe</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2022年7月23日</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>许可协议</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/07/24/Using-dd-command/" title="Using dd command">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Using dd command</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/07/22/Adding-something-to-man-page/" title="Adding something to man page">
+                        <span class="hidden-mobile">Adding something to man page</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

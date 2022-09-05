@@ -1,0 +1,676 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="John Doe">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="Chapter 1 Overview of CompilationCompilers are computer programs that translate a program written in one language into a program written in another language. 1.1 INTRODUCTIONThe compiler has a front e">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Engineering a compiler Notes">
+<meta property="og:url" content="http://example.com/2022/08/01/Engineering-a-compiler-Notes/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="Chapter 1 Overview of CompilationCompilers are computer programs that translate a program written in one language into a program written in another language. 1.1 INTRODUCTIONThe compiler has a front e">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-08-01T01:24:39.000Z">
+<meta property="article:modified_time" content="2022-09-04T09:19:36.029Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>Engineering a compiler Notes - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Jie</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/SteinsGate_all.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Engineering a compiler Notes"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-08-01 09:24" pubdate>
+          2022年8月1日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          6.2k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          52 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">Engineering a compiler Notes</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="Chapter-1-Overview-of-Compilation"><a href="#Chapter-1-Overview-of-Compilation" class="headerlink" title="Chapter 1 Overview of Compilation"></a>Chapter 1 Overview of Compilation</h1><p>Compilers are computer programs that translate a program written in one language into a program written in another language.</p>
+<h2 id="1-1-INTRODUCTION"><a href="#1-1-INTRODUCTION" class="headerlink" title="1.1 INTRODUCTION"></a>1.1 INTRODUCTION</h2><p>The compiler has a <mark>front end</mark> to deal with the source language, which focus on understanding the source-language program, and it has a <mark>back end</mark> to deal with the target language, which focus on mapping programs to the target machine.</p>
+<p>Many research compilers produce C program as their output. Because compilers for C are available on most computers.</p>
+<p>Two fundamental principles:<br>    - The compiler must preserve the meaning of the program being compiled.<br>    - The compiler must improve the input program in some discernible way.</p>
+<h2 id="1-2-COMPILER-STRUCTURE"><a href="#1-2-COMPILER-STRUCTURE" class="headerlink" title="1.2 COMPILER STRUCTURE"></a>1.2 COMPILER STRUCTURE</h2><p>A compiler uses some sets of data structures to represent the code it processes. That form is called an <mark>intermediate representation</mark>.</p>
+<p><mark>Two-phase compiler</mark>, 只有 front end 和 back end.<br><mark>Three-phase compiler</mark>, 有 front end, optimizer 和 back end.</p>
+<h2 id="1-3-OVERVIEW-OF-TRANSLATION"><a href="#1-3-OVERVIEW-OF-TRANSLATION" class="headerlink" title="1.3 OVERVIEW OF TRANSLATION"></a>1.3 OVERVIEW OF TRANSLATION</h2><p><mark>Notation</mark><br>A compiler translates a program written in one notation into an equivalent program written in another notation.</p>
+<h3 id="1-3-1-The-Front-End"><a href="#1-3-1-The-Front-End" class="headerlink" title="1.3.1 The Front End"></a>1.3.1 The Front End</h3><h4 id="Cheching-Syntax"><a href="#Cheching-Syntax" class="headerlink" title="Cheching Syntax"></a>Cheching Syntax</h4><p>The source language is a set, usually infinite, of strings defined by some finite set of rules, called a grammar.</p>
+<p>The scanner takes a stream of characters and converts it to a stream of classified words.</p>
+<p>The actual spelling of the words might be stored in a hash table and represented in the pairs with an integer index.</p>
+<p>The process of automatically finding derivations is called <mark>parsing</mark>.</p>
+<h4 id="Intermediate-Representations"><a href="#Intermediate-Representations" class="headerlink" title="Intermediate Representations"></a>Intermediate Representations</h4><p>Compilers use a variety of different kinds of IR.</p>
+<h3 id="1-3-2-The-Optimizer"><a href="#1-3-2-The-Optimizer" class="headerlink" title="1.3.2 The Optimizer"></a>1.3.2 The Optimizer</h3><p>The optimizer analyzes the IR form of the code to discover facts about that context and uses that contextual knowledge to rewrite the code so that it computes the same answer in a more efficient way.</p>
+<h4 id="Analysis"><a href="#Analysis" class="headerlink" title="Analysis"></a>Analysis</h4><h4 id="Transformation"><a href="#Transformation" class="headerlink" title="Transformation"></a>Transformation</h4><h3 id="1-3-3-The-Back-End"><a href="#1-3-3-The-Back-End" class="headerlink" title="1.3.3 The Back End"></a>1.3.3 The Back End</h3><p>The compiler’s back end traverses the IR form of the code and emits code for the target machine.</p>
+<p><code>ILOC</code>–”intermediate language for an optimizing compiler”, is a notation fo low-level examples.</p>
+<h4 id="Instruction-Selection"><a href="#Instruction-Selection" class="headerlink" title="Instruction Selection"></a>Instruction Selection</h4><p>Instruction selection maps each IR operation, in its context, into one or more target machine operations.<br><mark>Virtual register</mark><br>A symbolic register name that the compiler uses to indicate that a value can be stored in a register.</p>
+<p>意思就是选择最合适的 instruction, 所以叫 instruction selector, 比如一个 source code, mapping to 一个 machine code, 有几种选择, 这时 instruction selector 会选择最好的一个. </p>
+<h4 id="Register-Allocation"><a href="#Register-Allocation" class="headerlink" title="Register Allocation"></a>Register Allocation</h4><p>The register allocator must map those virtual registers onto actual target-machine registers.</p>
+<p>The optimization would increase demand for registers but eliminate a later instruction. 意思就是把前面计算的值用于后面的计算.</p>
+<h4 id="Instruction-Scheduling"><a href="#Instruction-Scheduling" class="headerlink" title="Instruction Scheduling"></a>Instruction Scheduling</h4><p>To reorder operation.</p>
+<p>It attempts to minimize the number of cycles wasted waiting for operands.</p>
+<h4 id="Interactions-Among-Code-Generation-Components"><a href="#Interactions-Among-Code-Generation-Components" class="headerlink" title="Interactions Among Code-Generation Components"></a>Interactions Among Code-Generation Components</h4><h2 id="1-4-SUMMARY-AND-PERSPECTIVE"><a href="#1-4-SUMMARY-AND-PERSPECTIVE" class="headerlink" title="1.4 SUMMARY AND PERSPECTIVE"></a>1.4 SUMMARY AND PERSPECTIVE</h2><h1 id="Chapter-2-Scanners"><a href="#Chapter-2-Scanners" class="headerlink" title="Chapter 2 Scanners"></a>Chapter 2 Scanners</h1><p>The scanner is the only pass in the compiler to touch every character in the input program.</p>
+<p>The regular expression, a notation used to describe the valid words in a programming laguage.</p>
+<h2 id="2-1-INTRODUCTION"><a href="#2-1-INTRODUCTION" class="headerlink" title="2.1 INTRODUCTION"></a>2.1 INTRODUCTION</h2><p>The scanner, 也就是 lexical analyzer, reads a stream of characters and produces a stream of words.</p>
+<h3 id="Conceptual-Roadmap"><a href="#Conceptual-Roadmap" class="headerlink" title="Conceptual Roadmap"></a>Conceptual Roadmap</h3><h3 id="Overview"><a href="#Overview" class="headerlink" title="Overview"></a>Overview</h3><p><mark>Syntactic category</mark>, a classification of words according to their grammatical usage.</p>
+<p><mark>Microsyntax</mark>, the lexical structure of a language, which specifies how to group characters into words and how to separate words that run together.</p>
+<p>In most languages, blanks and punctuation marks terminate a word.</p>
+<p><mark>Keyword</mark>, a word that is reserved for a particular syntactic purpose and, thus, cannot be used as an identifier.</p>
+<p>Both generated and hand-crafted scanners can be implemented to require just O(1) time per character.</p>
+<h2 id="2-2-RECONGNIZING-WORDS"><a href="#2-2-RECONGNIZING-WORDS" class="headerlink" title="2.2 RECONGNIZING WORDS"></a>2.2 RECONGNIZING WORDS</h2><p>The recognizer takes one transition per input character.</p>
+<h3 id="2-2-1-A-Formalism-for-Recognizers"><a href="#2-2-1-A-Formalism-for-Recognizers" class="headerlink" title="2.2.1 A Formalism for Recognizers"></a>2.2.1 A Formalism for Recognizers</h3><p><mark>Finite automation</mark>, a formalism for recogmizers that has a finite set of states, an alphabet, a transition function, a start state, and one or more accepting states. A finite automaton(FA) is a five-tuple($S, \epsilon, \delta, s_0, S_A$).</p>
+<p>有一个 error state $s_e$.</p>
+<h3 id="2-2-2-Recognizing-More-Complex-Words"><a href="#2-2-2-Recognizing-More-Complex-Words" class="headerlink" title="2.2.2 Recognizing More Complex Words"></a>2.2.2 Recognizing More Complex Words</h3><p>Syntactic category 和 lexeme.</p>
+<h2 id="2-3-REGULAR-EXPRESSION"><a href="#2-3-REGULAR-EXPRESSION" class="headerlink" title="2.3 REGULAR EXPRESSION"></a>2.3 REGULAR EXPRESSION</h2><p>The language described by an RE is called a <mark>regular languages</mark>.</p>
+<p>Simple recognizers have simple RE specifications.</p>
+<h3 id="2-3-1-Formalizing-the-Notation"><a href="#2-3-1-Formalizing-the-Notation" class="headerlink" title="2.3.1 Formalizing the Notation"></a>2.3.1 Formalizing the Notation</h3><p>An RE  is built up from three basic operations:</p>
+<ol>
+<li>Alternation, R|S</li>
+<li>Concatenation, RS</li>
+<li>Closure, $R^*$</li>
+</ol>
+<p>Regular expression are used in many applications to specify patterns in character strings.</p>
+<p>Parentheses have highest precedence, followed by closure, concatenation, and alternation, in that order.</p>
+<h3 id="2-3-2-Examples"><a href="#2-3-2-Examples" class="headerlink" title="2.3.2 Examples"></a>2.3.2 Examples</h3><p>The point is critical: the cost of operating an FA is proportional to the length of the input, not to the length or complexity of the RE that generates the FA.</p>
+<h3 id="2-3-3-Closure-Properties-of-REs"><a href="#2-3-3-Closure-Properties-of-REs" class="headerlink" title="2.3.3 Closure Properties of REs"></a>2.3.3 Closure Properties of REs</h3><p>Regular expressions are closed under many operations–that is, if we apply the operation to an RE or a collection of REs, the result is an RE.</p>
+<h2 id="2-4-FROM-REGULAR-EXPRESSION-TO-SCANNER"><a href="#2-4-FROM-REGULAR-EXPRESSION-TO-SCANNER" class="headerlink" title="2.4 FROM REGULAR EXPRESSION TO SCANNER"></a>2.4 FROM REGULAR EXPRESSION TO SCANNER</h2><p>The goal of out work with finite automata is to automate the derivation of executable scanners from a collection of REs.</p>
+<p>Deterministic FAs, or DFAs. Kleene’s construction derives an RE from a DFA.</p>
+<p>Nondeterministic FAs, or NFAs. Thompson’s construction derives an NFA from an RE.</p>
+<h3 id="2-4-1-Nondeterministic-Finite-Automata"><a href="#2-4-1-Nondeterministic-Finite-Automata" class="headerlink" title="2.4.1 Nondeterministic Finite Automata"></a>2.4.1 Nondeterministic Finite Automata</h3><p>An FA that includes states such as $s_0$ that have multiple transitions on a single character is called a <mark>nondeterministic finite automaton</mark>. Its an FA thats allows transitions on the empty string, $\epsilon$, and states that have multiple transitions on the same character.</p>
+<p>An FA with unique character transitions in each state is called a <mark>deterministic finite automaton</mark>. Its an FA where the transition function is single-valued. DFAs do not allow $\epsilon$-transitions.</p>
+<p>NFA 的行为:</p>
+<ul>
+<li>Each time the NFA must make a nondeterministic choice, it follows the transition that leads to an accepting state for the input string, if such a transition exists. 也就是说NFA会把一条路线走完.</li>
+<li>NFA 会 clones itself to pursue each possible transition. At any point, we call the specific set of states in which the NFA is active its <mark>configuration</mark>. 也就是其中某一条.</li>
+</ul>
+<h4 id="Equivalence-of-NFAs-and-DFAs"><a href="#Equivalence-of-NFAs-and-DFAs" class="headerlink" title="Equivalence of NFAs and DFAs"></a>Equivalence of NFAs and DFAs</h4><p>NFAs and DFAs are equivalent in their expressive power. Any DFA is a special case of an NFA.</p>
+<h3 id="2-4-2-Regular-Expression-to-NFA-Thompson’s-Construction"><a href="#2-4-2-Regular-Expression-to-NFA-Thompson’s-Construction" class="headerlink" title="2.4.2 Regular Expression to NFA: Thompson’s Construction"></a>2.4.2 Regular Expression to NFA: Thompson’s Construction</h3><p>Deriving an NFA from the RE.</p>
+<p>因为 NFA 要尝试所有情况, 因此 NFA 需要 $\epsilon$ transformation. 在每一个分支处都需要 $\epsilon$ transformation.</p>
+<p>Each NFA has one start state and one accepting state of NFAs for some component REs.</p>
+<p>An $\epsilon$-transition always connects two states.</p>
+<p>The NFA also contains many $\epsilon$-moves that are obviously unneeded.</p>
+<h3 id="2-4-3-NFA-to-DFA-The-Subset-Construction"><a href="#2-4-3-NFA-to-DFA-The-Subset-Construction" class="headerlink" title="2.4.3 NFA to DFA: The Subset Construction"></a>2.4.3 NFA to DFA: The Subset Construction</h3><p>DFA executions is much easier to simulate than NFA.</p>
+<p>The algorithm that constructs a DFA from an NFA is called <mark>subset construction</mark>.</p>
+<p><mark>Valid configuration</mark>, configuration of an NFA that can be reached by some input string.</p>
+<h3 id="2-4-5-Using-a-DFA-as-a-Recognizer"><a href="#2-4-5-Using-a-DFA-as-a-Recognizer" class="headerlink" title="2.4.5 Using a DFA as a Recognizer"></a>2.4.5 Using a DFA as a Recognizer</h3><h2 id="2-5-IMPLEMENTING-SCANNERS"><a href="#2-5-IMPLEMENTING-SCANNERS" class="headerlink" title="2.5 IMPLEMENTING SCANNERS"></a>2.5 IMPLEMENTING SCANNERS</h2><p>最后一部似乎是 convert the DFA into executable code.</p>
+<p>Three implementation strategies for converting a DFA into executable code:</p>
+<ul>
+<li>a table-driven scanner</li>
+<li>a direct-coded scanner</li>
+<li>a hand-coded sanner<br>All of these scanners operate in the same manner, by simulating the DFA.<br>The three implementation strategies differ in the details of their runtime cost.</li>
+</ul>
+<h3 id="2-5-1-Table-Driven-Scanners"><a href="#2-5-1-Table-Driven-Scanners" class="headerlink" title="2.5.1 Table-Driven Scanners"></a>2.5.1 Table-Driven Scanners</h3>
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Compiler-Theory/" class="category-chain-item">Compiler Theory</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Engineering a compiler Notes</div>
+      <div>http://example.com/2022/08/01/Engineering-a-compiler-Notes/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>John Doe</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2022年8月1日</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>许可协议</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/08/01/%E7%94%B5%E8%B7%AF%E5%88%86%E6%9E%90%E5%AF%BC%E8%AE%BA%20Notes/" title="电路分析导论">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">电路分析导论</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/07/31/CS61A-Python-Notes/" title="CS61A Python Notes">
+                        <span class="hidden-mobile">CS61A Python Notes</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
