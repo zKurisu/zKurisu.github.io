@@ -24,7 +24,7 @@
 <meta property="og:description" content="第6章 Linux 文件与目录管理6.4 文件与目录的默认权限与隐藏权限6.4.3 文件特殊权限: SUID, SGID, SBITSet UID第13章 Linux 账号管理与 ACL 权限设置13.1 Linux 的账号与用户组13.1.1 用户标识符: UID 与 GID账号的 ID 与 账号的对应在 &#x2F;etc&#x2F;passwd 中。 每个登录的用户至少都会获取两个 ID, 一个是用户 ID (">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2022-08-24T00:27:28.000Z">
-<meta property="article:modified_time" content="2022-09-04T09:19:36.036Z">
+<meta property="article:modified_time" content="2022-09-07T00:06:04.339Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -218,7 +218,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          9.1k 字
+          11k 字
         
       </span>
     
@@ -229,7 +229,7 @@
         
         
         
-          77 分钟
+          95 分钟
         
       </span>
     
@@ -582,7 +582,59 @@
 <li>is-enable</li>
 </ul>
 <p>不应该使用 <code>kill</code> 的方式来关闭一个正常的服务。</p>
-<h1 id="第23章-X-Window-设置介绍"><a href="#第23章-X-Window-设置介绍" class="headerlink" title="第23章 X Window 设置介绍"></a>第23章 X Window 设置介绍</h1><p>Linux 上的图形用户界面模式称为 X Window System. 其对于 Linux 来说只是一个软件。</p>
+<h1 id="第19章-启动流程，模块管理与-loader"><a href="#第19章-启动流程，模块管理与-loader" class="headerlink" title="第19章 启动流程，模块管理与 loader"></a>第19章 启动流程，模块管理与 loader</h1><h2 id="19-1-Linux-的启动流程分析"><a href="#19-1-Linux-的启动流程分析" class="headerlink" title="19.1 Linux 的启动流程分析"></a>19.1 Linux 的启动流程分析</h2><h3 id="19-1-1-启动流程一览"><a href="#19-1-1-启动流程一览" class="headerlink" title="19.1.1 启动流程一览"></a>19.1.1 启动流程一览</h3><p>Boot loader 可以指定使用哪个内核文件来启动，并实际加载到内核中解压缩与执行。此时内核就能够开始在内存中活动，并检测所有硬件信息与加载适当的驱动程序来使整台主机开始运行，等到内核检测硬件与加载驱动程序完毕后，操作系统便开始运行.</p>
+<h3 id="19-1-2-BIOS-boot-loader-与-kernel-加载"><a href="#19-1-2-BIOS-boot-loader-与-kernel-加载" class="headerlink" title="19.1.2 BIOS, boot loader 与 kernel 加载"></a>19.1.2 BIOS, boot loader 与 kernel 加载</h3><p>BIOS, 无论传统 BIOS 还是 UEFI BIOS 都会被简称为 BIOS.</p>
+<p>在个人计算机架构下，启动整个系统首先就要让系统去加载 BIOS (Basic Input Output System), 并通过 BIOS 程序去加载 CMOS 信息，并且借由 CMOS 内的设置取得主机的各项硬件配置. 在取得这些信息后，BIOS 会进行启动自我检测 (Power-on Self Test, POST), 然后开始执行硬件检测的初始化，并设置 PnP 设备，之后再定义出可启动的设备顺序，接下来就会开始进行设备的数据读取.</p>
+<p>Boot loader 位于启动设备的第一个扇区中。</p>
+<h4 id="boot-loader-的功能"><a href="#boot-loader-的功能" class="headerlink" title="boot loader 的功能"></a>boot loader 的功能</h4><p>loader 的主要功能是识别操作系统的文件格式.</p>
+<p>由于不同操作系统的文件格式不一致，因此每种操作系统都有自己的 boot loader.</p>
+<p>通常操作系统默认都会安装一份 loader 到它根目录所在文件系统的 boot sector 上.</p>
+<p>boot loader 主要的功能如下:</p>
+<ul>
+<li>提供选项：用户可以选择不同的启动选项, 这也是多重引导的重要功能</li>
+<li>加载内核文件: 直接指向可启动的程序区域来启动操作系统</li>
+<li>转交其他 loader: 将启动管理功能转交给其他 loader 负责</li>
+</ul>
+<p>内核文件一般被放置在 <code>/boot</code> 里，并去名为 <code>/boot/vmlinuz</code>.</p>
+<p>Linux 内核可以通过动态加载内核模块，这些模块放置在 <code>/lib/modules</code> 目录内。</p>
+<p>由于模块放置到磁盘根目录内，因此启动的过程中内核必须要挂在根目录，这样才能够读取内核模块提供的加载驱动程序功能.</p>
+<p>一般来说，Linux 发行版都会将非必要的功能且可以编译成为模块的内核功能，编译成为模块.</p>
+<p>虚拟文件系统 (Initial RAM Filesystem) 一般使用的文件名为 <code>/boot/initrd</code> 或 <code>/boot/initramfs</code>, 这个文件可以通过 boot loader 来加载到内存中，然后这个文件会被解压缩并且在内存中模拟成一个根目录.</p>
+<h3 id="19-1-3-第一个程序-systemd-及使用-default-target-进入启动程序分析"><a href="#19-1-3-第一个程序-systemd-及使用-default-target-进入启动程序分析" class="headerlink" title="19.1.3 第一个程序 systemd 及使用 default.target 进入启动程序分析"></a>19.1.3 第一个程序 systemd 及使用 default.target 进入启动程序分析</h3><p>systemd 最主要的功能就是准备软件执行的环境，包括系统的主机名，网络设置，语言设置，文件系统格式及其他服务的启动等.</p>
+<p>要知道系统服务的启用流程，最简单的方法就是:</p>
+<figure class="highlight dsconfig"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs dsconfig"><span class="hljs-string">systemctl</span> <span class="hljs-built_in">list-dependencies</span> <span class="hljs-string">graphical</span>.<span class="hljs-string">target</span><br></code></pre></td></tr></table></figure>
+<h3 id="19-1-4-systemd-执行-sysinit-target-初始化系统，basic-target-准备系统"><a href="#19-1-4-systemd-执行-sysinit-target-初始化系统，basic-target-准备系统" class="headerlink" title="19.1.4 systemd 执行 sysinit.target 初始化系统，basic.target 准备系统"></a>19.1.4 systemd 执行 sysinit.target 初始化系统，basic.target 准备系统</h3><h3 id="19-1-5-systemd-启动-multi-user-target-下的服务"><a href="#19-1-5-systemd-启动-multi-user-target-下的服务" class="headerlink" title="19.1.5 systemd 启动 multi-user.target 下的服务"></a>19.1.5 systemd 启动 multi-user.target 下的服务</h3><p>各种主机服务以及提供服务器功能的网络服务的启动，大多附属与 <code>multi-user.target</code>.</p>
+<p>一般服务的启动脚本设置都放在下面的目录内:</p>
+<ul>
+<li><code>/usr/lib/systemd/system</code> , 系统默认的服务启动脚本设置</li>
+<li><code>/etc/systemd/system</code> , 管理员自己开发与设置的脚本设置</li>
+</ul>
+<p>将服务放到 <code>/etc/systemed/system/multi-user.target.want</code> 下就可以在启动时启动它.</p>
+<p>当系统完成启动后，还想要系统额外执行某些程序的话，可以将程序命令或脚本的绝对路径名称写入到 <code>/etc/rc.d/rc.local</code> 这个文件下。 当 <code>rc.local</code> 具有可执行权限时才会被执行。</p>
+<h4 id="提供-tty-界面与登录服务"><a href="#提供-tty-界面与登录服务" class="headerlink" title="提供 tty 界面与登录服务"></a>提供 tty 界面与登录服务</h4><p><code>multi-user.target</code> 下面的 <code>getty.target</code> 操作界面选项是提供 tty 界面。</p>
+<p>用户登录服务也是在 <code>multi-user.target</code> 下。</p>
+<h3 id="19-1-6-systemd-启动-graphical-target-下面的服务"><a href="#19-1-6-systemd-启动-graphical-target-下面的服务" class="headerlink" title="19.1.6 systemd 启动 graphical.target 下面的服务"></a>19.1.6 systemd 启动 graphical.target 下面的服务</h3><p>如果 <code>default.target</code> 是 <code>multi-user.target</code>，这个步骤就不会执行.</p>
+<h3 id="19-1-7-启动过程会用到的主要配置文件"><a href="#19-1-7-启动过程会用到的主要配置文件" class="headerlink" title="19.1.7 启动过程会用到的主要配置文件"></a>19.1.7 启动过程会用到的主要配置文件</h3><p>几个常见的比较重要的配置文件:</p>
+<h4 id="关于模块-etc-modprobe-d-conf-及-etc-modules-load-d-conf"><a href="#关于模块-etc-modprobe-d-conf-及-etc-modules-load-d-conf" class="headerlink" title="关于模块: /etc/modprobe.d/*.conf 及 /etc/modules-load,d/*.conf"></a>关于模块: <code>/etc/modprobe.d/*.conf</code> 及 <code>/etc/modules-load,d/*.conf</code></h4><ul>
+<li><code>/etc/modprobe.d/*.conf</code> 是可以加上模块参数的位置</li>
+<li><code>/etc/modules-load.d/*.conf</code> 是单纯加载模块的位置</li>
+</ul>
+<p><code>systemctl restart systemd-modules-load.service</code> 可重新加载模块.</p>
+<h2 id="19-2-内核与内核模块"><a href="#19-2-内核与内核模块" class="headerlink" title="19.2 内核与内核模块"></a>19.2 内核与内核模块</h2><p>在整个启动的过程当中，是否能够成功驱动我们的主机的硬件设备是内核 (kernel) 的工作。</p>
+<p>内核一般为压缩文件，因此在使用内核之前，就的要将它解压缩后，才能加载到内存当中.</p>
+<p>内核与模块的存放位置:</p>
+<ul>
+<li>内核: <code>/boot/vmlinuz</code> 或 <code>/boot/vmlinuz-version</code></li>
+<li>内核解压缩所需的 RAM Disk: <code>/boot/inistramfs</code> 或 <code>/boot/inistramfs-version</code></li>
+<li>内核模块: <code>/lib/modules/version/kernel</code> 或 <code>/lib/modules/$(uname -r)/kernel</code></li>
+<li>内核源代码: <code>/usr/src/linux</code> 或 <code>/usr/src/kernels</code> (默认不安装)</li>
+</ul>
+<p>添加新硬件支持:</p>
+<ul>
+<li>重新编译内核，并加入最新的硬件驱动程序源代码</li>
+<li>将该硬件的驱动程序编译成为模块，在启动时加载该模块</li>
+</ul>
+<h3 id="19-2-1"><a href="#19-2-1" class="headerlink" title="19.2.1"></a>19.2.1</h3><h1 id="第23章-X-Window-设置介绍"><a href="#第23章-X-Window-设置介绍" class="headerlink" title="第23章 X Window 设置介绍"></a>第23章 X Window 设置介绍</h1><p>Linux 上的图形用户界面模式称为 X Window System. 其对于 Linux 来说只是一个软件。</p>
 <h2 id="23-1-什么是-X-Window-System"><a href="#23-1-什么是-X-Window-System" class="headerlink" title="23.1 什么是 X Window System"></a>23.1 什么是 X Window System</h2><p>名称由来, X 在英文顺序的 W(indow) 后面，有下一代的新窗口之意。因此叫做 X Window System.</p>
 <h3 id="23-1-1-X-Window-System-的发展简史"><a href="#23-1-1-X-Window-System-的发展简史" class="headerlink" title="23.1.1 X Window System 的发展简史"></a>23.1.1 X Window System 的发展简史</h3><p>在 UNIX-like 上面的图形用户接口(GUI)被称为 X 或 X11.</p>
 <h3 id="23-1-2-主要组件-X-Server-x2F-X-Client-x2F-Window-Manager-Display-Manager"><a href="#23-1-2-主要组件-X-Server-x2F-X-Client-x2F-Window-Manager-Display-Manager" class="headerlink" title="23.1.2 主要组件: X Server&#x2F;X Client&#x2F;Window Manager?Display Manager"></a>23.1.2 主要组件: X Server&#x2F;X Client&#x2F;Window Manager?Display Manager</h3><p>X Window System 是基于网络架构的GUI. 意思就是 X Client 从网络上获取需求，X Server 来呈现(即绘制图像)。需要网络提供数据。</p>
