@@ -1,0 +1,659 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="John Doe">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="深入理解计算机系统缓存数据对象来自其他存储结构。 命中与不命中就是缓存的数据中没有所需要的 虚拟地址虚拟地址空间大小为2的N次方，N为位数。其由cpu发出，经mmu(memory management unit)翻译，然后到主存中取数据。 一个对象有一个物理地址和一个虚拟地址。分割为虚拟页。 页表在物理地址中，页表中有页表条目pte，其含有效位。 cpu引用换存在主存中的虚拟页时，会查看页表中的有">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深入理解计算机系统">
+<meta property="og:url" content="http://example.com/2022/08/25/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%B3%BB%E7%BB%9F/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="深入理解计算机系统缓存数据对象来自其他存储结构。 命中与不命中就是缓存的数据中没有所需要的 虚拟地址虚拟地址空间大小为2的N次方，N为位数。其由cpu发出，经mmu(memory management unit)翻译，然后到主存中取数据。 一个对象有一个物理地址和一个虚拟地址。分割为虚拟页。 页表在物理地址中，页表中有页表条目pte，其含有效位。 cpu引用换存在主存中的虚拟页时，会查看页表中的有">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-08-25T02:17:54.000Z">
+<meta property="article:modified_time" content="2022-09-08T09:21:44.711Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>深入理解计算机系统 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Jie</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/SteinsGate_all.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="深入理解计算机系统"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-08-25 10:17" pubdate>
+          2022年8月25日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          1.4k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          12 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">深入理解计算机系统</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="深入理解计算机系统"><a href="#深入理解计算机系统" class="headerlink" title="深入理解计算机系统"></a>深入理解计算机系统</h1><h2 id="缓存"><a href="#缓存" class="headerlink" title="缓存"></a>缓存</h2><p>数据对象来自其他存储结构。</p>
+<h2 id="命中与不命中"><a href="#命中与不命中" class="headerlink" title="命中与不命中"></a>命中与不命中</h2><p>就是缓存的数据中没有所需要的</p>
+<h2 id="虚拟地址"><a href="#虚拟地址" class="headerlink" title="虚拟地址"></a>虚拟地址</h2><p>虚拟地址空间大小为2的N次方，N为位数。<br>其由cpu发出，经mmu(memory management unit)翻译，然后到主存中取数据。</p>
+<p>一个对象有一个物理地址和一个虚拟地址。<br>分割为虚拟页。</p>
+<p>页表在物理地址中，页表中有页表条目pte，其含有效位。</p>
+<p>cpu引用换存在主存中的虚拟页时，会查看页表中的有效位，进而判断是否缺页。</p>
+<h2 id="文件只读的作用"><a href="#文件只读的作用" class="headerlink" title="文件只读的作用"></a>文件只读的作用</h2><p>保护文件不被修改。</p>
+<h2 id="堆栈"><a href="#堆栈" class="headerlink" title="堆栈"></a>堆栈</h2><p>堆栈空间会有预留部分。</p>
+<p>ebp寄存器和esp寄存器划分区域。</p>
+<p>返回值一般在eax和edx中。编写程序尽量不返回大于4字节的数据。</p>
+<p>栈上的数据在函数返回时会被释放掉。</p>
+<p>堆的空闲链表分配法。</p>
+<h2 id="虚拟存储器理解"><a href="#虚拟存储器理解" class="headerlink" title="虚拟存储器理解"></a>虚拟存储器理解</h2><p>为了使分布在磁盘上不同地址的数据，使用同一块地址空间，即主存。</p>
+<p>使用虚拟存储器，进程不会与物理内存接触。</p>
+<p>每一页的首地址为页表条目？</p>
+<p>页表，PTE，物理存储器位于主存中。<br>虚拟页在磁盘中。</p>
+<p>好处：</p>
+<ul>
+<li>共享问题，多个进程可映射同一个地址。</li>
+<li>PTE可标记SUP,READ,WRITE位。违反此类常见报错“segment fault”</li>
+</ul>
+<p>PTE中含有物理页的起始位置，物理页中缓存有虚拟页。因此，虚拟页的位置就是物理页的起始位置+虚拟页面的偏移位置PPO。</p>
+<p>物理页一般大于虚拟页，毕竟要缓存虚拟页。</p>
+<p>虚拟页偏移量VPO等于物理页偏移量PPO。</p>
+<p>物理内存(这里指磁盘上的内存)+交换内存(这里指主存)&#x3D;虚拟内存<br>但是虚拟存储器在磁盘上，物理存储器在主存上。</p>
+<ul>
+<li>虚拟内存就是磁盘上的存储空间被当作内存使用，磁盘不属于内存，所以是虚拟内存。</li>
+<li>实际内存—-物理内存，虚拟内存—-磁盘上的空间。</li>
+<li>置换(swap),把内存上的内容和磁盘上的虚拟内存中的内容进行部分交换。</li>
+<li>动态链接库—-实现文件共享。</li>
+<li>32位系统对应4G进程，64位系统对应8G进程。</li>
+</ul>
+<h2 id="虚拟内存的实现"><a href="#虚拟内存的实现" class="headerlink" title="虚拟内存的实现"></a>虚拟内存的实现</h2><p>由物理内存和磁盘上的交换空间组成虚拟内存。</p>
+<p>只要Linux系统在运行，交换就一直在进行。</p>
+<h2 id="虚拟内存再理解"><a href="#虚拟内存再理解" class="headerlink" title="虚拟内存再理解"></a>虚拟内存再理解</h2><p>虚拟页缓存在物理页中，若不命中，则发生页牺牲，替换进需要的虚拟页，命中发生时，cpu发出虚拟地址，经mmu地址翻译后为物理地址，这个物理地址是物理页的地址。</p>
+<p>每一个进程都会被分配大小一定的虚拟内存，但实际消耗的大小不同。</p>
+<p>虚拟页一般很大，4KB～2MB。</p>
+<p>页表存储地址翻译的信息，页表是页表条目的数组，虚拟空间中的每个页都有一个页表条目。<br>从这里可以看出，cpu要找一个虚拟页，就得查看页表中的页表条目。PTE表明了是哪个虚拟页，缓存在哪个物理页及物理页的位置。<br>PTE中的地址字段有三种情况：</p>
+<blockquote>
+<ol>
+<li>物理页的起始地址(有效位被设置)</li>
+<li>空白(有效位没被设置，虚拟页未分配)</li>
+<li>虚拟页的起始位置(有效位没被设置)</li>
+</ol>
+</blockquote>
+<p><em>总的说</em>，程序都会从磁盘输送到主存中。<br>每个进程有单独的页表。</p>
+<h3 id="虚拟地址的组成"><a href="#虚拟地址的组成" class="headerlink" title="虚拟地址的组成"></a>虚拟地址的组成</h3><p>虚拟地址偏移量vpo和虚拟页表号vpn。页面大小决定偏移量大小。<br>物理地址同样包含ppo和ppn。</p>
+<h2 id="使用虚拟地址的好处"><a href="#使用虚拟地址的好处" class="headerlink" title="使用虚拟地址的好处"></a>使用虚拟地址的好处</h2><p>简化内存管理，提供自然的保护内存的方法。</p>
+<h2 id="多级页表"><a href="#多级页表" class="headerlink" title="多级页表"></a>多级页表</h2><p>用于压缩页表，一级页表是最内层的页表</p>
+<h2 id="进程"><a href="#进程" class="headerlink" title="进程"></a>进程</h2><p>磁盘上的程序，当被系统执行时，被加载进内存，然后放入寄存器，最后让cpu执行，就变成了进程<br>progress。也就是运行中的程序。</p>
+<ul>
+<li>进程运行时，会得到4G的虚拟内存，最高的一个G为内核内存，剩下三个G为用户内存。</li>
+</ul>
+<h2 id="映射"><a href="#映射" class="headerlink" title="映射"></a>映射</h2><p>把一个地址连接到另一个地址。如，内存单元A的地址为X，把它映射到地址Y，这样访问Y时，就可以访问到A了。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Computer/" class="category-chain-item">Computer</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>深入理解计算机系统</div>
+      <div>http://example.com/2022/08/25/深入理解计算机系统/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>John Doe</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2022年8月25日</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>许可协议</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/08/25/%E5%8E%9F%E7%A0%81%E3%80%81%E5%8F%8D%E7%A0%81%E3%80%81%E8%A1%A5%E7%A0%81%E7%9A%84%E4%BA%A7%E7%94%9F/" title="原码、反码、补码的产生">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">原码、反码、补码的产生</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/08/25/%E7%99%BD%E5%B8%BD%E5%AD%90%E8%AE%B2%20Web%20%E5%AE%89%E5%85%A8/" title="白帽子讲 Web 安全">
+                        <span class="hidden-mobile">白帽子讲 Web 安全</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

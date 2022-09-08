@@ -1,0 +1,744 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="John Doe">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="对协议的理解协议是信息传递的规范，只有两台计算机使用相同的协议进行交流，数据才能够被传达。 分组交换协议数据被拆分为包，包上有报文首部，含有原主机地址，目的主机地址等信息。 协议分层每个分层接受它的下一层提供的服务并向它自己的上一层提供服务。就是底层向上层服务。 便于区分功能。 层与层之间有接口，同层之间有协议。 通过OSI参考模型，可以得知每一层大致的作用。 OSI各层的作用：  应用层，确定数">
+<meta property="og:type" content="article">
+<meta property="og:title" content="图解 TCPIP.md">
+<meta property="og:url" content="http://example.com/2022/08/25/%E5%9B%BE%E8%A7%A3%20TCPIP/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="对协议的理解协议是信息传递的规范，只有两台计算机使用相同的协议进行交流，数据才能够被传达。 分组交换协议数据被拆分为包，包上有报文首部，含有原主机地址，目的主机地址等信息。 协议分层每个分层接受它的下一层提供的服务并向它自己的上一层提供服务。就是底层向上层服务。 便于区分功能。 层与层之间有接口，同层之间有协议。 通过OSI参考模型，可以得知每一层大致的作用。 OSI各层的作用：  应用层，确定数">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-08-25T02:17:54.000Z">
+<meta property="article:modified_time" content="2022-09-08T09:21:13.134Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>图解 TCPIP.md - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Jie</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/SteinsGate_all.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="图解 TCPIP.md"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-08-25 10:17" pubdate>
+          2022年8月25日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          4.3k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          37 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">图解 TCPIP.md</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="对协议的理解"><a href="#对协议的理解" class="headerlink" title="对协议的理解"></a>对协议的理解</h2><p>协议是信息传递的规范，只有两台计算机使用相同的协议进行交流，数据才能够被传达。</p>
+<h2 id="分组交换协议"><a href="#分组交换协议" class="headerlink" title="分组交换协议"></a>分组交换协议</h2><p>数据被拆分为包，包上有报文首部，含有原主机地址，目的主机地址等信息。</p>
+<h2 id="协议分层"><a href="#协议分层" class="headerlink" title="协议分层"></a>协议分层</h2><p>每个分层接受它的下一层提供的服务并向它自己的上一层提供服务。就是底层向上层服务。</p>
+<p>便于区分功能。</p>
+<p>层与层之间有接口，同层之间有协议。</p>
+<p>通过OSI参考模型，可以得知每一层大致的作用。</p>
+<p>OSI各层的作用：</p>
+<ul>
+<li>应用层，确定数据内容，发送者，目的地址</li>
+<li>表示层，用于数据的主机特有格式和网络统一格式的转换。即格式化编码。</li>
+<li>会话层，确定主机间的连接方式，建立几次连接之类。即标记发送顺序。管理何时建立连接，何时发送数据。</li>
+<li>传输层，进行实际上连接的建立和断开。确保数据传送至目的地，没有到达则重发。<em><strong>可能这里就是一次握手发生的地方。</strong></em>所以传输层的作用是确保通信的可靠性。逻辑上的连接。</li>
+<li>网络层，负责将数据发送至最终目标地址。</li>
+<li>数据链路层，负责传输介质设备之间的数据处理。物理上的连接</li>
+<li>物理层，将数据的0，1转换为电压和脉冲光传送给物理的传输介质。</li>
+</ul>
+<p>MAC地址(media access control介质访问控制)，即物理地址、硬件地址。</p>
+<h3 id="对各层作用的理解"><a href="#对各层作用的理解" class="headerlink" title="对各层作用的理解"></a>对各层作用的理解</h3><p>可能是每一层将自己的工作成果标记在表头报文中，然后接收方一一解析这些报文。</p>
+<h2 id="传输方式"><a href="#传输方式" class="headerlink" title="传输方式"></a>传输方式</h2><p>两种：</p>
+<blockquote>
+<ul>
+<li>面向连接</li>
+<li>面向无连接</li>
+</ul>
+</blockquote>
+<p>分组交换，每个包上标记有发送端和接受端的地址。</p>
+<p>传输速率又称<strong>宽带</strong><br>主机之间实际的传输速率称为吞吐量<br>物理设备的兼容性很重要。<br>计算机与外界连接的接口称作端口。</p>
+<h2 id="网络设备"><a href="#网络设备" class="headerlink" title="网络设备"></a>网络设备</h2><h3 id="网卡"><a href="#网卡" class="headerlink" title="网卡"></a>网卡</h3><p>用于接入网络。</p>
+<h3 id="中继器"><a href="#中继器" class="headerlink" title="中继器"></a>中继器</h3><p>位于OSI模型的物理层。<br>对电信号或光信号进行波形调整和放大。<br>用于延长网络。<br>信号在传输的过程中会减弱，中继器就是把信号调整正常和加强。</p>
+<h3 id="集线器"><a href="#集线器" class="headerlink" title="集线器"></a>集线器</h3><p>多口中继器。</p>
+<h3 id="网桥"><a href="#网桥" class="headerlink" title="网桥"></a>网桥</h3><p>位于OSI模型的第二层，数据链路层。可存储数据帧，连接网段。可学习。<br>又称2层交换机。<br>具有网桥功能的Hub叫做交换集线器，只有中继器功能的Hub叫集线器。</p>
+<h3 id="路由器"><a href="#路由器" class="headerlink" title="路由器"></a>路由器</h3><p>位于OSI模型的第三层，网络层，可以连接不同的数据链路。<br>网桥是根据MAC地址进行处理，路由器是根据IP地址进行处理。</p>
+<h3 id="4～7层交换机"><a href="#4～7层交换机" class="headerlink" title="4～7层交换机"></a>4～7层交换机</h3><p>处理传输层以上。其包含负载均衡器。</p>
+<h3 id="交换机"><a href="#交换机" class="headerlink" title="交换机"></a>交换机</h3><p>交换机内部有一张MAC地址表，记录每一个MAC地址的设备，连接在其哪一个端口。</p>
+<h3 id="网关"><a href="#网关" class="headerlink" title="网关"></a>网关</h3><p>协议的转换与数据的收发。</p>
+<h2 id="以太网"><a href="#以太网" class="headerlink" title="以太网"></a>以太网</h2><p>通过交换机小范围传输数据的网络。</p>
+<h2 id="网络流量"><a href="#网络流量" class="headerlink" title="网络流量"></a>网络流量</h2><p>网络上传输的数据报文的数量。</p>
+<h2 id="云"><a href="#云" class="headerlink" title="云"></a>云</h2><p>动态调整。</p>
+<h3 id="客户端-x2F-服务端模型"><a href="#客户端-x2F-服务端模型" class="headerlink" title="客户端&#x2F;服务端模型"></a>客户端&#x2F;服务端模型</h3><h1 id="来自知乎上一个回答的理解"><a href="#来自知乎上一个回答的理解" class="headerlink" title="来自知乎上一个回答的理解"></a>来自知乎上一个回答的理解</h1><p>路由器的每一个端口，都有独立的MAC地址。</p>
+<h2 id="自我理解"><a href="#自我理解" class="headerlink" title="自我理解"></a>自我理解</h2><p>集线器集主机的线，交换机是高级的集线器，路由器集交换机的线。</p>
+<h2 id="MAC地址"><a href="#MAC地址" class="headerlink" title="MAC地址"></a>MAC地址</h2><p>一般48位，前24位代表网络硬件制造商的编号，后24位是厂家自己分配的，一般表示系列号。</p>
+<p>通过IP号可以实现向一个区域内的主机发送数据。</p>
+<p>报文首部由几个头部组成，比如网络层头部，数据链路层头部。</p>
+<h2 id="IP地址作用"><a href="#IP地址作用" class="headerlink" title="IP地址作用"></a>IP地址作用</h2><p>便于将信息发送给一群设备。<br>IP地址可以随时修改。</p>
+<h2 id="子网的作用"><a href="#子网的作用" class="headerlink" title="子网的作用"></a>子网的作用</h2><p>如果源IP与目标IP处于一个子网，直接将包通过交换机发出。<br>如果源IP与目标IP不处于一个子网，则交给路由器处理。<br>子网号就是IP地址中的网络号。<br>子网掩码用于判断IP地址中那一部分表示子网，即网络号，那一部分表示主机号。<br>网络号是多个主机共有的、相同的。</p>
+<h2 id="默认网关"><a href="#默认网关" class="headerlink" title="默认网关"></a>默认网关</h2><p>默认网关也是一个IP地址。<br>在主机发送给不同子网的主机时，就发送给默认网关。</p>
+<p>所以说，路由器在交换机面前就是一个有IP地址、MAC地址的一个主机。</p>
+<p>路由器中有路由表，记录子网号。</p>
+<h2 id="ARP协议"><a href="#ARP协议" class="headerlink" title="ARP协议"></a>ARP协议</h2><p>通过IP地址，找到MAC地址。电脑中有ARP缓存表。<br>数据信息最终是通过MAC地址到达。</p>
+<h2 id="数据传输的过程"><a href="#数据传输的过程" class="headerlink" title="数据传输的过程"></a>数据传输的过程</h2><p>过程中，数据包中IP地址不变，MAC地址在变化。<br>数据链路层记录MAC地址，网络层记录IP地址。<br>交换机只处理MAC地址。</p>
+<p>路由器路由表中，若匹配上了吓一跳，即是发给下一个路由器。<br>发给交换机的数据中，必须包含MAC地址。</p>
+<h1 id="最终梳理，部分知识点"><a href="#最终梳理，部分知识点" class="headerlink" title="最终梳理，部分知识点"></a>最终梳理，部分知识点</h1><p>含有APR表的为主机和路由器，APR表记录IP地址和MAC地址的对应关系。<br>交换机中有MAC地址表，能够学习，记录MAC地址和端口的对应关系。<br>路由器中还有路由表，记录子网和端口的关系，通过下一跳表项决定是否传给下一个路由器。</p>
+<h2 id="数据包首部"><a href="#数据包首部" class="headerlink" title="数据包首部"></a>数据包首部</h2><p>每个分层，都会对所发送的数据附加一个首部。<br>数据包都是由两部分组成，一部分是首部，一部分是数据。</p>
+<p>每个包首部都至少包含两个信息：</p>
+<ul>
+<li>发送端和接受端的地址。</li>
+<li>上一层的协议类型。</li>
+</ul>
+<p>每个分层包首部中还包含一个识别位，用来表示上一层协议的种类信息。</p>
+<p>每一种协议对应一种处理程序。</p>
+<h2 id="以太网-1"><a href="#以太网-1" class="headerlink" title="以太网"></a>以太网</h2><p>Ethernet一词源于Ether(以太)，意为介质。<br>以太网的发展可以看成电缆的改变。</p>
+<h3 id="以太帧"><a href="#以太帧" class="headerlink" title="以太帧"></a>以太帧</h3><p>前端有八个字节的前导码，本体首部十四个字节，帧尾有FCS，四个字节，检验帧是否损坏，通过计算余数。</p>
+<h2 id="Wi-Fi"><a href="#Wi-Fi" class="headerlink" title="Wi-Fi"></a>Wi-Fi</h2><p>Wireless Fidelity，指高质量的无限LAN。</p>
+<h2 id="VPN"><a href="#VPN" class="headerlink" title="VPN"></a>VPN</h2><p>Virtual Private Network虚拟专用网络。</p>
+<h2 id="数据链路"><a href="#数据链路" class="headerlink" title="数据链路"></a>数据链路</h2><p>就是数据传输方式，如以太网、无线等，对应不同的通信媒介。</p>
+<h2 id="网络层与数据链路层的关系"><a href="#网络层与数据链路层的关系" class="headerlink" title="网络层与数据链路层的关系"></a>网络层与数据链路层的关系</h2><p>数据链路层负责直连的两个设备之间的通信，网络层负责没有直连的两个网络之间的通信。</p>
+<p>不同网络区间的数据传递称跳hop，下一跳，即指定下一个路由器或主机的位置。IP地址，比MAC地址更易组织。<br>不同数据链路—-不同介质—-不同传输速率。</p>
+<p>IP面向无连接，简单、高速化。<br>IP负责发送，TCP负责保证主机确实收到数据。<br>同一网段，即IP地址中的网络号相同。</p>
+<h1 id="IP地址"><a href="#IP地址" class="headerlink" title="IP地址"></a>IP地址</h1><p>ABCD四类地址对应多种功能。<br>有了子网掩码以后，就没有ABCD的IP地址分类了。</p>
+<p>数据链路不同，对应的MTU(最大传输单元)不同，因为其传输用途不同。</p>
+<p>面对网络过滤是否可模拟参数。</p>
+<p>分片的坏处，一块碎片丢失会导致整个数据作废.</p>
+<p>TTL(Time To Live)生存周期。</p>
+<h2 id="DHCP"><a href="#DHCP" class="headerlink" title="DHCP"></a>DHCP</h2><p>解决了移动通信时的IP分配问题。<br>避免重复分配，发送ICMP回送请求包。</p>
+<h2 id="NAT"><a href="#NAT" class="headerlink" title="NAT"></a>NAT</h2><p>Network Address Translator,解决IPv4地址枯竭问题，以及IPv6的安全问题。<br>私有IP地址和全局IP地址的转换。<br>NAT-PT(Protocol Translation)</p>
+<p>IP任播，指为提供同一种服务的服务器配置同一个IP地址。</p>
+<p>路由器有对某些包优先处理的方式。</p>
+<h2 id="包中的各个标记"><a href="#包中的各个标记" class="headerlink" title="包中的各个标记"></a>包中的各个标记</h2><p>每一层的标识，上一层的标识。</p>
+<h2 id="守护进程"><a href="#守护进程" class="headerlink" title="守护进程"></a>守护进程</h2><p>服务端的程序。<br>通过目的端口号可以识别数据包发送给哪一个守护进程。</p>
+<h2 id="流"><a href="#流" class="headerlink" title="流"></a>流</h2><p>指不间断的数据结构，可以想象成排水管道中的水流。</p>
+<h2 id="TCP"><a href="#TCP" class="headerlink" title="TCP"></a>TCP</h2><p>使用TCP时，发送端的信息中含有数据段的长度信息。</p>
+<h3 id="UDP"><a href="#UDP" class="headerlink" title="UDP"></a>UDP</h3><p>User Datagram Protocol,用户数据报协议。</p>
+<p>TCP的特征：</p>
+<ul>
+<li>面向连接</li>
+<li>具备顺序控制、重发机制等机制</li>
+</ul>
+<p>UDP的适用区：<br>高速传输和实时性较高要求的通信或广播通信。</p>
+<h2 id="socket"><a href="#socket" class="headerlink" title="socket"></a>socket</h2><p>即套接字。套接，是建立网络通讯和进程间通讯，字，是可交互的有序指令串。</p>
+<p>socket原意是物理上的插座，电器的插头插上插座就会从电网获取电力供应，这里可为逻辑上的，比如web和浏览器可视为socket。</p>
+<p>socket可能用于创建连接。</p>
+<h2 id="文件描述符"><a href="#文件描述符" class="headerlink" title="文件描述符"></a>文件描述符</h2><p>fd，file descriptor, 为了表示和区分已经打开的文件，UNIX&#x2F;Linux给每个文件分配的ID，通常：</p>
+<ul>
+<li>用0表示标准输入文件(stdin)，对应硬件设备的键盘</li>
+<li>用1表示标准输出文件(stdout),对应硬件设备的显示器</li>
+<li>用2表示标准错误输出文件(stderr)</li>
+</ul>
+<p>系统创建的每一个进程都会默认打开这三个文件。</p>
+<p>UNIX&#x2F;Linux执行的任何I&#x2F;O操作都是在读取或写入文件描述符—-一个整数，关联一个打开的文件。</p>
+<p>网络连接也是一个文件。</p>
+<p>每个文件的文件描述符不是固定的。<br>文件描述符也不是递增的，其被回收后可被重新分配。</p>
+<p>每个进程都维护一个文件描述符的集合。<br>新的文件描述符从3开始分配。</p>
+<p>总结：<br>    1.文件描述符是一个整型<br>    2.每个进程默认打开0、1、2三个文件描述符，新的文件描述符都是从3开始分配<br>    3.一个文件描述符被回收后可以再次被分配<br>    4.每个进程单独维护一个文件描述符的集合 </p>
+<h2 id="fork函数"><a href="#fork函数" class="headerlink" title="fork函数"></a>fork函数</h2><p>用于创建进程，其返回一个int值，当返回值为0时表明当前是子进程正在执行，非0就为父进程在执行。</p>
+<h2 id="端口号"><a href="#端口号" class="headerlink" title="端口号"></a>端口号</h2><p>几个地址：</p>
+<ul>
+<li>MAC地址，对应数据链路层的地址</li>
+<li>IP地址，对应网络层的地址</li>
+<li>端口号，对应传输层的地址</li>
+</ul>
+<p>用于识别同一台计算机中进行通信的不同应用程序，因此，也叫程序地址。</p>
+<p>TCP&#x2F;IP或UDP&#x2F;IP通信中采用的五个信息识别：</p>
+<ul>
+<li>源IP地址</li>
+<li>目标IP地址</li>
+<li>协议号</li>
+<li>源端口号</li>
+<li>目标端口号</li>
+</ul>
+<p>端口号可动态分配和静态分配。<br>不同的传输协议可以使用不同的端口号。</p>
+<h2 id="连接"><a href="#连接" class="headerlink" title="连接"></a>连接</h2><p>指各种设备、线路，或网络中进行通信的两个应用程序为了相互传递消息而专有的、虚拟的通信线路，也叫做虚拟电路。</p>
+<h2 id="窗口控制和重发控制的理解"><a href="#窗口控制和重发控制的理解" class="headerlink" title="窗口控制和重发控制的理解"></a>窗口控制和重发控制的理解</h2><p>通过确认应答来决定重发哪一部分数据。比如窗口大小为400字节，一段为一百字节。</p>
+<p>0~100字节发送后，还未收到确认应答，可继续发送。此时发送了101～200的字节。</p>
+<p>这时，可能收到了0～100的确认应答，这个时候表明0～100字节的数据已到达。</p>
+<p>若没收到0～100的确认应答，此时的原因有两种，一是数据丢失，而是确认应答丢失。</p>
+<p>先说第一种，数据丢失后，由于发出了101～200的数据，也会产生一个确认应答，若这个确认应答成功返回，它会请求0～100的数据，然后0～100的数据就会重发。</p>
+<p>第二种，确认应答丢失，通过对第二个确认应答的判断，若是请求201～300的数据，说明前两个数据段都已到达。</p>
+<p>因此，窗口控制和重发控制的核心就是，通过后面的应答判断前面的传输情况。</p>
+<h2 id="互联网的结构"><a href="#互联网的结构" class="headerlink" title="互联网的结构"></a>互联网的结构</h2><p>网络之间由NOC(Network Operate Center)连接。</p>
+<p>异构网络之间由IX(Internet Exchange)连接。</p>
+<p>连接互联网需要向ISP(Internet Service Provider)或区域网提交申请。</p>
+<h2 id="远程登录"><a href="#远程登录" class="headerlink" title="远程登录"></a>远程登录</h2><p>为了实现TSS(Time Sharing System)<br>SSH(Secure SHell)协议</p>
+<p>NVT(Network Virtual Terminal)仿真终端.</p>
+<h2 id="域名"><a href="#域名" class="headerlink" title="域名"></a>域名</h2><p>分层。</p>
+<h2 id="DNS"><a href="#DNS" class="headerlink" title="DNS"></a>DNS</h2><p>含有MX(Mail Exchange)记录,其记录有邮件地址及其作为发送地址时对应的邮件服务器的域名。</p>
+<h2 id="URI"><a href="#URI" class="headerlink" title="URI"></a>URI</h2><p>Uniform Resources Identifier.广义概念<br>URL(Uniform Resources Locator).狭义概念</p>
+<p>URI可用于www以外的协议。</p>
+<h2 id="URI的http方案的具体格式"><a href="#URI的http方案的具体格式" class="headerlink" title="URI的http方案的具体格式"></a>URI的http方案的具体格式</h2><p>http:&#x2F;&#x2F;主机名&#x2F;路径<br>http:&#x2F;&#x2F;主机名:端口号&#x2F;路径<br>http:&#x2F;&#x2F;主机名:端口号&#x2F;路径?访问内容#部分信息。</p>
+<h2 id="Cookie"><a href="#Cookie" class="headerlink" title="Cookie"></a>Cookie</h2><p>用于保存登录信息或网络购物中放入购物车的商品信息。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Web/" class="category-chain-item">Web</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>图解 TCPIP.md</div>
+      <div>http://example.com/2022/08/25/图解 TCPIP/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>John Doe</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2022年8月25日</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>许可协议</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/08/25/%E7%99%BD%E5%B8%BD%E5%AD%90%E8%AE%B2%20Web%20%E5%AE%89%E5%85%A8/" title="白帽子讲 Web 安全">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">白帽子讲 Web 安全</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/08/25/%E7%BD%91%E7%BB%9C%E6%98%AF%E6%80%8E%E6%A0%B7%E8%BF%9E%E6%8E%A5%E7%9A%84/" title="网络是怎样连接的">
+                        <span class="hidden-mobile">网络是怎样连接的</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

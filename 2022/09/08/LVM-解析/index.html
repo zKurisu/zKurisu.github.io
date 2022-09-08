@@ -1,0 +1,667 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="John Doe">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="Linux LVM分区与应用与详解-哔哩哔哩  传统磁盘管理无法扩充其大小，只能通过添加硬盘、创建新的分区来扩充空间。 LVMLogical Volume Manager, 封装底层物理硬盘，以逻辑卷的形式表现给上层系统，大小可动态调整。就是你不知道下面干了什么，操作系统帮你干了这些工作。 这样底层的操作就不会影响上层的操作系统。 就是一种磁盘管理机制。 四个概念 PE, Physical Ex">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LVM 解析">
+<meta property="og:url" content="http://example.com/2022/09/08/LVM-%E8%A7%A3%E6%9E%90/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="Linux LVM分区与应用与详解-哔哩哔哩  传统磁盘管理无法扩充其大小，只能通过添加硬盘、创建新的分区来扩充空间。 LVMLogical Volume Manager, 封装底层物理硬盘，以逻辑卷的形式表现给上层系统，大小可动态调整。就是你不知道下面干了什么，操作系统帮你干了这些工作。 这样底层的操作就不会影响上层的操作系统。 就是一种磁盘管理机制。 四个概念 PE, Physical Ex">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/media/16530989507068.jpg">
+<meta property="og:image" content="http://example.com/media/16530999959231.jpg">
+<meta property="og:image" content="http://example.com/media/16531007620264.jpg">
+<meta property="og:image" content="http://example.com/media/16531008720204.jpg">
+<meta property="og:image" content="http://example.com/media/16531012715759.jpg">
+<meta property="og:image" content="http://example.com/media/16531013631941.jpg">
+<meta property="og:image" content="http://example.com/media/16531016152757.jpg">
+<meta property="article:published_time" content="2022-09-07T16:00:00.000Z">
+<meta property="article:modified_time" content="2022-09-08T07:08:42.544Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/media/16530989507068.jpg">
+  
+  
+  
+  <title>LVM 解析 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Jie</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/SteinsGate_all.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="LVM 解析"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-09-08 00:00" pubdate>
+          2022年9月8日 凌晨
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          1.1k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          10 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">LVM 解析</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <hr>
+<p><a target="_blank" rel="noopener" href="https://b23.tv/ZLSREqz">Linux LVM分区与应用与详解-哔哩哔哩</a></p>
+<hr>
+<h1 id="传统磁盘管理"><a href="#传统磁盘管理" class="headerlink" title="传统磁盘管理"></a>传统磁盘管理</h1><p>无法扩充其大小，只能通过添加硬盘、创建新的分区来扩充空间。</p>
+<h1 id="LVM"><a href="#LVM" class="headerlink" title="LVM"></a>LVM</h1><p>Logical Volume Manager, 封装底层物理硬盘，以逻辑卷的形式表现给上层系统，大小可动态调整。就是你不知道下面干了什么，操作系统帮你干了这些工作。</p>
+<p>这样底层的操作就不会影响上层的操作系统。</p>
+<p>就是一种磁盘管理机制。</p>
+<h2 id="四个概念"><a href="#四个概念" class="headerlink" title="四个概念"></a>四个概念</h2><ul>
+<li>PE, Physical Extend, 物理拓展，是逻辑卷空间管理的最基本单位，默认是4M大小。</li>
+<li>PV, Physical Volume,  物理卷</li>
+<li>VG, Volume Group, 卷组，相当于一个内存池。</li>
+<li>LV, Logical Volume, 逻辑卷</li>
+</ul>
+<p>我们最终操作使用的是逻辑卷，逻辑卷是为了取代原本的硬盘和分区。</p>
+<h3 id="操作"><a href="#操作" class="headerlink" title="操作"></a>操作</h3><ol>
+<li>先将底层硬盘格式化为PV物理卷，实质上是把硬盘划分为一个一个的PE物理扩展。</li>
+<li>创建VG卷组，其作用是装PE，可以把多个PV加到VG中。VG的大小是所有PV的大小之和，</li>
+<li>创建LV逻辑卷，就是分配VG中的PE</li>
+<li>为创建好的LV逻辑卷创建文件系统。</li>
+<li>将格式化好的LV逻辑卷挂载使用。</li>
+</ol>
+<p>VG和LV都要创建名称作为标识。</p>
+<p>创建好一个卷组之后就会出现一个以卷组名字命名的文件夹 <code>/dev/vgname/lvname</code> </p>
+<p><img src="/media/16530989507068.jpg" srcset="/img/loading.gif" lazyload></p>
+<p>每一个逻辑卷的空间可能来自不同的物理硬盘，因为组成VG的PE来自不同的硬盘。</p>
+<p>VG大小不够就往里面加硬盘，也就是加PE的数量。</p>
+<h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4><p>先分割硬盘，然后把内存块放进池子，把一些内存块划为一块，就得到了LV。</p>
+<h3 id="创建LVM"><a href="#创建LVM" class="headerlink" title="创建LVM"></a>创建LVM</h3><p><img src="/media/16530999959231.jpg" srcset="/img/loading.gif" lazyload></p>
+<p>LV逻辑卷只可能是4M的整数倍，即PE的整数倍。</p>
+<p>步骤：</p>
+<pre><code class="hljs">fdisk -l  #查看
+pvcreate /dev/sdb /dev/sdc
+#可用 pvdisplay(详细) or pvs 查看物理卷信息， vgdisplay or vgs 查看卷组信息，lvdisplay or lvs 查看逻辑卷信息。
+vgcreate name /dev/sdb /dev/sdc
+lvcreate -n name -L space comefrom
+</code></pre>
+<p>逻辑卷实际位置在。dev&#x2F;mapper中。</p>
+<h3 id="删除LVM"><a href="#删除LVM" class="headerlink" title="删除LVM"></a>删除LVM</h3><p><img src="/media/16531007620264.jpg" srcset="/img/loading.gif" lazyload></p>
+<p>要按顺序删除，要删除PV，需要先删除LV，然后删除VG，最后在删除PV。</p>
+<h3 id="拉伸一个逻辑卷"><a href="#拉伸一个逻辑卷" class="headerlink" title="拉伸一个逻辑卷"></a>拉伸一个逻辑卷</h3><p><img src="/media/16531008720204.jpg" srcset="/img/loading.gif" lazyload></p>
+<p>可在线拉伸，不需要先卸载。数据不会丢失。</p>
+<p>文件系统的大小在创建是就已经固定了，扩展后并没有更新文件系统，所以要去更新文件系统。</p>
+<h3 id="拉伸卷组"><a href="#拉伸卷组" class="headerlink" title="拉伸卷组"></a>拉伸卷组</h3><p><img src="/media/16531012715759.jpg" srcset="/img/loading.gif" lazyload></p>
+<h3 id="缩小一个逻辑卷"><a href="#缩小一个逻辑卷" class="headerlink" title="缩小一个逻辑卷"></a>缩小一个逻辑卷</h3><p><img src="/media/16531013631941.jpg" srcset="/img/loading.gif" lazyload></p>
+<p>词操作必须要离线，即unmount。要按照以上的顺序。</p>
+<p>resize和缩小的大小不一致时回你损坏数据。</p>
+<h3 id="缩小卷组"><a href="#缩小卷组" class="headerlink" title="缩小卷组"></a>缩小卷组</h3><p><img src="/media/16531016152757.jpg" srcset="/img/loading.gif" lazyload></p>
+<h4 id="小结-1"><a href="#小结-1" class="headerlink" title="小结"></a>小结</h4><p>顺序很重要，注意大小的换算。</p>
+<hr>
+<h2 id="LVM的条带化striping"><a href="#LVM的条带化striping" class="headerlink" title="LVM的条带化striping"></a>LVM的条带化striping</h2><hr>
+<p><a target="_blank" rel="noopener" href="https://www.pianshen.com/article/83141522744/">参考</a></p>
+<hr>
+<p>就是把数据跨越多个磁盘存储，即把LV上连续的数据分成大小相同的块，然后依次存储在各个磁盘的PV上。</p>
+<hr>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Linux/" class="category-chain-item">Linux</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>LVM 解析</div>
+      <div>http://example.com/2022/09/08/LVM-解析/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>John Doe</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2022年9月8日</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>许可协议</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/09/08/%E9%B8%9F%E5%93%A5%E7%9A%84-Linux-%E7%A7%81%E6%88%BF%E8%8F%9C-%E6%9C%8D%E5%8A%A1%E5%99%A8%E6%9E%B6%E8%AE%BE%E7%AF%87-Notes/" title="鸟哥的 Linux 私房菜 服务器架设篇 Notes">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">鸟哥的 Linux 私房菜 服务器架设篇 Notes</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/09/07/ArchWiki-%E4%B8%AD%E5%85%B3%E4%BA%8E-Bash-%E7%9A%84%E9%83%A8%E5%88%86/" title="ArchWiki 中关于 Bash 的部分">
+                        <span class="hidden-mobile">ArchWiki 中关于 Bash 的部分</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
