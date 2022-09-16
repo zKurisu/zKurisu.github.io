@@ -24,7 +24,7 @@
 <meta property="og:description" content="琐碎知识点printf 分成多行写, 用 \: 12printf(&quot;Hello \    World&quot;); 第二章 常量, 变量和表达式2.2 常量转换说明 (Conversion Specification) 又被称为占位符 (placeholder).  2.3 变量变量是计算机存储器中的一块命名的空间, 可以在里面存储一个值, 存储的值是可以随时变化的, 所以才叫做变量.">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2022-09-12T13:26:46.000Z">
-<meta property="article:modified_time" content="2022-09-14T13:49:30.276Z">
+<meta property="article:modified_time" content="2022-09-15T07:43:23.398Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -218,7 +218,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          13k 字
+          15k 字
         
       </span>
     
@@ -229,7 +229,7 @@
         
         
         
-          111 分钟
+          123 分钟
         
       </span>
     
@@ -639,6 +639,47 @@
 <p>在用 gdb 调试时, 可以用 disassemble 命令反汇编. 如果 disassemble 命令后面跟函数名或地址则反汇编指定的函数.</p>
 <p>si 命令可以逐条指令 (应该是汇编指令) 进行单步调试. info registers 可以显示所有寄存器的当前值. 在 gdb 中表示寄存器名时前面要加 <code>$</code>, 如 <code>(gdb) p $esp</code>. <code>(gdb) x/20 $esp</code> 命令可以查看内存中从 0xbff1c3f4 地址开始的 20 个 32 位数.</p>
 <p>在执行程序时, 操作系统为进程分配一块栈空间来保存函数栈帧, esp (Stack Pointer) 寄存器总是指向栈顶, 在 x86 平台上这个栈是从高地址向低地址增长的.</p>
+<p>Linux 内核为每个新进程指定的栈空间的起始地址都会有些不同, 所以每次运行这个程序得到的地址都不一样.</p>
+<p><mark>参数是从右向左依次压栈的.</mark> </p>
+<p>这里栈指针每次减四是因为数据为 int 类型, 占四个字节.</p>
+<p>在每个函数的栈帧中, <code>ebp</code> (Base Pointer) 指向栈底, <code>esp</code> 指向栈顶. 函数的参数和局部变量都是通过 <code>ebp</code> 的值加上一个偏移量来访问.</p>
+<p>在 gdb 中可以用 bt 命令和 frame 命令查看每层栈帧上的参数和局部变量.</p>
+<p>bar 函数有一个 int 型的返回值, 这个返回值是通过 eax 寄存器传递的.</p>
+<h2 id="18-2-main-函数-启动例程和退出状态"><a href="#18-2-main-函数-启动例程和退出状态" class="headerlink" title="18.2 main 函数, 启动例程和退出状态"></a>18.2 main 函数, 启动例程和退出状态</h2><figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs css">gcc <span class="hljs-selector-tag">main</span><span class="hljs-selector-class">.c</span> -o <span class="hljs-selector-tag">main</span><br></code></pre></td></tr></table></figure>
+<p>这条命令实际可以分为三条命令来做:</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs stylus">$ gcc -S <span class="hljs-selector-tag">main</span><span class="hljs-selector-class">.c</span> <br>$ gcc -c <span class="hljs-selector-tag">main</span><span class="hljs-selector-class">.s</span> <br>$ gcc <span class="hljs-selector-tag">main</span><span class="hljs-selector-class">.o</span> <br></code></pre></td></tr></table></figure>
+<p>使用 <code>-v</code> 选项可以了解详细的编译过程:</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs stylus">$ gcc -v <span class="hljs-selector-tag">main</span><span class="hljs-selector-class">.c</span> -o main<br></code></pre></td></tr></table></figure>
+
+<p>gcc 只是一个外壳而不是真正的编译器, 真正的 C 编译器是 <code>/usr/lib/gcc/x86_64-pc-linux-gnu/12.2.0/cc1</code> (每个 Linux 版本的位置会有些许出入), gcc 调用 C 编译器, 汇编器和链接器完成 C 代码的编译链接工作.</p>
+<p>查看编译器提供的目标文件里都有什么 (这里查看符号表):</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs awk">$ nm <span class="hljs-regexp">/usr/</span>lib/crt1.o<br></code></pre></td></tr></table></figure>
+<p>或:</p>
+<figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs crystal"><span class="hljs-variable">$ </span>readelf -s crt1.o<br></code></pre></td></tr></table></figure>
+<p>符号表的每一行由地址, 符号类型和符号名组成.</p>
+<p>符号类型用一个字母表示, 大写字母是全局符号, 小写字母是局部符号, 具体含义可查 <code>man 1 nm</code>.</p>
+<p><code>T</code> 表示 Text, <code>U</code> 表示 Undefined.</p>
+<p>C 程序的入口 表示 Undefined.</p>
+<p>C 程序的入口其实是 <code>crt1.o</code> 提供的 <code>_start</code>, 它首先做一些初始化工作, 然后调用我们编写的 <code>main</code> 函数.</p>
+<p>用反汇编来查看一下 <code>_start</code> 的定义:</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs awk">$ objdump -d <span class="hljs-regexp">/usr/</span>lib/crt1.o<br></code></pre></td></tr></table></figure>
+
+<p>一个目标文件中引用了某个符号, 链接器在另一个目标文件中找到这个符号的定义并确定它的地址, 这个过程叫做 <mark>符号解析</mark> (Symble Resolution)</p>
+<p>符号解析和重定位都是通过修改指令中的地址实现的,</p>
+<p>链接器也是一种编辑器, 其编辑的是目标文件, 所以链接器叫做 Link Editor.</p>
+<p>就是把其他目标文件链接到 <code>crt1.o</code> 中.</p>
+<p>最后一个压栈的参数 <code>push $0x80483c4</code> 正是 main 函数的地址, <code>__libc_start_main</code> 在做完初始化工作之后会根据这个参数调用 main 函数.</p>
+<p>由于 main 函数是被启动例程 (startup Route, 也就是 <code>_start</code>) 调用的, 所以从 main 函数 return 时就返回到启动例程中, main 函数的返回值就被启动例程得到, 如果将启动例程表示成等价的 C 代码 (实际上启动例程一般是直接用汇编语言编写的), 则它调用 main 函数的形式是: </p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs awk"><span class="hljs-keyword">exit</span>(main(argc, argv));<br></code></pre></td></tr></table></figure>
+<p>也就是说, 启动例程得到 main 函数的返回值后, 会立即用它做参数调用 exit 函数.</p>
+<p>使用 <code>exit</code> 函数要包含 <code>stdlib.h</code> 头文件.</p>
+<h2 id="18-3-变量的存储布局"><a href="#18-3-变量的存储布局" class="headerlink" title="18.3 变量的存储布局"></a>18.3 变量的存储布局</h2><p>字符串字面值是只读, 相当于在全局作用域定义了一个 const 数组.</p>
+<p>const 变量在定义时必须初始化, 因为只有在初始化时才有机会给它一个值.</p>
+<p>链接器不会对局部符号做符号解析.</p>
+<p>一个函数定义前面也可以用 static 修饰, 表示这个函数名是局部符号.</p>
+<p>虽然栈是从高地址向低地址增长的, 但数组总是从低地址向高地址排列.</p>
+<p><code>register</code> 关键词的作用就是, 指示编译器尽可能分配一个寄存器来保存这个变量.</p>
+<p>C 语言中作用域的分类, 见书.</p>
 
                 
               </div>
@@ -719,6 +760,12 @@
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2022/09/15/Unity-3D-%E6%B8%B8%E6%88%8F%E5%BC%80%E5%8F%91-Notes/" title="Unity 3D 游戏开发 Notes">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Unity 3D 游戏开发 Notes</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">
