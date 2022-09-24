@@ -23,10 +23,12 @@
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="琐碎知识点printf 分成多行写, 用 \: 12printf(&quot;Hello \    World&quot;); 第二章 常量, 变量和表达式2.2 常量转换说明 (Conversion Specification) 又被称为占位符 (placeholder).  2.3 变量变量是计算机存储器中的一块命名的空间, 可以在里面存储一个值, 存储的值是可以随时变化的, 所以才叫做变量.">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/ctype.png">
 <meta property="article:published_time" content="2022-09-12T13:26:46.000Z">
-<meta property="article:modified_time" content="2022-09-24T01:23:24.445Z">
+<meta property="article:modified_time" content="2022-09-24T14:10:53.052Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/ctype.png">
   
   
   
@@ -218,7 +220,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          26k 字
+          30k 字
         
       </span>
     
@@ -229,7 +231,7 @@
         
         
         
-          214 分钟
+          248 分钟
         
       </span>
     
@@ -977,7 +979,115 @@
 <p>其实对于 <code>*</code> 和 <code>[]</code> 运算符来说, 数组类型和指针是统一的.</p>
 <p>C 语言规定, 只有指向同一个数组中的元素的指针之间下昂胡比较才有意义, 否则都是 <code>Undefined</code>.</p>
 <p>指针相减的结果是 <code>ptrdiff_t</code> 类型, 这个类型名在 <code>stddef.h</code> 中定义, 是一种有符号整型.</p>
-<p>数组类型做左值时表示整个数组的存储空间.</p>
+<p>数组类型做左值时表示整个数组的存储空间. 也就是说 <code>a[1]</code> 此时不是 <code>*(a + 1)</code> (这里的 <code>*</code> 表示这是一个指针类型), 而是 <code>*(*(a + 1))</code>, 即在这个地址上存的值.</p>
+<p>函数原型中参数可以写成:</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs arduino"><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">func</span><span class="hljs-params">(<span class="hljs-type">int</span> a[<span class="hljs-number">10</span>])</span></span><br><span class="hljs-function"></span>&#123;<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>等价于:</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs arduino"><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">func</span><span class="hljs-params">(<span class="hljs-type">int</span> *a)</span></span><br><span class="hljs-function"></span>&#123;<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>或:</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs arduino"><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">func</span><span class="hljs-params">(<span class="hljs-type">int</span> a[])</span></span><br><span class="hljs-function"></span>&#123;<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>第一个方括号中的数字可以不写.</p>
+<h2 id="22-4-指针与-const-限定符"><a href="#22-4-指针与-const-限定符" class="headerlink" title="22.4 指针与 const 限定符"></a>22.4 指针与 const 限定符</h2><figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs angelscript"><span class="hljs-keyword">const</span> <span class="hljs-built_in">int</span> *a;<br><span class="hljs-built_in">int</span> <span class="hljs-keyword">const</span> *a;<br></code></pre></td></tr></table></figure>
+<p>两者等价, 表示 a 是一个指向 <code>const int</code> 型的指针.</p>
+<figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs angelscript"><span class="hljs-built_in">int</span> * <span class="hljs-keyword">const</span> a;<br></code></pre></td></tr></table></figure>
+<p>表示 a 是一个指向 <code>int</code> 的 <code>const</code> 指针.</p>
+<p>良好的编程习惯应该尽可能多使用 <code>const</code> 限定符.</p>
+<p>gcc 把字符串字面值分配在 <code>.rodata</code> 段, 在运行时改写会出现段错误, 所以字符串字面值做右值时最好理解成 <code>const char*</code> 型.</p>
+<h2 id="22-5-指针与结构体"><a href="#22-5-指针与结构体" class="headerlink" title="22.5 指针与结构体"></a>22.5 指针与结构体</h2><p><code>(*p).c</code> 和 <code>(*p).num</code> 可以写成 <code>p-&gt;c</code> 和 <code>p-&gt;num</code>.</p>
+<h2 id="22-6-指向指针的指针与指针数组"><a href="#22-6-指向指针的指针与指针数组" class="headerlink" title="22.6 指向指针的指针与指针数组"></a>22.6 指向指针的指针与指针数组</h2><p><code>int *a[10]</code> 这种就是 <mark>指针数组</mark> , 后缀运算符的优先级更高, 所以 <code>a</code> 首先是一个数组.</p>
+<p><code>char *argv[]</code> 指向的命令行参数后一个指针是 <code>NULL</code>.</p>
+<p>如果给程序建立符号链接, 然后通过符号链接运行这个程序, 就可以得到不同的 <code>argv[0]</code>.</p>
+<p>关于 busybox, 这是一个可执行文件, 安装时会将 busybox 程序复制到嵌入式系统的 <code>/bin</code> 目录下, 同时在 <code>/bin</code>, <code>/sbin</code>, <code>/usr/bin</code>, <code>/usr/sbin</code> 等目录下创建很多指向 <code>/bin/busybox</code> 的符号链接, 命名为 cp, ls, mv, ifconfig 等, 不管执行哪个命令其实最终都在执行 <code>/bin/busybox</code>, 它会根据 <code>argv[0]</code> 来扮演不同的命令.</p>
+<p>在 gdb 调试时加入命令行参数, 可以在 run 或 start 命令之后加入, 也可以用 <code>set args</code> 命令设置命令行参数之后再调用 run 或 start 运行程序.</p>
+<p>指针的分析从右往左.</p>
+<h2 id="22-7-指向数组的指针与多维数组"><a href="#22-7-指向数组的指针与多维数组" class="headerlink" title="22.7 指向数组的指针与多维数组"></a>22.7 指向数组的指针与多维数组</h2><p>指向数组的指针:</p>
+<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs abnf">int (*a)[<span class="hljs-number">10</span>] <span class="hljs-operator">=</span> NULL<span class="hljs-comment">;</span><br></code></pre></td></tr></table></figure>
+<h2 id="22-8-函数类型和函数指针"><a href="#22-8-函数类型和函数指针" class="headerlink" title="22.8 函数类型和函数指针"></a>22.8 函数类型和函数指针</h2><p>在 C 语言中, 函数也是一种类型, 可以定义指向函数的指针.</p>
+<p>函数指针的内存单元里存放的是函数的入口地址 (位于 <code>.text</code> 段).</p>
+<p>分析 <code>void (*f)(const char *)</code>, <code>f</code> 首先跟 <code>*</code> 结合在一起, 因此是一个指针. <code>(*f)</code> 外面是一个函数原型的格式, 参数是 <code>const char *</code>, 返回值是 <code>void</code>.</p>
+<p>函数类型和数组类型相似, 做右值使用时自动转换成函数指针类型.</p>
+<p><mark>数组取下标运算符 <code>[]</code> 要求操作数是指针类型</mark>. <code>a[1]</code> 等价于 <code>*(a+1)</code>, 如果 a 是数组类型则要自动转换成指向首元素的指针类型.</p>
+<p>要区分函数类型和函数指针类型.</p>
+<p>以下为定义函数类型:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function"><span class="hljs-keyword">typedef</span> <span class="hljs-type">int</span> <span class="hljs-title">fn</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span></span>;<br></code></pre></td></tr></table></figure>
+
+<p>以下为定义函数指针:</p>
+<figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs angelscript"><span class="hljs-keyword">typedef</span> <span class="hljs-built_in">int</span> (*fp)(<span class="hljs-built_in">void</span>);<br></code></pre></td></tr></table></figure>
+<h2 id="22-9-不完全类型和复杂声明"><a href="#22-9-不完全类型和复杂声明" class="headerlink" title="22.9 不完全类型和复杂声明"></a>22.9 不完全类型和复杂声明</h2><p>C 语言的类型分为函数类型, 对象类型和不完全类型三大类. 对象类型又分为标量类型和非标量类型. 不完全类型是暂时没有完全定义好的类型, 编译器不知道这种类型该占几个字节的存储空间. 如:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">struct</span> <span class="hljs-title class_">s</span>;<br><span class="hljs-keyword">union</span> <span class="hljs-title class_">u</span>;<br><span class="hljs-type">char</span> <span class="hljs-type">str</span>[];<br></code></pre></td></tr></table></figure>
+<p>在分析复杂声明时, 要借助 <code>typedef</code> 把复杂声明分解成几种基本形式.</p>
+<ul>
+<li><code>T *p;</code> p 是指向 T 类型的指针</li>
+<li><code>T a[];</code> a 是由 T 类型的元素组成的数组, 但有一个例外, 如果 a 是函数的形参, 则相当于 <code>T *a</code></li>
+<li><code>T1 f(T2, T3...);</code> f 是一个函数, 参数类型是 T2, T3 等, 返回值类型是 T1</li>
+</ul>
+<p>书中例子: <code>int (*(*fp)(void *))[10];</code>.</p>
+<p>我们首先找到 name, 也就是 <code>fp</code>, 这里它前面有一个 <code>*</code>, 即 <code>*fp</code>, 说明这一长串最终肯定是一个指针, 但我们看到返回值极其复杂不便分析, 由此暂定为 <code>T1</code>, 因此可以简化为:</p>
+<figure class="highlight delphi"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs delphi">typedef int <span class="hljs-comment">(*T1(void *)</span>)[<span class="hljs-number">10</span>];<br>T1 *fp;<br></code></pre></td></tr></table></figure>
+<p>相当于 <code>*fp</code> 被替换为了 <code>T1</code>.</p>
+<p>接着又找 name, 也就是 <code>T1</code>, 其先和 <code>(void *)</code> 结合 (后缀运算符), 因此 <code>T1</code> 是一个函数类型, 仍然要掩盖返回值的复杂, 因此定为 <code>T2</code>:</p>
+<figure class="highlight delphi"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs delphi">typedef int <span class="hljs-comment">(*T2)[10];</span><br><span class="hljs-comment">typedef T2 T1(void *)</span>;<br>T1 *fp;<br></code></pre></td></tr></table></figure>
+<p>又看这里第一个 <code>typedef</code>, 这里 <code>T2</code> 先与 <code>*</code> 结合, 说明其为指针, 指向 <code>T3</code> 类型:</p>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs mipsasm">typedef int <span class="hljs-built_in">T3</span>[<span class="hljs-number">10</span>]<br>typedef <span class="hljs-built_in">T3</span> *<span class="hljs-built_in">T2</span><span class="hljs-comment">;         // T2 表示指向 T3 类型的指针</span><br>typedef <span class="hljs-built_in">T2</span> <span class="hljs-built_in">T1</span>(void *)<br><span class="hljs-built_in">T1</span> *<span class="hljs-built_in">fp</span>;<br></code></pre></td></tr></table></figure>
+<p>综合一下就是, <code>fp</code> 是一个指向一个函数类型(参数为 <code>void *</code> 返回值是指向含有 10 个元素的数组的指针)的指针.</p>
+<p>总结经验, 找 name 很重要, 通过优先级找到符合基本类型的条件后开始用 <code>typedef</code> 替换.</p>
+<p>实例练习, <code>char (*(*x(void))[3])(void)</code></p>
+<p>首先 name 为 <code>x</code>, 其和 <code>(void)</code> 结合, 表明其为函数类型, 返回值为 <code>T1</code>:</p>
+<figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs scss">typedef char (*(*T1)<span class="hljs-selector-attr">[3]</span>)(void);<br>T1 <span class="hljs-built_in">x</span>(void);<br></code></pre></td></tr></table></figure>
+<p>这里 <code>T1</code> 和 <code>*</code> 结合, 表明其为一个指针, 指向类型 <code>T2</code>:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function"><span class="hljs-keyword">typedef</span> <span class="hljs-title">char</span> <span class="hljs-params">(*T2[<span class="hljs-number">3</span>])</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span></span>;<br><span class="hljs-keyword">typedef</span> T2 *T1;<br><span class="hljs-function">T1 <span class="hljs-title">x</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span></span><br></code></pre></td></tr></table></figure>
+<p><code>T2</code> 与 <code>[3]</code> 先结合, 表明其为含有 3 个元素的数组, 再和前面的 <code>*</code> 结合, 表明是一个指针数组, 指向类型为 <code>T3</code>:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function"><span class="hljs-keyword">typedef</span> <span class="hljs-type">char</span> <span class="hljs-title">T3</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span></span>;<br><span class="hljs-keyword">typedef</span> T3 *T2[<span class="hljs-number">3</span>];<br><span class="hljs-keyword">typedef</span> T2 *T1;<br><span class="hljs-function">T1 <span class="hljs-title">x</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span></span>;<br></code></pre></td></tr></table></figure>
+<p>最后可以看出 <code>T3</code> 是一个函数类型, 参数为 <code>void</code> 类型, 返回值是 <code>char</code> 类型.</p>
+<p>递归下降法解析复杂声明.</p>
+<p>以下记录自 K&amp;R 一书 <code>5.12</code> 节:</p>
+<p>声明符 <code>dcl</code> 就是前面可能带多个 <code>*</code> 的 <code>direct-ctl</code>.</p>
+<p><code>direct-ctl</code> 可以是 name, 由一对圆括号扩起来的 <code>dcl</code>, 后面跟有一对圆括号的 <code>direct-dcl</code>, 后面跟有用方括号括起来表示可选长度的 <code>direct-dcl</code>.</p>
+<p>两个函数相互递归调用.</p>
+<h1 id="第23章-函数接口"><a href="#第23章-函数接口" class="headerlink" title="第23章 函数接口"></a>第23章 函数接口</h1><p>函数接口的描述, 函数名, 参数, 返回值.</p>
+<h3 id="23-1-1-strcpy-与-strncpy"><a href="#23-1-1-strcpy-与-strncpy" class="headerlink" title="23.1.1 strcpy 与  strncpy"></a>23.1.1 strcpy 与  strncpy</h3><p>书中建议多查阅 man page.</p>
+<p>确保 dest 以 <code>&#39;\0&#39;</code> 结尾:</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs csharp"><span class="hljs-built_in">char</span> buf[<span class="hljs-number">10</span>];<br>strncpy(buf, <span class="hljs-string">&quot;hello word&quot;</span>, <span class="hljs-keyword">sizeof</span>(buf));<br>buf[<span class="hljs-keyword">sizeof</span>(buf)<span class="hljs-number">-1</span>] = <span class="hljs-string">&#x27;\0&#x27;</span>;<br></code></pre></td></tr></table></figure>
+
+<p>函数的 Man Page 都有一部分专门讲返回值.</p>
+<p><code>CONFORMING TO</code> 部分描述了这个函数是遵照那些标准实现的.</p>
+<p><code>NOTES</code> 部分给出一些提示信息.</p>
+<p><code>BUGS</code> 部分说明了使用这些函数可能引起的 Bug.</p>
+<p>缓冲区溢出问题可能被利用, 推荐资料 “Smashing The Stack For Fun And Profit”.</p>
+<h3 id="23-1-2-malloc-与-free"><a href="#23-1-2-malloc-与-free" class="headerlink" title="23.1.2 malloc 与 free"></a>23.1.2 malloc 与 free</h3><p>位于 stdlib 中.</p>
+<p>每个进程都有一个堆空间, C 标准库函数 malloc 可以在堆空间动态分配内存, 它的底层通过 brk 系统调用向操作系统申请内存.</p>
+<p>malloc 函数保证它返回的指针指向的地址满足系统的对其要求.</p>
+<p>动态分配的内存用玩之后可以调用 free 函数释放掉.</p>
+<p>编写程序要规范, malloc 之后应该判断是否成功.</p>
+<p><code>free(p);</code> 之后, p 所指的内存空间是归还了, 但是 p 的值并没有变, 为了避免出现野指针, 因该在 <code>free(p);</code> 之后, 手动设置 <code>p = NULL</code>.</p>
+<p><code>malloc(0)</code> 是合法的, 返回一个非 NULL 指针.</p>
+<h2 id="23-2-传入参数与传出参数"><a href="#23-2-传入参数与传出参数" class="headerlink" title="23.2 传入参数与传出参数"></a>23.2 传入参数与传出参数</h2><p>把指针所指向的数据传给函数使用被称为传入参数.</p>
+<p>由函数填充指针所指的内存空间, 传回给调用者使用, 被称为传出参数.</p>
+<p>既是传入参数又是传出参数的被称为 Value-result 参数.</p>
+<p>很多系统函数对于指针参数是 NULL 的情况有特殊规定, 如果传入参数是 NULL 表示取默认值, 也可能表示不做特别处理. 传出参数是 NULL 表示调用者不需要传出值.</p>
+<h2 id="23-3-两层指针的参数"><a href="#23-3-两层指针的参数" class="headerlink" title="23.3 两层指针的参数"></a>23.3 两层指针的参数</h2><h2 id="23-4-返回值是指针的情况"><a href="#23-4-返回值是指针的情况" class="headerlink" title="23.4 返回值是指针的情况"></a>23.4 返回值是指针的情况</h2><h2 id="23-5-回调函数"><a href="#23-5-回调函数" class="headerlink" title="23.5 回调函数"></a>23.5 回调函数</h2><p>如果参数是一个函数指针, 调用者可以传递一个函数的地址给实现者, 即调用者提供一个函数但自己不去调用它, 而是让实现者去调用它, 这被称为回调函数 (Callback Function).</p>
+<p>这里有使用 <code>void *</code> 指针.</p>
+<p>回调函数的一个典型应用就是实现类似 C++ 的泛型算法 (Generics Algorithm).</p>
+<p>异步调用也是会掉函数的一种典型用法, 调用者首先将回调函数传给实现者, 实现者记住这个函数, 这称为 <mark>注册</mark> 一个回调函数, 然后当某个事件发生时实现者再调用先前注册过的函数.</p>
+<p>操作函数的函数称为高阶函数 (High-order Function).</p>
+<h2 id="23-6-可变参数"><a href="#23-6-可变参数" class="headerlink" title="23.6 可变参数"></a>23.6 可变参数</h2><p>要处理可变参数, 需要用到 C 标准库的 <code>va_list</code> 类型和 <code>va_start</code>, <code>va_arg</code>, <code>va_end</code> 宏, 都定义在 <code>stdarg.h</code> 头文件中.</p>
+<h1 id="第24章-C-标准库"><a href="#第24章-C-标准库" class="headerlink" title="第24章 C 标准库"></a>第24章 C 标准库</h1><p>Linux 平台提供的 C 标准库包括:</p>
+<ul>
+<li>一组头文件, 定义了很多类型和宏, 声明了很多库函数和全局变量</li>
+<li>一组库文件, 提供了库函数和全局变量的定义</li>
+</ul>
+<h2 id="24-1-字符串操作函数"><a href="#24-1-字符串操作函数" class="headerlink" title="24.1 字符串操作函数"></a>24.1 字符串操作函数</h2><p>程序按功能划分可分为数值计算, 符号处理和 I&#x2F;O 操作三类. 符号处理程序占相当大的比例.</p>
+<h3 id="24-1-1-给字符串赋初值"><a href="#24-1-1-给字符串赋初值" class="headerlink" title="24.1.1 给字符串赋初值"></a>24.1.1 给字符串赋初值</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;string.h&gt;</span></span><br><br><span class="hljs-function"><span class="hljs-type">void</span> *<span class="hljs-title">memset</span><span class="hljs-params">(<span class="hljs-type">void</span> *s, <span class="hljs-type">int</span> c, <span class="hljs-type">size_t</span> n)</span></span>;<br></code></pre></td></tr></table></figure>
+<p>通常调用 memset 时传给 c 的值是 0, 把一块内存区清零.</p>
+<p>C 标准说 memset 函数要把参数 c 转换成 unsigned char 型再填充到每个字节中.</p>
+<p><code>ctype.h</code> 中声明的字符处理函数 (如判断是否为数字之类). C 标准规定传给这些函数的参数可以是 EOF, EOF 是一个特殊的值, 它的类型是 int 而不是 char, 如果转换成 char 型会丢失信息.</p>
+<p><img src="/../img/ctype.png" srcset="/img/loading.gif" lazyload alt="ctype"></p>
+<h3 id="24-1-2-取字符串的长度"><a href="#24-1-2-取字符串的长度" class="headerlink" title="24.1.2 取字符串的长度"></a>24.1.2 取字符串的长度</h3><p>strlen.</p>
+<p>返回的长度不包括 <code>&#39;\0&#39;</code> 字符.</p>
+<h3 id="24-1-2-拷贝字符串"><a href="#24-1-2-拷贝字符串" class="headerlink" title="24.1.2 拷贝字符串"></a>24.1.2 拷贝字符串</h3><p>strcpy 和 strncpy 函数, 拷贝以 NULL 结尾的字符串.</p>
+<p>memcpy 和 memmove 函数, 拷贝固定的字节数.</p>
+<p>以 str 开头的函数操作以 Null 结尾的字符串, 而以 mem 开头的函数则不关心 <code>&#39;\0&#39;</code> 字符, 或者说这些函数只是把参数看做是 n 个字节, 并不看做字符串, 因此参数的指针类型是 <code>void *</code> 而非 <code>char *</code>.</p>
+<p>memmove 能够拷贝重叠区域.</p>
 
                 
               </div>
