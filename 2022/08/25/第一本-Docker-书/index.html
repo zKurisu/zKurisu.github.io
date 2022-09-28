@@ -24,7 +24,7 @@
 <meta property="og:description" content="第1章 简介容器(container) 和 管理程序虚拟化(hypervisor virtualization) 不同:  HV, 通过中间层将一台或多台独立的机器虚拟运行于物理硬件之上 Container, 直接运行在操作系统内核之上的用户空间  容器只能运行与底层宿主机相同或相似的操作系统。 Docker 是为改变容器的复杂性。 1.1 Docker 简介Docker 是一个能够把开发的应用程">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2022-08-25T02:17:54.000Z">
-<meta property="article:modified_time" content="2022-09-26T04:25:09.327Z">
+<meta property="article:modified_time" content="2022-09-26T08:58:54.172Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -218,7 +218,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          15k 字
+          16k 字
         
       </span>
     
@@ -229,7 +229,7 @@
         
         
         
-          128 分钟
+          138 分钟
         
       </span>
     
@@ -564,7 +564,9 @@
 <p>可以指定用户名或 UID 以及组或 GID:</p>
 <figure class="highlight crmsh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs crmsh"><span class="hljs-keyword">USER</span> <span class="hljs-title">user</span><br><span class="hljs-keyword">USER</span> <span class="hljs-title">user</span>:<span class="hljs-keyword">group</span><br><span class="hljs-title">USER</span> uid<br><span class="hljs-keyword">USER</span> <span class="hljs-title">uid</span>:gid<br><span class="hljs-keyword">USER</span> <span class="hljs-title">user</span>:gid<br><span class="hljs-keyword">USER</span> <span class="hljs-title">uid</span>:group<br></code></pre></td></tr></table></figure>
 <p>默认用户为 root, 可以用 <code>docker run</code> 的 <code>-u</code> 选项覆盖.</p>
-<h4 id="VOLUME"><a href="#VOLUME" class="headerlink" title="VOLUME"></a>VOLUME</h4><p>用来向基于镜像创建的容器添加卷, 一个卷是可以存在于一个或者多个容器内的特定的目录.</p>
+<h4 id="VOLUME"><a href="#VOLUME" class="headerlink" title="VOLUME"></a>VOLUME</h4><h5 id="作用"><a href="#作用" class="headerlink" title="作用"></a>作用</h5><p>在没有在 <code>docker run</code> 时使用 <code>-v</code> 选项时, 创建一个隐藏数据卷.</p>
+<h5 id="什么是隐藏数据卷"><a href="#什么是隐藏数据卷" class="headerlink" title="什么是隐藏数据卷"></a>什么是隐藏数据卷</h5><p>也就是没有指定宿主机上面的某一个目录, 因此自动在 <code>/var/lib/docker/volumes</code> 目录下自动创建的一个卷.</p>
+<h5 id="VOLUME-的作用"><a href="#VOLUME-的作用" class="headerlink" title="VOLUME 的作用"></a>VOLUME 的作用</h5><p>比如我们在 Dockerfile 中写 <code>VOLUME [ &quot;/Blog&quot; ]</code>, 并且在 run 的时候没有添加 <code>-v</code> 选项, 那么在容器创建后, 会生成 <code>/Blog</code> 这个目录, 以及在 <code>/var/lib/docker/volumes</code> 下生成一个卷, 这两个相互映射.<br>用来向基于镜像创建的容器添加卷, 一个卷是可以存在于一个或者多个容器内的特定的目录.</p>
 <p>特点:</p>
 <ul>
 <li>卷可以在容器间共享和重用</li>
@@ -714,7 +716,29 @@
 <figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs applescript">$ sudo docker <span class="hljs-built_in">run</span> -d -P <span class="hljs-comment">--volumes-from jemes_blog jamtur01/apache 091570cc2267</span><br></code></pre></td></tr></table></figure>
 <p><code>--volumes-from</code> 标志, 把指定容器里的所有卷都加入新创建的容器里.</p>
 <p>卷 这个概念感觉实际上就是挂载, 你在 Docker 里面修改了这个 卷 里的内容, 宿主机上面的目录也会更新.</p>
+<h3 id="6-1-7-备份-Jekyll-卷"><a href="#6-1-7-备份-Jekyll-卷" class="headerlink" title="6.1.7 备份 Jekyll 卷"></a>6.1.7 备份 Jekyll 卷</h3><p>如:</p>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs dockerfile">$ sudo docker <span class="hljs-keyword">run</span><span class="language-bash"> --<span class="hljs-built_in">rm</span> --volumes-from james_blog \</span><br><span class="language-bash">-v $(<span class="hljs-built_in">pwd</span>):/backup ubuntu \</span><br><span class="language-bash">tar cvf /backup/james_blog_backup.tar /var/www/html</span><br></code></pre></td></tr></table></figure>
+<p>上面命令的解释为, <code>--rm</code> 参数表明会在容器的进程运行完毕后, 自动删除容器, <code>--volumes-from james_blog</code> 指定从哪个容器中获取 volumes, <code>-v $(pwd):/backup</code> 将当前目录 (即用来存备份文件的目录) 挂载到容器中的 <code>/backup</code> 目录下, <code>ubuntu</code> 是 image 的名称, <code>tar cvf /backup/james_blog_backup.tar /var/www/html</code> 是将 <code>/var/www/html</code> 打包为 <code>/backup/james_blog_backup.tar</code> 文件.</p>
+<h3 id="6-1-8-扩展-Jekyll-示例网站"><a href="#6-1-8-扩展-Jekyll-示例网站" class="headerlink" title="6.1.8 扩展 Jekyll 示例网站"></a>6.1.8 扩展 Jekyll 示例网站</h3><h2 id="6-2-使用-Docker-构建一个-Java-应用服务"><a href="#6-2-使用-Docker-构建一个-Java-应用服务" class="headerlink" title="6.2 使用 Docker 构建一个 Java 应用服务"></a>6.2 使用 Docker 构建一个 Java 应用服务</h2><h3 id="6-2-1-WAR-文件的获取程序"><a href="#6-2-1-WAR-文件的获取程序" class="headerlink" title="6.2.1 WAR 文件的获取程序"></a>6.2.1 WAR 文件的获取程序</h3><h2 id="6-3-多容器的应用栈"><a href="#6-3-多容器的应用栈" class="headerlink" title="6.3 多容器的应用栈"></a>6.3 多容器的应用栈</h2><p><code>docker run</code> 中的 <code>-h</code> 标志, 用于指定容器的主机名. </p>
+<h2 id="6-4-不使用-SSH-管理-Docker-容器"><a href="#6-4-不使用-SSH-管理-Docker-容器" class="headerlink" title="6.4 不使用 SSH 管理 Docker 容器"></a>6.4 不使用 SSH 管理 Docker 容器</h2><p>传统上讲, 通过 SSH 登入运行环境或者虚拟机来管理服务.</p>
+<p>在 Docker 里, 大部分容器都只运行一个进程, 所以不能使用这种访问方法.</p>
+<p>需要登入容器时, 可以使用 <code>nsenter</code> 工具.</p>
+<p>nsenter 可以进入一个已经存在的容器的 shell, 即便这个容器没有运行 SSH 或任何类似目的的守护进程. 可以通过 Docker 容器安装 nsenter:</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs awk">$ sudo docker run -v <span class="hljs-regexp">/usr/</span>local<span class="hljs-regexp">/bin:/</span>target jpetazzo/nsenter<br></code></pre></td></tr></table></figure>
+<p>具体见书.</p>
+<h1 id="第7章-Docker-编配和服务发现"><a href="#第7章-Docker-编配和服务发现" class="headerlink" title="第7章 Docker 编配和服务发现"></a>第7章 Docker 编配和服务发现</h1><p>Docker Compose 是 Docker 的编配工具.</p>
+<h2 id="7-1-Docker-Compose"><a href="#7-1-Docker-Compose" class="headerlink" title="7.1 Docker Compose"></a>7.1 Docker Compose</h2><p>使用 Docker Compose, 可以用一个 YAML 文件定义一组要启动的容器, 以及容器运行时的属性. Docker Compose 称这些容器为 “服务”.</p>
+<h3 id="7-1-1-安装-Docker-Compose"><a href="#7-1-1-安装-Docker-Compose" class="headerlink" title="7.1.1 安装 Docker Compose"></a>7.1.1 安装 Docker Compose</h3><p>三种方法:</p>
+<ul>
+<li>直接安装</li>
+<li>Docker Toolbox</li>
+<li>Python Pip</li>
+</ul>
+<p>如:</p>
+<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cmake">sudo pip <span class="hljs-keyword">install</span> -U docker-compose<br></code></pre></td></tr></table></figure>
 
+<p>具体见书.</p>
+<h3 id="7-1-2-获取示例应用"><a href="#7-1-2-获取示例应用" class="headerlink" title="7.1.2 获取示例应用"></a>7.1.2 获取示例应用</h3>
                 
               </div>
             

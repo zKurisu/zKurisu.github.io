@@ -24,7 +24,7 @@
 <meta property="og:description" content="参考在 Linux 中一些不长期使用的服务, 没有被作为单独的守护进程在开机时启用, Linux 把这些服务监听端口全部由一个独立的进程 xinetd 集中监听, 当收到相应的客户端请求之后, xinetd 进程就临时启动相应服务并把相应端口移交给相应服务, 客户端断开之后, 相应的服务进程结束, xinetd 继续监听. 也就是说用来管理一些服务, 将一个请求传给其他服务. 守护进程分为两种处理">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2022-09-25T08:46:43.000Z">
-<meta property="article:modified_time" content="2022-09-25T09:29:01.671Z">
+<meta property="article:modified_time" content="2022-09-27T00:26:49.560Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -218,7 +218,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          685 字
+          2k 字
         
       </span>
     
@@ -229,7 +229,7 @@
         
         
         
-          6 分钟
+          17 分钟
         
       </span>
     
@@ -292,6 +292,33 @@
 <p>操作符可以是 <code>=</code>, <code>+=</code>, <code>-=</code>.</p>
 <h3 id="配置文件"><a href="#配置文件" class="headerlink" title="配置文件"></a>配置文件</h3><p>除了<code>/etc/xinetd.conf</code> 和 <code>/etc/xinetd.d/*</code> 外还有 <code>/etc/hosts.allow</code> 及 <code>/etc/hosts.deny</code></p>
 <h3 id="禁用和启用"><a href="#禁用和启用" class="headerlink" title="禁用和启用"></a>禁用和启用</h3><p>disabled 列表和 enabled 列表.</p>
+<h1 id="参考-B站"><a href="#参考-B站" class="headerlink" title="参考 B站"></a><a target="_blank" rel="noopener" href="https://b23.tv/FuT3XPw">参考 B站</a></h1><p>在我的 <code>/etc/xinetd.conf</code> 文件里, 内容为:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs conf"># /etc/xinetd.conf<br>#<br><br>defaults<br>&#123;<br>        instances               = 60<br>        log_type                = SYSLOG authpriv<br>        log_on_success          = HOST PID<br>        log_on_failure          = HOST<br>        cps                     = 25 30<br>&#125;<br><br>includedir /etc/xinetd.d<br></code></pre></td></tr></table></figure>
+<p>最后一行的这个 <code>includedir</code> 表示 xinetd 管理的, 服务的 xinetd 配置所在的目录.</p>
+<p>查看这个目录:</p>
+<figure class="highlight dos"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs dos">$ ls /etc/xinetd.d/<br>chargen<br>chargen-udp<br>daytime<br>daytime-udp<br>discard<br>discard-udp<br><span class="hljs-built_in">echo</span><br><span class="hljs-built_in">echo</span>-udp<br>servers<br>services<br><span class="hljs-built_in">time</span><br><span class="hljs-built_in">time</span>-udp<br></code></pre></td></tr></table></figure>
+<p>比如, 如果要让 xinetd 管理 telnet 服务, 在 <code>/etc/xinetd.d/</code> 目录下添加一个文件, 叫 <code>telnet</code>, 然好添加内容 (这里 <code>#</code> 在实际中可能并不是注释符):</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs perl">service telnet<br>&#123;<br>    flags = REUSE                   <span class="hljs-comment"># 表示反对, 作用不知</span><br>    socket_type = stream            <span class="hljs-comment"># 使用的 TCP/IP socket 类型, 值可能为 stream(TCP), dgram(UDP), raw, seqpacket</span><br>    <span class="hljs-keyword">wait</span> = <span class="hljs-keyword">no</span>                       <span class="hljs-comment"># no 即并行连接, yes 为串行连接</span><br>    user = root                     <span class="hljs-comment"># 设置服务进程的 UID</span><br>    server =<span class="hljs-regexp">/usr/</span>bin/in.telnetd     <span class="hljs-comment"># 服务的命令所在位置</span><br>    log_on_failure += USERID        <span class="hljs-comment"># 指定失败时登记的信息</span><br>    disable = <span class="hljs-keyword">no</span>                    <span class="hljs-comment"># 表示服务是否开启 yes/no</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<p>所有信息可以在 <code>man xinetd.conf</code> 中查看.</p>
+<p>还有几个比较常用:</p>
+<ul>
+<li><code>server_args</code>, 传给 <code>server</code> 的参数</li>
+<li><code>port</code>, 如果 <code>/etc/services</code> 里面列出了服务的 port, 必须和其一样</li>
+</ul>
+<p>举 port 的例子, 如果 service 是这样写的:</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs routeros">service netcat<br>&#123;<br>   <span class="hljs-built_in"> port </span>= 50000<br>    flags = REUSE                   <br>    socket_type = stream             <br>    wait = <span class="hljs-literal">no</span>                       <br>   <span class="hljs-built_in"> user </span>= root                     <br>   <span class="hljs-built_in"> server </span>=/usr/bin/netcat<br>    server_args = -lp 50001 -e shell<br>    log_on_failure += USERID        <br>    <span class="hljs-built_in">disable</span> = <span class="hljs-literal">no</span>                    <br>&#125;<br></code></pre></td></tr></table></figure>
+<p>你在另一个终端向 50000 端口发起连接:</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs powershell"><span class="hljs-variable">$</span> nc localhost <span class="hljs-number">50000</span><br><span class="hljs-variable">$</span> <span class="hljs-built_in">ls</span><br></code></pre></td></tr></table></figure>
+<p>你发现 <code>ls</code> 没有出现结果, 因为连接 50000 端口只是激活 <code>netcat</code> 这个服务, 然后再用:</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs powershell"><span class="hljs-variable">$</span> nc localhost <span class="hljs-number">50001</span> <br><span class="hljs-variable">$</span> <span class="hljs-built_in">ls</span><br></code></pre></td></tr></table></figure>
+<p>发现成功连接到 shell.</p>
+<p>可以设置, 允许谁访问, 谁不能访问, 最大连接数, 每个 IP 能有几个连接, 什么时间连接, 服务端口等.</p>
+<h2 id="启动-xinetd-服务"><a href="#启动-xinetd-服务" class="headerlink" title="启动 xinetd 服务"></a>启动 xinetd 服务</h2><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs powershell"><span class="hljs-variable">$</span> systemctl <span class="hljs-built_in">start</span> xinetd<br></code></pre></td></tr></table></figure>
+<p>查看当前哪些端口是打开的:</p>
+<figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs crystal"><span class="hljs-variable">$ </span>netstat -ntpl<br></code></pre></td></tr></table></figure>
+<p><code>-n</code> 是 <code>--numeric</code>, 显示数字地址而不是 symbolic.</p>
+<p><code>-p</code> 是 <code>--program</code>, 显示 socket 所属的 PID.</p>
+<p><code>-l</code> 是 <code>--listening</code>, 只显示监听 socket. 具体看 <code>man netstat</code>.</p>
 
                 
               </div>
