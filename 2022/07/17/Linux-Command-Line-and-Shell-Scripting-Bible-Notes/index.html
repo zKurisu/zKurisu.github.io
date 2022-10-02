@@ -31,7 +31,7 @@
 <meta property="og:image" content="http://example.com/img/strfn2.png">
 <meta property="og:image" content="http://example.com/img/timefn.png">
 <meta property="article:published_time" content="2022-07-17T04:43:22.000Z">
-<meta property="article:modified_time" content="2022-09-28T13:26:08.044Z">
+<meta property="article:modified_time" content="2022-09-30T04:47:24.141Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/gawk_var.png">
@@ -226,7 +226,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          22k 字
+          25k 字
         
       </span>
     
@@ -237,7 +237,7 @@
         
         
         
-          184 分钟
+          209 分钟
         
       </span>
     
@@ -849,6 +849,85 @@
 <h3 id="21-1-1-next-命令"><a href="#21-1-1-next-命令" class="headerlink" title="21.1.1 next 命令"></a>21.1.1 next 命令</h3><h4 id="单行的-next-命令"><a href="#单行的-next-命令" class="headerlink" title="单行的 next 命令"></a>单行的 next 命令</h4><p>小写的 <code>n</code>.</p>
 <p>也就是说, 先找到一行, 然后在其下一行执行命令列表. 之后也是先找, 然后再到下一行执行.</p>
 <h4 id="合并文本行"><a href="#合并文本行" class="headerlink" title="合并文本行"></a>合并文本行</h4><p>单行 next 命令会将数据流中的下一行文本行移动到 sed 编辑器的工作空间 (称为模式空间), 多行版本的 next 命令 (用大写 N) 会将下一文本行添加到模式空间中已有的文本后.</p>
+<p>虽然文本还是用换行符分隔, 但 sed 编辑器现在会将两行文本当成一行来处理.</p>
+<p>在处理完一个模式空间里的文本后, 下一个匹配的行是模式空间之外的行.</p>
+<p>大概是这样, 有一个文件有四行文本:</p>
+<figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs livecodeserver">This is <span class="hljs-keyword">the</span> header <span class="hljs-built_in">line</span>.<br>This is <span class="hljs-keyword">the</span> <span class="hljs-keyword">first</span> data <span class="hljs-built_in">line</span>.<br>This is <span class="hljs-keyword">the</span> <span class="hljs-keyword">second</span> data <span class="hljs-built_in">line</span>.<br>This is <span class="hljs-keyword">the</span> <span class="hljs-keyword">last</span> <span class="hljs-built_in">line</span>.<br></code></pre></td></tr></table></figure>
+<p>可以看作:</p>
+<figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs livecodeserver">This is <span class="hljs-keyword">the</span> header <span class="hljs-built_in">line</span>.\n<br>This is <span class="hljs-keyword">the</span> <span class="hljs-keyword">first</span> data <span class="hljs-built_in">line</span>.\n<br>This is <span class="hljs-keyword">the</span> <span class="hljs-keyword">second</span> data <span class="hljs-built_in">line</span>.\n<br>This is <span class="hljs-keyword">the</span> <span class="hljs-keyword">last</span> <span class="hljs-built_in">line</span>.\n<br></code></pre></td></tr></table></figure>
+<p>命令为:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sed <span class="hljs-string">&#x27;/first/&#123; N; s/\n/ / &#125;&#x27;</span> data.txt<br></code></pre></td></tr></table></figure>
+<p>相当于是先变成这样:</p>
+<figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs livecodeserver">This is <span class="hljs-keyword">the</span> header <span class="hljs-built_in">line</span>.\n<br>This is <span class="hljs-keyword">the</span> <span class="hljs-keyword">first</span> data <span class="hljs-built_in">line</span>.\nThis is <span class="hljs-keyword">the</span> <span class="hljs-keyword">second</span> data <span class="hljs-built_in">line</span>.\n<br>This is <span class="hljs-keyword">the</span> <span class="hljs-keyword">last</span> <span class="hljs-built_in">line</span>.\n<br></code></pre></td></tr></table></figure>
+<p>然后再对 <code>first</code> 这一行, 将第一个 <code>\n</code> 转换成空格. 这就体现出合并.</p>
+<p>要注意 <code>N</code> 命令处理最后一行时的问题, 因为是最后一行, 没有下一行可以合并到模式空间, <code>N</code> 命令会叫 sed 编辑器停止.</p>
+<h3 id="21-1-2-多行删除命令"><a href="#21-1-2-多行删除命令" class="headerlink" title="21.1.2 多行删除命令"></a>21.1.2 多行删除命令</h3><p><code>d</code> 命令是删除一行, 而不是一段文本. 和 <code>N</code> 命令配合时, 会将模式空间中的都删掉.</p>
+<p><code>D</code> 命令是多行删除命令, 其只删除模式空间中的第一行. 该命令会删除到换行符 (含换行符) 为止的所有字符.</p>
+<h3 id="21-1-3-多行打印命令"><a href="#21-1-3-多行打印命令" class="headerlink" title="21.1.3 多行打印命令"></a>21.1.3 多行打印命令</h3><p><code>P</code> 命令是多行打印命令, 它只打印模式空间中的第一行. 这包括模式空间中直到换行符为止的所有的字符.</p>
+<h2 id="21-2-保持空间"><a href="#21-2-保持空间" class="headerlink" title="21.2 保持空间"></a>21.2 保持空间</h2><p>模式空间 (pattern space) 是一块活跃的缓冲区.</p>
+<p>sed 编辑器有另一块称作保持空间 (hold space) 的缓冲区域.</p>
+<p>在处理 pattern space 中的某些行时, 可以用 hold space 来临时保存一些行.</p>
+<p>有 5 条命令可用来操作 hold space:</p>
+<ul>
+<li><code>h</code>, 将 pattern space 复制到 hold space</li>
+<li><code>H</code>, 将 pattern space 附加到 hold space</li>
+<li><code>g</code>, 将 hold space 复制到 pattern space</li>
+<li><code>G</code>, 将 hold space 附加到 pattern space</li>
+<li><code>x</code>, 交换 pattern space 和 hold space 的内容</li>
+</ul>
+<p>通常, 在使用 h 或 H 命令将字符串移动到 hold space 后, 最终还要用 g, G 或 x 命令将保存的字符串移回模式空间.</p>
+<p>复制到, 意思就是会替换掉原本的内容.</p>
+<h2 id="21-3-排除命令"><a href="#21-3-排除命令" class="headerlink" title="21.3 排除命令"></a>21.3 排除命令</h2><p><code>!</code> 命令作为排除 (negate) 命令, 会让原本会其作用的命令起相反作用.</p>
+<p>如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ sed -n <span class="hljs-string">&#x27;/head/!p&#x27;</span> data2.txt<br></code></pre></td></tr></table></figure>
+<p>会将不包含 <code>head</code> 单词的行打印出来.</p>
+<p><code>$</code> 表示的是特殊地址.</p>
+<p>另一个例子:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ sed <span class="hljs-string">&#x27;$!N; ...&#x27;</span> data.txt<br></code></pre></td></tr></table></figure>
+<p>会对除最后一行的其他行执行 <code>N</code> 命令.</p>
+<p>打印并不会移动缓冲区中的内容.</p>
+<h2 id="21-4-改变流"><a href="#21-4-改变流" class="headerlink" title="21.4 改变流"></a>21.4 改变流</h2><p>通常, sed 编辑器会从脚本的顶部开始, 一直执行到脚本的结尾 (D 命令除外, 它会强制 sed 编辑器返回到脚本的顶部, 而不读取新的行, 毕竟已经删除了一行了, 不可能对删除的行执行剩下的命令).</p>
+<h3 id="21-4-1-分支"><a href="#21-4-1-分支" class="headerlink" title="21.4.1 分支"></a>21.4.1 分支</h3><p>分支 (branch) 命令 <code>b</code> 的格式:</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs css"><span class="hljs-selector-attr">[address]</span><span class="hljs-selector-tag">b</span> <span class="hljs-selector-attr">[label]</span><br></code></pre></td></tr></table></figure>
+<p><code>address</code> 参数决定了哪些行的数据会触发分支命令. </p>
+<p><code>label</code> 参数定义了要跳转的位置, 如果没有加 label 参数, 跳转命令会跳转到脚本的结尾.</p>
+<p>也就是说, 可以让某些行跳过某些命令而不执行.</p>
+<p>标号以冒号开始, 最多可以是 7 个字符的长度. 要指定标签, 将它加到 <code>b</code> 命令后即可.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ sed <span class="hljs-string">&#x27;&#123;/first/b jump1 ; s/This is the/No jump on/</span><br><span class="hljs-string">&gt; :jump1</span><br><span class="hljs-string">&gt; s/This is the/Jump hero on/&#125;&#x27;</span> data2.txt<br></code></pre></td></tr></table></figure>
+
+<p>达成循环效果:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ <span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;This, is, a, test, to, remove, commas.&quot;</span> | sed -n <span class="hljs-string">&#x27;&#123;</span><br><span class="hljs-string">&gt; :start</span><br><span class="hljs-string">&gt; s/,//1p</span><br><span class="hljs-string">&gt; /,/b start</span><br><span class="hljs-string">&gt; &#125;&#x27;</span><br></code></pre></td></tr></table></figure>
+<p>注意要防止无限循环.</p>
+<p>感觉和汇编的 <code>jmp</code> 指令类似.</p>
+<h3 id="21-4-2-测试"><a href="#21-4-2-测试" class="headerlink" title="21.4.2 测试"></a>21.4.2 测试</h3><p>测试 (test) 命令 <code>t</code>, 也用来改变 sed 编辑器脚本的执行流程.</p>
+<p><code>t</code> 命令根据替换命令的结果跳转到某个标签, 而不是根据地址进行跳转.</p>
+<p>格式:</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs css"><span class="hljs-selector-attr">[address]</span>t <span class="hljs-selector-attr">[label]</span><br></code></pre></td></tr></table></figure>
+<p>和分支命令一样, 在没有指定标签的情况下, 如果测试成功, sed 回调转到脚本的结尾.</p>
+<p><code>t</code> 命令提供了对数据流中的文本执行基本的 <code>if-then</code> 命令的一个低成本办法:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ sed <span class="hljs-string">&#x27;&#123;</span><br><span class="hljs-string">&gt; s/first/matchd/</span><br><span class="hljs-string">&gt; t</span><br><span class="hljs-string">&gt; s/This is the/No match on/</span><br><span class="hljs-string">&gt; &#125;&#x27;</span> data2.txt<br></code></pre></td></tr></table></figure>
+<p>这个例子为, 如果第一个替换执行了, 就不会执行第二个.</p>
+<p>可以用测试命令来结束循环.</p>
+<h2 id="21-5-模式代替"><a href="#21-5-模式代替" class="headerlink" title="21.5 模式代替"></a>21.5 模式代替</h2><h3 id="21-5-1-amp-符号"><a href="#21-5-1-amp-符号" class="headerlink" title="21.5.1 &amp; 符号"></a>21.5.1 &amp; 符号</h3><p><code>&amp;</code> 符号可以用来代替命令中的匹配的模式. </p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ <span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;The cat sleeps in his hat.&quot;</span> | sed <span class="hljs-string">&#x27;s/.at/&quot;&amp;&quot;/g&#x27;</span><br></code></pre></td></tr></table></figure>
+<p>匹配到了 <code>cat</code>, 那么 <code>&amp;</code> 的值为 <code>cat</code>, 匹配到后面的 <code>hat</code>, 则 <code>&amp;</code> 的值为 <code>hat</code>.</p>
+<h3 id="21-5-2-代替单独的单词"><a href="#21-5-2-代替单独的单词" class="headerlink" title="21.5.2 代替单独的单词"></a>21.5.2 代替单独的单词</h3><p>sed 编辑器用圆括号来定义替换模式中的子模式.</p>
+<p>替代字符由反斜线和数字组成, 数字表明子模式的位置, 如 <code>\1</code>, <code>\2</code>.</p>
+<p>在替换命令中使用圆括号时, 必须用转移字符将它们标示为分组字符而不是普通的圆括号, 这有点反常:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ <span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;The System Administrator manual&quot;</span> | sed <span class="hljs-string">&#x27;</span><br><span class="hljs-string">&gt; s/\(System\) Administrator/\1 User/&#x27;</span><br></code></pre></td></tr></table></figure>
+<p>正则表达式的 <code>*</code> 放在文本的后面.</p>
+<h2 id="21-6-在脚本中使用-sed"><a href="#21-6-在脚本中使用-sed" class="headerlink" title="21.6 在脚本中使用 sed"></a>21.6 在脚本中使用 sed</h2><h3 id="21-6-1-使用包装脚本"><a href="#21-6-1-使用包装脚本" class="headerlink" title="21.6.1 使用包装脚本"></a>21.6.1 使用包装脚本</h3><p>在 shell 脚本中, 可以将普通的 shell 变量及参数和 sed 编辑器脚本一起使用:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-meta">#! /bin/bash</span><br>sed -n <span class="hljs-string">&#x27;&#123; 1!G ; h ; $p&#125;&#x27;</span> <span class="hljs-variable">$1</span> <br></code></pre></td></tr></table></figure>
+<p>这个把命令行的第一个参数 (这里可以是文件名) 当成 sed 的输入. 这里的 <code>$p</code> 的含义是, 只有最后一行才打印. <code>p</code> 是一个动作.</p>
+<h3 id="21-6-2-重定向-sed-的输出"><a href="#21-6-2-重定向-sed-的输出" class="headerlink" title="21.6.2 重定向 sed 的输出"></a>21.6.2 重定向 sed 的输出</h3><p>默认情况下, sed 编辑器会将脚本的结果输出到 STDOUT 上, 可以在 shell 脚本中使用各种标准方法对 sed 编辑器的输出进行重定向.</p>
+<p>如用 <code>$()</code> 重定向到变量中.</p>
+<h2 id="21-7-创建-sed-实用工具"><a href="#21-7-创建-sed-实用工具" class="headerlink" title="21.7 创建 sed 实用工具"></a>21.7 创建 sed 实用工具</h2><h3 id="21-7-1-加倍行间距"><a href="#21-7-1-加倍行间距" class="headerlink" title="21.7.1 加倍行间距"></a>21.7.1 加倍行间距</h3><p>保持空间的默认值为一个空行.</p>
+<h3 id="21-7-2-对可能含有空白行的文件加倍行间距"><a href="#21-7-2-对可能含有空白行的文件加倍行间距" class="headerlink" title="21.7.2 对可能含有空白行的文件加倍行间距"></a>21.7.2 对可能含有空白行的文件加倍行间距</h3><p>先删除所有的空白行, 然后用 <code>G</code> 命令在所有行后插入新的空白行.</p>
+<h3 id="21-7-3-给文件中的行编号"><a href="#21-7-3-给文件中的行编号" class="headerlink" title="21.7.3 给文件中的行编号"></a>21.7.3 给文件中的行编号</h3><p>在获得等号的输出后, 可以通过管道将输出传给另一个 sed 编辑器脚本, 它会使用 <code>N</code> 命令来合并这两行, 还需要用替换命令将换行符更换成空格或制表符.</p>
+<h3 id="21-7-4-打印末尾行"><a href="#21-7-4-打印末尾行" class="headerlink" title="21.7.4 打印末尾行"></a>21.7.4 打印末尾行</h3><p>创建滚动窗口. 通过循环使用 <code>N</code> 和 <code>D</code> 命令, 可以做到, 向模式空间的文本行块增加新行的同时删除旧行.</p>
+<p><code>q</code> (quit) 退出命令会停止循环.</p>
+<h3 id="21-7-5-删除行"><a href="#21-7-5-删除行" class="headerlink" title="21.7.5 删除行"></a>21.7.5 删除行</h3><p>选择性的删除数据中不需要的空白行.</p>
+<p>区间地址, 如 <code>/./,/^$/</code> 两个 pattern 用 <code>,</code> 分隔, 区间的开始是 <code>/./</code> 匹配任意的一个字符, 结尾是 <code>/^$/</code> 匹配一个空行.</p>
 <h1 id="第22章-gawk-进阶"><a href="#第22章-gawk-进阶" class="headerlink" title="第22章 gawk 进阶"></a>第22章 gawk 进阶</h1><p>gawk 同样不会直接修改文件.</p>
 <h2 id="22-1-使用变量"><a href="#22-1-使用变量" class="headerlink" title="22.1 使用变量"></a>22.1 使用变量</h2><p>两种类型:</p>
 <ul>
