@@ -24,8 +24,9 @@
 <meta property="og:description" content="第10章 高性能 Web 服务器 Nginx (engine x)10.1.1 Nginx 的组成与工作原理Nginx 仅仅通过查找配置文件将客户端的请求映射到一个 location block. location block 用于 URL 匹配. Nginx 的模块直接被编译进 Nginx, 属于静态编译方式. 模块感觉相当与插件, 包含一些指令. 在解析配置文件时, Nginx 的每个模块都有">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/file_structure.png">
+<meta property="og:image" content="http://example.com/img/internal_var.png">
 <meta property="article:published_time" content="2022-10-01T23:03:53.000Z">
-<meta property="article:modified_time" content="2022-10-02T02:31:10.142Z">
+<meta property="article:modified_time" content="2022-10-03T08:50:45.125Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/file_structure.png">
@@ -220,7 +221,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          980 字
+          2.8k 字
         
       </span>
     
@@ -231,7 +232,7 @@
         
         
         
-          9 分钟
+          24 分钟
         
       </span>
     
@@ -280,13 +281,7 @@
 <p>模块感觉相当与插件, 包含一些指令.</p>
 <p>在解析配置文件时, Nginx 的每个模块都有可能去处理某个请求, 但是同一个请求只能由一个模块来完成.</p>
 <h2 id="10-3-配置与调试-Nginx"><a href="#10-3-配置与调试-Nginx" class="headerlink" title="10.3 配置与调试 Nginx"></a>10.3 配置与调试 Nginx</h2><h3 id="10-3-1-Nginx-配置文件结构"><a href="#10-3-1-Nginx-配置文件结构" class="headerlink" title="10.3.1 Nginx 配置文件结构"></a>10.3.1 Nginx 配置文件结构</h3><p><img src="/../img/file_structure.png" srcset="/img/loading.gif" lazyload alt="Nginx 配置文件结构"></p>
-<h3 id="10-3-2-Nginx-配置文件详解"><a href="#10-3-2-Nginx-配置文件详解" class="headerlink" title="10.3.2 Nginx 配置文件详解"></a>10.3.2 Nginx 配置文件详解</h3><p>Nginx 配置文件主要分成四个部分: main (全局设置), server (主机设置), upstream (负载均衡服务器设置) 和 location (URL 匹配特定位置的设置).</p>
-<p>main 部分设置的命令将影响其他所有设置.</p>
-<p>server 部分的命令主要用于指定主机和端口.</p>
-<p>upstream 命令主要用于负载均衡, 设置一系列的后端服务器.</p>
-<p>location 部分用于匹配网页位置.</p>
-<p>server 继承 main, location 继承 server, upstream 既不会继承其他设置, 也不会被继承.</p>
-<p>location 中的 <code>expires</code> 指令用来指定静态文件的过期时间.</p>
+<h3 id="10-3-2-Nginx-配置文件详解"><a href="#10-3-2-Nginx-配置文件详解" class="headerlink" title="10.3.2 Nginx 配置文件详解"></a>10.3.2 Nginx 配置文件详解</h3><p>location 中的 <code>expires</code> 指令用来指定静态文件的过期时间.</p>
 <figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs nginx"><span class="hljs-section">location</span> <span class="hljs-regexp">~ .*.jsp$</span> &#123;<br>    <span class="hljs-attribute">index</span> index.jsp;<br>    <span class="hljs-attribute">proxy_pass</span> http://localhost:8080;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>这一段将所有以 <code>.jsp</code> 后缀的文件都交给本机的 8080 端口处理.</p>
 <p>错误信息的返回页面的大小要超过 512KB, 否则会被 IE 浏览器替换为 IE 默认的错误页面.</p>
@@ -298,6 +293,78 @@
 <p><code>-c</code> 参数用于指定配置文件路径, 不指定的话默认到安装目录下查找 <code>conf/nginx.conf</code></p>
 <h2 id="10-4-Nginx-常用功能介绍"><a href="#10-4-Nginx-常用功能介绍" class="headerlink" title="10.4 Nginx 常用功能介绍"></a>10.4 Nginx 常用功能介绍</h2><h3 id="10-4-1-Nginx-反向代理应用实例"><a href="#10-4-1-Nginx-反向代理应用实例" class="headerlink" title="10.4.1 Nginx 反向代理应用实例"></a>10.4.1 Nginx 反向代理应用实例</h3><p>当一台代理服务器能够代理外部网络上的访问请求来访问内部网络时, 这种代理服务的方式称为反向代理.</p>
 <h4 id="1-多域名跳转应用实例"><a href="#1-多域名跳转应用实例" class="headerlink" title="1. 多域名跳转应用实例"></a>1. 多域名跳转应用实例</h4><p>一个网站可以有多个域名.</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs awk">server www.tb.com<br>location / &#123;<br>proxy_pass http:<span class="hljs-regexp">//</span><span class="hljs-number">192.168</span>.<span class="hljs-number">66.90</span>:<span class="hljs-number">8080</span><span class="hljs-regexp">/web/</span>;<br>&#125;<br>location /admin &#123;<br>proxy_pass http:<span class="hljs-regexp">//</span><span class="hljs-number">192.168</span>.<span class="hljs-number">66.90</span>:<span class="hljs-number">8080</span><span class="hljs-regexp">/admin/</span>;<br>&#125;<br>server m.tb.com<br>location / &#123;<br>proxy_pass http:<span class="hljs-regexp">//</span><span class="hljs-number">192.168</span>.<span class="hljs-number">66.90</span>:<span class="hljs-number">8080</span><span class="hljs-regexp">/wap/</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h4 id="2-通过-Nginx-重定向实现新旧域名过渡"><a href="#2-通过-Nginx-重定向实现新旧域名过渡" class="headerlink" title="2. 通过 Nginx 重定向实现新旧域名过渡"></a>2. 通过 Nginx 重定向实现新旧域名过渡</h4><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs nginx"><span class="hljs-section">server</span> &#123;<br><span class="hljs-attribute">server_name</span> www.taob.com;<br><span class="hljs-attribute">rewrite</span><span class="hljs-regexp"> ^/(.*)$</span> http://www.tb.com/<span class="hljs-variable">$1</span> <span class="hljs-literal">permanent</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p><code>rewrite</code> 模块用于重定向.</p>
+<h4 id="3-alias-在-Nginx-下的应用"><a href="#3-alias-在-Nginx-下的应用" class="headerlink" title="3. alias 在 Nginx 下的应用"></a>3. alias 在 Nginx 下的应用</h4><p>设置别名的功能:</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs awk">location /i &#123;<br>    alias <span class="hljs-regexp">/var/</span>www<span class="hljs-regexp">/html/im</span>ages/;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>将请求中的 <code>/i</code> 替换为 <code>/var/www/html/images/</code>.</p>
+<p>还比如:</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs awk">location ~ ^<span class="hljs-regexp">/download/</span>(.*)$ &#123;<br>    alias <span class="hljs-regexp">/home/</span>webdata<span class="hljs-regexp">/www/</span><span class="hljs-variable">$1</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>这里的 <code>$1</code> 是引用正则表达式中捕获的内容.</p>
+<p>在 Nginx 中, alias 命令和 root 命令有些类似, 但还是有差别.</p>
+<p>alias 指定的目录是当前目录, 而 root 指定的是根目录.</p>
+<p>一般情况下, 建议在 <code>location /</code> 中通过 root 命令来配置根目录, 而在其他目录配置的位置使用 alias 命令.</p>
+<h4 id="location-命令应用实例"><a href="#location-命令应用实例" class="headerlink" title="location 命令应用实例"></a>location 命令应用实例</h4><p>实现 IP 访问控制, 需要使用 <code>ngx_http_access_module</code> 模块 (也就是编译时加入这个模块), 如:</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs nginx"><span class="hljs-section">location</span> / &#123;<br>    <span class="hljs-attribute">deny</span> <span class="hljs-number">192.168.66.80</span>;<br>    <span class="hljs-attribute">allow</span> <span class="hljs-number">192.168.66.0</span>/<span class="hljs-number">24</span>;<br>    <span class="hljs-attribute">deny</span> all;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>禁止访问某个目录:</p>
+<figure class="highlight crmsh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs crmsh"><span class="hljs-keyword">location</span> <span class="hljs-title">~ ^/(WEB-INF</span>)/ &#123;<br>    <span class="hljs-keyword">deny</span> all;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="10-4-2-Nginx-的-URL-重新应用实例"><a href="#10-4-2-Nginx-的-URL-重新应用实例" class="headerlink" title="10.4.2 Nginx 的 URL 重新应用实例"></a>10.4.2 Nginx 的 URL 重新应用实例</h3><p>常见的 URL 重写模块命令有 if, rewrite, set, break 等.</p>
+<h4 id="1-if-命令"><a href="#1-if-命令" class="headerlink" title="1. if 命令"></a>1. if 命令</h4><p>语法和 C 语言一样.</p>
+<p>可以在 server, location 部分使用.</p>
+<p>几个可以在判断部分使用的匹配.</p>
+<p>正则匹配:</p>
+<ul>
+<li><code>~</code>, 区分大小写匹配</li>
+<li><code>~*</code>, 不区分大小写匹配</li>
+<li><code>!~</code> 和 <code>!~*</code>, 非</li>
+</ul>
+<p>文件及目录匹配, 这里和 shell script 差不多:</p>
+<ul>
+<li><code>-f</code>, 是否是文件</li>
+<li><code>-d</code>, 是否是目录</li>
+<li><code>-e</code>, 是否存在</li>
+<li><code>-x</code>, 文件是否可执行</li>
+</ul>
+<p>Nginx 配置文件的内置变量:<br><img src="/../img/internal_var.png" srcset="/img/loading.gif" lazyload alt="内置变量"></p>
+<h4 id="2-rewrite-命令"><a href="#2-rewrite-命令" class="headerlink" title="2. rewrite 命令"></a>2. rewrite 命令</h4><p>Nginx 通过 <code>ngx_http_rewrite_module</code> 模块支持 URL 重写和 if 条件判断, 但要使用 rewrite 功能, 需要 pcre 支持, 应在编译 Nginx 时指定 pcre 源码目录.</p>
+<p>语法是:</p>
+<figure class="highlight coq"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs coq"><span class="hljs-built_in">rewrite</span> regex flag<br></code></pre></td></tr></table></figure>
+<p>可以在 server, location, if 部分使用.</p>
+<p>主要的 flag 标记:</p>
+<ul>
+<li>last</li>
+<li>break</li>
+<li>redirect</li>
+<li>permanent</li>
+</ul>
+<h4 id="3-set-命令"><a href="#3-set-命令" class="headerlink" title="3. set 命令"></a>3. set 命令</h4><p><code>set</code> 命令可以设置一个变量并为其赋值.</p>
+<p>不能使用 <code>set</code> 设置 <code>$http_xxx</code> 头部变量的值.</p>
+<p>语法:</p>
+<figure class="highlight gams"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs gams"><span class="hljs-keyword">set</span> <span class="hljs-keyword">variable</span> <span class="hljs-comment">value</span><br></code></pre></td></tr></table></figure>
+<p>可以在 server, location, if 字段中使用.</p>
+<p>如:</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs nginx"><span class="hljs-section">location</span> / &#123;<br><span class="hljs-attribute">proxy_pass</span> http://127.0.0.1:8080/;<br><span class="hljs-attribute">set</span> <span class="hljs-variable">$query</span> <span class="hljs-variable">$query_string</span>;<br><span class="hljs-attribute">rewrite</span> /dede /wordpress?query?;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h4 id="break-命令"><a href="#break-命令" class="headerlink" title="break 命令"></a>break 命令</h4><p>表示完成当前设置的规则后, 不再匹配后面的重写规则.</p>
+<p>语法:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs kotlin"><span class="hljs-keyword">break</span><br></code></pre></td></tr></table></figure>
+<p>可以在 server, location, if 字段中使用.</p>
+<p>如:</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs nginx"><span class="hljs-section">server</span> &#123;<br>    <span class="hljs-attribute">listen</span> <span class="hljs-number">80</span>;<br>    <span class="hljs-attribute">server_name</span> www.tb.cn www.taob.com;<br><br>    <span class="hljs-attribute">if</span> (<span class="hljs-variable">$host</span> != <span class="hljs-string">&#x27;www.tb.cn&#x27;</span>) &#123;<br>        <span class="hljs-attribute">rewrite</span><span class="hljs-regexp"> ^/(.*)$</span> http://www.tb.cn/error.txt<br>        <span class="hljs-literal">break</span>;<br>        <span class="hljs-attribute">rewrite</span><span class="hljs-regexp"> ^/(.*)$</span> http://www.tb.cn/<span class="hljs-variable">$1</span> <span class="hljs-literal">permanent</span>;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="10-5-案例-Nginx-作为-Web-缓存服务器应用"><a href="#10-5-案例-Nginx-作为-Web-缓存服务器应用" class="headerlink" title="10.5 案例: Nginx 作为 Web 缓存服务器应用"></a>10.5 案例: Nginx 作为 Web 缓存服务器应用</h2><h2 id="10-6-案例-Nginx-作为负载均衡服务器应用"><a href="#10-6-案例-Nginx-作为负载均衡服务器应用" class="headerlink" title="10.6 案例: Nginx 作为负载均衡服务器应用"></a>10.6 案例: Nginx 作为负载均衡服务器应用</h2><p>Nginx 的负载均衡功能是通过 upstream 命令实现的.</p>
+<h3 id="10-6-1-Nginx-的负载均衡算法"><a href="#10-6-1-Nginx-的负载均衡算法" class="headerlink" title="10.6.1 Nginx 的负载均衡算法"></a>10.6.1 Nginx 的负载均衡算法</h3><h2 id="10-7-Nginx-性能优化技巧"><a href="#10-7-Nginx-性能优化技巧" class="headerlink" title="10.7 Nginx 性能优化技巧"></a>10.7 Nginx 性能优化技巧</h2><p>三个方面:</p>
+<ul>
+<li>编译安装</li>
+<li>第三方插件</li>
+<li>系统内核</li>
+</ul>
+<h3 id="10-7-1-编译安装过程优化"><a href="#10-7-1-编译安装过程优化" class="headerlink" title="10.7.1 编译安装过程优化"></a>10.7.1 编译安装过程优化</h3><p>编译之前, 学该相关源代码, 取消 <code>debug</code> 模式.</p>
+<p>注释掉 <code>auto/cc/gcc</code> 中的:</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs ini"><span class="hljs-comment"># debug</span><br><span class="hljs-attr">CFLAGS</span>=<span class="hljs-string">&quot; $CFLAGS -g&quot;</span><br></code></pre></td></tr></table></figure>
+
+<p>使用以下两个参数:</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs ini"><span class="hljs-attr">--with-cc-opt</span>=<span class="hljs-string">&#x27;-O3&#x27;</span><br><span class="hljs-attr">--with-cpu-opt</span>=CPU <span class="hljs-comment"># 这里要指定一个特定的 CPU</span><br></code></pre></td></tr></table></figure>
+<p>利用 <code>cat /proc/cpuinfo | grep &quot;model name&quot;</code> 来确定.</p>
 
                 
               </div>
@@ -378,6 +445,12 @@
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2022/10/02/ArchWiki-%E5%85%B3%E4%BA%8E-Zim-%E9%83%A8%E5%88%86/" title="ArchWiki-关于-Zim-部分">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">ArchWiki-关于-Zim-部分</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">

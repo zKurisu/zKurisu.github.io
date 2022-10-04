@@ -24,7 +24,7 @@
 <meta property="og:description" content="第1章 简介容器(container) 和 管理程序虚拟化(hypervisor virtualization) 不同:  HV, 通过中间层将一台或多台独立的机器虚拟运行于物理硬件之上 Container, 直接运行在操作系统内核之上的用户空间  容器只能运行与底层宿主机相同或相似的操作系统。 Docker 是为改变容器的复杂性。 1.1 Docker 简介Docker 是一个能够把开发的应用程">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2022-08-25T02:17:54.000Z">
-<meta property="article:modified_time" content="2022-09-26T08:58:54.172Z">
+<meta property="article:modified_time" content="2022-10-02T07:08:13.819Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -218,7 +218,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          16k 字
+          17k 字
         
       </span>
     
@@ -229,7 +229,7 @@
         
         
         
-          138 分钟
+          145 分钟
         
       </span>
     
@@ -738,7 +738,28 @@
 <figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cmake">sudo pip <span class="hljs-keyword">install</span> -U docker-compose<br></code></pre></td></tr></table></figure>
 
 <p>具体见书.</p>
-<h3 id="7-1-2-获取示例应用"><a href="#7-1-2-获取示例应用" class="headerlink" title="7.1.2 获取示例应用"></a>7.1.2 获取示例应用</h3>
+<h3 id="7-1-2-获取示例应用"><a href="#7-1-2-获取示例应用" class="headerlink" title="7.1.2 获取示例应用"></a>7.1.2 获取示例应用</h3><h3 id="7-1-3-docker-compose-yml-文件"><a href="#7-1-3-docker-compose-yml-文件" class="headerlink" title="7.1.3 docker-compose.yml 文件"></a>7.1.3 docker-compose.yml 文件</h3><p>执行 <code>docker-compose up</code> 命令, Compose 会启动这些容器, 使用指定的参数来执行, 并将所有日志输出合并到一起. </p>
+<p>示例 <code>docker-compose.yml</code> 文件:</p>
+<figure class="highlight nestedtext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs nestedtext"><span class="hljs-attribute">version</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&#x27;3&#x27;</span><br><span class="hljs-attribute">services</span><span class="hljs-punctuation">:</span><br>  <span class="hljs-attribute">web</span><span class="hljs-punctuation">:</span><br>    <span class="hljs-attribute">image</span><span class="hljs-punctuation">:</span> <span class="hljs-string">jamtur01/composeapp</span><br>    <span class="hljs-attribute">command</span><span class="hljs-punctuation">:</span> <span class="hljs-string">python app.py</span><br>    <span class="hljs-attribute">ports</span><span class="hljs-punctuation">:</span><br>     <span class="hljs-bullet">-</span> <span class="hljs-string">&quot;5000:5000&quot;</span><br>    <span class="hljs-attribute">volumes</span><span class="hljs-punctuation">:</span><br>     <span class="hljs-bullet">-</span> <span class="hljs-string">.:/composeapp</span><br>    <span class="hljs-attribute">links</span><span class="hljs-punctuation">:</span><br>     <span class="hljs-bullet">-</span> <span class="hljs-string">redis</span><br>  <span class="hljs-attribute">redis</span><span class="hljs-punctuation">:</span><br>    <span class="hljs-attribute">image</span><span class="hljs-punctuation">:</span> <span class="hljs-string">redis</span><br></code></pre></td></tr></table></figure>
+<p>也可以增加 <code>build: /home/james/composeapp</code> 这个是用来构建镜像, 后面的路径为 <code>Dockerfile</code> 的位置.</p>
+<p><code>links</code> 指定了要连接到服务的其他服务.</p>
+<p>可以在 Docker Compose 官网查看 docker-compose.yml 所有可用指令列表. <a target="_blank" rel="noopener" href="https://docs.docker.com/compose/compose-file/">位置</a></p>
+<h3 id="7-1-4-运行-Compose"><a href="#7-1-4-运行-Compose" class="headerlink" title="7.1.4 运行 Compose"></a>7.1.4 运行 Compose</h3><p>创建并启动服务:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ docker-compose up<br></code></pre></td></tr></table></figure>
+
+<p>为了保证服务是唯一的, Compose 将 docker-compose.yml 文件中指定的服务名称加上目录名作为前缀, 并分别使用数字作为后缀.</p>
+<p>Compose 之后接管了每个服务输出的日志, 输出的日志每一行都使用缩短的服务名称最为前缀, 并交替输出在一起.</p>
+<p>服务和 Compose 交替运行, 这意味着, 如果使用 <code>Ctrl+C</code> 来停止 Compose 运行, 也会停止运行的服务.</p>
+<p>可以在运行 <code>Compose</code> 时指定 <code>-d</code> 标志, 其将以守护进程来运行服务.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ docker-compose up -d<br></code></pre></td></tr></table></figure>
+<h3 id="7-1-5-使用-Compose"><a href="#7-1-5-使用-Compose" class="headerlink" title="7.1.5 使用 Compose"></a>7.1.5 使用 Compose</h3><p>可以用 <code>docker-compose ps</code> 命令来查看服务的运行状态:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ docker-copose ps<br></code></pre></td></tr></table></figure>
+<p>使用 <code>docker-compose help +命令</code> 来查看相关用法. </p>
+<p><code>docker-compose stop</code> 可以停止正在运行的服务.</p>
+<p><code>docker-compose kill</code> 强制杀死服务.</p>
+<p>使用 <code>docker-compose start</code> 命令重启.</p>
+<p><code>docker-compose rm</code> 来删除这些服务.</p>
+
                 
               </div>
             
