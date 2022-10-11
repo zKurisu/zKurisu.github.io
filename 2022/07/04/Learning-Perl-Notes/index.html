@@ -26,8 +26,9 @@
 <meta property="og:image" content="http://example.com/img/file_test_ope1.png">
 <meta property="og:image" content="http://example.com/img/file_test_ope2.png">
 <meta property="og:image" content="http://example.com/img/binary_ope.png">
+<meta property="og:image" content="http://example.com/img/convery_to_disimal.png">
 <meta property="article:published_time" content="2022-07-04T11:37:10.000Z">
-<meta property="article:modified_time" content="2022-10-10T05:56:48.315Z">
+<meta property="article:modified_time" content="2022-10-11T06:00:25.191Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/file_test_ope1.png">
@@ -237,7 +238,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          27k 字
+          31k 字
         
       </span>
     
@@ -248,7 +249,7 @@
         
         
         
-          225 分钟
+          262 分钟
         
       </span>
     
@@ -1035,6 +1036,102 @@ print “Hey, I’m returning a value now!\n”;
 <figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> @all_files = &lt;*&gt;;<br><span class="hljs-keyword">my</span> $dir = <span class="hljs-string">&#x27;/etc&#x27;</span>;<br><span class="hljs-keyword">my</span> @dir_files = &lt;$dir/* $dir/.*&gt;;<br></code></pre></td></tr></table></figure>
 <h2 id="目录句柄-directory-handle"><a href="#目录句柄-directory-handle" class="headerlink" title="目录句柄 (directory handle)"></a>目录句柄 (directory handle)</h2><p>和文件句柄使用起来没多大差别.</p>
 <p>用 <code>opendir</code> 打开, 用 <code>readdir</code> 读取, 用 <code>closedir</code> 关闭. 操作的是目录里的文件名, 而不是文件内容.</p>
+<p>目录句柄会在程序结束时自动关闭.</p>
+<p><code>readdir</code> 操作符返回的文件名并不含路径名, 只是目录里的文件名. 只有加上路径名称才有办法得到文件的全名.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">opendir</span> <span class="hljs-keyword">my</span> $somedir, $dirname <span class="hljs-keyword">or</span> <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;Cannot open $dirname: $!&quot;</span>;<br><span class="hljs-keyword">while</span> (<span class="hljs-keyword">my</span> $name = <span class="hljs-keyword">readdir</span> $somedir) &#123;<br>    <span class="hljs-keyword">next</span> <span class="hljs-keyword">if</span> $name =~ <span class="hljs-regexp">/^\./</span>;<br>    $name = <span class="hljs-string">&quot;$dirname/$name&quot;</span>;<br>    <span class="hljs-keyword">next</span> <span class="hljs-keyword">unless</span> -f $name <span class="hljs-keyword">and</span> -r $name;<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>可以使用 <code>File::Spec::Functions</code> 或 <code>Path::Class</code> 模块构造用于本地系统的合适文件名.</p>
+<h2 id="递归访问目录"><a href="#递归访问目录" class="headerlink" title="递归访问目录"></a>递归访问目录</h2><p>Perl 的 <code>File::Find</code> 或 <code>File::Find::Rule</code> 或 <code>File::Finder</code> 模块可以实现 Unix 下的 find 命令.</p>
+<h2 id="文件和目录的操作"><a href="#文件和目录的操作" class="headerlink" title="文件和目录的操作"></a>文件和目录的操作</h2><h3 id="删除文件"><a href="#删除文件" class="headerlink" title="删除文件"></a>删除文件</h3><p>使用 <code>unlink</code> 操作符, 并指定要删除的文件列表.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">unlink</span> <span class="hljs-string">&#x27;slate&#x27;</span>, <span class="hljs-string">&#x27;bedrock&#x27;</span>, <span class="hljs-string">&#x27;lava&#x27;</span>;<br><span class="hljs-keyword">unlink</span> <span class="hljs-string">qw(slate bedrock lava)</span>;<br></code></pre></td></tr></table></figure>
+<p>可以配合 <code>glob</code> 使用:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">unlink</span> <span class="hljs-keyword">glob</span> <span class="hljs-string">&#x27;*.o&#x27;</span>;<br></code></pre></td></tr></table></figure>
+<p><code>unlink</code> 的返回值代表成功删除的文件数目.</p>
+<p>可以使用循环:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">foreach</span> <span class="hljs-keyword">my</span> $file (<span class="hljs-string">qw(slate bedrock lava)</span>) &#123;<br>    <span class="hljs-keyword">unlink</span> $file <span class="hljs-keyword">or</span> <span class="hljs-keyword">warn</span> <span class="hljs-string">&quot;Failed on $file: $!\n&quot;</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><code>unlink</code> 不能用来删除目录. 删除目录要使用 <code>rmdir</code>.</p>
+<p>删除文件的权限跟文件本身的权限位无关, 其取决于文件所在目录的权限位.</p>
+<h3 id="重命名文件"><a href="#重命名文件" class="headerlink" title="重命名文件"></a>重命名文件</h3><p>使用 <code>rename</code> 函数. 相当与命令行下的 <code>mv</code>.</p>
+<p>如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">rename</span> <span class="hljs-string">&#x27;old&#x27;</span>, <span class="hljs-string">&#x27;new&#x27;</span>;<br></code></pre></td></tr></table></figure>
+<p>可以移到不同目录:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">rename</span> <span class="hljs-string">&#x27;over_there/some/place/some_file&#x27;</span>, <span class="hljs-string">&#x27;some_file&#x27;</span>;<br></code></pre></td></tr></table></figure>
+<p>可以不用逗号而用 <code>=&gt;</code>:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">rename</span> <span class="hljs-string">&#x27;over_there/some/place/some_file&#x27;</span> =&gt; <span class="hljs-string">&#x27;some_file&#x27;</span>;<br></code></pre></td></tr></table></figure>
+<p>批量把名称以 <code>.old</code> 结尾的文件改名为 <code>.new</code> 结尾:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">foreach</span> <span class="hljs-keyword">my</span> $file (<span class="hljs-keyword">glob</span> <span class="hljs-string">&quot;*.old&quot;</span>) &#123;<br>    <span class="hljs-keyword">my</span> $newfile = $file;<br>    $newfile =~ <span class="hljs-regexp">s/\.old$/.new/</span>;<br>    <span class="hljs-keyword">if</span> (-e $newfile) &#123;<br>        <span class="hljs-keyword">warn</span> <span class="hljs-string">&quot;can&#x27;t rename $file to $newfile: $newfile exists\n&quot;</span>;<br>    &#125; <span class="hljs-keyword">elsif</span> (<span class="hljs-keyword">rename</span> $file =&gt; $newfile) &#123;<br><br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>        <span class="hljs-keyword">warn</span> <span class="hljs-string">&quot;rename $file to $newfile failed: $!\n&quot;</span>;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="链接与文件"><a href="#链接与文件" class="headerlink" title="链接与文件"></a>链接与文件</h3><p>目录是一种由系统管理的特殊文件, 基本上目录是一份文件名和相应 inode 编号的对照表. <code>ls -i</code> 可查看 inode.</p>
+<p>判断一个 inode 是否可用, 利用 inode 的链接数 (link count). 如果 inode 并未在任何目录里出现, 它的链接数就一定是零.</p>
+<p>所有链接数为零的 inode 都可以用来存放新文件.</p>
+<p>任何目录的链接数都至少是 2 :一个位于它的上层目录的列表里, 另一个位于它本身的列表里.</p>
+<p>利用 Perl 中的 <code>link</code> 函数建立新的链接:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">link</span> <span class="hljs-string">&#x27;chicken&#x27;</span>, <span class="hljs-string">&#x27;egg&#x27;</span> <span class="hljs-keyword">or</span> <span class="hljs-keyword">warn</span> <span class="hljs-string">&quot;can&#x27;t link chicken to egg: $!&quot;</span>;<br></code></pre></td></tr></table></figure>
+<p>和命令行下的 <code>ln chicken egg</code> 效果类似. 这是硬链接. 如果删除了 chichen 文件, 文件里的数据并不会丢失, 还可以用 egg 这个文件名来访问.</p>
+<p>目录列表的硬链接还有一条规定: 在目录列表中所有 inode 指向的文件都必须在同一个挂载卷中.</p>
+<p><code>rename</code> 虽然可以将文件移到别的目录里, 但是来源和目的地必须位于同一个文件系统 (挂载卷) 上.</p>
+<p>软链接 (symbolic link):</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">symlink</span> <span class="hljs-string">&#x27;dodgson&#x27;</span>, <span class="hljs-string">&#x27;carroll&#x27;</span> <span class="hljs-keyword">or</span> <span class="hljs-keyword">warn</span> <span class="hljs-string">&quot;can&#x27;t symlink dodgson to carroll: $!&quot;</span>;<br></code></pre></td></tr></table></figure>
+<p>符号链接是创建了新的 inode.</p>
+<p>取得符号链接指向的位置, 使用 <code>readlink</code> 函数:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $where = <span class="hljs-keyword">readlink</span> <span class="hljs-string">&#x27;carroll&#x27;</span>;<br><br><span class="hljs-keyword">my</span> $perl = <span class="hljs-keyword">readlink</span> <span class="hljs-string">&#x27;/usr/local/bin/perl&#x27;</span>;<br></code></pre></td></tr></table></figure>
+<p>两种链接都可以用 <code>unlink</code> 移除.</p>
+<h2 id="创建和删除目录"><a href="#创建和删除目录" class="headerlink" title="创建和删除目录"></a>创建和删除目录</h2><p>使用 <code>mkdir</code> 目录创建:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">mkdir</span> <span class="hljs-string">&#x27;fred&#x27;</span>, <span class="hljs-number">0755</span> <span class="hljs-keyword">or</span> <span class="hljs-keyword">warn</span> <span class="hljs-string">&quot;Cannot make fred directory: $!&quot;</span>;<br></code></pre></td></tr></table></figure>
+<p>注意这里用的是八进制数.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $name = <span class="hljs-string">&#x27;fred&#x27;</span>;<br><span class="hljs-keyword">my</span> $permissions = <span class="hljs-string">&quot;0755&quot;</span>;<br><span class="hljs-keyword">mkdir</span> $name, <span class="hljs-keyword">oct</span>($permissions) <span class="hljs-keyword">or</span> <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;Cannot create $name: $!&quot;</span>;<br></code></pre></td></tr></table></figure>
+
+<p>移除空目录直接用 <code>rmdir</code>, 每次调用只能删除一个目录:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">foreach</span> <span class="hljs-keyword">my</span> $dir <span class="hljs-string">qw(fred barbey betty)</span> &#123;<br>    <span class="hljs-keyword">rmdir</span> $dir <span class="hljs-keyword">or</span> <span class="hljs-keyword">warn</span> <span class="hljs-string">&quot;Cannot rmdir $dir: $!\n&quot;</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>删除非空目录之前, 先用 <code>unlink</code> 删除目录中的内容.</p>
+<p>进程号, 存在 <code>$$</code> 中.</p>
+<p>可以参考 <code>File::Path</code> 模块中的 <code>rmtree</code> 函数.</p>
+<h2 id="修改权限"><a href="#修改权限" class="headerlink" title="修改权限"></a>修改权限</h2><p>使用 perl 中的 <code>chmod</code> 函数:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">chmod</span> <span class="hljs-number">0755</span>, <span class="hljs-string">&#x27;fred&#x27;</span>, <span class="hljs-string">&#x27;barney&#x27;</span>;<br></code></pre></td></tr></table></figure>
+<p><code>chmod</code> 会返回成功更改的条目数量.</p>
+<p>安装 <code>File::chmod</code> 模块可以支持符号表示的权限值.</p>
+<h2 id="修改隶属关系"><a href="#修改隶属关系" class="headerlink" title="修改隶属关系"></a>修改隶属关系</h2><p>需要使用数字形式的用户标识符及组标识符:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $user = <span class="hljs-number">1004</span>;<br><span class="hljs-keyword">my</span> $group = <span class="hljs-number">100</span>;<br><span class="hljs-keyword">chown</span> $user, $group, <span class="hljs-keyword">glob</span> <span class="hljs-string">&#x27;*.o&#x27;</span>;<br></code></pre></td></tr></table></figure>
+<p>可以使用 <code>getpwnam</code> 函数将用户名转换成用户编号, <code>getgrnam</code> 把用户组名转换成组编号:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">defined</span>(<span class="hljs-keyword">my</span> $user = <span class="hljs-keyword">getpwnam</span> <span class="hljs-string">&#x27;merlyn&#x27;</span>) <span class="hljs-keyword">or</span> <span class="hljs-keyword">die</span> <span class="hljs-string">&#x27;bad user&#x27;</span>;<br><span class="hljs-keyword">defined</span>(<span class="hljs-keyword">my</span> $group = <span class="hljs-keyword">getgrnam</span> <span class="hljs-string">&#x27;users&#x27;</span>) <span class="hljs-keyword">or</span> <span class="hljs-keyword">die</span> <span class="hljs-string">&#x27;bad group&#x27;</span>;<br><span class="hljs-keyword">chown</span> $user, $group, <span class="hljs-keyword">glob</span> <span class="hljs-string">&#x27;/home/merlyn/*&#x27;</span>;<br></code></pre></td></tr></table></figure>
+<p><code>chown</code> 会返回受影响的文件数量.</p>
+<h2 id="修改时间戳"><a href="#修改时间戳" class="headerlink" title="修改时间戳"></a>修改时间戳</h2><p>使用 <code>utime</code> 函数, 前两个参数是新的访问时间和更改时间, 其余参数是要修改时间戳的文件名列表. 时间格式采用的是内部时间戳的格式 (stat 和 lstat 函数).</p>
+<p>如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $now = <span class="hljs-keyword">time</span>;<br><span class="hljs-keyword">my</span> $ago = $now - <span class="hljs-number">24</span> * <span class="hljs-number">60</span> * <span class="hljs-number">60</span>;<br><span class="hljs-keyword">utime</span> $now, $ago, <span class="hljs-keyword">glob</span> <span class="hljs-string">&#x27;*&#x27;</span>;<br></code></pre></td></tr></table></figure>
+<h1 id="第十四章-字符串与排序"><a href="#第十四章-字符串与排序" class="headerlink" title="第十四章 字符串与排序"></a>第十四章 字符串与排序</h1><h2 id="用-index-查找子字符串"><a href="#用-index-查找子字符串" class="headerlink" title="用 index 查找子字符串"></a>用 index 查找子字符串</h2><p>找出子字符串在主字符串中的相对位置:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl">$where = <span class="hljs-keyword">index</span>($big, $small);<br></code></pre></td></tr></table></figure>
+<p>返回值是整数, 表示首次出现的第一个字符的位置. 从零算起. 无法找到, 就会返回 1.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $stuff = <span class="hljs-string">&quot;Howdy world!&quot;</span>;<br><span class="hljs-keyword">my</span> $where = <span class="hljs-keyword">index</span>($stuff, <span class="hljs-string">&quot;wor&quot;</span>);<br></code></pre></td></tr></table></figure>
+<p>返回 6.</p>
+<p>可指定开始查找的位置 (第三个参数):</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $stuff = <span class="hljs-string">&quot;Howdy world!&quot;</span>;<br><span class="hljs-keyword">my</span> $where = <span class="hljs-keyword">index</span>($stuff, <span class="hljs-string">&quot;wor&quot;</span>, <span class="hljs-number">2</span>);<br><br></code></pre></td></tr></table></figure>
+<p><code>rindex</code> 返回最后出现的位置.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $last_slash = <span class="hljs-keyword">rindex</span>(<span class="hljs-string">&quot;/etc/passwd&quot;</span>, <span class="hljs-string">&quot;/&quot;</span>);<br></code></pre></td></tr></table></figure>
+<p>结果为四. 其第三个参数用来限定返回值的上限.</p>
+<h2 id="用-substr-操作子字符串"><a href="#用-substr-操作子字符串" class="headerlink" title="用 substr 操作子字符串"></a>用 substr 操作子字符串</h2><p>如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $part = <span class="hljs-keyword">substr</span>($string, $initial_position, $length);<br></code></pre></td></tr></table></figure>
+<p>可不用指定长度, 直接取到结尾如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $pebble = <span class="hljs-keyword">substr</span> <span class="hljs-string">&quot;Fred J. Flinstone&quot;</span>, <span class="hljs-number">13</span>;<br></code></pre></td></tr></table></figure>
+<p>起始位置为负数表示倒数.</p>
+<p>和 <code>index</code> 配合使用:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $long = <span class="hljs-string">&quot;some very very long string&quot;</span>;<br><span class="hljs-keyword">my</span> $right = <span class="hljs-keyword">substr</span>($long, <span class="hljs-keyword">index</span>($long, <span class="hljs-string">&quot;l&quot;</span>));<br></code></pre></td></tr></table></figure>
+<p>修改字符串被选取的部分:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $string = <span class="hljs-string">&quot;Hello, world&quot;</span>;<br><span class="hljs-keyword">substr</span>($string, <span class="hljs-number">0</span>, <span class="hljs-number">5</span>) = <span class="hljs-string">&quot;Goodbye&quot;</span>;<br></code></pre></td></tr></table></figure>
+<p>变量 <code>string</code> 的前五个字符被替换为后面的字符串, 即 “Goodbye”. (也就是前五个字符被选取出来进行处理).</p>
+<p>等同于:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $previous_value = <span class="hljs-keyword">substr</span>($string, <span class="hljs-number">0</span>, <span class="hljs-number">5</span>, <span class="hljs-string">&quot;Goodbye&quot;</span>);<br></code></pre></td></tr></table></figure>
+
+<p>配合 <code>=~</code> 和正则表达式:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">substr</span>($string, -<span class="hljs-number">20</span>) =~ <span class="hljs-regexp">s/fred/barney/g</span>;<br></code></pre></td></tr></table></figure>
+<h2 id="用-sprintf-格式化字符串"><a href="#用-sprintf-格式化字符串" class="headerlink" title="用 sprintf 格式化字符串"></a>用 sprintf 格式化字符串</h2><p>其返回格式化之后的字符串而不是打印.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $date_tag = <span class="hljs-keyword">sprintf</span> <span class="hljs-string">&quot;%4d/%02d/%02d %2d:%02d:%02d&quot;</span>, $ye, $mo, $da, $h, $m, $s;<br></code></pre></td></tr></table></figure>
+<p>格式化定义中数字字段的前置零表示必要时会在数字前补零以符合指定的宽度.</p>
+<h2 id="用-sprintf-格式化金额数字"><a href="#用-sprintf-格式化金额数字" class="headerlink" title="用 sprintf 格式化金额数字"></a>用 sprintf 格式化金额数字</h2><p>使用 <code>%.2f</code> 这种限定小数位.</p>
+<p>有用的程序:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">big_money</span> </span>&#123;<br>    <span class="hljs-keyword">my</span> $number = <span class="hljs-keyword">sprintf</span> <span class="hljs-string">&quot;%.2f&quot;</span>, <span class="hljs-keyword">shift</span> @_;<br>    <span class="hljs-number">1</span> <span class="hljs-keyword">while</span> $number =~ <span class="hljs-regexp">s/^(-?\d+)(\d\d\d)/$1,$2/</span>;<br>    $number =~ <span class="hljs-regexp">s/^(-?)/$1\$/</span>;<br>    $number;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>看不懂就翻书.</p>
+<h2 id="非十进制数字字符串的转换"><a href="#非十进制数字字符串的转换" class="headerlink" title="非十进制数字字符串的转换"></a>非十进制数字字符串的转换</h2><p>使用 <code>hex()</code> 或 <code>oct</code> 进行转换.</p>
+<p><code>0b</code> 开头表示二进制. <code>0x</code> 开头表示十六进制, 其他的表示为八进制.<br><img src="/../img/convery_to_disimal.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="高级排序"><a href="#高级排序" class="headerlink" title="高级排序"></a>高级排序</h2><p>Perl 允许你建立自己的 “排序规则子程序 (sort-definition subroutine)”.</p>
 
                 
               </div>
