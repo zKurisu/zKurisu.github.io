@@ -28,7 +28,7 @@
 <meta property="og:image" content="http://example.com/img/binary_ope.png">
 <meta property="og:image" content="http://example.com/img/convery_to_disimal.png">
 <meta property="article:published_time" content="2022-07-04T11:37:10.000Z">
-<meta property="article:modified_time" content="2022-10-11T14:14:45.435Z">
+<meta property="article:modified_time" content="2022-10-12T00:00:41.686Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/file_test_ope1.png">
@@ -238,7 +238,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          37k 字
+          38k 字
         
       </span>
     
@@ -249,7 +249,7 @@
         
         
         
-          308 分钟
+          316 分钟
         
       </span>
     
@@ -1208,7 +1208,7 @@ print “Hey, I’m returning a value now!\n”;
 <p>区别: <code>system</code> 函数会创建子进程, 子进程会在 Perl 睡眠期间执行任务. <code>exec</code> 函数却导致 Perl 进程自己去执行任务. </p>
 <p>如:</p>
 <figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">chdir</span> <span class="hljs-string">&#x27;/tmp&#x27;</span> <span class="hljs-keyword">or</span> <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;Cannot chdir /tmp: $!&quot;</span>;<br><span class="hljs-keyword">exec</span> <span class="hljs-string">&#x27;bedrock&#x27;</span>, <span class="hljs-string">&#x27;-o&#x27;</span>, <span class="hljs-string">&#x27;args1&#x27;</span>, @ARGV;<br></code></pre></td></tr></table></figure>
-<p>当运行到 exec 时, Perl 找到 <code>bedrock</code> 并且 “跳进去” 执行, 此后, 就没有 Perl 进程了, 只有那个运行 <code>bedrock</code> 命令的进程, 这样在 <code>bedrock</code> 运行结束时, 没有 Perl 进程在等待.</p>
+<p>当运行到 exec 时, Perl 找到 <code>bedrock</code> 并且 “跳进去” 执行, 此后, 就没有 Perl 进程了, 只有那个运行 <code>bedrock</code> 命令的进程, 这样在 <code>bedrock</code> 运行结束时, 没有 Perl 进程在等待. (也就是说, Perl 创建了一个子进程, 然后被这个子进程替换掉)</p>
 <p><code>exec</code> 调用之后写的代码都无法运行. 不过如果启动过程出现错误, 那么后续的捕获语句还是可以继续运行的:</p>
 <figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">exec</span> <span class="hljs-string">&#x27;date&#x27;</span>;<br><span class="hljs-keyword">die</span> <span class="hljs-string">&quot;date couldn&#x27;t run: $!&quot;</span>;<br></code></pre></td></tr></table></figure>
 <h2 id="用反引号捕获输出结果"><a href="#用反引号捕获输出结果" class="headerlink" title="用反引号捕获输出结果"></a>用反引号捕获输出结果</h2><p>无论是 <code>system</code> 还是 <code>exec</code>, 所执行命令的输出都会送往 Perl 的标准输出.</p>
@@ -1226,7 +1226,30 @@ print “Hey, I’m returning a value now!\n”;
 <figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> IPC::System::Simple <span class="hljs-string">qw(system)</span>;<br><br><span class="hljs-keyword">my</span> $tarfile = <span class="hljs-string">&#x27;something*wicked.tar&#x27;</span>;<br><span class="hljs-keyword">my</span> @dirs = <span class="hljs-string">qw(fred|flintstone &lt;barney&amp;rubble betty&gt;)</span>;<br><span class="hljs-keyword">system</span> <span class="hljs-string">&#x27;tar&#x27;</span>, <span class="hljs-string">&#x27;cvf&#x27;</span>, $tarfile, @dirs;<br></code></pre></td></tr></table></figure>
 <p>提供的 <code>systemx</code> 函数在执行外部命令时不会通过 shell 调用.</p>
 <p>捕获外部命令的输出, 使用 <code>capture</code> 或 <code>capturex</code>.</p>
+<h2 id="通过文件句柄执行外部的进程"><a href="#通过文件句柄执行外部的进程" class="headerlink" title="通过文件句柄执行外部的进程"></a>通过文件句柄执行外部的进程</h2><p>并发式运行子进程, 将命令放在 <code>open</code> 调用道德文件名部分, 并且在它前面或后面加上竖线 (即管道符号), 两个参数的形式如下:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">open</span> DATE, <span class="hljs-string">&#x27;date|&#x27;</span> <span class="hljs-keyword">or</span> <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;cannot pipe from date: $!&quot;</span>;<br><span class="hljs-keyword">open</span> MAIL, <span class="hljs-string">&#x27;|mail merlyn&#x27;</span> <span class="hljs-keyword">or</span> <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;cannot pipe to mail: $!&quot;</span>;<br></code></pre></td></tr></table></figure>
+<p><code>|</code> 在右边表示该命令的标准输出连接到 <code>DATE</code>.</p>
+<p><code>|</code> 在左边表示该命令的标准输入连接到 <code>MAIL</code>.</p>
+<p>三个参数的形式如下:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">open</span> <span class="hljs-keyword">my</span> $date_fh, <span class="hljs-string">&#x27;-|&#x27;</span>, <span class="hljs-string">&#x27;date&#x27;</span> <span class="hljs-keyword">or</span> <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;cannot pipe from date: $!&quot;</span>;<br><span class="hljs-keyword">open</span> <span class="hljs-keyword">my</span> $mail_fh, <span class="hljs-string">&#x27;|-&#x27;</span>, <span class="hljs-string">&#x27;mail merlyn&#x27;</span> <span class="hljs-keyword">or</span> <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;cannot pipe to mail: $!&quot;</span>;<br></code></pre></td></tr></table></figure>
+<p><code>-</code> 的位置替代了原来的 <code>command</code>.</p>
+<p>也可三个以上的参数:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">open</span> <span class="hljs-keyword">my</span> $mail_fh, <span class="hljs-string">&#x27;|-&#x27;</span>, <span class="hljs-string">&#x27;mail&#x27;</span>, <span class="hljs-string">&#x27; merlyn&#x27;</span> <span class="hljs-keyword">or</span> <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;cannot pipe to mail: $!&quot;</span>;<br></code></pre></td></tr></table></figure>
 
+<p>从以读取模式打开的文件句柄中读取数据:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $now = &lt;$date_fh&gt;;<br></code></pre></td></tr></table></figure>
+<p>发送数据到 mail 进程:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">print</span> $mail_fh <span class="hljs-string">&quot;The time is now $now&quot;</span>;<br></code></pre></td></tr></table></figure>
+<p>结束:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">close</span> $mail_fh;<br><span class="hljs-keyword">die</span> <span class="hljs-string">&quot;mail: non-zero exit of $?&quot;</span> <span class="hljs-keyword">if</span> $?;<br></code></pre></td></tr></table></figure>
+<p>退出状态保存在 <code>$?</code> 中.</p>
+<h2 id="用-fork-进行深入和复杂工作"><a href="#用-fork-进行深入和复杂工作" class="headerlink" title="用 fork 进行深入和复杂工作"></a>用 fork 进行深入和复杂工作</h2><figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">system</span> <span class="hljs-string">`date`</span>;<br></code></pre></td></tr></table></figure>
+<p>这条语句的低级实现:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">defined</span>(<span class="hljs-keyword">my</span> $pid = <span class="hljs-keyword">fork</span>) <span class="hljs-keyword">or</span> <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;Cannot fork: $!&quot;</span>;<br><span class="hljs-keyword">unless</span> ($pid) &#123;<br>    <span class="hljs-keyword">exec</span> <span class="hljs-string">`date`</span>;<br>    <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;cannot exec date: $!&quot;</span>;<br>&#125;<br><span class="hljs-keyword">waitpid</span>($pid, <span class="hljs-number">0</span>);<br></code></pre></td></tr></table></figure>
+<p><code>fork</code> 调用成功会返回一个 <code>pid</code>, 失败返回 <code>undef</code>.</p>
+<p><code>waitpid</code> 用于等待特定的子进程结束.</p>
+<p>深入了解可以查看 <code>perlipc</code> 文档.</p>
+<h2 id="发送及接收信号"><a href="#发送及接收信号" class="headerlink" title="发送及接收信号"></a>发送及接收信号</h2>
                 
               </div>
             
