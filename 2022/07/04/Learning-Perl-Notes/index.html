@@ -28,7 +28,7 @@
 <meta property="og:image" content="http://example.com/img/binary_ope.png">
 <meta property="og:image" content="http://example.com/img/convery_to_disimal.png">
 <meta property="article:published_time" content="2022-07-04T11:37:10.000Z">
-<meta property="article:modified_time" content="2022-10-12T00:00:41.686Z">
+<meta property="article:modified_time" content="2022-10-13T09:21:42.927Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/file_test_ope1.png">
@@ -240,7 +240,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          38k 字
+          40k 字
         
       </span>
     
@@ -251,7 +251,7 @@
         
         
         
-          316 分钟
+          338 分钟
         
       </span>
     
@@ -1245,13 +1245,61 @@ print “Hey, I’m returning a value now!\n”;
 <p>结束:</p>
 <figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">close</span> $mail_fh;<br><span class="hljs-keyword">die</span> <span class="hljs-string">&quot;mail: non-zero exit of $?&quot;</span> <span class="hljs-keyword">if</span> $?;<br></code></pre></td></tr></table></figure>
 <p>退出状态保存在 <code>$?</code> 中.</p>
-<h2 id="用-fork-进行深入和复杂工作"><a href="#用-fork-进行深入和复杂工作" class="headerlink" title="用 fork 进行深入和复杂工作"></a>用 fork 进行深入和复杂工作</h2><figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">system</span> <span class="hljs-string">`date`</span>;<br></code></pre></td></tr></table></figure>
+<h2 id="用-fork-进行深入和复杂工作"><a href="#用-fork-进行深入和复杂工作" class="headerlink" title="用 fork 进行深入和复杂工作"></a>用 fork 进行深入和复杂工作</h2><figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">system</span> <span class="hljs-string">&#x27;date&#x27;</span>;<br></code></pre></td></tr></table></figure>
 <p>这条语句的低级实现:</p>
 <figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">defined</span>(<span class="hljs-keyword">my</span> $pid = <span class="hljs-keyword">fork</span>) <span class="hljs-keyword">or</span> <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;Cannot fork: $!&quot;</span>;<br><span class="hljs-keyword">unless</span> ($pid) &#123;<br>    <span class="hljs-keyword">exec</span> <span class="hljs-string">`date`</span>;<br>    <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;cannot exec date: $!&quot;</span>;<br>&#125;<br><span class="hljs-keyword">waitpid</span>($pid, <span class="hljs-number">0</span>);<br></code></pre></td></tr></table></figure>
 <p><code>fork</code> 调用成功会返回一个 <code>pid</code>, 失败返回 <code>undef</code>.</p>
 <p><code>waitpid</code> 用于等待特定的子进程结束.</p>
 <p>深入了解可以查看 <code>perlipc</code> 文档.</p>
-<h2 id="发送及接收信号"><a href="#发送及接收信号" class="headerlink" title="发送及接收信号"></a>发送及接收信号</h2>
+<h2 id="发送及接收信号"><a href="#发送及接收信号" class="headerlink" title="发送及接收信号"></a>发送及接收信号</h2><h3 id="发送信号"><a href="#发送信号" class="headerlink" title="发送信号"></a>发送信号</h3><p>在 Linux 中可以用 <code>kill -l</code> 列出所有的信号.</p>
+<p>在 Perl 中使用 <code>kill</code> 发送信号:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">kill</span> <span class="hljs-number">2</span>, <span class="hljs-number">4200</span> <span class="hljs-keyword">or</span> <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;Cannot signal 4021 with SIGINT: $!&quot;</span>;<br></code></pre></td></tr></table></figure>
+<p>这里的 <code>2</code> 是信号, 也可以用名称如 <code>INT</code>, <code>4022</code> 是 pid:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">kill</span> <span class="hljs-string">&#x27;INT&#x27;</span>, <span class="hljs-number">4200</span> <span class="hljs-keyword">or</span> <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;Cannot signal 4021 with SIGINT: $!&quot;</span>;<br></code></pre></td></tr></table></figure>
+<p>可以使用 <code>=&gt;</code>, 这样信号名称不用被单引号包裹, 其会自动作为裸字符串:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">kill</span> <span class="hljs-string">INT =&gt;</span> <span class="hljs-number">4200</span> <span class="hljs-keyword">or</span> <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;Cannot signal 4021 with SIGINT: $!&quot;</span>;<br></code></pre></td></tr></table></figure>
+<p>编号为 <code>0</code> 的特殊信号表示, 尝试是否能向这个进程发送信号. 可用于探测进程是否存活:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">unless</span> (<span class="hljs-keyword">kill</span> <span class="hljs-number">0</span>, $pid) &#123;<br>    <span class="hljs-keyword">warn</span> <span class="hljs-string">&quot;$pid has gone away&quot;</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="接收信号"><a href="#接收信号" class="headerlink" title="接收信号"></a>接收信号</h3><p>也就是处理向这个程序发送的信号.</p>
+<p>对特殊哈希 <code>%SIG</code> 赋值会启动信号处理程序 (直到撤销为止). 哈希值是子程序名 (这里不加 <code>&amp;</code> 号). 如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $temp_directory = <span class="hljs-string">&quot;/tmp/myprog.$$&quot;</span>;<br><span class="hljs-keyword">mkdir</span> $temp_directory, <span class="hljs-number">0700</span> <span class="hljs-keyword">or</span> <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;Cannot create $temp_directory&quot;</span>;<br><br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">clean_up</span> </span>&#123;<br>    <span class="hljs-keyword">unlink</span> <span class="hljs-keyword">glob</span> <span class="hljs-string">&quot;$temp_directory/*&quot;</span>;<br>    <span class="hljs-keyword">rmdir</span> $temp_directory;<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">my_int_handler</span> </span>&#123;<br>    &amp;clean_up();<br>    <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;interrupted, exiting...\n&quot;</span>;<br>&#125;<br><br>$SIG&#123;<span class="hljs-string">&#x27;INT&#x27;</span>&#125; = <span class="hljs-string">&#x27;my_int_handler&#x27;</span>;<br>.<br>.<br>.<br>&amp;clean_up;<br></code></pre></td></tr></table></figure>
+<p>设置标记:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $int_count = <span class="hljs-number">0</span>;<br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">my_int_handler</span> </span>&#123; $int_count++ &#125;;<br>$SIG&#123;<span class="hljs-string">&#x27;INT&#x27;</span>&#125; = <span class="hljs-string">&#x27;my_int_handler&#x27;</span>;<br>...;<br><span class="hljs-keyword">while</span> (&lt;SOMEFILE) &#123;<br>    ...;<br>    <span class="hljs-keyword">if</span> ($int_count) &#123;<br>        <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;[processing interrupted...]\n&quot;</span>;<br>        <span class="hljs-keyword">last</span>;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h1 id="第十七章-高级-Perl-技巧"><a href="#第十七章-高级-Perl-技巧" class="headerlink" title="第十七章 高级 Perl 技巧"></a>第十七章 高级 Perl 技巧</h1><h2 id="切片"><a href="#切片" class="headerlink" title="切片"></a>切片</h2><p>列表切片, 就是可以用索引取得列表中的值 (把列表当作数组使用):</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $mtime = (<span class="hljs-keyword">stat</span> $some_file)[<span class="hljs-number">9</span>];<br></code></pre></td></tr></table></figure>
+<p>这里的圆括号是必须的.</p>
+<p>一次取一个值, 如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $card_num = (<span class="hljs-keyword">split</span> <span class="hljs-regexp">/:/</span>)[<span class="hljs-number">1</span>];<br><span class="hljs-keyword">my</span> $count = (<span class="hljs-keyword">split</span> <span class="hljs-regexp">/:/</span>)[<span class="hljs-number">5</span>];<br></code></pre></td></tr></table></figure>
+
+<p>一次取两个值, 如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span>($card_num, $count) = (<span class="hljs-keyword">split</span> <span class="hljs-regexp">/:/</span>)[<span class="hljs-number">1</span>, <span class="hljs-number">5</span>];<br></code></pre></td></tr></table></figure>
+<p>可以用 <code>-1</code> 代表最后一个元素.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> @numbers = (@name)[<span class="hljs-number">9</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span>];<br></code></pre></td></tr></table></figure>
+<h3 id="数组切片-array-slice"><a href="#数组切片-array-slice" class="headerlink" title="数组切片 (array slice)"></a>数组切片 (array slice)</h3><p>从数组中切出元素时不需要圆括号, 上面改为:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> @numbers = @name[<span class="hljs-number">9</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span>];<br></code></pre></td></tr></table></figure>
+<p>Perl 中 <code>$</code> 符号意味着一个东西, 而 <code>@</code> 符号意味着一组东西.</p>
+<p>以 Perl 的习惯来看开头的符号和结尾的方括号, 方括号意味着你要检索数组成员, <code>@</code> 符号意味着获取整个列表, <code>$</code> 符号意味着取单个元素.</p>
+<p>如果前面有个 <code>$</code> 符号, 下标表达式就会在标量上下文中求得索引值, 但如果之前有个 <code>@</code> 符号的话, 下表表达式就会在列表上下文中计算</p>
+<p>切片可以直接内插到字符串中.</p>
+<p>列表的元素会被 Perl 内置的 <code>$&quot;</code> 变量的内容填充, 而它的默认值就是空格, 一般不应改变. 内插时, Perl 实际上会执行 <code>join $&quot;,@list</code>.</p>
+<p>修改数组中的元素:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $new_home_phone = <span class="hljs-string">&quot;555-6099&quot;</span>;<br><span class="hljs-keyword">my</span> $new_address = <span class="hljs-string">&quot;99380 Red Rock West&quot;</span>;<br>@items[<span class="hljs-number">2</span>, <span class="hljs-number">3</span>] = ($new_address, $new_home_phone);<br></code></pre></td></tr></table></figure>
+<h3 id="哈希切片-hash-slice"><a href="#哈希切片-hash-slice" class="headerlink" title="哈希切片 (hash slice)"></a>哈希切片 (hash slice)</h3><p>切片一定是列表, 因此哈希切片也是用 <code>@</code> 符号来表示.</p>
+<p>在 Perl 中看到类似 <code>@score&#123;...&#125;</code> 的写法, 用 Perl 的习惯来看就是, 花括号意味着你要检索哈希成员, <code>@</code> 符号意味着获取的是整个列表.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> @three_scores = ($score&#123;<span class="hljs-string">&quot;barney&quot;</span>&#125;, $score&#123;<span class="hljs-string">&quot;fred&quot;</span>&#125;, $score&#123;<span class="hljs-string">&quot;dino&quot;</span>&#125;);<br><span class="hljs-keyword">my</span> @three_scores = @score&#123; <span class="hljs-keyword">qw</span>/barney fred dino/ &#125;;<br></code></pre></td></tr></table></figure>
+<p>百分号符号表示的是整个哈希, 哈希切片一定是列表而不一定是整个哈希.</p>
+<h2 id="捕获错误"><a href="#捕获错误" class="headerlink" title="捕获错误"></a>捕获错误</h2><p>可参阅 &lt;<Mastering Perl>&gt;</p>
+<h3 id="使用-eval"><a href="#使用-eval" class="headerlink" title="使用 eval"></a>使用 eval</h3><p>把代码包裹在 <code>eval</code> 块中.</p>
+<p><code>eval</code> 块只是一个表达式, 要在结尾加 <code>;</code></p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">eval</span> &#123; $barney = $fred / $dino &#125;;<br></code></pre></td></tr></table></figure>
+<p>只要 <code>eval</code> 发现在它的监察范围内出现致命错误, 就会立即停止运行整个块, 退出后继续运行其余代码.</p>
+<p>和子程序相同, <code>eval</code> 的返回值是语句块中最后一条表达式的执行结果.</p>
+<p>如果 <code>eval</code> 捕获到了错误, 那么整个语句块将返回 <code>undef</code>. 并且在特殊变量 <code>$@</code> 中设置错误消息.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> <span class="hljs-number">5.010</span>;<br><span class="hljs-keyword">my</span> $barney - <span class="hljs-keyword">eval</span> &#123; $fred / $dino &#125; // <span class="hljs-string">&#x27;NaN&#x27;</span>; <br><span class="hljs-keyword">print</span> <span class="hljs-string">&quot;I couldn&#x27;t divide by \$dino: $@&quot;</span> <span class="hljs-keyword">if</span> $@;<br></code></pre></td></tr></table></figure>
+<p>可以构造一个有返回值的代码块:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">unless</span> ( <span class="hljs-keyword">eval</span> &#123; some_sub(); <span class="hljs-number">1</span> &#125; ) &#123;<br>    <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;I couldn&#x27;t divide by \$dino: $@&quot;</span> <span class="hljs-keyword">if</span> $@;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>在列表上下文中, 捕获到错误的 <code>eval</code> 会返回空列表.</p>
+
                 
               </div>
             
