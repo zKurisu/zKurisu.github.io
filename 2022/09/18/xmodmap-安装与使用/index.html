@@ -16,13 +16,15 @@
   <meta name="author" content="John Doe">
   <meta name="keywords" content="">
   
-    <meta property="og:type" content="article">
+    <meta name="description" content="官方文档xmodmap 是用于修改 Xorg 中键位图和指针映射的工具. xmodmap 和 XKB (X keyboard extension) 没有直接关系. 注意, xmodmap 设置会被 setxkbmap 重置. 简介Xorg 中有两种类型的键盘值: 键码和键符.  键码 keycode, 表示按键或鼠标按钮被按下时, 内核收到的表示数字 键符 keysym, 是键码所对应的符号表达式">
+<meta property="og:type" content="article">
 <meta property="og:title" content="xmodmap-安装与使用">
 <meta property="og:url" content="http://example.com/2022/09/18/xmodmap-%E5%AE%89%E8%A3%85%E4%B8%8E%E4%BD%BF%E7%94%A8/index.html">
 <meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="官方文档xmodmap 是用于修改 Xorg 中键位图和指针映射的工具. xmodmap 和 XKB (X keyboard extension) 没有直接关系. 注意, xmodmap 设置会被 setxkbmap 重置. 简介Xorg 中有两种类型的键盘值: 键码和键符.  键码 keycode, 表示按键或鼠标按钮被按下时, 内核收到的表示数字 键符 keysym, 是键码所对应的符号表达式">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2022-09-18T00:28:40.000Z">
-<meta property="article:modified_time" content="2022-09-18T00:28:46.365Z">
+<meta property="article:modified_time" content="2022-10-15T01:09:31.021Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -233,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          0 字
+          1.8k 字
         
       </span>
     
@@ -244,7 +246,7 @@
         
         
         
-          1 分钟
+          15 分钟
         
       </span>
     
@@ -287,7 +289,52 @@
             
               <div class="markdown-body">
                 
-                
+                <p><a target="_blank" rel="noopener" href="https://wiki.archlinux.org/title/Xmodmap_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87)">官方文档</a><br>xmodmap 是用于修改 Xorg 中键位图和指针映射的工具.</p>
+<p>xmodmap 和 XKB (X keyboard extension) 没有直接关系.</p>
+<p>注意, xmodmap 设置会被 setxkbmap 重置.</p>
+<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>Xorg 中有两种类型的键盘值: 键码和键符.</p>
+<ul>
+<li>键码 keycode, 表示按键或鼠标按钮被按下时, 内核收到的表示数字</li>
+<li>键符 keysym, 是键码所对应的符号表达式, 意思是可以通过按下相应的键符对应的位置向内核发送 keycode. 字符形式或十六进制形式都可以, 如 <code>Shift_L</code> 和 (0x32) 是同一个意思, 表示的都是键盘上的位置, 比如这个就是左侧的 Shift 键</li>
+</ul>
+<p>比如, 按 <code>a</code> 产生 <code>38</code> 号 keycode, 它被映射到 <code>0x61</code> 号 keysym, 对应 ASCII 表中的 <code>a</code>.</p>
+<p>keycode 和 keysym 的映射表可以用 <code>xmodmap</code> 查看.</p>
+<p>内核对 keycode 的解释是定死了的, 但是按下什么键发送什么 keycode 是我们可以操控的.</p>
+<h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><p><code>xorg-xmodmap</code> 包提供 xmodmap.</p>
+<p><code>xkeycaps</code> 包提供 xmodmap 的图形前端.</p>
+<h1 id="键映射表"><a href="#键映射表" class="headerlink" title="键映射表"></a>键映射表</h1><p>以表达式格式呈现:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ xmodmap -pke<br></code></pre></td></tr></table></figure>
+<p>表中的 <code>Key</code> 表示 keycode 对应的按键.</p>
+<p>如果要跳过一个 keysym, 将其值设置为 <code>NoSymble</code>.</p>
+<p>多媒体键有预定义的描述性键符, 如 <code>XF86AudioMute</code>, 可在  <code>/usr/include/X11/XF86keysym.h</code> 中找到.</p>
+<p>要永久改变, 可修改 <code>.xprofile</code> 或 <code>.xinitrc</code> 文件.</p>
+<h1 id="自定义映射表"><a href="#自定义映射表" class="headerlink" title="自定义映射表"></a>自定义映射表</h1><p>创建一个映射列表:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ xmodmap -pke &gt; ~/.Xmodmap<br></code></pre></td></tr></table></figure>
+<p>测试更改:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ xmodmap ~/.Xmodmap<br></code></pre></td></tr></table></figure>
+<h2 id="激活"><a href="#激活" class="headerlink" title="激活"></a>激活</h2><p>在 <code>~/.xinitrc</code> 中添加:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">[[ -f ~/.Xmodmap ]] &amp;&amp; xmodmap ~/.Xmodmap<br></code></pre></td></tr></table></figure>
+<h2 id="临时修改"><a href="#临时修改" class="headerlink" title="临时修改"></a>临时修改</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ xmodmap -e <span class="hljs-string">&quot;keycode 46 = l L l L lstroke lstroke lstroke&quot;</span><br>$ xmodmap -e <span class="hljs-string">&quot;keysym a = e E&quot;</span><br></code></pre></td></tr></table></figure>
+<h1 id="修饰键"><a href="#修饰键" class="headerlink" title="修饰键"></a>修饰键</h1><p>就是 modkey (mod 是 modifier 的意思). </p>
+<p>对 <code>xmodmap -pm</code> 的输出的理解:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ xmodmap -pm<br><br>xmodmap:  up to 4 keys per modifier, (keycodes <span class="hljs-keyword">in</span> parentheses):<br><br><span class="hljs-built_in">shift</span>       Shift_L (0x32),  Shift_R (0x3e)<br>lock        Caps_Lock (0x25)<br>control     Control_L (0x42),  Control_R (0x69)<br>mod1        Alt_L (0x40),  Alt_R (0x6c),  Alt_L (0xcc),  Meta_L (0xcd)<br>mod2        Num_Lock (0x4d)<br>mod3        ISO_Level5_Shift (0xcb)<br>mod4        Super_L (0x85),  Super_R (0x86),  Super_L (0xce),  Hyper_L (0xcf)<br>mod5        ISO_Level3_Shift (0x5c)<br><br></code></pre></td></tr></table></figure>
+<p>应该是按右侧的键, 都可以表示左侧的修饰键. 就比如:</p>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs mipsasm"><span class="hljs-keyword">shift </span>      <span class="hljs-keyword">Shift_L </span>(<span class="hljs-number">0x32</span>),  <span class="hljs-keyword">Shift_R </span>(<span class="hljs-number">0x3e</span>)<br></code></pre></td></tr></table></figure>
+<p>表名, 按下左边的 Shift 和按下 右边的 Shift 都会产生 shift 修饰符的作用.</p>
+<p>使用 <code>!</code> 作为注释.</p>
+<h1 id="Man-page"><a href="#Man-page" class="headerlink" title="Man page"></a>Man page</h1><p>在 Man Page 中有语法讲解以及示例.</p>
+<h2 id="xev-程序"><a href="#xev-程序" class="headerlink" title="xev 程序"></a>xev 程序</h2><p>这个软件打开后可用来检测 keycode 和 keysym 等信息.</p>
+<h2 id="语法-keycode-Num-x3D-keysymname-…"><a href="#语法-keycode-Num-x3D-keysymname-…" class="headerlink" title="语法: keycode Num &#x3D; keysymname …"></a>语法: keycode Num &#x3D; keysymname …</h2><p>一个 keycode 最多绑定 8 个 keysym.</p>
+<p>一个 key 后面跟着的 keysym 的含义:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">keycode 57 = n N<br></code></pre></td></tr></table></figure>
+<p>这个位置有特别的含义, 出现在第一个位置表明 no modifier key is conjunction with this key, 第二个位置表明和 Shift 一起按, 第三个 with Mode_switch key, 第四个 with both Mode_switch and Shift.</p>
+<h2 id="keycode"><a href="#keycode" class="headerlink" title="keycode"></a>keycode</h2><h2 id="clear-MODIFIERNAME"><a href="#clear-MODIFIERNAME" class="headerlink" title="clear MODIFIERNAME"></a>clear MODIFIERNAME</h2><p><code>clear</code> 后面可以跟: Shift, Lock, Control, Mod1, Mod2, Mod3, Mod4, Mod5 (modifier name 可以不区分大小写).</p>
+<h1 id="参考一个-Tutorial"><a href="#参考一个-Tutorial" class="headerlink" title="参考一个 Tutorial"></a>参考一个 Tutorial</h1><p><a target="_blank" rel="noopener" href="http://xahlee.info/linux/linux_xmodmap_tutorial.html">参考</a><br>xmodmap 不能做的事:</p>
+<ul>
+<li>不能将一个键变成, 按下这个键等于多个键的组合 </li>
+<li>不能执行脚本</li>
+</ul>
+
                 
               </div>
             

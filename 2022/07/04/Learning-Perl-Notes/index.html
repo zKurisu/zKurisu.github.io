@@ -28,7 +28,7 @@
 <meta property="og:image" content="http://example.com/img/binary_ope.png">
 <meta property="og:image" content="http://example.com/img/convery_to_disimal.png">
 <meta property="article:published_time" content="2022-07-04T11:37:10.000Z">
-<meta property="article:modified_time" content="2022-10-13T09:21:42.927Z">
+<meta property="article:modified_time" content="2022-10-14T02:19:55.459Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/file_test_ope1.png">
@@ -240,7 +240,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          40k 字
+          43k 字
         
       </span>
     
@@ -251,7 +251,7 @@
         
         
         
-          338 分钟
+          357 分钟
         
       </span>
     
@@ -1299,6 +1299,54 @@ print “Hey, I’m returning a value now!\n”;
 <p>可以构造一个有返回值的代码块:</p>
 <figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">unless</span> ( <span class="hljs-keyword">eval</span> &#123; some_sub(); <span class="hljs-number">1</span> &#125; ) &#123;<br>    <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;I couldn&#x27;t divide by \$dino: $@&quot;</span> <span class="hljs-keyword">if</span> $@;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>在列表上下文中, 捕获到错误的 <code>eval</code> 会返回空列表.</p>
+<p><code>eval</code> 块可以设定 <code>my</code> 变量的新作用域, 块内的语句数目不限:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">foreach</span> <span class="hljs-keyword">my</span> $person (<span class="hljs-keyword">qw</span>/ fred wilma betty barney dino pebbles /) &#123;<br>    <span class="hljs-keyword">eval</span> &#123;<br>        <span class="hljs-keyword">open</span> <span class="hljs-keyword">my</span> $fh, <span class="hljs-string">&#x27;&lt;&#x27;</span>, $person<br>            <span class="hljs-keyword">or</span> <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;Can&#x27;t open file &#x27;$person&#x27;: $!&quot;</span>;<br><br>        <span class="hljs-keyword">my</span>($total, $count);<br><br>        <span class="hljs-keyword">while</span> (&lt;$fh&gt;) &#123;<br>            $total += $_;<br>            $count++;<br>        &#125;<br><br>        <span class="hljs-keyword">my</span> $average = $total / $count;<br>        <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;Average for file $person was $average\n&quot;</span>;<br><br>        $do_something($person, $average);<br>    &#125;;<br><br>    <span class="hljs-keyword">if</span> ($@) &#123;<br>        <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;An error occurred ($@), continuing\n&quot;</span>;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>可以嵌套使用 <code>eval</code>, 内层的 <code>eval</code> 通过 <code>die</code> 向外层报告.</p>
+<p>有 4 中类型的错误是 <code>eval</code> 无法捕获的:</p>
+<ul>
+<li>语法错误, 如忘写分号 <code>;</code> (perl 解释器的编译器会在解析源代码时捕获这类错误并在运行程序前停下来, 而 eval 仅仅能捕获 Perl 运行时出现的错误)</li>
+<li>让 perl 解释器本身崩溃的错误, 如内存溢出 (其会让 perl 解释器意外终止)</li>
+<li>无法捕获警告</li>
+<li>用 <code>exit</code> 退出</li>
+</ul>
+<h2 id="更为高级的错误处理"><a href="#更为高级的错误处理" class="headerlink" title="更为高级的错误处理"></a>更为高级的错误处理</h2><p>用 <code>die</code> 抛出异常, 用 <code>eval</code> 捕获异常.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs perl">&#123;<br><span class="hljs-keyword">local</span> $@;<br><br><span class="hljs-keyword">eval</span> &#123;<br>    ...;<br>    <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;An unexpected exception message&quot;</span> <span class="hljs-keyword">if</span> $unexpected;<br>    <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;Bad denominator&quot;</span> <span class="hljs-keyword">if</span> $dino;<br>&#125;;<br><br><span class="hljs-keyword">if</span> ($@ =~ <span class="hljs-regexp">/unexpected/</span>) &#123;<br>    ...;<br>&#125; <span class="hljs-keyword">elsif</span> ($@ =~ <span class="hljs-regexp">/denominator/</span>) &#123;<br>    ...; <br>&#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>使用 Try::Tiny 模块, 其不是内置模块:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> Try::Tiny;<br><br>try &#123;<br>    ...; <span class="hljs-comment"># 可能会抛出异常的代码</span><br>&#125;<br>catch &#123;<br>    ...; <span class="hljs-comment"># 某些处理异常的代码</span><br>&#125;<br>finally &#123;<br>    ...;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>可省略 <code>catch</code> 和 <code>finally</code> 块. 只用 <code>try</code> 来忽略错误:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $barney = try &#123;$fred / $dino&#125;;<br></code></pre></td></tr></table></figure>
+<p>Try::Tiny 把错误消息放到了默认变量 <code>$_</code>.</p>
+<h2 id="autodie"><a href="#autodie" class="headerlink" title="autodie"></a>autodie</h2><figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> autodie;<br><span class="hljs-keyword">open</span> <span class="hljs-keyword">my</span> $fh, <span class="hljs-string">&#x27;&gt;&#x27;</span>, $filename; <span class="hljs-comment"># 在发生错误时仍会调用 die 函数</span><br></code></pre></td></tr></table></figure>
+<p><code>autodie</code> 模块默认会对一系列 Perl 内置的用于处理文件, 文件句柄, 进程间通信和套接字的函数自动施行监管, 也可以指定:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> autodie <span class="hljs-string">qw( open system :socket )</span>;<br></code></pre></td></tr></table></figure>
+<p><code>autodie</code> 抛出错误时, 它会把一个 <code>autodie::exception</code> 对象放到 <code>$@</code> 变量中.</p>
+<h2 id="用-grep-筛选列表"><a href="#用-grep-筛选列表" class="headerlink" title="用 grep 筛选列表"></a>用 grep 筛选列表</h2><p>如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> @odd_numbers = <span class="hljs-keyword">grep</span> &#123; $_ % <span class="hljs-number">2</span> &#125; <span class="hljs-number">1</span>..<span class="hljs-number">1000</span>;<br></code></pre></td></tr></table></figure>
+<p><code>grep</code> 的第一个参数为一个代码块, 第二个为列表. <code>grep</code> 对列表中的每个元素计算出代码块的值. 代码块中的表达式返回真假值供 <code>grep</code> 判断.</p>
+<p>在 <code>grep</code> 运行中 <code>$_</code> 会轮流成为列表中每个元素的别名.</p>
+<p>从一个文件中取出包含 fred 的行:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> @matching_lines = <span class="hljs-keyword">grep</span> <span class="hljs-regexp">/\bfred\b/i</span>, &lt;$fh&gt;;<br></code></pre></td></tr></table></figure>
+<p><code>grep</code> 操作符在标量上下文中返回的是符合过滤条件的元素个数:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $line_count = <span class="hljs-keyword">grep</span> <span class="hljs-regexp">/\bfred\b/i</span>, &lt;$fh&gt;; <br></code></pre></td></tr></table></figure>
+<h2 id="用-map-把列表元素变形"><a href="#用-map-把列表元素变形" class="headerlink" title="用 map 把列表元素变形"></a>用 map 把列表元素变形</h2><figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> @data = (<span class="hljs-number">4.75</span>, <span class="hljs-number">1.5</span>, <span class="hljs-number">2</span>, <span class="hljs-number">1234</span>, <span class="hljs-number">6.9456</span>, <span class="hljs-number">12345678.9</span>, <span class="hljs-number">29.95</span>);<br><span class="hljs-keyword">my</span> @formatted_data = <span class="hljs-keyword">map</span> &#123; &amp;big_money($_) &#125; @data;<br></code></pre></td></tr></table></figure>
+<p>和 <code>grep</code> 类似, 但其不返回真假值, 而是表达式实际的计算结果, 最终返回一系列这样的结果组成的列表.</p>
+<p>事实上, 任何形式的 <code>grep</code> 或 <code>map</code> 语句都可以该写成 <code>foreach</code> 循环.</p>
+<p>可以用简单的表达式和逗号而非一整个语句块:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">print</span> <span class="hljs-string">&quot;Some powers of two are:\n&quot;</span>, <br>    <span class="hljs-keyword">map</span> <span class="hljs-string">&quot;t&quot;</span> . ( <span class="hljs-number">2</span> ** $_ ) . <span class="hljs-string">&quot;\n&quot;</span>, <span class="hljs-number">0</span>..<span class="hljs-number">15</span>;<br></code></pre></td></tr></table></figure>
+<h2 id="更花哨的列表工具"><a href="#更花哨的列表工具" class="headerlink" title="更花哨的列表工具"></a>更花哨的列表工具</h2><p>Perl 中有一些模块专门用于列表数据的处理.</p>
+<p>List::Util 模块包含在标准库中, 其用 C 语言实现.</p>
+<p>如, 在找到第一个符合条件的元素时结束遍历, 返回结果, 使用 List::Util 提供的 <code>first</code> 子程序:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> List::Util <span class="hljs-string">qw(first)</span>;<br><span class="hljs-keyword">my</span> $first_match = first &#123; <span class="hljs-regexp">/\bPebbles\b/i</span> &#125; @characters;<br></code></pre></td></tr></table></figure>
+<p>计算总和, 利用 <code>sum</code> 子程序:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> List::Util <span class="hljs-string">qw(sum)</span>;<br><span class="hljs-keyword">my</span> $total = sum( <span class="hljs-number">1</span>..<span class="hljs-number">1000</span> );<br></code></pre></td></tr></table></figure>
+<p>最大值:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> List::Util <span class="hljs-string">qw(maxstr)</span>;<br><span class="hljs-keyword">my</span> $max = maxstr( @strings );<br></code></pre></td></tr></table></figure>
+
+<p>元素随机排序:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> List::Util <span class="hljs-string">qw(shuffle)</span>;<br><span class="hljs-keyword">my</span> @shuffled = shuffle(<span class="hljs-number">1</span>..<span class="hljs-number">1000</span>);<br></code></pre></td></tr></table></figure>
+
+<p>List::MoreUtils, 提供更多工具, 但不是 Perl 自带的.</p>
 
                 
               </div>
