@@ -23,10 +23,13 @@
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="项目主页ArchWiki 相关 简介WireGuard 是一种及其简单但快速且现代的 VPN. 安装安装 wireguard-tools 包: 1sudo pacman -S wireguard-tools systemd-networkd 和 NetworkManager 都为 WireGuard 接口设置提供原生支持. 使用使用 ip link 显示的 wg0 就是 wireguard. 在">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/for_wireguard.png">
+<meta property="og:image" content="http://example.com/img/another_rela_of_wireguard.png">
 <meta property="article:published_time" content="2022-09-17T05:51:22.000Z">
-<meta property="article:modified_time" content="2022-09-22T05:41:37.978Z">
+<meta property="article:modified_time" content="2022-10-17T02:34:18.350Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/for_wireguard.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -235,7 +238,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          905 字
+          2k 字
         
       </span>
     
@@ -246,7 +249,7 @@
         
         
         
-          8 分钟
+          18 分钟
         
       </span>
     
@@ -313,6 +316,43 @@
 <p>如果使用 NetworkManager, 可能有必要启用 NetworkManager-wait-online.service.</p>
 <h2 id="查看网络连接"><a href="#查看网络连接" class="headerlink" title="查看网络连接"></a>查看网络连接</h2><figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ebnf"><span class="hljs-attribute">sudo netstat -ntpl</span><br></code></pre></td></tr></table></figure>
 
+<h1 id="参考-B-站"><a href="#参考-B-站" class="headerlink" title="参考 B 站"></a><a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1uT411w7Tq?share_source=copy_web&vd_source=07f553d0f02b7055cfbb295adfde9f48">参考 B 站</a></h1><p>VPN, Virtual Private Network 的作用是保证访问的私密. 对数据进行加密, 校验.<br><img src="/../img/for_wireguard.png" srcset="/img/loading.gif" lazyload alt="示意图"></p>
+<p>wireguard 是一种 VPN 技术. 其可以让连接的设备以为自己处于同一个内网中. 从上面的示意图可以看出, 这个虚拟的内网是由 wireguard 链路连接的.</p>
+<p>wireguard 并不区分客户端和服务器端.</p>
+<p>在任何设备上如果安装了 wireguard 都会被视为一个节点. 其既可以连接其他设备也可已被其他设备直接连接.</p>
+<p>也就是说, 用一台拥有公网 IP 的服务器作为连接点, 使得所有连接到这台服务器的主机都可以通信.</p>
+<h1 id="Ubuntu-上的手动操作-具体看文档-已拉取到本地"><a href="#Ubuntu-上的手动操作-具体看文档-已拉取到本地" class="headerlink" title="Ubuntu 上的手动操作 (具体看文档, 已拉取到本地)"></a>Ubuntu 上的手动操作 (具体看文档, 已拉取到本地)</h1><p>安装:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ apt install wireguard resolvconf<br></code></pre></td></tr></table></figure>
+
+<p>开启 ipv4 转发, 使该服务器能够成为一个转发的服务器:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ <span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;net.ipv4.ip_forward = 1&quot;</span> &gt;&gt; /etc/sysctl.conf<br></code></pre></td></tr></table></figure>
+<p>可以通过 <code>sysctl -p</code> 查看是否设置成功.</p>
+<p>wireguard 的配置文件位于 <code>/etc/wireguard</code></p>
+<h2 id="生成服务器上的密钥对"><a href="#生成服务器上的密钥对" class="headerlink" title="生成服务器上的密钥对"></a>生成服务器上的密钥对</h2><p>每一个节点需要生成一对密钥.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ <span class="hljs-built_in">cd</span> /etc/wireguard<br>$ <span class="hljs-built_in">chmod</span> 0777 /etc/wireguard<br>$ <span class="hljs-built_in">umask</span> 0777<br>$ wg genkey &gt; server.key<br>$ wg pubkey &lt; server.key &gt; server.key.pub<br></code></pre></td></tr></table></figure>
+<p>最后一行是根据私钥来创建公钥.</p>
+<h2 id="生成客户端的密钥对"><a href="#生成客户端的密钥对" class="headerlink" title="生成客户端的密钥对"></a>生成客户端的密钥对</h2><p>是在服务器上生成.</p>
+<p>和上面同样的操作.</p>
+<h2 id="修改配置文件"><a href="#修改配置文件" class="headerlink" title="修改配置文件"></a>修改配置文件</h2><p><code>[Interface]</code> 配置的是虚拟网卡的信息.</p>
+<p>监听端口用来判断 client 的连接.</p>
+<p>每添加一个 peer 都要在 server 的配置文件中添加 <code>[Peer]</code> 块.</p>
+<p>客户端的配置和服务器端的配置类似.</p>
+<p>重新设置了配置文件, 需要重启 wireguard, 利用 down 和 up.</p>
+<p>客户端的 IP 需要在 服务器端设置 (这里的 IP 是虚拟 IP).</p>
+<p>Endpoint 是设置对端也就是服务器的 IP 和端口. 其实是我们被其他节点主动连接的时候所使用的 IP. 设置 server 是因为 server 是被主动连接的.</p>
+<p>wireguard 使用的是 UDP 协议.</p>
+<p>连接之后两台主机就可以通话了.</p>
+<p>可以用 <code>wg</code> 命令来查看 wireguard 的连接状况.</p>
+<p><img src="/../img/another_rela_of_wireguard.png" srcset="/img/loading.gif" lazyload></p>
+<p>keepalive 是尝试重连.</p>
+<p>搭建了内网穿透就可以直接连接远端没有公网 IP 的服务器.</p>
+<h1 id="利用-Docker-搭建"><a href="#利用-Docker-搭建" class="headerlink" title="利用 Docker 搭建"></a>利用 Docker 搭建</h1><p><a target="_blank" rel="noopener" href="https://github.com/WeeJeWel/wg-easy">github 相关页面</a><br>其生成的配置文件是 client 的.</p>
+<p>在有公网的服务器创建一个 Docker, 然后用这个 Docker 访问控制页面.</p>
+<h2 id="手机连入"><a href="#手机连入" class="headerlink" title="手机连入"></a>手机连入</h2><p>可以用手机客户端扫二维码.</p>
+<h1 id="自己尝试"><a href="#自己尝试" class="headerlink" title="自己尝试"></a>自己尝试</h1><h2 id="手动配置"><a href="#手动配置" class="headerlink" title="手动配置"></a>手动配置</h2><p>按照上面 司波图 的博客内容可以成功搭建.</p>
+<h2 id="docker"><a href="#docker" class="headerlink" title="docker"></a>docker</h2><p>出了些小问题.</p>
+<p>结果是我服务器的端口开放错误, 开放了另一个端口.</p>
+<p>按照教程即可完成.</p>
 
                 
               </div>
