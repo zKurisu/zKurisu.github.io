@@ -16,17 +16,19 @@
   <meta name="author" content="John Doe">
   <meta name="keywords" content="">
   
-    <meta name="description" content="参考1参考2">
+    <meta name="description" content="参考1 参考2 简介unit 是 systemd 中的 primary object. 资源是用 unit 文件作为配置文件. Unit Files 的位置&#x2F;lib&#x2F;systemd&#x2F;system&#x2F;默认位于 &#x2F;lib&#x2F;systemd&#x2F;system&#x2F; 目录下. 软件安装 unit file 就会放到这里. 不该在这个目录下编辑文件, 可以重写文件. &#x2F;etc&#x2F;systemd&#x2F;system&#x2F;最好是在 &#x2F;">
 <meta property="og:type" content="article">
 <meta property="og:title" content="如何编写-systemd-unit-file">
 <meta property="og:url" content="http://example.com/2022/10/19/%E5%A6%82%E4%BD%95%E7%BC%96%E5%86%99-systemd-unit-file/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="参考1参考2">
+<meta property="og:description" content="参考1 参考2 简介unit 是 systemd 中的 primary object. 资源是用 unit 文件作为配置文件. Unit Files 的位置&#x2F;lib&#x2F;systemd&#x2F;system&#x2F;默认位于 &#x2F;lib&#x2F;systemd&#x2F;system&#x2F; 目录下. 软件安装 unit file 就会放到这里. 不该在这个目录下编辑文件, 可以重写文件. &#x2F;etc&#x2F;systemd&#x2F;system&#x2F;最好是在 &#x2F;">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/unit_file_types.png">
 <meta property="article:published_time" content="2022-10-19T03:51:44.000Z">
-<meta property="article:modified_time" content="2022-10-19T03:55:04.867Z">
+<meta property="article:modified_time" content="2022-10-21T02:13:14.840Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/unit_file_types.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -235,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          6 字
+          3.2k 字
         
       </span>
     
@@ -246,7 +248,7 @@
         
         
         
-          1 分钟
+          27 分钟
         
       </span>
     
@@ -289,8 +291,80 @@
             
               <div class="markdown-body">
                 
-                <p><a target="_blank" rel="noopener" href="https://www.digitalocean.com/community/tutorials/understanding-systemd-units-and-unit-files">参考1</a><br><a target="_blank" rel="noopener" href="https://www.suse.com/support/kb/doc/?id=000019672">参考2</a></p>
+                <p><a target="_blank" rel="noopener" href="https://www.digitalocean.com/community/tutorials/understanding-systemd-units-and-unit-files">参考1</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.suse.com/support/kb/doc/?id=000019672">参考2</a></p>
+<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>unit 是 systemd 中的 primary object. 资源是用 unit 文件作为配置文件.</p>
+<h1 id="Unit-Files-的位置"><a href="#Unit-Files-的位置" class="headerlink" title="Unit Files 的位置"></a>Unit Files 的位置</h1><h2 id="lib-systemd-system"><a href="#lib-systemd-system" class="headerlink" title="/lib/systemd/system/"></a><code>/lib/systemd/system/</code></h2><p>默认位于 <code>/lib/systemd/system/</code> 目录下. 软件安装 unit file 就会放到这里. 不该在这个目录下编辑文件, 可以重写文件.</p>
+<h2 id="etc-systemd-system"><a href="#etc-systemd-system" class="headerlink" title="/etc/systemd/system/"></a><code>/etc/systemd/system/</code></h2><p>最好是在 <code>/etc/systemd/system/</code> 目录下编写, 其拥有最高的优先级.</p>
+<p>对于一个 unit, 可以给其创建子目录, 格式为 (如果 unit 叫 <code>example.services</code>): <code>example.services.d</code>, 在子目录下编写 <code>.conf</code> 文件即可. </p>
+<h2 id="run-systemd-system"><a href="#run-systemd-system" class="headerlink" title="/run/systemd/system/"></a><code>/run/systemd/system/</code></h2><p>run-time unit definitions 位于 <code>/run/systemd/system/</code> 其优先级介于 <code>/lib/systemd/system/</code> 和 <code>/etc/systemd/system/</code> 之间.</p>
+<p>任何在其中的修改在重启后都会丢失. 其用于在 runtime 动态创建 unit file.</p>
+<h1 id="Unit-的类型"><a href="#Unit-的类型" class="headerlink" title="Unit 的类型"></a>Unit 的类型</h1><p>参考鸟哥:<br><img src="/../img/unit_file_types.png" srcset="/img/loading.gif" lazyload></p>
+<p>有一些 unit file 是用来 trigger 其他的 unit.</p>
+<h1 id="Unit-file-解析"><a href="#Unit-file-解析" class="headerlink" title="Unit file 解析"></a>Unit file 解析</h1><p>Unit file 用 sections 来组织, 每一个 section 用 <code>[]</code> 包裹的名称开始.</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs ini"><span class="hljs-section">[Section]</span><br><span class="hljs-attr">Directive1</span>=value<br><span class="hljs-attr">Directive2</span>=value<br></code></pre></td></tr></table></figure>
+<h2 id="General-Characteristics-of-Unit-Files"><a href="#General-Characteristics-of-Unit-Files" class="headerlink" title="General Characteristics of Unit Files"></a>General Characteristics of Unit Files</h2><p>Section 的名称是 well-defined 和 case-sensitive 的.</p>
+<p>如果想添加非标准的 section 来让 <code>systemd</code> 以外的程序使用, 需要在 section name 之前添加 a <code>X-</code> prefix.</p>
+<p>在 section 之中, 通过 key-value 的格式来定义 unit behavior 和 metadata.</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs ini"><span class="hljs-section">[Section]</span><br><span class="hljs-attr">Directive1</span>=value<br><span class="hljs-attr">Directive2</span>=value<br></code></pre></td></tr></table></figure>
 
+<p>在一个 override file 中想要 reset 一个 directive, 用空字符串给其赋值:</p>
+<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs abnf"><span class="hljs-attribute">Directive1</span><span class="hljs-operator">=</span><br></code></pre></td></tr></table></figure>
+
+<p>一些 boolean 表达:<br>    - 真: 1, yes, on, true<br>    - 假: o, no, off, false</p>
+<h2 id="Unit-Section-的-Directives"><a href="#Unit-Section-的-Directives" class="headerlink" title="[Unit] Section 的 Directives"></a>[Unit] Section 的 Directives</h2><p>第一个 Section 一般是 <code>[Unit]</code>. 用来定义 unit 的一些 metadata 以及配置其和其他 unit 的关系.</p>
+<p>尽管 section 的顺序对于 <code>systemd</code> 来说无关紧要. <code>[Unit]</code> section 一般还是放在 unit file 的顶部.</p>
+<p> 一些常见的 directives:</p>
+<ul>
+<li><code>Description=</code>: 可以用来描述这个 unit 的名称和基本用途</li>
+<li><code>Documentation=</code>: 提供可查阅的 document 的位置, 该值用 <code>systemctl status</code> 可以返回, 如: <code>Documentation=man:systemd.special(7)</code></li>
+<li><code>Requires=</code>: 列出需要依赖的其他 unit, 这些 unit 在默认情况下会被 started in parallel with the current unit</li>
+<li><code>Wants=</code>: 和 <code>Requires=</code> 类似, 但没那么严格, <code>systemd</code> 会尝试启动 any units listed here, 如果没找到或启动失败, 当前 unit 仍然可以工作.</li>
+<li><code>BindsTo=</code>: 和 <code>Requires=</code> 类似, 但在 其他 unit 终止时, 当前 unit 也会停止</li>
+<li><code>Before=</code>: 当前 unit 在其列出的 unit 启动前启动</li>
+<li><code>After=</code>: 在当前 unit 在其列出的 unit 启动后启动</li>
+<li><code>Conflicts=</code>: 列出的 unit 不能和当前 unit 同时运行, 启动其列出的 unit 会导致当前 unit 停止</li>
+<li><code>Condition...=</code>:</li>
+<li><code>Assert...=</code>:</li>
+</ul>
+<h2 id="Install-Section-Directives"><a href="#Install-Section-Directives" class="headerlink" title="[Install] Section Directives"></a>[Install] Section Directives</h2><p>Unit file 的最后一个 section 一般是 <code>[Install]</code> section. 这个 section 是可选的, 用来定义一个 unit 在 enable 之后的行为, enable 即开机自动启动.</p>
+<p>因此, 只有 units that can be enabled 才会有这个 section.</p>
+<p>这个 section 的 directives:</p>
+<ul>
+<li><code>WantedBy=</code>: 表明 how a unit should be enabled. 其允许你像 <code>Wants=</code> 一样指明一个依赖关系, 当拥有这个 directive 的 unit 被 enable 后, 其会在 <code>/etc/systemd/system/</code> 目录下创建一个后缀为 <code>.wants</code> 的目录. 之后会创建一个 symbolic link 到当前文件.</li>
+<li><code>RequiredBy=</code>: 和 <code>WantedBy=</code> 类似, 但在依赖不存在时仍和开启, 会创建 <code>.requires</code> 的目录</li>
+<li><code>Alias=</code>: 允许这个 unit 用另一个名称来 enable</li>
+<li><code>Also=</code>: 允许 unit 作为一个 set 被 enable</li>
+<li><code>DefaultInstance=</code>:</li>
+</ul>
+<h2 id="Unit-specific-Section-Directives"><a href="#Unit-specific-Section-Directives" class="headerlink" title="Unit-specific Section Directives"></a>Unit-specific Section Directives</h2><h3 id="The-Service-Section"><a href="#The-Service-Section" class="headerlink" title="The [Service] Section"></a>The [Service] Section</h3><p>用来提供配置.</p>
+<p>最基本的是设置 <code>Type=</code>, 其有如下选项:</p>
+<ul>
+<li>simple: 设置了之后, service 的主要进程会在 start line 中显示. 当 <code>Type=</code> 和 <code>Busname=</code> 未设置, <code>ExecStart</code> 设置了的时候, 其是默认值.</li>
+<li>forking: 当 service fork 了一个 child process 是使用. 其告诉 <code>systemd</code> 当 parent exit 的时候程序仍然在运行.</li>
+<li>oneshot: 指明进程会 short-lived, 然后 <code>systemd</code> 应该等待进程退出 before continuing on with other units, 其为 <code>Type=</code> 和 <code>ExecStart=</code> 未设置时的默认值</li>
+<li>dbus: 指明 unit will take a name on the D-Bus bus</li>
+<li>notify: 指明 service will issue a notification when it has finished starting up</li>
+<li>idle:</li>
+</ul>
+<p>其他的 directive:</p>
+<ul>
+<li><code>ExecStart=</code>: 指明开启进程的命令的 full path and arguments, 只能指定一个, 如果命令之前 preceded by a dash <code>-</code> character, 会使命令在返回非零值时程序不会停止</li>
+<li><code>ExecStartPre=</code>: 在 mian process 启动之前执行, 可多次使用, 同样, 如果命令之前 preceded by a dash <code>-</code> character, 会使命令在返回非零值时程序不会停止</li>
+<li><code>ExecStartPost=</code>: 之后</li>
+<li><code>ExecReload=</code>: 可选, 指明用来 reload 配置文件的命令</li>
+<li><code>ExecStop=</code>: 用来 stop service 的命令, 如果没有指明, the main process will be killed immediately when the service is stopped</li>
+<li><code>ExecStopPost=</code>: 在 stop command execute 之后执行</li>
+<li><code>RestartSec=</code>: 指明尝试重启前需要等待的时间</li>
+<li><code>Restart=</code>: 可以设置 “always”, “on-success”, “on-failure”, “on-abnormal”, “on-abort”, “on-watchdog” 等</li>
+<li><code>TimeoutSec=</code>: 在你 stop 一个 service 时, <code>systemd</code> 将其标记为 failed 或 forcefully killing 的等待时间.</li>
+</ul>
+<p>其他的参考博文即可.</p>
+<h1 id="从-Template-Unit-Files-创建实例"><a href="#从-Template-Unit-Files-创建实例" class="headerlink" title="从 Template Unit Files 创建实例"></a>从 Template Unit Files 创建实例</h1><h2 id="Template-and-Instance-Unit-Names"><a href="#Template-and-Instance-Unit-Names" class="headerlink" title="Template and Instance Unit Names"></a>Template and Instance Unit Names</h2><p>用 <code>@</code> 标识 Template unit files.</p>
+<p>如: <code>example@.service</code></p>
+<p>当一个 Instance 是从一个 template 创建的, 其 instance identifier 放在 <code>@</code> 和 unit type 之间: <code>example@instance1.service</code></p>
+<p>一个 instance file 常常是 template file 的 symbolic link.</p>
+<h2 id="Template-Specifiers"><a href="#Template-Specifiers" class="headerlink" title="Template Specifiers"></a>Template Specifiers</h2>
                 
               </div>
             
