@@ -24,7 +24,7 @@
 <meta property="og:description" content="第一章 简介申请 PAUSE 账户, 此链接 使用 use 指定版本时, 小数点之后需要有三个数字, 如: 1use 5.014; 也可以使用两个小数点的形式: 1use v5.14.2; or: 1use 5.14.2;  在线 Perl 社区 第二章 使用模块CPAN (Comprehensice Perl Archive Network). 有三个相关页面:  主页 搜索界面 MetaCPA">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2022-10-20T03:02:45.000Z">
-<meta property="article:modified_time" content="2022-10-20T14:25:08.677Z">
+<meta property="article:modified_time" content="2022-10-24T07:10:10.241Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3k 字
+          13k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          26 分钟
+          110 分钟
         
       </span>
     
@@ -390,7 +390,211 @@
 
 <p>这里的代码块实际上是一个匿名子例程.</p>
 <p>能够引入作用域限于 “块” 的变量, 即使用 <code>my</code>.</p>
-<h3 id="3-1-2-使用-map-转换列表"><a href="#3-1-2-使用-map-转换列表" class="headerlink" title="3.1.2 使用 map 转换列表"></a>3.1.2 使用 map 转换列表</h3>
+<h3 id="3-1-2-使用-map-转换列表"><a href="#3-1-2-使用-map-转换列表" class="headerlink" title="3.1.2 使用 map 转换列表"></a>3.1.2 使用 map 转换列表</h3><p>可以每个输入产生两个输出:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> @result = <span class="hljs-keyword">map</span> &#123; $_, <span class="hljs-number">3</span> * $_ &#125; @input_numbers;<br></code></pre></td></tr></table></figure>
+<p>可直接使用 map 表达式生成散列:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> %hash = <span class="hljs-keyword">map</span> &#123; $_, <span class="hljs-number">3</span> * $_ &#125; @input_numbers;<br></code></pre></td></tr></table></figure>
+<p>可以为每个输入项生成不同的输出项:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> @result = <span class="hljs-keyword">map</span> &#123; <span class="hljs-keyword">split</span> <span class="hljs-regexp">//</span> &#125; @input_numbers;<br></code></pre></td></tr></table></figure>
+<p><code>split //</code> 就是直接把输入拆开.</p>
+<p>如果一个特定调用的结果是空列表, map 表达式就将这个空结果连接到更大的列表中, 不为列表添加任何元素:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> @result = <span class="hljs-keyword">map</span> &#123;<br>    <span class="hljs-keyword">my</span> @digits = <span class="hljs-keyword">split</span> <span class="hljs-regexp">//</span>, $_;<br>    <span class="hljs-keyword">if</span> ($digits[-<span class="hljs-number">1</span>] == <span class="hljs-number">4</span>) &#123;<br>        @digits;<br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>        (  );   <span class="hljs-comment"># 返回的空列表</span><br>    &#125;<br>&#125; @input_numbers;<br></code></pre></td></tr></table></figure>
+
+<p>能够用 map 表达式和 grep 表达式做的所有事情, 也能够使用显示的 foreach 循环完成.</p>
+<h2 id="3-2-使用-eval-捕获错误"><a href="#3-2-使用-eval-捕获错误" class="headerlink" title="3.2 使用 eval 捕获错误"></a>3.2 使用 eval 捕获错误</h2><p>eval 表达式是 Perl 的首选异常机制.</p>
+<p>最常见的是在 eval 语句块执行完之后立即检查 <code>$@</code>, 该特殊变量为空则意味着没有错误.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">eval</span> &#123; $average = $total / $count &#125;;<br><span class="hljs-keyword">print</span> <span class="hljs-string">&quot;continuing after error: $@&quot;</span> <span class="hljs-keyword">if</span> $@;<br><br><span class="hljs-keyword">eval</span> &#123; rescue_scheme_42() &#125;;<br><span class="hljs-keyword">print</span> <span class="hljs-string">&quot;continuing after error: $@&quot;</span> <span class="hljs-keyword">if</span> $@;<br></code></pre></td></tr></table></figure>
+<p>eval 语句块后的分号是必须的, eval 是一个术语, 而不是控制结构.</p>
+<p>块中的代码运行失败, 在标量上下文中返回 undef, 在列表上下文中返回空列表. 成功则有正常的返回值.</p>
+<p>eval 不捕获警告, 语法错误, 和 perl 自己中断执行的错误.</p>
+<h2 id="3-3-用-eval-语句块动态编译代码"><a href="#3-3-用-eval-语句块动态编译代码" class="headerlink" title="3.3 用 eval 语句块动态编译代码"></a>3.3 用 eval 语句块动态编译代码</h2><p>eval 语句块的第二种形式: 参数是字符串表达式而不是代码块. 在运行时通过字符串的方式编译和执行代码. 但是不建议对字符串使用 eval 语句块.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">eval</span> <span class="hljs-string">&#x27;$sum = 2 + 2&#x27;</span>;<br><span class="hljs-keyword">print</span> <span class="hljs-string">&quot;The sum is $sum\n&quot;</span>;<br></code></pre></td></tr></table></figure>
+<p>Perl 在词法上下文中执行 eval 语句块前后的代码, eval 语句块的结果即为最后一个表达式的值.</p>
+<p>如果 eval 语句块不能够正确编译并且不能正确运行我们传递的 Perl 代码, 同样设置 <code>$@</code> 变量.</p>
+<h2 id="3-4-使用-do-语句块"><a href="#3-4-使用-do-语句块" class="headerlink" title="3.4 使用 do 语句块"></a>3.4 使用 do 语句块</h2><p>do 语句执行的结果同样是最后一个表达式的值. do  语句可以把一组语句聚集为单个表达式.</p>
+<p>如, 将:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $bowler;<br><span class="hljs-keyword">if</span> (...) &#123;<br>    $bowler = <span class="hljs-string">&#x27;Mary Ann&#x27;</span>;<br>&#125;<br><span class="hljs-keyword">elsif</span> (...) &#123;<br>    $bowler = <span class="hljs-string">&#x27;Ginger&#x27;</span>;<br>&#125;<br><span class="hljs-keyword">else</span> &#123;<br>    $bowler = <span class="hljs-string">&#x27;The Professor&#x27;</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>用 do 表达式写为:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $bowler = <span class="hljs-keyword">do</span> &#123;<br>    <span class="hljs-keyword">if</span> (...) &#123; <span class="hljs-string">&#x27;Mary Ann&#x27;</span> &#125;<br>    <span class="hljs-keyword">elsif</span> (...) &#123; <span class="hljs-string">&#x27;Ginger&#x27;</span> &#125;<br>    <span class="hljs-keyword">else</span> &#123; <span class="hljs-string">&#x27;The Professor&#x27;</span> &#125;<br>&#125;;<br></code></pre></td></tr></table></figure>
+<p>do 语句适合创建一个操作的作用域</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $file_contents = <span class="hljs-keyword">do</span> &#123;<br>    <span class="hljs-keyword">local</span> $/;<br>    <span class="hljs-keyword">local</span> @ARGV = ( $filename );<br>    &lt;&gt;<br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<p>同样可以向 do 语句块提供字符串的形式, 其会尝试通过该字符串名称加载, 编译文件:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">do</span> $filename;<br></code></pre></td></tr></table></figure>
+<p>内置的 <code>require</code> 同样也可用于加载模块:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">require</span> List::Util;<br></code></pre></td></tr></table></figure>
+<p><code>use</code> 语句实际上是一个 BEGIN 块中 <code>require</code> 语句和调用类导入的内容:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs perl">BEGIN &#123;<br>    <span class="hljs-keyword">require</span> List::Util;<br>    List::Util-&gt;import(...);<br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="习题"><a href="#习题" class="headerlink" title="习题"></a>习题</h2><p>判断某个条件错误时执行某个操作使用 <code>unless</code> 比较合适.</p>
+<p>从外部文件或 STDIN 获取输入时, 最好用 <code>chomp</code> 去除换行符.</p>
+<h1 id="第4章-引用简介"><a href="#第4章-引用简介" class="headerlink" title="第4章 引用简介"></a>第4章 引用简介</h1><h2 id="4-1-在多个数组上完成相同的任务"><a href="#4-1-在多个数组上完成相同的任务" class="headerlink" title="4.1 在多个数组上完成相同的任务"></a>4.1 在多个数组上完成相同的任务</h2><p>Perl 的参数列表是 <code>@_</code> 数组. 传递参数同样通过括号.</p>
+<h2 id="PeGS-Perl-图形结构"><a href="#PeGS-Perl-图形结构" class="headerlink" title="PeGS: Perl 图形结构"></a>PeGS: Perl 图形结构</h2><p>PeGS (Perl Graphical Structure). 是 Perl 数据结构的图形表示方式.</p>
+<p>大多数 PeGS 图由两部分组成: 变量名称和该变量引用的数据.</p>
+<h2 id="4-3-对数组取引用"><a href="#4-3-对数组取引用" class="headerlink" title="4.3 对数组取引用"></a>4.3 对数组取引用</h2><p>反斜线 <code>\</code> 用于 “取引用” 操作.</p>
+<p>如, 放在数组名称之前 <code>\@skipper</code> 就得到该数组的引用. 和 C 中的指针有些区别, 引用指向整个数组, 而不是数组本身的第一个元素的地址.</p>
+<p>引用能够作为数组或者散列的元素, 也能直接放入普通标量变量中:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $ref_to_skipper = \@skipper;<br></code></pre></td></tr></table></figure>
+
+<p>引用同样是指向地址, 引用的数值形式是 <code>@skipper</code> 数组在内部数据结构中唯一的内存地址, 该地址在数据的生存在周期内部都不会改变.</p>
+<p>若是直接向子例程传递参数, 实际上是将参数都复制了一遍, 而使用引用则避免了这里的消耗.</p>
+<h2 id="4-4-对数组引用进行解引用操作"><a href="#4-4-对数组引用进行解引用操作" class="headerlink" title="4.4 对数组引用进行解引用操作"></a>4.4 对数组引用进行解引用操作</h2><p>解引用实际上就是取地址上的值.</p>
+<p>可以将数组的任意引用放入大括号中, 用于替换数组名称, 最后以i一个访问原始数组的方法作为结束 (也就是用大括号 “{}” 来解引用):</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl">@skipper<br>@&#123; $items &#125;<br></code></pre></td></tr></table></figure>
+<p>以下两种方法都指向数组的第二个元素:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl">$skipper[<span class="hljs-number">1</span>]<br>$&#123; $items &#125;[<span class="hljs-number">1</span>]<br></code></pre></td></tr></table></figure>
+<h2 id="4-5-去除大括号"><a href="#4-5-去除大括号" class="headerlink" title="4.5 去除大括号"></a>4.5 去除大括号</h2><p>如果只是一个简单的标量值, 那么也可删除第一组大括号.</p>
+<p>见书.</p>
+<h2 id="4-6-修改数组"><a href="#4-6-修改数组" class="headerlink" title="4.6 修改数组"></a>4.6 修改数组</h2><p>修改解引用的数组就是修改原始数组.</p>
+<h2 id="4-7-嵌套的数据结构"><a href="#4-7-嵌套的数据结构" class="headerlink" title="4.7 嵌套的数据结构"></a>4.7 嵌套的数据结构</h2><h2 id="4-8-用箭头简化嵌套元素的引用"><a href="#4-8-用箭头简化嵌套元素的引用" class="headerlink" title="4.8 用箭头简化嵌套元素的引用"></a>4.8 用箭头简化嵌套元素的引用</h2><p>在编写 <code>$&#123;DUMMY&#125;[$y]</code> 的任何地方, 都可以使用 <code>DUMMY-&gt;[$y]</code> 这种方式代替.(引用位于箭头之前)</p>
+<p>通过在表达式后面用一个箭头和一个带方括号的下标定义数组引用, 就可以选取数组中一个特定的元素.</p>
+<p>如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl">$all_with_names[<span class="hljs-number">2</span>][<span class="hljs-number">1</span>]<br></code></pre></td></tr></table></figure>
+
+<p>另一条规则: 如果箭头位于 “下标类的符号” 之间, 也可以删除这些箭头:</p>
+<p>例如(含义为, 先解引用 all_with_names 这个数组的第三个元素, 再…):</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl">$all_with_names[<span class="hljs-number">2</span>]-&gt;[<span class="hljs-number">1</span>]-&gt;[<span class="hljs-number">0</span>]<br></code></pre></td></tr></table></figure>
+<p>可以表达为:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl">$all_tith_names[<span class="hljs-number">2</span>][<span class="hljs-number">1</span>][<span class="hljs-number">0</span>]<br></code></pre></td></tr></table></figure>
+
+<p>基本上是有几个 <code>[]</code> 就是几重数组.</p>
+<h2 id="4-9-散列的引用"><a href="#4-9-散列的引用" class="headerlink" title="4.9 散列的引用"></a>4.9 散列的引用</h2><p>同样使用 <code>\</code> 反斜线作为 “取引用” 操作符.</p>
+<p>同样有大括号, 箭头形式.</p>
+<p>对于数组切片或散列切片, 没有带箭头 (-&gt;) 的快捷方式.</p>
+<p>如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">for</span> <span class="hljs-keyword">my</span> $crewmember (@crew) &#123;<br>    <span class="hljs-keyword">printf</span> $format, @$crewmember&#123;<span class="hljs-string">qw(name shirt hat position)</span>&#125;;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="4-10-检查引用类型"><a href="#4-10-检查引用类型" class="headerlink" title="4.10 检查引用类型"></a>4.10 检查引用类型</h2><p>开始使用和传递引用时, 必须确保知道正在使用哪种类型的引用.</p>
+<p>最简单的方式是使用 <code>ref</code> 函数.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> Carp <span class="hljs-string">qw(croak)</span>;<br><br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">show_hash</span> </span>&#123;<br>    <span class="hljs-keyword">my</span> $hash_ref = <span class="hljs-keyword">shift</span>;<br>    <span class="hljs-keyword">my</span> $ref_type = <span class="hljs-keyword">ref</span> $hash_ref;<br>    croak <span class="hljs-string">&quot;I expected a hash reference!&quot;</span>;<br>        <span class="hljs-keyword">unless</span> $ref_type eq <span class="hljs-string">&#x27;HASH&#x27;</span>;<br><br>        <span class="hljs-keyword">foreach</span> <span class="hljs-keyword">my</span> $key ( %$hash_ref ) &#123;<br>            ...<br>        &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><code>ref</code> 的返回值是类型名, 如 <code>HASH</code>.</p>
+<p>constant 变量感觉类似于 C 中的宏定义:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> constant <span class="hljs-string">HASH =&gt;</span> <span class="hljs-keyword">ref</span> &#123;&#125;    <br><br>croak <span class="hljs-string">&quot;I expected a hash reference!&quot;</span><br>    <span class="hljs-keyword">unless</span> d<br></code></pre></td></tr></table></figure>
+
+<p>Scalar::Util 模块中的 <code>reftype</code> 函数也能完成 <code>ref</code> 函数的任务.</p>
+<p>可以使用 eval 检查:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl">croak <span class="hljs-string">&quot;I expected a hash reference !&quot;</span><br>    <span class="hljs-keyword">unless</span> <span class="hljs-keyword">eval</span> &#123; <span class="hljs-keyword">keys</span> %$ref_type; <span class="hljs-number">1</span> &#125;<br></code></pre></td></tr></table></figure>
+
+<h1 id="第5章-引用和作用域"><a href="#第5章-引用和作用域" class="headerlink" title="第5章 引用和作用域"></a>第5章 引用和作用域</h1><p>能够像标量一样复制并且传递引用.</p>
+<h2 id="5-1-关于数据引用的更多信息"><a href="#5-1-关于数据引用的更多信息" class="headerlink" title="5.1 关于数据引用的更多信息"></a>5.1 关于数据引用的更多信息</h2><p>Perl 通过一个叫做 “引用计数” 的机制追踪有多少中访问数据的方法.</p>
+<p>有了初始名称, 引用计数就为 1.</p>
+<p>可以随意添加和删除引用, 并且只要引用计数没有减少到 0. Perl 就将在内存中保存该数组.</p>
+<p>销毁引用, 可以把 undef 赋给该变量:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl">$ref_to_skipper = <span class="hljs-keyword">undef</span>;<br></code></pre></td></tr></table></figure>
+
+<p>特殊情况下, 保存在子例程的私有 (词法) 变量中的引用, 将会在子例程的结尾销毁.</p>
+<p>仅当所有引用销毁时, Perl 才会回收数组占用的内存.</p>
+<h2 id="5-2-如果它曾是变量名将会怎样"><a href="#5-2-如果它曾是变量名将会怎样" class="headerlink" title="5.2 如果它曾是变量名将会怎样"></a>5.2 如果它曾是变量名将会怎样</h2><h2 id="5-3-引用计数和嵌套数据结构"><a href="#5-3-引用计数和嵌套数据结构" class="headerlink" title="5.3 引用计数和嵌套数据结构"></a>5.3 引用计数和嵌套数据结构</h2><p>删除数据树顶端的节点通常就意味着删除该数据树包含的所有数据.</p>
+<p>Perl 会保证, 如果我们仍然拥有一个指向数据的引用, 就将仍然拥有该数据.</p>
+<h2 id="5-4-当引用计数出现问题时"><a href="#5-4-当引用计数出现问题时" class="headerlink" title="5.4 当引用计数出现问题时"></a>5.4 当引用计数出现问题时</h2><p>当数据结构中的一部分以循环的方式指向数据结构的其他部分时, 就会出现问题.</p>
+<h2 id="5-5-直接创建匿名数组"><a href="#5-5-直接创建匿名数组" class="headerlink" title="5.5 直接创建匿名数组"></a>5.5 直接创建匿名数组</h2><p>使用方括号:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $ref_to_skipper_provisions = <br>    [ <span class="hljs-string">qw(blue_shirt hat jacket preserver sunscreen)</span> ];<br></code></pre></td></tr></table></figure>
+<p>取方括号内的值 (在列表上下文中求值), 为这些元素创建一个新的匿名数组, 并且返回该数组的引用.</p>
+<p>使用方括号匿名数组构造函数得到的结果是一个数组引用, 该引用适用于标量变量适用的所有场合.</p>
+<p>创建更大的列表:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $ref_to_skipper_provisions = <br>    [ <span class="hljs-string">qw(blue_shirt hat jacket preserver sunscreen)</span> ];<br>    <span class="hljs-keyword">my</span> @skipper_with_name = (<span class="hljs-string">&#x27;The Skipper&#x27;</span>, $ref_to_skipper_provisions);<br></code></pre></td></tr></table></figure>
+
+<p>使用匿名数组的好处在于不用记忆中间名称.</p>
+<p>可以用空的匿名数组构造器函数表示空的匿名数组引用.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl">[<span class="hljs-string">&#x27;Mrs. Howell&#x27;</span>, <br>  [  ]<br>],<br></code></pre></td></tr></table></figure>
+<h2 id="5-6-创建匿名散列"><a href="#5-6-创建匿名散列" class="headerlink" title="5.6 创建匿名散列"></a>5.6 创建匿名散列</h2><p>大括号 <code>&#123;&#125;</code> 是匿名散列构造函数.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $ref_to_gilligan_info = &#123;<br>    <span class="hljs-string">name     =&gt;</span> <span class="hljs-string">&#x27;Gilligan&#x27;</span>,<br>    <span class="hljs-string">hat      =&gt;</span> <span class="hljs-string">&#x27;White&#x27;</span>,<br>    <span class="hljs-string">shirt    =&gt;</span> <span class="hljs-string">&#x27;Red&#x27;</span>,<br>    <span class="hljs-string">position =&gt;</span> <span class="hljs-string">&#x27;First Mate&#x27;</span>,<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>注意, 当列表末尾的元素并非紧跟着右花括号, 方括号或小括号时, 可以以逗号结尾.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> @crew = (<br>    &#123;<br>        <span class="hljs-string">name       =&gt;</span> <span class="hljs-string">&#x27;Gilligan&#x27;</span>,<br>        <span class="hljs-string">hat        =&gt;</span> <span class="hljs-string">&#x27;Gilligan&#x27;</span>,<br>        <span class="hljs-string">shirt      =&gt;</span> <span class="hljs-string">&#x27;Gilligan&#x27;</span>,<br>        <span class="hljs-string">position   =&gt;</span> <span class="hljs-string">&#x27;Gilligan&#x27;</span>,<br>    &#125;,<br>    &#123;<br>        <span class="hljs-string">name       =&gt;</span> <span class="hljs-string">&#x27;Skipper&#x27;</span>,<br>        <span class="hljs-string">hat        =&gt;</span> <span class="hljs-string">&#x27;Black&#x27;</span>,<br>        <span class="hljs-string">shirt      =&gt;</span> <span class="hljs-string">&#x27;Blue&#x27;</span>,<br>        <span class="hljs-string">position   =&gt;</span> <span class="hljs-string">&#x27;Captain&#x27;</span>,<br>    &#125;,<br>        )<br></code></pre></td></tr></table></figure>
+
+<p>向编译器说明我们想要一个匿名散列构造函数, 就在左大括号之前放置一个加号:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl">+&#123;...&#125;<br></code></pre></td></tr></table></figure>
+<p>如果想得到一个代码块, 就在语句块开始处放置一个分号:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl">&#123;; ...&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="5-7-自动带入"><a href="#5-7-自动带入" class="headerlink" title="5.7 自动带入"></a>5.7 自动带入</h2><h2 id="5-8-自动带入和散列"><a href="#5-8-自动带入和散列" class="headerlink" title="5.8 自动带入和散列"></a>5.8 自动带入和散列</h2><p>自动带入的一个便捷之处在于典型的数据压缩任务.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> %total_bytes;<br><span class="hljs-keyword">while</span> (&lt;&gt;) &#123;<br>    <span class="hljs-keyword">my</span> ($source, $destination, $bytes) = <span class="hljs-keyword">split</span>;<br>    $total_bytes&#123;$source&#125;&#123;$destination&#125; += $bytes;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>此处两个大括号间有隐式的箭头.</p>
+<h1 id="第6章-操作复杂的数据结构"><a href="#第6章-操作复杂的数据结构" class="headerlink" title="第6章 操作复杂的数据结构"></a>第6章 操作复杂的数据结构</h1><h2 id="6-1-使用调试器查看复杂的数据"><a href="#6-1-使用调试器查看复杂的数据" class="headerlink" title="6.1 使用调试器查看复杂的数据"></a>6.1 使用调试器查看复杂的数据</h2><p>最简单的一种是在命令行条件下调用 perl 并带上 <code>-d</code> 参数.</p>
+<p>每个新发布的调试器都与之前发布的调试器在工作方式上略有不同.</p>
+<p>有任何问题都可以通过输入 <code>h</code> 或者查看 <code>perldebug</code> 文档.</p>
+<p>调试器会在执行前显示每一行正在调试的代码.</p>
+<p><code>s</code> 命令将单步执行程序.</p>
+<p><code>x</code> 命令显示存储在列表中的所有值.</p>
+<h2 id="6-2-使用-Data-Dumper-模块查看复杂的数据"><a href="#6-2-使用-Data-Dumper-模块查看复杂的数据" class="headerlink" title="6.2 使用 Data::Dumper 模块查看复杂的数据"></a>6.2 使用 Data::Dumper 模块查看复杂的数据</h2><p>Data::Dumper 将 Perl 的数据结构显示为 Perl 代码.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> Data::Dumper;<br><br><span class="hljs-keyword">my</span> %total_bytes;<br><span class="hljs-keyword">while</span> (&lt;&gt;) &#123;<br>    <span class="hljs-keyword">my</span> ($source, $destination, $bytes) = <span class="hljs-keyword">split</span>;<br>    $total_bytes&#123;$source&#125;&#123;$destination&#125; += $bytes;<br>&#125;<br><br><span class="hljs-keyword">print</span> Dumper(\%total_bytes);<br></code></pre></td></tr></table></figure>
+<p>Data::Dumper 模块定义的 Dumper 子例程类似与调试器中的 <code>x</code> 命令. 其与 <code>x</code> 命令的区别在于, Dumper 生成的字符串是 Perl 代码.</p>
+<h3 id="其他形式的转储程序"><a href="#其他形式的转储程序" class="headerlink" title="其他形式的转储程序"></a>其他形式的转储程序</h3><p>Data::Dump 模块有一个叫做 dump 的子例程, 与 Data::Dumper 模块的用法一致.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> Data::Dump <span class="hljs-string">qw(dump)</span>;<br><span class="hljs-keyword">dump</span>( \%total_bytes );<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> Data::Printer;<br>p( %total_bytes );<br></code></pre></td></tr></table></figure>
+
+<p>Data::Printer 模块的 p 子例程不需要一个引用作为参数:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> Data::Printer;<br><br>p( %total_bytes );<br></code></pre></td></tr></table></figure>
+
+<h2 id="6-3-数据编组"><a href="#6-3-数据编组" class="headerlink" title="6.3 数据编组"></a>6.3 数据编组</h2><p>能够将 Data::Dumper 模块 Dumper 子进程的输出放入一个文件中, 然后另一个程序加载该文件.</p>
+<h3 id="6-3-1-使用-Storable-模块对复杂数据排序"><a href="#6-3-1-使用-Storable-模块对复杂数据排序" class="headerlink" title="6.3.1 使用 Storable 模块对复杂数据排序"></a>6.3.1 使用 Storable 模块对复杂数据排序</h3><p>编组数据: 将复杂数据转换成一种能够作为字节流写入文件的一种形式.</p>
+<p>Perl 的 Storable 模块更适合编组数据.</p>
+<p>Storable 生成更短小并且易于处理的文件.</p>
+<p>freeze 子例程返回一个二进制字符串, 该字符串用于表述所需要输出的数据结构:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> Storable;<br><span class="hljs-keyword">my</span> @data1 = <span class="hljs-string">qw(one won)</span>;<br><span class="hljs-keyword">my</span> @data2 = <span class="hljs-string">qw(two too to)</span>;<br><span class="hljs-keyword">push</span> @data2, \@data1;<br><span class="hljs-keyword">push</span> @data1, \@data2;<br><span class="hljs-keyword">my</span> $frozen = freeze [\@data1, \@data2];<br></code></pre></td></tr></table></figure>
+
+<h3 id="6-3-2-YAML-模块"><a href="#6-3-2-YAML-模块" class="headerlink" title="6.3.2 YAML 模块"></a>6.3.2 YAML 模块</h3><p>YAML (Yet Another Mark Language).</p>
+<p>YAML 模块的工作方式与 Data::Dumper 模块相同.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs perl"> <span class="hljs-keyword">use</span> YAML;<br><br> <span class="hljs-keyword">my</span> %total_bytes;<br><br> <span class="hljs-keyword">while</span> (&lt;&gt;) &#123;<br>     <span class="hljs-keyword">my</span> ($source, $destination, $bytes) = <span class="hljs-keyword">split</span>;<br>     $total_bytes&#123;$source&#125;&#123;$destination&#125; += $bytes;<br>&#125;<br><br><span class="hljs-keyword">print</span> Dump(\%total_bytes);<br></code></pre></td></tr></table></figure>
+
+<h3 id="6-3-3-JSON-模块"><a href="#6-3-3-JSON-模块" class="headerlink" title="6.3.3 JSON 模块"></a>6.3.3 JSON 模块</h3><p>JSON (JavaScript Object Notation).</p>
+<p>JSON 模块有很多中创建输出的方法, 其中就包括 <code>to_json</code>:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> JSON;<br><br><span class="hljs-keyword">print</span> to_json( \%total_bytes, &#123; <span class="hljs-string">pretty =&gt;</span> <span class="hljs-number">1</span> &#125; );<br></code></pre></td></tr></table></figure>
+<p>这里的 <code>&#123; pretty =&gt; 1 &#125;</code> 是使用属性.</p>
+<p>可以从一个文件, Web 请求或者来自其他程序的输出获取 JSON 文本:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> JSON;<br><br><span class="hljs-keyword">my</span> $hash_ref = from_json($json_string);<br></code></pre></td></tr></table></figure>
+
+<h2 id="6-4-使用-map-和-grep-操作符"><a href="#6-4-使用-map-和-grep-操作符" class="headerlink" title="6.4 使用 map 和 grep 操作符"></a>6.4 使用 map 和 grep 操作符</h2><h2 id="6-5-应用一点间接方法"><a href="#6-5-应用一点间接方法" class="headerlink" title="6.5 应用一点间接方法"></a>6.5 应用一点间接方法</h2><h1 id="第7章-对子例程的引用"><a href="#第7章-对子例程的引用" class="headerlink" title="第7章 对子例程的引用"></a>第7章 对子例程的引用</h1><p>除了对标量, 数组和散列的引用, 也可以对一个子例程进行引用.k</p>
+<h2 id="7-1-对命名子例程的引用"><a href="#7-1-对命名子例程的引用" class="headerlink" title="7.1 对命名子例程的引用"></a>7.1 对命名子例程的引用</h2><p>对子例程 <code>skipper_greets()</code> 取引用, 前导字符 “&amp;” 在这里是必须的, 但删除了其后的小括号.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $ref_to_greeter = \&amp;skipper_greets;<br></code></pre></td></tr></table></figure>
+<p>解引用同样是加大括号:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl">&amp;&#123; $ref_to_greeter &#125;( <span class="hljs-string">&#x27;Gilligan&#x27;</span> )<br></code></pre></td></tr></table></figure>
+<p>同样, 如果大括号里的值是简单的标量变量, 大括号可以删除:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl">&amp; $ref_to_greeter( <span class="hljs-string">&#x27;Gilligan&#x27;</span> )<br></code></pre></td></tr></table></figure>
+<p>也可以转换成带箭头的形式:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl">$ref_to_greeter -&gt; ( <span class="hljs-string">&#x27;Gilligan&#x27;</span> )<br></code></pre></td></tr></table></figure>
+<p>迭代调用所有子例程:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">for</span> <span class="hljs-keyword">my</span> %greet (\&amp;skipper_greets, \&amp;gilligan_greets) &#123;<br>    $greet-&gt;(<span class="hljs-string">&#x27;Professor&#x27;</span>);<br>&#125;    <br></code></pre></td></tr></table></figure>
+<p>也就是说, 用子例程的引用的一个好处就是, 当子例程调用的参数相同时, 可以利用控制结构简化操作.</p>
+<h2 id="7-2-匿名子例程"><a href="#7-2-匿名子例程" class="headerlink" title="7.2 匿名子例程"></a>7.2 匿名子例程</h2><p>匿名子例程看上去像是普通子例程, 只是在 sub 关键字和紧随的代码块之间没有名字, 最后有一个分号, 毕竟是一个赋值语句, 其返回一个子例程的引用:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $ginger = <span class="hljs-function"><span class="hljs-keyword">sub</span> </span>&#123;<br>    <span class="hljs-keyword">my</span> $person = <span class="hljs-keyword">shift</span>;<br>    <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;Ginger: (in a sultry voice) Well hello, $person!\n&quot;</span>;<br>&#125;;<br>$ginger-&gt;(<span class="hljs-string">&#x27;Skipper&#x27;</span>);<br></code></pre></td></tr></table></figure>
+<h2 id="7-3-回调"><a href="#7-3-回调" class="headerlink" title="7.3 回调"></a>7.3 回调</h2><p>File::Find 模块导出的 find 子例程, 用来以可移植的方式遍历给定文件系统的层次结构. 传递给 find 子例程两个参数:  第一个是对子例程的引用. 该子例程会从给定的起始目录开始, 通过递归搜索的方法, 找到其下的每个文件或目录, 执行子例程引用下的操作, 第二个表示目录开始点的字符串:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> File::Find;<br><br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">what_to_do</span> </span>&#123;<br>    <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;$File::Find::name found\n&quot;</span>;<br>&#125;<br><span class="hljs-keyword">my</span> @starting_directories = <span class="hljs-string">qw(.)</span>;<br><br>find(\&amp;what_to_do, @starting_directories);<br></code></pre></td></tr></table></figure>
+<p>改用匿名子例程的方式:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> File::Find;<br><br>find(<br>    <span class="hljs-function"><span class="hljs-keyword">sub</span> </span>&#123;<br>        <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;$File::Find:name found\n&quot;</span>;<br>    &#125;,<br>    @starting_directories,<br>);<br></code></pre></td></tr></table></figure>
+<h2 id="7-4-闭包"><a href="#7-4-闭包" class="headerlink" title="7.4 闭包"></a>7.4 闭包</h2><p>还可以用 File::Find 来查找文件的一些其他属性.</p>
+<p><code>$_</code> 中保存的是文件名, 而 <code>File::Find::name</code> 中保存的是相对于起始路径的文件名. 如, 若起始目录为 <code>/usr</code>, 查找的文件为 <code>/usr/bin/perl</code>, 那么 <code>$_</code> 中的值为 <code>perl</code> 而 <code>$File::Find::name</code> 的值为 <code>/bin/perl</code>.</p>
+<p>能够访问声明时就存在的所有词法变量的子例程叫做闭包. (也就是说变量是在子例程外面声明的).</p>
+<p>从闭包内部访问变量能够确保只要子例程引用存在, 访问的变量就存在.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> File::Find;<br><br><span class="hljs-keyword">my</span> $callback;<br>&#123;<br>    <span class="hljs-keyword">my</span> $count = <span class="hljs-number">0</span>;<br>    $callback = <span class="hljs-function"><span class="hljs-keyword">sub</span> </span>&#123; <span class="hljs-keyword">print</span> ++$count, <span class="hljs-string">&quot;: $File::Find::name\n&quot;</span> &#125;;<br>&#125;<br>find($callback, <span class="hljs-string">&#x27;.&#x27;</span>);<br></code></pre></td></tr></table></figure>
+
+<h2 id="7-5-从一个子例程返回另一个子例程"><a href="#7-5-从一个子例程返回另一个子例程" class="headerlink" title="7.5 从一个子例程返回另一个子例程"></a>7.5 从一个子例程返回另一个子例程</h2><figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> File::Find;<br><br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">create_find_callback_that_counts</span> </span>&#123;<br>    <span class="hljs-keyword">my</span> $count = <span class="hljs-number">0</span>;<br>    <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">sub</span> </span>&#123; <span class="hljs-keyword">print</span> ++$count, <span class="hljs-string">&quot;: $File::Find::name\n&quot;</span> &#125;;<br>&#125;<br><br><span class="hljs-keyword">my</span> $callback = create_find_callback_that_counts();<br>find($callback, <span class="hljs-string">&#x27;.&#x27;</span>);<br></code></pre></td></tr></table></figure>
+
+<h2 id="7-6-作为输入参数的闭包变量"><a href="#7-6-作为输入参数的闭包变量" class="headerlink" title="7.6 作为输入参数的闭包变量"></a>7.6 作为输入参数的闭包变量</h2><p>闭包变量也同样可以用于为子例程提供初始变量或者持续输入.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> File::Find;<br><br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">print_bigger_than</span> </span>&#123;<br>    <span class="hljs-keyword">my</span> $minimum_size = <span class="hljs-keyword">shift</span>;<br>    <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">sub</span> </span>&#123; <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;$File::Find::name\n&quot;</span> <span class="hljs-keyword">if</span> -f <span class="hljs-keyword">and</span> -s &gt;= $minimum_size &#125;;<br>&#125;<br><br><span class="hljs-keyword">my</span> $bigger_than_1024 = print_bigger_than(<span class="hljs-number">1024</span>);<br>find($bigger_than_1024, <span class="hljs-string">&#x27;bin&#x27;</span>);<br></code></pre></td></tr></table></figure>
+<h2 id="7-7-闭包变量作为静态局部变量"><a href="#7-7-闭包变量作为静态局部变量" class="headerlink" title="7.7 闭包变量作为静态局部变量"></a>7.7 闭包变量作为静态局部变量</h2><p>命名子例程也可以是闭包.</p>
+<p>如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl">&#123;<br><span class="hljs-keyword">my</span> $count;<br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">count_one</span> </span>&#123; ++$count &#125;<br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">count_so_fat</span> </span>&#123; <span class="hljs-keyword">return</span> $count &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>子例程在作用域外仍将保持. 也就是说, 上面虽然是在一个代码块中, 外面的程序仍然能够使用这两个子例程.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs perl">&#123;<br><span class="hljs-keyword">my</span> $countdown = <span class="hljs-number">10</span>;<br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">count_down</span> </span>&#123; $countdown-- &#125;<br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">count_remaining</span> </span>&#123; $countdown &#125;<br>&#125;<br><br>count_down();<br>count_down();<br>count_down();<br><span class="hljs-keyword">print</span> <span class="hljs-string">&quot;we&#x27;re down to &quot;</span>, count_remaining(), <span class="hljs-string">&quot; coconuts!\n&quot;</span>;<br></code></pre></td></tr></table></figure>
+<p>实测加上 BEGIN 结果也是一样的?</p>
+<h3 id="state-变量"><a href="#state-变量" class="headerlink" title="state 变量"></a>state 变量</h3><p>Perl v5.10 版开始为子例程引入了另一种方法生成私有的, 持续的变量. (也就是说重复调用子例程时值不会丢失)</p>
+<p>可以使用 <code>state</code> 语句在子例程内部声明变量.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> v5.<span class="hljs-number">10</span>;<br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">countdown</span> </span>&#123;<br>    <span class="hljs-keyword">state</span> $countdown = <span class="hljs-number">10</span>;<br>    $countdown--;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><code>state</code> 变量有一个限制, 仅能使用 state 语句初始化标量变量. 能够使用 state 语句声明任何类型的变量, 但是不能初始化它们.</p>
+<h2 id="7-8-查询我们自己的身份"><a href="#7-8-查询我们自己的身份" class="headerlink" title="7.8 查询我们自己的身份"></a>7.8 查询我们自己的身份</h2><p>Perl v5.16 版引入 <code>__SUB__</code> 标记 (token), 返回一个指向当前子例程的引用.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $sub = <span class="hljs-function"><span class="hljs-keyword">sub</span> </span>&#123;<br>    <span class="hljs-keyword">state</span> $n = <span class="hljs-number">5</span>;<br>    <span class="hljs-keyword">return</span> <span class="hljs-keyword">unless</span> $n &gt; -<span class="hljs-number">1</span>;<br>    <span class="hljs-keyword">say</span> $n--;<br>    __SUB_<span class="hljs-number">_</span>-&gt;();<br>&#125;<br>$sub-&gt;();<br></code></pre></td></tr></table></figure>
+
+<h3 id="7-8-1-令人着迷的子例程"><a href="#7-8-1-令人着迷的子例程" class="headerlink" title="7.8.1 令人着迷的子例程"></a>7.8.1 令人着迷的子例程</h3><figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> @arry = ( \ <span class="hljs-string">&#x27;xyz&#x27;</span>, [<span class="hljs-string">qw(a b c)</span>], <span class="hljs-function"><span class="hljs-keyword">sub</span> </span>&#123; <span class="hljs-keyword">say</span> <span class="hljs-string">&#x27;Buster&#x27;</span> &#125; );<br><br><span class="hljs-keyword">foreach</span> ( @array ) &#123;<br>    <span class="hljs-keyword">when</span> (<span class="hljs-keyword">ref</span> eq <span class="hljs-keyword">ref</span> \ <span class="hljs-string">&#x27;&#x27;</span>   ) &#123; <span class="hljs-keyword">say</span> <span class="hljs-string">&quot;Scalar $$_&quot;</span> &#125;<br>    <span class="hljs-keyword">when</span> (<span class="hljs-keyword">ref</span> eq <span class="hljs-keyword">ref</span> []     ) &#123; <span class="hljs-keyword">say</span> <span class="hljs-string">&quot;Array @$_&quot;</span> &#125;<br>    <span class="hljs-keyword">when</span> (<span class="hljs-keyword">ref</span> eq <span class="hljs-keyword">ref</span> <span class="hljs-function"><span class="hljs-keyword">sub</span> </span>&#123;&#125; ) &#123; <span class="hljs-keyword">say</span> <span class="hljs-string">&quot;Sub ???&quot;</span> &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>这里每一个 <code>when</code> 中的第一个 <code>ref</code> 实际上是 <code>ref $_</code>.</p>
+<h3 id="7-8-2-转储闭包"><a href="#7-8-2-转储闭包" class="headerlink" title="7.8.2 转储闭包"></a>7.8.2 转储闭包</h3><p>Data::Dump::Streamer 模块是增强版的 Data::Dumper 模块.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> Data::Dump::Streamer;<br><br><span class="hljs-keyword">my</span> @luxuries = <span class="hljs-string">qw(Diamonds Furs Caviar)</span>;<br><br><span class="hljs-keyword">my</span> $hash = &#123;<br>    <span class="hljs-string">Gilligan           =&gt;</span> <span class="hljs-function"><span class="hljs-keyword">sub</span> </span>&#123; <span class="hljs-keyword">say</span> <span class="hljs-string">&#x27;Howdy Skipper!&#x27;</span>     &#125;,<br>    <span class="hljs-string">Skipper            =&gt;</span> <span class="hljs-function"><span class="hljs-keyword">sub</span> </span>&#123; <span class="hljs-keyword">say</span> <span class="hljs-string">&#x27;Gilligan!!!!&#x27;</span>       &#125;,<br>    <span class="hljs-string">&#x27;Mr. Howell&#x27;</span>       =&gt; <span class="hljs-function"><span class="hljs-keyword">sub</span> </span>&#123; <span class="hljs-keyword">say</span> <span class="hljs-string">&#x27;Money money money!&#x27;</span> &#125;,<br>    <span class="hljs-string">Ginger             =&gt;</span> <span class="hljs-function"><span class="hljs-keyword">sub</span> </span>&#123; <span class="hljs-keyword">say</span> $luxuries[<span class="hljs-keyword">rand</span> @luxuries] &#125;,<br>&#125;;<br><br>Dump $hash;<br></code></pre></td></tr></table></figure>
+
+
+
+
                 
               </div>
             
