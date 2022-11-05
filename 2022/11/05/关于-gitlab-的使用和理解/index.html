@@ -23,10 +23,12 @@
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="首先，gitlab 是一个平台，不管使用 docker 来搭建 gitlab 还是直接的镜像，都只是搭建这个平台用. 可以在 Web 上访问. gitlab-runner 是另一个平台，其用来运行 gitlab CI&#x2F;CD。 因此使用 gitlab CI&#x2F;CD 之前，需要先搭建好 gitlab-runner, 然后在 gitlab 的 project 上注册这个 runner">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/DAG_pipline.png">
 <meta property="article:published_time" content="2022-11-05T02:47:18.000Z">
-<meta property="article:modified_time" content="2022-11-05T02:51:11.063Z">
+<meta property="article:modified_time" content="2022-11-05T12:24:37.132Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/DAG_pipline.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -235,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          203 字
+          1.3k 字
         
       </span>
     
@@ -246,7 +248,7 @@
         
         
         
-          2 分钟
+          11 分钟
         
       </span>
     
@@ -292,7 +294,59 @@
                 <p>首先，gitlab 是一个平台，不管使用 docker 来搭建 gitlab 还是直接的镜像，都只是搭建这个平台用. 可以在 Web 上访问.</p>
 <p>gitlab-runner 是另一个平台，其用来运行 gitlab CI&#x2F;CD。</p>
 <p>因此使用 gitlab CI&#x2F;CD 之前，需要先搭建好 gitlab-runner, 然后在 gitlab 的 project 上注册这个 runner (才找得到 runner 在哪里以及哪一个) 之后才能使用.</p>
+<h1 id="自动部署项目示例"><a href="#自动部署项目示例" class="headerlink" title="自动部署项目示例"></a>自动部署项目示例</h1><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_47872288/article/details/124818005">参考</a></p>
+<h1 id="参考-B-站系列视频"><a href="#参考-B-站系列视频" class="headerlink" title="参考 B 站系列视频"></a><a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1kA411L7jS/?spm_id_from=333.999.0.0&vd_source=bc8ddbb1a08707dc809c3fd9bb85290d">参考 B 站系列视频</a></h1><h2 id="关于-CI-x2F-CD"><a href="#关于-CI-x2F-CD" class="headerlink" title="关于 CI&#x2F;CD"></a>关于 CI&#x2F;CD</h2><p><a target="_blank" rel="noopener" href="https://fizzz.blog.csdn.net/article/details/111029151">参考</a></p>
+<p>重要的关键词: stage, script, retry, image, tags, only&#x2F;except, when, cache.</p>
+<p>若没有自己定义 stage 数组，则默认的 stage 有:</p>
+<ul>
+<li><code>.pre</code></li>
+<li><code>build</code></li>
+<li><code>test</code></li>
+<li><code>deploy</code></li>
+<li><code>.post</code></li>
+</ul>
+<p>任务的执行是按照阶段 stage 定义的顺序执行，而不是你写 job 的顺序.</p>
+<p>同一个 stage 中的 jobs 的并发执行数量在 runner 的配置文件中定义，默认为一.</p>
+<h3 id="retry"><a href="#retry" class="headerlink" title="retry"></a>retry</h3><p>retry 关键词设置的范围是 0~2. 如:</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">retry</span>: <span class="hljs-number">2</span><br></code></pre></td></tr></table></figure>
+<p>或:</p>
+<figure class="highlight nestedtext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs nestedtext"><span class="hljs-attribute">retry</span><span class="hljs-punctuation">:</span><br>  <span class="hljs-attribute">max</span><span class="hljs-punctuation">:</span> <span class="hljs-string">2</span><br>  <span class="hljs-attribute">when</span><span class="hljs-punctuation">: </span><br>    <span class="hljs-bullet">-</span> <br>    <span class="hljs-bullet">-</span> <br></code></pre></td></tr></table></figure>
+<h3 id="image"><a href="#image" class="headerlink" title="image"></a>image</h3><p>既可以定义全局，也可以指定某个任务.</p>
+<h3 id="tags"><a href="#tags" class="headerlink" title="tags"></a>tags</h3><p>指定 runner.</p>
+<h3 id="only-x2F-except"><a href="#only-x2F-except" class="headerlink" title="only&#x2F;except"></a>only&#x2F;except</h3><p>限定当前任务执行的条件.</p>
+<h3 id="cache"><a href="#cache" class="headerlink" title="cache"></a>cache</h3><p>缓存当前工作环境目录中的一些文件，在某个任务初始化时恢复.</p>
+<p>其下一般用到两个关键词: </p>
+<ul>
+<li>key</li>
+<li>paths</li>
+</ul>
+<p>前者标识这次缓存, 后者指明文件的路径.</p>
+<p>检出缓存似乎不需要手动检出，而是在每个阶段开始时自动检出. 每次检出后又会缓存.</p>
+<h3 id="变量的使用"><a href="#变量的使用" class="headerlink" title="变量的使用"></a>变量的使用</h3><p>在 <code>.gitlab-ci.yml</code>  文件中定义变量.</p>
+<p>使用 <code>variable:</code> , 变量名最好都用大写如:</p>
+<figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs dts"><span class="hljs-symbol">variables:</span><br><span class="hljs-symbol">  MT_VAR:</span> <span class="hljs-string">&quot;my name is ...&quot;</span><br><span class="hljs-symbol"></span><br><span class="hljs-symbol">log_var:</span><br><span class="hljs-symbol">  script:</span><br>    - echo $MT_VAR<br></code></pre></td></tr></table></figure>
 
+<p>两个 flag, <code>Protect variable</code>, 表明只有在保护分支中才能使用该变量.</p>
+<p><code>Mask variable</code> 表明在 pipline 中不会直接显示.</p>
+<p>pipline 中有预定义的变量.</p>
+<p>使用 <code>export</code> 可以导出所有变量:</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs yml"><span class="hljs-attr">script:</span><br>  <span class="hljs-bullet">-</span> <span class="hljs-string">export</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="流水线类型"><a href="#流水线类型" class="headerlink" title="流水线类型"></a>流水线类型</h2><h3 id="DAG-流水线-Directed-Acyclic-Graphs"><a href="#DAG-流水线-Directed-Acyclic-Graphs" class="headerlink" title="DAG 流水线 (Directed Acyclic Graphs)"></a>DAG 流水线 (Directed Acyclic Graphs)</h3><p>适用于多平台部署:</p>
+<p><img src="/../img/DAG_pipline.png" srcset="/img/loading.gif" lazyload></p>
+<p>设置依赖关系. 用 <code>needs</code> 关键词, 如:</p>
+<figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs dts"><span class="hljs-symbol">test_a:</span><br><span class="hljs-symbol">  stage:</span> test<br><span class="hljs-symbol">  needs:</span> [build_a]<br><span class="hljs-symbol">  script:</span><br>    - echo <span class="hljs-string">&quot;...&quot;</span><br></code></pre></td></tr></table></figure>
+<p>方括号里面为其他 job 的名称.</p>
+<h3 id="父子流水线"><a href="#父子流水线" class="headerlink" title="父子流水线"></a>父子流水线</h3><p>触发式. 使用 <code>trigger</code>, <code>include</code> 和 <code>rules</code> 关键词.</p>
+<p>如:</p>
+<figure class="highlight nestedtext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs nestedtext"><span class="hljs-attribute">trigger_a</span><span class="hljs-punctuation">:</span><br>  <span class="hljs-attribute">stage</span><span class="hljs-punctuation">:</span> <span class="hljs-string">test</span><br>  <span class="hljs-attribute">trigger</span><span class="hljs-punctuation">:</span><br>    <span class="hljs-attribute">include</span><span class="hljs-punctuation">:</span> <span class="hljs-string">a/.gitlab-ci.yml</span><br>  <span class="hljs-attribute">rules</span><span class="hljs-punctuation">:</span><br>    <span class="hljs-bullet">-</span> <span class="hljs-string">change:</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">a/*</span><br></code></pre></td></tr></table></figure>
+<h3 id="多项目流水线"><a href="#多项目流水线" class="headerlink" title="多项目流水线"></a>多项目流水线</h3><p>触发另一个项目的流水线.</p>
+<h3 id="合并流水线"><a href="#合并流水线" class="headerlink" title="合并流水线"></a>合并流水线</h3><p>合并的时候触发.</p>
+<p>在一个 job 下添加:</p>
+<figure class="highlight nestedtext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs nestedtext"><span class="hljs-attribute">only</span><span class="hljs-punctuation">:</span><br>  <span class="hljs-bullet">-</span> <span class="hljs-string">merge_requests</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="流水线的触发"><a href="#流水线的触发" class="headerlink" title="流水线的触发"></a>流水线的触发</h3><p>推送代码时，定时，url, 手动触发.</p>
+<h2 id="远程服务器部署"><a href="#远程服务器部署" class="headerlink" title="远程服务器部署"></a>远程服务器部署</h2><h2 id="调试手段"><a href="#调试手段" class="headerlink" title="调试手段"></a>调试手段</h2>
                 
               </div>
             
