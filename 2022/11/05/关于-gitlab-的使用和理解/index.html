@@ -23,12 +23,15 @@
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="首先，gitlab 是一个平台，不管使用 docker 来搭建 gitlab 还是直接的镜像，都只是搭建这个平台用. 可以在 Web 上访问. gitlab-runner 是另一个平台，其用来运行 gitlab CI&#x2F;CD。 因此使用 gitlab CI&#x2F;CD 之前，需要先搭建好 gitlab-runner, 然后在 gitlab 的 project 上注册这个 runner">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/whereis_token.png">
+<meta property="og:image" content="http://example.com/img/clone_url_solution.png">
+<meta property="og:image" content="http://example.com/img/gitlab-ci-unable-to-access.png">
 <meta property="og:image" content="http://example.com/img/DAG_pipline.png">
 <meta property="article:published_time" content="2022-11-05T02:47:18.000Z">
-<meta property="article:modified_time" content="2022-11-05T12:24:37.132Z">
+<meta property="article:modified_time" content="2022-11-06T07:55:44.167Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="http://example.com/img/DAG_pipline.png">
+<meta name="twitter:image" content="http://example.com/img/whereis_token.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -237,7 +240,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.3k 字
+          5.5k 字
         
       </span>
     
@@ -248,7 +251,7 @@
         
         
         
-          11 分钟
+          47 分钟
         
       </span>
     
@@ -294,8 +297,66 @@
                 <p>首先，gitlab 是一个平台，不管使用 docker 来搭建 gitlab 还是直接的镜像，都只是搭建这个平台用. 可以在 Web 上访问.</p>
 <p>gitlab-runner 是另一个平台，其用来运行 gitlab CI&#x2F;CD。</p>
 <p>因此使用 gitlab CI&#x2F;CD 之前，需要先搭建好 gitlab-runner, 然后在 gitlab 的 project 上注册这个 runner (才找得到 runner 在哪里以及哪一个) 之后才能使用.</p>
+<h2 id="利用-docker-搭建-gitlab"><a href="#利用-docker-搭建-gitlab" class="headerlink" title="利用 docker 搭建 gitlab"></a>利用 docker 搭建 gitlab</h2><p><a target="_blank" rel="noopener" href="https://www.bilibili.com/read/mobile?id=14636241&share_medium=android&share_plat=android&share_session_id=9f648ec4-b6af-4a38-aa41-0d689585fc0b&share_source=COPY&share_tag=s_i&timestamp=1640852403&unique_k=qmhoF8p">参考</a></p>
+<p>如下:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ <span class="hljs-built_in">export</span> GITLAB_HOME=/srv/gitlab<br>$ <span class="hljs-built_in">mkdir</span> -p /opt/docker-compose/gitlab<br>$ vim /opt/docker-compose/gitlab/docker-compose.yml<br></code></pre></td></tr></table></figure>
+<p>在 docker-compose.yml 中添加:</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs yml"><span class="hljs-attr">version:</span> <span class="hljs-string">&#x27;3.8&#x27;</span><br><span class="hljs-attr">services:</span><br> <span class="hljs-attr">gitlab:</span><br>   <span class="hljs-attr">hostname:</span> <span class="hljs-string">&#x27;&#x27;</span><br>   <span class="hljs-attr">image:</span> <span class="hljs-string">&#x27;gitlab/gitlab-ce:14.2.4-ce.0&#x27;</span><br>   <span class="hljs-attr">restart:</span> <span class="hljs-string">always</span><br>   <span class="hljs-attr">environment:</span><br>     <span class="hljs-attr">GITLAB_OMNIBUS_CONFIG:</span> <span class="hljs-string">|</span><br><span class="hljs-string">       external_url &#x27;http://:9080&#x27;</span><br><span class="hljs-string">       gitlab_rails[&#x27;gitlab_shell_ssh_port&#x27;] = 9022</span><br><span class="hljs-string">       gitlab_rails[&#x27;time_zone&#x27;] = &#x27;Asia/Shanghai&#x27;</span><br><span class="hljs-string"></span>   <span class="hljs-attr">ports:</span><br>     <span class="hljs-bullet">-</span> <span class="hljs-string">&#x27;9080:9080&#x27;</span><br>     <span class="hljs-bullet">-</span> <span class="hljs-string">&#x27;9022:22&#x27;</span><br>   <span class="hljs-attr">volumes:</span><br>     <span class="hljs-bullet">-</span> <span class="hljs-string">&#x27;$GITLAB_HOME/config:/etc/gitlab&#x27;</span><br>     <span class="hljs-bullet">-</span> <span class="hljs-string">&#x27;$GITLAB_HOME/logs:/var/log/gitlab&#x27;</span><br>     <span class="hljs-bullet">-</span> <span class="hljs-string">&#x27;$GITLAB_HOME/data:/var/opt/gitlab&#x27;</span><br></code></pre></td></tr></table></figure>
+<p>注意这里的 <code>hostname</code> 和 <code>external_url</code> 部分要自己补全.</p>
+<p>之后在含有 <code>docker-compose.yml</code> 的目录下执行 <code>docker-compose up -d</code> 即可.</p>
+<p>初始密码在 <code>$GITLAB_HOME/config/initial_root_password</code> 文件中.</p>
+<h2 id="关于-gitlab-runner"><a href="#关于-gitlab-runner" class="headerlink" title="关于 gitlab runner"></a>关于 gitlab runner</h2><p><a target="_blank" rel="noopener" href="https://docs.gitlab.com/runner/install/docker.html">用容器运行 runner 的官方文档</a></p>
+<p>runners 是用来运行 CI&#x2F;CD jobs 的代理.</p>
+<p>shared runners 意味着所有的 projects 都可以使用这个 runner 来运行服务.</p>
+<p>Gitlab runner 的 docker 镜像基于 Ubuntu 或 Alpine.</p>
+<p>以下两行命令等效:<br>在容器内执行:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ gitlab-runner &lt;runner <span class="hljs-built_in">command</span> and options...&gt;<br></code></pre></td></tr></table></figure>
+<p>在容器外执行的版本:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ docker run &lt;chosen docker options...&gt; gitlab/gitlab-runner &lt;runner <span class="hljs-built_in">command</span> and options...&gt;<br></code></pre></td></tr></table></figure>
+<p>其会创建一个容器，但似乎无法进入. 主要操作就是修改挂载的 volume 然后重新加载容器.</p>
+<p>常见的用法如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ docker run --<span class="hljs-built_in">rm</span> -t -i gitlab/gitlab-runner --<span class="hljs-built_in">help</span><br></code></pre></td></tr></table></figure>
+<p>这里添加 <code>--rm</code> 参数表明用该容器执行命令后删除.</p>
+<h3 id="创建一个-gitlab-runner"><a href="#创建一个-gitlab-runner" class="headerlink" title="创建一个 gitlab runner"></a>创建一个 gitlab runner</h3><p>利用 docker:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ docker run -d --name gitlab-runner --restart always \<br>      -v /srv/gitlab-runner/config:/etc/gitlab-runner \<br>      -v /var/run/docker.sock:/var/run/docker.sock \<br>      gitlab/gitlab-runner:latest<br><br></code></pre></td></tr></table></figure>
+<p>这里没什么需要修改的，直接用即可.</p>
+<h3 id="给某个-gitlab-注册-runner"><a href="#给某个-gitlab-注册-runner" class="headerlink" title="给某个 gitlab 注册 runner"></a>给某个 gitlab 注册 runner</h3><p><a target="_blank" rel="noopener" href="https://docs.gitlab.com/runner/register/index.html#docker">runner 注册的官方文档</a></p>
+<p>将 gitlab 容器和 gitlab runner 产生联系需利用 registration token:<br><img src="/../img/whereis_token.png" srcset="/img/loading.gif" lazyload></p>
+<p>这里只是获取 registration token 的内容，用来标识这个 gitlab.</p>
+<p>注册过程需使用另一个镜像, 脚本如下:</p>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs jboss-cli">  docker run <span class="hljs-params">--rm</span> -v <span class="hljs-string">/srv/gitlab-runner/config</span>:<span class="hljs-string">/etc/gitlab-runner</span> gitlab/gitlab-runner register \<br><span class="hljs-params">--non-interactive</span> \<br><span class="hljs-params">--executor</span> <span class="hljs-string">&quot;docker&quot;</span> \<br><span class="hljs-params">--docker-image</span> alpine<span class="hljs-function">:latest</span> \<br><span class="hljs-params">--url</span> <span class="hljs-string">&quot;http://10.0.8.3:9080/&quot;</span> \<br><span class="hljs-params">--registration-token</span> <span class="hljs-string">&quot;wknr7omKyoP7xXYQ9ncb&quot;</span> \<br><span class="hljs-params">--description</span> <span class="hljs-string">&quot;second-register-runner&quot;</span> \<br><span class="hljs-params">--tag-list</span> <span class="hljs-string">&quot;testGitlab&quot;</span> \<br><span class="hljs-params">--run-untagged=</span><span class="hljs-string">&quot;true&quot;</span> \<br><span class="hljs-params">--locked=</span><span class="hljs-string">&quot;false&quot;</span> \<br><span class="hljs-params">--access-level=</span><span class="hljs-string">&quot;not_protected&quot;</span><br></code></pre></td></tr></table></figure>
+
+<p>注意一些参数的修改. 如 <code>--url</code> 为 gitlab 所在的地址，<code>--registration-token</code> 为 gitlab 上的 token.</p>
+<p>若 <code>--excutor</code> 为 docker, 注意在 <code>/srv/gitlab-runner/config/config.toml</code> 文件中添加 <code>clone-url</code>:</p>
+<p><img src="/../img/clone_url_solution.png" srcset="/img/loading.gif" lazyload></p>
+<p>不然可能会报错. 如:</p>
+<p><img src="/../img/gitlab-ci-unable-to-access.png" srcset="/img/loading.gif" lazyload></p>
+<p>因为执行环境为 docker, 这里仓库的地址又不是公网 ip, docker 使用 <code>127.0.0.1</code> 就会报错.</p>
+<p>也可以手动交互式输入:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ docker run --<span class="hljs-built_in">rm</span> -it -v /srv/gitlab-runner/config:/etc/gitlab-runner gitlab/gitlab-runner register<br></code></pre></td></tr></table></figure>
+
+<p>注册之前需要先有 runner 服务. 这里的注册操作其实就是通过修改 <code>/srv/gitlab-runner/config/config.toml</code> 来实现，只不过是先挂载到一个容器中，修改之后将这个容器删除，但是根据 volume 的性质，修改是保存了的. 因此注册实际上就是将 gitlab 服务器和 token 等信息写入 runner 的配置文件.</p>
+<p><a target="_blank" rel="noopener" href="https://docs.gitlab.com/runner/configuration/advanced-configuration.html">runner 配置文件官方文档</a></p>
+<p>修改 <code>config.toml</code> 文件. 使用 TOML 的格式.</p>
+<p>Gitlab Runner 每 3 秒检查一次配置修改，在必要情况下重新加载配置文件.</p>
+<p>如果注册后将 runner 停止运行，pipline 在运行是就会一直 pending.</p>
 <h1 id="自动部署项目示例"><a href="#自动部署项目示例" class="headerlink" title="自动部署项目示例"></a>自动部署项目示例</h1><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_47872288/article/details/124818005">参考</a></p>
-<h1 id="参考-B-站系列视频"><a href="#参考-B-站系列视频" class="headerlink" title="参考 B 站系列视频"></a><a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1kA411L7jS/?spm_id_from=333.999.0.0&vd_source=bc8ddbb1a08707dc809c3fd9bb85290d">参考 B 站系列视频</a></h1><h2 id="关于-CI-x2F-CD"><a href="#关于-CI-x2F-CD" class="headerlink" title="关于 CI&#x2F;CD"></a>关于 CI&#x2F;CD</h2><p><a target="_blank" rel="noopener" href="https://fizzz.blog.csdn.net/article/details/111029151">参考</a></p>
+<h1 id="参考-B-站系列视频"><a href="#参考-B-站系列视频" class="headerlink" title="参考 B 站系列视频"></a><a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1kA411L7jS/?spm_id_from=333.999.0.0&vd_source=bc8ddbb1a08707dc809c3fd9bb85290d">参考 B 站系列视频</a></h1><h2 id="关于-CI-x2F-CD"><a href="#关于-CI-x2F-CD" class="headerlink" title="关于 CI&#x2F;CD"></a>关于 CI&#x2F;CD</h2><p>gitlab CI 指 Continuous Integration.</p>
+<p>gitlab CD 指 Continuous Delivery 和 Continuous Deployment.</p>
+<p>pipline, 流水线的模式. 分阶段和任务. 任务是最小单元.</p>
+<p>pipline -&gt; stages -&gt; jobs</p>
+<p><code>.gitlab-ci.yml</code> 文件是 CI 的配置文件，其放在仓库中.</p>
+<h1 id="参考官方文档编写-gitlab-ci-yml-文件"><a href="#参考官方文档编写-gitlab-ci-yml-文件" class="headerlink" title="参考官方文档编写 .gitlab-ci.yml 文件"></a><a target="_blank" rel="noopener" href="https://docs.gitlab.com/ee/ci/yaml/gitlab_ci_yaml.html">参考官方文档编写 <code>.gitlab-ci.yml</code> 文件</a></h1><p>该文件可能包含的内容:</p>
+<figure class="highlight nestedtext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs nestedtext"><span class="hljs-attribute">stages</span><span class="hljs-punctuation">:</span><br>  <span class="hljs-bullet">-</span> <span class="hljs-string">build</span><br>  <span class="hljs-bullet">-</span> <span class="hljs-string">test</span><br><br><span class="hljs-attribute">build-code-job</span><span class="hljs-punctuation">:</span><br>  <span class="hljs-attribute">stage</span><span class="hljs-punctuation">:</span> <span class="hljs-string">build</span><br>  <span class="hljs-attribute">script</span><span class="hljs-punctuation">:</span><br>    <span class="hljs-bullet">-</span> <span class="hljs-string">echo &quot;Check the ruby version, then build some Ruby project files:&quot;</span><br>    <span class="hljs-bullet">-</span> <span class="hljs-string">ruby -v</span><br>    <span class="hljs-bullet">-</span> <span class="hljs-string">rake</span><br><br><span class="hljs-attribute">test-code-job1</span><span class="hljs-punctuation">:</span><br>  <span class="hljs-attribute">stage</span><span class="hljs-punctuation">:</span> <span class="hljs-string">test</span><br>  <span class="hljs-attribute">script</span><span class="hljs-punctuation">:</span><br>    <span class="hljs-bullet">-</span> <span class="hljs-string">echo &quot;If the files are built successfully, test some files with one command:&quot;</span><br>    <span class="hljs-bullet">-</span> <span class="hljs-string">rake test1</span><br><br><span class="hljs-attribute">test-code-job2</span><span class="hljs-punctuation">:</span><br>  <span class="hljs-attribute">stage</span><span class="hljs-punctuation">:</span> <span class="hljs-string">test</span><br>  <span class="hljs-attribute">script</span><span class="hljs-punctuation">:</span><br>    <span class="hljs-bullet">-</span> <span class="hljs-string">echo &quot;If the files are built successfully, test other files with a different command:&quot;</span><br>    <span class="hljs-bullet">-</span> <span class="hljs-string">rake test2</span><br><br></code></pre></td></tr></table></figure>
+
+<p>首先定义了两个 stages, 之后定义的都是 jobs, 其中选定其属于哪一个 stage.</p>
+<p><code>scripts</code> 之下是脚本的内容.</p>
+<p>所有的语法文档 <a target="_blank" rel="noopener" href="https://docs.gitlab.com/ee/ci/yaml/index.html">参见</a></p>
+<p>若某个 job 需要让一个 container 来运行，则在其中添加如:</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">image</span>: ruby:<span class="hljs-number">2</span>.<span class="hljs-number">7</span>.<span class="hljs-number">5</span><br></code></pre></td></tr></table></figure>
+
+<p>每一个 job 板块都需要包含 <code>stage</code> 和 <code>scripts</code></p>
+<p><a target="_blank" rel="noopener" href="https://fizzz.blog.csdn.net/article/details/111029151">参考 B 站老哥</a></p>
 <p>重要的关键词: stage, script, retry, image, tags, only&#x2F;except, when, cache.</p>
 <p>若没有自己定义 stage 数组，则默认的 stage 有:</p>
 <ul>
@@ -324,7 +385,7 @@
 <p>检出缓存似乎不需要手动检出，而是在每个阶段开始时自动检出. 每次检出后又会缓存.</p>
 <h3 id="变量的使用"><a href="#变量的使用" class="headerlink" title="变量的使用"></a>变量的使用</h3><p>在 <code>.gitlab-ci.yml</code>  文件中定义变量.</p>
 <p>使用 <code>variable:</code> , 变量名最好都用大写如:</p>
-<figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs dts"><span class="hljs-symbol">variables:</span><br><span class="hljs-symbol">  MT_VAR:</span> <span class="hljs-string">&quot;my name is ...&quot;</span><br><span class="hljs-symbol"></span><br><span class="hljs-symbol">log_var:</span><br><span class="hljs-symbol">  script:</span><br>    - echo $MT_VAR<br></code></pre></td></tr></table></figure>
+<figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs dts"><span class="hljs-symbol">variables:</span><br><span class="hljs-symbol">  MT_VAR:</span> <span class="hljs-string">&quot;my name is ...&quot;</span><br><span class="hljs-symbol">  TEST:</span> <span class="hljs-string">&quot;The second var&quot;</span><br><span class="hljs-symbol"></span><br><span class="hljs-symbol"></span><br><span class="hljs-symbol">log_var:</span><br><span class="hljs-symbol">  script:</span><br>    - echo $MT_VAR<br></code></pre></td></tr></table></figure>
 
 <p>两个 flag, <code>Protect variable</code>, 表明只有在保护分支中才能使用该变量.</p>
 <p><code>Mask variable</code> 表明在 pipline 中不会直接显示.</p>
@@ -332,21 +393,38 @@
 <p>使用 <code>export</code> 可以导出所有变量:</p>
 <figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs yml"><span class="hljs-attr">script:</span><br>  <span class="hljs-bullet">-</span> <span class="hljs-string">export</span><br></code></pre></td></tr></table></figure>
 
-<h2 id="流水线类型"><a href="#流水线类型" class="headerlink" title="流水线类型"></a>流水线类型</h2><h3 id="DAG-流水线-Directed-Acyclic-Graphs"><a href="#DAG-流水线-Directed-Acyclic-Graphs" class="headerlink" title="DAG 流水线 (Directed Acyclic Graphs)"></a>DAG 流水线 (Directed Acyclic Graphs)</h3><p>适用于多平台部署:</p>
+<h2 id="流水线类型"><a href="#流水线类型" class="headerlink" title="流水线类型"></a>流水线类型</h2><p><a target="_blank" rel="noopener" href="https://docs.gitlab.com/ee/ci/pipelines/">官方文档</a></p>
+<h3 id="DAG-流水线-Directed-Acyclic-Graphs"><a href="#DAG-流水线-Directed-Acyclic-Graphs" class="headerlink" title="DAG 流水线 (Directed Acyclic Graphs)"></a>DAG 流水线 (Directed Acyclic Graphs)</h3><p>适用于多平台部署:</p>
 <p><img src="/../img/DAG_pipline.png" srcset="/img/loading.gif" lazyload></p>
 <p>设置依赖关系. 用 <code>needs</code> 关键词, 如:</p>
 <figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs dts"><span class="hljs-symbol">test_a:</span><br><span class="hljs-symbol">  stage:</span> test<br><span class="hljs-symbol">  needs:</span> [build_a]<br><span class="hljs-symbol">  script:</span><br>    - echo <span class="hljs-string">&quot;...&quot;</span><br></code></pre></td></tr></table></figure>
 <p>方括号里面为其他 job 的名称.</p>
-<h3 id="父子流水线"><a href="#父子流水线" class="headerlink" title="父子流水线"></a>父子流水线</h3><p>触发式. 使用 <code>trigger</code>, <code>include</code> 和 <code>rules</code> 关键词.</p>
+<h3 id="父子流水线"><a href="#父子流水线" class="headerlink" title="父子流水线"></a>父子流水线</h3><p>在同一个项目中子目录下也有 <code>.gitlab-ci.yml</code> 文件，也就是配置字流水线.</p>
+<p>触发式. 使用 <code>trigger</code>, <code>include</code> 和 <code>rules</code> 关键词.</p>
 <p>如:</p>
 <figure class="highlight nestedtext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs nestedtext"><span class="hljs-attribute">trigger_a</span><span class="hljs-punctuation">:</span><br>  <span class="hljs-attribute">stage</span><span class="hljs-punctuation">:</span> <span class="hljs-string">test</span><br>  <span class="hljs-attribute">trigger</span><span class="hljs-punctuation">:</span><br>    <span class="hljs-attribute">include</span><span class="hljs-punctuation">:</span> <span class="hljs-string">a/.gitlab-ci.yml</span><br>  <span class="hljs-attribute">rules</span><span class="hljs-punctuation">:</span><br>    <span class="hljs-bullet">-</span> <span class="hljs-string">change:</span><br>        <span class="hljs-bullet">-</span> <span class="hljs-string">a/*</span><br></code></pre></td></tr></table></figure>
-<h3 id="多项目流水线"><a href="#多项目流水线" class="headerlink" title="多项目流水线"></a>多项目流水线</h3><p>触发另一个项目的流水线.</p>
+
+<p>这里 <code>triger</code> 和 <code>include</code> 就是指明子流水线的配置文件位置.</p>
+<p><code>rules</code> 就是指明什么时候执行 <code>triger</code> 下的流水线.</p>
+<h3 id="多项目流水线"><a href="#多项目流水线" class="headerlink" title="多项目流水线"></a>多项目流水线</h3><p>触发另一个项目的流水线. 就是有多个 project.</p>
+<p>示例:</p>
+<figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs dts"><span class="hljs-symbol">trigger_c:</span><br><span class="hljs-symbol">  stage:</span> triggers<br><span class="hljs-symbol">  trigger:</span><br><span class="hljs-symbol">    project:</span> root/...    <span class="hljs-meta"># 指明 project 的位置</span><br><span class="hljs-symbol">    branch:</span> master       <span class="hljs-meta"># 指明哪个分支</span><br><span class="hljs-symbol">    strategy:</span> depend<br></code></pre></td></tr></table></figure>
+<p>这里没有指定触发条件.</p>
 <h3 id="合并流水线"><a href="#合并流水线" class="headerlink" title="合并流水线"></a>合并流水线</h3><p>合并的时候触发.</p>
 <p>在一个 job 下添加:</p>
 <figure class="highlight nestedtext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs nestedtext"><span class="hljs-attribute">only</span><span class="hljs-punctuation">:</span><br>  <span class="hljs-bullet">-</span> <span class="hljs-string">merge_requests</span><br></code></pre></td></tr></table></figure>
 
 <h3 id="流水线的触发"><a href="#流水线的触发" class="headerlink" title="流水线的触发"></a>流水线的触发</h3><p>推送代码时，定时，url, 手动触发.</p>
-<h2 id="远程服务器部署"><a href="#远程服务器部署" class="headerlink" title="远程服务器部署"></a>远程服务器部署</h2><h2 id="调试手段"><a href="#调试手段" class="headerlink" title="调试手段"></a>调试手段</h2>
+<h2 id="远程服务器部署"><a href="#远程服务器部署" class="headerlink" title="远程服务器部署"></a>远程服务器部署</h2><p><a target="_blank" rel="noopener" href="https://docs.gitlab.com/ee/ci/ssh_keys/">官方关于 ssh</a></p>
+<p>主要原理就是利用 ssh 将文件上传到目标主机 (即要发布项目的主机).</p>
+<p>现在 gitlab runner 所在主机生成 ssh 的密钥对，然后将公钥传给项目部署所在的主机:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ ssh-keygen -t rsa -b 2048 -C <span class="hljs-string">&quot;email@example.com&quot;</span><br>$ scp -r id_rsa.pub root@1.2.3.4:/root/.ssh/authorized_keys<br></code></pre></td></tr></table></figure>
+
+<p><code>.gitlab-ci.yml</code> 文件内容:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs bash">job-deploy:<br>  stage: deploy<br>  before_script:<br>    - <span class="hljs-string">&#x27;which ssh-agent || ( yum update -y &amp;&amp; yum install openssh-client git -y )&#x27;</span><br>    - <span class="hljs-built_in">eval</span> $(ssh-agent -s)  <span class="hljs-comment"># 会输出一些环境变量及值</span><br>    - <span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;<span class="hljs-variable">$SSH_PRIVATE_KEY</span>&quot;</span> | <span class="hljs-built_in">tr</span> -d <span class="hljs-string">&#x27;\r&#x27;</span> | ssh-add -<br>    - <span class="hljs-built_in">mkdir</span> -p ~/.ssh<br>    - <span class="hljs-built_in">chmod</span> 700 ~/.ssh   <span class="hljs-comment"># 这一部分在将私钥放在 runner 所在的服务器</span><br>    - ssh-keyscan ... &gt;&gt; ~/.ssh/knon_hosts<br>    - <span class="hljs-built_in">chmod</span> 644 ~/.ssh/known_hosts<br>  script:<br>    - <span class="hljs-built_in">echo</span> <span class="hljs-string">&#x27;start scp&#x27;</span><br>    - scp -r dist root@...<br></code></pre></td></tr></table></figure>
+
+
+<h2 id="调试手段"><a href="#调试手段" class="headerlink" title="调试手段"></a>调试手段</h2>
                 
               </div>
             
