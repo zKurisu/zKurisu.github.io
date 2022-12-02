@@ -24,8 +24,9 @@
 <meta property="og:description" content="第一章 简介申请 PAUSE 账户, 此链接 使用 use 指定版本时, 小数点之后需要有三个数字, 如: 1use 5.014; 也可以使用两个小数点的形式: 1use v5.14.2; or: 1use 5.14.2;  在线 Perl 社区 第二章 使用模块CPAN (Comprehensice Perl Archive Network). 有三个相关页面:  主页 搜索界面 MetaCPA">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/Pod_mark.png">
+<meta property="og:image" content="http://example.com/img/the_PeGS_structure_of_tv_horse.png">
 <meta property="article:published_time" content="2022-10-20T03:02:45.000Z">
-<meta property="article:modified_time" content="2022-12-02T11:47:38.351Z">
+<meta property="article:modified_time" content="2022-12-02T12:45:02.163Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/Pod_mark.png">
@@ -237,7 +238,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          29k 字
+          30k 字
         
       </span>
     
@@ -248,7 +249,7 @@
         
         
         
-          243 分钟
+          253 分钟
         
       </span>
     
@@ -936,8 +937,33 @@
 <figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-comment">#! perl</span><br><span class="hljs-comment"># scripts/horse.pl</span><br><br><span class="hljs-keyword">my</span> $name = <span class="hljs-string">&#x27;Mr. Ed&#x27;</span>;<br><span class="hljs-keyword">my</span> $tv_horse = \$name;<br><br><span class="hljs-keyword">bless</span> $tv_horse, <span class="hljs-string">&#x27;Horse&#x27;</span>;<br></code></pre></td></tr></table></figure>
 <p>可以在 <code>perldoc -f bless</code> 中查看 <code>bless</code> 的用法.</p>
 <p>这里将 <code>$tv_horse</code> 变为 <code>Horse</code> 的对象. (就是给 <code>tv_horse</code> 附加上 <code>Horse</code> 这个包名)</p>
+<p><img src="/../img/the_PeGS_structure_of_tv_horse.png" srcset="/img/loading.gif" lazyload></p>
 <p>此时 <code>tv_horse</code> 是 <code>Horse</code> 类的一个实例，但是这个引用并没有什么改变，依旧可以用传统的解引用操作符.</p>
-<h2 id="15-2-调用实例方法"><a href="#15-2-调用实例方法" class="headerlink" title="15.2 调用实例方法"></a>15.2 调用实例方法</h2>
+<h2 id="15-2-调用实例方法"><a href="#15-2-调用实例方法" class="headerlink" title="15.2 调用实例方法"></a>15.2 调用实例方法</h2><p>Perl 从被 bless 过的实例变量中取出类的名称，然后用它来定位和调用方法.</p>
+<p>bless 的目的就是把一个类和这个引用关联起来，让 Perl 解释器能找到适当的方法.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-comment"># scripts/horses.pl, as before</span><br><span class="hljs-keyword">my</span> $name = <span class="hljs-string">&#x27;Mr. Ed&#x27;</span>;<br><span class="hljs-keyword">my</span> $tv_horse = \$name;<br><br><span class="hljs-keyword">bless</span> $tv_horse, <span class="hljs-string">&#x27;Horse&#x27;</span>;<br><br><span class="hljs-keyword">my</span> $noise = $tv_horse-&gt;sound;<br></code></pre></td></tr></table></figure>
+<p>Perl 会直接查找 Horse::Sound, 做中生成的方法调用为:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl">Horse::sound($tv_horse)<br></code></pre></td></tr></table></figure>
+<p>相当于 <code>$tv_horse-&gt;sound</code> 会传入一个默认参数.</p>
+<h2 id="15-3-访问实例数据"><a href="#15-3-访问实例数据" class="headerlink" title="15.3 访问实例数据"></a>15.3 访问实例数据</h2><p>一个常见的方法，就是用过 <code>shift</code> 语句，将默认数组的第一个参数，传递给实例方法一个叫 <code>$self</code> 的标量.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">name</span> </span>&#123;<br>    <span class="hljs-keyword">my</span> $self = <span class="hljs-keyword">shift</span>;<br>    $$<span class="hljs-keyword">shift</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="15-4-如何构建-Horse-的实例"><a href="#15-4-如何构建-Horse-的实例" class="headerlink" title="15.4 如何构建 Horse 的实例"></a>15.4 如何构建 Horse 的实例</h2><p>让 Horse 类自动构建一个新的 Horse 实例:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">package</span> Horse;<br><span class="hljs-keyword">use</span> parent <span class="hljs-string">qw(Animal)</span>;<br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">sound</span> </span>&#123; <span class="hljs-string">&#x27;neigh&#x27;</span> &#125;<br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">name</span> </span>&#123;<br>    <span class="hljs-keyword">my</span> $self = <span class="hljs-keyword">shift</span>;<br>    $$self;<br>&#125;<br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">named</span> </span>&#123;<br>    <span class="hljs-keyword">my</span> $class = <span class="hljs-keyword">shift</span>;<br>    <span class="hljs-keyword">my</span> $name = <span class="hljs-keyword">shift</span>;<br>    <span class="hljs-keyword">bless</span> \$name, $class;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p><code>bless</code> 会返回 <code>\$name</code>.</p>
+<p>使用 <code>named</code> a方法构建一个实例，而不必直接生成引用:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-comment"># my $name = &#x27;Mr. Ed&#x27;;</span><br><span class="hljs-comment"># my $tv_horse = \$name;</span><br><span class="hljs-keyword">my</span> $tv_horse = Horse-&gt;named(<span class="hljs-string">&#x27;Mr. Ed&#x27;</span>);<br></code></pre></td></tr></table></figure>
+<p>这里的第一个参数是默认参数 ‘Horse’.</p>
+<p><code>named</code> 就是一个构造函数.</p>
+<p>大多数人使用一个叫做 <code>new</code> 的构造函数.</p>
+<h2 id="15-5-继承构造函数"><a href="#15-5-继承构造函数" class="headerlink" title="15.5 继承构造函数"></a>15.5 继承构造函数</h2><figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">package</span> Animal;<br><br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">name</span> </span>&#123;<br>    <span class="hljs-keyword">my</span> $self = <span class="hljs-keyword">shift</span>;<br>    $$self;<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">named</span> </span>&#123;<br>    <span class="hljs-keyword">my</span> $class = <span class="hljs-keyword">shift</span>;<br>    <span class="hljs-keyword">my</span> $name = <span class="hljs-keyword">shift</span>;<br>    <span class="hljs-keyword">bless</span> \$name, $class;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>在一个实例上调用 <code>speak</code> 方法:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $tv_horse = Horse-&gt;named(<span class="hljs-string">&#x27;Mr. Ed&#x27;</span>);<br>$tv_horse-&gt;speak;<br></code></pre></td></tr></table></figure>
+<p>得到的值为:</p>
+<figure class="highlight gams"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs gams">a Horse=<span class="hljs-keyword">SCALAR</span>(0xaca42ac) gose <span class="hljs-comment">neigh!</span><br></code></pre></td></tr></table></figure>
+<h2 id="15-6-编写能够使用类或实例作为参数的方法"><a href="#15-6-编写能够使用类或实例作为参数的方法" class="headerlink" title="15.6 编写能够使用类或实例作为参数的方法"></a>15.6 编写能够使用类或实例作为参数的方法</h2><p>需要判断方法是类还是实例上调用的.</p>
+<p>最简单的方法是使用 <code>ref</code> 操作符.</p>
+
                 
               </div>
             
