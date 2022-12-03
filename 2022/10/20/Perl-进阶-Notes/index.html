@@ -26,7 +26,7 @@
 <meta property="og:image" content="http://example.com/img/Pod_mark.png">
 <meta property="og:image" content="http://example.com/img/the_PeGS_structure_of_tv_horse.png">
 <meta property="article:published_time" content="2022-10-20T03:02:45.000Z">
-<meta property="article:modified_time" content="2022-12-02T14:41:29.243Z">
+<meta property="article:modified_time" content="2022-12-03T13:06:53.037Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/Pod_mark.png">
@@ -238,7 +238,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          32k 字
+          35k 字
         
       </span>
     
@@ -249,7 +249,7 @@
         
         
         
-          264 分钟
+          289 分钟
         
       </span>
     
@@ -988,6 +988,57 @@
 <li>成功&#x2F;失败代码</li>
 </ul>
 <p>避免当调用为空上下文时，存储前一项的值, 用 <code>wantarray</code>, 在 <code>perldoc -f wantarray</code> 中查看用法.</p>
+<p>如果返回对象本身，可以使用这样的链式设定:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $tv_horse = <br>    Horse-&gt;named(<span class="hljs-string">&#x27;Mr. Ed&#x27;</span>)<br>         -&gt;set_color(<span class="hljs-string">&#x27;grey&#x27;</span>)<br>         -&gt;set_age(<span class="hljs-number">4</span>)<br>         -&gt;set_height(<span class="hljs-string">&#x27;17 hands&#x27;</span>);<br></code></pre></td></tr></table></figure>
+<p>因为每个 setter 的返回值是初始对象, 成为下一次方法调用的对象.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">set_color</span> </span>&#123;<br>    <span class="hljs-keyword">my</span> $self = <span class="hljs-keyword">shift</span>;<br>    $self-&gt;&#123;Color&#125; = <span class="hljs-keyword">shift</span>;<br>    $shift;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="15-11-不要查看-“盒子”-里面的内容"><a href="#15-11-不要查看-“盒子”-里面的内容" class="headerlink" title="15.11 不要查看 “盒子” 里面的内容"></a>15.11 不要查看 “盒子” 里面的内容</h2><p>使用 setter 和 getter 而不窥视内部的数据结构.</p>
+<h2 id="15-12-更快的-setter-和-getter"><a href="#15-12-更快的-setter-和-getter" class="headerlink" title="15.12 更快的 setter 和 getter"></a>15.12 更快的 setter 和 getter</h2><h2 id="15-13-getter-作为双倍的-setter"><a href="#15-13-getter-作为双倍的-setter" class="headerlink" title="15.13 getter 作为双倍的 setter"></a>15.13 getter 作为双倍的 setter</h2><p>用一个方法来完成 getter 和 setter 的工作: 如果没有参数，就是一个取值操作 (用作 getter), 如果有参数，就是一个设值操作 (用作 setter).</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">color</span> </span>&#123;<br>    <span class="hljs-keyword">my</span> $self = <span class="hljs-keyword">shift</span>;<br>    <span class="hljs-keyword">if</span> (@_) &#123;       <span class="hljs-comment"># are there any more parameters?</span><br>        <span class="hljs-comment"># yes, it&#x27;s a setter:</span><br>        $self-&gt;&#123;Color&#125; = <span class="hljs-keyword">shift</span>;<br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>        <span class="hljs-comment"># no, it&#x27;s a getter:</span><br>        $self-&gt;&#123;Color&#125;;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="15-14-仅仅限制一个类方法或者实例方法"><a href="#15-14-仅仅限制一个类方法或者实例方法" class="headerlink" title="15.14 仅仅限制一个类方法或者实例方法"></a>15.14 仅仅限制一个类方法或者实例方法</h2><p>在 Perl 中，没有哪个方法定义的声明为: “这是一个类方法” 或者 “这是一个实例方法”, 因为它们都是 Perl 的子例程.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> Carp <span class="hljs-string">qw(croak)</span>;<br><br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">instance_only</span> </span>&#123;<br>    <span class="hljs-keyword">ref</span>(<span class="hljs-keyword">my</span> $self = <span class="hljs-keyword">shift</span>) <span class="hljs-keyword">or</span> croak <span class="hljs-string">&quot;instance variable needed&quot;</span>;<br>    ... <span class="hljs-keyword">use</span> $self as the instance ...<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">class_only</span> </span>&#123;<br>    <span class="hljs-keyword">ref</span>(<span class="hljs-keyword">my</span> $self = <span class="hljs-keyword">shift</span>) <span class="hljs-keyword">and</span> croak <span class="hljs-string">&quot;class variable needed&quot;</span>;<br>    ... <span class="hljs-keyword">use</span> $self as the class ...<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>可以用 Carp 模块来代替模块中的 <code>die</code> 和 <code>warn</code> 语句, <code>croak</code> 函数是另一种形式的 <code>die</code> 函数，<code>carp</code> 函数可用作 <code>warn</code> 函数的替代.</p>
+<h1 id="第16章-一些高级对象主题"><a href="#第16章-一些高级对象主题" class="headerlink" title="第16章 一些高级对象主题"></a>第16章 一些高级对象主题</h1><h2 id="16-1-通用方法"><a href="#16-1-通用方法" class="headerlink" title="16.1 通用方法"></a>16.1 通用方法</h2><p>在定义类时,我们在每个包中通过全局变量@ISA创建了继承层次。在查找一个方法的过程中,Perl解释器会遍历@ISA树,直到找到一个匹配的方法或查找失败。</p>
+<p>然而,在查找失败后,Perl解释器通常会在一个叫做 UNIVERSAL 的特殊类中查找,并调用其中的一个方法,如果成功匹配,则该方法就像位于任何其他类或超类中一样。</p>
+<p>UNIVERSAL 是所有对象的基类，可以将任何方法放在这里, 如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">UNIVERSAL</span>::<span class="hljs-title">fandango</span> </span>&#123;<br>    <span class="hljs-keyword">warn</span> <span class="hljs-string">&#x27;object &#x27;</span>, <span class="hljs-keyword">shift</span>, <span class="hljs-string">&quot; can do the fandango!\n&quot;</span>;<br>&#125; <br></code></pre></td></tr></table></figure>
+<p>其使得程序的所有对象都可以被 <code>$some_object-&gt;fandando</code> 调用.</p>
+<p>UNIVERSAL 包中编写的可以算作通用方法.</p>
+<p>应当尽力避免使用 UNIVERSAL 模块.</p>
+<h2 id="16-2-为了更好的行为而测试对象"><a href="#16-2-为了更好的行为而测试对象" class="headerlink" title="16.2 为了更好的行为而测试对象"></a>16.2 为了更好的行为而测试对象</h2><p>除了为我们提供一个空间来放置通用方法以外,UNIVERSAL包同时预加载了两个非常有用的实用方法:DOES和can。</p>
+<p><code>DOES</code> 方法查询类和实例:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> v5.<span class="hljs-number">10</span>;<br><br><span class="hljs-keyword">if</span> (Horse-&gt;DOES(<span class="hljs-string">&#x27;Animal&#x27;</span>)) &#123;   <span class="hljs-comment"># does Horse do Animal?</span><br>    <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;A Horse is an Animal.\n&quot;</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><code>can</code> 查询特定的方法:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">if</span> ($tv_horse-&gt;can(<span class="hljs-string">&#x27;eat&#x27;</span>)) &#123;<br>    $tv_horse-&gt;eat(<span class="hljs-string">&#x27;hay&#x27;</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>都尽可能配合 <code>eval</code> 使用:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">if</span> (<span class="hljs-keyword">eval</span> &#123; $unknown_thing-&gt;DOES(<span class="hljs-string">&#x27;Animal&#x27;</span>) &#125;) &#123;<br><span class="hljs-comment">#    ... it&#x27;s an Animal ...</span><br>&#125;<br><br><span class="hljs-keyword">if</span> (<span class="hljs-keyword">eval</span> &#123; $tv_horse-&gt;can(<span class="hljs-string">&#x27;eat&#x27;</span>) &#125;) &#123; ... &#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="16-3-最后的手段"><a href="#16-3-最后的手段" class="headerlink" title="16.3 最后的手段"></a>16.3 最后的手段</h2><p>在Perl解释器在继承树和UNIVERSAL中查找方法后,如果还不成功,查找将不会停止。Perl解释器将重复搜寻相同的层次(包括 UNIVERSAL),查找一个叫 AUTOLOAD 的方法。</p>
+<p>定义一个叫 AUTOLOAD 的方法.</p>
+<p>查看 Autoloader 和 SelfLoader 的核心模块文档.</p>
+<h2 id="16-4-使用-AUTOLOAD-创建访问器"><a href="#16-4-使用-AUTOLOAD-创建访问器" class="headerlink" title="16.4 使用 AUTOLOAD 创建访问器"></a>16.4 使用 AUTOLOAD 创建访问器</h2><h2 id="16-5-更容易地创建-getter-和-setter"><a href="#16-5-更容易地创建-getter-和-setter" class="headerlink" title="16.5 更容易地创建 getter 和 setter"></a>16.5 更容易地创建 getter 和 setter</h2><p>使用 Class::MethodMaker 模块.</p>
+<h2 id="16-6-多重继承"><a href="#16-6-多重继承" class="headerlink" title="16.6 多重继承"></a>16.6 多重继承</h2><p>多重继承发生在当一个类的 <code>@ISA</code> 有不止一个元素的时候.</p>
+<p>如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">package</span> ReceHorse;<br><span class="hljs-keyword">use</span> parent <span class="hljs-string">qw&#123; Horse Racer &#125;</span>;<br></code></pre></td></tr></table></figure>
+
+<h1 id="第17章-Exporter"><a href="#第17章-Exporter" class="headerlink" title="第17章 Exporter"></a>第17章 Exporter</h1><h2 id="17-1-use-语句在做什么"><a href="#17-1-use-语句在做什么" class="headerlink" title="17.1 use 语句在做什么"></a>17.1 use 语句在做什么</h2><p>下面两个操作是等价的:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> Island::Plotting::Maps <span class="hljs-string">qw( load_map scale_map draw_map )</span>;<br><br>BEGIN &#123;<br>    <span class="hljs-keyword">require</span> Island::Plotting::Maps;<br>    Island::Plotting::Maps-&gt;import( <span class="hljs-string">qw( load_map scale_map draw_map )</span> );<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>冒号在类 UNIX 系统中被转换成目录分隔符，最终将以如下方式显示:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">require</span> <span class="hljs-string">&quot;Island/Plotting/Maps.pm&quot;</span>;<br></code></pre></td></tr></table></figure>
+<p>我们不能使用前面使用的 <code>.pl</code> (即 Perl library 的缩写)作为扩展名,因为 use 语句找不到它。它只能使用 <code>.pm</code> 扩展名。</p>
+<p>Perl解释器将查找当前@INC数组中的值,按顺序检查每个目录,查找一个叫Island的子目录中的Plotting子目录中包含名为Maps.pm的文件。</p>
+<p>如果Perl解释器查找@INC数组后还找不到指定的文件,程序就由于查询不到所调用的库而终止(这可通过eval捕获)。否则,Perl读取并判断它读取的第一个文件。与require语句类似,最后一个表达式的值必须为真,否则程序将认为它遇到编译文件的错误而退出。</p>
+<p>File::Basename模块文件的一部分可能如下所示:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">package</span> File::Basename;<br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">dirname</span> </span>&#123; ... &#125;<br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">basename</span> </span>&#123; ... &#125;<br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">fileparse</span> </span>&#123; ... &#125;<br></code></pre></td></tr></table></figure>
+
+<p>在BEGIN块中的第二步:Perl解释器在模块的包里自动调用一个叫做import的例程,传入整个导入列表。通常情况下,这个例程将对导入的命名空间中的一些名称指定别名(例如:File::Basename模块),然后映射到当前的命名空间之中(例如main)。</p>
+<p>最后,整个过程被封装在一个BEGIN语句块内。这意味着use语句的操作在编译时间内生效,而不是运行时,</p>
 
                 
               </div>
