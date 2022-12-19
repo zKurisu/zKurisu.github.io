@@ -24,7 +24,7 @@
 <meta property="og:description" content="第2章 集腋成裘2.2 分子Perl 识别 token 时采用的是一种贪婪方式，如果特定情况下 Perl 解析器要在识别一个短 token 还是一个长 token 之间做出选择，他肯定会选择长的那一个. 如果某一行以 &#x3D; 开头，这个语句是合法的，从这一行向下，直到下一个以 &#x3D;cut 开头的行，这之间的所有内容都会被 Perl 忽略，被忽略的这些文本称为 pod (plain old documen">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2022-12-08T23:04:23.000Z">
-<meta property="article:modified_time" content="2022-12-19T02:37:57.214Z">
+<meta property="article:modified_time" content="2022-12-19T13:53:05.164Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.6k 字
+          5.2k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          22 分钟
+          44 分钟
         
       </span>
     
@@ -354,11 +354,85 @@
 </ul>
 <figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">package</span> Bestiary;<br><span class="hljs-keyword">require</span> Exporter;<br><br><span class="hljs-keyword">our</span> @ISA = <span class="hljs-string">qw(Exporter)</span>;<br><span class="hljs-keyword">our</span> @EXPORT = <span class="hljs-string">qw(camel)</span>;<br><span class="hljs-keyword">our</span> @EXPORT_OK = <span class="hljs-string">qw($weight)</span>;<br><span class="hljs-keyword">our</span> $VERSION = <span class="hljs-number">1.00</span>;<br><br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">camel</span> </span>&#123; <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;One-hump dromedary&quot;</span> &#125;<br><br>$weight = <span class="hljs-number">1024</span>;<br></code></pre></td></tr></table></figure>
 
+<h3 id="11-2-1-模块私有和输出器"><a href="#11-2-1-模块私有和输出器" class="headerlink" title="11.2.1 模块私有和输出器"></a>11.2.1 模块私有和输出器</h3><p>Perl 模块和其用户之间有一种约定, 常见规则部分约定是说<mark>禁止一个模块修改任何没有允许它修改的名字空间</mark>.</p>
+<p>从模块输出符号的动作有时候被称为 <mark>污染你的名字空间</mark>.</p>
+<p>导入列表可以使用正则表达式:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> Bestiary <span class="hljs-string">qw(/am/)</span>;<br></code></pre></td></tr></table></figure>
 
+<p>以下两个等价:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> Bestiary LIST;<br></code></pre></td></tr></table></figure>
+<p>与:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs perl">BEGIN &#123;<br>    <span class="hljs-keyword">require</span> Bestiary;<br>    import Bestiary LIST;<br>&#125;<br></code></pre></td></tr></table></figure>
 
+<h4 id="11-2-1-1-不用-Exporter-的输入方法进行输出"><a href="#11-2-1-1-不用-Exporter-的输入方法进行输出" class="headerlink" title="11.2.1.1 不用 Exporter 的输入方法进行输出"></a>11.2.1.1 不用 Exporter 的输入方法进行输出</h4><h4 id="11-2-1-2-版本检查"><a href="#11-2-1-2-版本检查" class="headerlink" title="11.2.1.2 版本检查"></a>11.2.1.2 版本检查</h4><p>如果你的模块定义了一个 <code>$VERSION</code> 变量. 则可以:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> Bestiary <span class="hljs-number">3.14</span>; <span class="hljs-comment"># Bestiary 必须是版本 3.14 或者更新</span><br><br><span class="hljs-keyword">use</span> Bestiary v1.<span class="hljs-number">0</span>.<span class="hljs-number">4</span>;<br></code></pre></td></tr></table></figure>
+<h4 id="11-2-1-3-管理未知符号"><a href="#11-2-1-3-管理未知符号" class="headerlink" title="11.2.1.3 管理未知符号"></a>11.2.1.3 管理未知符号</h4><p>放在 <code>@EXPORT_FAIL</code> 数组中避免把这些符号输出.</p>
+<p>如果一个程序想要输入这些符号中的任何一个, Exporter 在生成一个错误之前给模块一个处理这种情况的机会, 通过传递这个失败符号列表调用 <code>export_fail</code> 方法, 可以自己定义:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">export_fail</span> </span>&#123;<br>    <span class="hljs-keyword">my</span> $class = <span class="hljs-keyword">shift</span>;<br>    carp <span class="hljs-string">&quot;Sorry, these symblos are unavailable: @_&quot;</span>;<br>    <span class="hljs-keyword">return</span> @_;<br>&#125;<br></code></pre></td></tr></table></figure>
 
+<h4 id="11-2-1-4-标签绑定工具函数"><a href="#11-2-1-4-标签绑定工具函数" class="headerlink" title="11.2.1.4 标签绑定工具函数"></a>11.2.1.4 标签绑定工具函数</h4><p><code>%EXPORT_TAGS</code> 里列出的符号必须同时在 <code>@EXPORT</code> 或 <code>@EXPORT_OK</code> 中, Exporter 提供了两个函数来增加:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl">%EXPORT_TAG = ( <span class="hljs-string">foo =&gt;</span> [<span class="hljs-string">qw(aa bb cc)</span>], <span class="hljs-string">bar =&gt;</span> [<span class="hljs-string">qw(aa cc dd)</span>] );<br><br>Exporter::export_tags(<span class="hljs-string">&#x27;foo&#x27;</span>); <span class="hljs-comment"># 把 aa, bb, cc 加到 @export</span><br>Exporter::export_ok_tags(<span class="hljs-string">&#x27;bar&#x27;</span>); <span class="hljs-comment"># 把 aa, cc, dd 加到 @export_OK</span><br><br></code></pre></td></tr></table></figure>
 
+<h2 id="11-3-覆盖内建函数"><a href="#11-3-覆盖内建函数" class="headerlink" title="11.3 覆盖内建函数"></a>11.3 覆盖内建函数</h2><p>使用 <code>subs</code>:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> subs <span class="hljs-string">qw(chdir chroot chmod chown)</span>;<br><br><span class="hljs-keyword">chdir</span> $somewhere;<br><br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">chdir</span> </span>&#123; ... &#125;<br></code></pre></td></tr></table></figure>
 
+<p>内建的函数的最早的版本总是可以通过伪包 CORE 来访问. 因此, <code>CORE::chdir</code> 将总是最初编译进 Perl 里的版本, 即使 <code>chdir</code> 关键字已经被覆盖.</p>
+<p>覆盖如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs perl">*CORE::GLOBAL::<span class="hljs-keyword">glob</span> = <span class="hljs-function"><span class="hljs-keyword">sub</span> </span>&#123;<br>    <span class="hljs-keyword">my</span> $pat = <span class="hljs-keyword">shift</span>;<br>    <span class="hljs-keyword">my</span> @got;<br>    <span class="hljs-keyword">local</span> *D;<br>    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">opendir</span> D, <span class="hljs-string">&#x27;.&#x27;</span>) &#123;<br>        $got = <span class="hljs-keyword">grep</span> <span class="hljs-regexp">/$pat/</span>. <span class="hljs-keyword">readdir</span> D;<br>        <span class="hljs-keyword">closedir</span> D;<br>    &#125;<br>    <span class="hljs-keyword">return</span> @got;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h1 id="第18章-编译"><a href="#第18章-编译" class="headerlink" title="第18章 编译"></a>第18章 编译</h1><h2 id="18-1-Perl-程序的生命周期"><a href="#18-1-Perl-程序的生命周期" class="headerlink" title="18.1 Perl 程序的生命周期"></a>18.1 Perl 程序的生命周期</h2><p>可以把 Perl 程序分裂为四个独立的阶段, 每个阶段都有自己的独立的字阶段.</p>
+<h3 id="1-编译阶段"><a href="#1-编译阶段" class="headerlink" title="1. 编译阶段:"></a>1. 编译阶段:</h3><p>Perl 编译器把你的程序转换成一个叫 <mark>分析树</mark> 的数据结构. <code>use</code> 和 <code>no</code> 实际上都是伪装的 <code>BEGIN</code> 块.</p>
+<p>词法声明也做上记号, 但是还不执行给它们的赋值.</p>
+<p>常量表达式都预先计算.</p>
+<h3 id="2-代码生成阶段-可选"><a href="#2-代码生成阶段-可选" class="headerlink" title="2. 代码生成阶段 (可选)"></a>2. 代码生成阶段 (可选)</h3><p>把编译完成的 ( 但还没运行的 ) 程序转换成 C 源程序或者串行的 Perl 字节码 – 一个代表内部 Perl 指令的数值序列.</p>
+<h3 id="3-分析树重构阶段-可选"><a href="#3-分析树重构阶段-可选" class="headerlink" title="3. 分析树重构阶段 (可选)"></a>3. 分析树重构阶段 (可选)</h3><p>这个阶段只有在发生了代码生成并且你选择生成字节码的情况下存在.</p>
+<h3 id="4-执行阶段"><a href="#4-执行阶段" class="headerlink" title="4. 执行阶段"></a>4. 执行阶段</h3><p>解释器拿来分析树 (可能是直接从编译器来的或者间接从代码生成阶段以及随后的分析树重构阶段过来的) 并且运行.</p>
+<h2 id="18-2-编译你的代码"><a href="#18-2-编译你的代码" class="headerlink" title="18.2 编译你的代码"></a>18.2 编译你的代码</h2><p>Perl 总是处于两种操作模式之一: 要么它在编译你的程序, 要么是在执行它 – 从来不会同时处于两种模式.</p>
+<p>除了处理 <code>BEGIN</code> 块的解释器以外, 编译器默许三个概念上的过程处理你的程序.</p>
+<p><mark>词法分析器 (lexer)</mark>  扫描你的程序里的每一个最小的单元 – token.</p>
+<p><mark>分析器 (parser)</mark> 以 Perl 语言的语法为基础. 试图通过把这些 token 组合成更大的构造, 比如表达式和语句, 来获取意义.</p>
+<p><mark>优化器 (optimizer)</mark>  对这些词法的组合进行重新排列并且把它们归减成更有效的序列.</p>
+<p>这些过程并不是在相互独立的阶段进行, 而是同时发生, 并且相互之间有大量交互.</p>
+<h2 id="18-3-执行你的代码"><a href="#18-3-执行你的代码" class="headerlink" title="18.3 执行你的代码"></a>18.3 执行你的代码</h2><p>Perl 里没有使用硬件程序计数器, 而是由解释器追踪当前要执行的操作数.</p>
+<p>Perl 里也没有堆栈指针, 解释器有它自己的虚拟堆栈, 这个堆栈非常重要, 因为 Perl 虚拟机是一个基于堆栈的机器.</p>
+<p>Perl 操作码在内部称作 PP 代码 (push-pop codes), 因为他们操作解释器的虚拟堆栈以寻找所有操作数, 处理临时数值, 还有处理所有结果.</p>
+<p>Perl 的虚拟机替你追踪一堆动态环境.</p>
+<p>Perl 维护不少堆栈:</p>
+<ul>
+<li>操作数堆栈 (operand stack)</li>
+<li>保存堆栈 (save stack)</li>
+<li>范围堆栈 (scope stack)</li>
+<li>环境堆栈 (context stack)</li>
+<li>环境跳转堆栈 (jumpenv stack)</li>
+<li>返回堆栈 (return stack)</li>
+<li>标记堆栈 (mark stack)</li>
+<li>递归词法填充堆栈 (recursive lexical pad stacks)</li>
+<li>存放所有 C 变量的 C 堆栈</li>
+</ul>
+<h2 id="18-4-编译器后端"><a href="#18-4-编译器后端" class="headerlink" title="18.4 编译器后端"></a>18.4 编译器后端</h2><p>这些后端可以把编译好的操作码串行化和存储到任何外部文件中, 甚至可以把它们转换成几种不同风格的 C 代码.</p>
+<h2 id="18-5-代码生成器"><a href="#18-5-代码生成器" class="headerlink" title="18.5 代码生成器"></a>18.5 代码生成器</h2><p>目前的三种把 Perl 操作码转换成其他格式的后端都是处于实验阶段的.</p>
+<h3 id="18-5-1-字节码生成器"><a href="#18-5-1-字节码生成器" class="headerlink" title="18.5.1 字节码生成器"></a>18.5.1 字节码生成器</h3><p><code>B::Bytecode</code> 模块将分析树的操作码以平台无关的编码写出.</p>
+<p>perlcc 命令知道怎么把一个 Perl 源程序转换成一个编译成字节码的 Perl 程序.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ perlcc -b -o pbyscript srcscript<br></code></pre></td></tr></table></figure>
+
+<p><code>ByteLoader</code> 模块是源码过滤器, 他知道如何把 <code>B::Bytecode</code> 生成的串行的字节码分解并重新组合成原来的分析树.</p>
+<h3 id="18-5-2-C-代码生成器"><a href="#18-5-2-C-代码生成器" class="headerlink" title="18.5.2 C 代码生成器"></a>18.5.2 C 代码生成器</h3><p><code>B::C</code> 和 <code>B::CC</code> 模块都生成 C 代码, 而不是串行化的 Perl 操作码.</p>
+<h2 id="18-6-提前编译-回头解释"><a href="#18-6-提前编译-回头解释" class="headerlink" title="18.6 提前编译, 回头解释"></a>18.6 提前编译, 回头解释</h2><p>一个传统: 如果一个子过程会被编译器或者解释器自动出发, 那么用大写字母为之命名.</p>
+<p>与程序的生命期的不同阶段相连的是另外四个子过程:</p>
+<ul>
+<li><code>BEGIN</code></li>
+<li><code>CHECK</code></li>
+<li><code>INIT</code></li>
+<li><code>END</code></li>
+</ul>
+<p>它们前面的 <code>sub</code> 关键字是可选的, 可能最好叫它们 “语句块”, 因为它们从某种程度上来说更像命名语句块而不像子过程.</p>
+<p>运行顺序:</p>
+<ul>
+<li><code>BEGIN</code>, 如果在编译过程中碰到, 则在编译其他文件之前尽可能快地运行</li>
+<li><code>CHECK</code>, 当编译完成后, 但在程序开始之前运行</li>
+<li><code>INIT</code>, 在程序的主流程开始执行之前运行</li>
+<li><code>END</code>, 在程序执行结束之后运行</li>
+</ul>
 
                 
               </div>
