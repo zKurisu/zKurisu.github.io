@@ -25,8 +25,9 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/figure_of_disk.png">
 <meta property="og:image" content="http://example.com/img/how_to_set_graphic_card_mode.png">
+<meta property="og:image" content="http://example.com/img/flag_register_bytes.png">
 <meta property="article:published_time" content="2022-07-13T00:57:37.000Z">
-<meta property="article:modified_time" content="2022-12-16T12:37:11.882Z">
+<meta property="article:modified_time" content="2022-12-17T10:27:24.379Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/figure_of_disk.png">
@@ -238,7 +239,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          4.6k 字
+          6k 字
         
       </span>
     
@@ -249,7 +250,7 @@
         
         
         
-          39 分钟
+          50 分钟
         
       </span>
     
@@ -431,15 +432,66 @@
 <h2 id="开始导入-C-语言"><a href="#开始导入-C-语言" class="headerlink" title="开始导入 C 语言"></a>开始导入 C 语言</h2><p><code>goto</code>指令实际上会被编译成<code>JMP</code>指令.</p>
 <p>C语言中不能使用<code>HLT</code>, 也没有相当与<code>DB</code>的指令.</p>
 <p>gcc 是以 gas 汇编语言为基础.</p>
+<p>“A to B” 中的 “to” 常被写作 “2”.</p>
 <p>目标文件是一种特殊的机器语言文件，必须与其他文件链接(link)后才能变成真正可以执行的机器语言.</p>
 <p>C语言有一些局限性，不可能只用C语言来编写所有的程序，所以其中有一部分必须用汇编来写，然后链接到C语言写的程序上.</p>
+<h2 id="实现-HLT"><a href="#实现-HLT" class="headerlink" title="实现 HLT"></a>实现 HLT</h2><p>用汇编写的函数, 之后还要与 <code>bootpack.obj</code> 链接, 所以也需要编译成目标文件. 注意要在函数名的前面加上 <code>_</code>, 否则就不能很好地与 C 语言函数链接, 需要链接的函数名, 都要用 <code>GLOBAL</code> 指令声明.</p>
+<p><code>RET</code> 指令, 相当于 C 语言的 return, 表示 “函数的处理到此结束, 返回吧”.</p>
 <p><mark>映像文件</mark><br>大概是，不是文件本来的状态，而是一种替代形式. 简单来说就是软盘的备份数据.</p>
 <h1 id="第4天-C语言与画面显示练习"><a href="#第4天-C语言与画面显示练习" class="headerlink" title="第4天 C语言与画面显示练习"></a>第4天 C语言与画面显示练习</h1><p>CPU(英特尔系列):</p>
 <figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs basic"><span class="hljs-symbol">8086 </span>-&gt; <span class="hljs-number">80186</span> -&gt; <span class="hljs-number">286</span> -&gt; <span class="hljs-number">386</span> -&gt; <span class="hljs-number">486</span> -&gt; Pentium -&gt; Per<br></code></pre></td></tr></table></figure>
 <p>到286为止CPU是16位，386以后CPU是32位.</p>
-<h2 id="挑战指针"><a href="#挑战指针" class="headerlink" title="挑战指针"></a>挑战指针</h2><figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs arduino"><span class="hljs-type">char</span> *p;  <span class="hljs-comment">//用于BYTE类地址</span><br><span class="hljs-type">short</span> *p; <span class="hljs-comment">//用于WORD类地址</span><br><span class="hljs-type">int</span> *p; <span class="hljs-comment">//用于DWORD类地址</span><br></code></pre></td></tr></table></figure>
+<h2 id="挑战指针"><a href="#挑战指针" class="headerlink" title="挑战指针"></a>挑战指针</h2><figure class="highlight armasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs armasm"><span class="hljs-keyword">MOV</span> [<span class="hljs-number">0x1234</span>], <span class="hljs-number">0x56</span><br></code></pre></td></tr></table></figure>
+<p>这种写法会报错, 在向内存写入时, 需要指定内存的大小:</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-keyword">MOV</span> <span class="hljs-built_in">BYTE</span> [<span class="hljs-number">0x1234</span>], <span class="hljs-number">0x56</span><br></code></pre></td></tr></table></figure>
+<p>这也是变量声明需要声明类型, 也就是获知其大小.</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs arduino"><span class="hljs-type">char</span> *p;  <span class="hljs-comment">//用于BYTE类地址</span><br><span class="hljs-type">short</span> *p; <span class="hljs-comment">//用于WORD类地址</span><br><span class="hljs-type">int</span> *p;   <span class="hljs-comment">//用于DWORD类地址</span><br></code></pre></td></tr></table></figure>
 <p>但是，以上变量<code>p</code>都是4字节.</p>
-<p><code>cast</code>在英文中的原意有压入模具，让材料成为某种特定的形状.</p>
+<p>类型转换的 <code>cast</code> 在英文中的原意有压入模具，让材料成为某种特定的形状.</p>
+<p>在 C 语言中, 普通数值和表示内存地址的数值被认为是两种不同的东西.</p>
+<p><code>p[i]</code> 和 <code>*(p+i)</code> 意思完全相同. </p>
+<p><code>[i]p</code> 和 <code>*(i+p)</code> 也表示同样的含义.</p>
+<p>8 位彩色模式, 是由程序员随意指定 0 ~ 255 的数字所对应的颜色.</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">char</span> a[<span class="hljs-number">3</span>];<br></code></pre></td></tr></table></figure>
+<p>相当于汇编中的:</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">a</span>:<br>    <span class="hljs-attribute">RESB</span> <span class="hljs-number">3</span><br></code></pre></td></tr></table></figure>
+
+<p>CPU 的管脚不仅与内存相连, 和其他设备也相连.</p>
+<p><code>FLAGS</code> 这个标志寄存器各位的作用:</p>
+<p><img src="/../img/flag_register_bytes.png" srcset="/img/loading.gif" lazyload></p>
+<p>根据 C 语言的规定, 执行 RET 语句时, EAX 中的值就被看作是函数的返回值.</p>
+<h1 id="第5天-结构体-文字显示与-GDT-x2F-IDT-初始化"><a href="#第5天-结构体-文字显示与-GDT-x2F-IDT-初始化" class="headerlink" title="第5天 结构体, 文字显示与 GDT&#x2F;IDT 初始化"></a>第5天 结构体, 文字显示与 GDT&#x2F;IDT 初始化</h1><p>独立的功能做成独立的函数, 这样的程序读起来要容易一些.</p>
+<h2 id="试用结构体"><a href="#试用结构体" class="headerlink" title="试用结构体"></a>试用结构体</h2><p>结构体的好处, 是可以将各种东西一起传递:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">TEST</span> &#123;</span><br>    <span class="hljs-type">int</span> a1, a2, a3;<br>    <span class="hljs-type">char</span> b1, b2, b3;<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">TEST</span> <span class="hljs-title">test</span>;</span><br>foo(test);<br></code></pre></td></tr></table></figure>
+
+<p>两种使用结构体内变量的方法:</p>
+<ul>
+<li><p><code>.</code> 点标记, 如:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">(*binfo).scrnx = <span class="hljs-number">10</span>;<br></code></pre></td></tr></table></figure>
+</li>
+<li><p><code>-&gt;</code> 箭头标记</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">binfo-&gt;scrnx = <span class="hljs-number">10</span>;<br></code></pre></td></tr></table></figure>
+<p>也就是说, 使用箭头形式可以不用将指针解引用.</p>
+</li>
+</ul>
+<h2 id="显示字符"><a href="#显示字符" class="headerlink" title="显示字符"></a>显示字符</h2><p>C 语言无法用二进制数记录数据, 只能写成十六进制或八进制.</p>
+<h2 id="增加字体"><a href="#增加字体" class="headerlink" title="增加字体"></a>增加字体</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">extern</span> <span class="hljs-type">char</span> hankaku[<span class="hljs-number">4096</span>];<br></code></pre></td></tr></table></figure>
+<p>像这种在源程序以外准备的数据, 都需要加上 <code>extern</code> 属性. 这样, C 编译器就能知道它是外部数据, 并在编译时做出相应调整.</p>
+<p>C 语言中, 字符串都是以 <code>0x00</code> 结尾的.</p>
+<p>每一个字符都是通过改变每一个像素点形成.</p>
+<h2 id="显示变量值"><a href="#显示变量值" class="headerlink" title="显示变量值"></a>显示变量值</h2><p><code>sprintf()</code> 函数, 其不是按指定格式输出, 只是将输出内容作为字符串写在内存中.</p>
+<h2 id="显示鼠标指针"><a href="#显示鼠标指针" class="headerlink" title="显示鼠标指针"></a>显示鼠标指针</h2><h2 id="GDT-与-IDT-的初始化"><a href="#GDT-与-IDT-的初始化" class="headerlink" title="GDT 与 IDT 的初始化"></a>GDT 与 IDT 的初始化</h2><p>GDT 和 IDT 都是与 CPU 有关的设定.</p>
+<p>为了让操作系统能够使用 32 位模式, 需要对 CPU 做各种设定.</p>
+<h3 id="分段-Segmentation"><a href="#分段-Segmentation" class="headerlink" title="分段 Segmentation"></a>分段 Segmentation</h3><p>汇编语言编程时, 如果不用 ORG 指令明确声明程序要读入的内存地址, 就不能写出正确的程序.</p>
+<p>分段用于解决, 每一个程序都运行时的内存重叠问题 (比如都从 <code>0x7c00</code> 加载, 那都使用这一片内存吗) </p>
+<p>所谓分段, 几个比方说, 就是按照自己喜欢的方式, 将合计 <code>4GB</code> 的内存分成很多块 (block), 每一块的起始地址都看作 0 来处理. 这很方便, 有了这个功能, 任何程序都先可以写上一句 <code>ORG 0</code>, 像这样分割出来的块, 就被称为段 (segment).</p>
+<p>32 位中, 写成 <code>MOV AL,[DS:EBX]</code>, 这里 <code>[]</code> 中的地址不再是 <code>DX x 16 + EBX</code>, 而是 DS 所表示的段的起始地址加上 EBX. 即使省略了 <code>DS</code>, 也会自动认为是指定了 <code>DS</code>.</p>
+<p>为了表示一个段, 需要有以下信息:</p>
+<ul>
+<li>段的大小是多少</li>
+<li>段的起始位置在哪里</li>
+<li>段的管理属性 (禁止写入, 禁止执行, 系统专用等)</li>
+</ul>
 
                 
               </div>
