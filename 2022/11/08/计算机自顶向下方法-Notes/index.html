@@ -60,8 +60,11 @@
 <meta property="og:image" content="http://example.com/img/handle_the_output_port.png">
 <meta property="og:image" content="http://example.com/img/priority_queuing_modle.png">
 <meta property="og:image" content="http://example.com/img/datagram_format_of_IPv4.png">
+<meta property="og:image" content="http://example.com/img/NAT.png">
+<meta property="og:image" content="http://example.com/img/format_of_IPv6_package.png">
+<meta property="og:image" content="http://example.com/img/build_turnal.png">
 <meta property="article:published_time" content="2022-11-08T09:14:45.000Z">
-<meta property="article:modified_time" content="2022-12-22T14:54:23.599Z">
+<meta property="article:modified_time" content="2022-12-25T02:06:23.233Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/optical_line_terminator.png">
@@ -273,7 +276,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          15k 字
+          17k 字
         
       </span>
     
@@ -284,7 +287,7 @@
         
         
         
-          129 分钟
+          141 分钟
         
       </span>
     
@@ -837,8 +840,37 @@
 <p>将过大的 IP 分组挤进链路层帧的方法是将 IP 数据报分片.</p>
 <p>用单独的链路层帧封装这些较小的 IP 数据报, 然后通过输出链路发送这些帧, 每个这些较小的数据报都称为 <mark>片 (fragment)</mark> </p>
 <p>片在其到达目的地运输层以前需要重新组装.</p>
-<p>为坚持网络内核保持简单的原则, IPv4 的设计者决定将数据报的重新组装工作放到端系统中, 而不是放到网络路由器中. </p>
-
+<p>为坚持网络内核保持简单的原则, IPv4 的设计者决定将数据报的重新组装工作放到端系统中, 而不是放到网络路由器中. <mark>也就是, 分片在路由器, 组装在接受者主机</mark> </p>
+<p>为了让目的主机执行这些重新组装任务, IPv4 的设计者讲标识, 标识和片偏移字段放在 <mark>IP 数据报首部</mark>中.</p>
+<p>当生成一个数据报时, 发送主机在为该数据报设置源和目的地址的同时贴上标识号, 发送主机通常将它发送的每个数据报的标识号加 1. </p>
+<p>当目的地从同一发送主机收到一系列数据报时, 它能够检查数据报的标识号以确定哪些数据报实际上是同一较大数据报的片.</p>
+<p>为了让目的主机绝对地相信它已收到了初始数据报的最后一个片, <mark>最后一个片的标识比特被设置为 0, 而其他所有其他片的标识比特被设为 1</mark> </p>
+<p><mark>为了让目的主机确定是否丢失了一个片 (且能按正确的顺序重新组装片)</mark>, 使用偏移字段指定该片应放在初始 IP 数据报的哪个位置.</p>
+<h3 id="4-3-3-IPv4-编址"><a href="#4-3-3-IPv4-编址" class="headerlink" title="4.3.3 IPv4 编址"></a>4.3.3 IPv4 编址</h3><p><mark>主机与路由器连入网络的方法</mark> : 一台主机通常只有一条链路连接到网络. 当主机中的 IP 想发送一个数据报时, 它就在该链路上发送. </p>
+<p>主机与物理链路之间的边界叫做 <mark>接口 (interface)</mark> </p>
+<h4 id="1-获取一块地址"><a href="#1-获取一块地址" class="headerlink" title="1. 获取一块地址"></a>1. 获取一块地址</h4><p><mark>ICANN 组织</mark>的作用不仅是分配 IP 地址, 还管理 DNS 根服务器. 其还会分配域名与解决域名纷争.</p>
+<p>ICANN 向区域性因特网注册机构分配地址, 这些机构一起形成了 ICANN 的地址支持组织, 处理本区域内的地址分配&#x2F;管理.</p>
+<h4 id="2-获取主机地址-动态主机配置协议-Dynamic-Host-Configuration-DHCP"><a href="#2-获取主机地址-动态主机配置协议-Dynamic-Host-Configuration-DHCP" class="headerlink" title="2. 获取主机地址: 动态主机配置协议 (Dynamic Host Configuration, DHCP)"></a>2. 获取主机地址: 动态主机配置协议 (Dynamic Host Configuration, DHCP)</h4><p>DHCP 允许主机自动获取 (被分配) 一个 IP 地址.</p>
+<p>网络管理员能够配置 DHCP, 以使某给定主机每次与网络连接时能得到一个相同的 IP 地址, 或者某主机将被分配一个临时的 IP 地址, 每次与网络连接时该地址也许是不同的.</p>
+<p>最简单场合下, 每个子网将具有一个 DHCP 服务器, 如果在某子网中没有服务器, 则需要一个 DHCP 中继代理 (通常是一台路由器), 这个代理知道用于该网络的 DHCP 服务器的地址.</p>
+<h3 id="4-3-4-网络地址转换-Network-Address-Translation-NAT"><a href="#4-3-4-网络地址转换-Network-Address-Translation-NAT" class="headerlink" title="4.3.4 网络地址转换 (Network Address Translation, NAT)"></a>4.3.4 网络地址转换 (Network Address Translation, NAT)</h3><p><mark>具有专用地址的地域 (realm with private address)</mark> 指其地址仅对该网络中的设备有意义的网络.</p>
+<p><mark>NAT 路由器</mark>对外界的行为就如同一个具有单一 IP 地址的单一设备.</p>
+<p>从本质上讲, NAT 使能路由器对外界隐藏了家庭网络的细节.</p>
+<p>路由器从 ISP 的 DHCP 服务器得到它的地址, 并且路由器运行一个 DHCP 服务器, 为位于 NAT-DHCP 路由器控制的家庭网络空间中的计算机提供地址.</p>
+<p><img src="/../img/NAT.png" srcset="/img/loading.gif" lazyload></p>
+<p><mark>NAT 转换表 (NAT translation table)</mark> 中包含端口号和 IP 地址. 不同的内部主机及其端口号映射到对外 IP 的不同端口上.</p>
+<p>端口号字段为 16 比特长, NAT 协议可支持超过 60000 个并行使用路由器广域网一侧单个 IP 地址的连接.</p>
+<p>原本端口号是用于进程寻址而不是主机寻址, 因此会出现一些问题.</p>
+<h3 id="4-3-5-IPv6"><a href="#4-3-5-IPv6" class="headerlink" title="4.3.5 IPv6"></a>4.3.5 IPv6</h3><h4 id="IPv6-数据报格式"><a href="#IPv6-数据报格式" class="headerlink" title="IPv6 数据报格式"></a>IPv6 数据报格式</h4><p><img src="/../img/format_of_IPv6_package.png" srcset="/img/loading.gif" lazyload></p>
+<p>IP 地址长度从 32 比特增加到 128 比特.</p>
+<p>引入了 <mark>任播地址 (anycast address)</mark>, 使数据交付给一组主机中的任意一个.</p>
+<p>40 字节首部.</p>
+<p><mark>IPv6 不允许在中间路由器上进行分片与重新组装</mark>, 这种操作只能在源与目的地执行.</p>
+<h4 id="从-IPv4-到-IPv6-的迁移"><a href="#从-IPv4-到-IPv6-的迁移" class="headerlink" title="从 IPv4 到 IPv6 的迁移"></a>从 IPv4 到 IPv6 的迁移</h4><p><mark>建隧道</mark>处理, 将两个 IPv6 节点之间的所有 IPv4 节点视为一个隧道. 将整个 IPv6 数据报放到一个 IPv4 数据报的数据字段中.</p>
+<p><img src="/../img/build_turnal.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="4-4-通用转发和-SDN"><a href="#4-4-通用转发和-SDN" class="headerlink" title="4.4 通用转发和 SDN"></a>4.4 通用转发和 SDN</h2><p>因特网路由器的转发决定<mark>传统上</mark>仅仅基于分组的目的地址.</p>
+<p><mark>通用转发</mark>，其中转发和其他功能可以使用数据报首部中的几个不同的字段值.</p>
+<h1 id="第5章-网络层-控制平面"><a href="#第5章-网络层-控制平面" class="headerlink" title="第5章 网络层: 控制平面"></a>第5章 网络层: 控制平面</h1>
                 
               </div>
             
