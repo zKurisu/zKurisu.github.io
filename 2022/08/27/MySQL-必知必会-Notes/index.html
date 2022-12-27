@@ -26,8 +26,14 @@
 <meta property="og:image" content="http://example.com/img/image_database.png">
 <meta property="og:image" content="http://example.com/img/where_opes.png">
 <meta property="og:image" content="http://example.com/img/sql_regex.png">
+<meta property="og:image" content="http://example.com/img/sql_string_func1.png">
+<meta property="og:image" content="http://example.com/img/sql_string_func2.png">
+<meta property="og:image" content="http://example.com/img/sql_time_func1.png">
+<meta property="og:image" content="http://example.com/img/sql_num_func1.png">
+<meta property="og:image" content="http://example.com/img/sql_converge_func1.png">
+<meta property="og:image" content="http://example.com/img/the_difference_of_ORDER_BY_and_GROUP_BY.png">
 <meta property="article:published_time" content="2022-08-27T00:37:08.000Z">
-<meta property="article:modified_time" content="2022-12-25T12:30:06.142Z">
+<meta property="article:modified_time" content="2022-12-27T08:52:24.631Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/image_database.png">
@@ -239,7 +245,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3.7k 字
+          7.2k 字
         
       </span>
     
@@ -250,7 +256,7 @@
         
         
         
-          32 分钟
+          60 分钟
         
       </span>
     
@@ -443,7 +449,108 @@
 <p>设置别名, 使用 <code>AS</code>:</p>
 <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> Concat(RTrim(vend_name), <span class="hljs-string">&#x27; (&#x27;</span>, RTrim(vend_country), <span class="hljs-string">&#x27;)&#x27;</span>) <span class="hljs-keyword">AS</span> vend_title<br><span class="hljs-keyword">FROM</span> vendors<br><span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> vend_name<br></code></pre></td></tr></table></figure>
 
-<h2 id="10-3-执行算术计算"><a href="#10-3-执行算术计算" class="headerlink" title="10.3 执行算术计算"></a>10.3 执行算术计算</h2>
+<h2 id="10-3-执行算术计算"><a href="#10-3-执行算术计算" class="headerlink" title="10.3 执行算术计算"></a>10.3 执行算术计算</h2><p>可用算术操作符:</p>
+<ul>
+<li><code>+</code></li>
+<li><code>-</code></li>
+<li><code>*</code></li>
+<li><code>/</code></li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> prod_id<br>       quantity,<br>       item_price,<br>       quantity<span class="hljs-operator">*</span>item_price <span class="hljs-keyword">AS</span> expanded_price<br><span class="hljs-keyword">FROM</span> orderitems<br><span class="hljs-keyword">WHERE</span> order_num <span class="hljs-operator">=</span> <span class="hljs-number">20005</span>;<br></code></pre></td></tr></table></figure>
+
+<h1 id="第11章-使用数据处理函数"><a href="#第11章-使用数据处理函数" class="headerlink" title="第11章 使用数据处理函数"></a>第11章 使用数据处理函数</h1><p>相对来说, 多数 SQL 语句是可移植的, 而函数的可移植性却步枪.</p>
+<h2 id="11-2-使用函数"><a href="#11-2-使用函数" class="headerlink" title="11.2 使用函数"></a>11.2 使用函数</h2><h3 id="11-2-1-文本处理"><a href="#11-2-1-文本处理" class="headerlink" title="11.2.1 文本处理"></a>11.2.1 文本处理</h3><p><code>Upper()</code>:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> vend_name, <span class="hljs-built_in">Upper</span>(vend_name) <span class="hljs-keyword">AS</span> vend_name_upcase<br><span class="hljs-keyword">FROM</span> vendors<br><span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> vend_name;<br></code></pre></td></tr></table></figure>
+
+<p>常用函数:</p>
+<p><img src="/../img/sql_string_func1.png" srcset="/img/loading.gif" lazyload></p>
+<p><img src="/../img/sql_string_func2.png" srcset="/img/loading.gif" lazyload></p>
+<p><code>SOUNDEX</code> 是一个将任何文本串转换为描述其<mark>语音表示的字母数字模式</mark>的算法.</p>
+<p>如, 匹配所有发音类似于 <code>Y.Lie</code> 的联系名:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> cust_name, cust_contact<br><span class="hljs-keyword">FROM</span> customers<br><span class="hljs-keyword">WHERE</span> Soundex(cust_contact) <span class="hljs-operator">=</span> Soundex(<span class="hljs-string">&#x27;Y Lie&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<h3 id="11-2-2-日期和时间处理函数"><a href="#11-2-2-日期和时间处理函数" class="headerlink" title="11.2.2 日期和时间处理函数"></a>11.2.2 日期和时间处理函数</h3><p><img src="/../img/sql_time_func1.png" srcset="/img/loading.gif" lazyload></p>
+<p>检索基本日期:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> cust_id, order_num<br><span class="hljs-keyword">FROM</span> orders<br><span class="hljs-keyword">WHERE</span> order_date <span class="hljs-operator">=</span> <span class="hljs-string">&#x27;2005-09-01&#x27;</span>;<br></code></pre></td></tr></table></figure>
+
+<p><code>datetime</code> 数据类型, 存储日期及时间值. </p>
+<p>和日期相关, 都使用 <code>Date()</code> 函数:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> cust_id, order_num<br><span class="hljs-keyword">FROM</span> orders<br><span class="hljs-keyword">WHERE</span> <span class="hljs-type">Date</span>(order_date) <span class="hljs-operator">=</span> <span class="hljs-string">&#x27;2005-09-01&#x27;</span>;<br></code></pre></td></tr></table></figure>
+
+<h3 id="11-2-3-数值处理函数"><a href="#11-2-3-数值处理函数" class="headerlink" title="11.2.3 数值处理函数"></a>11.2.3 数值处理函数</h3><p>在主要 DBMS 的函数中, 数值函数是最一致最统一的函数.</p>
+<p><img src="/../img/sql_num_func1.png" srcset="/img/loading.gif" lazyload></p>
+<h1 id="第12章-汇总数据"><a href="#第12章-汇总数据" class="headerlink" title="第12章 汇总数据"></a>第12章 汇总数据</h1><h2 id="12-1-聚集函数"><a href="#12-1-聚集函数" class="headerlink" title="12.1 聚集函数"></a>12.1 聚集函数</h2><p>也就是对某一列做计算:</p>
+<p><img src="/../img/sql_converge_func1.png" srcset="/img/loading.gif" lazyload></p>
+<p><code>AVG()</code> :</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> <span class="hljs-built_in">AVG</span>(prod_price) <span class="hljs-keyword">AS</span> avg_price<br><span class="hljs-keyword">FROM</span> products;<br></code></pre></td></tr></table></figure>
+
+<p><code>COUNT()</code> :</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> <span class="hljs-built_in">COUNT</span>(<span class="hljs-operator">*</span>) <span class="hljs-keyword">AS</span> num_cust<br><span class="hljs-keyword">FROM</span> customers;<br></code></pre></td></tr></table></figure>
+
+<h2 id="12-2-聚集不同的值"><a href="#12-2-聚集不同的值" class="headerlink" title="12.2 聚集不同的值"></a>12.2 聚集不同的值</h2><p>就是值相同的某一行的值不聚集起来.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> <span class="hljs-built_in">AVG</span>(<span class="hljs-keyword">DISTINCT</span> prod_price) <span class="hljs-keyword">AS</span> avg_price<br><span class="hljs-keyword">FROM</span> products<br><span class="hljs-keyword">WHERE</span> vend_id <span class="hljs-operator">=</span> <span class="hljs-number">1003</span>;<br></code></pre></td></tr></table></figure>
+<p>默认是 <code>ALL</code>.</p>
+<h2 id="12-3-组合聚合函数"><a href="#12-3-组合聚合函数" class="headerlink" title="12.3 组合聚合函数"></a>12.3 组合聚合函数</h2><p>也就是在 <code>SELECT</code> 语句中包含多个聚集函数.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> <span class="hljs-built_in">COUNT</span>(<span class="hljs-operator">*</span>) <span class="hljs-keyword">AS</span> num_items,<br>       <span class="hljs-built_in">MIN</span>(prod_price) <span class="hljs-keyword">AS</span> price_min,<br>       <span class="hljs-built_in">MAX</span>(prod_price) <span class="hljs-keyword">AS</span> price_max,<br>       <span class="hljs-built_in">AVG</span>(prod_price) <span class="hljs-keyword">AS</span> price_avg<br><span class="hljs-keyword">FROM</span> products;<br></code></pre></td></tr></table></figure>
+
+<h1 id="第13章-分组数据"><a href="#第13章-分组数据" class="headerlink" title="第13章 分组数据"></a>第13章 分组数据</h1><h2 id="13-2-创建分组"><a href="#13-2-创建分组" class="headerlink" title="13.2 创建分组"></a>13.2 创建分组</h2><p><code>GROUP BY</code> 即让数据以某一列来排序:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> vend_id, <span class="hljs-built_in">COUNT</span>(<span class="hljs-operator">*</span>) <span class="hljs-keyword">AS</span> num_prods<br><span class="hljs-keyword">FROM</span> products<br><span class="hljs-keyword">GROUP</span> <span class="hljs-keyword">BY</span> vend_id<br></code></pre></td></tr></table></figure>
+
+<h2 id="13-3-过滤分组"><a href="#13-3-过滤分组" class="headerlink" title="13.3 过滤分组"></a>13.3 过滤分组</h2><p><code>HAVING</code> 类似于 <code>WHERE</code>, 目前为止所有学过的类型的 <code>WHERE</code> 子句都可以用 <code>HAVING</code> 来代替. 唯一的差别是 <code>WHERE</code> 过滤行, <code>HAVING</code> 过滤分组. </p>
+<p><mark>一种理解方法</mark>:</p>
+<ul>
+<li><code>WHERE</code> 在数据分组前进行过滤</li>
+<li><code>HAVING</code> 在数据分组后进行过滤</li>
+</ul>
+<p>注意 <code>HAVING</code> 的位置:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> vend_id, <span class="hljs-built_in">COUNT</span>(<span class="hljs-operator">*</span>) <span class="hljs-keyword">AS</span> num_prods<br><span class="hljs-keyword">FROM</span> products<br><span class="hljs-keyword">WHERE</span> prod_price<br><span class="hljs-keyword">GROUP</span> <span class="hljs-keyword">BY</span> vend_id<br><span class="hljs-keyword">HAVING</span> <span class="hljs-built_in">COUNT</span>(<span class="hljs-operator">*</span>) <span class="hljs-operator">&gt;=</span> <span class="hljs-number">2</span>;<br></code></pre></td></tr></table></figure>
+
+<h2 id="13-4-分组和排序"><a href="#13-4-分组和排序" class="headerlink" title="13.4 分组和排序"></a>13.4 分组和排序</h2><p><code>ORDER BY</code> 和 <code>GROUP BY</code> 的区别:</p>
+<p><img src="/../img/the_difference_of_ORDER_BY_and_GROUP_BY.png" srcset="/img/loading.gif" lazyload></p>
+<p>一般在使用 <code>GROUP BY</code> 子句时, 应该也给出 <code>ORDER BY</code> 子句, 这是保证数据正确排序的唯一办法.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> order_num, <span class="hljs-built_in">SUM</span>(quantity<span class="hljs-operator">*</span>item_price) <span class="hljs-keyword">AS</span> ordertotal<br><span class="hljs-keyword">FROM</span> orderitems<br><span class="hljs-keyword">GROUP</span> <span class="hljs-keyword">BY</span> order_num<br><span class="hljs-keyword">HAVING</span> <span class="hljs-built_in">SUM</span>(quantity<span class="hljs-operator">*</span>item_price) <span class="hljs-operator">&gt;=</span> <span class="hljs-number">50</span><br><span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> ordertotal<br></code></pre></td></tr></table></figure>
+
+<h1 id="第14章-使用子查询"><a href="#第14章-使用子查询" class="headerlink" title="第14章 使用子查询"></a>第14章 使用子查询</h1><p>也就是 <code>SELECT</code> 语句之下嵌套 <code>SELECT</code> 语句:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> cust_id<br><span class="hljs-keyword">FROM</span> orders<br><span class="hljs-keyword">WHERE</span> order_num <span class="hljs-keyword">IN</span> (<span class="hljs-keyword">SELECT</span> order_num<br>                    <span class="hljs-keyword">FROM</span> orderitems<br>                    <span class="hljs-keyword">WHERE</span> prod_id <span class="hljs-operator">=</span> <span class="hljs-string">&#x27;TNT2&#x27;</span>)<br></code></pre></td></tr></table></figure>
+
+<p>对于能嵌套的子查询的数目没有限制, 不过在实际使用时由于性能的限制, 不能嵌套太多的子查询.</p>
+<h1 id="第15章-联结表"><a href="#第15章-联结表" class="headerlink" title="第15章 联结表"></a>第15章 联结表</h1><p>联结 (join).</p>
+<h2 id="15-2-创建联结"><a href="#15-2-创建联结" class="headerlink" title="15.2 创建联结"></a>15.2 创建联结</h2><p><mark>将多个表的列添加到一起</mark>. 也就是添加外部的表到当前表. 但不是真正添加到表的存储中, 只是在查询的执行中存在.</p>
+<p>联结的数目没有限制.</p>
+<p>如:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> vend_name, prod_name, prod_price<br><span class="hljs-keyword">FROM</span> vendors, products<br><span class="hljs-keyword">WHERE</span> vendors.vend_id <span class="hljs-operator">=</span> products.vend_id <br><span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> vend_name, prod_name;<br></code></pre></td></tr></table></figure>
+
+<p>注意使用了完全限定名称.</p>
+<p><mark>笛卡尔积 (cartesian product)</mark> 指返回的行数为第一个表的行数乘以第二个表的行数. 这里 <mark>没有指定完全限定名称和 <code>WHERE</code> 子句而出现</mark> </p>
+<p>如, 直接从两个表取:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> vend_name, prod_name, prod_price<br><span class="hljs-keyword">FROM</span> vendors, products<br><span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> vend_name, prod_name;<br></code></pre></td></tr></table></figure>
+
+<h3 id="15-2-2-内部联结"><a href="#15-2-2-内部联结" class="headerlink" title="15.2.2 内部联结"></a>15.2.2 内部联结</h3><p>基于两个表之间的相等测试?</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> vend_name, prod_name. prod_price<br><span class="hljs-keyword">FROM</span> vendors <span class="hljs-keyword">INNER</span> <span class="hljs-keyword">JOIN</span> products<br><span class="hljs-keyword">ON</span> vendors.vend_id <span class="hljs-operator">=</span> products.vend_id;<br></code></pre></td></tr></table></figure>
+
+<h1 id="第16章-创建高级联结"><a href="#第16章-创建高级联结" class="headerlink" title="第16章 创建高级联结"></a>第16章 创建高级联结</h1><h2 id="16-1-使用表别名"><a href="#16-1-使用表别名" class="headerlink" title="16.1 使用表别名"></a>16.1 使用表别名</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> cust_name, cust_contact<br><span class="hljs-keyword">FROM</span> customers <span class="hljs-keyword">AS</span> c, orders <span class="hljs-keyword">AS</span> o, orderitems <span class="hljs-keyword">AS</span> oi<br><span class="hljs-keyword">WHERE</span> c.cust_id <span class="hljs-operator">=</span> o.cust_id<br><span class="hljs-keyword">AND</span>   oi.order_num <span class="hljs-operator">=</span> o.order_num   <br><span class="hljs-keyword">AND</span>   prod_id <span class="hljs-operator">=</span> <span class="hljs-string">&#x27;TNT2&#x27;</span>;<br></code></pre></td></tr></table></figure>
+<h2 id="16-2-使用不同类型的联结"><a href="#16-2-使用不同类型的联结" class="headerlink" title="16.2 使用不同类型的联结"></a>16.2 使用不同类型的联结</h2><h3 id="16-2-1-自联结"><a href="#16-2-1-自联结" class="headerlink" title="16.2.1 自联结"></a>16.2.1 自联结</h3><p>联结的两个表是同一个表. 需要结合表别名.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> p1.prod_id, p1.prod_name<br><span class="hljs-keyword">FROM</span> products <span class="hljs-keyword">AS</span> p1, products <span class="hljs-keyword">AS</span> p2<br><span class="hljs-keyword">WHERE</span> p1.vend_id <span class="hljs-operator">=</span> p2.vend_id<br><span class="hljs-keyword">AND</span>   p2.prod_id <span class="hljs-operator">=</span> <span class="hljs-string">&#x27;DTNTR&#x27;</span>;<br></code></pre></td></tr></table></figure>
+
+<h3 id="16-2-2-自然联结"><a href="#16-2-2-自然联结" class="headerlink" title="16.2.2 自然联结"></a>16.2.2 自然联结</h3><p>不是很明白.</p>
+<h3 id="16-2-3-外部联结"><a href="#16-2-3-外部联结" class="headerlink" title="16.2.3 外部联结"></a>16.2.3 外部联结</h3><p><mark>联结包含了那些在相关表中没有关联行的行, 叫做外部联结</mark>.</p>
+<h1 id="第17章-组合查询"><a href="#第17章-组合查询" class="headerlink" title="第17章 组合查询"></a>第17章 组合查询</h1><h2 id="17-1-组合查询"><a href="#17-1-组合查询" class="headerlink" title="17.1 组合查询"></a>17.1 组合查询</h2><p>一般的查询只有一条 <code>SELECT</code> 语句, 执行多个 <code>SELECT</code> 并返回的称为<mark>组合查询 (union) 或复合查询 (compound query)</mark></p>
+<h2 id="17-2-创建组合查询"><a href="#17-2-创建组合查询" class="headerlink" title="17.2 创建组合查询"></a>17.2 创建组合查询</h2><p>使用 <code>UNION</code> 关键字.</p>
+<p>如:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> vend_id, prod_id, prod_price    <br><span class="hljs-keyword">FROM</span> products<br><span class="hljs-keyword">WHERE</span> prod_price <span class="hljs-operator">&lt;=</span> <span class="hljs-number">5</span><br><span class="hljs-keyword">UNION</span><br><span class="hljs-keyword">SELECT</span> vend_id, prod_id, prod_price    <br><span class="hljs-keyword">FROM</span> products<br><span class="hljs-keyword">WHERE</span> vend_id <span class="hljs-keyword">IN</span> (<span class="hljs-number">1001</span>,<span class="hljs-number">1002</span>);<br></code></pre></td></tr></table></figure>
+
+<h3 id="17-2-2-UNION-规则"><a href="#17-2-2-UNION-规则" class="headerlink" title="17.2.2 UNION 规则"></a>17.2.2 UNION 规则</h3><ul>
+<li>两条及以上</li>
+<li>相同的列, 表达式或聚集函数</li>
+<li>类型兼容</li>
+</ul>
+<h3 id="17-2-3-包含或取消重复的行"><a href="#17-2-3-包含或取消重复的行" class="headerlink" title="17.2.3 包含或取消重复的行"></a>17.2.3 包含或取消重复的行</h3><p><code>UNION</code> 默认去掉重复的行.</p>
+<p>返回所有行可使用 <code>UNION ALL</code>.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> vend_id, prod_id, prod_price    <br><span class="hljs-keyword">FROM</span> products<br><span class="hljs-keyword">WHERE</span> prod_price <span class="hljs-operator">&lt;=</span> <span class="hljs-number">5</span><br><span class="hljs-keyword">UNION</span> <span class="hljs-keyword">ALL</span><br><span class="hljs-keyword">SELECT</span> vend_id, prod_id, prod_price    <br><span class="hljs-keyword">FROM</span> products<br><span class="hljs-keyword">WHERE</span> vend_id <span class="hljs-keyword">IN</span> (<span class="hljs-number">1001</span>,<span class="hljs-number">1002</span>);<br></code></pre></td></tr></table></figure>
+
+<h3 id="17-2-4-对组合查询结果排序"><a href="#17-2-4-对组合查询结果排序" class="headerlink" title="17.2.4 对组合查询结果排序"></a>17.2.4 对组合查询结果排序</h3><p>在用 <code>UNION</code> 组合查询时, 只能使用一条 <code>ORDER BY</code> 子句, 且必须出现在最后一条 <code>SELECT</code> 语句之后.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> vend_id, prod_id, prod_price    <br><span class="hljs-keyword">FROM</span> products<br><span class="hljs-keyword">WHERE</span> prod_price <span class="hljs-operator">&lt;=</span> <span class="hljs-number">5</span><br><span class="hljs-keyword">UNION</span> <span class="hljs-keyword">ALL</span><br><span class="hljs-keyword">SELECT</span> vend_id, prod_id, prod_price    <br><span class="hljs-keyword">FROM</span> products<br><span class="hljs-keyword">WHERE</span> vend_id <span class="hljs-keyword">IN</span> (<span class="hljs-number">1001</span>,<span class="hljs-number">1002</span>);<br><span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> vend_id, prod_price;<br></code></pre></td></tr></table></figure>
+
+<h1 id="第18章-全文本搜索"><a href="#第18章-全文本搜索" class="headerlink" title="第18章 全文本搜索"></a>第18章 全文本搜索</h1>
                 
               </div>
             
