@@ -32,8 +32,9 @@
 <meta property="og:image" content="http://example.com/img/sql_num_func1.png">
 <meta property="og:image" content="http://example.com/img/sql_converge_func1.png">
 <meta property="og:image" content="http://example.com/img/the_difference_of_ORDER_BY_and_GROUP_BY.png">
+<meta property="og:image" content="http://example.com/img/sql_fulltext_boolean_opes.png">
 <meta property="article:published_time" content="2022-12-27T00:37:08.000Z">
-<meta property="article:modified_time" content="2022-12-27T08:53:13.754Z">
+<meta property="article:modified_time" content="2022-12-28T14:48:13.423Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/image_database.png">
@@ -245,7 +246,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          7.2k 字
+          11k 字
         
       </span>
     
@@ -256,7 +257,7 @@
         
         
         
-          60 分钟
+          89 分钟
         
       </span>
     
@@ -550,7 +551,63 @@
 <h3 id="17-2-4-对组合查询结果排序"><a href="#17-2-4-对组合查询结果排序" class="headerlink" title="17.2.4 对组合查询结果排序"></a>17.2.4 对组合查询结果排序</h3><p>在用 <code>UNION</code> 组合查询时, 只能使用一条 <code>ORDER BY</code> 子句, 且必须出现在最后一条 <code>SELECT</code> 语句之后.</p>
 <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> vend_id, prod_id, prod_price    <br><span class="hljs-keyword">FROM</span> products<br><span class="hljs-keyword">WHERE</span> prod_price <span class="hljs-operator">&lt;=</span> <span class="hljs-number">5</span><br><span class="hljs-keyword">UNION</span> <span class="hljs-keyword">ALL</span><br><span class="hljs-keyword">SELECT</span> vend_id, prod_id, prod_price    <br><span class="hljs-keyword">FROM</span> products<br><span class="hljs-keyword">WHERE</span> vend_id <span class="hljs-keyword">IN</span> (<span class="hljs-number">1001</span>,<span class="hljs-number">1002</span>);<br><span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> vend_id, prod_price;<br></code></pre></td></tr></table></figure>
 
-<h1 id="第18章-全文本搜索"><a href="#第18章-全文本搜索" class="headerlink" title="第18章 全文本搜索"></a>第18章 全文本搜索</h1>
+<h1 id="第18章-全文本搜索"><a href="#第18章-全文本搜索" class="headerlink" title="第18章 全文本搜索"></a>第18章 全文本搜索</h1><h2 id="18-1-理解全文本搜索"><a href="#18-1-理解全文本搜索" class="headerlink" title="18.1 理解全文本搜索"></a>18.1 理解全文本搜索</h2><p>在使用全文本搜索时, MySQL 不需要分别查看每个行, 不需要分别分析和处理每个词.</p>
+<p>MySQL 创建指定列中各词的一个索引, 搜索可以针对这些词进行.</p>
+<p>不是很理解.</p>
+<h2 id="18-2-使用全文本搜索"><a href="#18-2-使用全文本搜索" class="headerlink" title="18.2 使用全文本搜索"></a>18.2 使用全文本搜索</h2><p>为了进行全文本搜索, 必须索引被搜索的列, 而且要随着数据的改变不断重新索引.</p>
+<h3 id="18-2-1-启用全文本搜索支持"><a href="#18-2-1-启用全文本搜索支持" class="headerlink" title="18.2.1 启用全文本搜索支持"></a>18.2.1 启用全文本搜索支持</h3><p>在<mark>创建表</mark>时启用全文本搜索. 指定 <code>FULLTEXT</code>.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> productnotes<br>(<br>    note_id     <span class="hljs-type">int</span>          <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">NULL</span> AUTO_INCREMENT,<br>    prod_id     <span class="hljs-type">char</span>(<span class="hljs-number">10</span>)     <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">NULL</span>,<br>    note_date   datetime     <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">NULL</span>,<br>    note_id     text          <span class="hljs-keyword">NULL</span>,<br>    <span class="hljs-keyword">PRIMARY</span> KEY(note_id),<br>    FULLTEXT(note_text)<br>) ENGING<span class="hljs-operator">=</span>MyISAM;<br></code></pre></td></tr></table></figure>
+<p>MySQL 根据子句 <code>FULLTEXT(note_text)</code> 的指示对它进行索引, 这里的 <code>FULLTEXT</code> 索引单个列, 也可以指定多个.</p>
+<h3 id="18-2-2-进行全文本搜索"><a href="#18-2-2-进行全文本搜索" class="headerlink" title="18.2.2 进行全文本搜索"></a>18.2.2 进行全文本搜索</h3><p>索引之后, 使用:</p>
+<ul>
+<li><code>Match()</code> 指定被搜索的列</li>
+<li><code>Against()</code> 指定要使用的搜索表达式</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> note_text<br><span class="hljs-keyword">FROM</span> productnotes<br><span class="hljs-keyword">WHERE</span> <span class="hljs-keyword">Match</span>(note_text) Against(<span class="hljs-string">&#x27;rabbit&#x27;</span>);<br></code></pre></td></tr></table></figure>
+<p>搜索不区分大小写.</p>
+<h3 id="18-2-3-使用查询扩展"><a href="#18-2-3-使用查询扩展" class="headerlink" title="18.2.3 使用查询扩展"></a>18.2.3 使用查询扩展</h3><p>返回的行数会更多:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> note_text<br><span class="hljs-keyword">FROM</span> productnotes<br><span class="hljs-keyword">WHERE</span> <span class="hljs-keyword">Match</span>(note_text) Against(<span class="hljs-string">&#x27;anvils&#x27;</span> <span class="hljs-keyword">WITH</span> QUERY EXPANSION);<br></code></pre></td></tr></table></figure>
+
+<h3 id="18-2-4-布尔文本搜索"><a href="#18-2-4-布尔文本搜索" class="headerlink" title="18.2.4 布尔文本搜索"></a>18.2.4 布尔文本搜索</h3><p>可指定要排斥的值:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> note_text<br><span class="hljs-keyword">FROM</span> productnotes<br><span class="hljs-keyword">WHERE</span> <span class="hljs-keyword">Match</span>(note_text) Against(<span class="hljs-string">&#x27;heavy -repo*&#x27;</span> <span class="hljs-keyword">IN</span> <span class="hljs-type">BOOLEAN</span> MODE);<br></code></pre></td></tr></table></figure>
+
+<p><code>-repo*</code> 明确指示 MySQL 排除包含 <code>repo*</code> 的行.</p>
+<p><img src="/../img/sql_fulltext_boolean_opes.png" srcset="/img/loading.gif" lazyload></p>
+<h3 id="18-2-5-全文搜索的使用说明"><a href="#18-2-5-全文搜索的使用说明" class="headerlink" title="18.2.5 全文搜索的使用说明"></a>18.2.5 全文搜索的使用说明</h3><p>具体见书.</p>
+<h1 id="第19章-插入数据"><a href="#第19章-插入数据" class="headerlink" title="第19章 插入数据"></a>第19章 插入数据</h1><p><code>INSERT</code>.</p>
+<h2 id="19-2-插入完整的行"><a href="#19-2-插入完整的行" class="headerlink" title="19.2 插入完整的行"></a>19.2 插入完整的行</h2><p>指定表名和被插入到新行中的值:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> Customers<br><span class="hljs-keyword">VALUES</span>(<span class="hljs-keyword">NULL</span>,<br>    <span class="hljs-string">&#x27;Pep E. LaPew&#x27;</span>,<br>    <span class="hljs-string">&#x27;100 Main Street&#x27;</span>,<br>    <span class="hljs-string">&#x27;Los Angeles&#x27;</span>, <br>    <span class="hljs-string">&#x27;CA&#x27;</span>, <br>    <span class="hljs-string">&#x27;90046&#x27;</span>,<br>    <span class="hljs-string">&#x27;USA&#x27;</span>,<br>    <span class="hljs-keyword">NULL</span>,<br>    <span class="hljs-keyword">NULL</span>);<br></code></pre></td></tr></table></figure>
+<p>这里插入的是一行.</p>
+<p>这种语法并不安全, 应尽量避免使用.</p>
+<p><mark>安全做法</mark> 是明确给出列名:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> Customers(cust_name,<br>    cust_address,<br>    cust_city,<br>    cust_state,<br>    cust_zip,<br>    cust_country,<br>    cust_contact,<br>    cust_email)<br><span class="hljs-keyword">VALUES</span>(<span class="hljs-keyword">NULL</span>,<br>    <span class="hljs-string">&#x27;Pep E. LaPew&#x27;</span>,<br>    <span class="hljs-string">&#x27;100 Main Street&#x27;</span>,<br>    <span class="hljs-string">&#x27;Los Angeles&#x27;</span>, <br>    <span class="hljs-string">&#x27;CA&#x27;</span>, <br>    <span class="hljs-string">&#x27;90046&#x27;</span>,<br>    <span class="hljs-string">&#x27;USA&#x27;</span>,<br>    <span class="hljs-keyword">NULL</span>,<br>    <span class="hljs-keyword">NULL</span>);<br></code></pre></td></tr></table></figure>
+<h2 id="19-3-插入多个行"><a href="#19-3-插入多个行" class="headerlink" title="19.3 插入多个行"></a>19.3 插入多个行</h2><p>使用多条 <code>INSERT</code> 语句, 每条语句用一个分号结束:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> Customers(cust_name,<br>    cust_address,<br>    cust_city,<br>    cust_state,<br>    cust_zip,<br>    cust_country,<br>    cust_contact,<br>    cust_email)<br><span class="hljs-keyword">VALUES</span>(<span class="hljs-keyword">NULL</span>,<br>    <span class="hljs-string">&#x27;Pep E. LaPew&#x27;</span>,<br>    <span class="hljs-string">&#x27;100 Main Street&#x27;</span>,<br>    <span class="hljs-string">&#x27;Los Angeles&#x27;</span>, <br>    <span class="hljs-string">&#x27;CA&#x27;</span>, <br>    <span class="hljs-string">&#x27;90046&#x27;</span>,<br>    <span class="hljs-string">&#x27;USA&#x27;</span>,<br>    <span class="hljs-keyword">NULL</span>,);<br><span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> Customers(cust_name,<br>    cust_address,<br>    cust_city,<br>    cust_state,<br>    cust_zip,<br>    cust_country,<br>    cust_contact,<br>    cust_email)<br><span class="hljs-keyword">VALUES</span>(<span class="hljs-keyword">NULL</span>,<br>    <span class="hljs-string">&#x27;Pep E. LaPew&#x27;</span>,<br>    <span class="hljs-string">&#x27;100 Main Street&#x27;</span>,<br>    <span class="hljs-string">&#x27;Los Angeles&#x27;</span>, <br>    <span class="hljs-string">&#x27;CA&#x27;</span>, <br>    <span class="hljs-string">&#x27;90046&#x27;</span>,<br>    <span class="hljs-string">&#x27;USA&#x27;</span>,<br>    <span class="hljs-keyword">NULL</span>,);<br><span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> Customers(cust_name,<br>    cust_address,<br>    cust_city,<br>    cust_state,<br>    cust_zip,<br>    cust_country,<br>    cust_contact,<br>    cust_email)<br><span class="hljs-keyword">VALUES</span>(<span class="hljs-keyword">NULL</span>,<br>    <span class="hljs-string">&#x27;Pep E. LaPew&#x27;</span>,<br>    <span class="hljs-string">&#x27;100 Main Street&#x27;</span>,<br>    <span class="hljs-string">&#x27;Los Angeles&#x27;</span>, <br>    <span class="hljs-string">&#x27;CA&#x27;</span>, <br>    <span class="hljs-string">&#x27;90046&#x27;</span>,<br>    <span class="hljs-string">&#x27;USA&#x27;</span>,<br>    <span class="hljs-keyword">NULL</span>,<br>   <span class="hljs-keyword">NULL</span>);<br></code></pre></td></tr></table></figure>
+
+<p>或:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> Customers(cust_name,<br>    cust_address,<br>    cust_city,<br>    cust_state,<br>    cust_zip,<br>    cust_country,<br>    cust_contact,<br>    cust_email)<br><span class="hljs-keyword">VALUES</span>(<span class="hljs-keyword">NULL</span>,<br>    <span class="hljs-string">&#x27;Pep E. LaPew&#x27;</span>,<br>    <span class="hljs-string">&#x27;100 Main Street&#x27;</span>,<br>    <span class="hljs-string">&#x27;Los Angeles&#x27;</span>, <br>    <span class="hljs-string">&#x27;CA&#x27;</span>, <br>    <span class="hljs-string">&#x27;90046&#x27;</span>,<br>    <span class="hljs-string">&#x27;USA&#x27;</span>,<br>    <span class="hljs-keyword">NULL</span>,<br>    <span class="hljs-keyword">NULL</span>),<br>    (<span class="hljs-keyword">NULL</span>,<br>    <span class="hljs-string">&#x27;Pep E. LaPew&#x27;</span>,<br>    <span class="hljs-string">&#x27;100 Main Street&#x27;</span>,<br>    <span class="hljs-string">&#x27;Los Angeles&#x27;</span>, <br>    <span class="hljs-string">&#x27;CA&#x27;</span>, <br>    <span class="hljs-string">&#x27;90046&#x27;</span>,<br>    <span class="hljs-string">&#x27;USA&#x27;</span>,<br>    <span class="hljs-keyword">NULL</span>,<br>    <span class="hljs-keyword">NULL</span><br>    );<br><br></code></pre></td></tr></table></figure>
+<h2 id="19-4-插入检索出的数据"><a href="#19-4-插入检索出的数据" class="headerlink" title="19.4 插入检索出的数据"></a>19.4 插入检索出的数据</h2><p>即将一条 <code>SELECT</code> 语句的结果插入表中.</p>
+<p>如, 将 <code>custnew</code> 表中的内容插入 <code>customers</code> 表.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> customers(cust_id,<br>    cust_contact,<br>    cust_email,<br>    cust_name,<br>    cust_address,<br>    cust_city,<br>    cust_state,<br>    cust_zip,<br>    cust_country)<br><span class="hljs-keyword">SELECT</span> cust_id,<br>    cust_contact,<br>    cust_email,<br>    cust_name,<br>    cust_address,<br>    cust_city,<br>    cust_state,<br>    cust_zip,<br>    cust_country<br><span class="hljs-keyword">FROM</span> custnew;<br></code></pre></td></tr></table></figure>
+<p>也可包含 <code>WHERE</code> 子句来过滤.</p>
+<h1 id="第20章-更新和删除数据"><a href="#第20章-更新和删除数据" class="headerlink" title="第20章 更新和删除数据"></a>第20章 更新和删除数据</h1><h2 id="20-1-更新数据"><a href="#20-1-更新数据" class="headerlink" title="20.1 更新数据"></a>20.1 更新数据</h2><p><code>UPDATE</code> 语句由 3 部分组成:</p>
+<ul>
+<li>要更新的表</li>
+<li>列名和它们的新值</li>
+<li>确定要更新行的过滤条件</li>
+</ul>
+<p><code>SET</code> 命令用来将新值赋给被更新的列.</p>
+<p>如:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">UPDATE</span> customers<br><span class="hljs-keyword">SET</span> cust_name <span class="hljs-operator">=</span> <span class="hljs-string">&#x27;The Fudds&#x27;</span><br>    cust_email <span class="hljs-operator">=</span> <span class="hljs-string">&#x27;elmer@fudd.com&#x27;</span><br><span class="hljs-keyword">WHERE</span> cust_id <span class="hljs-operator">=</span> <span class="hljs-number">10005</span>;<br></code></pre></td></tr></table></figure>
+<p>注意 <code>WHERE</code> 的使用, 如果没有 <code>WHERE</code> 则会更新所有行.</p>
+<p>即使是发生错误, 也继续进行更新, 使用 <code>IGNORE</code> 关键字. 如 <code>UPDATE IGNORE customers...</code></p>
+<h2 id="20-2-删除数据"><a href="#20-2-删除数据" class="headerlink" title="20.2 删除数据"></a>20.2 删除数据</h2><p><code>DELETE</code>.</p>
+<p>如:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">DELETE</span> <span class="hljs-keyword">FROM</span> customers<br><span class="hljs-keyword">WHERE</span> cust_id <span class="hljs-operator">=</span> <span class="hljs-number">10006</span>;<br></code></pre></td></tr></table></figure>
+
+<p><code>DELETE</code> 不需要列名, <code>DELETE</code> 删除整行而不删除列, 为了删除指定的列, 使用 <code>UPDATE</code> 语句. </p>
+<p>MySQL 没有撤销 (undo).</p>
+<h1 id="第21章-创建和操纵表"><a href="#第21章-创建和操纵表" class="headerlink" title="第21章 创建和操纵表"></a>第21章 创建和操纵表</h1>
                 
               </div>
             
@@ -630,6 +687,12 @@
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2022/12/29/Lua-%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1-Notes/" title="Lua-程序设计-Notes">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Lua-程序设计-Notes</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">
