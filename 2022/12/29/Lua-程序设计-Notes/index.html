@@ -25,8 +25,9 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/lua_ope_priority.png">
 <meta property="og:image" content="http://example.com/img/lua_escape_characters.png">
+<meta property="og:image" content="http://example.com/img/lua_args_of_io_read.png">
 <meta property="article:published_time" content="2022-12-29T01:05:03.000Z">
-<meta property="article:modified_time" content="2022-12-29T07:39:58.419Z">
+<meta property="article:modified_time" content="2022-12-29T12:24:52.047Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/lua_ope_priority.png">
@@ -238,7 +239,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          4.3k 字
+          8.8k 字
         
       </span>
     
@@ -249,7 +250,7 @@
         
         
         
-          36 分钟
+          73 分钟
         
       </span>
     
@@ -470,6 +471,136 @@
 
 <p>受限于表在 Lua 语言中的底层实现机制, 遍历过程中<mark>元素的出现顺序可能是随机的</mark>.</p>
 <p>对于列表 (上面的不算是列表) 可使用 <code>ipairs</code> 迭代器, 可以保证按照顺序.</p>
+<p><code>for</code> 循环遍历:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs lua">t = &#123;<span class="hljs-number">10</span>, <span class="hljs-built_in">print</span>, <span class="hljs-number">12</span>, <span class="hljs-string">&quot;hi&quot;</span>&#125;<br><span class="hljs-keyword">for</span> k = <span class="hljs-number">1</span>, #t <span class="hljs-keyword">do</span><br>    <span class="hljs-built_in">print</span>(k, t[k])<br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="5-5-安全访问"><a href="#5-5-安全访问" class="headerlink" title="5.5 安全访问"></a>5.5 安全访问</h2><p>Lua 没有安全访问操作符.</p>
+<p><code>a or &#123;&#125;</code> 当 <code>a</code> 为 <code>nil</code> 时其结果是一个空表, 对于表达式 <code>(a or &#123;&#125;).b</code>, 当 <code>a</code> 为 <code>nil</code> 时其结果也同样是 <code>nil</code>.</p>
+<h2 id="5-6-表标准库"><a href="#5-6-表标准库" class="headerlink" title="5.6 表标准库"></a>5.6 表标准库</h2><h3 id="table-insert"><a href="#table-insert" class="headerlink" title="table.insert"></a>table.insert</h3><p>向序列指定位置插入一个元素, 不指定位置时在序列的最后插入:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs lua">t = [<span class="hljs-number">10</span>, <span class="hljs-number">20</span>, <span class="hljs-number">30</span>]<br><span class="hljs-built_in">table</span>.<span class="hljs-built_in">insert</span>(t,<span class="hljs-number">1</span>,<span class="hljs-number">15</span>)<br><span class="hljs-comment">-- t 变为 [15,10,20,30]</span><br></code></pre></td></tr></table></figure>
+<p>另一个例子:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs lua">t = &#123;&#125;<br><span class="hljs-keyword">for</span> line <span class="hljs-keyword">in</span> <span class="hljs-built_in">io</span>.<span class="hljs-built_in">lines</span>() <span class="hljs-keyword">do</span><br>    <span class="hljs-built_in">table</span>.<span class="hljs-built_in">insert</span>(t, line)<br><span class="hljs-keyword">end</span><br><span class="hljs-built_in">print</span>(#t)<br></code></pre></td></tr></table></figure>
+
+<h3 id="table-remove"><a href="#table-remove" class="headerlink" title="table.remove"></a>table.remove</h3><p>删除并返回序列指定位置的元素, 然后将其后的元素向前豫东填充删除元素后造成的空洞.</p>
+<p>不指定位置则删除最后一个.</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-built_in">table</span>.<span class="hljs-built_in">remove</span>(t,<span class="hljs-number">1</span>)<br><span class="hljs-built_in">table</span>.<span class="hljs-built_in">remove</span>(t)<br></code></pre></td></tr></table></figure>
+
+<h3 id="table-move"><a href="#table-move" class="headerlink" title="table.move"></a>table.move</h3><figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-built_in">table</span>.move(a,f,e,t)<br></code></pre></td></tr></table></figure>
+<p>将表 <code>a</code> 中从索引 f 到 e 的元素移动到位置 t 上:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-built_in">table</span>.move(a, <span class="hljs-number">1</span>, #a, <span class="hljs-number">2</span>)<br>a[<span class="hljs-number">1</span>] = newElement<br><span class="hljs-built_in">table</span>.move(a, <span class="hljs-number">2</span>, #a, <span class="hljs-number">1</span>)<br>a[#a] = <span class="hljs-literal">nil</span><br></code></pre></td></tr></table></figure>
+
+<p><code>table.move</code> 还支持使用一个表作为可选参数, 即将第一个表中的元素移动到第二个表中.</p>
+<h1 id="6-函数"><a href="#6-函数" class="headerlink" title="6 函数"></a>6 函数</h1><p>无论哪种情况, 函数调用时都需要使用一对圆括号把参数列表括起来.</p>
+<p><mark>例外</mark> 当函数只有一个参数且该参数是字符串常量或表构造器:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-built_in">print</span> <span class="hljs-string">&quot;Hello World&quot;</span><br><span class="hljs-built_in">dofile</span> <span class="hljs-string">&#x27;a.lua&#x27;</span><br><span class="hljs-built_in">print</span> <span class="hljs-string">[[a multi-line</span><br><span class="hljs-string">    message]]</span><br>f&#123;x=<span class="hljs-number">10</span>, y=<span class="hljs-number">20</span>&#125;<br><span class="hljs-built_in">type</span>&#123;&#125;<br></code></pre></td></tr></table></figure>
+
+<p>Lua 为面向对象提供的特殊语法, 冒号操作符 <code>:</code></p>
+<p>如:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lua">o:foo(x)    <span class="hljs-comment">-- 调用对象 o 的 foo 方法  </span><br></code></pre></td></tr></table></figure>
+
+<p>Lua 语言标准库中所有的函数都是使用 C 语言编写的.</p>
+<p><mark>函数语法格式</mark> :</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">add</span><span class="hljs-params">(a)</span></span><br>    <span class="hljs-keyword">local</span> sum = <span class="hljs-number">0</span><br>    <span class="hljs-keyword">for</span> i = <span class="hljs-number">1</span>, #a <span class="hljs-keyword">do</span><br>        sum = sum + a[i]<br>    <span class="hljs-keyword">end</span><br>    <span class="hljs-keyword">return</span> sum<br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+<p>参数的行为<mark>与局部变量的行为完全一致</mark>, 相当于一个用函数调用时传入的值进行初始化的局部变量.</p>
+<p>调用函数时使用的参数个数可以与定义函数时使用的参数不一致.</p>
+<p>Lua 语言会通过抛弃多余参数和将不足的参数设为 <code>nil</code> 的方式来调整参数的个数.</p>
+<p><mark>默认参数</mark>:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">incCount</span><span class="hljs-params">(n)</span></span><br>    n = n <span class="hljs-keyword">or</span> <span class="hljs-number">1</span><br>    globalCounter = globalCounter + n<br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+<p>这里 <code>n</code> 的默认值相当于就是 1.</p>
+<h2 id="6-1-多返回值"><a href="#6-1-多返回值" class="headerlink" title="6.1 多返回值"></a>6.1 多返回值</h2><p>Lua 允许一个函数返回多个结果.</p>
+<p>在 <code>return</code> 后列出所有要返回的值即可:</p>
+<p>如:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">maximum</span><span class="hljs-params">(a)</span></span><br>    <span class="hljs-keyword">local</span> mi = <span class="hljs-number">1</span><br>    <span class="hljs-keyword">local</span> m = aa[mi]<br>    <span class="hljs-keyword">for</span> i = <span class="hljs-number">1</span>, #a <span class="hljs-keyword">do</span><br>        <span class="hljs-keyword">if</span> a[i] &gt; m <span class="hljs-keyword">then</span><br>            mi = i; m = a[i]<br>        <span class="hljs-keyword">end</span><br>    <span class="hljs-keyword">end</span><br>    <span class="hljs-keyword">return</span> m, mi <br><span class="hljs-keyword">end</span><br><br><span class="hljs-built_in">print</span>(maximum(&#123;<span class="hljs-number">8</span>,<span class="hljs-number">10</span>,<span class="hljs-number">23</span>,<span class="hljs-number">12</span>,<span class="hljs-number">5</span>&#125;))<br></code></pre></td></tr></table></figure>
+
+<p>在多重赋值中, 如果一个函数没有返回值或者返回值个数不够多, 那么 Lua 语言会用 <code>nil</code> 来补充缺失的值:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lua">x,y,z = foo()   <span class="hljs-comment">-- x=&quot;a&quot;, y=&quot;b&quot;, z=nil</span><br></code></pre></td></tr></table></figure>
+<p><mark>注意</mark>, 只有当函数调用是一系列表达式中的最后一个表达式时才能返回多值结果, 否则只能返回一个结果.</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">foo</span><span class="hljs-params">()</span></span> <span class="hljs-keyword">return</span> <span class="hljs-string">&quot;a&quot;</span>, <span class="hljs-string">&quot;b&quot;</span> <span class="hljs-keyword">end</span><br><br>x,y = foo(), <span class="hljs-number">20</span>     <span class="hljs-comment">-- x=&quot;a&quot;, y=20</span><br></code></pre></td></tr></table></figure>
+
+<p>当一个函数调用是另一个函数调用的最后一个实参时, 第一个函数的所有返回值都会被作为实参传给第二个函数.</p>
+<p>将函数调用用用一对圆括号括起来可以强制其只返回一个结果:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-built_in">print</span>((foo()))<br></code></pre></td></tr></table></figure>
+
+<h2 id="6-2-可变长参数函数"><a href="#6-2-可变长参数函数" class="headerlink" title="6.2 可变长参数函数"></a>6.2 可变长参数函数</h2><p>如:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">add</span><span class="hljs-params">(...)</span></span><br>    <span class="hljs-keyword">local</span> s = <span class="hljs-number">0</span><br>    <span class="hljs-keyword">for</span> _, v <span class="hljs-keyword">in</span> <span class="hljs-built_in">ipairs</span>&#123;...&#125; <span class="hljs-keyword">do</span><br>        s = s + v<br>    <span class="hljs-keyword">end</span><br>    <span class="hljs-keyword">return</span> s<br><span class="hljs-keyword">end</span><br><br><span class="hljs-built_in">print</span>(add(<span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">10</span>, <span class="hljs-number">25</span>, <span class="hljs-number">12</span>))<br></code></pre></td></tr></table></figure>
+<p><code>...</code> 表示该函数的参数是可变长的.</p>
+<p>当函数要访问这些参数时仍需用到 <code>...</code></p>
+<p>表达式 <code>&#123;...&#125;</code> (被称为可变长参数表达式 vararg expression) 的结果是一个由所有可变长参数组成的列表.</p>
+<p>可用变长参数来模拟 Lua 中普通的参数传递机制:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">foo</span><span class="hljs-params">(...)</span></span><br>    <span class="hljs-keyword">local</span> a, b, c = ...<br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+<p>格式化输出的函数 <code>string.format</code>. 输出文本函数 <code>io.write</code></p>
+<p>具有可变长参数的函数也可以具有任意数量的固定参数:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">fwrite</span><span class="hljs-params">(fmt, ...)</span></span><br>    <span class="hljs-keyword">return</span> <span class="hljs-built_in">io</span>.<span class="hljs-built_in">write</span>(<span class="hljs-built_in">string</span>.<span class="hljs-built_in">format</span>(fmt, ...))<br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+<p><code>table.pack</code> 函数, 保存所有参数, 然后将其放在一个表中返回, 这个表中还有一个保存了参数个数的额外字段 “n”.</p>
+<p>判断可变长参数中是否包含无效的 <code>nil</code>:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">nonils</span><span class="hljs-params">(...)</span></span><br>    <span class="hljs-keyword">local</span> <span class="hljs-built_in">arg</span> = <span class="hljs-built_in">table</span>.pack(...)<br>    <span class="hljs-keyword">for</span> i = <span class="hljs-number">1</span>, <span class="hljs-built_in">arg</span>.n <span class="hljs-keyword">do</span><br>        <span class="hljs-keyword">if</span> <span class="hljs-built_in">arg</span>[i] == <span class="hljs-literal">nil</span> <span class="hljs-keyword">then</span> <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span> <span class="hljs-keyword">end</span><br>    <span class="hljs-keyword">end</span><br>    <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span><br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+<h3 id="使用-select-函数遍历"><a href="#使用-select-函数遍历" class="headerlink" title="使用 select 函数遍历"></a>使用 select 函数遍历</h3><p>函数 <code>select</code> 总是具有一个固定的参数 <code>selector</code>, 以及数量可变的参数, 如果 <code>selector</code> 是数值 n, 那么函数 select 则返回第 n 个参数后的所有参数, 否则, <code>selector</code> 应该是字符串 <code>#</code>, 以便函数 <code>select</code> 返回额外参数的总数:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-built_in">print</span>(<span class="hljs-built_in">select</span>(<span class="hljs-number">1</span>, <span class="hljs-string">&quot;a&quot;</span>, <span class="hljs-string">&quot;b&quot;</span>, <span class="hljs-string">&quot;c&quot;</span>))     <span class="hljs-comment">--&gt; a b c</span><br><span class="hljs-built_in">print</span>(<span class="hljs-built_in">select</span>(<span class="hljs-number">2</span>, <span class="hljs-string">&quot;a&quot;</span>, <span class="hljs-string">&quot;b&quot;</span>, <span class="hljs-string">&quot;c&quot;</span>))     <span class="hljs-comment">--&gt; b c</span><br><span class="hljs-built_in">print</span>(<span class="hljs-built_in">select</span>(<span class="hljs-number">3</span>, <span class="hljs-string">&quot;a&quot;</span>, <span class="hljs-string">&quot;b&quot;</span>, <span class="hljs-string">&quot;c&quot;</span>))     <span class="hljs-comment">--&gt; c</span><br><span class="hljs-built_in">print</span>(<span class="hljs-built_in">select</span>(<span class="hljs-string">&quot;#&quot;</span>, <span class="hljs-string">&quot;a&quot;</span>, <span class="hljs-string">&quot;b&quot;</span>, <span class="hljs-string">&quot;c&quot;</span>))     <span class="hljs-comment">--&gt; 3</span><br></code></pre></td></tr></table></figure>
+
+<p>遍历如:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">add</span><span class="hljs-params">(...)</span></span><br>    <span class="hljs-keyword">local</span> s = <span class="hljs-number">0</span><br>    <span class="hljs-keyword">for</span> i = <span class="hljs-number">1</span>, <span class="hljs-built_in">select</span>(<span class="hljs-string">&quot;#&quot;</span>, ...) <span class="hljs-keyword">do</span><br>        s = s + <span class="hljs-built_in">select</span>(i, ...)<br>    <span class="hljs-keyword">end</span><br>    <span class="hljs-keyword">return</span> s<br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="6-3-函数-table-unpack"><a href="#6-3-函数-table-unpack" class="headerlink" title="6.3 函数 table.unpack"></a>6.3 函数 table.unpack</h2><p>其参数是一个数组, 返回值为数组内的所有元素.</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-built_in">print</span>(<span class="hljs-built_in">table</span>.<span class="hljs-built_in">unpack</span>&#123;<span class="hljs-number">10</span>, <span class="hljs-number">20</span>, <span class="hljs-number">30</span>&#125;)<br>a,b = <span class="hljs-built_in">table</span>.<span class="hljs-built_in">unpack</span>&#123;<span class="hljs-number">10</span>, <span class="hljs-number">20</span>, <span class="hljs-number">30</span>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>通过数组 a 传入可变的参数来调用函数 f:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lua">f(<span class="hljs-built_in">table</span>.<span class="hljs-built_in">unpack</span>(a))<br></code></pre></td></tr></table></figure>
+
+<p>两个等价形式:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-built_in">print</span>(<span class="hljs-built_in">string</span>.<span class="hljs-built_in">find</span>(<span class="hljs-string">&quot;hello&quot;</span>, <span class="hljs-string">&quot;ll&quot;</span>))<br></code></pre></td></tr></table></figure>
+<p>等价于:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs lua">f = <span class="hljs-built_in">string</span>.<span class="hljs-built_in">find</span><br>a = &#123;<span class="hljs-string">&quot;hello&quot;</span>, <span class="hljs-string">&quot;ll&quot;</span>&#125;<br><br><span class="hljs-built_in">print</span>(f(<span class="hljs-built_in">table</span>.<span class="hljs-built_in">unpack</span>(a)))<br></code></pre></td></tr></table></figure>
+
+<p>可以显示地限制返回元素的范围</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-built_in">print</span>(<span class="hljs-built_in">table</span>.<span class="hljs-built_in">unpack</span>(&#123;<span class="hljs-string">&quot;Sun&quot;</span>, <span class="hljs-string">&quot;Mon&quot;</span>, <span class="hljs-string">&quot;Tue&quot;</span>, <span class="hljs-string">&quot;Wed&quot;</span>&#125;, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>))<br></code></pre></td></tr></table></figure>
+
+<h2 id="6-4-正确的尾调用"><a href="#6-4-正确的尾调用" class="headerlink" title="6.4 正确的尾调用"></a>6.4 正确的尾调用</h2><p>当一个函数的最后一个动作是调用另一个函数而没有进行其他工作时, 就形成了 <mark>尾调用 (tail call)</mark> </p>
+<p>如:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">f</span><span class="hljs-params">(x)</span></span><br>    x = x + <span class="hljs-number">1</span><br>    <span class="hljs-keyword">return</span> g(x) <br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+<p>当 g 返回时, 程序的执行路径会直接返回到调用 f 的位置. 不会再调用栈中保存有关调用函数的任何信息.</p>
+<p>在进行尾调用时不使用任何额外的栈空间，称这种实现为<mark>尾调用消除 (tail-call elimination)</mark></p>
+<p>由于尾调用不会使用栈空间, 所以一个程序中能够嵌套的尾调用的数量是无限的. (不会发生栈溢出)</p>
+<h1 id="7-输入输出"><a href="#7-输入输出" class="headerlink" title="7 输入输出"></a>7 输入输出</h1><p>Lua 只提供了 ISO C 语言标准支持的功能, 即基本的文件操作等.</p>
+<h2 id="7-1-简单-I-x2F-O-模型"><a href="#7-1-简单-I-x2F-O-模型" class="headerlink" title="7.1 简单 I&#x2F;O 模型"></a>7.1 简单 I&#x2F;O 模型</h2><p>I&#x2F;O 操作通过:</p>
+<ul>
+<li>当前输入流 (current input stream), 初始化为标准输入 stdin</li>
+<li>当前输出流 (current output stream), 初始化为标准输出 stdout</li>
+</ul>
+<p>实现.</p>
+<h3 id="函数-io-input-和-io-output"><a href="#函数-io-input-和-io-output" class="headerlink" title="函数 io.input 和 io.output"></a>函数 io.input 和 io.output</h3><p>函数 <code>io.input</code> 和函数 <code>io.output</code> 可以用于改变当前的输入输出流.</p>
+<p>如: <code>io.input(filename)</code> 会以只读模式打开指定文件, 并将文件设置为当前输入流.</p>
+<h3 id="函数-io-write-和-io-read"><a href="#函数-io-write-和-io-read" class="headerlink" title="函数 io.write 和 io.read"></a>函数 io.write 和 io.read</h3><p><code>io.write</code> 读取任意数量的字符串 (或者数字) 并将其写入当前输出流.</p>
+<p><mark>作为原则</mark>, 应该只在 “用后即弃” 的代码或调试代码中使用函数 <code>print</code>, 当需要完全控制输出时, 应该使用函数 <code>io.write</code>.</p>
+<p>函数 <code>io.write</code> 允许对输出进行重定向. 函数 <code>print</code> 只能使用标准输出, 其可以自动为其参数调用 <code>tostring</code>.</p>
+<p><code>io.read</code> 可以从当前输入流中读取字符串, 其参数有:</p>
+<p><img src="/../img/lua_args_of_io_read.png" srcset="/img/loading.gif" lazyload></p>
+<p>如:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-keyword">for</span> count = <span class="hljs-number">1</span>, <span class="hljs-built_in">math</span>.<span class="hljs-built_in">huge</span> <span class="hljs-keyword">do</span><br>    <span class="hljs-keyword">local</span> line = <span class="hljs-built_in">io</span>.<span class="hljs-built_in">read</span>(<span class="hljs-string">&quot;L&quot;</span>)<br>    <span class="hljs-keyword">if</span> line == <span class="hljs-literal">nil</span> <span class="hljs-keyword">then</span> <span class="hljs-keyword">break</span> <span class="hljs-keyword">end</span><br>    <span class="hljs-built_in">io</span>.<span class="hljs-built_in">write</span>(<span class="hljs-built_in">string</span>.<span class="hljs-built_in">format</span>(<span class="hljs-string">&quot;%6d  &quot;</span>, count), line)<br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+<p>使用 <code>io.lines</code> 迭代器, 逐行迭代一个文件:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-keyword">local</span> count = <span class="hljs-number">0</span><br><span class="hljs-keyword">for</span> line <span class="hljs-keyword">in</span> <span class="hljs-built_in">io</span>.<span class="hljs-built_in">lines</span>() <span class="hljs-keyword">do</span><br>    count = count + <span class="hljs-number">1</span><br>    <span class="hljs-built_in">io</span>.<span class="hljs-built_in">write</span>(<span class="hljs-built_in">string</span>.<span class="hljs-built_in">format</span>(<span class="hljs-string">&quot;%6d  &quot;</span>, count), line, <span class="hljs-string">&quot;\n&quot;</span>)<br></code></pre></td></tr></table></figure>
+
+<p><code>io.read(0)</code> 是一个特例, 它常用于测试是否到达了文件末尾, 如果仍然有数据可供读取, 它会返回一个空字符串, 否则, 则返回 nil.</p>
+<p>调用 <code>read</code> 时可以指定多个选项, 函数会根据每个参数返回相应的结果, 如:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-keyword">while</span> <span class="hljs-literal">true</span> <span class="hljs-keyword">do</span><br>    <span class="hljs-keyword">local</span> n1, n2, n3 = <span class="hljs-built_in">io</span>.<span class="hljs-built_in">read</span>(<span class="hljs-string">&quot;n&quot;</span>, <span class="hljs-string">&quot;n&quot;</span>, <span class="hljs-string">&quot;n&quot;</span>)<br>    <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> n1 <span class="hljs-keyword">then</span> <span class="hljs-keyword">break</span> <span class="hljs-keyword">end</span><br>    <span class="hljs-built_in">print</span>(<span class="hljs-built_in">math</span>.<span class="hljs-built_in">max</span>(n1, n2, n3))<br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="7-2-完整-I-x2F-O-模型"><a href="#7-2-完整-I-x2F-O-模型" class="headerlink" title="7.2 完整 I&#x2F;O 模型"></a>7.2 完整 I&#x2F;O 模型</h2><h3 id="io-open"><a href="#io-open" class="headerlink" title="io.open"></a>io.open</h3><p>两个参数:</p>
+<ul>
+<li>待打开的文件名</li>
+<li>模式, 包括: 只读的 <code>r</code>, 只写的 <code>w</code>, 追加的 <code>a</code>, 打开二进制文件的 <code>b</code></li>
+</ul>
+<p><mark>检查错误</mark>, 使用 <code>assert</code> 函数:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-keyword">local</span> f = <span class="hljs-built_in">assert</span>(<span class="hljs-built_in">io</span>.<span class="hljs-built_in">open</span>(filename, mode))<br></code></pre></td></tr></table></figure>
+
+
+
+
+
+
+
 
                 
               </div>
