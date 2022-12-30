@@ -27,7 +27,7 @@
 <meta property="og:image" content="http://example.com/img/lua_escape_characters.png">
 <meta property="og:image" content="http://example.com/img/lua_args_of_io_read.png">
 <meta property="article:published_time" content="2022-12-29T01:05:03.000Z">
-<meta property="article:modified_time" content="2022-12-30T06:48:58.340Z">
+<meta property="article:modified_time" content="2022-12-30T12:52:44.195Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/lua_ope_priority.png">
@@ -239,7 +239,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          15k 字
+          19k 字
         
       </span>
     
@@ -250,7 +250,7 @@
         
         
         
-          122 分钟
+          156 分钟
         
       </span>
     
@@ -798,7 +798,137 @@
 <li>没有错误, 返会 <code>true</code> 以及被调用函数的所有返回值</li>
 <li>错误, 返回 <code>false</code> 及错误信息</li>
 </ul>
-<h2 id="16-5-错误信息和栈回溯"><a href="#16-5-错误信息和栈回溯" class="headerlink" title="16.5 错误信息和栈回溯"></a>16.5 错误信息和栈回溯</h2>
+<h2 id="16-5-错误信息和栈回溯"><a href="#16-5-错误信息和栈回溯" class="headerlink" title="16.5 错误信息和栈回溯"></a>16.5 错误信息和栈回溯</h2><p><code>error</code> 还有第 2 个可选参数 <code>level</code>.</p>
+<p>当 <code>pcall</code> 返回错误信息时, 部分的调用栈已经被破坏了 (从 <code>pcall</code> 到出错之处的部分), 如果希望得到一个有意义的栈回溯, 那么就必须在函数 <code>pcall</code> 返回前先将调用栈构造好, 即使用 <code>xpcall</code> 函数.</p>
+<p><code>xpcall</code> 和 <code>pcall</code> 类似, 但其第二个参数是一个消息处理函数 (message handler function)</p>
+<p>当错误发生时, Lua 会在调用栈展开 (stack unwind) 前调用这个消息处理函数, 以便消息处理函数能够使用调试库来获取有关错误的更多信息.</p>
+<p>两个常用的消息处理函数:</p>
+<ul>
+<li><code>debug.debug</code>, 提供一个 Lua 提示符让用户来检查错误发生原因</li>
+<li><code>debug.traceback</code>, 使用调用栈来构造详细的错误信息</li>
+</ul>
+<h1 id="17-模块和包"><a href="#17-模块和包" class="headerlink" title="17 模块和包"></a>17 模块和包</h1><p><mark>从用户观点来看</mark>, 一个模块 (module) 就是一些代码 (要么是 Lua, 要么是 C), 这些代码可以通过函数 <code>require</code> 加载, 然后创建和返回一个表, 这个表就像是某种命名空间, 其中定义的内容是模块中导出的东西, 比如函数和常量.</p>
+<p>如:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-keyword">local</span> m = <span class="hljs-built_in">require</span> <span class="hljs-string">&quot;math&quot;</span><br><span class="hljs-built_in">print</span>(m.<span class="hljs-built_in">sin</span>(<span class="hljs-number">3.14</span>))<br></code></pre></td></tr></table></figure>
+
+<p>独立解释器会使用跟如下代码等价的方式 <mark>提前加载所有标准库</mark> </p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-built_in">math</span> = <span class="hljs-built_in">require</span> <span class="hljs-string">&quot;math&quot;</span><br><span class="hljs-built_in">string</span> = <span class="hljs-built_in">require</span> <span class="hljs-string">&quot;string&quot;</span><br>...<br></code></pre></td></tr></table></figure>
+
+<h2 id="17-1-函数-require"><a href="#17-1-函数-require" class="headerlink" title="17.1 函数 require"></a>17.1 函数 <code>require</code></h2><p>首先, <code>require</code> 函数在表 <code>package.loaded</code> 中检查模块是否已被加载:</p>
+<ul>
+<li>如果模块已经被加载, 函数 <code>require</code> 就返回相应的值。</li>
+<li>如果模块未被加载, 函数 <code>require</code> 则搜索具有指定模块名的 Lua 文件, 搜索路径由变量 <code>package.path</code> 指定. <ul>
+<li>找到了, 就用 <code>loadfile</code> 加载, 返回一个称为<mark>加载器</mark>的函数</li>
+<li>没找到, 搜索相应名称的 C 标准库, (路径由 <code>package.cpath</code> 指定) 找到则使用底层函数 <code>package.loadlib</code> 进行加载, 这个底层函数会查找名为 <code>luaopen_modname</code> 的函数并返回</li>
+</ul>
+</li>
+</ul>
+<p><mark>为了最终加载模块</mark> , <code>require</code> 函数带着两个参数调用加载函数 (大多数模块会忽略):</p>
+<ul>
+<li>模块名</li>
+<li>加载函数所在文件的名称</li>
+</ul>
+<p>如果加载函数有返回值, 那么函数 <code>require</code> 会返回这个值, 然后保存在表 <code>package.loaded</code> 中.</p>
+<p>如果加载函数没有返回值且表中的 <code>package.loaded[@rep&#123;modname&#125;]</code> 为空, 函数 <code>require</code> 就假设模块的返回值是 <code>true</code>.</p>
+<h3 id="17-1-1-模块重命名"><a href="#17-1-1-模块重命名" class="headerlink" title="17.1.1 模块重命名"></a>17.1.1 模块重命名</h3><p>对于 Lua 语言模块: 写该 <code>.lua</code> 文件的文件名即可.</p>
+<p>对于 C 标准库的二进制目标代码中 <code>luaopen_*</code> 函数的名称, 使用 <mark>连字符技巧</mark> (见书, 不是很懂) </p>
+<h3 id="17-1-2-搜索路径"><a href="#17-1-2-搜索路径" class="headerlink" title="17.1.2 搜索路径"></a>17.1.2 搜索路径</h3><p><code>require</code> 使用的路径是一组模板, 将 <code>?</code> 替换为文件名来查找, 会一个一个尝试, 模板之间用 <code>;</code> 分隔, 如一组模板为:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lua">?;?.lua;c:\windows\?;/usr/<span class="hljs-keyword">local</span>/lua/?/?.lua<br></code></pre></td></tr></table></figure>
+
+<p>该值存储在 <code>package.path</code> 变量中.</p>
+<p>则 <code>require &quot;sql&quot;</code> 会尝试打开:</p>
+<ul>
+<li><code>sql</code></li>
+<li><code>sql.lua</code></li>
+<li><code>c:\windows\sql</code></li>
+<li><code>/usr/local/lua/sql/sql.lua</code></li>
+</ul>
+<p>当 <code>package</code> 模块被初始化后, 它就把变量 <code>package.path</code> 设置成环境变量 <code>LUA_PATH_5_3</code> 的值, 未定义则尝试 <code>LUA_PATH</code>. 都未定义则使用一个编译时定义的默认路径.</p>
+<p>在使用一个环境变量的值时, Lua 会将其中所有的 <code>;;</code> 替换成默认路径, 例: <code>LUA_PATH_5_3=&#39;mydir/?.lua;;&#39;</code>, 则最终路径就会是模板 <code>mydir/?.lua</code> 后跟默认路径.</p>
+<p>搜索 C 标准库类似. 变量为 <code>package.cpath</code>, 环境变量为 <code>LUA_CPATH_5_3</code> 或 <code>LUA_CPATH</code></p>
+<h3 id="17-1-3-搜索器"><a href="#17-1-3-搜索器" class="headerlink" title="17.1.3 搜索器"></a>17.1.3 搜索器</h3><h2 id="17-2-Lua-语言中编写模块的基本方法"><a href="#17-2-Lua-语言中编写模块的基本方法" class="headerlink" title="17.2 Lua 语言中编写模块的基本方法"></a>17.2 Lua 语言中编写模块的基本方法</h2><p><mark>创建模块的最简单方法是</mark> 创建一个表并将所有需要导出的函数放入其中, 最后返回这个表. 如:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-keyword">local</span> M = &#123;&#125;    <span class="hljs-comment">-- 模块</span><br><br><span class="hljs-comment">-- 创建一个新的复数</span><br><span class="hljs-keyword">local</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">new</span><span class="hljs-params">(r, i)</span></span><br>    <span class="hljs-keyword">return</span> &#123;r=r, i=i&#125;<br><span class="hljs-keyword">end</span><br><br>M.new = new     <span class="hljs-comment">-- 把 &#x27;new&#x27; 加到模块中</span><br><br><span class="hljs-comment">-- constant &#x27;i&#x27;</span><br>M.i = new(<span class="hljs-number">0</span>, <span class="hljs-number">1</span>)<br><br><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">M.add</span><span class="hljs-params">(c1, c2)</span></span><br>    <span class="hljs-keyword">return</span> new(c1.r + c2.r, c1.i + c2.i)<br><span class="hljs-keyword">end</span><br><br>...<br><br><span class="hljs-keyword">return</span> M<br></code></pre></td></tr></table></figure>
+
+<p>不使用 <code>return M</code> 的方式:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-keyword">local</span> M = &#123;&#125;<br><span class="hljs-built_in">package</span>.<span class="hljs-built_in">loaded</span>[...] = M<br></code></pre></td></tr></table></figure>
+<p><code>require</code> 会把模块的名称作为第一个参数传给加载函数, 因此这里的 <code>...</code> 为模块名.</p>
+<p>如果一个模块没有返回值, 那么 <code>require</code> 会返回 <code>package.loaded[modname]</code> 的当前值.</p>
+<p><mark>另一种编写模块的方法</mark> : 把所有的函数定义为局部变量, 然后再最后返回表:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">add</span><span class="hljs-params">(c1, c2)</span></span><br>    <span class="hljs-keyword">return</span> new(c1.r + c2.r, c1.i + c2.i)<br><span class="hljs-keyword">end</span><br><br>...<br><br><span class="hljs-keyword">return</span> &#123;<br>    new = new,<br>    add = add,<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="17-3-子模块和包"><a href="#17-3-子模块和包" class="headerlink" title="17.3 子模块和包"></a>17.3 子模块和包</h2><p>Lua 支持具有层次结构的模块名, <mark>通过点</mark>来分隔名称中的层次.</p>
+<p>当搜索一个定义子模块的文件时, <code>require</code> 会将点转换为另一个字符, 通常就是操作系统的目录分隔符.</p>
+<h1 id="20-元表和元方法"><a href="#20-元表和元方法" class="headerlink" title="20 元表和元方法"></a>20 元表和元方法</h1><p><mark>元表</mark> 是一个表, 其内容是 <mark>元方法 (metamethod)</mark>如 <code>__add</code>, <code>__sub</code>, 弄成表应该是方便查询. 可以修改一个值某个操作 (加法减法之类) 的行为, 如: <code>a</code> 和 <code>b</code> 都是表, 可以通过元表定义如何计算 <code>a + b</code></p>
+<p>当 Lua 语言试图将两个表相加, 它会先检查两者之一<mark>是否有元表 (metatable)</mark> 且该元表中是否有 <code>__add</code> 字段 (两个下划线). 如果 Lua 找到了该字段, 就调用该字段对应的值, 即 <mark>元方法 (metamethod)</mark> (一个函数).</p>
+<p>元表只能给出预先定义的操作集合的行为, 其不支持继承.</p>
+<p>Lua 中的每一个值都可以有元表.</p>
+<p>用 <code>getmetatable</code> 来获取元表.</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs lua">t = &#123;&#125;<br><span class="hljs-built_in">print</span>(<span class="hljs-built_in">getmetatable</span>(t))  <span class="hljs-comment">--&gt; nil</span><br></code></pre></td></tr></table></figure>
+
+<p>可以使用函数 <code>setmetatable</code> 来设置或修改任意表的元表:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs lua">t1 = &#123;&#125;<br><span class="hljs-built_in">setmetatable</span>(t, t1)<br><span class="hljs-built_in">print</span>(<span class="hljs-built_in">getmetatable</span>(t) == t1)    <span class="hljs-comment">--&gt; true</span><br></code></pre></td></tr></table></figure>
+
+<p>Lua 中只能为表设置元表. 如果要为其他类型的值设置元表, 必须通过 C 代码或调试库完成.</p>
+<p>一个表可以成为任意值的元表.</p>
+<h2 id="20-1-算术运算相关的元方法"><a href="#20-1-算术运算相关的元方法" class="headerlink" title="20.1 算术运算相关的元方法"></a>20.1 算术运算相关的元方法</h2><p>示例:</p>
+<p><code>set</code> 是一个类型的表 </p>
+<p><code>local mt = &#123;&#125;</code> 是一个元表</p>
+<p><code>setmetatable(set, mt)</code> 设置 <code>set</code> 的元表为 <code>mt</code>.</p>
+<p><code>Set.union</code> 定义了 <code>set</code> 这种类型表的相加操作</p>
+<p><code>mt.__add = Set.union</code> 设置元表的元方法.</p>
+<p>之后 <code>set</code> 相加时如 <code>set1 + set2</code> 就会自动调用 <code>mt.__add</code> 即 <code>Set.union</code> 函数</p>
+<p>每种算术运算符都有一个对应的元方法, 位操作也有元方法:</p>
+<ul>
+<li><code>__sub</code></li>
+<li><code>__div</code></li>
+<li><code>__idiv</code></li>
+<li><code>__unm</code></li>
+<li><code>__mod</code></li>
+<li><code>__pow</code></li>
+<li><code>__band</code></li>
+<li><code>__bor</code></li>
+<li><code>__bxor</code></li>
+<li><code>__bnot</code></li>
+<li><code>__shl</code></li>
+<li><code>__shr</code></li>
+<li><code>__concat</code><br>等.</li>
+</ul>
+<p><mark>Lua 查找元方法的步骤</mark> :</p>
+<ul>
+<li>如果第一个值有元表且元表中存在所需的元方法, 那么 Lua 就使用这个元方法, 与第二个值无关</li>
+<li>如果第二个值有元表且元表中存在所需的元方法, 那么 Lua 就使用这个元方法</li>
+<li>都没有则抛出异常</li>
+</ul>
+<h2 id="20-2-关系运算相关的元方法"><a href="#20-2-关系运算相关的元方法" class="headerlink" title="20.2 关系运算相关的元方法"></a>20.2 关系运算相关的元方法</h2><p>元表还允许指定关系运算符的含义, 其中的元方法包括:</p>
+<ul>
+<li><code>__eq</code> 等于</li>
+<li><code>__lt</code> 小于</li>
+<li><code>__le</code> 小于等于</li>
+</ul>
+<p>其他三个关系运算符没有单独的元方法, 因为 Lua 会将 <code>a~=b</code> 转换为 <code>not (a==b)</code>, <code>a&gt;b</code> 转换为 <code>b&lt;a</code>, <code>a&gt;=b</code> 转换为 <code>b&lt;=a</code>.</p>
+<p>实现 <code>__eq</code>, <code>__le</code> 和 <code>__lt</code> 示例:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs lua">mt.<span class="hljs-built_in">__eq</span> = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(a, b)</span></span><br>    <span class="hljs-keyword">return</span> a &lt;=b <span class="hljs-keyword">and</span> b &lt;= a<br><span class="hljs-keyword">end</span><br><br>mt.<span class="hljs-built_in">__le</span> = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(a, b)</span></span><br>    <span class="hljs-keyword">for</span> k <span class="hljs-keyword">in</span> <span class="hljs-built_in">pairs</span>(a) <span class="hljs-keyword">do</span> <br>        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> b[k] <span class="hljs-keyword">then</span> <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span> <span class="hljs-keyword">end</span><br>    <span class="hljs-keyword">end</span><br>    <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span><br><span class="hljs-keyword">end</span><br><br>mt.<span class="hljs-built_in">__lt</span> = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(a, b)</span></span><br>    <span class="hljs-keyword">return</span> a &lt;= b <span class="hljs-keyword">and</span> <span class="hljs-keyword">not</span> (b &lt;= a)<br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="20-3-库定义相关的元方法"><a href="#20-3-库定义相关的元方法" class="headerlink" title="20.3 库定义相关的元方法"></a>20.3 库定义相关的元方法</h2><p>Lua 虚拟机会检测一个操作中涉及的值是否有存在对应元方法的元表, 由于元表是一个普通表, 所以任何人都可以使用它们.</p>
+<p>当对值进行格式化时, 函数 <code>tostring</code> 会首先检查值是否有一个元方法 <code>__tostring</code>, 如果有, 就调用这个元方法, 将对象作为参数传给该函数, 然后把元方法的返回值作为函数 <code>tostring</code> 的返回值.</p>
+<p>函数 <code>setmetatable</code> 和 <code>getmetatable</code> 用元方法来保护元表, 使用户既不能看到也不能修改元表. 需要在元表中设置 <code>__metatable</code> 字段, 则:</p>
+<ul>
+<li><code>getmetatable</code> 会返回这个字段的值</li>
+<li><code>setmetatable</code> 会引发错误</li>
+</ul>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lua">mt.<span class="hljs-built_in">__metatable</span> = <span class="hljs-string">&quot;not your business&quot;</span><br></code></pre></td></tr></table></figure>
+
+<p>当一个对象拥有 <code>__pairs</code> 元方法时, <code>pair</code> 会调用这个元方法来完成遍历.</p>
+<h2 id="20-4-表相关元方法"><a href="#20-4-表相关元方法" class="headerlink" title="20.4 表相关元方法"></a>20.4 表相关元方法</h2><h3 id="20-4-1-index-元方法"><a href="#20-4-1-index-元方法" class="headerlink" title="20.4.1 __index 元方法"></a>20.4.1 <code>__index</code> 元方法</h3><h1 id="22-环境-Environment"><a href="#22-环境-Environment" class="headerlink" title="22 环境 (Environment)"></a>22 环境 (Environment)</h1><p>可以认为, Lua 把所有全局变量保存在一个<mark>称为全局环境 (global environment) 的普通表中</mark>.</p>
+<p>Lua 将全局环境自身保存在全局变量 <code>_G</code> 中 (<code>_G._G</code> 与 <code>_G</code> 等价).</p>
+<p>输出全局环境中全部全局变量名称:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-keyword">for</span> n <span class="hljs-keyword">in</span> <span class="hljs-built_in">pairs</span> (<span class="hljs-built_in">_G</span>) <span class="hljs-keyword">do</span> <span class="hljs-built_in">print</span>(n) <span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="22-1-具有动态名称的全局变量"><a href="#22-1-具有动态名称的全局变量" class="headerlink" title="22.1 具有动态名称的全局变量"></a>22.1 具有动态名称的全局变量</h2><p>获取全局表中的值:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lua">value = <span class="hljs-built_in">_G</span>[varname]<br></code></pre></td></tr></table></figure>
+<h2 id="22-2-全局变量的声明"><a href="#22-2-全局变量的声明" class="headerlink" title="22.2 全局变量的声明"></a>22.2 全局变量的声明</h2><p>Lua 中的全局变量不需要声明就可以使用.</p>
+<p>检测所有对全局表中不存在键的访问:</p>
+
                 
               </div>
             
