@@ -24,7 +24,7 @@
 <meta property="og:description" content="neovim 中使用 require 加载文件时, 默认会在配置文件所在目录下的 lua 目录下找. 配置文件所在目录由环境变量 VIMCONFIG 来指定, 即默认查找 $VIMCONFIG&#x2F;lua, 如: 1require &quot;test&quot; 则会加载 $VIMCONFIG&#x2F;lua&#x2F;test.lua 文件. 文件的层次可以通过 . 区分, 如: 1require &quot;te">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2022-12-30T09:10:24.000Z">
-<meta property="article:modified_time" content="2022-12-30T11:48:46.037Z">
+<meta property="article:modified_time" content="2023-01-04T11:19:23.067Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          248 字
+          3.4k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          3 分钟
+          29 分钟
         
       </span>
     
@@ -295,7 +295,99 @@
 <p>文件的层次可以通过 <code>.</code> 区分, 如:</p>
 <figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-built_in">require</span> <span class="hljs-string">&quot;test.haha&quot;</span><br></code></pre></td></tr></table></figure>
 <p>则会加载 <code>$VIMCONFIG/lua/test/haha.lua</code> 文件.</p>
-<h1 id="P2-基础选项配置-Setting-options"><a href="#P2-基础选项配置-Setting-options" class="headerlink" title="P2 基础选项配置-Setting options"></a>P2 基础选项配置-Setting options</h1>
+<p><code>require</code> 查找的路径实际上为变量 <code>package.path</code> 的值.</p>
+<h1 id="P2-基础选项配置-Setting-options"><a href="#P2-基础选项配置-Setting-options" class="headerlink" title="P2 基础选项配置-Setting options"></a>P2 基础选项配置-Setting options</h1><p>组织 <code>lua</code> 目录下的文件时可以创建子目录.</p>
+<p><mark>注意</mark>, 如:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lua">vim.opt.backup<br></code></pre></td></tr></table></figure>
+<p>与:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lua">vim.opt[<span class="hljs-string">&#x27;backup&#x27;</span>]<br></code></pre></td></tr></table></figure>
+<p>等价.</p>
+<p><mark>设置 vim 的选项 (option) 用</mark>:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lua">vim.opt<br></code></pre></td></tr></table></figure>
+<p>开头.</p>
+<p>如:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs lua">vim.opt.backup = <span class="hljs-literal">false</span><br>vim.opt.cmdheight = <span class="hljs-number">2</span><br>vim.opt[<span class="hljs-string">&#x27;hlsearch&#x27;</span>] = <span class="hljs-literal">true</span><br></code></pre></td></tr></table></figure>
+
+<p><mark>运行 vim 的命令用</mark>:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lua">vim.cmd<br></code></pre></td></tr></table></figure>
+<p>如:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs lua">vim.cmd <span class="hljs-string">&quot;set whichwrap+=&lt;,&gt;,[,],h,l&quot;</span><br>vim.cmd <span class="hljs-string">[[set iskeyword+=-]]</span><br></code></pre></td></tr></table></figure>
+
+<h1 id="P3-定制你的键盘映射-Custom-Keymaps"><a href="#P3-定制你的键盘映射-Custom-Keymaps" class="headerlink" title="P3 定制你的键盘映射-Custom Keymaps"></a>P3 定制你的键盘映射-Custom Keymaps</h1><p>键盘映射使用 <code>vim.api.nvim_set_keymap</code> 函数, 如:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-comment">-- 用更短的函数别名</span><br><span class="hljs-keyword">local</span> keymap = vim.api.nvim_set_keymap<br>keymap(<span class="hljs-string">&quot;模式&quot;</span>, <span class="hljs-string">&quot;设置的键位&quot;</span>, <span class="hljs-string">&quot;替换的键位&quot;</span>, <span class="hljs-string">&quot;其他选项&quot;</span>)<br><span class="hljs-comment">-- 例如</span><br><span class="hljs-keyword">local</span> opts = &#123; noremap = <span class="hljs-literal">true</span>, silent = <span class="hljs-literal">true</span> &#125;<br>keymap(<span class="hljs-string">&quot;i&quot;</span>, <span class="hljs-string">&quot;jk&quot;</span>, <span class="hljs-string">&quot;&lt;ESC&gt;&quot;</span>, opts)<br></code></pre></td></tr></table></figure>
+<p>上面就是把 <code>jk</code> 映射为 <code>&lt;ESC&gt;</code> 的写法.</p>
+<p>模式包括:</p>
+<ul>
+<li><code>n</code>, normal</li>
+<li><code>i</code>, insert</li>
+<li><code>v</code>, visual</li>
+<li><code>x</code>, visual block</li>
+<li><code>t</code>, term</li>
+<li><code>c</code>, command</li>
+</ul>
+<p>设置 <code>leader</code>:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs lua">vim.g.mapleader = <span class="hljs-string">&quot; &quot;</span><br>vim.g.maplocalleader = <span class="hljs-string">&quot; &quot;</span><br></code></pre></td></tr></table></figure>
+
+<h1 id="P4-了解vim插件体系-Plugin-Deep-Dive"><a href="#P4-了解vim插件体系-Plugin-Deep-Dive" class="headerlink" title="P4 了解vim插件体系 - Plugin Deep Dive"></a>P4 了解vim插件体系 - Plugin Deep Dive</h1><p><code>packer.nvim</code> 插件使用, 在用 nvim 打开一个文件是, 其就会开始下载插件.</p>
+<p><code>site/pack/packer</code> 目录下的两个目录:</p>
+<ul>
+<li><code>opt</code> 代表 optional </li>
+<li><code>start</code> 代表一打开 nvim 就运行</li>
+</ul>
+<p><code>plugins/packer_compiled.lua</code> 文件可能会加快插件的打包速度.</p>
+<p>插件默认放在 <code>start</code> 目录下, 若要放在 <code>opt</code> 目录下, 需添加 <code>opt = true</code>, 如:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lua">use &#123; <span class="hljs-string">&#x27;vim/plugins&#x27;</span>, opt = <span class="hljs-literal">true</span> &#125;<br></code></pre></td></tr></table></figure>
+<p>还有其他可选关键字, 如 <code>run</code> 用来运行命令, <code>branch</code> 用来指定分支等.</p>
+<p>有些插件除了用 <code>packer</code> 安装以外, 还需要 <code>require().setup&#123;&#125;</code>.</p>
+<h1 id="P5-主题配色以及如何配置-Colorschemes-and-how-t"><a href="#P5-主题配色以及如何配置-Colorschemes-and-how-t" class="headerlink" title="P5 主题配色以及如何配置- Colorschemes and how t"></a>P5 主题配色以及如何配置- Colorschemes and how t</h1><p>一个技巧, 在加载一个插件时检测其是否还存在, 这样在你移除后可以避免报错, 如:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-keyword">local</span> colorscheme = <span class="hljs-string">&quot;tokyonight&quot;</span><br><br><span class="hljs-keyword">local</span> status_ok, _ = <span class="hljs-built_in">pcall</span>(vim.cmd, <span class="hljs-string">&quot;colorscheme &quot;</span> .. colorscheme)<br><span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> status_ok <span class="hljs-keyword">then</span><br>  <span class="hljs-keyword">return</span><br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+<p><code>pcall</code> 函数带两个参数:</p>
+<ul>
+<li>第一个, 函数名</li>
+<li>第二个, 函数的参数 (这是一个变长参数)</li>
+</ul>
+<p><code>_</code> 相当于一个占位符.</p>
+<h1 id="P6-自动补全-Completion-Tutorial"><a href="#P6-自动补全-Completion-Tutorial" class="headerlink" title="P6 自动补全 - Completion Tutorial"></a>P6 自动补全 - Completion Tutorial</h1><p>使用插件为 <code>nvim-cmp</code>.</p>
+<p>Super 键, 也就是 Win 键, 映射的时候使用如: <code>&lt;S-t&gt;</code>.</p>
+<p><code>formatting</code> 就是配置补全时旁边显示的东西.</p>
+<p><code>source</code> 好像是补全显示的顺序.</p>
+<p><code>nvim-cmp</code> 是可扩展的, 扩展用的插件可以在 github 上面找, 也就是 source. 安装好插件后将其添加到 <code>source</code> 下面.</p>
+<h1 id="P7-多语言语法支持-LSP-Setup-Tutorial"><a href="#P7-多语言语法支持-LSP-Setup-Tutorial" class="headerlink" title="P7 多语言语法支持- LSP Setup Tutorial"></a>P7 多语言语法支持- LSP Setup Tutorial</h1><p><mark>关于很多插件都有 <code>require(name).setup()</code> 解析</mark>, 应该是一种约定俗称的函数, 在返回的模块中有一个成员函数叫做 <code>setup()</code>, 其完成一些设置.</p>
+<p>使用 <code>Mason</code> 下载 LSP 之后在配置文件中启用.</p>
+<p><code>lspconfig</code> 这个插件中可以找到各种语言的 language server 的配置方式.</p>
+<p>可以给 LSP 传递一些参数配置. 设置的参数就可以在 <code>nvim-lspconfig</code> 这个插件中找.</p>
+<p><code>gd</code> 快捷键还可以跳转到光标下的路径的文件.</p>
+<p><code>gr</code> 用 quickfix 查找光标下的单词. (r 是 reference)</p>
+<h1 id="P8-查找-文件或字符等-插件Telescope-a-highly-extendable-fuzzy-finder"><a href="#P8-查找-文件或字符等-插件Telescope-a-highly-extendable-fuzzy-finder" class="headerlink" title="P8 查找(文件或字符等)插件Telescope - a highly extendable fuzzy finder"></a>P8 查找(文件或字符等)插件Telescope - a highly extendable fuzzy finder</h1><p>telescope 是一个 fuzzy finder.</p>
+<p>使用示例, <code>:Telescope find_files</code> 用于查找文件. <code>:Telescope live_grep</code> 用于查找字符.</p>
+<p><code>:Telescope planets</code> 可以查看行星.</p>
+<p>可以设置打开的 menu 的主题, 如 <code>:Telescope find_files theme=ivy</code>, 其会在底部打开 Telescope 而不是 float.</p>
+<p><code>dropdown</code> 主题会将预览放在上方. <code>cursor</code> 主题打开的窗口比较小.</p>
+<p>在使用 <code>Telescope</code> 时, 可以进入 normal 模式, 这样就可以用 <code>j</code> 和 <code>k</code> 来控制.</p>
+<p>可以在 <code>Telescope</code> 中预览图片. 需要 <code>Telescope-media-files.nvim</code> 插件. 这是一个 neovim 插件, 同时也是 <code>Telescope</code> 的插件, 需要卸载 <code>Telescope</code> 的配置中.</p>
+<h1 id="P9-语法高亮插件-Treesitter-Syntax-Highlighting"><a href="#P9-语法高亮插件-Treesitter-Syntax-Highlighting" class="headerlink" title="P9 语法高亮插件 - Treesitter Syntax Highlighting"></a>P9 语法高亮插件 - Treesitter Syntax Highlighting</h1><p>可以用 <code>:TSDisableAll highlight</code> 来关闭 <code>Treesitter</code> 插件的高亮作用.</p>
+<p>Treesitter 也有很多插件, 这些插件的配置信息写在 Treesitter 的配置文件里, 如 <code>p00f/nvim-ts-rainbow</code></p>
+<p><code>playground</code> 插件可以显示出语法树和高亮代码的联系.</p>
+<p>可以制作自己的 colorscheme.</p>
+<h1 id="P10-符号配对插件-Autopairs-automatically-close-‘’"><a href="#P10-符号配对插件-Autopairs-automatically-close-‘’" class="headerlink" title="P10 符号配对插件 - Autopairs automatically close () [] {} ‘’ _"></a>P10 符号配对插件 - Autopairs automatically close () [] {} ‘’ _</h1><p><code>&lt;M-e&gt;</code> 快捷键.</p>
+<h1 id="P11-注释插件-Comments"><a href="#P11-注释插件-Comments" class="headerlink" title="P11 注释插件 - Comments"></a>P11 注释插件 - Comments</h1><p><code>gcc</code> 和 visual 模式下的 <code>gc</code></p>
+<h1 id="P12-git插件-Gitsigns-Powerful-Git-Plugin"><a href="#P12-git插件-Gitsigns-Powerful-Git-Plugin" class="headerlink" title="P12 git插件 - Gitsigns Powerful Git Plugin"></a>P12 git插件 - Gitsigns Powerful Git Plugin</h1><p>可以查看很多内容.</p>
+<h1 id="P13-树形文件浏览器插件-NvimTree-File-Explorer"><a href="#P13-树形文件浏览器插件-NvimTree-File-Explorer" class="headerlink" title="P13 树形文件浏览器插件- NvimTree File Explorer"></a>P13 树形文件浏览器插件- NvimTree File Explorer</h1><p><code>a</code> 即 add 可以添加文件.</p>
+<p><code>r</code> 即 renane 可以修改文件名.</p>
+<p><code>d</code> 即 delete 可以删除文件.</p>
+<h1 id="P14-Buffer插件以及Buffer-和-Tab以及Windows之间的对比-Bufferline-Buffers"><a href="#P14-Buffer插件以及Buffer-和-Tab以及Windows之间的对比-Bufferline-Buffers" class="headerlink" title="P14 Buffer插件以及Buffer 和 Tab以及Windows之间的对比 - Bufferline Buffers"></a>P14 Buffer插件以及Buffer 和 Tab以及Windows之间的对比 - Bufferline Buffers</h1><p><code>BufferLinePick</code> 可以跳转.</p>
+<p>buffer 就是加载到内存中的文件.</p>
+<p>vim 的 hidden 选项可以让 buffer 留在内存中。</p>
+<p>vim 可以创建 tab, window, buffer.</p>
+<p>tab 有点像 collection of windows.</p>
+<h1 id="P15-格式化与Lint插件-Null-LS-Formatting-Linting"><a href="#P15-格式化与Lint插件-Null-LS-Formatting-Linting" class="headerlink" title="P15 格式化与Lint插件 - Null-LS Formatting, Linting"></a>P15 格式化与Lint插件 - Null-LS Formatting, Linting</h1><p>null ls 插件用来格式化代码. 使用 <code>:lua vim.lsp.buf.formatting_sync()</code> 来触发.</p>
+<p>lua 的格式化依赖于 <code>stylua</code> 这个二进制文件.</p>
+<p>添加一个语言的格式化将其添加到 <code>null ls</code> 的配置文件中.</p>
+<p>支持的语言和 source 可以在其安装目录的 <code>lua/null-ls/built-in</code> 目录下找.</p>
+<p>diagnostic 和 linter 差不多</p>
+<p><code>NullLsInfo</code> 可以查看信息.</p>
+<p>lsp 内置的 Formatting 和 null ls 冲突, 查看 handler 文件.</p>
+<h1 id="P16-在Nvim中调用terminal插件-不许套娃-Toggleterm-Open-terminal-programs-in-Nvim"><a href="#P16-在Nvim中调用terminal插件-不许套娃-Toggleterm-Open-terminal-programs-in-Nvim" class="headerlink" title="P16 在Nvim中调用terminal插件(不许套娃)- Toggleterm Open terminal programs in Nvim"></a>P16 在Nvim中调用terminal插件(不许套娃)- Toggleterm Open terminal programs in Nvim</h1>
                 
               </div>
             
