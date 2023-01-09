@@ -1,0 +1,799 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/wallhaven-j5kjgy_1920x1080.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="John Doe">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="第七章 Symbol Tables and TypeglobsSymbol tables 组织和存储这 Perl’s package (global) 变量. 可以用 typeglobs 来影响 symbol tables. package and Lexical Variables (包和词法变量)Symbol table 会追踪 package variables 而不会追踪 Lexical">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Mastering-Perl-Notes">
+<meta property="og:url" content="http://example.com/2023/01/09/Mastering-Perl-Notes/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="第七章 Symbol Tables and TypeglobsSymbol tables 组织和存储这 Perl’s package (global) 变量. 可以用 typeglobs 来影响 symbol tables. package and Lexical Variables (包和词法变量)Symbol table 会追踪 package variables 而不会追踪 Lexical">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-01-09T07:29:16.000Z">
+<meta property="article:modified_time" content="2023-01-09T13:00:16.193Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>Mastering-Perl-Notes - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Jie</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/SteinsGate_all.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Mastering-Perl-Notes"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2023-01-09 15:29" pubdate>
+          2023年1月9日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          3.2k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          27 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">Mastering-Perl-Notes</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="第七章-Symbol-Tables-and-Typeglobs"><a href="#第七章-Symbol-Tables-and-Typeglobs" class="headerlink" title="第七章 Symbol Tables and Typeglobs"></a>第七章 Symbol Tables and Typeglobs</h1><p>Symbol tables 组织和存储这 Perl’s package (global) 变量.</p>
+<p>可以用 typeglobs 来影响 symbol tables.</p>
+<h2 id="package-and-Lexical-Variables-包和词法变量"><a href="#package-and-Lexical-Variables-包和词法变量" class="headerlink" title="package and Lexical Variables (包和词法变量)"></a>package and Lexical Variables (包和词法变量)</h2><p>Symbol table 会追踪 package variables 而不会追踪 Lexical variables.</p>
+<p>处理 symbol table 或 typeglobs , 就是处理 package variables. 包变量也是 global variables.</p>
+<p>Perl 处理 double use of package variables 的方式, 可以利用 <code>local</code>. 如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs perl">$n = <span class="hljs-number">10</span>;<br><span class="hljs-keyword">my</span> $square = square( <span class="hljs-number">15</span> );<br><br><span class="hljs-keyword">print</span> <span class="hljs-string">&quot;n is $n, square is $square\n&quot;</span>;<br><br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">square</span> </span>&#123; <span class="hljs-keyword">local</span> $n = <span class="hljs-keyword">shift</span>; $n ** <span class="hljs-number">2</span>; &#125;<br></code></pre></td></tr></table></figure>
+<h2 id="Getting-the-Package-Version"><a href="#Getting-the-Package-Version" class="headerlink" title="Getting the Package Version"></a>Getting the Package Version</h2><p>可随时用 full package name 来访问包变量.k</p>
+<p>如 <code>$main::global</code>.</p>
+<p><code>our</code> 告诉 Perl 在接下来的 scope 中都使用这个包变量.</p>
+<h2 id="The-Symbol-Table-符号表"><a href="#The-Symbol-Table-符号表" class="headerlink" title="The Symbol Table (符号表)"></a>The Symbol Table (符号表)</h2><p>每一个包都有一个 special hash-like data structure 叫做符号表, 其还包括包中的所有的 stashes. stash 即变量表, 一个 stash 就是一个哈希表 (不是传统上的 Perl 哈希, 只是类似), 里面存放包中定义的全部变量. (stash 没有公认的中文翻译)</p>
+<p> 这个 stash 并不是传统上 Perl 的 hash. 其命名为 package name + <code>::</code>, 如 <code>%main::</code>.</p>
+<p>打印一个符号表中的所有内容:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">foreach</span> <span class="hljs-keyword">my</span> $entry ( <span class="hljs-keyword">keys</span> %main:: ) &#123;<br>    <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;$entry\n&quot;</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><code>%main::</code> 符号表还包含了所有其他的符号表.</p>
+<p>也可以对 stash 进行其他哈希操作. 如用 <code>delete</code> 删除表中的元素.</p>
+<h2 id="Typeglob"><a href="#Typeglob" class="headerlink" title="Typeglob"></a>Typeglob</h2><p>总共有七中变量类型:</p>
+<ul>
+<li>SCALAR</li>
+<li>ARRAY</li>
+<li>HASH</li>
+<li>CODE - <code>&amp;foo</code></li>
+<li>IO - 文件和目录句柄</li>
+<li>GLOB - <code>*foo</code></li>
+<li>FORMAT - 格式名</li>
+<li>PACKAGE</li>
+</ul>
+<p>可以像使用哈希一样使用 <code>GLOB</code> 类型, 如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-comment">#! /usr/bin/perl</span><br><span class="hljs-comment"># </span><br><span class="hljs-keyword">use</span> v5.<span class="hljs-number">10</span>;<br><br>$bar = <span class="hljs-string">&#x27;Buster&#x27;</span>;<br>@bar = <span class="hljs-string">qw(Mini Roscoe)</span>;<br><br>$foo = *bar<span class="hljs-string">&#123;SCALAR&#125;</span>; <span class="hljs-comment"># 返回引用</span><br>$baz = *bar<span class="hljs-string">&#123;ARRAY&#125;</span>;<br><span class="hljs-keyword">say</span> <span class="hljs-string">&quot;\$foo is $$foo&quot;</span>;<br><span class="hljs-keyword">say</span> <span class="hljs-string">&quot;\$baz is @$baz&quot;</span>;<br></code></pre></td></tr></table></figure>
+<p>注意返回的是引用. </p>
+<p>即使一个变量从来没使用过, 其 <code>GLOB</code> 返回的始终是一个匿名标量引用:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-comment">#! /usr/bin/perl</span><br><span class="hljs-comment"># </span><br><span class="hljs-keyword">use</span> v5.<span class="hljs-number">10</span>;<br><br>$foo = *bar<span class="hljs-string">&#123;SCALAR&#125;</span>;<br><br><span class="hljs-keyword">say</span> <span class="hljs-string">&#x27;$foo is a reference&#x27;</span> <span class="hljs-keyword">if</span> <span class="hljs-keyword">ref</span> $foo;<br></code></pre></td></tr></table></figure>
+
+<p>stash 只能作为右值使用, 不能作为左值使用, 不然会报错:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl">*bar<span class="hljs-string">&#123;SCALAR&#125;</span> = <span class="hljs-number">5</span>;<br></code></pre></td></tr></table></figure>
+<p>但可以将其作为整体赋值. 如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl">*foo = *bar;<br></code></pre></td></tr></table></figure>
+
+<p><mark>检测一个包变量是否已经在某处被使用的一个方法</mark> :</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-comment">#! /usr/bin/perl</span><br><span class="hljs-comment"># </span><br><span class="hljs-keyword">use</span> v5.<span class="hljs-number">10</span>;<br><br><span class="hljs-keyword">foreach</span> <span class="hljs-keyword">my</span> $entry ( <span class="hljs-keyword">sort</span> <span class="hljs-keyword">keys</span> %main:: ) &#123;<br>    <span class="hljs-keyword">say</span> $entry;<br><br>    <span class="hljs-keyword">say</span> <span class="hljs-string">&quot;\tarray is defined&quot;</span> <span class="hljs-keyword">if</span> *&#123;$entry&#125;<span class="hljs-string">&#123;ARRAY&#125;</span>;<br>    <span class="hljs-keyword">say</span> <span class="hljs-string">&quot;\thash is defined&quot;</span> <span class="hljs-keyword">if</span> *&#123;$entry&#125;<span class="hljs-string">&#123;HASH&#125;</span>;<br>    <span class="hljs-keyword">say</span> <span class="hljs-string">&quot;\tsub is defined&quot;</span> <span class="hljs-keyword">if</span> *&#123;$entry&#125;<span class="hljs-string">&#123;CODE&#125;</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>也就是说 <code>typeglob</code> 类似与哈希, 其中的值为引用.</p>
+<h3 id="别名"><a href="#别名" class="headerlink" title="别名"></a>别名</h3><p>通过将一个 <code>typeglob</code> 赋值给另一个 <code>typeglob</code>, 就可以创建变量的别名.</p>
+<p>单个类型, 就传递单个类型的引用. 如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl">*foo = \$scalar;<br></code></pre></td></tr></table></figure>
+
+<p>看这段代码:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-comment">#! /usr/bin/perl</span><br><span class="hljs-comment"># </span><br><span class="hljs-keyword">use</span> v5.<span class="hljs-number">10</span>;<br><span class="hljs-keyword">use</span> strict;<br><br><span class="hljs-keyword">my</span> $scalar = <span class="hljs-string">&#x27;foo&#x27;</span>;<br><span class="hljs-keyword">my</span> @array  = <span class="hljs-number">1</span> .. <span class="hljs-number">5</span>;<br><br>*foo = \$scalar;<br>*foo = \@array;<br><br>&#123;<br><span class="hljs-keyword">no</span> strict <span class="hljs-string">&#x27;var&#x27;</span>;<br><span class="hljs-keyword">say</span> <span class="hljs-string">&quot;\$foo is $foo&quot;</span>;<br><span class="hljs-keyword">say</span> <span class="hljs-string">&quot;\@foo is @foo&quot;</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这里的 <code>strict</code> 对 <code>*foo</code> 不起作用, 只对 <code>$foo</code> 和 <code>@foo</code> 管用.</p>
+<p><code>Exporter</code> 也是从包中获取的变量然后将变量名赋值给要导入包的 <code>typeglob</code>.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">package</span> Exporter;<br><br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">import</span> </span>&#123;<br>    <span class="hljs-keyword">my</span> $pkg = <span class="hljs-keyword">shift</span>;<br>    <span class="hljs-keyword">my</span> $callpkg = <span class="hljs-keyword">caller</span>($ExporterLevel);<br><br>    <span class="hljs-comment">#...</span><br>    *(<span class="hljs-string">&quot;$callpkg\::$_&quot;</span>) = \&amp;(<span class="hljs-string">&quot;pkg\::$_&quot;</span>) <span class="hljs-keyword">foreach</span> @_;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="旧代码中的文件句柄参数"><a href="#旧代码中的文件句柄参数" class="headerlink" title="旧代码中的文件句柄参数"></a>旧代码中的文件句柄参数</h3><p>在 Perl 5.6 加入对文件句柄的引用之前, 如果需要给一个子程序传递一个文件句柄, 就只能使用 <code>typeglob</code>.</p>
+<p>旧代码如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> CGI;<br><br><span class="hljs-keyword">open</span> FH, $cgi_data_file<br>    <span class="hljs-keyword">or</span> <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;Could not open $cgi_data_file: $!&quot;</span>;<br><br>    CGI-&gt;new( *FH ); <span class="hljs-comment"># 不能 new( FH ), 需要 typeglob</span><br></code></pre></td></tr></table></figure>
+
+<p>新代码如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> CGI;<br><br><span class="hljs-keyword">open</span> <span class="hljs-keyword">my</span> $fh, <span class="hljs-string">&#x27;&lt;&#x27;</span>, $cgi_data_file<br>    <span class="hljs-keyword">or</span> <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;Could not open $cgi_data_file: $!&quot;</span>;<br>    CGI-&gt;new($fh);<br></code></pre></td></tr></table></figure>
+
+<h3 id="给匿名子程序命名"><a href="#给匿名子程序命名" class="headerlink" title="给匿名子程序命名"></a>给匿名子程序命名</h3><p>使用 <code>typeglob</code> 赋值, 可以给匿名子程序赋予一个名字. 这样就可以使用一个已命名的子程序, 而不必使用解引用来得到子程序.</p>
+<p>如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl">*func = <span class="hljs-function"><span class="hljs-keyword">sub</span> </span>&#123; ... &#125;;<br></code></pre></td></tr></table></figure>
+<p>使用则可以如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl">&amp;func;<br></code></pre></td></tr></table></figure>
+
+<p>因为只是对引用赋值, 它影响的只是 <code>typeglob</code> 中的子程序部分.</p>
+<h3 id="简单的方法"><a href="#简单的方法" class="headerlink" title="简单的方法"></a>简单的方法</h3><p>使用 <code>Package::Stash</code> 模块, 可以简化对 <code>typeglob</code> 和 stash 的操作.</p>
+<p>要修改一个 stash, 只需要创建一个对象, 提供供该 stash 使用的命名空间 (不加冒号), 如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> Package::Stash;<br><br><span class="hljs-keyword">my</span> $foo_stash = Package::Stash-&gt;new( <span class="hljs-string">&#x27;Animals&#x27;</span> );<br></code></pre></td></tr></table></figure>
+<p>添加一个变量:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl">$foo_stash-&gt;add_symbol( <span class="hljs-string">&#x27;$camel&#x27;</span> );<br><span class="hljs-comment"># 并赋值</span><br>$foo_stash-&gt;add_symbol( <span class="hljs-string">&#x27;$camel&#x27;</span>, <span class="hljs-string">&#x27;Amelia&#x27;</span> );<br></code></pre></td></tr></table></figure>
+
+<p>显示某个特定 stash 中的所有名称:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-comment">#! /usr/bin/perl</span><br><span class="hljs-comment"># </span><br><span class="hljs-keyword">use</span> Package::Stash;<br><br><span class="hljs-keyword">my</span> $main_stash = Package::Stash-&gt;new( <span class="hljs-string">&#x27;main&#x27;</span> )-&gt;get_all_symbols;<br><br><span class="hljs-keyword">foreach</span> <span class="hljs-keyword">my</span> $key ( <span class="hljs-keyword">keys</span> %$main_stash ) &#123;<br>    <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;$key\n&quot;</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+
+
+
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Perl/" class="category-chain-item">Perl</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Mastering-Perl-Notes</div>
+      <div>http://example.com/2023/01/09/Mastering-Perl-Notes/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>John Doe</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2023年1月9日</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>许可协议</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2023/01/09/%E4%BB%80%E4%B9%88%E6%98%AF-polipo/" title="什么是-polipo">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">什么是-polipo</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2023/01/08/Effective-Perl-Notes/" title="Effective-Perl-Notes">
+                        <span class="hidden-mobile">Effective-Perl-Notes</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zKurisu/comments-utterances');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Jie</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Orkarin</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.1/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
