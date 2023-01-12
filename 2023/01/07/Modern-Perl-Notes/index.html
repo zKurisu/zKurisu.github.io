@@ -24,7 +24,7 @@
 <meta property="og:description" content="运行 Modern Perl用于测试的模块 Test::More. 管理 Perl 版本用 App::perlbrew. Perl 5 和 Perl 6若要学习 Perl 6, 可浏览 http:&#x2F;&#x2F;perl6.org, 试用 Rakudo ( http:&#x2F;&#x2F;www.rakudo.org ), 以及 Using Perl 6 一书. Perl 哲学Perldocperldoc perlfaq 会显">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-01-07T14:27:11.000Z">
-<meta property="article:modified_time" content="2023-01-12T03:30:11.310Z">
+<meta property="article:modified_time" content="2023-01-12T15:07:53.804Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          10k 字
+          14k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          87 分钟
+          115 分钟
         
       </span>
     
@@ -575,7 +575,67 @@
 <li><code>StrangeMonkey::Test</code> 包含为项目编写的顶层测试代码;</li>
 </ul>
 <h2 id="引用"><a href="#引用" class="headerlink" title="引用"></a>引用</h2><p>Perl 5 提供了一种机制, 通过它你可以简介使用某值而不必为此创建一份拷贝.</p>
+<p>引用是 Perl 5 中的一等共民, 是一种 <mark>内置的标量数据类型</mark> , 它不是字符串, 不是数组, 也不是哈希. 它就是一个引用其他第一等数据类型的标量.</p>
+<h3 id="标量引用"><a href="#标量引用" class="headerlink" title="标量引用"></a>标量引用</h3><p>解引用需要在解开每一重引用时加上额外的印记.</p>
+<p>复杂的引用需要加上一对大括号以消除表达式断句上的歧义:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">reverse_in_place</span> </span>&#123;<br>    <span class="hljs-keyword">my</span> $name_ref = <span class="hljs-keyword">shift</span>;<br>    $&#123; $name_ref &#125; = <span class="hljs-keyword">reverse</span> $&#123; $name_ref &#125;;<br>&#125;<br></code></pre></td></tr></table></figure>
 
+<p>Perl 不提供内存位置的原生访问.</p>
+<p>这些地址仅在大致上唯一, 因为在垃圾回收器回收某未引用的引用后, Perl 可能重用此存储位置.</p>
+<h3 id="数组引用"><a href="#数组引用" class="headerlink" title="数组引用"></a>数组引用</h3><p>如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> @cards      = <span class="hljs-string">qw( K Q J 10 9 8 7 6 5 4 3 2 A )</span>;<br><span class="hljs-keyword">my</span> $cards_ref  = \@cards;<br><br><span class="hljs-keyword">my</span> $card_count = @$cards_ref;<br><span class="hljs-keyword">my</span> @card_copy  = @$cards_ref<br></code></pre></td></tr></table></figure>
+
+<p>数组分片:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> @high_card = @&#123; $cards_ref &#125;[<span class="hljs-number">1</span> .. <span class="hljs-number">2</span>, -<span class="hljs-number">1</span>];<br></code></pre></td></tr></table></figure>
+<h3 id="函数引用"><a href="#函数引用" class="headerlink" title="函数引用"></a>函数引用</h3><p>如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">bake_cake</span> </span>&#123; <span class="hljs-keyword">say</span> <span class="hljs-string">&#x27;Baking a wonderful cake!&#x27;</span> &#125;;<br><span class="hljs-keyword">my</span> $cake_ref = \&amp;bake_cake;<br><br>$cake_ref-&gt;();<br></code></pre></td></tr></table></figure>
+<p>注意这里需要用<mark>解引用箭头</mark>调用引用指向的函数. (还有用 <code>&amp;</code> 的写法)</p>
+<p>创建匿名函数, 这里使用 <code>sub</code> 关键字不用函数名称也可以使得函数正常编译, 但是它不会被安装到当前的名称空间中, 访问此函数的唯一方法就是通过引用.</p>
+<h3 id="文件句柄引用"><a href="#文件句柄引用" class="headerlink" title="文件句柄引用"></a>文件句柄引用</h3><p>当使用 <code>open</code> (<code>opendir</code>) 词法文件句柄形式, 其实就在处理文件句柄引用, 对此文件句柄进行字符串化可以得到类似 <code>GLOB(0x8bda880)</code> 形式的东西.</p>
+<p>内部机制上, 这些文件句柄都是 <code>IO::Handle</code> 类的对象, 当你加载这个模块, 可以调用文件句柄上的方法:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> IO::Handle;<br><span class="hljs-keyword">use</span> autodie;<br><br><span class="hljs-keyword">open</span> <span class="hljs-keyword">my</span> $out_fh, <span class="hljs-string">&#x27;&gt;&#x27;</span>, <span class="hljs-string">&#x27;output_file.txt&#x27;</span>;<br>$out_fh-&gt;<span class="hljs-keyword">say</span>( <span class="hljs-string">&#x27;Have some text!&#x27;</span> );<br></code></pre></td></tr></table></figure>
+
+<p>老旧的代码用型团 (typeglob) 来获取文件句柄的引用:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $fh = <span class="hljs-keyword">do</span> &#123;<br>    <span class="hljs-keyword">local</span> *FH;<br>    <span class="hljs-keyword">open</span> FH, <span class="hljs-string">&quot;&gt; $file&quot;</span> <span class="hljs-keyword">or</span> <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;Can&#x27;t write to &#x27;$file&#x27;: $!\n&quot;</span>;<br>    \*FH;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="引用计数"><a href="#引用计数" class="headerlink" title="引用计数"></a>引用计数</h3><p>Perl 5 使用一种名为 <mark>引用计数</mark> 的内存管理技术。程序中的每一个值都有附加的计数器。 每次被其他东西引用时,Perl 增加计数器的值,无论隐式还是显式。每次引用消失后,Perl 将减少计数器的值。当计数器减至零,Perl 就可以安全地回收这个值。</p>
+<p>对 <code>$fh</code> 的回收隐式地调用了该文件句柄上的 <code>close()</code> 方法, 使得文件最终被关闭.</p>
+<h3 id="引用和函数"><a href="#引用和函数" class="headerlink" title="引用和函数"></a>引用和函数</h3><p>如果需要对引用的内容做出破坏性改动, 请将其所含的值复制到一个新的变量中:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> @new_array = @&#123; $array_ref &#125;;<br><span class="hljs-keyword">my</span> %new_hash  = %&#123; $hash_ref &#125;;<br></code></pre></td></tr></table></figure>
+
+<p>如果引用更加复杂, 考虑 <code>Storable</code> 模块和其 <code>dclose</code> (deep cloning) 函数.</p>
+<h2 id="嵌套数据结构"><a href="#嵌套数据结构" class="headerlink" title="嵌套数据结构"></a>嵌套数据结构</h2><p>Perl 中的嵌套数据结构, 例如数组的数组, 哈希的哈希, 是通过引用机制来实现的.</p>
+<p>如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> @famous_triplets = (<br>    [<span class="hljs-string">qw( eenie miney moe)</span>],<br>    [<span class="hljs-string">qw( huey dewey louie)</span>],<br>    [<span class="hljs-string">qw( duck duck goose)</span>],<br>)<br><br><span class="hljs-keyword">my</span> %meals = (<br>    <span class="hljs-string">breakfast =&gt;</span> &#123; <span class="hljs-string">entree =&gt;</span> <span class="hljs-string">&#x27;eggs&#x27;</span>,   <span class="hljs-string">side =&gt;</span> <span class="hljs-string">&#x27;hash browns&#x27;</span> &#125;,<br>    <span class="hljs-string">lunch     =&gt;</span> &#123; <span class="hljs-string">entree =&gt;</span> <span class="hljs-string">&#x27;panini&#x27;</span>, <span class="hljs-string">side =&gt;</span> <span class="hljs-string">&#x27;apple&#x27;</span> &#125;,<br>    <span class="hljs-string">breakfast =&gt;</span> &#123; <span class="hljs-string">entree =&gt;</span> <span class="hljs-string">&#x27;steak&#x27;</span>,  <span class="hljs-string">side =&gt;</span> <span class="hljs-string">&#x27;avocado salad&#x27;</span> &#125;,<br>)<br></code></pre></td></tr></table></figure>
+
+<p>解引用之前的变量值为引用:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $last_nephew = $famous_triplets[<span class="hljs-number">1</span>]-&gt;[<span class="hljs-number">2</span>];<br><span class="hljs-keyword">my</span> $breaky_side = $meals<span class="hljs-string">&#123;breakfast&#125;</span>-&gt;&#123;side&#125;;<br></code></pre></td></tr></table></figure>
+<p>因为嵌套一个数据结构的唯一方法就是通过引用, 因此这里的箭头是多余的, 如下的代码和前面等价:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $last_nephew = $famous_triplets[<span class="hljs-number">1</span>][<span class="hljs-number">2</span>];<br><span class="hljs-keyword">my</span> $breaky_side = $meals<span class="hljs-string">&#123;breakfast&#125;</span><span class="hljs-string">&#123;side&#125;</span>;<br></code></pre></td></tr></table></figure>
+
+<p>调用存放于<mark>嵌套数据结构内的函数引用</mark>时, 使用箭头调用语法是最清晰的, 除此之外可以避开箭头的使用.</p>
+<p>有时, 使用临时变量会更清晰:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $breakfast_ref   = $meals<span class="hljs-string">&#123;breakfast&#125;</span>;<br><span class="hljs-keyword">my</span> ($entree, $side) = @$breakfast_ref&#123;<span class="hljs-string">qw( entree side )</span>&#125;;<br></code></pre></td></tr></table></figure>
+<h3 id="自生"><a href="#自生" class="headerlink" title="自生"></a>自生</h3><p>当你试图编写一个嵌套数据结构组件时, 如果不存在, Perl 会创建通向这部分数据结构的路径:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> @aoaoaoa;<br>$aoaoaoa[<span class="hljs-number">0</span>][<span class="hljs-number">0</span>][<span class="hljs-number">0</span>][<span class="hljs-number">0</span>] = <span class="hljs-string">&#x27;nested deeply&#x27;</span>;<br></code></pre></td></tr></table></figure>
+<p>这个行为称为 <mark>自生</mark> . 好处是减少嵌套数据结构的初始化代码.</p>
+<p>CPAN 上的 <code>autovivification</code> 编译指令, 让你可以在词法作用域内对某特定类型操作禁用自生行为.</p>
+<h3 id="调试嵌套数据结构"><a href="#调试嵌套数据结构" class="headerlink" title="调试嵌套数据结构"></a>调试嵌套数据结构</h3><p>核心模块 <code>Data::Dumper</code> 可以将任意复杂的数据结构的值字符串化为 Perl 5 代码:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> Data::Dumper;<br><br><span class="hljs-keyword">print</span> Dumper( $my_complex_structure );<br></code></pre></td></tr></table></figure>
+
+<p>一些开发人员更愿意使用 <code>YAML::XS</code> 和 <code>JSON</code> 来调试程序.</p>
+<h3 id="循环引用"><a href="#循环引用" class="headerlink" title="循环引用"></a>循环引用</h3><p>两个互指的引用最终形成了一循环引用, Perl 无法自行销毁它.</p>
+<p>需要手动打断引用计数, 或者利用一个名为 <mark>弱引用</mark> 的特性. 弱引用是一个不增加被引用者引用计数的引用, 其可通过 <code>Scalar::Util</code> 来使用, 导出 <code>weaken()</code> 函数并对某引用使用它可以防止引用计数的增加:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> Scalar::Util <span class="hljs-string">&#x27;weaken&#x27;</span>;<br><span class="hljs-keyword">my</span> $alice = &#123; <span class="hljs-string">mother =&gt;</span> <span class="hljs-string">&#x27;&#x27;</span>, <span class="hljs-string">father =&gt;</span> <span class="hljs-string">&#x27;&#x27;</span>, <span class="hljs-string">children =&gt;</span> [] &#125;;<br><span class="hljs-keyword">my</span> $robert = &#123; <span class="hljs-string">mother =&gt;</span> <span class="hljs-string">&#x27;&#x27;</span>, <span class="hljs-string">father =&gt;</span> <span class="hljs-string">&#x27;&#x27;</span>, <span class="hljs-string">children =&gt;</span> [] &#125;;<br><span class="hljs-keyword">my</span> $cianne = &#123; <span class="hljs-string">mother =&gt;</span> $alice, <span class="hljs-string">father =&gt;</span> $robert, <span class="hljs-string">children =&gt;</span> [] &#125;;<br><br><span class="hljs-keyword">push</span> @&#123; $alice-&gt;&#123;children&#125; &#125;, $cianne;<br><span class="hljs-keyword">push</span> @&#123; $robert-&gt;&#123;children&#125; &#125;, $cianne;<br><br>weaken( $cianne-&gt;&#123;mother&#125; );<br>weaken( $cianne-&gt;&#123;father&#125; );<br></code></pre></td></tr></table></figure>
+
+<h1 id="操作符"><a href="#操作符" class="headerlink" title="操作符"></a>操作符</h1><h2 id="操作符特征"><a href="#操作符特征" class="headerlink" title="操作符特征"></a>操作符特征</h2><p><code>perldoc perlop</code> 和 <code>perldoc perlsyn</code> 提供了大量有关 Perl 操作符行为的信息.</p>
+<p>每一个操作符持有若干构成其行为的重要特征:</p>
+<ul>
+<li>操作数的个数</li>
+<li>和其他操作符的关系</li>
+<li>可能的用法</li>
+</ul>
+<h2 id="优先级"><a href="#优先级" class="headerlink" title="优先级"></a>优先级</h2>
                 
               </div>
             
