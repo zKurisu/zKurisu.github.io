@@ -24,7 +24,7 @@
 <meta property="og:description" content="运行 Modern Perl用于测试的模块 Test::More. 管理 Perl 版本用 App::perlbrew. Perl 5 和 Perl 6若要学习 Perl 6, 可浏览 http:&#x2F;&#x2F;perl6.org, 试用 Rakudo ( http:&#x2F;&#x2F;www.rakudo.org ), 以及 Using Perl 6 一书. Perl 哲学Perldocperldoc perlfaq 会显">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-01-07T14:27:11.000Z">
-<meta property="article:modified_time" content="2023-01-12T15:07:53.804Z">
+<meta property="article:modified_time" content="2023-01-14T08:46:36.515Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          14k 字
+          18k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          115 分钟
+          147 分钟
         
       </span>
     
@@ -589,7 +589,7 @@
 <figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> @high_card = @&#123; $cards_ref &#125;[<span class="hljs-number">1</span> .. <span class="hljs-number">2</span>, -<span class="hljs-number">1</span>];<br></code></pre></td></tr></table></figure>
 <h3 id="函数引用"><a href="#函数引用" class="headerlink" title="函数引用"></a>函数引用</h3><p>如:</p>
 <figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">bake_cake</span> </span>&#123; <span class="hljs-keyword">say</span> <span class="hljs-string">&#x27;Baking a wonderful cake!&#x27;</span> &#125;;<br><span class="hljs-keyword">my</span> $cake_ref = \&amp;bake_cake;<br><br>$cake_ref-&gt;();<br></code></pre></td></tr></table></figure>
-<p>注意这里需要用<mark>解引用箭头</mark>调用引用指向的函数. (还有用 <code>&amp;</code> 的写法)</p>
+<p>注意这里需要用<mark>解引用箭头</mark>调用引用指向的函数.k</p>
 <p>创建匿名函数, 这里使用 <code>sub</code> 关键字不用函数名称也可以使得函数正常编译, 但是它不会被安装到当前的名称空间中, 访问此函数的唯一方法就是通过引用.</p>
 <h3 id="文件句柄引用"><a href="#文件句柄引用" class="headerlink" title="文件句柄引用"></a>文件句柄引用</h3><p>当使用 <code>open</code> (<code>opendir</code>) 词法文件句柄形式, 其实就在处理文件句柄引用, 对此文件句柄进行字符串化可以得到类似 <code>GLOB(0x8bda880)</code> 形式的东西.</p>
 <p>内部机制上, 这些文件句柄都是 <code>IO::Handle</code> 类的对象, 当你加载这个模块, 可以调用文件句柄上的方法:</p>
@@ -635,7 +635,129 @@
 <li>和其他操作符的关系</li>
 <li>可能的用法</li>
 </ul>
-<h2 id="优先级"><a href="#优先级" class="headerlink" title="优先级"></a>优先级</h2>
+<h3 id="优先级"><a href="#优先级" class="headerlink" title="优先级"></a>优先级</h3><p>可以用括号将子表达式分组使某操作符在其他操作符之前求值.</p>
+<p><code>perldoc perlop</code> 包含了一张优先级表.</p>
+<h3 id="结合性"><a href="#结合性" class="headerlink" title="结合性"></a>结合性</h3><p>某操作符的结合性决定了它是从左往右求值还是从右往左.</p>
+<p>核心模块 <code>B::Deparse</code> 可以重写代码片段并如实展示 Perl 究竟是如何处理操作符优先级和结合性的. 在某代码段上运行 <code>perl -MO=Deparse,-p</code> (<code>-p</code> 标志添加额外的分组括号使得求值顺序更为明显)</p>
+<h3 id="参数数量"><a href="#参数数量" class="headerlink" title="参数数量"></a>参数数量</h3><p>操作符的参数数量就是该操作符所作用的操作数的个数.</p>
+<h3 id="词缀性"><a href="#词缀性" class="headerlink" title="词缀性"></a>词缀性</h3><p>操作符的词缀性就是它相对其操作数的位置:</p>
+<ul>
+<li>中缀操作符, 出现在操作数之间, 如 <code>$length * $width</code></li>
+<li>前缀操作符, 出现在其操作数之前. 如 <code>-$x</code></li>
+<li>后缀操作符, 出现在其操作数之后. 如 <code>$z++</code></li>
+<li>环缀操作符, 包围其操作数, 如 <code>&#123; ... &#125;</code></li>
+<li>后环缀操作符, 接载某些操作数之后并围绕其他部分, 如 <code>$hash&#123; ... &#125;</code></li>
+</ul>
+<h2 id="操作符类型"><a href="#操作符类型" class="headerlink" title="操作符类型"></a>操作符类型</h2><h3 id="数值操作符"><a href="#数值操作符" class="headerlink" title="数值操作符"></a>数值操作符</h3><p>数值操作符对其操作数强制数值上下文.</p>
+<ul>
+<li><code>+</code></li>
+<li><code>-</code></li>
+<li><code>*</code></li>
+<li><code>/</code></li>
+<li><code>**</code></li>
+<li><code>%</code></li>
+<li><code>+=</code>, <code>-=</code>, <code>*=</code>, <code>/=</code>, <code>**=</code>, <code>%=</code> </li>
+<li><code>--</code></li>
+</ul>
+<p>自增操作符 <code>++</code>, 有特殊的字符串行为.</p>
+<p>若干比较操作符:<br><code>==</code>, <code>!=</code>, <code>&gt;</code>, <code>&lt;</code>, <code>&gt;=</code>, <code>&lt;=</code>, <code>&lt;=&gt;</code>, </p>
+<h3 id="字符串操作符"><a href="#字符串操作符" class="headerlink" title="字符串操作符"></a>字符串操作符</h3><p>字符串操作符对其操作数强制字符串上下文.</p>
+<ul>
+<li><code>=~</code></li>
+<li><code>!~</code></li>
+<li><code>.</code></li>
+</ul>
+<p>若干比较操作符:<br><code>eq</code>, <code>ne</code>, <code>gt</code>, <code>lt</code>, <code>ge</code>, <code>le</code>, <code>cmp</code>, </p>
+<h3 id="逻辑操作符"><a href="#逻辑操作符" class="headerlink" title="逻辑操作符"></a>逻辑操作符</h3><p>逻辑操作符在布尔上下文中处理操作数.</p>
+<ul>
+<li><code>&amp;&amp;</code> 和 <code>and</code></li>
+<li><code>||</code> 和 <code>or</code></li>
+</ul>
+<p>都为 <mark>短路测试</mark> </p>
+<p><mark>已定义-或</mark> 操作符, <code>//</code>, 测试其操作符的定义性, 在设置默认值时有用.</p>
+<p><code>!</code> 和 <code>not</code> 返回其操作数的逻辑反值. <code>not</code> 的优先级比 <code>!</code> 低.</p>
+<p><code>?:</code>, <code>xor</code>.</p>
+<h3 id="按位操作符"><a href="#按位操作符" class="headerlink" title="按位操作符"></a>按位操作符</h3><ul>
+<li><code>&lt;&lt;</code></li>
+<li><code>&gt;&gt;</code></li>
+<li><code>&amp;</code></li>
+<li><code>|</code></li>
+<li><code>^</code></li>
+<li><code>&amp;=</code>, <code>|=</code>, <code>^=</code>, <code>&lt;&lt;=</code>, <code>&gt;&gt;=</code></li>
+</ul>
+<h3 id="特殊操作符"><a href="#特殊操作符" class="headerlink" title="特殊操作符"></a>特殊操作符</h3><p>自增操作符:</p>
+<ul>
+<li>在数值上下文中使用则增加数值部分</li>
+<li>如果这个变量明显地是一个字符串, 则此字符串将会 <code>带进位</code> 地自增, 如 <code>zz</code> 增为 <code>aaa</code></li>
+</ul>
+<p>重复操作符 <code>x</code>.</p>
+<p>范围操作符 <code>..</code></p>
+<p>逗号操作符 <code>,</code></p>
+<p>胖逗号操作符 <code>=&gt;</code></p>
+<h1 id="函数"><a href="#函数" class="headerlink" title="函数"></a>函数</h1><h2 id="别名"><a href="#别名" class="headerlink" title="别名"></a>别名</h2><p>一个 <code>@_</code> 的有用特性, 其包含了传入参数的别名, 如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">Test</span> </span>&#123;<br>    $_[<span class="hljs-number">0</span>] = <span class="hljs-string">&#x27;The value is changed..&#x27;</span>;<br>&#125;<br><br><span class="hljs-keyword">my</span> $test = <span class="hljs-string">&#x27;haha&#x27;</span>;<br>Test($test);<br><br><span class="hljs-keyword">say</span> $test;<br></code></pre></td></tr></table></figure>
+<p>这里 <code>$_[0]</code> 成了 <code>$test</code> 的别名.</p>
+<h2 id="名称空间"><a href="#名称空间" class="headerlink" title="名称空间"></a>名称空间</h2><p>每一个函数存在于某名称空间中, 位于未声明名称空间中的函数, 即没有在一条明确的 <code>package ...</code> 语句之后声明的函数, 存在于 <code>main</code> 名称空间. 可以在声明时为函数指定当前之外的名称空间:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">Extension</span>::<span class="hljs-title">Math</span>::<span class="hljs-title">add</span> </span>&#123;<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>如果向替换一个已经存在的函数, 可以通过 <code>no warnings &#39;redefine&#39;</code> 来禁用这类警告.</p>
+<h3 id="导入"><a href="#导入" class="headerlink" title="导入"></a>导入</h3><p>当使用 <code>use</code> 关键字加载模块时, Perl 自动调用所提供模块的 <code>import()</code> 方法 (可自己定义), 以使部分或全部经过定义的符号在调用者的名称空间中可用.</p>
+<p>所有 <code>use</code> 语句内模块名后的参数会传递给模块的 <code>import()</code> 方法:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> strict <span class="hljs-string">&#x27;refs&#x27;</span>;<br></code></pre></td></tr></table></figure>
+<p>加载 <code>strict.pm</code> 模块, 调用 <code>strict-&gt;import( &#39;refs&#39; )</code>.</p>
+<p>也等价于:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs perl">BEGIN<br>&#123;<br>    <span class="hljs-keyword">require</span> strict;<br>    strict-&gt;import( <span class="hljs-string">&#x27;refs&#x27;</span> );<br>    strict-&gt;import( <span class="hljs-string">qw( subs vars )</span> );<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>也可以看出, <code>require</code> 只是加载模块, 不导入任何名称.</p>
+<h2 id="报告错误"><a href="#报告错误" class="headerlink" title="报告错误"></a>报告错误</h2><p>在函数之内, 可以通过 <code>caller</code> 操作符得到有关本次调用的上下文信息, 如果不加参数, 其返回三个元素的列表, 包括:</p>
+<ul>
+<li>调用包的名称</li>
+<li>本次调用的文件名</li>
+<li>调用发生的包内行号</li>
+</ul>
+<p>如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">package</span> main;<br><br>main();<br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">main</span> </span>&#123;<br>    show_call_information();<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">show_call_information</span></span><br><span class="hljs-function"></span>&#123;<br>    <span class="hljs-keyword">my</span> ($package, $file, $line) = <span class="hljs-keyword">caller</span>();<br>    <span class="hljs-keyword">say</span> <span class="hljs-string">&quot;Called from $package in $file at $line&quot;</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>可以向 <code>caller()</code> 传递单个可选的整数参数, 这样, Perl 将按给出的层数回查调用者的调用者的调用者, 并提供该次调用的相关信息. 如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">show_call_information</span></span><br><span class="hljs-function"></span>&#123;<br>    <span class="hljs-keyword">my</span> ($package, $file, $line, $func) = <span class="hljs-keyword">caller</span>(<span class="hljs-number">0</span>);<br>    <span class="hljs-keyword">say</span> <span class="hljs-string">&quot;Called $func from $package in $file at $line&quot;</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="验证参数"><a href="#验证参数" class="headerlink" title="验证参数"></a>验证参数</h2><p>可以通过在标量上下文中对 <code>@_</code> 求值来检查传递给函数的参数个数是否正确:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">add_numbers</span> </span>&#123;<br>    croak <span class="hljs-string">&quot;Expected two numbers, but received: &quot;</span> . @_<br>        <span class="hljs-keyword">unless</span> @_ == <span class="hljs-number">2</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="高级函数"><a href="#高级函数" class="headerlink" title="高级函数"></a>高级函数</h2><h3 id="上下文认知"><a href="#上下文认知" class="headerlink" title="上下文认知"></a>上下文认知</h3><p>Perl 5 内置函数了解你是在空, 标量, 还是列表上下文中调用他们.</p>
+<p><code>wantarray</code> 关键字:</p>
+<ul>
+<li>返回 <code>undef</code> 表示空上下文</li>
+<li>返回假值表示标量上下文</li>
+<li>返回真值表明列表上下文</li>
+</ul>
+<p>如</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">context_sensitive</span> </span>&#123;<br>    <span class="hljs-keyword">my</span> $context = <span class="hljs-keyword">wantarray</span>();<br>    <span class="hljs-keyword">return</span> <span class="hljs-string">qw( Called in list context )</span>  <span class="hljs-keyword">if</span>             $context;<br>    <span class="hljs-keyword">say</span>       <span class="hljs-string">&#x27;Called in void context&#x27;</span>   <span class="hljs-keyword">unless</span> <span class="hljs-keyword">defined</span> $context;<br>    <span class="hljs-keyword">return</span>    <span class="hljs-string">&#x27;Called in scalar context&#x27;</span> <span class="hljs-keyword">unless</span>         $context;<br>&#125;    <br><br>context_sensitive();<br><span class="hljs-keyword">say</span> <span class="hljs-keyword">my</span> $scalar = context_sensitive();<br><span class="hljs-keyword">say</span> context_sensitive();<br></code></pre></td></tr></table></figure>
+
+<h3 id="递归"><a href="#递归" class="headerlink" title="递归"></a>递归</h3><p>在 Perl 中每一次函数调用都创建一个新的 <mark>调用帧</mark> . 这是一种代表调用本身的内部数据结构: 传入参数, 返回点, 步入此调用点前的所有程序控制流程.</p>
+<p>注意先给出结束递归的条件.</p>
+<h3 id="词法相关"><a href="#词法相关" class="headerlink" title="词法相关"></a>词法相关</h3><p>每一次对函数的新调用会创建自生词法作用域的实例.</p>
+<h3 id="尾部调用"><a href="#尾部调用" class="headerlink" title="尾部调用"></a>尾部调用</h3><p>递归的一个缺点就是必须将返回条件编写正确.</p>
+<p>Perl 检测到失控的递归时, 提供的警告为 <code>Deep recursion on subroutine</code>. 限制是 100 次递归调用, 可以通过递归调用作用域内通过 <code>no warning &#39;recursion&#39;</code> 来禁用这一警告.</p>
+<p><mark>尾部调用</mark> 就是调用一个函数然后直接返回这个函数的结果.</p>
+<p><mark>尾部调用消除</mark> 的特性可以解决高度递归代码创建新调用帧和存储词法变量值造成的内存使用过高问题. (因为直接返回函数的结果)</p>
+<p>可使用 <code>Sub::Call::Tail</code> 模块用 <code>tail</code> 代替 <code>return</code>.</p>
+<h2 id="缺陷和设计失误"><a href="#缺陷和设计失误" class="headerlink" title="缺陷和设计失误"></a>缺陷和设计失误</h2><p>Perl 5 仍支持旧式函数调用, 前期版本的 Perl 要求用前置的 <code>&amp;</code> 字符调用函数, Perl 1 要求使用 <code>do</code> 关键字.</p>
+<p>前置 <code>&amp;</code> 形式在你不明确地传递参数时, 会隐式地将 <code>@_</code> 的内容不加修改地传给函数. (这里不能加括号, 不然不会传递, 加了括号貌似就是传递空参数)</p>
+<h2 id="作用域"><a href="#作用域" class="headerlink" title="作用域"></a>作用域</h2><p>在 Perl 中, 任何有名字的事物都有作用域.</p>
+<h3 id="词法作用域"><a href="#词法作用域" class="headerlink" title="词法作用域"></a>词法作用域</h3><p>Perl 编译器在编译期解决此类作用域.</p>
+<p>要 <mark>创建一个新的词法作用域</mark> 可以编写一个由大括号分隔的代码块. (这个代码块可以是一个裸块, 或循环结构主体中的块, 一个 eval 块或是其他没有用引号引起的块)</p>
+<p>词法作用域 <mark>管理由 <code>my</code> 声明的变量的可见性</mark> , 这些变量被称作词法变量.</p>
+<h3 id="动态作用域"><a href="#动态作用域" class="headerlink" title="动态作用域"></a>动态作用域</h3><p>动态作用域在可见性规则上类似于词法作用域, 和在编译器确定作用域相反, 确定作用域的过程沿着调用上下文发生.</p>
+<p><mark>词法变量</mark>被存放在附着于作用域的 <mark>词法板</mark> 中, 每次进入到词法作用域中都需要 Perl 来创建一个包含变量值的新的专属词法板.</p>
+<p><mark>包变量</mark> 的存储机制称为符号表. 每个包都有一个单独的符号表, 并且每个包变量在其中占有一个条目. <code>local</code> 只能局部化全局和包变量而非词法变量.</p>
+<p>用 <code>local</code> 局部化若干神奇变量的做法很常见.</p>
+<h3 id="“State”-作用域"><a href="#“State”-作用域" class="headerlink" title="“State” 作用域"></a>“State” 作用域</h3><p><code>state</code> 关键字, 声明一个词法变量, 但是该变量只初始化一次, 随后一直保持.</p>
+<h2 id="匿名函数"><a href="#匿名函数" class="headerlink" title="匿名函数"></a>匿名函数</h2><p>匿名函数没有 Perl 可以识别的名称.</p>
+<p>CPAN 模块 <code>Sub::Identify</code> 提供了一系列有用的函数来对<mark>传入函数引用</mark>的名称进行检查. 如 <code>sub_name()</code>:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> Sub::Identify <span class="hljs-string">&#x27;sub_name&#x27;</span>;<br><br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">main</span> </span>&#123;<br>    <span class="hljs-keyword">say</span> sub_name( \&amp;main );<br>    <span class="hljs-keyword">say</span> sub_name( <span class="hljs-function"><span class="hljs-keyword">sub</span> </span>&#123;&#125; );<br>&#125;<br><br>main();<br></code></pre></td></tr></table></figure>
+
+<p>CPAN 模块 <code>Sub::Name</code> 的 <code>subname()</code> 函数允许将名称附加在匿名函数上:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> Sub::Name;<br><span class="hljs-keyword">use</span> Sub::Identify <span class="hljs-string">&#x27;sub_name&#x27;</span>;<br><br><span class="hljs-keyword">my</span> $anon = <span class="hljs-function"><span class="hljs-keyword">sub</span> </span>&#123;&#125;;<br><span class="hljs-keyword">say</span> sub_name( $anon );<br><br><span class="hljs-keyword">my</span> $named = subname( <span class="hljs-string">&#x27;pseudo-anonymous&#x27;</span>, $anon );<br><span class="hljs-keyword">say</span> sub_name( $named );<br><span class="hljs-keyword">say</span> sub_name( $anon );<br><br><span class="hljs-keyword">say</span> sub_name( <span class="hljs-function"><span class="hljs-keyword">sub</span> </span>&#123;&#125; );<br></code></pre></td></tr></table></figure>
+<h3 id="隐式匿名函数"><a href="#隐式匿名函数" class="headerlink" title="隐式匿名函数"></a>隐式匿名函数</h3>
                 
               </div>
             
