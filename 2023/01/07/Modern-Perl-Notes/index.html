@@ -24,7 +24,7 @@
 <meta property="og:description" content="运行 Modern Perl用于测试的模块 Test::More. 管理 Perl 版本用 App::perlbrew. Perl 5 和 Perl 6若要学习 Perl 6, 可浏览 http:&#x2F;&#x2F;perl6.org, 试用 Rakudo ( http:&#x2F;&#x2F;www.rakudo.org ), 以及 Using Perl 6 一书. Perl 哲学Perldocperldoc perlfaq 会显">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-01-07T14:27:11.000Z">
-<meta property="article:modified_time" content="2023-01-15T00:54:05.161Z">
+<meta property="article:modified_time" content="2023-01-15T14:38:12.389Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          19k 字
+          21k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          157 分钟
+          172 分钟
         
       </span>
     
@@ -792,7 +792,69 @@
 
 <p><code>Test::More</code> 的 <code>like()</code> 函数和 <code>is()</code> 类似, 只是第二个参数是 <code>qr//</code> 产生的正则表达式对象:</p>
 <figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl">like($name, <span class="hljs-regexp">qr/$hat$filed/</span>, <span class="hljs-string">&#x27;Found a hat in a field&#x27;</span>);<br></code></pre></td></tr></table></figure>
-<h2 id="量词"><a href="#量词" class="headerlink" title="量词"></a>量词</h2>
+<h2 id="量词"><a href="#量词" class="headerlink" title="量词"></a>量词</h2><p><code>&#123;n&#125;</code> 意味着确切匹配 n 次.</p>
+<h2 id="贪心性"><a href="#贪心性" class="headerlink" title="贪心性"></a>贪心性</h2><p><code>*</code> 和 <code>+</code> 是贪心量词. </p>
+<p>让贪心量词变成非贪心只需在其后加上 <code>?</code> 量词.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $minimal_greedy_match = <span class="hljs-regexp">qr/hot.*?meal/</span>;<br></code></pre></td></tr></table></figure>
+
+<h2 id="正则表达式锚点"><a href="#正则表达式锚点" class="headerlink" title="正则表达式锚点"></a>正则表达式锚点</h2><p>锚点的意思是, 强制在字符串某位置进行匹配.</p>
+<p><code>\A</code> 确保任何匹配都将从字符串开头开始.</p>
+<p><code>\Z</code> 确保任何匹配都将结束于字符串末尾.</p>
+<p>(为什么是 <code>\A</code> 和 <code>\Z</code>, 因为这是字母表的首尾)</p>
+<p>单词边界元字符 <code>\b</code>.</p>
+<h2 id="元字符"><a href="#元字符" class="headerlink" title="元字符"></a>元字符</h2><p>匹配字符, 数字, 空白: <code>\w</code>, <code>\d</code>, <code>\s</code></p>
+<h2 id="字符类"><a href="#字符类" class="headerlink" title="字符类"></a>字符类</h2><figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $maybe_cat = <span class="hljs-regexp">qr/c$&#123;vowels&#125;t/</span>;<br></code></pre></td></tr></table></figure>
+<p>这里的 <code>&#123;&#125;</code> 有助于消除对变量名的歧义.</p>
+<p>将连字符添加到字符类的开头或结尾可以将其包括进此字符类中 (或转义):</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $interesting_punctuation = <span class="hljs-regexp">qr/-!?/</span>;<br></code></pre></td></tr></table></figure>
+
+<p>用 <code>^</code> 作为字符类的第一个元素意味着 “除这些外的所有字符”.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $not_a_vowel = <span class="hljs-regexp">qr/[^aeiou]/</span>;<br></code></pre></td></tr></table></figure>
+
+<h2 id="捕获"><a href="#捕获" class="headerlink" title="捕获"></a>捕获</h2><h3 id="具名捕获"><a href="#具名捕获" class="headerlink" title="具名捕获"></a>具名捕获</h3><p>结构:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl">(?&lt;capture name&gt; ...)<br></code></pre></td></tr></table></figure>
+<p>(这里的 <code>()</code> 和 <code>&lt;&gt;</code> 都是有的, <code>...</code> 表示正则表达式的内容)</p>
+<p>如果正则表达式匹配该片段, Perl 将字符串被捕获部分存储在神奇变量 <code>%+</code> 中: 一个以捕获缓冲区名为键, 匹配表达式的字符串部分为值的哈希.</p>
+<p>如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">if</span> ($contact_info =~ /(?&lt;phone&gt;$phone_number)) &#123;<br>    <span class="hljs-keyword">say</span> <span class="hljs-string">&quot;Found a number $+&#123;number&#125;&quot;</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="编号捕获"><a href="#编号捕获" class="headerlink" title="编号捕获"></a>编号捕获</h3><p>Perl 将捕获的子字符串放在一系列以 <code>$1</code> 开头的神奇变量中.</p>
+<p>捕获计数起始于捕获的开括号.</p>
+<p>如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">if</span> ($contact_info =~ <span class="hljs-regexp">/($phone_number)/</span>) &#123;<br>    <span class="hljs-keyword">say</span> <span class="hljs-string">&quot;Found a number $1&quot;</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="成组或选项"><a href="#成组或选项" class="headerlink" title="成组或选项"></a>成组或选项</h3><p><mark>非捕获分组</mark>, 如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $starches = <span class="hljs-regexp">qr/(?:pasta|potatoes|rice)/</span>;<br></code></pre></td></tr></table></figure>
+
+<h2 id="其他转义序列"><a href="#其他转义序列" class="headerlink" title="其他转义序列"></a>其他转义序列</h2><p><code>\Q</code> 元字符 <mark>禁用对元字符的处理</mark> 知道它碰到 <code>\E</code> 序列.</p>
+<h2 id="断言"><a href="#断言" class="headerlink" title="断言"></a>断言</h2><p><mark>正则表达式的断言形式</mark> , 指字符串需要满足此条件, 但并不实际匹配字符串中的某个字符.</p>
+<p>如正则表达式锚点 <code>\A</code>, <code>\Z</code>. <code>\b</code> 和 <code>\B</code> 也是断言.</p>
+<p>还有些见书.</p>
+<h2 id="正则表达式修饰符"><a href="#正则表达式修饰符" class="headerlink" title="正则表达式修饰符"></a>正则表达式修饰符</h2><p>可在模式中内嵌修饰符, 如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $find_a_cat = <span class="hljs-regexp">qr/(?&lt;feline&gt;(?i)cat)/</span>;<br></code></pre></td></tr></table></figure>
+<p><code>(?i)</code> 语法仅为它所包围的组启用大小写不敏感匹配.</p>
+<p>也可以通过前缀 <code>-</code> 来禁用特定的修饰符. 如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $find_a_cat = <span class="hljs-regexp">qr/(?&lt;feline&gt;(?-i)cat)/</span>;<br></code></pre></td></tr></table></figure>
+
+<p>其他见书.</p>
+<h2 id="智能匹配"><a href="#智能匹配" class="headerlink" title="智能匹配"></a>智能匹配</h2><p>智能匹配操作符 <code>~~</code>.</p>
+<p>具体见书.</p>
+<h1 id="对象"><a href="#对象" class="headerlink" title="对象"></a>对象</h1><h2 id="Moose"><a href="#Moose" class="headerlink" title="Moose"></a>Moose</h2><p>Moose 是一个专为 Perl 5 提供更为完整的对象系统.</p>
+<p>面向对象,或 面向对象程序设计,是一种程序编排方法,它将组件分块为离散的唯一 的实体。这些实体称为 对象。用 Moose 的术语来说,每一个对象是某一个 类 的实例, 类作为模版描述了对象包含的数据和专属的行为。</p>
+<h3 id="类"><a href="#类" class="headerlink" title="类"></a>类</h3><p>类可以有一个名称, 默认地, Perl 5 类使用包来提供名称空间:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl">&#123;<br>    <span class="hljs-keyword">package</span> Cat;<br><br>    <span class="hljs-keyword">use</span> Moose;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>这里 Moose 会定义此类并向 Perl 注册它.</p>
+<p>之后就可以创建 <code>Cat</code> 类的对象 (或实例):</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $brad = Cat-&gt;new();<br></code></pre></td></tr></table></figure>
+<h3 id="方法"><a href="#方法" class="headerlink" title="方法"></a>方法</h3><p>method 就是一个和类关联的函数.</p>
+<p>方法调用总是对执行方法 <mark>被调用者</mark> 进行的. Perl 5 中方法的被调用者是方法的第一个参数, 如, <code>Cat</code> 类可以拥有一个名为 <code>meow()</code> (喵) 的方法:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs perl">&#123;<br>    <span class="hljs-keyword">package</span> Cat;<br><br>    <span class="hljs-keyword">use</span> Moose;<br><br>    <span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">meow</span> </span>&#123;<br>        <span class="hljs-keyword">my</span> $self = <span class="hljs-keyword">shift</span>;<br>        <span class="hljs-keyword">say</span> <span class="hljs-string">&#x27;Meow!&#x27;</span>;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>调用:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $alarm = Cat-&gt;new();<br>$alarm-&gt;meow();<br></code></pre></td></tr></table></figure>
+
+<p>按照惯例, Perl 中方法的被调用者是一个名为 <code>$self</code> 的词法变量, 但这仅仅是一个普遍的惯例.</p>
+<p>也就是说, 会将调用者作为第一个参数传入.</p>
+
                 
               </div>
             
