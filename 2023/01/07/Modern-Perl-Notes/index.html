@@ -24,7 +24,7 @@
 <meta property="og:description" content="运行 Modern Perl用于测试的模块 Test::More. 管理 Perl 版本用 App::perlbrew. Perl 5 和 Perl 6若要学习 Perl 6, 可浏览 http:&#x2F;&#x2F;perl6.org, 试用 Rakudo ( http:&#x2F;&#x2F;www.rakudo.org ), 以及 Using Perl 6 一书. Perl 哲学Perldocperldoc perlfaq 会显">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-01-07T14:27:11.000Z">
-<meta property="article:modified_time" content="2023-01-17T08:25:40.274Z">
+<meta property="article:modified_time" content="2023-01-18T08:10:17.128Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          28k 字
+          31k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          235 分钟
+          256 分钟
         
       </span>
     
@@ -982,7 +982,81 @@
 <p>可以用 <code>exists</code> 操作符检查特定的符号名是否存在于符号表中.</p>
 <h2 id="高级-Perl-面向对象"><a href="#高级-Perl-面向对象" class="headerlink" title="高级 Perl 面向对象"></a>高级 Perl 面向对象</h2><p>这一节具体见书</p>
 <h3 id="多用合成而非继承"><a href="#多用合成而非继承" class="headerlink" title="多用合成而非继承"></a>多用合成而非继承</h3><h3 id="单一职责原则-SRP"><a href="#单一职责原则-SRP" class="headerlink" title="单一职责原则 (SRP)"></a>单一职责原则 (SRP)</h3><h3 id="不要重复你自己-DRY"><a href="#不要重复你自己-DRY" class="headerlink" title="不要重复你自己 (DRY)"></a>不要重复你自己 (DRY)</h3><h3 id="Liskov-替换原则-LSP"><a href="#Liskov-替换原则-LSP" class="headerlink" title="Liskov 替换原则 (LSP)"></a>Liskov 替换原则 (LSP)</h3><h3 id="子类型和强制转换"><a href="#子类型和强制转换" class="headerlink" title="子类型和强制转换"></a>子类型和强制转换</h3><h3 id="不可变性"><a href="#不可变性" class="headerlink" title="不可变性"></a>不可变性</h3><h1 id="编程风格和效能"><a href="#编程风格和效能" class="headerlink" title="编程风格和效能"></a>编程风格和效能</h1><h2 id="编写可维护的-Perl-程序"><a href="#编写可维护的-Perl-程序" class="headerlink" title="编写可维护的 Perl 程序"></a>编写可维护的 Perl 程序</h2><h2 id="编写惯用语化的-Perl-程序"><a href="#编写惯用语化的-Perl-程序" class="headerlink" title="编写惯用语化的 Perl 程序"></a>编写惯用语化的 Perl 程序</h2><p>CPAN 上的发行包如 <code>Perl::Critic</code>, <code>Perl::Tidy</code> 以及 <code>CPAN::Mini</code> 可让你的工作更简单.</p>
-<h2 id="编写高效的-Perl-程序"><a href="#编写高效的-Perl-程序" class="headerlink" title="编写高效的 Perl 程序"></a>编写高效的 Perl 程序</h2>
+<h2 id="编写高效的-Perl-程序"><a href="#编写高效的-Perl-程序" class="headerlink" title="编写高效的 Perl 程序"></a>编写高效的 Perl 程序</h2><h2 id="文件"><a href="#文件" class="headerlink" title="文件"></a>文件</h2><h3 id="输入和输出"><a href="#输入和输出" class="headerlink" title="输入和输出"></a>输入和输出</h3><p>与程序外界交互的主要机制是通过 <mark>文件句柄</mark>.</p>
+<p>文件句柄代表输入输出通道的某种状态.</p>
+<p><code>DATA</code> 代表当前文件. 当 Perl 完成对文件的编译, 它留着包全局文件句柄 <code>DATA</code> 不动, 并在编译单元尾打开它.</p>
+<p>如果在 <code>__DATA__</code> 或是 <code>__END__</code> 后放置字符串, 可以从 <code>DATA</code> 文件句柄处读取它们. <code>perldoc perldata</code> 对此特性进行了详细的描述.</p>
+<p>除了文件, 还可以在标量上打开文件句柄:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> autodie;<br><br><span class="hljs-keyword">my</span> $captured_output;<br><span class="hljs-keyword">open</span> <span class="hljs-keyword">my</span> $fh, <span class="hljs-string">&#x27;&gt;&#x27;</span>, \$captured_output;<br><br>do_something_awesome( $fh );<br></code></pre></td></tr></table></figure>
+
+<p><code>perldoc perlopentut</code> 提供了更多有关 <code>open</code> 奇形怪状用法的细节, 包括它启动及控制其他进程的能力, 同时也介绍了可以对输入输出进行更加精细控制的 <code>sysopen</code> 用法.</p>
+<h3 id="读取文件"><a href="#读取文件" class="headerlink" title="读取文件"></a>读取文件</h3><p><code>readline</code> 也可写作 <code>&lt;&gt;</code> .</p>
+<p>文件结尾为 <code>eof()</code>, 遇到文件结尾时返回 <code>undef</code>.</p>
+<h3 id="写入文件"><a href="#写入文件" class="headerlink" title="写入文件"></a>写入文件</h3><p>如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">print</span> $out_fh <span class="hljs-string">&quot;Here&#x27;s a line of text\n&quot;</span>;<br></code></pre></td></tr></table></figure>
+<p>注意没有逗号.</p>
+<p>将文件句柄包裹在大括号中是一个好习惯.</p>
+<p>如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">print</span> &#123;$out_fh&#125; <span class="hljs-string">&quot;Here&#x27;s a line of text\n&quot;</span>;<br></code></pre></td></tr></table></figure>
+
+<h3 id="特殊文件句柄变量"><a href="#特殊文件句柄变量" class="headerlink" title="特殊文件句柄变量"></a>特殊文件句柄变量</h3><p>每读取一行, Perl 5 都会增加 <code>$.</code> 的值, 其可以用作计数器.</p>
+<p><code>readline</code> 将 <code>$/</code> 当前的内容作为行结束符.</p>
+<p>当前活动的输出文件句柄缓冲由 <code>$|</code> 变量控制, 当设置为非零值时, Perl 在每次对此文件句柄进行写入操作后都会冲洗输出, 当设置为零值, Perl 仍将1采用默认的缓冲策略 (即仅在数据足够多且超出某一限制时才进行 IO 操作)</p>
+<p>使用 <code>FileHandle</code> 的 <code>autoflush()</code> 方法可替代 <code>$|</code> 全局变量:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> autodie;<br><span class="hljs-keyword">use</span> FileHandle;<br><br><span class="hljs-keyword">open</span> <span class="hljs-keyword">my</span> $fh, <span class="hljs-string">&#x27;&gt;&#x27;</span>, <span class="hljs-string">&#x27;pecan.log&#x27;</span>;<br>$fh-&gt;autoflush( <span class="hljs-number">1</span> );<br></code></pre></td></tr></table></figure>
+
+<p>可在 <code>perldoc FileHandle</code>, <code>perldoc IO::Handle</code> 中获取更多信息.</p>
+<h3 id="目录和路径"><a href="#目录和路径" class="headerlink" title="目录和路径"></a>目录和路径</h3><p>打开目录句柄:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> autodie;<br><br><span class="hljs-keyword">opendir</span> <span class="hljs-keyword">my</span> $dirh, <span class="hljs-string">&#x27;/home/monkeytamer/tasks/&#x27;</span>;<br></code></pre></td></tr></table></figure>
+
+<p>Perl 5.12 新增特性, <code>while</code> 循环中 <code>readdir</code> 会设置 <code>$_</code>, 正如 <code>while</code> 中的 <code>readline</code>:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> <span class="hljs-number">5.012</span>;<br><span class="hljs-keyword">use</span> autodie;<br><br><span class="hljs-keyword">opendir</span> <span class="hljs-keyword">my</span> $dirh, <span class="hljs-string">&#x27;tasks/circus/&#x27;</span>;<br><br><span class="hljs-keyword">while</span> (<span class="hljs-keyword">readdir</span> $dirh) &#123;<br>    <span class="hljs-keyword">next</span> <span class="hljs-keyword">if</span> /^\./;<br>    <span class="hljs-keyword">say</span> <span class="hljs-string">&quot;Found a task $_!&quot;</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><code>closedir</code> 关闭.</p>
+<h4 id="操作路径"><a href="#操作路径" class="headerlink" title="操作路径"></a>操作路径</h4><p><code>File::Spec</code> 模块为以安全可以移植地操作文件路径提供了抽象.</p>
+<p>CPAN 上的 <code>Path::Class</code> 模块为 <code>File::Spec</code> 提供了更好的接口. 更多信息可见 <code>Path::Class::Dir</code> 和 <code>Path::Class::File</code> 文档.</p>
+<h3 id="文件操作"><a href="#文件操作" class="headerlink" title="文件操作"></a>文件操作</h3><p>在 Perl 5.10.1 之后, 可以用形如 <code>perldoc -f -r</code> 的方式来查看这些文件测试操作的文档.</p>
+<p><code>Cwd</code> 模块允许判断当前目录.</p>
+<p><code>chdir</code> 关键字可以改变当前工作目录.</p>
+<p><code>rename</code> 关键字可以重命名或在目录间移动某个文件. 接受两个操作数, 旧文件名和新文件名:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> autodie;<br><br><span class="hljs-keyword">rename</span> <span class="hljs-string">&#x27;death_star.txt&#x27;</span>, <span class="hljs-string">&#x27;carbon_sink.txt&#x27;</span>;<br></code></pre></td></tr></table></figure>
+
+<p>核心模块 <code>File::Copy</code> 提供了 <code>copy()</code> 和 <code>move()</code> 来复制文件.</p>
+<p>可以用 <code>unlink</code> 来删除一个或多个文件.</p>
+<p><code>Path::Class</code> 为检查特定文件属性和完整删除文件提供了便捷的方法.</p>
+<h2 id="异常"><a href="#异常" class="headerlink" title="异常"></a>异常</h2><h3 id="抛出异常"><a href="#抛出异常" class="headerlink" title="抛出异常"></a>抛出异常</h3><p><code>die()</code> 设置全局变量 <code>$@</code> 为其参数并立即退出当前函数而不返回任何值.</p>
+<h3 id="捕获异常"><a href="#捕获异常" class="headerlink" title="捕获异常"></a>捕获异常</h3><p>使用 <code>eval</code>:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $fh = <span class="hljs-keyword">eval</span> &#123; open_log_file( <span class="hljs-string">&#x27;monkeytown.log&#x27;</span> ) &#125;;<br></code></pre></td></tr></table></figure>
+<p><code>eval</code> 代码块参数引入了新的作用域, 如果文件打开成功, <code>$fh</code> 将包含此文件的文件句柄, 如果失败, <code>$fh</code> 将维持未定义.</p>
+<p>检查 <code>$@</code> 的值来检测异常:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">if</span> ($@) &#123; ... &#125;<br></code></pre></td></tr></table></figure>
+
+<p>将 <code>$@</code> 的值复制出来可以避免后续代码破坏全局变量 <code>$@</code> 的值.</p>
+<p>自行编写异常处理机制的替代, 可参见 CPAN 发行模块 <code>Exception::Class</code>.</p>
+<h3 id="异常注意事项"><a href="#异常注意事项" class="headerlink" title="异常注意事项"></a>异常注意事项</h3><p>CPAN <code>Try::Tiny</code> 发行模块, 更加友好:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> Try::Tiny;<br><br><span class="hljs-keyword">my</span> $fh = try &#123; open_log_file( <span class="hljs-string">&#x27;monkeytown.log&#x27;</span> ) &#125;<br>         catch &#123; ... &#125;;<br></code></pre></td></tr></table></figure>
+
+<h3 id="内置异常"><a href="#内置异常" class="headerlink" title="内置异常"></a>内置异常</h3><p>有些异常也许值的捕获, 语法错误则不值得.</p>
+<h2 id="编译命令"><a href="#编译命令" class="headerlink" title="编译命令"></a>编译命令</h2><p>影响编译器行为的模块称为一条 <mark>编译命令 (pragma)</mark> , 按照惯例, 编译命令的名称为小写, 以示与其他模块的区别.</p>
+<h3 id="编译命令和作用域"><a href="#编译命令和作用域" class="headerlink" title="编译命令和作用域"></a>编译命令和作用域</h3><p>如 <code>warnings</code>, <code>strict</code> 就是编译命令.</p>
+<p>编译命令的作用域与词法变量相同.</p>
+<h3 id="使用编译命令"><a href="#使用编译命令" class="headerlink" title="使用编译命令"></a>使用编译命令</h3><p>可以指定所需编译命令的版本, 也可以向编译命令传递参数列表以便更好地控制其行为:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> strict <span class="hljs-string">qw( subs vars )</span>;<br></code></pre></td></tr></table></figure>
+<p>在作用域内可以用 <code>no</code> 关键字禁用部分或全部编译命令:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> strict;<br><br>&#123;<br>    <span class="hljs-keyword">no</span> strict <span class="hljs-string">&#x27;refs&#x27;</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="常用核心编译命令"><a href="#常用核心编译命令" class="headerlink" title="常用核心编译命令"></a>常用核心编译命令</h3><ul>
+<li>strict</li>
+<li>warnings</li>
+<li>utf8</li>
+<li>autodie</li>
+<li>constant, 可用 CPAN 的 <code>Readonly</code> 替代</li>
+<li>vars</li>
+<li>autobox</li>
+<li>perl5i</li>
+</ul>
+<p>Perl 5.10.0 新增了用纯 Perl 代码编写你自己的词法编译命令的能力, 参考 <code>perldoc perlvar</code>, <code>perldoc perlvar</code> 对 <code>$^H</code> 的解释说明此特性的工作原理.</p>
+
                 
               </div>
             
