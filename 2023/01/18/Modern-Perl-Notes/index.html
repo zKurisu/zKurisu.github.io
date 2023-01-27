@@ -27,8 +27,9 @@
 <meta property="og:image" content="http://example.com/img/Perl_Module_Distribution_Contents.png">
 <meta property="og:image" content="http://example.com/img/Some_Utils_of_Perl_1.png">
 <meta property="og:image" content="http://example.com/img/Some_Utils_of_Perl_2.png">
+<meta property="og:image" content="http://example.com/img/perl_super_global_var.png">
 <meta property="article:published_time" content="2023-01-18T14:27:11.000Z">
-<meta property="article:modified_time" content="2023-01-27T12:57:02.429Z">
+<meta property="article:modified_time" content="2023-01-27T14:43:44.868Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/Perl_Test_Modules.png">
@@ -240,7 +241,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          39k 字
+          41k 字
         
       </span>
     
@@ -251,7 +252,7 @@
         
         
         
-          327 分钟
+          345 分钟
         
       </span>
     
@@ -1272,7 +1273,66 @@
 <figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> English <span class="hljs-string">&#x27;-no_match_vars&#x27;</span>;<br></code></pre></td></tr></table></figure>
 
 <p>名称记录在 <code>perldoc perlvar</code> 中.</p>
-<p>三个正则表达式相关的超级全局变量 <code>$&amp;</code>, <code>$\`` 和 </code>$’&#96; 会降低程序内所有正则表达式的性能. </p>
+<p>三个正则表达式相关的超级全局变量 <code>$&amp;</code>, <code>$反引号</code> 和 <code>$&#39;</code> 会降低程序内所有正则表达式的性能. 现代化 Perl 程序用 <code>@-</code> 代替前三个变量.</p>
+<h3 id="常用超级全局变量"><a href="#常用超级全局变量" class="headerlink" title="常用超级全局变量"></a>常用超级全局变量</h3><p><img src="/../img/perl_super_global_var.png" srcset="/img/loading.gif" lazyload></p>
+<h1 id="要避免什么"><a href="#要避免什么" class="headerlink" title="要避免什么"></a>要避免什么</h1><h2 id="裸字"><a href="#裸字" class="headerlink" title="裸字"></a>裸字</h2><p><mark>裸字</mark> 是一个标识符, 它没有印记或其他用于说明其语法功能的附加消歧条件.</p>
+<h3 id="裸字的正当使用"><a href="#裸字的正当使用" class="headerlink" title="裸字的正当使用"></a>裸字的正当使用</h3><p>Perl 5 中的哈希键是裸字, 有时足够用, 也可消除歧义:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $value = $items<span class="hljs-string">&#123;shift&#125;</span>;<br><br><span class="hljs-keyword">my</span> $value = $items&#123;<span class="hljs-keyword">shift</span> @_&#125;;<br><br><span class="hljs-comment"># 消除歧义</span><br><span class="hljs-keyword">my</span> $value = $items&#123;+<span class="hljs-keyword">shift</span>&#125;;<br></code></pre></td></tr></table></figure>
+
+<p>用 <code>constant</code> 编译命令定义的常量可以按裸字使用:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> constant <span class="hljs-string">NAME =&gt;</span> <span class="hljs-string">&#x27;Bucky&#x27;</span>;<br></code></pre></td></tr></table></figure>
+
+<h3 id="裸字的欠考虑使用"><a href="#裸字的欠考虑使用" class="headerlink" title="裸字的欠考虑使用"></a>裸字的欠考虑使用</h3><p>没有启用 <code>strict &#39;subs&#39;</code> 而编写的代码可以使用裸字函数名.</p>
+<p>内置的 <code>sort</code> 操作符以第二参数的形式接受一个用于排序的函数名, 作为代替, 提供一个用于排序<mark>函数引用</mark> 可以避免使用裸字:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-comment"># 不良用法</span><br><span class="hljs-keyword">my</span> @sorted = <span class="hljs-keyword">sort</span> compare_lengths @unsorted;<br><br><span class="hljs-comment"># 更好的风格</span><br><span class="hljs-keyword">my</span> $comparison = \&amp;compare_lengths;<br><span class="hljs-keyword">my</span> @sorted = <span class="hljs-keyword">sort</span> $comparison @unsorted;<br></code></pre></td></tr></table></figure>
+
+<p>Perl 5 语法解析器并不理解单行版本:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> @sorted = <span class="hljs-keyword">sort</span> \&amp;compare_lengths @unsorted;<br></code></pre></td></tr></table></figure>
+
+<h3 id="间接对象"><a href="#间接对象" class="headerlink" title="间接对象"></a>间接对象</h3><p>Perl 5 中的<mark>构造器</mark>就是任何返回对象的东西.</p>
+<p>一般将构造器函数命名为 <code>new</code>, 避免歧义的写法为:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $q = CGI-&gt;new();<br></code></pre></td></tr></table></figure>
+
+<h3 id="间接记法的标量限制"><a href="#间接记法的标量限制" class="headerlink" title="间接记法的标量限制"></a>间接记法的标量限制</h3><p><code>IO::Handle</code> 核心模块, 其允许你调用文件句柄对象上的方法来执行 IO 操作.</p>
+<h2 id="原型"><a href="#原型" class="headerlink" title="原型"></a>原型</h2><p><mark>原型 (prototype)</mark> 是一块附加在函数生命上的可选元数据.</p>
+<p>两个目的:</p>
+<ul>
+<li>给予语法分析器提示来改变对函数及其参数的语法分析</li>
+<li>修改了 Perl 5 处理函数参数的方式</li>
+</ul>
+<p>如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">foo</span></span>     (&amp;@);<br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">bar</span>     ($$) </span>&#123; ... &#125;;<br><br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">foo</span>(&amp;@) </span>&#123;<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>括号内的代表参数内容, <code>&amp;</code> 表示接受一个代码块, <code>@</code> 表示接受一个列表, <code>$</code> 表示接受一个标量.</p>
+<p>该原型必须完整地出现在函数声明中.</p>
+<p>原型最初的目的是允许用户定义它们自己的函数, 这些函数的行为和 (一些) 内置操作符一样.</p>
+<p>内置操作符 <code>prototype</code> 接受一个函数名称并返回代表其原型的字符串:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ perl -E <span class="hljs-string">&quot;say prototype &#x27;CORE::push&#x27; // &#x27;undef&#x27;;&quot;</span><br>\@@<br>$ perl -E <span class="hljs-string">&quot;say prototype &#x27;CORE::keys&#x27; // &#x27;undef&#x27;;&quot;</span><br>\%<br></code></pre></td></tr></table></figure>
+
+<p>一些内置操作符拥有你无法模拟的原型.</p>
+<p>对于:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ perl -E <span class="hljs-string">&quot;say prototype &#x27;CORE::push&#x27; // &#x27;undef&#x27;;&quot;</span><br>\@@<br></code></pre></td></tr></table></figure>
+<p>的含义.</p>
+<p><code>@</code> 字符代表一个列表, 反斜杠强制对对应的参数进行引用, 因此这个函数接受一个数组引用和一列值.</p>
+<p>可参考 <code>perldoc perlsub</code> 文档.</p>
+<h3 id="原型的问题"><a href="#原型的问题" class="headerlink" title="原型的问题"></a>原型的问题</h3><p>原型可以改变后续代码的语法分析而且他们会对参数进行强制类型转换.</p>
+<p>原型对参数的强制类型转换以一种隐晦的方式发生, 如在传入参数上强制标量上下文:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">numeric_equality</span>($$) </span>&#123;<br>    <span class="hljs-keyword">my</span> ($left, $right) = @_;<br>    <span class="hljs-keyword">return</span> $left == $right;<br>&#125;<br><br><span class="hljs-keyword">my</span> @nums = <span class="hljs-number">1</span> .. <span class="hljs-number">10</span>;<br><br><span class="hljs-keyword">say</span> <span class="hljs-string">&quot;They&#x27;re equal, whatever that means!&quot;</span> <span class="hljs-keyword">if</span> numeric_equality(@nums, <span class="hljs-number">10</span>);<br></code></pre></td></tr></table></figure>
+<p>看上述代码可知.</p>
+<h3 id="原型的正当使用"><a href="#原型的正当使用" class="headerlink" title="原型的正当使用"></a>原型的正当使用</h3><p><mark>理由一</mark>: 用于覆盖内置关键字来用户自定义函数, 需要先用 <code>prototype</code> 来确认有没有返回 <code>undef</code> 来检查是否可以覆盖内置关键字, 返回 <code>undef</code> 则不能.</p>
+<p>知道了关键字的原型, 就可以声明和核心关键字同名的前置定义:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> subs <span class="hljs-string">&#x27;push&#x27;</span>;<br><br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">push</span>(\@@) </span>&#123; ... &#125;<br></code></pre></td></tr></table></figure>
+
+<p><mark>理由二</mark>: 定义编译器常数: 一个由 <mark>空原型</mark> 声明且求值得单个表达式的函数将成为常数而非函数调用:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">PI</span>() </span>&#123; <span class="hljs-number">4</span> * <span class="hljs-keyword">atan2</span>(<span class="hljs-number">1</span>, <span class="hljs-number">1</span>) &#125;<br></code></pre></td></tr></table></figure>
+<p>毕竟此时传入参数就会报错.</p>
+<p>CPAN 的 <code>Readonly</code> 模块可以将常量内插入字符串.</p>
+<p><mark>理由三</mark>: 见书.</p>
+<h2 id="方法-函数等价"><a href="#方法-函数等价" class="headerlink" title="方法-函数等价"></a>方法-函数等价</h2><p>Perl 自身不对存储于包中的函数和存储于包中的方法加以强制区分.</p>
+<p>如果你试着将函数作为方法调用, Perl 自身将把任何能找到的拥有合适名称, 处于合适包中的函数当作方法.</p>
+<h3 id="调用方-Caller-side"><a href="#调用方-Caller-side" class="headerlink" title="调用方 (Caller-side)"></a>调用方 (Caller-side)</h3><figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $name = <span class="hljs-string">&#x27;apply_discount&#x27;</span>;<br>$o-&gt;$name();<br></code></pre></td></tr></table></figure>
+<p>也可运行.</p>
+<h3 id="被调用方-Callee-side"><a href="#被调用方-Callee-side" class="headerlink" title="被调用方 (Callee-side)"></a>被调用方 (Callee-side)</h3><h2 id="捆绑-Tie"><a href="#捆绑-Tie" class="headerlink" title="捆绑 (Tie)"></a>捆绑 (Tie)</h2><p>使用 <code>tie</code> 关键字. 可查看 <code>perldoc perltie</code> 文档.</p>
+<p>这个主题先见其他书.</p>
 
                 
               </div>
