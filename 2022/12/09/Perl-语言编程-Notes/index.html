@@ -24,7 +24,7 @@
 <meta property="og:description" content="第2章 集腋成裘2.2 分子Perl 识别 token 时采用的是一种贪婪方式，如果特定情况下 Perl 解析器要在识别一个短 token 还是一个长 token 之间做出选择，他肯定会选择长的那一个. 如果某一行以 &#x3D; 开头，这个语句是合法的，从这一行向下，直到下一个以 &#x3D;cut 开头的行，这之间的所有内容都会被 Perl 忽略，被忽略的这些文本称为 pod (plain old documen">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2022-12-08T23:04:23.000Z">
-<meta property="article:modified_time" content="2023-01-08T07:52:14.482Z">
+<meta property="article:modified_time" content="2023-01-28T03:40:15.199Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          5.2k 字
+          6.2k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          44 分钟
+          52 分钟
         
       </span>
     
@@ -379,6 +379,20 @@
 <p>内建的函数的最早的版本总是可以通过伪包 CORE 来访问. 因此, <code>CORE::chdir</code> 将总是最初编译进 Perl 里的版本, 即使 <code>chdir</code> 关键字已经被覆盖.</p>
 <p>覆盖如:</p>
 <figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs perl">*CORE::GLOBAL::<span class="hljs-keyword">glob</span> = <span class="hljs-function"><span class="hljs-keyword">sub</span> </span>&#123;<br>    <span class="hljs-keyword">my</span> $pat = <span class="hljs-keyword">shift</span>;<br>    <span class="hljs-keyword">my</span> @got;<br>    <span class="hljs-keyword">local</span> *D;<br>    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">opendir</span> D, <span class="hljs-string">&#x27;.&#x27;</span>) &#123;<br>        $got = <span class="hljs-keyword">grep</span> <span class="hljs-regexp">/$pat/</span>. <span class="hljs-keyword">readdir</span> D;<br>        <span class="hljs-keyword">closedir</span> D;<br>    &#125;<br>    <span class="hljs-keyword">return</span> @got;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h1 id="第十三章-重载"><a href="#第十三章-重载" class="headerlink" title="第十三章 重载"></a>第十三章 重载</h1><h2 id="13-1-overload-用法"><a href="#13-1-overload-用法" class="headerlink" title="13.1 overload 用法"></a>13.1 <code>overload</code> 用法</h2><p><code>use overload</code> 实现操作符重载, 可以向其提供一个操作符和对应性质的 <mark>键字&#x2F;数值列表</mark> :</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">package</span> MyClass;<br><br><span class="hljs-keyword">use</span> overload <span class="hljs-string">&#x27;+&#x27;</span> =&gt; \&amp;myadd,    <span class="hljs-comment"># 代码引用</span><br>             <span class="hljs-string">&#x27;&lt;&#x27;</span> =&gt; <span class="hljs-string">&quot;less_then&quot;</span>, <span class="hljs-comment"># 命名方法</span><br>             <span class="hljs-string">&#x27;abs&#x27;</span> =&gt; <span class="hljs-function"><span class="hljs-keyword">sub</span> </span>&#123; <span class="hljs-keyword">return</span> @_; &#125;; <span class="hljs-comment"># 匿名字过程</span><br></code></pre></td></tr></table></figure>
+
+<p>最后一个后面是 <code>;</code>.</p>
+<p>这里我们自己提供的过程称为 <mark>句柄 (handler)</mark> </p>
+<p>当你使用 <code>&lt;</code> 时, Perl 会注意其被声明为一个字符串, 就会将其当作方法名称, 而不仅仅是一个子过程.</p>
+<p>在操作一个重载了的操作符的时候, 其对应的句柄是带着<mark>三个参数调用</mark>的, 前两个参数是两个操作数, 如果该操作符只使用一个操作数, 第二个参数是 <code>undef</code>. </p>
+<p>第三个参数标明前两个参数是否交换. 交换过为真.</p>
+<p>对于单目操作符, 当该操作符应用于该类的一个对象的时候则调用为该类声明的句柄. </p>
+<p>对于双目操作符, 当第一个操作数是该类的一个对象或当第二个操作数是该类的对象而且第一个操作数没有重载性质的时候,则调用该句柄.</p>
+<p>唯一的三元操作符 <code>?:</code> 不能被重载.</p>
+<p>默认传入的参数就是对象, 如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">package</span> Test;<br><span class="hljs-keyword">use</span> Moose;<br><span class="hljs-keyword">use</span> <span class="hljs-number">5.36</span>.<span class="hljs-number">0</span>;<br><span class="hljs-keyword">use</span> utf8;<br><span class="hljs-keyword">use</span> overload <span class="hljs-string">&#x27;+&#x27;</span> =&gt; <span class="hljs-string">&#x27;plus&#x27;</span>;<br><br>has <span class="hljs-string">&#x27;value&#x27;</span> =&gt; (<br>    <span class="hljs-string">is =&gt;</span> <span class="hljs-string">&#x27;ro&#x27;</span>,<br>    <span class="hljs-string">isa =&gt;</span> <span class="hljs-string">&#x27;Str&#x27;</span>,<br>);<br><br><span class="hljs-keyword">my</span> $fir_str = Test-&gt;new(<span class="hljs-string">value =&gt;</span> <span class="hljs-string">&#x27;Hello&#x27;</span>);<br><span class="hljs-keyword">my</span> $sec_str = Test-&gt;new(<span class="hljs-string">value =&gt;</span> <span class="hljs-string">&#x27;World&#x27;</span>);<br><span class="hljs-keyword">print</span> $fir_str + $sec_str;<br><br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">plus</span> </span>&#123;<br>    <span class="hljs-keyword">my</span> ($fir_str, $sec_str) = @_;<br>    $fir_str-&gt;value() . $sec_str-&gt;value();<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <h1 id="第18章-编译"><a href="#第18章-编译" class="headerlink" title="第18章 编译"></a>第18章 编译</h1><h2 id="18-1-Perl-程序的生命周期"><a href="#18-1-Perl-程序的生命周期" class="headerlink" title="18.1 Perl 程序的生命周期"></a>18.1 Perl 程序的生命周期</h2><p>可以把 Perl 程序分裂为四个独立的阶段, 每个阶段都有自己的独立的字阶段.</p>
 <h3 id="1-编译阶段"><a href="#1-编译阶段" class="headerlink" title="1. 编译阶段:"></a>1. 编译阶段:</h3><p>Perl 编译器把你的程序转换成一个叫 <mark>分析树</mark> 的数据结构. <code>use</code> 和 <code>no</code> 实际上都是伪装的 <code>BEGIN</code> 块.</p>
