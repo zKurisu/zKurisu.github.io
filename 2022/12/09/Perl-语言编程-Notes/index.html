@@ -23,10 +23,12 @@
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="第2章 集腋成裘2.2 分子Perl 识别 token 时采用的是一种贪婪方式，如果特定情况下 Perl 解析器要在识别一个短 token 还是一个长 token 之间做出选择，他肯定会选择长的那一个. 如果某一行以 &#x3D; 开头，这个语句是合法的，从这一行向下，直到下一个以 &#x3D;cut 开头的行，这之间的所有内容都会被 Perl 忽略，被忽略的这些文本称为 pod (plain old documen">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/perl_overload_ops.png">
 <meta property="article:published_time" content="2022-12-08T23:04:23.000Z">
-<meta property="article:modified_time" content="2023-01-28T03:40:15.199Z">
+<meta property="article:modified_time" content="2023-01-29T04:28:34.172Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/perl_overload_ops.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -235,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          6.2k 字
+          9.5k 字
         
       </span>
     
@@ -246,7 +248,7 @@
         
         
         
-          52 分钟
+          79 分钟
         
       </span>
     
@@ -394,6 +396,109 @@
 <p>默认传入的参数就是对象, 如:</p>
 <figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">package</span> Test;<br><span class="hljs-keyword">use</span> Moose;<br><span class="hljs-keyword">use</span> <span class="hljs-number">5.36</span>.<span class="hljs-number">0</span>;<br><span class="hljs-keyword">use</span> utf8;<br><span class="hljs-keyword">use</span> overload <span class="hljs-string">&#x27;+&#x27;</span> =&gt; <span class="hljs-string">&#x27;plus&#x27;</span>;<br><br>has <span class="hljs-string">&#x27;value&#x27;</span> =&gt; (<br>    <span class="hljs-string">is =&gt;</span> <span class="hljs-string">&#x27;ro&#x27;</span>,<br>    <span class="hljs-string">isa =&gt;</span> <span class="hljs-string">&#x27;Str&#x27;</span>,<br>);<br><br><span class="hljs-keyword">my</span> $fir_str = Test-&gt;new(<span class="hljs-string">value =&gt;</span> <span class="hljs-string">&#x27;Hello&#x27;</span>);<br><span class="hljs-keyword">my</span> $sec_str = Test-&gt;new(<span class="hljs-string">value =&gt;</span> <span class="hljs-string">&#x27;World&#x27;</span>);<br><span class="hljs-keyword">print</span> $fir_str + $sec_str;<br><br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">plus</span> </span>&#123;<br>    <span class="hljs-keyword">my</span> ($fir_str, $sec_str) = @_;<br>    $fir_str-&gt;value() . $sec_str-&gt;value();<br>&#125;<br></code></pre></td></tr></table></figure>
 
+<h2 id="13-3-可重载操作符"><a href="#13-3-可重载操作符" class="headerlink" title="13.3 可重载操作符"></a>13.3 可重载操作符</h2><p>只有一部分操作符可以重载.</p>
+<p>可以在 <code>%overload::ops</code> 散列中找到已经被重载的操作符.</p>
+<p><img src="/../img/perl_overload_ops.png" srcset="/img/loading.gif" lazyload></p>
+<p>有些并不是操作符, 但都是有效键字.</p>
+<h2 id="13-4-拷贝构造器"><a href="#13-4-拷贝构造器" class="headerlink" title="13.4 拷贝构造器 ="></a>13.4 拷贝构造器 <code>=</code></h2><p>其作为一个重载的键字有点特殊的含义. 其并不重载 Perl 的赋值操作符.</p>
+<p>书上内容不是很理解.</p>
+<h2 id="13-5-当确实重载句柄的时候-nomethod-和-fallback"><a href="#13-5-当确实重载句柄的时候-nomethod-和-fallback" class="headerlink" title="13.5 当确实重载句柄的时候 (nomethod 和 fallback)"></a>13.5 当确实重载句柄的时候 (nomethod 和 fallback)</h2><p>如果对一个对象使用一个没有重载句柄的操作符, Perl 会找重载 <code>nomethod</code> 得到的行为, 在重载操作符中相当于子过程中的 <code>AUTOLOAD</code>.</p>
+<p>如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">package</span> Test;<br><span class="hljs-keyword">use</span> Moose;<br><span class="hljs-keyword">use</span> <span class="hljs-number">5.36</span>.<span class="hljs-number">0</span>;<br><br><span class="hljs-keyword">use</span> overload <span class="hljs-string">&#x27;nomethod&#x27;</span> =&gt; \&amp;say_something;<br><br><span class="hljs-keyword">my</span> $obj1 = Test-&gt;new();<br><span class="hljs-keyword">my</span> $obj2 = Test-&gt;new();<br><br><span class="hljs-keyword">print</span> $obj1 + $obj2;<br><br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">say_something</span> </span>&#123;<br>    <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;That&#x27;s it&quot;</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>这里未定义两个对象相加, 就调用了 <code>nomethod</code> 对应的句柄, 其实际上传入了四个参数:</p>
+<ul>
+<li>操作符两侧</li>
+<li>是否交换</li>
+<li>操作符</li>
+</ul>
+<p>如果 Perl 找不到 <code>nomethod</code> 句柄, 就会报错.</p>
+<p>为了在没找到时得到没有重载的结果, 使用 <code>fallback</code> 关键字. 其有三个状态 (就是使用 <code>overload</code> 给 <code>fallback</code> 赋值):</p>
+<ul>
+<li><code>undef</code>, 就是未定义 <code>fallback</code> 时的状态, 不做出任何行为</li>
+<li><code>defined but false</code>, 不会进行自动生成</li>
+<li><code>true</code></li>
+</ul>
+<p>如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> overload <span class="hljs-string">&quot;fallback&quot;</span> =&gt; <span class="hljs-number">0</span>, <span class="hljs-comment"># ...</span><br></code></pre></td></tr></table></figure>
+
+<p>具体还是不太理解.</p>
+<h2 id="13-6-重载常量"><a href="#13-6-重载常量" class="headerlink" title="13.6 重载常量"></a>13.6 重载常量</h2><p>可以用  <code>overload::constant</code> 和 <code>overload::remove_constant</code> 改变 Perl 解释常量的方法.</p>
+<p>一般放在一个包的 <code>import</code> 方法中使用:</p>
+<p>如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">import</span> </span>&#123;<br>    overload::constant (<br>        <span class="hljs-string">integer =&gt;</span> \&amp;integer_handler,<br>        <span class="hljs-string">float   =&gt;</span> \&amp;base_handler,<br>        <span class="hljs-string">binary  =&gt;</span> \&amp;base_handler,<br>        <span class="hljs-string">q       =&gt;</span> \&amp;string_handler,<br>        <span class="hljs-string">qr      =&gt;</span> \&amp;regex_handler<br>    )<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><code>overload::constant</code> 后跟参数, 参数为键值对, 键只能为:</p>
+<ul>
+<li><code>integer</code></li>
+<li><code>float</code></li>
+<li><code>binary</code></li>
+<li><code>q</code>, 表示 <code>string</code> 中的</li>
+<li><code>qr</code>, 表示 <code>regex</code> 中的</li>
+</ul>
+<p>值为一个子过程引用.</p>
+<p>表示, 当 Perl 记号查找其碰到一个<mark>常量数字 (即用 <code>use constant</code> 声明的数字)</mark>时, 就会调用 <code>integer</code> 和 <code>float</code> 提供的句柄.</p>
+<p>Perl 会给句柄传递三个参数: </p>
+<ul>
+<li>第一个, 原来的常量, 形式是它原来提供给 Perl 的形式</li>
+<li>第二个, 是 Perl 实际上如何解释该常量, 如 <code>123_456</code> 显示为 <code>123456</code></li>
+<li>第三个, 只为那些由 <code>q</code> 和 <code>qr</code> 处理字串的句柄定义. 值为 <code>qq</code>, <code>q</code>, <code>s</code>, <code>tr</code> 之一, 含义见书</li>
+</ul>
+<p>似乎直接用不太行, 需要从模块中导出时利用 <code>import</code>.</p>
+<p>如, 一个模块:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">package</span> Orkarin;<br><span class="hljs-keyword">use</span> overload;<br><br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">Hello</span> </span>&#123;<br>    <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;Hello!&quot;</span>;<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">import</span> </span>&#123;<br>    overload::constant(<br>        <span class="hljs-string">integer =&gt;</span> \&amp;handler,<br>    );<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">handler</span> </span>&#123;<br>    <span class="hljs-keyword">my</span> $integer = <span class="hljs-keyword">shift</span>;<br>    <span class="hljs-keyword">return</span> $integer * <span class="hljs-number">10</span>;<br>&#125;<br><br><br><span class="hljs-number">1</span>;<br></code></pre></td></tr></table></figure>
+<p>另一个脚本:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> <span class="hljs-number">5.36</span>.<span class="hljs-number">0</span>;<br><span class="hljs-keyword">use</span> utf8;<br><span class="hljs-keyword">use</span> lib <span class="hljs-string">&#x27;/home/jie/scripts/perl/&#x27;</span>;<br><span class="hljs-keyword">use</span> My::Orkarin;<br><br><span class="hljs-keyword">my</span> $test = <span class="hljs-number">10</span>;<br><span class="hljs-keyword">print</span> $test;<br></code></pre></td></tr></table></figure>
+<p>则会打印 <code>100</code>.</p>
+<h2 id="13-7-公共重载函数"><a href="#13-7-公共重载函数" class="headerlink" title="13.7 公共重载函数"></a>13.7 公共重载函数</h2><p>见书.</p>
+<h2 id="13-8-继承和重载"><a href="#13-8-继承和重载" class="headerlink" title="13.8 继承和重载"></a>13.8 继承和重载</h2><p>重载过程中发生继承, 在 <code>use overload</code> 中提供的是字符串如 <code>use overload &#39;+&#39; =&gt; &#39;add&#39;</code> 而不是函数引用, 此时能被解释为方法, 并从父类中继承.</p>
+<p>还有见书</p>
+<h2 id="13-9-运行时重载"><a href="#13-9-运行时重载" class="headerlink" title="13.9 运行时重载"></a>13.9 运行时重载</h2><p>因为 <code>use</code> 语句是在编译时重载的, 在运行是改变重载的唯一方法是:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">eval</span> <span class="hljs-string">&quot;use overload &#x27;+&#x27; =&gt; \&amp;my_add&quot;</span>;<br></code></pre></td></tr></table></figure>
+
+<h2 id="13-10-重载诊断"><a href="#13-10-重载诊断" class="headerlink" title="13.10 重载诊断"></a>13.10 重载诊断</h2><p>见书</p>
+<h1 id="第十四章-捆绑-tie-变量"><a href="#第十四章-捆绑-tie-变量" class="headerlink" title="第十四章 捆绑 (tie) 变量"></a>第十四章 捆绑 (tie) 变量</h1><p><code>tie</code> 可翻译成捆绑, 也可是领带. <code>tie</code> 感觉像是一种调用器, 它会使变量有一些默认的动作. (也就是默认调用一些动作)</p>
+<p>Perl 内建的 <code>dbmopen</code> 和 <code>dbmclose</code> 函数, 可以将散列变量和数据库绑在一起. (现在这两个函数就是依靠 <code>tie</code> 来实现)</p>
+<p>如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">tie</span> VARIABLE, CLASSNAME, LIST;<br>$object = <span class="hljs-keyword">tied</span> VARIABLE;<br></code></pre></td></tr></table></figure>
+<p>(这个 <code>LIST</code> 后面再说, 其也是传递给 <code>TIESCALAR</code> 之类函数的参数)</p>
+<p><code>tie</code> 可以把一个标量, 数组, 散列或者文件句柄绑到一个类上, 还要提供一个方法名称的列表. 提供的第一个方法会在绑定时调用 (即, 调用一个构造函数, 其在成功时会返回一个对象, 这个对象可以用 <code>tied</code> 取出)</p>
+<p><mark>断开</mark>变量和类的联系可以用 <code>untie</code>:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">untie</span> VARIABLE;<br></code></pre></td></tr></table></figure>
+
+<p>用 <code>tie</code> 绑定的变量可以调用预定名称的方法, 这些方法为全大写. 调用的构造函数包括:</p>
+<ul>
+<li><code>TIESCALAR</code></li>
+<li><code>TIEARRAY</code></li>
+<li><code>TIEHASH</code></li>
+<li><code>TIEHANDLE</code></li>
+</ul>
+<p>Perl 中几乎所有预定义包, 变量和文件句柄都采用大写.</p>
+<h2 id="14-1-绑定标量"><a href="#14-1-绑定标量" class="headerlink" title="14.1 绑定标量"></a>14.1 绑定标量</h2><p>要实现一个捆绑的标量, 一个类必须定义以下方法:</p>
+<ul>
+<li><code>TIESCALAR</code>, 绑定时自动调用, 第一个参数是要绑定的类名.</li>
+<li><code>FETCH</code>, 读取时调用, 传入的第一个参数是本身</li>
+<li><code>STORE</code>, 给变量赋值时调用, 第一个参数是本身, 第二个参数是值</li>
+<li>(可能 还有 <code>DESTROY</code>, 在对象的最后一个引用消失时调用, 即在程序终止或调用 <code>untie</code> 时调用)</li>
+</ul>
+<p>在解除绑定时调用:</p>
+<ul>
+<li><code>UNTIE</code></li>
+</ul>
+<p><code>untie</code> 会删除 <code>tie</code> 使用的引用.</p>
+<p><code>Tie::Scalar</code> 和 <code>Tie::StdScalar</code> 模块中定义了所有上述方法, 提供简单的用法.</p>
+<p>如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">package</span> Test;<br><br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">TIESCALAR</span> </span>&#123;<br>    <span class="hljs-keyword">bless</span> \<span class="hljs-keyword">my</span> $self, <span class="hljs-keyword">shift</span>;<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">STORE</span> </span>&#123;<br>    $&#123; $_[<span class="hljs-number">0</span>] &#125; = $_[<span class="hljs-number">1</span>];<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">FETCH</span> </span>&#123;<br>    <span class="hljs-keyword">my</span> $value = <span class="hljs-keyword">shift</span>;<br>    <span class="hljs-keyword">print</span> $$value;<br>&#125;<br><br><span class="hljs-keyword">package</span> main;<br><br><span class="hljs-keyword">my</span> $test;<br><span class="hljs-keyword">tie</span> $test, <span class="hljs-string">&quot;Test&quot;</span>;<br>$test = <span class="hljs-number">100</span>;<br><br><span class="hljs-keyword">print</span> $test;<br></code></pre></td></tr></table></figure>
+
+<p>当然也有:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $obj = <span class="hljs-keyword">tie</span> $test, <span class="hljs-string">&quot;Test&quot;</span>;<br><br><span class="hljs-comment"># 等价于使用 `tied` 获取</span><br><br><span class="hljs-keyword">my</span> $obj = <span class="hljs-keyword">tied</span> $test;<br></code></pre></td></tr></table></figure>
+<p>这里 <code>$obj</code> 可以调用 <code>Test</code> 类的其他方法. 但 <code>tie</code> 的返回值常常被省略. 这个对象可以用 <code>tied</code> 获取.</p>
+<p>这里 <code>TIESCALAR</code> 中的 <code>my $self</code>, 这个变量叫什么名字其实无所谓, 其作用就是配合 <code>bless</code> 返回一个被 <code>bless</code> 的引用给要 <code>tie</code> 的变量, 所以说这个变量本质上还是一个引用, 只不过其行为被重载了. (因为其处于词法作用域, 出了作用域之后, 就会变为匿名)</p>
+<p><code>STORE</code> 这个是在赋值时调用的, 传入的第一个参数就是本身 (也就是一个引用), 第二个参数是要赋的值.</p>
+<p>传入 <code>FETCH</code> 的第一个值也是本身 (也就是一个引用).</p>
+<h3 id="14-1-1-标量捆绑方法"><a href="#14-1-1-标量捆绑方法" class="headerlink" title="14.1.1 标量捆绑方法"></a>14.1.1 标量捆绑方法</h3><p>如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> Test;<br><br><span class="hljs-keyword">tie</span> $test, <span class="hljs-string">&quot;Test&quot;</span>, <span class="hljs-string">&quot;/tmp/test.txt&quot;</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="14-2-绑定数组"><a href="#14-2-绑定数组" class="headerlink" title="14.2 绑定数组"></a>14.2 绑定数组</h2><p>只要定义了 <code>FETCH</code> 和 <code>STORE</code>, 对象包含什么样的数据结构并不重要.</p>
 <h1 id="第18章-编译"><a href="#第18章-编译" class="headerlink" title="第18章 编译"></a>第18章 编译</h1><h2 id="18-1-Perl-程序的生命周期"><a href="#18-1-Perl-程序的生命周期" class="headerlink" title="18.1 Perl 程序的生命周期"></a>18.1 Perl 程序的生命周期</h2><p>可以把 Perl 程序分裂为四个独立的阶段, 每个阶段都有自己的独立的字阶段.</p>
 <h3 id="1-编译阶段"><a href="#1-编译阶段" class="headerlink" title="1. 编译阶段:"></a>1. 编译阶段:</h3><p>Perl 编译器把你的程序转换成一个叫 <mark>分析树</mark> 的数据结构. <code>use</code> 和 <code>no</code> 实际上都是伪装的 <code>BEGIN</code> 块.</p>
 <p>词法声明也做上记号, 但是还不执行给它们的赋值.</p>
