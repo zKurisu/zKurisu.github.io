@@ -25,7 +25,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/output_of_perl_mod_Data_Dumper.png">
 <meta property="article:published_time" content="2022-10-27T01:28:56.000Z">
-<meta property="article:modified_time" content="2023-03-01T10:58:31.266Z">
+<meta property="article:modified_time" content="2023-03-05T10:30:22.780Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/output_of_perl_mod_Data_Dumper.png">
@@ -237,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          9.9k 字
+          11k 字
         
       </span>
     
@@ -248,7 +248,7 @@
         
         
         
-          83 分钟
+          88 分钟
         
       </span>
     
@@ -458,6 +458,20 @@
 <figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> utf8;<br><span class="hljs-keyword">use</span> lib <span class="hljs-string">&#x27;/home/jie/scripts/perl/&#x27;</span>;<br><span class="hljs-keyword">use</span> Data::Dumper;<br><br><span class="hljs-keyword">my</span> $string = &lt;&lt;<span class="hljs-string">&#x27;COLUMNAR&#x27;</span>;<br>ID  First Name  Middle  Last Name<br><span class="hljs-number">1</span>   brian       d       foy<br><span class="hljs-number">2</span>   Joshua              McAdams<br><span class="hljs-number">3</span>   Joseph      N       Hall<br>COLUMNAR<br><br><span class="hljs-keyword">open</span> <span class="hljs-keyword">my</span> ($fh), <span class="hljs-string">&#x27;&lt;&#x27;</span>, \$string;<br><br><span class="hljs-keyword">my</span> $format = <span class="hljs-string">&#x27;A2 @4 A10 @16 A6 @24 A*&#x27;</span>;<br><br><span class="hljs-keyword">my</span> @headers = <span class="hljs-keyword">unpack</span> $format, &lt;$fh&gt;; <span class="hljs-comment"># Get the first line</span><br><br><span class="hljs-keyword">my</span> @name;<br><br><span class="hljs-keyword">while</span> (&lt;$fh&gt;) &#123; <span class="hljs-comment"># Get the left lines</span><br>    <span class="hljs-keyword">my</span> %hash;<br>    @hash&#123; @headers &#125; = <span class="hljs-keyword">unpack</span> $format, $_;<br>    <span class="hljs-keyword">push</span> @names, \%hash;<br>&#125;<br><br><span class="hljs-keyword">print</span> Dumper( @names );<br><br></code></pre></td></tr></table></figure>
 
 <h1 id="使用-Prima-制作界面"><a href="#使用-Prima-制作界面" class="headerlink" title="使用 Prima 制作界面"></a>使用 Prima 制作界面</h1><h1 id="让一个变量成为两个类的对象"><a href="#让一个变量成为两个类的对象" class="headerlink" title="让一个变量成为两个类的对象"></a>让一个变量成为两个类的对象</h1><p>使用 <code>bless</code> 即可.</p>
+<h1 id="关于关闭文件句柄以输出缓冲区数据"><a href="#关于关闭文件句柄以输出缓冲区数据" class="headerlink" title="关于关闭文件句柄以输出缓冲区数据"></a>关于关闭文件句柄以输出缓冲区数据</h1><p>当 Perl 程序还未结束时，print 到一个文件句柄的内容并不一定会立即发送。这是因为 I&#x2F;O 操作在 Perl 中是缓冲的，所以 print 语句的输出可能会先存储在缓冲区中，直到满足一定条件时才会将其发送到文件。</p>
+<p>具体来说，Perl 中的缓冲机制有三种类型：</p>
+<ul>
+<li><p>全缓冲：当输出到一个终端或者管道时使用全缓冲，也就是缓冲区被填满后才进行输出。可以使用 $| &#x3D; 0 或者 STDOUT-&gt;autoflush(0) 命令关闭全缓冲。</p>
+</li>
+<li><p>行缓冲：当输出到一个终端时使用行缓冲，也就是缓冲区填满一行后进行输出。可以使用 $| &#x3D; 1 或者 STDOUT-&gt;autoflush(1) 命令开启行缓冲。</p>
+</li>
+<li><p>无缓冲：当输出到一个文件时使用无缓冲，也就是直接进行输出。可以使用 open 函数的 :raw 模式或者 binmode 函数将文件句柄设置为无缓冲模式。</p>
+</li>
+</ul>
+<p>如果程序在退出前没有将缓冲区中的数据发送到文件，那么这些数据就会丢失。可以使用 close 函数或者 flush 函数强制将缓冲区中的数据发送到文件。</p>
+<p>如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-comment"># 打开文件句柄</span><br><span class="hljs-keyword">open</span> <span class="hljs-keyword">my</span> $fh, <span class="hljs-string">&quot;&gt;&quot;</span>, <span class="hljs-string">&quot;output.txt&quot;</span>;<br><br><span class="hljs-comment"># 将数据写入文件</span><br><span class="hljs-keyword">print</span> $fh <span class="hljs-string">&quot;hello, world\n&quot;</span>;<br><br><span class="hljs-comment"># 关闭文件句柄，强制将缓冲区中的数据发送到文件</span><br><span class="hljs-keyword">close</span> $fh;<br></code></pre></td></tr></table></figure>
+
 
                 
               </div>
