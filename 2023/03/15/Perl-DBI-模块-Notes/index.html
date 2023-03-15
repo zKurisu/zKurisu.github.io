@@ -26,7 +26,7 @@
 <meta property="og:image" content="http://example.com/img/DBI_architecture.png">
 <meta property="og:image" content="http://example.com/img/conventions_of_DBI.png">
 <meta property="article:published_time" content="2023-03-15T11:09:58.000Z">
-<meta property="article:modified_time" content="2023-03-15T14:06:00.843Z">
+<meta property="article:modified_time" content="2023-03-15T23:33:55.179Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/DBI_architecture.png">
@@ -238,7 +238,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          687 字
+          1.3k 字
         
       </span>
     
@@ -249,7 +249,7 @@
         
         
         
-          6 分钟
+          11 分钟
         
       </span>
     
@@ -317,6 +317,28 @@
 <figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs perl">$sth = $dbh-&gt;prepare(<span class="hljs-string">&quot;SELECT foo, bar FROM table WHERE baz=?&quot;</span>);<br>$sth-&gt;execute( $baz );<br><br><span class="hljs-keyword">while</span> ( @row = $sth-&gt;fetchrow_array ) &#123;<br>    <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;@row\n&quot;</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>这里的 <code>?</code> 应该会被传入的参数替换掉.</p>
 <p><code>do()</code> 是 <code>prepare()</code> 和 <code>execute()</code> 的包装.</p>
+<p>在 <code>AutoCommit</code> 关闭时, 提交对数据库的改变用:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl">$dbh-&gt;commit;<br></code></pre></td></tr></table></figure>
+<p>可以用:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl">$dbh-&gt;rollback;<br></code></pre></td></tr></table></figure>
+<p>来 undo 改变.</p>
+<p>在完成所有处理后, 用 <code>disconnect</code> 来断开连接:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl">$dbh-&gt;disconnect;<br></code></pre></td></tr></table></figure>
+
+<h1 id="总的接口规则和注意事项-General-Interface-Rules-amp-Caveats"><a href="#总的接口规则和注意事项-General-Interface-Rules-amp-Caveats" class="headerlink" title="总的接口规则和注意事项 General Interface Rules &amp; Caveats"></a>总的接口规则和注意事项 General Interface Rules &amp; Caveats</h1><p>一般, 多条 SQL 语句不会放在单个 statement handle (<code>$sth</code>) 中.</p>
+<p>DBI 获取的数据 fetch 过一次后就没了 (应该是 <code>pop</code> 和 <code>push</code> 这类).</p>
+<p>私有的 SQL 函数 (可能是自己写的脚本) 可以用 <code>func()</code> 来调用.</p>
+<h1 id="占位符和绑定值-Placeholders-and-Bind-Values"><a href="#占位符和绑定值-Placeholders-and-Bind-Values" class="headerlink" title="占位符和绑定值 Placeholders and Bind Values"></a>占位符和绑定值 Placeholders and Bind Values</h1><p>如:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-variable constant_">INSERT</span> <span class="hljs-variable constant_">INTO</span> sales (product_code, qty, price) <span class="hljs-variable constant_">VALUES</span> (<span class="hljs-string">?,</span> <span class="hljs-string">?,</span> <span class="hljs-string">?)</span> <br></code></pre></td></tr></table></figure>
+<p>中的 <code>?</code>, 实际值和占位符的联系就叫做 <mark>binding</mark> </p>
+<p>大部分时候, placeholders 只有做 single scalar values 时才管用, 如:</p>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs pgsql"><span class="hljs-keyword">SELECT</span> <span class="hljs-type">name</span>, age <span class="hljs-keyword">FROM</span> ?<br></code></pre></td></tr></table></figure>
+<p>则可能失败.</p>
+<h1 id="Null-values"><a href="#Null-values" class="headerlink" title="Null values"></a>Null values</h1><p>可以通过传递 <code>undef</code> 来表示传递 Null value.</p>
+<p>如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs perl">$sth = $dbh-&gt;prepare(<span class="hljs-string">qq&#123;</span><br><span class="hljs-string">    INSERT INTO people (fullname, age) VALUES (?, ?)</span><br><span class="hljs-string">&#125;</span>);<br>$sth-&gt;execute(<span class="hljs-string">&quot;Joe Bloggs&quot;</span>, <span class="hljs-keyword">undef</span>);<br></code></pre></td></tr></table></figure>
+
+
 
                 
               </div>
