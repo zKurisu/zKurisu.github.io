@@ -24,7 +24,7 @@
 <meta property="og:description" content="第13章 类, 对象和 Tiesbless 绑定到当前包: 12my $object &#x3D; &amp;#123;&amp;#125;;bless($object);  在用 bless 将一个引用绑定到一个包后, ref 函数将不会返回引用类型, 而是其绑定的包名. bless 的目的就是让引用和一个名称空间联系, Perl 可以从中查找 functions. 典型的构造器为: 123456sub new &amp;#12">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-02-15T09:06:21.000Z">
-<meta property="article:modified_time" content="2023-03-16T03:15:48.187Z">
+<meta property="article:modified_time" content="2023-03-16T03:37:45.969Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.4k 字
+          1.8k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          12 分钟
+          15 分钟
         
       </span>
     
@@ -299,9 +299,15 @@
 <p>destructor 只能为 <code>DESTROY</code>. 其会在对象的内存释放之前调用.</p>
 <p>如果想要区分类函数和对象函数, 可以写为.</p>
 <p>如, 只能用类调用:</p>
-<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> Carp;<br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">class_only_method</span> </span>&#123;<br>    <span class="hljs-keyword">my</span> $class = <span class="hljs-keyword">shift</span>;<br>    croak <span class="hljs-string">&quot;class method invoked on object&quot;</span> <span class="hljs-keyword">if</span> <span class="hljs-keyword">ref</span> $class;<br>&#125;<br></code></pre></td></tr></table></figure>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> Carp;<br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">class_only_method</span> </span>&#123;<br>    <span class="hljs-keyword">my</span> $class = <span class="hljs-keyword">shift</span>;<br>    croak <span class="hljs-string">&quot;class method invoked on object&quot;</span> <span class="hljs-keyword">if</span> <span class="hljs-keyword">ref</span> $class;<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
+<p><code>ref</code> 需要作用于一个引用. 作用于其他值时返回空字符串. 作用于引用时返回引用类型.</p>
+<p>若只允许对象调用:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> Carp;<br><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">instance_only_method</span> </span>&#123;<br>    <span class="hljs-keyword">my</span> $self = <span class="hljs-keyword">shift</span>;<br>    croak <span class="hljs-string">&quot;instance method invoked on class&quot;</span> <span class="hljs-keyword">unless</span> <span class="hljs-keyword">ref</span> $self;<br>    <span class="hljs-comment"># more code here</span><br>&#125;<br></code></pre></td></tr></table></figure>
 
-
+<p>调用不存在的 method 则会自动调用 <code>AUTOLOAD</code>.</p>
+<p>Perl, 在 <code>@ISA</code> 变量中查找继承的类. 如果 <code>$ISA[0]</code> 中仍然没有需要的方法, 但 <code>$ISA[0]</code> 中有自己的 <code>@ISA</code>, 那么又会从这个变量中查找.</p>
+<p>如果所有的父类中都没有需要的方法, 则重复上述查找, 只不过是查找  <code>AUTOLOAD</code> 函数.</p>
+<p>如果 <code>@ISA</code> 中只有一个元素, 则称为 <code>single inheritance</code>.</p>
 <h1 id="第14章-访问数据库"><a href="#第14章-访问数据库" class="headerlink" title="第14章 访问数据库"></a>第14章 访问数据库</h1><h2 id="14-0-介绍"><a href="#14-0-介绍" class="headerlink" title="14.0 介绍"></a>14.0 介绍</h2><p><code>DBD::SQLite</code> 模块和 <code>DBI</code> 模块.</p>
 <p>什么是 <code>DBM files</code>:<br>DBM（Database Management）文件是一种基于磁盘的哈希表，它可以用来存储键值对。DBM文件通常用于存储小型数据集，例如配置文件、用户信息等。在Perl中，可以使用标准模块DB_File来访问和操作DBM文件。</p>
 <h2 id="14-1-创建和使用-DBM-File"><a href="#14-1-创建和使用-DBM-File" class="headerlink" title="14.1 创建和使用 DBM File"></a>14.1 创建和使用 DBM File</h2><h1 id="第15章-交互"><a href="#第15章-交互" class="headerlink" title="第15章 交互"></a>第15章 交互</h1><h2 id="15-0-介绍"><a href="#15-0-介绍" class="headerlink" title="15.0 介绍"></a>15.0 介绍</h2><h2 id="15-1-解析程序参数"><a href="#15-1-解析程序参数" class="headerlink" title="15.1 解析程序参数"></a>15.1 解析程序参数</h2><p>用 <code>Getope::Std</code> 和 <code>Getope::Long</code> 模块来处理选项.</p>
