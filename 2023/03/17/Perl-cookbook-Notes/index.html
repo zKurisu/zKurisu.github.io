@@ -25,7 +25,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/how_tied_variables_are_interpreted.png">
 <meta property="article:published_time" content="2023-03-17T09:06:21.000Z">
-<meta property="article:modified_time" content="2023-03-17T04:36:48.421Z">
+<meta property="article:modified_time" content="2023-03-17T04:58:12.466Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/how_tied_variables_are_interpreted.png">
@@ -237,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          9.9k 字
+          11k 字
         
       </span>
     
@@ -248,7 +248,7 @@
         
         
         
-          83 分钟
+          89 分钟
         
       </span>
     
@@ -442,6 +442,17 @@
 <figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs perl">$sth = $dbh-&gt;prepare(<span class="hljs-string">&#x27;SELECT * FROM Addresses WHERE House = ?</span><br><span class="hljs-string">AND Street LIKE ?&#x27;</span>);<br>$sth-&gt;bind_param(<span class="hljs-number">1</span>, <span class="hljs-string">&#x27;221b&#x27;</span>);<br>$sth-&gt;bind_param(<span class="hljs-number">2</span>, <span class="hljs-string">&#x27;Baker&#x27;</span>);<br></code></pre></td></tr></table></figure>
 <p><code>bind_param</code> 的第三个参数可以指定传入值的类型, 如:</p>
 <figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl">$sth-&gt;bind_param(<span class="hljs-number">1</span>, <span class="hljs-string">&#x27;J&#x27;</span>, SQL_CHAR);<br></code></pre></td></tr></table></figure>
+<p>若要使用这些类型, 需要显示开启:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> DBI <span class="hljs-string">qw(SQL_CHAR SQL_INTEGER)</span>;<br><span class="hljs-keyword">use</span> DBI <span class="hljs-string">qw(:sql_types)</span>;<br></code></pre></td></tr></table></figure>
+<p>查看所有类型:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">foreach</span> (@&#123; $dbi::EXPORT_TAGS<span class="hljs-string">&#123;sql_types&#125;</span> &#125;) &#123;<br>    <span class="hljs-keyword">printf</span> <span class="hljs-string">&quot;%s=%d\n&quot;</span>, $_, &amp;&#123;<span class="hljs-string">&quot;DBI::$_&quot;</span>&#125;;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>占位符的缺陷在于, 只能用于单值, 且不能表示 table 或 column name.</p>
+<h2 id="14-13-以编程方式构造查询"><a href="#14-13-以编程方式构造查询" class="headerlink" title="14.13 以编程方式构造查询"></a>14.13 以编程方式构造查询</h2><p>将语句 join 到一起, 如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">if</span> ($year_min)<br> &#123; <span class="hljs-keyword">push</span> @clauses, <span class="hljs-string">&quot;Year &gt;= $year_min&quot;</span> &#125;<br><span class="hljs-keyword">if</span> ($year_max)<br> &#123; <span class="hljs-keyword">push</span> @clauses, <span class="hljs-string">&quot;Year &lt;= $year_max&quot;</span> &#125;<br><span class="hljs-keyword">if</span> ($bedrooms_min) &#123; <span class="hljs-keyword">push</span> @clauses, <span class="hljs-string">&quot;Beds &gt;= $bedrooms_min&quot;</span> &#125;<br><span class="hljs-keyword">if</span> ($bedrooms_max) &#123; <span class="hljs-keyword">push</span> @clauses, <span class="hljs-string">&quot;Beds &lt;= $bedrooms_max&quot;</span> &#125;<br><span class="hljs-comment"># ...</span><br>$clause = <span class="hljs-keyword">join</span>(<span class="hljs-string">&quot; AND &quot;</span>, @clauses);<br>$sth = $dbh-&gt;prepare(<span class="hljs-string">&quot;SELECT beds,baths FROM Houses WHERE $clause&quot;</span>);<br></code></pre></td></tr></table></figure>
+
+
+
 
 
 
