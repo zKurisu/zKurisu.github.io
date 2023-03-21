@@ -26,7 +26,7 @@
 <meta property="og:image" content="http://example.com/img/some_special_string_in_verilog.png">
 <meta property="og:image" content="http://example.com/img/verilog_operators.png">
 <meta property="article:published_time" content="2023-03-21T07:05:26.000Z">
-<meta property="article:modified_time" content="2023-03-21T11:12:07.015Z">
+<meta property="article:modified_time" content="2023-03-21T11:49:32.657Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/some_special_string_in_verilog.png">
@@ -238,7 +238,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          5.3k 字
+          6.9k 字
         
       </span>
     
@@ -249,7 +249,7 @@
         
         
         
-          44 分钟
+          58 分钟
         
       </span>
     
@@ -446,7 +446,7 @@
 <h2 id="96-include"><a href="#96-include" class="headerlink" title="&#96;include"></a>&#96;include</h2><p>`include 和 C 中的 <code>#include</code> 类似, 用于编译时将一个 Verilog 文件内嵌到另一个 Verilog 文件中， 可以是相对路径, 也可以是绝对路径, 如:</p>
 <figure class="highlight armasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs armasm">`<span class="hljs-meta">include</span>         <span class="hljs-string">&quot;../../param.v&quot;</span><br>`<span class="hljs-meta">include</span>         <span class="hljs-string">&quot;header.v&quot;</span><br></code></pre></td></tr></table></figure>
 
-<h2 id="96-timescale"><a href="#96-timescale" class="headerlink" title="&#96;timescale"></a>&#96;timescale</h2><h2 id="96-default-nettype"><a href="#96-default-nettype" class="headerlink" title="&#96;default_nettype"></a>&#96;default_nettype</h2><h2 id="96-resetall"><a href="#96-resetall" class="headerlink" title="&#96;resetall"></a>&#96;resetall</h2><h1 id="3-1-连续赋值"><a href="#3-1-连续赋值" class="headerlink" title="3.1 连续赋值"></a>3.1 连续赋值</h1><h2 id="全加器-assign"><a href="#全加器-assign" class="headerlink" title="全加器 assign"></a>全加器 assign</h2><p>任何已经声明 wire 变量的连续赋值语句都是以 assign 开头, 如:</p>
+<h2 id="96-timescale"><a href="#96-timescale" class="headerlink" title="&#96;timescale"></a>&#96;timescale</h2><h2 id="96-default-nettype"><a href="#96-default-nettype" class="headerlink" title="&#96;default_nettype"></a>&#96;default_nettype</h2><h2 id="96-resetall"><a href="#96-resetall" class="headerlink" title="&#96;resetall"></a>&#96;resetall</h2><h1 id="3-1-连续赋值"><a href="#3-1-连续赋值" class="headerlink" title="3.1 连续赋值"></a>3.1 连续赋值</h1><h2 id="assign"><a href="#assign" class="headerlink" title="assign"></a>assign</h2><p>任何已经声明 wire 变量的连续赋值语句都是以 assign 开头, 如:</p>
 <figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs mipsasm">wire      Cout, A, <span class="hljs-keyword">B </span>;<br>assign    Cout  = A &amp; <span class="hljs-keyword">B </span><span class="hljs-comment">;     //实现计算A与B的功能</span><br></code></pre></td></tr></table></figure>
 
 <p><mark>注意</mark> :</p>
@@ -454,7 +454,36 @@
 <li>左值必须是一个标量或者线型向量，<mark>不能是寄存器类型</mark>而</li>
 <li>右值没有类型要求</li>
 </ul>
+<h1 id="3-2-时延"><a href="#3-2-时延" class="headerlink" title="3.2 时延"></a>3.2 时延</h1><p>用于控制任意操作数发生变化到语句左端赋予新值之间的时间延时.</p>
+<p>连续赋值时延一般可分为:</p>
+<ul>
+<li>普通赋值时延</li>
+<li>隐式时延</li>
+<li>声明时延</li>
+</ul>
+<p>如:</p>
+<figure class="highlight verilog"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs verilog"><br><span class="hljs-comment">//普通时延，A&amp;B计算结果延时10个时间单位赋值给Z</span><br><span class="hljs-keyword">wire</span> Z, A, B ;<br><span class="hljs-keyword">assign</span> #<span class="hljs-number">10</span>    Z = A &amp; B ;<br> <br><span class="hljs-comment">//隐式时延，声明一个wire型变量时对其进行包含一定时延的连续赋值。</span><br><span class="hljs-keyword">wire</span> A, B;<br><span class="hljs-keyword">wire</span> #<span class="hljs-number">10</span>        Z = A &amp; B;<br> <br><span class="hljs-comment">//声明时延，声明一个wire型变量是指定一个时延。因此对该变量所有的连续赋值都会被推迟到指定的时间。除非门级建模中，一般不推荐使用此类方法建模。</span><br><span class="hljs-keyword">wire</span> A, B;<br><span class="hljs-keyword">wire</span> #<span class="hljs-number">10</span> Z ;<br><span class="hljs-keyword">assign</span>           Z =A &amp; B<br></code></pre></td></tr></table></figure>
 
+<h2 id="惯性时延"><a href="#惯性时延" class="headerlink" title="惯性时延"></a>惯性时延</h2><h1 id="4-1-过程结构"><a href="#4-1-过程结构" class="headerlink" title="4.1 过程结构"></a>4.1 过程结构</h1><p>过程结构语句有 2 种，initial 与 always 语句</p>
+<p> 一个模块中可以包含多个 initial 和 always 语句，但 2 种语句不能嵌套使用。</p>
+<p>这些语句在模块间<mark>并行执行</mark>，与其在模块的前后顺序没有关系, 但是 initial 语句或 always 语句内部可以理解为是顺序执行的.</p>
+<p>每个 initial 语句或 always 语句都会产生一个独立的控制流，执行时间都是从 0 时刻开始.</p>
+<h2 id="initial-语句"><a href="#initial-语句" class="headerlink" title="initial 语句"></a>initial 语句</h2><p> initial 语句从 0 时刻开始执行，<mark>只执行一次</mark>，多个 initial 块之间是相互独立的。</p>
+<p>如果 initial 块内包含多个语句，需要使用关键字 begin 和 end 组成一个块语句。</p>
+<p>如果 initial 块内只要一条语句，关键字 begin 和 end 可使用也可不使用.</p>
+<p>如:</p>
+<figure class="highlight verilog"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><code class="hljs verilog"><span class="hljs-meta">`<span class="hljs-keyword">timescale</span> 1ns/1ns</span><br> <br><span class="hljs-keyword">module</span> test ;<br>    <span class="hljs-keyword">reg</span>  ai, bi ;<br> <br>    <span class="hljs-keyword">initial</span> <span class="hljs-keyword">begin</span><br>        ai         = <span class="hljs-number">0</span> ;<br>        #<span class="hljs-number">25</span> ;      ai        = <span class="hljs-number">1</span> ;<br>        #<span class="hljs-number">35</span> ;      ai        = <span class="hljs-number">0</span> ;        <span class="hljs-comment">//absolute 60ns</span><br>        #<span class="hljs-number">40</span> ;      ai        = <span class="hljs-number">1</span> ;        <span class="hljs-comment">//absolute 100ns</span><br>        #<span class="hljs-number">10</span> ;      ai        = <span class="hljs-number">0</span> ;        <span class="hljs-comment">//absolute 110ns</span><br>    <span class="hljs-keyword">end</span><br> <br>    <span class="hljs-keyword">initial</span> <span class="hljs-keyword">begin</span><br>        bi         = <span class="hljs-number">1</span> ;<br>        #<span class="hljs-number">70</span> ;      bi        = <span class="hljs-number">0</span> ;        <span class="hljs-comment">//absolute 70ns</span><br>        #<span class="hljs-number">20</span> ;      bi        = <span class="hljs-number">1</span> ;        <span class="hljs-comment">//absolute 90ns</span><br>    <span class="hljs-keyword">end</span><br> <br>    <span class="hljs-comment">//at proper time stop the simulation</span><br>    <span class="hljs-keyword">initial</span> <span class="hljs-keyword">begin</span><br>        <span class="hljs-keyword">forever</span> <span class="hljs-keyword">begin</span><br>            #<span class="hljs-number">100</span>;<br>            <span class="hljs-comment">//$display(&quot;---gyc---%d&quot;, $time);</span><br>            <span class="hljs-keyword">if</span> (<span class="hljs-built_in">$time</span> &gt;= <span class="hljs-number">1000</span>) <span class="hljs-keyword">begin</span><br>                <span class="hljs-built_in">$finish</span> ;<br>            <span class="hljs-keyword">end</span><br>        <span class="hljs-keyword">end</span><br>   <span class="hljs-keyword">end</span><br> <br><span class="hljs-keyword">endmodule</span><br></code></pre></td></tr></table></figure>
+
+
+<h2 id="always-语句"><a href="#always-语句" class="headerlink" title="always 语句"></a>always 语句</h2><p>always 语句是<mark>重复执行</mark>的。always 语句块从 0 时刻开始执行其中的行为语句；当执行完最后一条语句后，便再次执行语句块中的第一条语句，如此循环反复.</p>
+<p>如:</p>
+<figure class="highlight verilog"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs verilog"><span class="hljs-meta">`<span class="hljs-keyword">timescale</span> 1ns/1ns</span><br> <br><span class="hljs-keyword">module</span> test ;<br> <br>    <span class="hljs-keyword">parameter</span> CLK_FREQ   = <span class="hljs-number">100</span> ; <span class="hljs-comment">//100MHz</span><br>    <span class="hljs-keyword">parameter</span> CLK_CYCLE  = <span class="hljs-number">1</span>e9 / (CLK_FREQ * <span class="hljs-number">1</span>e6) ;   <span class="hljs-comment">//switch to ns</span><br> <br>    <span class="hljs-keyword">reg</span>  clk ;<br>    <span class="hljs-keyword">initial</span>      clk = <span class="hljs-number">1&#x27;b0</span> ;      <span class="hljs-comment">//clk is initialized to &quot;0&quot;</span><br>    <span class="hljs-keyword">always</span>     # (CLK_CYCLE/<span class="hljs-number">2</span>) clk = ~clk ;       <span class="hljs-comment">//generating a real clock by reversing</span><br> <br>    <span class="hljs-keyword">always</span> <span class="hljs-keyword">begin</span><br>        #<span class="hljs-number">10</span>;<br>        <span class="hljs-keyword">if</span> (<span class="hljs-built_in">$time</span> &gt;= <span class="hljs-number">1000</span>) <span class="hljs-keyword">begin</span><br>            <span class="hljs-built_in">$finish</span> ;<br>        <span class="hljs-keyword">end</span><br>    <span class="hljs-keyword">end</span><br> <br><span class="hljs-keyword">endmodule</span><br></code></pre></td></tr></table></figure>
+
+<h1 id="4-2-过程赋值"><a href="#4-2-过程赋值" class="headerlink" title="4.2 过程赋值"></a>4.2 过程赋值</h1><p>过程性赋值是在 initial 或 always 语句块里的赋值，赋值对象是寄存器、整数、实数等类型。</p>
+<p>这些变量在被赋值后，其值将保持不变，直到重新被赋予新值。</p>
+<h2 id="阻塞赋值"><a href="#阻塞赋值" class="headerlink" title="阻塞赋值"></a>阻塞赋值</h2><p>阻塞赋值属于顺序执行，即下一条语句执行前，当前语句一定会执行完毕。</p>
+<p>阻塞赋值语句使用等号 &#x3D; 作为赋值符。</p>
+<h2 id="非阻塞赋值"><a href="#非阻塞赋值" class="headerlink" title="非阻塞赋值"></a>非阻塞赋值</h2>
                 
               </div>
             
