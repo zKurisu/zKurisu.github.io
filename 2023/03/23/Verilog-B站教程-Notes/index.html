@@ -25,7 +25,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/combinational_and_sequential_logic.png">
 <meta property="article:published_time" content="2023-03-23T06:07:00.000Z">
-<meta property="article:modified_time" content="2023-03-23T07:28:38.964Z">
+<meta property="article:modified_time" content="2023-03-23T07:57:18.962Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/combinational_and_sequential_logic.png">
@@ -237,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.2k 字
+          1.8k 字
         
       </span>
     
@@ -248,7 +248,7 @@
         
         
         
-          10 分钟
+          16 分钟
         
       </span>
     
@@ -321,7 +321,17 @@
 
 <p>之外的应该就是组合逻辑, 且用 <code>assign</code> 来赋值.</p>
 <h1 id="二选一多路器实现"><a href="#二选一多路器实现" class="headerlink" title="二选一多路器实现"></a>二选一多路器实现</h1><figure class="highlight fortran"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs fortran"><span class="hljs-keyword">module</span> mux2(<br>    input  a, b, sel,<br>    output <span class="hljs-keyword">out</span><br>);<br>    <span class="hljs-keyword">assign</span> <span class="hljs-keyword">out</span> = (sel == <span class="hljs-number">1</span>) ? a : b;<br><span class="hljs-keyword">endmodule</span><br></code></pre></td></tr></table></figure>
-<p>也就是说, 如果 <code>sel == 1</code>, 那么</p>
+<p>也就是说, 如果 <code>sel == 1</code>, 那么输出的值等于 <code>a</code> 端的输入, 如果 <code>sel == 0</code>, 那么输出的值等于 <code>b</code> 端的输入.</p>
+<h2 id="仿真和测试"><a href="#仿真和测试" class="headerlink" title="仿真和测试"></a>仿真和测试</h2><p>在 vivado 中, 设计时, 创建 design 文件, 仿真时, 创建 simulation 文件.</p>
+<p>关于:</p>
+<figure class="highlight verilog"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs verilog"><span class="hljs-meta">`<span class="hljs-keyword">timescale</span> 1ns/1ps</span><br></code></pre></td></tr></table></figure>
+<p>的作用, 其影响 <code>#1</code> 这类延时操作, 如这里就是延时 <code>1ns</code>, 因为精度为 <code>1ps</code>, 因此也可以写成 <code>#1.001</code>.</p>
+<p>测试文件一般不需要端口.</p>
+<p>测试一个模块, 也就是将一个模块例化. 例化和面向对象创建实例类似, 用模块名当作类型, 再加上一个例化名称.</p>
+<p>如:</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><code class="hljs nginx"><span class="hljs-attribute">module</span> mux_2_test();<br>    <span class="hljs-attribute">reg</span> a, b, sel;<br>    <span class="hljs-attribute">wire</span> out;<br><br>    <span class="hljs-attribute">mux_2</span> mux_2_test1(<br>        .a  (a),<br>        .b  (b),<br>        .sel(sel),<br>        .out(out),<br>    );<br><br>    <span class="hljs-attribute">initial</span> begin<br>        a = <span class="hljs-number">0</span>, b = <span class="hljs-number">0</span>, sel = <span class="hljs-number">0</span>;<br>        <span class="hljs-comment">#200;</span><br>        <span class="hljs-attribute">a</span> = <span class="hljs-number">0</span>, b = <span class="hljs-number">0</span>, sel = <span class="hljs-number">1</span>;<br>        <span class="hljs-comment">#200;</span><br>        <span class="hljs-attribute">a</span> = <span class="hljs-number">0</span>, b = <span class="hljs-number">1</span>, sel = <span class="hljs-number">0</span>;<br>        <span class="hljs-comment">#200;</span><br>        <span class="hljs-attribute">a</span> = <span class="hljs-number">0</span>, b = <span class="hljs-number">1</span>, sel = <span class="hljs-number">1</span>;<br>        <span class="hljs-comment">#200;</span><br>        <span class="hljs-attribute">a</span> = <span class="hljs-number">1</span>, b = <span class="hljs-number">0</span>, sel = <span class="hljs-number">0</span>;<br>        <span class="hljs-comment">#200;</span><br>        <span class="hljs-attribute">a</span> = <span class="hljs-number">1</span>, b = <span class="hljs-number">0</span>, sel = <span class="hljs-number">1</span>;<br>        <span class="hljs-comment">#200;</span><br>        <span class="hljs-attribute">a</span> = <span class="hljs-number">1</span>, b = <span class="hljs-number">1</span>, sel = <span class="hljs-number">0</span>;<br>        <span class="hljs-comment">#200;</span><br>        <span class="hljs-attribute">a</span> = <span class="hljs-number">1</span>, b = <span class="hljs-number">1</span>, sel = <span class="hljs-number">1</span>;<br>        <span class="hljs-comment">#200;</span><br>    <span class="hljs-attribute">end</span><br>endmodule<br></code></pre></td></tr></table></figure>
+
+<h1 id="使用-initial-块的原因"><a href="#使用-initial-块的原因" class="headerlink" title="使用 initial 块的原因"></a>使用 initial 块的原因</h1><p>对于需要初始化的寄存器或变量，使用initial语句块可以保证它们的值在仿真开始时被正确地初始化。而使用赋值语句可能会导致在仿真开始时出现未定义的值</p>
 
                 
               </div>
