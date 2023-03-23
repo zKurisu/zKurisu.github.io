@@ -27,7 +27,7 @@
 <meta property="og:image" content="http://example.com/img/verilog_operators.png">
 <meta property="og:image" content="http://example.com/img/the_diff_of_task_and_func.png">
 <meta property="article:published_time" content="2023-03-21T07:05:26.000Z">
-<meta property="article:modified_time" content="2023-03-23T00:48:46.747Z">
+<meta property="article:modified_time" content="2023-03-23T06:27:53.541Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/some_special_string_in_verilog.png">
@@ -239,7 +239,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          16k 字
+          17k 字
         
       </span>
     
@@ -250,7 +250,7 @@
         
         
         
-          135 分钟
+          140 分钟
         
       </span>
     
@@ -479,6 +479,13 @@
 <h2 id="always-语句"><a href="#always-语句" class="headerlink" title="always 语句"></a>always 语句</h2><p>always 语句是<mark>重复执行</mark>的。always 语句块从 0 时刻开始执行其中的行为语句；当执行完最后一条语句后，便再次执行语句块中的第一条语句，如此循环反复.</p>
 <p>如:</p>
 <figure class="highlight verilog"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs verilog"><span class="hljs-meta">`<span class="hljs-keyword">timescale</span> 1ns/1ns</span><br> <br><span class="hljs-keyword">module</span> test ;<br> <br>    <span class="hljs-keyword">parameter</span> CLK_FREQ   = <span class="hljs-number">100</span> ; <span class="hljs-comment">//100MHz</span><br>    <span class="hljs-keyword">parameter</span> CLK_CYCLE  = <span class="hljs-number">1</span>e9 / (CLK_FREQ * <span class="hljs-number">1</span>e6) ;   <span class="hljs-comment">//switch to ns</span><br> <br>    <span class="hljs-keyword">reg</span>  clk ;<br>    <span class="hljs-keyword">initial</span>      clk = <span class="hljs-number">1&#x27;b0</span> ;      <span class="hljs-comment">//clk is initialized to &quot;0&quot;</span><br>    <span class="hljs-keyword">always</span>     # (CLK_CYCLE/<span class="hljs-number">2</span>) clk = ~clk ;       <span class="hljs-comment">//generating a real clock by reversing</span><br> <br>    <span class="hljs-keyword">always</span> <span class="hljs-keyword">begin</span><br>        #<span class="hljs-number">10</span>;<br>        <span class="hljs-keyword">if</span> (<span class="hljs-built_in">$time</span> &gt;= <span class="hljs-number">1000</span>) <span class="hljs-keyword">begin</span><br>            <span class="hljs-built_in">$finish</span> ;<br>        <span class="hljs-keyword">end</span><br>    <span class="hljs-keyword">end</span><br> <br><span class="hljs-keyword">endmodule</span><br></code></pre></td></tr></table></figure>
+
+<p>在Verilog中，@符号用于always块中的敏感列表中，表示该always块应该对列表中指定的变量进行敏感性检测。敏感性列表中的变量发生改变时，该always块将被激活并执行相应的操作。</p>
+<p>具体来说，@(*)表示always块应该对敏感性列表中的所有变量进行敏感性检测，包括输入端口、输出端口和内部变量等。这种方式通常称为“敏感性列表自动感知”，它可以简化设计，并且可以在设计变更时自动更新敏感性列表，从而避免遗漏任何敏感变量。</p>
+<p>需要注意的是，always块中的敏感性列表必须是完整的，否则可能导致行为与预期不符。因此，在设计时，应该仔细检查always块的敏感性列表，并确保它包含了所有必要的变量。</p>
+<p>如:</p>
+<figure class="highlight verilog"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs verilog"><span class="hljs-keyword">module</span> mux4to1(<br>    <span class="hljs-keyword">input</span> [<span class="hljs-number">1</span>:<span class="hljs-number">0</span>]     sel ,<br>    <span class="hljs-keyword">input</span> [<span class="hljs-number">1</span>:<span class="hljs-number">0</span>]     p0 ,<br>    <span class="hljs-keyword">input</span> [<span class="hljs-number">1</span>:<span class="hljs-number">0</span>]     p1 ,<br>    <span class="hljs-keyword">input</span> [<span class="hljs-number">1</span>:<span class="hljs-number">0</span>]     p2 ,<br>    <span class="hljs-keyword">input</span> [<span class="hljs-number">1</span>:<span class="hljs-number">0</span>]     p3 ,<br>    <span class="hljs-keyword">output</span> [<span class="hljs-number">1</span>:<span class="hljs-number">0</span>]    sout);<br><br>    <span class="hljs-keyword">reg</span> [<span class="hljs-number">1</span>:<span class="hljs-number">0</span>]     sout_t ;<br><br>    <span class="hljs-keyword">always</span> @(*) <span class="hljs-keyword">begin</span><br>        <span class="hljs-keyword">if</span> (sel == <span class="hljs-number">2&#x27;b00</span>)<br>            sout_t = p0 ;<br>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (sel == <span class="hljs-number">2&#x27;b01</span>)<br>            sout_t = p1 ;<br>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (sel == <span class="hljs-number">2&#x27;b10</span>)<br>            sout_t = p2 ;<br>        <span class="hljs-keyword">else</span><br>            sout_t = p3 ;<br>    <span class="hljs-keyword">end</span><br>    <span class="hljs-keyword">assign</span> sout = sout_t ;<br> <br><span class="hljs-keyword">endmodule</span><br><br></code></pre></td></tr></table></figure>
+
 
 <h1 id="4-2-过程赋值"><a href="#4-2-过程赋值" class="headerlink" title="4.2 过程赋值"></a>4.2 过程赋值</h1><p>过程性赋值是在 initial 或 always 语句块里的赋值，赋值对象是寄存器、整数、实数等类型。</p>
 <p>这些变量在被赋值后，其值将保持不变，直到重新被赋予新值。</p>
