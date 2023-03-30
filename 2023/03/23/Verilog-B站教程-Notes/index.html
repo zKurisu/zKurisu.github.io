@@ -30,7 +30,7 @@
 <meta property="og:image" content="http://example.com/img/D-flip-flops.png">
 <meta property="og:image" content="http://example.com/img/adder_example.png">
 <meta property="article:published_time" content="2023-03-23T06:07:00.000Z">
-<meta property="article:modified_time" content="2023-03-30T02:23:03.923Z">
+<meta property="article:modified_time" content="2023-03-30T02:53:19.091Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/progress_of_FPGA_design.png">
@@ -242,7 +242,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          4.1k 字
+          4.6k 字
         
       </span>
     
@@ -253,7 +253,7 @@
         
         
         
-          35 分钟
+          39 分钟
         
       </span>
     
@@ -390,8 +390,19 @@
 <p>若要每 500ms 闪烁, 则需要经过 $500ms&#x2F;20ns$ 个周期, 即 25000000 个周期.</p>
 <p>也就是让计数器来记录 25000000 个周期.</p>
 <p>代码如下:<br>(这里的复位接口的作用是让 counter 复位)</p>
-<figure class="highlight verilog"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs verilog"><span class="hljs-keyword">module</span>(<br>    <span class="hljs-keyword">input</span>  clk, reset,<br>    <span class="hljs-keyword">output</span> led<br>)<br>    <span class="hljs-keyword">reg</span>[<span class="hljs-number">24</span>:<span class="hljs-number">0</span>] counter;<br><br>    <span class="hljs-keyword">always</span> @ (<span class="hljs-keyword">posedge</span> clk <span class="hljs-keyword">or</span> <span class="hljs-keyword">negedge</span> reset)<br>    <span class="hljs-keyword">if</span> (!Reset_n) <br>        counter &lt;= <span class="hljs-number">0</span>;<br><br><br><span class="hljs-keyword">endmodule</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight verilog"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs verilog"><span class="hljs-keyword">module</span>(<br>    <span class="hljs-keyword">input</span>  clk, reset,<br>    <span class="hljs-keyword">output</span> led<br>)<br>    <span class="hljs-keyword">reg</span>[<span class="hljs-number">24</span>:<span class="hljs-number">0</span>] counter;<br>    <span class="hljs-keyword">reg</span>       led;<br><br>    <span class="hljs-keyword">always</span> @ (<span class="hljs-keyword">posedge</span> clk <span class="hljs-keyword">or</span> <span class="hljs-keyword">negedge</span> reset)<br>    <span class="hljs-keyword">if</span> (!Reset_n) <span class="hljs-keyword">begin</span><br>        counter &lt;= <span class="hljs-number">0</span>;<br>        led &lt;= <span class="hljs-number">0</span>;<br>    <span class="hljs-keyword">end</span><br>    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (counter == <span class="hljs-number">25000000</span>) <span class="hljs-keyword">begin</span><br>        led &lt;= !led;<br>        counter &lt;= <span class="hljs-number">0</span>;<br>    <span class="hljs-keyword">end</span><br>    <span class="hljs-keyword">else</span><br>        counter &lt;= counter + <span class="hljs-number">1&#x27;d1</span>;<br><span class="hljs-keyword">endmodule</span><br></code></pre></td></tr></table></figure>
 <p>代码解释:<br>当 <code>clk</code> 信号的上升沿或者 <code>reset</code> 信号的下降沿时, 执行 always 块.</p>
+<p><code>&lt;=</code> 指非阻塞赋值.</p>
+<p>上述代码中的 <code>always</code> 块也可以分开写 (推荐):</p>
+<figure class="highlight verilog"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs verilog"><span class="hljs-keyword">always</span> @ (<span class="hljs-keyword">posedge</span> clk <span class="hljs-keyword">or</span> <span class="hljs-keyword">negedge</span> reset) <br><span class="hljs-keyword">if</span> (!reset)<br>    counter &lt;= <span class="hljs-number">0</span>;<br><span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (counter == <span class="hljs-number">25000000</span>)<br>    counter &lt;= <span class="hljs-number">0</span>;<br><span class="hljs-keyword">else</span> <br>    counter &lt;= counter + <span class="hljs-number">1&#x27;d1</span>;<br><br><span class="hljs-keyword">always</span> @ (<span class="hljs-keyword">posedge</span> clk <span class="hljs-keyword">or</span> <span class="hljs-keyword">negedge</span> reset)<br><span class="hljs-keyword">if</span> (!reset) <br>    led &lt;= <span class="hljs-number">0</span>;<br><span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (counter == <span class="hljs-number">25000000</span>)<br>    led &lt;= !led;<br></code></pre></td></tr></table></figure>
+
+<p>test bench 代码为:</p>
+<figure class="highlight verilog"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs verilog"><span class="hljs-meta">`<span class="hljs-keyword">timescale</span> 1ns/1ns</span><br><br><span class="hljs-keyword">module</span> led_flash_tb ()<br><br>    <span class="hljs-keyword">reg</span> clk;<br>    <span class="hljs-keyword">reg</span> reset;<br>    <span class="hljs-keyword">wire</span> led;<br><br>    led_flash flash(<br><br>    );<br><br><span class="hljs-keyword">endmodule</span><br></code></pre></td></tr></table></figure>
+
+
+
+
+
 
                 
               </div>
