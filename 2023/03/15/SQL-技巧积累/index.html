@@ -16,15 +16,15 @@
   <meta name="author" content="John Doe">
   <meta name="keywords" content="">
   
-    <meta name="description" content="查看当前用户1SELECT USER();  已存在的数据库1SHOW DATABASES LIKE &amp;#x27;name&amp;#x27;;   进入一个数据库1USE databasename;  显示数据库中的所有表1SHOW TABLES;  显示一个表中的所有列1DESCRIBE tablename;">
+    <meta name="description" content="查看当前用户1SELECT USER();  已存在的数据库1SHOW DATABASES LIKE &amp;#x27;name&amp;#x27;;   进入一个数据库1USE databasename;  显示数据库中的所有表1SHOW TABLES;  显示一个表中的所有列1DESCRIBE tablename;  解决 mysql 无法存储中文其问题在于没有将数据库的字符集设置为支持中文的编码, 如 u">
 <meta property="og:type" content="article">
 <meta property="og:title" content="SQL-技巧积累">
 <meta property="og:url" content="http://example.com/2023/03/15/SQL-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="查看当前用户1SELECT USER();  已存在的数据库1SHOW DATABASES LIKE &amp;#x27;name&amp;#x27;;   进入一个数据库1USE databasename;  显示数据库中的所有表1SHOW TABLES;  显示一个表中的所有列1DESCRIBE tablename;">
+<meta property="og:description" content="查看当前用户1SELECT USER();  已存在的数据库1SHOW DATABASES LIKE &amp;#x27;name&amp;#x27;;   进入一个数据库1USE databasename;  显示数据库中的所有表1SHOW TABLES;  显示一个表中的所有列1DESCRIBE tablename;  解决 mysql 无法存储中文其问题在于没有将数据库的字符集设置为支持中文的编码, 如 u">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-03-15T08:38:52.000Z">
-<meta property="article:modified_time" content="2023-03-15T11:09:43.043Z">
+<meta property="article:modified_time" content="2023-04-06T09:47:26.870Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          137 字
+          1.4k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          2 分钟
+          12 分钟
         
       </span>
     
@@ -300,7 +300,37 @@
 
 <h1 id="显示一个表中的所有列"><a href="#显示一个表中的所有列" class="headerlink" title="显示一个表中的所有列"></a>显示一个表中的所有列</h1><figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs abnf">DESCRIBE tablename<span class="hljs-comment">;</span><br></code></pre></td></tr></table></figure>
 
-<h1 id=""><a href="#" class="headerlink" title=""></a></h1>
+<h1 id="解决-mysql-无法存储中文"><a href="#解决-mysql-无法存储中文" class="headerlink" title="解决 mysql 无法存储中文"></a>解决 mysql 无法存储中文</h1><p>其问题在于没有将数据库的字符集设置为支持中文的编码, 如 <code>utf8mb4</code>.</p>
+<p>需注意: </p>
+<ul>
+<li>表的字符集和列的字符集都应该是相同的，并且应该与数据库字符集一致</li>
+<li>连接 MySQL 时要设置正确的字符集，如在连接时执行 <code>SET NAMES &#39;utf8mb4&#39;</code> (<code>NAMES</code> 指定之后的 <code>&#39;utf8mb4&#39;</code>)</li>
+</ul>
+<p>查看当前的编码格式:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SHOW</span> VARIABLES <span class="hljs-keyword">LIKE</span> <span class="hljs-string">&#x27;%char%&#x27;</span>;<br></code></pre></td></tr></table></figure>
+
+<p>查看一个数据库中一个表的字符集:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SHOW</span> <span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> table_name;<br></code></pre></td></tr></table></figure>
+<h2 id="直接设置"><a href="#直接设置" class="headerlink" title="直接设置"></a>直接设置</h2><p>将一个数据库的字符集设置为 <code>utf8mb4</code>:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">ALTER</span> DATABASE database_name <span class="hljs-type">CHARACTER</span> <span class="hljs-keyword">SET</span> <span class="hljs-operator">=</span> utf8mb4 <span class="hljs-keyword">COLLATE</span> <span class="hljs-operator">=</span> utf8mb4_unicode_ci;<br></code></pre></td></tr></table></figure>
+
+
+<p>将一个表的字符集设置为 <code>utf8mb4</code>:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">ALTER</span> <span class="hljs-keyword">TABLE</span> table_name <span class="hljs-keyword">CONVERT</span> <span class="hljs-keyword">TO</span> <span class="hljs-type">CHARACTER</span> <span class="hljs-keyword">SET</span> utf8mb4 <span class="hljs-keyword">COLLATE</span> utf8mb4_unicode_ci;<br></code></pre></td></tr></table></figure>
+
+<h2 id="通过修改配置文件来设置"><a href="#通过修改配置文件来设置" class="headerlink" title="通过修改配置文件来设置"></a>通过修改配置文件来设置</h2><p>修改 <code>/etc/my.cnf</code> 或 <code>/etc/my.ini</code>, 如:</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs ini"><span class="hljs-section">[client]</span><br><span class="hljs-attr">default-character-set</span>=utf8mb4<br><br><span class="hljs-section">[mysql]</span><br><span class="hljs-attr">default-character-set</span>=utf8mb4<br><br><span class="hljs-section">[mysqld]</span><br><span class="hljs-comment"># ...</span><br><span class="hljs-attr">character-set-server</span>=utf8mb4<br><span class="hljs-attr">collation-server</span>=utf8mb4_unicode_ci<br></code></pre></td></tr></table></figure>
+<p>其中，<code>[client]</code> 和 <code>[mysql]</code> 用于客户端连接 MySQL 服务器时的默认字符集，<code>[mysqld]</code> 是 MySQL 服务器的默认字符集。</p>
+<p>在上述配置中，utf8mb4 是比较常用的字符集编码，它是 UTF-8 的超集，支持更多的 Unicode 字符。同时还设置了与之对应的排序规则 utf8mb4_unicode_ci，保证数据库中存储的文本数据以及索引的排序符合 Unicode 标准。需要注意的是，如果要使用 utf8mb4 字符集，还需要确认 MySQL 服务器和客户端的版本都支持该字符集。</p>
+<p>在修改完配置文件后，需要重启 MySQL 服务使得配置生效。</p>
+<h1 id="关于-Primary-Key"><a href="#关于-Primary-Key" class="headerlink" title="关于 Primary Key"></a>关于 Primary Key</h1><p>这个列不能有相同元素.</p>
+<h1 id="关于-AUTO-INCREMENT"><a href="#关于-AUTO-INCREMENT" class="headerlink" title="关于 AUTO_INCREMENT"></a>关于 AUTO_INCREMENT</h1><p>MySQL 中 AUTO_INCREMENT 属性只能作用于整数类型（INT、BIGINT、SMALLINT 和 TINYINT）的列。这是因为在实现自增 ID 的过程中，需要对该列的取值进行加一操作，只有整数类型的数据才能进行准确的加法计算。在 MySQL 中，关于 AUTO_INCREMENT 属性的使用还有一些限制：</p>
+<pre><code class="hljs">表中最多只能有一个 AUTO_INCREMENT 列。
+AUTO_INCREMENT 只能创建在单列上。
+如果表中 AUTO_INCREMENT 列的值被手动修改，那么这个新值将被作为之后插入行的新起始值。
+</code></pre>
+<p>需要注意的是，虽然 AUTO_INCREMENT 列会按照自增规则生成下一个 ID 值，但并不能保证 ID 的连续性和不重复性。如果想要保证 ID 值的唯一性，请在该列上添加 UNIQUE 约束。</p>
+
                 
               </div>
             
