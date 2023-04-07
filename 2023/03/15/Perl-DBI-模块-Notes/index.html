@@ -27,7 +27,7 @@
 <meta property="og:image" content="http://example.com/img/conventions_of_DBI.png">
 <meta property="og:image" content="http://example.com/img/how_DBI_work_with_DBD.png">
 <meta property="article:published_time" content="2023-03-15T11:09:58.000Z">
-<meta property="article:modified_time" content="2023-04-07T03:11:51.215Z">
+<meta property="article:modified_time" content="2023-04-07T04:37:18.714Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/DBI_architecture.png">
@@ -239,7 +239,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.5k 字
+          2.9k 字
         
       </span>
     
@@ -250,7 +250,7 @@
         
         
         
-          21 分钟
+          25 分钟
         
       </span>
     
@@ -361,6 +361,14 @@
 <p>注意对查询的缓存:</p>
 <figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs perl">&#123;  <br>    <span class="hljs-keyword">my</span> $sth;<br><br>    <span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">age_by_id</span> </span>&#123;<br>        <span class="hljs-comment"># Arguments: database handle, person ID number</span><br>        <span class="hljs-keyword">my</span> ($dbh, $id) = @_;<br><br>        <span class="hljs-keyword">if</span> (! <span class="hljs-keyword">defined</span> $sth) &#123;<br>            $sth = $dbh-&gt;prepare(<span class="hljs-string">&#x27;SELECT age FROM people WHERE id = ?&#x27;</span>)<br>            <span class="hljs-keyword">or</span> <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;Couldn&#x27;t prepare statement: &quot;</span> . $dbh-&gt;errstr;<br>        &#125;<br><br>        $sth-&gt;execute($id) <br>                <span class="hljs-keyword">or</span> <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;Couldn&#x27;t execute statement: &quot;</span> . $sth-&gt;errstr;<br><br>        <span class="hljs-keyword">my</span> ($age) = $sth-&gt;fetchrow_array();<br>        <span class="hljs-keyword">return</span> $age;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>也就是只 <code>prepare</code> 一次, 然后多次使用, <code>prepare</code> 的开销一般比较大.</p>
+<p>或者直接用 <code>prepare_cached</code>, 其会检查这一次查询是不是和上一次一样:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs perl"> <span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">age_by_id</span> </span>&#123;<br>    <span class="hljs-comment"># Arguments: database handle, person ID number</span><br>    <span class="hljs-keyword">my</span> ($dbh, $id) = @_;<br>    <span class="hljs-keyword">my</span> $sth = $dbh-&gt;prepare_cached(<span class="hljs-string">&#x27;SELECT age FROM people WHERE id = ?&#x27;</span>)<br>        <span class="hljs-keyword">or</span> <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;Couldn&#x27;t prepare statement: &quot;</span> . $dbh-&gt;errstr;<br><br>    $sth-&gt;execute($id) <br>                <span class="hljs-keyword">or</span> <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;Couldn&#x27;t execute statement: &quot;</span> . $sth-&gt;errstr;<br><br>    <span class="hljs-keyword">my</span> ($age) = $sth-&gt;fetchrow_array();<br>    <span class="hljs-keyword">return</span> $age;<br>&#125;<br><br></code></pre></td></tr></table></figure>
+
+
+
+
+
+
 
                 
               </div>
