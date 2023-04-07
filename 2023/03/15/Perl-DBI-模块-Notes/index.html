@@ -27,7 +27,7 @@
 <meta property="og:image" content="http://example.com/img/conventions_of_DBI.png">
 <meta property="og:image" content="http://example.com/img/how_DBI_work_with_DBD.png">
 <meta property="article:published_time" content="2023-03-15T11:09:58.000Z">
-<meta property="article:modified_time" content="2023-04-07T04:37:18.714Z">
+<meta property="article:modified_time" content="2023-04-07T04:49:06.302Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/DBI_architecture.png">
@@ -239,7 +239,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.9k 字
+          3.9k 字
         
       </span>
     
@@ -250,7 +250,7 @@
         
         
         
-          25 分钟
+          33 分钟
         
       </span>
     
@@ -364,11 +364,11 @@
 <p>或者直接用 <code>prepare_cached</code>, 其会检查这一次查询是不是和上一次一样:</p>
 <figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs perl"> <span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">age_by_id</span> </span>&#123;<br>    <span class="hljs-comment"># Arguments: database handle, person ID number</span><br>    <span class="hljs-keyword">my</span> ($dbh, $id) = @_;<br>    <span class="hljs-keyword">my</span> $sth = $dbh-&gt;prepare_cached(<span class="hljs-string">&#x27;SELECT age FROM people WHERE id = ?&#x27;</span>)<br>        <span class="hljs-keyword">or</span> <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;Couldn&#x27;t prepare statement: &quot;</span> . $dbh-&gt;errstr;<br><br>    $sth-&gt;execute($id) <br>                <span class="hljs-keyword">or</span> <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;Couldn&#x27;t execute statement: &quot;</span> . $sth-&gt;errstr;<br><br>    <span class="hljs-keyword">my</span> ($age) = $sth-&gt;fetchrow_array();<br>    <span class="hljs-keyword">return</span> $age;<br>&#125;<br><br></code></pre></td></tr></table></figure>
 
+<p>一个和 transaction 相关的示例:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-function"><span class="hljs-keyword">sub</span> <span class="hljs-title">new_employee</span> </span>&#123;<br>    <span class="hljs-comment"># Arguments: database handle; first and last names of new employee;</span><br>    <span class="hljs-comment"># department ID number for new employee&#x27;s work assignment</span><br>    <span class="hljs-keyword">my</span> ($dbh, $first, $last, $department) = @_;<br>    <span class="hljs-keyword">my</span> ($insert_handle, $update_handle);<br><br>    <span class="hljs-keyword">my</span> $insert_handle = <br>    $dbh-&gt;prepare_cached(<span class="hljs-string">&#x27;INSERT INTO employees VALUES (?,?,?)&#x27;</span>); <br>    <span class="hljs-keyword">my</span> $update_handle = <br>    $dbh-&gt;prepare_cached(<span class="hljs-string">&#x27;UPDATE departments </span><br><span class="hljs-string">                            SET num_members = num_members + 1</span><br><span class="hljs-string">                        WHERE id = ?&#x27;</span>);<br><br>    <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;Couldn&#x27;t prepare queries; aborting&quot;</span><br>            <span class="hljs-keyword">unless</span> <span class="hljs-keyword">defined</span> $insert_handle &amp;&amp; <span class="hljs-keyword">defined</span> $update_handle;<br><br>    <span class="hljs-keyword">my</span> $success = <span class="hljs-number">1</span>;<br>    $success &amp;&amp;= $insert_handle-&gt;execute($first, $last, $department);<br>    $success &amp;&amp;= $update_handle-&gt;execute($department);<br><br>    <span class="hljs-keyword">my</span> $result = ($success ? $dbh-&gt;commit : $dbh-&gt;rollback);<br>    <span class="hljs-keyword">unless</span> ($result) &#123; <br>        <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;Couldn&#x27;t finish transaction: &quot;</span> . $dbh-&gt;errstr <br>    &#125;<br>    <span class="hljs-keyword">return</span> $success;<br>&#125;<br></code></pre></td></tr></table></figure>
 
-
-
-
-
+<p><code>do</code> 是 <code>prepare</code>, <code>execute</code> 和 <code>finish</code> 这三个操作的缩写, 但其用于没有返回数据的操作, 其返回值为改变的行数, 似乎不会获取数据库中的行. (可能 <code>finish</code> 会刷新获取的行)</p>
+<h1 id="书籍-Programming-the-Perl-DBI"><a href="#书籍-Programming-the-Perl-DBI" class="headerlink" title="书籍 Programming the Perl DBI"></a>书籍 Programming the Perl DBI</h1><p><a target="_blank" rel="noopener" href="https://docstore.mik.ua/orelly/linux/dbi/index.htm">网页版</a></p>
 
                 
               </div>
