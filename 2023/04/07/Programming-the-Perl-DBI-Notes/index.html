@@ -24,7 +24,7 @@
 <meta property="og:description" content="第一章 简介第二章 基本的 Non-DBI Databases考虑两个模块:  Storable Data::Dumper  2.1 Storage Managers and Layers2.2 查询语言和 Data Functions基本的操作:  Fetching (select) Storing (insert) Updating (update) Deleting (delete)  2.">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-04-07T10:03:47.000Z">
-<meta property="article:modified_time" content="2023-04-07T13:17:37.537Z">
+<meta property="article:modified_time" content="2023-04-07T13:39:48.747Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          6.3k 字
+          7.9k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          53 分钟
+          67 分钟
         
       </span>
     
@@ -364,7 +364,25 @@
 <p>让 <code>Data::Dumper</code> 产生的输出没有换行符, 可以通过设置两个包变量:</p>
 <figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl">$Data::Dumper::Indent = <span class="hljs-number">0</span>; <span class="hljs-comment"># don&#x27;t use newlines to layout the output</span><br>$Data::Dumper::Useqq = <span class="hljs-number">1</span>; <span class="hljs-comment"># use double quoted strings with &quot;\n&quot; escapes</span><br></code></pre></td></tr></table></figure>
 
-<h3 id="2-5-2-Storable-模块"><a href="#2-5-2-Storable-模块" class="headerlink" title="2.5.2 Storable 模块"></a>2.5.2 Storable 模块</h3>
+<p>可以这样写:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">if</span> ($ARGV[<span class="hljs-number">0</span>] eq <span class="hljs-string">&#x27;flat&#x27;</span>) &#123;<br>    $Data::Dumper::Indent = <span class="hljs-number">0</span>;<br>    $Data::Dumper::Useqq = <span class="hljs-number">1</span>;<br>&#125;<br>$Data::Dumper::Purity = <span class="hljs-number">1</span>;<br></code></pre></td></tr></table></figure>
+
+<h3 id="2-5-2-Storable-模块"><a href="#2-5-2-Storable-模块" class="headerlink" title="2.5.2 Storable 模块"></a>2.5.2 Storable 模块</h3><p><code>Storable</code> 模块的特点是速度快.</p>
+<p>主要利用两个函数:</p>
+<ul>
+<li><code>freeze</code></li>
+<li><code>thaw</code></li>
+</ul>
+<p><code>freeze</code> 函数将 Perl 数据结构转换为字节数据流，以便存储到文件或通过网络传输</p>
+<p><code>thaw</code> 函数将字节数据流转换为原始的 Perl 数据结构。</p>
+<p>这里存储的是十六进制码, 如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-number">0302000000050</span>a0a436173746c6572696767580a0743756d62726961580a0a4e59203239312032<br><span class="hljs-number">3336580</span>a0c53746f6e6520436972636c65580aa34f6e65206f6620746865206c6f76656c696573<br><span class="hljs-number">742073746</span>f6e6520636972636c65732072656d61696e696e6720746f6461792e20546869732073<br><span class="hljs-number">69746520697320636</span>f6d707269736564206f66206c6172676520726f756e64656420626f756c64<br><span class="hljs-number">657273207365742077697468696</span>e2061206e61747572616c20616d706869746865617472652066<br><span class="hljs-number">6</span>f726d656420627920737572726f756e64696e672068696c6c732e5858<br></code></pre></td></tr></table></figure>
+
+<p>处理代码如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-comment">### Scan through all the entries for the desired site</span><br><span class="hljs-keyword">while</span> ( &lt;MEGADATA&gt; ) &#123;<br>    <span class="hljs-comment">### Convert the ASCII encoded string back to binary</span><br>    <span class="hljs-comment">### (pack ignores the trailing newline record delimiter)</span><br>    <span class="hljs-keyword">my</span> $frozen = <span class="hljs-keyword">pack</span> <span class="hljs-string">&quot;H*&quot;</span>, $_;<br>    <span class="hljs-comment">### Thaw the frozen data structure</span><br>    <span class="hljs-keyword">my</span> $fields = thaw( $frozen );<br>    <span class="hljs-comment">### Break up the record data into separate fields</span><br>    <span class="hljs-keyword">my</span> ( $name, $location, $mapref, $type, $description ) = @$fields;<br>    <span class="hljs-comment">### Skip the record if the extracted site name field doesn&#x27;t match</span><br>    <span class="hljs-keyword">next</span> <span class="hljs-keyword">unless</span> $siteName eq $name;<br>    <span class="hljs-comment">### We&#x27;ve found the record to update</span><br>    <span class="hljs-comment">### Create a new fields array with new map ref value</span><br>    $fields = [ $name, $location, $siteMapRef, $type, $description ];<br>    <span class="hljs-comment">### Freeze the data structure into a binary string</span><br>    $frozen = nfreeze( $fields );<br>    <span class="hljs-comment">### Encode the binary string as readable ASCII and append a newline</span><br>    $_ = <span class="hljs-keyword">unpack</span>( <span class="hljs-string">&quot;H*&quot;</span>, $frozen ) . <span class="hljs-string">&quot;\n&quot;</span>;<br>&#125;<br><span class="hljs-keyword">continue</span>&#123;<br>&#125;<br>    <span class="hljs-comment">### Write the record out to the temporary file</span><br>    <span class="hljs-keyword">print</span> TMPMEGADATA $_<br>        <span class="hljs-keyword">or</span> <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;Error writing $tempFile: $!\n&quot;</span>;<br></code></pre></td></tr></table></figure>
+
+<p>用 <code>nfreeze()</code> 代替 <code>freeze()</code> 可以保证数字的形式适合任意系统.</p>
+<h2 id="2-6-同时访问数据库以及-Locking"><a href="#2-6-同时访问数据库以及-Locking" class="headerlink" title="2.6 同时访问数据库以及 Locking"></a>2.6 同时访问数据库以及 Locking</h2>
                 
               </div>
             
