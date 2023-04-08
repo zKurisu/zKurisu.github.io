@@ -30,7 +30,7 @@
 <meta property="og:image" content="http://example.com/img/DBI_handles.png">
 <meta property="og:image" content="http://example.com/img/data_source_name_example.png">
 <meta property="article:published_time" content="2023-04-07T10:03:47.000Z">
-<meta property="article:modified_time" content="2023-04-08T12:34:23.719Z">
+<meta property="article:modified_time" content="2023-04-08T13:04:19.138Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/default_argument_of_DB_Files.png">
@@ -242,7 +242,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          29k 字
+          31k 字
         
       </span>
     
@@ -253,7 +253,7 @@
         
         
         
-          243 分钟
+          261 分钟
         
       </span>
     
@@ -603,6 +603,24 @@
 <figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl">$h-&gt;&#123;PrintError&#125; = <span class="hljs-number">1</span>;<br>$h-&gt;&#123;RaiseError&#125; = <span class="hljs-number">1</span>;<br></code></pre></td></tr></table></figure>
 
 <p>当 <code>PrintError</code> 和 <code>RaiseError</code> 被同时设置时, 如果没有设置 <code>$SIG&#123;__DIE__&#125;</code>, 那么 <code>warn()</code> 则会被跳过 (防止报错信息打印两次)</p>
+<p>一个使用 <code>RaiseError</code> 的例子:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> DBI;<br><br><span class="hljs-comment"># Load the DBI module</span><br><span class="hljs-keyword">my</span> ($dbh, $sth, @row);<br><br><span class="hljs-comment">### Perform the connection using the Oracle driver</span><br>$dbh = DBI-&gt;<span class="hljs-keyword">connect</span>( <span class="hljs-string">&quot;dbi:Oracle:archaeo&quot;</span>, <span class="hljs-string">&quot;username&quot;</span>, <span class="hljs-string">&quot;password&quot;</span> , &#123;<br>    <span class="hljs-string">PrintError =&gt;</span> <span class="hljs-number">0</span>, <span class="hljs-comment">### Don&#x27;t report errors via warn( )</span><br>    <span class="hljs-string">RaiseError =&gt;</span> <span class="hljs-number">1</span> <span class="hljs-comment">### Do report errors via die( )</span><br>&#125; );<br><br><span class="hljs-comment">### Prepare a SQL statement for execution</span><br>$sth = $dbh-&gt;prepare( <span class="hljs-string">&quot;SELECT * FROM megaliths&quot;</span> );<br><br><span class="hljs-comment">### Execute the statement in the database</span><br>$sth-&gt;execute( );<br><br><span class="hljs-comment">### Retrieve the returned rows of data</span><br><span class="hljs-keyword">while</span> ( @row = $sth-&gt;fetchrow_array( ) ) &#123;<br>    <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;Row: @row\n&quot;</span>;<br>&#125;<br><br><span class="hljs-comment">### Disconnect from the database</span><br>$dbh-&gt;disconnect( );<br><br><span class="hljs-keyword">exit</span>;<br></code></pre></td></tr></table></figure>
+
+<h4 id="4-5-1-3-混合-error-checking"><a href="#4-5-1-3-混合-error-checking" class="headerlink" title="4.5.1.3 混合 error checking"></a>4.5.1.3 混合 error checking</h4><p>让 database 崩溃时进行重连:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-comment">#!/usr/bin/perl -w</span><br><span class="hljs-comment">#</span><br><span class="hljs-comment"># ch04/error/mixed1: Example showing mixed error checking modes.</span><br><span class="hljs-keyword">use</span> DBI;<br><span class="hljs-comment"># Load the DBI module</span><br><span class="hljs-comment">### Attributes to pass to DBI-&gt;connect() to disable automatic</span><br><span class="hljs-comment">### error checking</span><br><span class="hljs-keyword">my</span> %attr = (<br>    <span class="hljs-string">PrintError =&gt;</span> <span class="hljs-number">0</span>,<br>    <span class="hljs-string">RaiseError =&gt;</span> <span class="hljs-number">0</span>,<br>);<br><span class="hljs-comment">### The program runs forever and ever and ever and ever ...</span><br><span class="hljs-keyword">while</span> ( <span class="hljs-number">1</span> ) &#123;<br>    <span class="hljs-keyword">my</span> $dbh;<br><br>    <span class="hljs-comment">### Attempt to connect to the database. If the connection</span><br>    <span class="hljs-comment">### fails, sleep and retry until it succeeds ...</span><br>    <span class="hljs-keyword">until</span> (<br>        $dbh = DBI-&gt;<span class="hljs-keyword">connect</span>( <span class="hljs-string">&quot;dbi:Oracle:archaeo&quot;</span>, <span class="hljs-string">&quot;username&quot;</span>, <span class="hljs-string">&quot;password&quot;</span> , \%attr )<br>    ) &#123;<br>        <span class="hljs-keyword">warn</span> <span class="hljs-string">&quot;Can&#x27;t connect: $DBI::errstr. Pausing before retrying.\n&quot;</span>;<br>        <span class="hljs-keyword">sleep</span>( <span class="hljs-number">5</span> * <span class="hljs-number">60</span> );<br>    &#125;<br><br>    <span class="hljs-keyword">eval</span> &#123;<br>        <span class="hljs-comment">### Catch _any_ kind of failures from the code within</span><br>        <span class="hljs-comment">### Enable auto-error checking on the database handle</span><br>        $dbh-&gt;&#123;RaiseError&#125; = <span class="hljs-number">1</span>;<br><br>        <span class="hljs-comment">### Prepare a SQL statement for execution</span><br>        <span class="hljs-keyword">my</span> $sth = $dbh-&gt;prepare( <span class="hljs-string">&quot;SELECT stock, value FROM current_values&quot;</span> );<br>        <span class="hljs-keyword">while</span> (<span class="hljs-number">1</span>) &#123;<br>            <span class="hljs-comment">### Execute the statement in the database</span><br>            $sth-&gt;execute( );<br>            <span class="hljs-comment">### Retrieve the returned rows of data</span><br>            <span class="hljs-keyword">while</span> ( <span class="hljs-keyword">my</span> @row = $sth-&gt;fetchrow_array() ) &#123;<br>                <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;Row: @row\n&quot;</span>;<br>            &#125;<br>        &#125;<br><br>        <span class="hljs-comment">### Pause for the stock market values to move</span><br>        <span class="hljs-keyword">sleep</span> <span class="hljs-number">60</span>;<br>    &#125;;<br>    <span class="hljs-keyword">warn</span> <span class="hljs-string">&quot;Monitoring aborted by error: $@\n&quot;</span> <span class="hljs-keyword">if</span> $@;<br>    <span class="hljs-comment">### Short sleep here to avoid thrashing the database</span><br>    <span class="hljs-keyword">sleep</span> <span class="hljs-number">5</span>;<br>&#125;<br><br><span class="hljs-keyword">exit</span>;<br></code></pre></td></tr></table></figure>
+<p>在连接时手动处理, 其他时候自动处理 (且放在 <code>eval</code> 块中).</p>
+<h3 id="4-5-2-Error-Diagnostics"><a href="#4-5-2-Error-Diagnostics" class="headerlink" title="4.5.2 Error Diagnostics"></a>4.5.2 Error Diagnostics</h3><p>DBI 定义了几个错误诊断的方法, 可以用任意 driver, database, statement handles 来调用. 通过其返回值来判断:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl">$rv = $h-&gt;err();<br>$str = $h-&gt;errstr();<br>$str = $h-&gt;<span class="hljs-keyword">state</span>();<br></code></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+
 
                 
               </div>
