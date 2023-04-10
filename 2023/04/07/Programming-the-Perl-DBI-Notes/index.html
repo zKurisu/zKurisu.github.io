@@ -32,7 +32,7 @@
 <meta property="og:image" content="http://example.com/img/how_to_set_DBI_TRACE.png">
 <meta property="og:image" content="http://example.com/img/statement_preparation_data_flow_via_DBI.png">
 <meta property="article:published_time" content="2023-04-07T10:03:47.000Z">
-<meta property="article:modified_time" content="2023-04-10T13:16:45.001Z">
+<meta property="article:modified_time" content="2023-04-10T13:46:22.511Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/default_argument_of_DB_Files.png">
@@ -244,7 +244,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          42k 字
+          43k 字
         
       </span>
     
@@ -255,7 +255,7 @@
         
         
         
-          347 分钟
+          356 分钟
         
       </span>
     
@@ -742,10 +742,27 @@
 <p>使用如:</p>
 <figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs perl">$sth = $dbh-&gt;prepare( <span class="hljs-string">&quot;</span><br><span class="hljs-string">    SELECT name, mapref, location</span><br><span class="hljs-string">    FROM megaliths</span><br><span class="hljs-string">&quot;</span> );<br>$sth-&gt;execute();<br>$rows = $sth-&gt;dump_results();<br></code></pre></td></tr></table></figure>
 
-<h2 id="可以-自定义输出的格式-默认的参数为-1-Maximum-Field-Length"><a href="#可以-自定义输出的格式-默认的参数为-1-Maximum-Field-Length" class="headerlink" title="可以 自定义输出的格式 , 默认的参数为:1: Maximum Field Length"></a>可以 <mark>自定义输出的格式</mark> , 默认的参数为:<br>1:<br> Maximum Field Length</h2><h2 id="352-Line-Separator"><a href="#352-Line-Separator" class="headerlink" title=" 352: Line Separator"></a> 35<br>2:<br> Line Separator</h2><h2 id="“-n”3-Field-Separator"><a href="#“-n”3-Field-Separator" class="headerlink" title=" “\n”3: Field Separator"></a> “\n”<br>3:<br> Field Separator</h2><p> “,”</p>
+<p>可以 <mark>自定义输出的格式</mark> , 默认的参数为:</p>
 <ul>
-<li>第4个参数: Output file handle - STDOUT</li>
+<li>第1个参数: Maximum Field Length - 35 </li>
+<li>第2个参数: Line Separator       - “\n”</li>
+<li>第3个参数: Field Separator      - “,”</li>
+<li>第4个参数: Output file handle   - STDOUT</li>
 </ul>
+<p>设置如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-comment">### Prepare and execute the query</span><br>$sth = $dbh-&gt;prepare( <span class="hljs-string">&quot;</span><br><span class="hljs-string">    SELECT name, location, mapref</span><br><span class="hljs-string">    FROM megaliths</span><br><span class="hljs-string">&quot;</span> );<br>$sth-&gt;execute( );<br><br><span class="hljs-comment">### Open the output file</span><br><span class="hljs-keyword">open</span> FILE, <span class="hljs-string">&quot;&gt;results.lis&quot;</span> <span class="hljs-keyword">or</span> <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;Can&#x27;t open results.lis: $!&quot;</span>;<br><br><span class="hljs-comment">### Dump the formatted results to the file</span><br>$rows = $sth-&gt;dump_results( <span class="hljs-number">80</span>, <span class="hljs-string">&#x27;\n&#x27;</span>, <span class="hljs-string">&#x27;:&#x27;</span>, \*FILE );<br><br><span class="hljs-comment">### Close the output file</span><br><span class="hljs-keyword">close</span> FILE <span class="hljs-keyword">or</span> <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;Error closing result file: $!\n&quot;</span>;<br></code></pre></td></tr></table></figure>
+
+<p><code>dump_results()</code> 方法在内部使用 <code>neat_list()</code> 来设置格式.</p>
+<h3 id="5-1-4-提前完成一个-Data-Fetch"><a href="#5-1-4-提前完成一个-Data-Fetch" class="headerlink" title="5.1.4 提前完成一个 Data Fetch"></a>5.1.4 提前完成一个 Data Fetch</h3><p>也就是用 statement handle 执行 <code>finish()</code> 方法. (其只是 finish 掉了当前的 execution, 而不是句柄本身, 因此句柄还是可以再次 <code>execute()</code>)</p>
+<p>当你不需要用到一次 <code>execution</code> 的所有结果时, 又不想让 result set 占用一部分 temporary disk space, 就可以用 <code>finish()</code> 来释放这部分内存.</p>
+<p>没有 <code>fetch</code> 完所有结果的 statement handle 称为 <mark>active statement handle</mark> .</p>
+<h3 id="5-1-5-释放-statement-handles"><a href="#5-1-5-释放-statement-handles" class="headerlink" title="5.1.5 释放 statement handles"></a>5.1.5 释放 statement handles</h3><p>Statement handle 也是 Perl 对象, 可以用 Perl 的 garbage collector 的机制来处理.</p>
+<p>可以用 <code>Kids</code> 和 <code>ActiveKids</code> 这两个 database handle attributes 来追踪一个 database handle attributes 分配的 statement handle 数量.</p>
+<p>一般利用 scope 来限制一个 statement handle 的生命周期来释放, 如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">if</span> ($fetch_new_data) &#123;<br>    <span class="hljs-keyword">my</span> $sth = $dbh-&gt;prepare( ... );<br>    $sth-&gt;execute( );<br>    $data = $sth-&gt;fetchall_arrayref();<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>在 <code>if</code> 块结束后, 这个 <code>$sth</code> 就会被释放.</p>
+<h2 id="5-2-执行-Non-SELECT-Statements"><a href="#5-2-执行-Non-SELECT-Statements" class="headerlink" title="5.2 执行 Non-SELECT Statements"></a>5.2 执行 Non-SELECT Statements</h2><p>这些操作如 inserting, deleting, 和 updating 数据一般不会要求返回数据.</p>
 
                 
               </div>
