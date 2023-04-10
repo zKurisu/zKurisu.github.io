@@ -30,8 +30,9 @@
 <meta property="og:image" content="http://example.com/img/DBI_handles.png">
 <meta property="og:image" content="http://example.com/img/data_source_name_example.png">
 <meta property="og:image" content="http://example.com/img/how_to_set_DBI_TRACE.png">
+<meta property="og:image" content="http://example.com/img/statement_preparation_data_flow_via_DBI.png">
 <meta property="article:published_time" content="2023-04-07T10:03:47.000Z">
-<meta property="article:modified_time" content="2023-04-10T04:57:37.017Z">
+<meta property="article:modified_time" content="2023-04-10T05:28:31.008Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/default_argument_of_DB_Files.png">
@@ -243,7 +244,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          36k 字
+          37k 字
         
       </span>
     
@@ -254,7 +255,7 @@
         
         
         
-          304 分钟
+          308 分钟
         
       </span>
     
@@ -660,9 +661,17 @@
 <p>如:</p>
 <figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> DBI;<br><span class="hljs-comment">### Declare a list of values</span><br><span class="hljs-keyword">my</span> @values = ( <span class="hljs-number">333</span>, <span class="hljs-string">&#x27;Choronzon&#x27;</span>, <span class="hljs-string">&#x27;Tim&#x27;</span>, <span class="hljs-keyword">undef</span>, <span class="hljs-string">&#x27;Alligator&#x27;</span>, <span class="hljs-number">1234.34</span>,<br>                <span class="hljs-string">&#x27;Linda&#x27;</span>, <span class="hljs-number">0x0F</span>, <span class="hljs-string">&#x27;0x0F&#x27;</span>, <span class="hljs-string">&#x27;Larry Wall&#x27;</span> );<br><br><span class="hljs-comment">### Check to see which are numbers!</span><br><span class="hljs-keyword">my</span> @areNumbers = DBI::looks_like_number( @values );<br><br><span class="hljs-keyword">for</span> (<span class="hljs-keyword">my</span> $i = <span class="hljs-number">0</span>; $i &lt; @values; ++$i ) &#123;<br>    <span class="hljs-keyword">my</span> $value = (<span class="hljs-keyword">defined</span> $values[$i]) ? $values[$i] : <span class="hljs-string">&quot;undef&quot;</span>;<br><br>    <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;values[$i] -&gt; $value &quot;</span>;<br><br>    <span class="hljs-keyword">if</span> ( <span class="hljs-keyword">defined</span> $areNumbers[$i] ) &#123;<br>        <span class="hljs-keyword">if</span> ( $areNumbers[$i] ) &#123;<br>            <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;is a number!\n&quot;</span>;<br>        &#125;<br>        <span class="hljs-keyword">else</span> &#123;<br>            <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;is utterly unlike a number and should be quoted!\n&quot;</span>;<br>        &#125;<br>    &#125;<br>    <span class="hljs-keyword">else</span> &#123;<br>        <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;is undefined!\n&quot;</span>;<br>    &#125;<br>&#125;<br><br><span class="hljs-keyword">exit</span>;<br></code></pre></td></tr></table></figure>
 
-<h1 id="第五章-和数据库交互"><a href="#第五章-和数据库交互" class="headerlink" title="第五章 和数据库交互"></a>第五章 和数据库交互</h1><h2 id="发出简单的查询"><a href="#发出简单的查询" class="headerlink" title="发出简单的查询"></a>发出简单的查询</h2><p>用 DBI 从数据库获取数据一般分为 4 步:</p>
-<p>1. </p>
+<h1 id="第五章-和数据库交互"><a href="#第五章-和数据库交互" class="headerlink" title="第五章 和数据库交互"></a>第五章 和数据库交互</h1><h2 id="5-1-发出简单的查询"><a href="#5-1-发出简单的查询" class="headerlink" title="5.1 发出简单的查询"></a>5.1 发出简单的查询</h2><p>可以手动将数据全部 fetch, 也可以用 <code>finish()</code> 方法来清除.</p>
+<h3 id="5-1-1-准备-SQL-Statements"><a href="#5-1-1-准备-SQL-Statements" class="headerlink" title="5.1.1 准备 SQL Statements"></a>5.1.1 准备 SQL Statements</h3><p><code>prepare</code> 其实就是语法检查和解析部分.</p>
+<p>流程如:</p>
+<p><img src="/../img/statement_preparation_data_flow_via_DBI.png" srcset="/img/loading.gif" lazyload></p>
+<p>传递给 <code>prepare()</code> 的 SQL 语句以字符串的形式传递给对应的 database handle, 其又将语句传递给 Database Engine 对语句进行解析, 如果语句有效 (即没有语法错误, 以及没有访问错误), 则将封装好的 statement handle 返回.</p>
+<p>简单获取一个 statement handle:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> DBI;<br><br><span class="hljs-comment">### The database handle</span><br><span class="hljs-keyword">my</span> $dbh = DBI-&gt;<span class="hljs-keyword">connect</span>( <span class="hljs-string">&quot;dbi:Oracle:archaeo&quot;</span>, <span class="hljs-string">&quot;username&quot;</span>, <span class="hljs-string">&quot;password&quot;</span> );<br><br><span class="hljs-comment">### The statement handle</span><br><span class="hljs-keyword">my</span> $sth = $dbh-&gt;prepare( <span class="hljs-string">&quot;SELECT id, name FROM megaliths&quot;</span> );<br><br><span class="hljs-keyword">exit</span>;<br></code></pre></td></tr></table></figure>
 
+<p>语句有问题则返回 <code>undef</code>.</p>
+<p>对于有些 driver 来说, <code>prepare</code> 的步骤实际上到 <code>execute()</code> 时才真正进行.</p>
+<h4 id="5-1-1-1-构建-“on-the-fly”-的语句"><a href="#5-1-1-1-构建-“on-the-fly”-的语句" class="headerlink" title="5.1.1.1 构建 “on-the-fly” 的语句"></a>5.1.1.1 构建 “on-the-fly” 的语句</h4>
                 
               </div>
             
