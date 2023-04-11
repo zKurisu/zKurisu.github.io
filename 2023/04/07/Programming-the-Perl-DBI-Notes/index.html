@@ -32,7 +32,7 @@
 <meta property="og:image" content="http://example.com/img/how_to_set_DBI_TRACE.png">
 <meta property="og:image" content="http://example.com/img/statement_preparation_data_flow_via_DBI.png">
 <meta property="article:published_time" content="2023-04-07T10:03:47.000Z">
-<meta property="article:modified_time" content="2023-04-11T01:14:19.571Z">
+<meta property="article:modified_time" content="2023-04-11T02:22:04.341Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/default_argument_of_DB_Files.png">
@@ -244,7 +244,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          45k 字
+          47k 字
         
       </span>
     
@@ -255,7 +255,7 @@
         
         
         
-          378 分钟
+          395 分钟
         
       </span>
     
@@ -798,7 +798,22 @@
 <p>如果在 <code>execute()</code> 之前调用了 <code>bind_param()</code> , 其参数类型会被使用 (<code>bind_param()</code> 提供的参数值不会被使用), 如:</p>
 <figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs perl">$sth-&gt;prepare( <span class="hljs-string">&quot;</span><br><span class="hljs-string">    SELECT name, location, mapref</span><br><span class="hljs-string">    FROM megaliths</span><br><span class="hljs-string">    WHERE id = ?</span><br><span class="hljs-string">&quot;</span> );<br>$sth-&gt;bind_param( <span class="hljs-number">1</span>, <span class="hljs-number">42</span>, SQL_INTEGER );<br>$sth-&gt;execute( <span class="hljs-number">123456</span> );<br>...<br></code></pre></td></tr></table></figure>
 
-<h2 id="5-4-绑定输出列"><a href="#5-4-绑定输出列" class="headerlink" title="5.4 绑定输出列"></a>5.4 绑定输出列</h2>
+<h2 id="5-4-绑定输出列"><a href="#5-4-绑定输出列" class="headerlink" title="5.4 绑定输出列"></a>5.4 绑定输出列</h2><p><code>fetch()</code> 方法是 <code>fetchall_arrayref()</code> 方法的缩写.</p>
+<p>只让 <code>fetch()</code> 返回指定的列, 避免额外的 copying, 使用 <code>bind_col()</code> 方法, 如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-comment">### Perl variables to store the field data in</span><br><span class="hljs-keyword">my</span> ( $name, $location, $type );<br><span class="hljs-comment">### Prepare and execute the SQL statement</span><br>$sth = $dbh-&gt;prepare( <span class="hljs-string">&quot;</span><br><span class="hljs-string">    SELECT meg.name, meg.location, st.site_type</span><br><span class="hljs-string">    FROM megaliths meg, site_types st</span><br><span class="hljs-string">    WHERE meg.site_type_id = st.id</span><br><span class="hljs-string">&quot;</span> );<br>$sth-&gt;execute( );<br><br><span class="hljs-comment">### Associate Perl variables with each output column</span><br>$sth-&gt;bind_col( <span class="hljs-number">1</span>, \$name );<br>$sth-&gt;bind_col( <span class="hljs-number">2</span>, \$location );<br>$sth-&gt;bind_col( <span class="hljs-number">3</span>, \$type );<br><br><span class="hljs-comment">### Fetch the data from the result set</span><br><span class="hljs-keyword">while</span> ( $sth-&gt;fetch ) &#123;<br>    <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;$name is a $type located in $location\n&quot;</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p><code>bind_col()</code> 的第一个参数是列数 (第几列的数据), 第二个参数是获取值的变量引用.</p>
+<p>也可以使用 <code>bind_columns()</code> 方法来绑定多行:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-comment">### Perl variables to store the field data in</span><br><span class="hljs-keyword">my</span> ( $name, $location, $type );<br><br><span class="hljs-comment">### Prepare and execute the SQL statement</span><br>$sth = $dbh-&gt;prepare( <span class="hljs-string">&quot;</span><br><span class="hljs-string">    SELECT meg.name, meg.location, st.site_type</span><br><span class="hljs-string">    FROM megaliths meg, site_types st</span><br><span class="hljs-string">    WHERE meg.site_type_id = st.id</span><br><span class="hljs-string">&quot;</span> );<br>$sth-&gt;execute( );<br><br><span class="hljs-comment">### Associate Perl variables with each output column</span><br>$sth-&gt;bind_columns( <span class="hljs-keyword">undef</span>, \$name, \$location, \$type );<br><br><span class="hljs-comment">### Fetch the data from the result set</span><br><span class="hljs-keyword">while</span> ( $sth-&gt;fetch ) &#123;<br>    <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;$name is a $type located in $location\n&quot;</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="5-5-do-方法和-prepare-方法的对比"><a href="#5-5-do-方法和-prepare-方法的对比" class="headerlink" title="5.5 do() 方法和 prepare() 方法的对比"></a>5.5 <code>do()</code> 方法和 <code>prepare()</code> 方法的对比</h2><p>需要重复使用的 SQL 语句用 <code>prepare()</code> 比较高效, 如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-comment">### Setup the statement for repeated execution</span><br>$sth = $dbh-&gt;prepare( <span class="hljs-string">&quot;INSERT INTO megaliths ( name ) VALUES ( ? )&quot;</span> );<br><br><span class="hljs-comment">### Iterate through the various bits of data...</span><br><span class="hljs-keyword">foreach</span> $name ( <span class="hljs-string">qw( Stonehenge Avebury Castlerigg Sunhoney )</span> ) &#123;<br>    <span class="hljs-comment">### ... and insert them into the table</span><br>    $sth-&gt;execute( $name );<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="5-6-原子性抓取和批量获取"><a href="#5-6-原子性抓取和批量获取" class="headerlink" title="5.6 原子性抓取和批量获取"></a>5.6 原子性抓取和批量获取</h2><h3 id="5-6-1-原子抓取-Atomic-Fetching"><a href="#5-6-1-原子抓取-Atomic-Fetching" class="headerlink" title="5.6.1 原子抓取 (Atomic Fetching)"></a>5.6.1 原子抓取 (Atomic Fetching)</h3><p>当你要获取一行数据时, 可以用 <code>selectrow_array()</code> 和 <code>selectrow_arrayref()</code> 方法, 其和 <code>fetchrow_array</code> 和 <code>fetchrow_arrayref</code> 类似, 区别在于前者不需要单独 <code>prepare</code> 以及 <code>execute</code>, 且只返回一行数据.</p>
+<p><code>selectrow_array</code> 和 <code>selectrow_arrayref</code> 直接通过 database handle 执行, 如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-comment">### Assuming a valid $dbh exists...</span><br>( $name, $mapref ) =<br>    $dbh-&gt;selectrow_array( <span class="hljs-string">&quot;SELECT name, mapref</span><br><span class="hljs-string">        FROM megaliths&quot;</span> );<br><span class="hljs-keyword">print</span> <span class="hljs-string">&quot;Megalith $name is located at $mapref\n&quot;</span>;<br></code></pre></td></tr></table></figure>
+
+<h3 id="5-6-2-批量抓取-Batch-Fetching"><a href="#5-6-2-批量抓取-Batch-Fetching" class="headerlink" title="5.6.2 批量抓取 (Batch Fetching)"></a>5.6.2 批量抓取 (Batch Fetching)</h3><p>Batch fetching 是通过一次 call 来获取 result set 中的全部数据,</p>
+
                 
               </div>
             
