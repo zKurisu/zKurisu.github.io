@@ -31,8 +31,9 @@
 <meta property="og:image" content="http://example.com/img/data_source_name_example.png">
 <meta property="og:image" content="http://example.com/img/how_to_set_DBI_TRACE.png">
 <meta property="og:image" content="http://example.com/img/statement_preparation_data_flow_via_DBI.png">
+<meta property="og:image" content="http://example.com/img/fetchall_arrayref_data_structure.png">
 <meta property="article:published_time" content="2023-04-07T10:03:47.000Z">
-<meta property="article:modified_time" content="2023-04-11T02:22:04.341Z">
+<meta property="article:modified_time" content="2023-04-11T02:52:11.416Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/default_argument_of_DB_Files.png">
@@ -244,7 +245,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          47k 字
+          50k 字
         
       </span>
     
@@ -255,7 +256,7 @@
         
         
         
-          395 分钟
+          419 分钟
         
       </span>
     
@@ -812,8 +813,47 @@
 <p><code>selectrow_array</code> 和 <code>selectrow_arrayref</code> 直接通过 database handle 执行, 如:</p>
 <figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-comment">### Assuming a valid $dbh exists...</span><br>( $name, $mapref ) =<br>    $dbh-&gt;selectrow_array( <span class="hljs-string">&quot;SELECT name, mapref</span><br><span class="hljs-string">        FROM megaliths&quot;</span> );<br><span class="hljs-keyword">print</span> <span class="hljs-string">&quot;Megalith $name is located at $mapref\n&quot;</span>;<br></code></pre></td></tr></table></figure>
 
-<h3 id="5-6-2-批量抓取-Batch-Fetching"><a href="#5-6-2-批量抓取-Batch-Fetching" class="headerlink" title="5.6.2 批量抓取 (Batch Fetching)"></a>5.6.2 批量抓取 (Batch Fetching)</h3><p>Batch fetching 是通过一次 call 来获取 result set 中的全部数据,</p>
+<h3 id="5-6-2-批量抓取-Batch-Fetching"><a href="#5-6-2-批量抓取-Batch-Fetching" class="headerlink" title="5.6.2 批量抓取 (Batch Fetching)"></a>5.6.2 批量抓取 (Batch Fetching)</h3><p>Batch fetching 是通过一次 call 来获取 result set 中的全部数据.</p>
+<p>通过 <code>fetchall_arrayref()</code> 和 <code>selectall_arrayref()</code> 方法, 其用一个 <code>prepared</code> 和 <code>executed</code> 的 statement handle 来调用.</p>
+<p>可以给 <code>fetchall_arrayref</code> 参数来改变模式, 有三种模式:</p>
+<ul>
+<li>无参数</li>
+<li>数组切片的引用</li>
+<li>哈希切片的引用</li>
+</ul>
+<h4 id="5-6-2-1-无参数模式"><a href="#5-6-2-1-无参数模式" class="headerlink" title="5.6.2.1 无参数模式"></a>5.6.2.1 无参数模式</h4><p>此时返回一个数组引用, 包含 result set 中每一行数据的引用 (数组的元素都是引用).</p>
+<p>示意图如:</p>
+<p><img src="/../img/fetchall_arrayref_data_structure.png" srcset="/img/loading.gif" lazyload></p>
+<p>示例代码:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-comment">#!/usr/bin/perl -w</span><br><span class="hljs-comment">#</span><br><span class="hljs-comment"># ch05/fetchall_arrayref/ex1: Complete example that connects to a database,</span><br><span class="hljs-comment">#                             executes a SQL statement, then fetches all the</span><br><span class="hljs-comment">#                             data rows out into a data structure. This</span><br><span class="hljs-comment">#                             structure is then traversed and printed.</span><br><span class="hljs-keyword">use</span> DBI;<br><span class="hljs-comment">### The database handle</span><br><span class="hljs-keyword">my</span> $dbh = DBI-&gt;<span class="hljs-keyword">connect</span>( <span class="hljs-string">&quot;dbi:Oracle:archaeo&quot;</span>, <span class="hljs-string">&quot;username&quot;</span>, <span class="hljs-string">&quot;password&quot;</span> , &#123;<br>    <span class="hljs-string">RaiseError =&gt;</span> <span class="hljs-number">1</span><br>&#125;);<br><br><span class="hljs-comment">### The statement handle</span><br><span class="hljs-keyword">my</span> $sth = $dbh-&gt;prepare( <span class="hljs-string">&quot; SELECT name, location, mapref FROM megaliths &quot;</span> );<br><br><span class="hljs-comment">### Execute the statement</span><br>$sth-&gt;execute( );<br><br><span class="hljs-comment">### Fetch all the data into a Perl data structure</span><br><span class="hljs-keyword">my</span> $array_ref = $sth-&gt;fetchall_arrayref( );<br><br><span class="hljs-comment">### Traverse the data structure and dump each piece of data out</span><br><span class="hljs-comment">###</span><br><span class="hljs-comment">### For each row in the returned array reference ...</span><br><span class="hljs-keyword">foreach</span> <span class="hljs-keyword">my</span> $row (@$array_ref) &#123;<br>    <span class="hljs-comment">### Split the row up and print each field ...</span><br>    <span class="hljs-keyword">my</span> ( $name, $type, $location ) = @$row;<br>    <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;\tMegalithic site $name, found in $location, is a $type\n&quot;</span>;<br>&#125;<br><span class="hljs-keyword">exit</span>;<br></code></pre></td></tr></table></figure>
 
+<h4 id="5-6-2-2-用数组切片引用作为参数"><a href="#5-6-2-2-用数组切片引用作为参数" class="headerlink" title="5.6.2.2 用数组切片引用作为参数"></a>5.6.2.2 用数组切片引用作为参数</h4><p>只返回所有行的特定列.</p>
+<p>如查询中返回 5 列: <code>name</code>, <code>site_type</code>, <code>location</code>, <code>mapref</code>, 但指向要 <code>name</code> 和 <code>location</code> 这 2 列.</p>
+<p>若 SQL 如:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> meg.name, st.site_type, meg.location, meg.mapref<br><span class="hljs-keyword">FROM</span> megaliths meg, site_types st<br><span class="hljs-keyword">WHERE</span> meg.site_type_id <span class="hljs-operator">=</span> st.id<br></code></pre></td></tr></table></figure>
+
+<p>返回的列和数组引用的对应关系为:</p>
+<figure class="highlight xl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs xl"><span class="hljs-function"><span class="hljs-title">name</span>       -&gt;</span> <span class="hljs-number">0</span><br><span class="hljs-function"><span class="hljs-title">site_type</span>  -&gt;</span> <span class="hljs-number">1</span><br><span class="hljs-function"><span class="hljs-title">location</span>   -&gt;</span> <span class="hljs-number">2</span><br><span class="hljs-function"><span class="hljs-title">mapref</span>     -&gt;</span> <span class="hljs-number">3</span><br></code></pre></td></tr></table></figure>
+
+<p>给 <code>fetchall_arrayref()</code> 传递切片如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-comment">### Retrieve the name and location fields...</span><br>$array_ref = $sth-&gt;fetchall_arrayref( [ <span class="hljs-number">0</span>, <span class="hljs-number">2</span> ] );<br><br><span class="hljs-comment">### Retrieve the second last and last columns</span><br>$array_ref = $sth-&gt;fetchall_arrayref( [ -<span class="hljs-number">2</span>, -<span class="hljs-number">1</span> ] );<br><br><span class="hljs-comment">### Fetch the first to third columns</span><br>$array_ref = $sth-&gt;fetchall_arrayref( [ <span class="hljs-number">0</span> .. <span class="hljs-number">2</span> ] );<br></code></pre></td></tr></table></figure>
+
+<h4 id="5-6-2-3-用哈希切片引用为参数"><a href="#5-6-2-3-用哈希切片引用为参数" class="headerlink" title="5.6.2.3 用哈希切片引用为参数"></a>5.6.2.3 用哈希切片引用为参数</h4><p>此时的返回值同样是一个数组引用, 只不过其元素为哈希引用.</p>
+<p>若查询为:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> name, location, mapref<br><span class="hljs-keyword">FROM</span> megaliths<br></code></pre></td></tr></table></figure>
+
+<p>想要 <code>name</code> 和 <code>location</code> 两列的哈希引用, 则:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-comment">### Store the name and location columns</span><br>$array_ref = $sth-&gt;fetchall_arrayref( &#123; <span class="hljs-string">name =&gt;</span> <span class="hljs-number">1</span>, <span class="hljs-string">location =&gt;</span> <span class="hljs-number">1</span> &#125; );<br></code></pre></td></tr></table></figure>
+
+<p>一个完整的示例:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-comment">#!/usr/bin/perl -w</span><br><span class="hljs-comment">#</span><br><span class="hljs-comment"># ch05/fetchall_arrayref/ex3: Complete example that connects to a database,</span><br><span class="hljs-comment"># executes a SQL statement, then fetches all the</span><br><span class="hljs-comment"># data rows out into a data structure. This</span><br><span class="hljs-comment"># structure is then traversed and printed.</span><br><span class="hljs-keyword">use</span> DBI;<br><br><span class="hljs-comment">### The database handle</span><br><span class="hljs-keyword">my</span> $dbh = DBI-&gt;<span class="hljs-keyword">connect</span>( <span class="hljs-string">&quot;dbi:Oracle:archaeo&quot;</span>, <span class="hljs-string">&quot;username&quot;</span>, <span class="hljs-string">&quot;password&quot;</span> , &#123;<br>    <span class="hljs-string">RaiseError =&gt;</span> <span class="hljs-number">1</span>,<br>&#125; );<br><br><span class="hljs-comment">### The statement handle</span><br><span class="hljs-keyword">my</span> $sth = $dbh-&gt;prepare( <span class="hljs-string">&quot; SELECT name, location, mapref FROM megaliths &quot;</span> );<br><br><span class="hljs-comment">### Execute the statement</span><br>$sth-&gt;execute( );<br><br><span class="hljs-comment">### Fetch all the data into an array reference of hash references!</span><br><span class="hljs-keyword">my</span> $array_ref = $sth-&gt;fetchall_arrayref( &#123; <span class="hljs-string">name =&gt;</span> <span class="hljs-number">1</span>, <span class="hljs-string">location =&gt;</span> <span class="hljs-number">1</span> &#125; );<br><br><span class="hljs-comment">### Traverse the data structure and dump each piece of data out</span><br><span class="hljs-comment">###</span><br><span class="hljs-comment">### For each row in the returned array reference.....</span><br><span class="hljs-keyword">foreach</span> <span class="hljs-keyword">my</span> $row (@$array_ref) &#123;<br>    <span class="hljs-comment">### Get the appropriate fields out the hashref and print...</span><br>    <span class="hljs-keyword">print</span> <span class="hljs-string">&quot;\tMegalithic site $row-&gt;&#123;name&#125;, found in $row-&gt;&#123;location&#125;\n&quot;</span>;<br>&#125;<br><span class="hljs-keyword">exit</span>;<br></code></pre></td></tr></table></figure>
+
+<p>需要注意两点:</p>
+<ul>
+<li>若有同名列, 只返回一个, earlier entries 会被覆盖</li>
+<li>哈希引用中的所有键都是 lowercase</li>
+</ul>
+<h1 id="第六章-Advanced-DBI"><a href="#第六章-Advanced-DBI" class="headerlink" title="第六章 Advanced DBI"></a>第六章 Advanced DBI</h1>
                 
               </div>
             
