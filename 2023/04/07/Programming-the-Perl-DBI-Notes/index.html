@@ -33,7 +33,7 @@
 <meta property="og:image" content="http://example.com/img/statement_preparation_data_flow_via_DBI.png">
 <meta property="og:image" content="http://example.com/img/fetchall_arrayref_data_structure.png">
 <meta property="article:published_time" content="2023-04-07T10:03:47.000Z">
-<meta property="article:modified_time" content="2023-04-11T02:52:11.416Z">
+<meta property="article:modified_time" content="2023-04-11T03:21:59.892Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/default_argument_of_DB_Files.png">
@@ -245,7 +245,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          50k 字
+          51k 字
         
       </span>
     
@@ -256,7 +256,7 @@
         
         
         
-          419 分钟
+          428 分钟
         
       </span>
     
@@ -853,7 +853,27 @@
 <li>若有同名列, 只返回一个, earlier entries 会被覆盖</li>
 <li>哈希引用中的所有键都是 lowercase</li>
 </ul>
-<h1 id="第六章-Advanced-DBI"><a href="#第六章-Advanced-DBI" class="headerlink" title="第六章 Advanced DBI"></a>第六章 Advanced DBI</h1>
+<h1 id="第六章-Advanced-DBI"><a href="#第六章-Advanced-DBI" class="headerlink" title="第六章 Advanced DBI"></a>第六章 Advanced DBI</h1><h2 id="6-1-Handle-的属性和-Metadata"><a href="#6-1-Handle-的属性和-Metadata" class="headerlink" title="6.1 Handle 的属性和 Metadata"></a>6.1 Handle 的属性和 Metadata</h2><p>有些 attributes 是 database 或者 statement 独有的, 有些是共有的.</p>
+<p>attribute values 可以视为 hash 的键值对来使用, 如下列使用 <code>AutoCommit</code> 属性;</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-comment">### Set the database handle attribute &quot;AutoCommit&quot; to 1 (e.g., on)</span><br>$dbh-&gt;&#123;AutoCommit&#125; = <span class="hljs-number">1</span>;<br><br><span class="hljs-comment">### Fetch the current value of &quot;AutoCommit&quot; from the handle</span><br>$foo = $dbh-&gt;&#123;AutoCommit&#125;;<br><br><span class="hljs-comment">### Print the current value of &quot;AutoCommit&quot; from the handle</span><br><span class="hljs-keyword">print</span> <span class="hljs-string">&quot;AutoCommit: $dbh-&gt;&#123;AutoCommit&#125;\n&quot;</span>;<br></code></pre></td></tr></table></figure>
+
+<p>在 <code>AutoCommit</code> 被设置为 <code>0</code> 时:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-comment">### Print the current value of &quot;AutoCommit&quot; from the handle</span><br><span class="hljs-keyword">print</span> <span class="hljs-string">&quot;AutoCommit: $dbh-&gt;&#123;AutoCommit&#125;\n&quot;</span>;<br></code></pre></td></tr></table></figure>
+
+<p>可能输出为:</p>
+<figure class="highlight avrasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs avrasm"><span class="hljs-symbol">AutoCommit:</span><br></code></pre></td></tr></table></figure>
+
+<p>因为此时 <code>$dbh-&gt;&#123;AutoCommit&#125;</code> 被视为空字符串来表示 false.</p>
+<p>若访问不存在的 attributes 或者修改一个 read-only attribute, 都会调用 <code>die</code> 报错, 不管是否设置 <code>RaiseError</code>, 因此最好放在 <code>eval &#123; ... &#125;</code> 块中.</p>
+<p><mark>注意</mark> , child handles 会继承一些 parent handles 的属性. 一个 statement handle 就是一个 database handle 的 child.</p>
+<p>规则为:</p>
+<ul>
+<li>一个 statement handle 在被创建时会继承 parent database handle 的部分属性值</li>
+<li>如果一个 statement handle 的属性发生变化, 不会影响 parent database handle 以及其他 statement handle</li>
+<li>一个 database handle 的属性改变也不会影响以存在的 statement handle, 只会影响后续创建的 handle</li>
+</ul>
+<h3 id="6-1-1-给-DBI-方法传递属性"><a href="#6-1-1-给-DBI-方法传递属性" class="headerlink" title="6.1.1 给 DBI 方法传递属性"></a>6.1.1 给 DBI 方法传递属性</h3><p>许多方法都接受一个 reference to a hash of attribute values 来改变其行为.</p>
+
                 
               </div>
             
