@@ -32,7 +32,7 @@
 <meta property="og:image" content="http://example.com/img/how_to_set_DBI_TRACE.png">
 <meta property="og:image" content="http://example.com/img/statement_preparation_data_flow_via_DBI.png">
 <meta property="article:published_time" content="2023-04-07T10:03:47.000Z">
-<meta property="article:modified_time" content="2023-04-10T14:28:28.032Z">
+<meta property="article:modified_time" content="2023-04-11T01:07:36.215Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/default_argument_of_DB_Files.png">
@@ -244,7 +244,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          43k 字
+          45k 字
         
       </span>
     
@@ -255,7 +255,7 @@
         
         
         
-          363 分钟
+          374 分钟
         
       </span>
     
@@ -782,7 +782,17 @@
 <p>绑定多个值时:</p>
 <figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs perl">$sth = $dbh-&gt;prepare( <span class="hljs-string">&quot;</span><br><span class="hljs-string">    SELECT name, location</span><br><span class="hljs-string">    FROM megaliths</span><br><span class="hljs-string">    WHERE name = ?</span><br><span class="hljs-string">    AND mapref = ?</span><br><span class="hljs-string">    AND type LIKE ?</span><br><span class="hljs-string">&quot;</span> );<br>$sth-&gt;bind_param( <span class="hljs-number">1</span>, <span class="hljs-string">&quot;Avebury&quot;</span> );<br>$sth-&gt;bind_param( <span class="hljs-number">2</span>, $mapreference );<br>$sth-&gt;bind_param( <span class="hljs-number">3</span>, <span class="hljs-string">&quot;%Stone Circle%&quot; );</span><br></code></pre></td></tr></table></figure>
 
-<h3 id="5-3-1-比较绑定和内插语句"><a href="#5-3-1-比较绑定和内插语句" class="headerlink" title="5.3.1 比较绑定和内插语句"></a>5.3.1 比较绑定和内插语句</h3>
+<h3 id="5-3-1-比较绑定和内插语句"><a href="#5-3-1-比较绑定和内插语句" class="headerlink" title="5.3.1 比较绑定和内插语句"></a>5.3.1 比较绑定和内插语句</h3><p>对于有些数据库而言, 使用 bind values 可以极大提高数据库处理速度. 因为这些数据库有 <code>Shared SQL Cache</code> 机制, 会重复利用相似的 SQL 语句, 而不需要重新解析, 即使提供的是不同的值, 如:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> name, location, mapref<br><span class="hljs-keyword">FROM</span> megaliths<br><span class="hljs-keyword">WHERE</span> name <span class="hljs-operator">=</span> <span class="hljs-operator">&lt;</span>search_term<span class="hljs-operator">&gt;</span><br></code></pre></td></tr></table></figure>
+<p>这里提供不同的 <code>&lt;search_term&gt;</code>, 但其他部分相同, 则会被重用.</p>
+<p>但有些情况下不支持 placeholder, 就需要用变量内插的方法. </p>
+<h3 id="5-3-2-绑定值和数据类型"><a href="#5-3-2-绑定值和数据类型" class="headerlink" title="5.3.2 绑定值和数据类型"></a>5.3.2 绑定值和数据类型</h3><p>用 <code>bind_param</code> 时指定传递数据的类型:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> DBI <span class="hljs-string">qw(:sql_types)</span>;<br><br>$sth = $dbh-&gt;prepare( <span class="hljs-string">&quot;</span><br><span class="hljs-string">    SELECT meg.name, meg.location, st.site_type, meg.mapref</span><br><span class="hljs-string">    FROM megaliths meg, site_types st</span><br><span class="hljs-string">    WHERE name = ?</span><br><span class="hljs-string">    AND id = ?</span><br><span class="hljs-string">    AND mapref = ?</span><br><span class="hljs-string">    AND meg.site_type_id = st.id</span><br><span class="hljs-string">&quot;</span> );<br><br><span class="hljs-comment">### No need for a datatype for this value. It&#x27;s a string.</span><br>$sth-&gt;bind_param( <span class="hljs-number">1</span>, <span class="hljs-string">&quot;Avebury&quot;</span> );<br><br><span class="hljs-comment">### This one is obviously a number, so no type again</span><br>$sth-&gt;bind_param( <span class="hljs-number">2</span>, <span class="hljs-number">21</span> );<br><br><span class="hljs-comment">### However, this one is a string but looks like a number</span><br>$sth-&gt;bind_param( <span class="hljs-number">3</span>, <span class="hljs-number">123500</span>, &#123; <span class="hljs-string">TYPE =&gt;</span> SQL_VARCHAR &#125; );<br><br><span class="hljs-comment">### Alternative shorthand form of the previous statement</span><br>$sth-&gt;bind_param( <span class="hljs-number">3</span>, <span class="hljs-number">123500</span>, SQL_VARCHAR );<br><br><span class="hljs-comment">### All placeholders now have values bound, so we can execute</span><br>$sth-&gt;execute( );<br></code></pre></td></tr></table></figure>
+
+<h3 id="5-3-3-绑定-Input-和-Output-参数"><a href="#5-3-3-绑定-Input-和-Output-参数" class="headerlink" title="5.3.3 绑定 Input 和 Output 参数"></a>5.3.3 绑定 Input 和 Output 参数</h3><p>使用 <code>bind_param_inout()</code>, 其和 <code>bind_param()</code> 类似, 但传递的是一个引用, 而不是直接值, 其好处是可以直接得到更新后的值, 其可以传入一个参数来控制返回值的大小, 其使用如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-comment">### The variables to be populated as return values...</span><br><span class="hljs-keyword">my</span> $ceiling;<br><span class="hljs-keyword">my</span> $floor;<br><br>$sth = $dbh-&gt;prepare( <span class="hljs-string">&quot;BEGIN ceiling_floor( ?, ?, ? ); END;&quot;</span> );<br>$sth-&gt;bind_param( <span class="hljs-number">1</span>, <span class="hljs-number">42.3</span> );<br>$sth-&gt;bind_param_inout( <span class="hljs-number">2</span>, \$ceiling, <span class="hljs-number">50</span> );<br>$sth-&gt;bind_param_inout( <span class="hljs-number">3</span>, \$floor, <span class="hljs-number">50</span> );<br>$sth-&gt;execute( );<br><br><span class="hljs-keyword">print</span> <span class="hljs-string">&quot;Stored procedure returned $ceiling, $floor\n&quot;</span>;<br></code></pre></td></tr></table></figure>
+
+<h3 id="5-3-4-不使用-bind-param-的绑定值"><a href="#5-3-4-不使用-bind-param-的绑定值" class="headerlink" title="5.3.4 不使用 bind_param() 的绑定值"></a>5.3.4 不使用 <code>bind_param()</code> 的绑定值</h3>
                 
               </div>
             
