@@ -32,7 +32,7 @@
 <meta property="og:image" content="http://example.com/img/how_to_set_DBI_TRACE.png">
 <meta property="og:image" content="http://example.com/img/statement_preparation_data_flow_via_DBI.png">
 <meta property="article:published_time" content="2023-04-07T10:03:47.000Z">
-<meta property="article:modified_time" content="2023-04-11T01:07:36.215Z">
+<meta property="article:modified_time" content="2023-04-11T01:14:19.571Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/default_argument_of_DB_Files.png">
@@ -255,7 +255,7 @@
         
         
         
-          374 分钟
+          378 分钟
         
       </span>
     
@@ -792,7 +792,13 @@
 <h3 id="5-3-3-绑定-Input-和-Output-参数"><a href="#5-3-3-绑定-Input-和-Output-参数" class="headerlink" title="5.3.3 绑定 Input 和 Output 参数"></a>5.3.3 绑定 Input 和 Output 参数</h3><p>使用 <code>bind_param_inout()</code>, 其和 <code>bind_param()</code> 类似, 但传递的是一个引用, 而不是直接值, 其好处是可以直接得到更新后的值, 其可以传入一个参数来控制返回值的大小, 其使用如:</p>
 <figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-comment">### The variables to be populated as return values...</span><br><span class="hljs-keyword">my</span> $ceiling;<br><span class="hljs-keyword">my</span> $floor;<br><br>$sth = $dbh-&gt;prepare( <span class="hljs-string">&quot;BEGIN ceiling_floor( ?, ?, ? ); END;&quot;</span> );<br>$sth-&gt;bind_param( <span class="hljs-number">1</span>, <span class="hljs-number">42.3</span> );<br>$sth-&gt;bind_param_inout( <span class="hljs-number">2</span>, \$ceiling, <span class="hljs-number">50</span> );<br>$sth-&gt;bind_param_inout( <span class="hljs-number">3</span>, \$floor, <span class="hljs-number">50</span> );<br>$sth-&gt;execute( );<br><br><span class="hljs-keyword">print</span> <span class="hljs-string">&quot;Stored procedure returned $ceiling, $floor\n&quot;</span>;<br></code></pre></td></tr></table></figure>
 
-<h3 id="5-3-4-不使用-bind-param-的绑定值"><a href="#5-3-4-不使用-bind-param-的绑定值" class="headerlink" title="5.3.4 不使用 bind_param() 的绑定值"></a>5.3.4 不使用 <code>bind_param()</code> 的绑定值</h3>
+<h3 id="5-3-4-不使用-bind-param-的绑定值"><a href="#5-3-4-不使用-bind-param-的绑定值" class="headerlink" title="5.3.4 不使用 bind_param() 的绑定值"></a>5.3.4 不使用 <code>bind_param()</code> 的绑定值</h3><p>将值传给 <code>execute()</code>, 其会自动调用 <code>bind_param()</code> 如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs perl">$sth = $dbh-&gt;prepare( <span class="hljs-string">&quot;</span><br><span class="hljs-string">    SELECT name, location, mapref</span><br><span class="hljs-string">    FROM megaliths</span><br><span class="hljs-string">    WHERE name = ? OR description LIKE ?</span><br><span class="hljs-string">&quot;</span> );<br>$sth-&gt;execute( <span class="hljs-string">&quot;Avebury&quot;</span>, <span class="hljs-string">&quot;%largest stone circle%&quot; );</span><br><span class="hljs-string">...</span><br></code></pre></td></tr></table></figure>
+<p>这种情况下无法提供参数类型, 大部分情况下 driver 会做出正确的猜测.</p>
+<p>如果在 <code>execute()</code> 之前调用了 <code>bind_param()</code> , 其参数类型会被使用 (<code>bind_param()</code> 提供的参数值不会被使用), 如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs perl">$sth-&gt;prepare( <span class="hljs-string">&quot;</span><br><span class="hljs-string">    SELECT name, location, mapref</span><br><span class="hljs-string">    FROM megaliths</span><br><span class="hljs-string">    WHERE id = ?</span><br><span class="hljs-string">&quot;</span> );<br>$sth-&gt;bind_param( <span class="hljs-number">1</span>, <span class="hljs-number">42</span>, SQL_INTEGER );<br>$sth-&gt;execute( <span class="hljs-number">123456</span> );<br>...<br></code></pre></td></tr></table></figure>
+
+<h2 id="5-4-绑定输出列"><a href="#5-4-绑定输出列" class="headerlink" title="5.4 绑定输出列"></a>5.4 绑定输出列</h2>
                 
               </div>
             
