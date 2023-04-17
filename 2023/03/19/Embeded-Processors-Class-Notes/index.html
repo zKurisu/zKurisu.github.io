@@ -47,8 +47,9 @@
 <meta property="og:image" content="http://example.com/img/mbed_SPISlave_methods.png">
 <meta property="og:image" content="http://example.com/img/ADXL345_register_message.png">
 <meta property="og:image" content="http://example.com/img/register_map_of_ADXL345.png">
+<meta property="og:image" content="http://example.com/img/ADXL345_SPI_Initialise.png">
 <meta property="article:published_time" content="2023-03-19T08:46:44.000Z">
-<meta property="article:modified_time" content="2023-04-17T12:22:31.100Z">
+<meta property="article:modified_time" content="2023-04-17T12:59:05.115Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/computor_structure.png">
@@ -260,7 +261,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          5.8k 字
+          6.4k 字
         
       </span>
     
@@ -271,7 +272,7 @@
         
         
         
-          49 分钟
+          54 分钟
         
       </span>
     
@@ -579,6 +580,21 @@
 <p>在没有传输时, SCLK 需要设置为 high.</p>
 <p>ADXL345 的全 register map:</p>
 <p><img src="/../img/register_map_of_ADXL345.png" srcset="/img/loading.gif" lazyload></p>
+<p>一个 ADXL345 的初始化示例:</p>
+<p><img src="/../img/ADXL345_SPI_Initialise.png" srcset="/img/loading.gif" lazyload></p>
+<p>解释如下:</p>
+<ul>
+<li><code>8-bit data, Mode 3</code> 中, <code>8-bit data</code> 指每个 SPI 传输字节都是 8 位二进制数据, <code>Mode 3</code> 是指 SPI 时钟极性为高电平（CPOL&#x3D;1），时钟相位为下降沿（CPHA&#x3D;1），这意味着数据在时钟的下降沿上进行传输</li>
+<li><pre><code class="hljs">ADXL345.write(0x31); // point to data format register
+ADXL345.write(0x03); // format +/-16g, 0.004g/LSB
+</code></pre>
+</li>
+</ul>
+<p>在 SPI 通信中，写入数据需要分两步进行：</p>
+<p>第一步是写入要操作的寄存器地址。这个寄存器地址就像一个指针，指向要写入数据的寄存器。在这段代码中，第一次调用 <code>ADXL345.write(0x31)</code> 是为了将指针指向 ADXL345 的数据格式寄存器，以便后续写入数据时能够正确配置数据格式。</p>
+<p>第二步是向指定的寄存器中写入数据。在这段代码中，第二次调用 <code>ADXL345.write(0x03)</code> 是将数据格式寄存器的值设置为 0x03，以配置数据输出格式。这个值的具体含义取决于 ADXL345 数据手册中定义的格式。</p>
+<p>需要注意的是，对于某些设备，写入数据时不需要先写入寄存器地址，而是直接将地址和数据打包在一起一次性传输。但对于 ADXL345 这样的设备，需要先发送要操作的寄存器地址，然后才能写入数据。</p>
+<p>00001011<br>7 – 0 6 – 0 5 – 0 4 – 0 3 – 0 2 – 0 1和0 – 11<br>00000011</p>
 
                 
               </div>
