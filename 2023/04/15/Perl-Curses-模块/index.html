@@ -44,7 +44,7 @@
 <meta property="og:image" content="http://example.com/img/Curses-UI-Dialog-Filebrowser-test.png">
 <meta property="og:image" content="http://example.com/img/Curses-UI-Dialog-Status-test.png">
 <meta property="article:published_time" content="2023-04-15T05:15:23.000Z">
-<meta property="article:modified_time" content="2023-04-24T03:19:03.087Z">
+<meta property="article:modified_time" content="2023-04-24T04:16:38.496Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/Curses-UI-Window-test.png">
@@ -267,7 +267,7 @@
         
         
         
-          157 分钟
+          160 分钟
         
       </span>
     
@@ -417,6 +417,7 @@
 <p>总之，<code>focus()</code> 子例程的作用是确保当前窗口能够正常地接收到用户的输入，同时将其他窗口的操作和键盘事件排除在外。</p>
 <p>上述代码的效果:</p>
 <p><img src="/../img/Curses-UI-Window-test.png" srcset="/img/loading.gif" lazyload></p>
+<p><code>-border</code> 选项用于开启边缘线 (像 Curses 中的 box(0,0))</p>
 <h3 id="Bottonbox"><a href="#Bottonbox" class="headerlink" title="Bottonbox"></a>Bottonbox</h3><p>用于创建按钮, 如在 window 上添加按钮:</p>
 <figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs perl"> <span class="hljs-keyword">use</span> Curses::UI;<br><span class="hljs-keyword">my</span> $cui = new Curses::UI;<br><span class="hljs-keyword">my</span> $win = $cui-&gt;add(<span class="hljs-string">&#x27;window_id&#x27;</span>, <span class="hljs-string">&#x27;Window&#x27;</span>);<br><br><span class="hljs-keyword">my</span> $buttons = $win-&gt;add(<br>    <span class="hljs-string">&#x27;mybuttons&#x27;</span>, <span class="hljs-string">&#x27;Buttonbox&#x27;</span>,<br>    <span class="hljs-string">-buttons   =&gt;</span> [<br>        &#123; <br>            <span class="hljs-string">-label =&gt;</span> <span class="hljs-string">&#x27;&lt; Button 1 &gt;&#x27;</span>,<br>            <span class="hljs-string">-value =&gt;</span> <span class="hljs-number">1</span>,<br>            <span class="hljs-string">-shortcut =&gt;</span> <span class="hljs-number">1</span> <br>        &#125;,&#123; <br>            <span class="hljs-string">-label =&gt;</span> <span class="hljs-string">&#x27;&lt; Button 2 &gt;&#x27;</span>,<br>            <span class="hljs-string">-value =&gt;</span> <span class="hljs-number">2</span>,<br>            <span class="hljs-string">-shortcut =&gt;</span> <span class="hljs-number">2</span> <br>        &#125;<br>    ]<br>);<br><br><span class="hljs-keyword">my</span> $value = $buttons-&gt;get();<br><br><span class="hljs-comment"># 显示窗口直到用户按下 Ctrl+Q 键退出</span><br>$cui-&gt;set_binding( <span class="hljs-function"><span class="hljs-keyword">sub</span> </span>&#123; <span class="hljs-keyword">exit</span> &#125;, <span class="hljs-string">&quot;\cQ&quot;</span> );<br><br>$buttons-&gt;focus();<br><br>$cui-&gt;mainloop();<br></code></pre></td></tr></table></figure>
 
@@ -549,6 +550,8 @@
 
 <p>效果为;</p>
 <p><img src="/../img/Curses-UI-Dialog-Status-test.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="技巧积累"><a href="#技巧积累" class="headerlink" title="技巧积累"></a>技巧积累</h2><h3 id="显示到屏幕中央"><a href="#显示到屏幕中央" class="headerlink" title="显示到屏幕中央"></a>显示到屏幕中央</h3><figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $win_width  = <span class="hljs-number">15</span>;<br><span class="hljs-keyword">my</span> $win_height = <span class="hljs-number">5</span>;<br><br><br><span class="hljs-keyword">my</span> $cui = Curses::UI-&gt;new(<br>    <span class="hljs-string">-clear_on_exit =&gt;</span> <span class="hljs-number">0</span>,<br>    <span class="hljs-string">-color_support =&gt;</span> <span class="hljs-number">1</span>,<br>);<br><br><span class="hljs-keyword">my</span> $win1 = $cui-&gt;add(<br>    <span class="hljs-string">&#x27;window1&#x27;</span>, <span class="hljs-string">&#x27;Window&#x27;</span>,<br>    <span class="hljs-string">-title =&gt;</span> <span class="hljs-string">&#x27;Window 1&#x27;</span>,<br>    <span class="hljs-string">-width =&gt;</span> $win_width,<br>    <span class="hljs-string">-height =&gt;</span> $win_height,<br>    <span class="hljs-string">-border =&gt;</span> <span class="hljs-number">1</span>,<br>    <span class="hljs-string">-x =&gt;</span> ($cui-&gt;width()-$win_width)/<span class="hljs-number">2</span>,<br>    <span class="hljs-string">&#x27;-y&#x27;</span> =&gt; ($cui-&gt;height()-$win_height)/<span class="hljs-number">2</span>,<br>);<br></code></pre></td></tr></table></figure>
+
 
                 
               </div>
