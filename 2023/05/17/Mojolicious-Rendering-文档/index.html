@@ -26,7 +26,7 @@
 <meta property="og:image" content="http://example.com/img/ep_tags.png">
 <meta property="og:image" content="http://example.com/img/ep_lines.png">
 <meta property="article:published_time" content="2023-05-17T10:36:45.000Z">
-<meta property="article:modified_time" content="2023-05-17T13:40:28.268Z">
+<meta property="article:modified_time" content="2023-05-18T01:48:35.823Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/ep_tags.png">
@@ -238,7 +238,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.4k 字
+          3.4k 字
         
       </span>
     
@@ -249,7 +249,7 @@
         
         
         
-          20 分钟
+          29 分钟
         
       </span>
     
@@ -340,23 +340,22 @@
 <p>如应用默认的 helper 函数 <code>dumper</code>:</p>
 <figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-comment"># Template</span><br>%= dumper [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>]<br><br><span class="hljs-comment"># Application</span><br><span class="hljs-keyword">my</span> $serialized = $app-&gt;dumper([<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>]);<br><br><span class="hljs-comment"># Controller</span><br><span class="hljs-keyword">my</span> $serialized = $c-&gt;dumper([<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>]);<br></code></pre></td></tr></table></figure>
 
+<p>在 <code>Mojolicious::Plugin::DefaultHelpers</code> 中定义了一些 general purpose helper 函数.</p>
+<p>在 <code>Mojolicious::Plugin::TagHelpers</code> 中定义了一些 tag helpers, 其主要用于 template 以及生成 HTML tags, 如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl">%= link_to <span class="hljs-string">Mojolicious =&gt;</span> <span class="hljs-string">&quot;https://mojolicious.org&quot;</span><br></code></pre></td></tr></table></figure>
 
+<p>可以用 <code>Mojolicious::Controller</code> 对象的 <code>helpers</code> 方法来调用 helper 函数:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">my</span> $serialized = $c-&gt;helpers-&gt;dumper([<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>]);<br></code></pre></td></tr></table></figure>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+<h2 id="静态文件-Static-files"><a href="#静态文件-Static-files" class="headerlink" title="静态文件 Static files"></a>静态文件 Static files</h2><p>静态文件一般位于应用的 <code>public</code> 目录下, 也可以用 <code>Mojolicious::Static</code> 的 <code>paths</code> 方法来指定.</p>
+<p>静态文件也可以位于 <code>__DATA__</code> 中, 用 <code>Mojolicious::Static</code> 中的 <code>classes</code> 方法指定.</p>
+<p>可以通过 <code>Mojolicious::Plugin::DefaultHelpers</code> 中的 <code>reply-&gt;static</code> 方法或者 <code>reply-&gt;file</code> 方法来指定, 如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs perl"> <span class="hljs-keyword">use</span> Mojolicious::Lite -signatures;<br><br>get <span class="hljs-string">&#x27;/&#x27;</span> =&gt; <span class="hljs-function"><span class="hljs-keyword">sub</span> ($<span class="hljs-title">c</span>) </span>&#123;<br>  $c-&gt;reply-&gt;static(<span class="hljs-string">&#x27;index.html&#x27;</span>);<br>&#125;;<br><br>get <span class="hljs-string">&#x27;/some_download&#x27;</span> =&gt; <span class="hljs-function"><span class="hljs-keyword">sub</span> ($<span class="hljs-title">c</span>) </span>&#123;<br>  $c-&gt;res-&gt;headers-&gt;content_disposition(<span class="hljs-string">&#x27;attachment; filename=bar.png;&#x27;</span>);<br>  $c-&gt;reply-&gt;static(<span class="hljs-string">&#x27;foo/bar.png&#x27;</span>);<br>&#125;;<br><br>get <span class="hljs-string">&#x27;/leak&#x27;</span> =&gt; <span class="hljs-function"><span class="hljs-keyword">sub</span> ($<span class="hljs-title">c</span>) </span>&#123;<br>  $c-&gt;reply-&gt;file(<span class="hljs-string">&#x27;/etc/passwd&#x27;</span>);<br>&#125;;<br><br>app-&gt;start;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>reply-&gt;static</code> 通过相对路径来指定, 文件位于 <code>public</code> 目录下, 或者 <code>__DATA__</code> 中</li>
+<li><code>reply-&gt;file</code> 通过绝对路径指定</li>
+</ul>
+<h2 id="Static-assets"><a href="#Static-assets" class="headerlink" title="Static assets"></a>Static assets</h2>
                 
               </div>
             
