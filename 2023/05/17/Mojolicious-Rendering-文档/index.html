@@ -26,7 +26,7 @@
 <meta property="og:image" content="http://example.com/img/ep_tags.png">
 <meta property="og:image" content="http://example.com/img/ep_lines.png">
 <meta property="article:published_time" content="2023-05-17T10:36:45.000Z">
-<meta property="article:modified_time" content="2023-05-18T01:48:35.823Z">
+<meta property="article:modified_time" content="2023-05-18T02:20:22.688Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/ep_tags.png">
@@ -238,7 +238,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3.4k 字
+          6.8k 字
         
       </span>
     
@@ -249,7 +249,7 @@
         
         
         
-          29 分钟
+          57 分钟
         
       </span>
     
@@ -355,7 +355,70 @@
 <li><code>reply-&gt;static</code> 通过相对路径来指定, 文件位于 <code>public</code> 目录下, 或者 <code>__DATA__</code> 中</li>
 <li><code>reply-&gt;file</code> 通过绝对路径指定</li>
 </ul>
-<h2 id="Static-assets"><a href="#Static-assets" class="headerlink" title="Static assets"></a>Static assets</h2>
+<h2 id="Static-assets"><a href="#Static-assets" class="headerlink" title="Static assets"></a>Static assets</h2><blockquote>
+<p>什么是 asset files? </p>
+</blockquote>
+<p>Asset file（资源文件）是指在计算机程序中使用的一种文件格式，通常是包含了程序所需的各种资源，如图像、音频、视频、文本等。这些文件通常被打包在一起，以便程序可以轻松地访问和使用这些资源。</p>
+<p>在移动应用程序开发中，asset file通常是指嵌入在应用程序包中的资源文件，这些文件可以在应用程序运行时动态加载和使用。例如，一个游戏应用程序可能包含多个图像、音效和视频文件，这些文件可以作为asset file打包在应用程序中，并在游戏运行时动态加载和使用。</p>
+<p>在Web开发中，asset file同样是指嵌入在Web应用程序中的资源文件，如CSS样式表、JavaScript文件、图像、字体等。这些文件可以通过HTTP协议动态加载和使用，以提高Web应用程序的性能和用户体验。</p>
+<hr>
+
+<p>asset files 可以为任意类型的文件, 其命名格式为 <code>[name].[checksum].[extensions]</code>. (“checksum” 的意思是校验和)</p>
+<p>可以用:</p>
+<ul>
+<li><code>Mojolicious::Controller</code> 中的 <code>url_for_asset</code></li>
+<li><code>Mojolicious::Plugin::TagHelpers</code> 中的 <code>asset_tag</code></li>
+</ul>
+<p>来生成 URLs, 且不需要知道 checksum:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-comment"># &quot;/assets/myapp.ab1234cd5678ef.js&quot;</span><br>$c-&gt;url_for_asset(<span class="hljs-string">&#x27;/myapp.js&#x27;</span>);<br><br><span class="hljs-comment"># &quot;&lt;script src=&quot;/assets/myapp.ab1234cd5678ef.js&quot;&gt;&lt;/script&gt;&quot;</span><br>$c-&gt;asset_tag(<span class="hljs-string">&#x27;/myapp.js&#x27;</span>);<br></code></pre></td></tr></table></figure>
+
+<h2 id="内容协商-Content-Negotiation"><a href="#内容协商-Content-Negotiation" class="headerlink" title="内容协商 Content Negotiation"></a>内容协商 Content Negotiation</h2><blockquote>
+<p>什么是 Content Negotiation?</p>
+</blockquote>
+<p>Content negotiation（内容协商）是指在客户端和服务器之间进行的一种交互式协商过程，用于确定要在HTTP请求和响应中使用的最佳内容格式。这个过程允许客户端和服务器在多个可接受的内容格式之间进行选择，并选择最适合请求的格式。</p>
+<p>在HTTP协议中，内容协商通常在请求头部字段Accept和响应头部字段Content-Type之间进行交互。客户端将请求头部字段Accept设置为它所支持的内容类型及其优先级顺序，而服务器则在响应头部字段Content-Type中指定所提供的内容类型。在服务器收到请求后，它会检查请求头部字段Accept中指定的内容类型，并选择最佳的内容类型作为响应头部字段Content-Type中的值，然后将响应发送回客户端。</p>
+<hr>
+
+<p>具体见文档.</p>
+<h2 id="渲染-exception-和-not-found-page"><a href="#渲染-exception-和-not-found-page" class="headerlink" title="渲染 exception 和 not_found page"></a>渲染 <code>exception</code> 和 <code>not_found</code> page</h2><p><code>Mojolicious</code> 有内置的 404 (Not Found) 和 500 (Server Error) 页面. 可以用 <code>Mojolicious::Plugin::DefaultHelpers</code> 模块中的:</p>
+<ul>
+<li><code>reply-&gt;exception</code></li>
+<li><code>reply-&gt;not_found</code></li>
+</ul>
+<p>来手动渲染这两个 pages, 如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> Mojolicious::Lite -signatures;<br><span class="hljs-keyword">use</span> Scalar::Util <span class="hljs-string">qw(looks_like_number)</span>;<br><br>get <span class="hljs-string">&#x27;/divide/:dividend/by/:divisor&#x27;</span> =&gt; <span class="hljs-function"><span class="hljs-keyword">sub</span> ($<span class="hljs-title">c</span>) </span>&#123;<br><br>  <span class="hljs-keyword">my</span> $dividend = $c-&gt;param(<span class="hljs-string">&#x27;dividend&#x27;</span>);<br>  <span class="hljs-keyword">my</span> $divisor  = $c-&gt;param(<span class="hljs-string">&#x27;divisor&#x27;</span>);<br><br>  <span class="hljs-comment"># 404</span><br>  <span class="hljs-keyword">return</span> $c-&gt;reply-&gt;not_found <span class="hljs-keyword">unless</span> looks_like_number $dividend &amp;&amp; looks_like_number $divisor;<br><br>  <span class="hljs-comment"># 500</span><br>  <span class="hljs-keyword">return</span> $c-&gt;reply-&gt;exception(<span class="hljs-string">&#x27;Division by zero!&#x27;</span>) <span class="hljs-keyword">if</span> $divisor == <span class="hljs-number">0</span>;<br><br>  <span class="hljs-comment"># 200</span><br>  $c-&gt;render(<span class="hljs-string">text =&gt;</span> $dividend / $divisor);<br>&#125;;<br><br>app-&gt;start;<br></code></pre></td></tr></table></figure>
+
+<p>可以改变触发这两个页面的错误码, 如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">return</span> $c-&gt;reply-&gt;exception(<span class="hljs-string">&#x27;Division by zero!&#x27;</span>)-&gt;rendered(<span class="hljs-number">400</span>) <span class="hljs-keyword">if</span> $divisor == <span class="hljs-number">0</span>;<br></code></pre></td></tr></table></figure>
+<p>这里将触发 <code>exception</code> 页面改为 <code>400</code> 错误码.</p>
+<p><mark>自定义</mark> 这些 pages 的 template, <code>renderer</code> 在启用默认的模板之前会自动查找 <code>exception.$mode.$format.*</code> 或 <code>not_found.$mode.$format.*</code> 文件, 如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> Mojolicious::Lite;<br><br>get <span class="hljs-string">&#x27;/dies&#x27;</span> =&gt; <span class="hljs-function"><span class="hljs-keyword">sub</span> </span>&#123; <span class="hljs-keyword">die</span> <span class="hljs-string">&#x27;Intentional error&#x27;</span> &#125;;<br><br>app-&gt;start;<br><span class="language-mojolicious"><span class="hljs-meta">__DATA__</span><span class="language-xml"></span></span><br><span class="language-xml"><span class="language-mojolicious"></span></span><br><span class="language-xml"><span class="language-mojolicious"></span></span><span class="hljs-comment">@@ exception.production.html.ep</span><span class="language-mojolicious"><span class="language-xml"></span></span><br><span class="language-xml"><span class="language-mojolicious"><span class="hljs-meta">&lt;!DOCTYPE <span class="hljs-keyword">html</span>&gt;</span></span></span><br><span class="language-xml"><span class="language-mojolicious"><span class="hljs-tag">&lt;<span class="hljs-name">html</span>&gt;</span></span></span><br><span class="language-xml"><span class="language-mojolicious">  <span class="hljs-tag">&lt;<span class="hljs-name">head</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">title</span>&gt;</span>Server error<span class="hljs-tag">&lt;/<span class="hljs-name">title</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">head</span>&gt;</span></span></span><br><span class="language-xml"><span class="language-mojolicious">  <span class="hljs-tag">&lt;<span class="hljs-name">body</span>&gt;</span></span></span><br><span class="language-xml"><span class="language-mojolicious">    <span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span>Exception<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span></span></span><br><span class="language-xml"><span class="language-mojolicious">    <span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>&lt;%=</span><span class="language-perl"> $exception-&gt;message </span><span class="language-xml">%&gt;<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span></span></span><br><span class="language-xml"><span class="language-mojolicious">    <span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span>Stash<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span></span></span><br><span class="language-xml"><span class="language-mojolicious">    <span class="hljs-tag">&lt;<span class="hljs-name">pre</span>&gt;</span>&lt;%=</span><span class="language-perl"> dumper $snapshot </span><span class="language-xml">%&gt;<span class="hljs-tag">&lt;/<span class="hljs-name">pre</span>&gt;</span></span></span><br><span class="language-xml"><span class="language-mojolicious">  <span class="hljs-tag">&lt;/<span class="hljs-name">body</span>&gt;</span></span></span><br><span class="language-xml"><span class="language-mojolicious"><span class="hljs-tag">&lt;/<span class="hljs-name">html</span>&gt;</span></span></span><br></code></pre></td></tr></table></figure>
+
+<p>用 <code>Mojolicious::Plugin::DefaultHelpers</code> 中的 <code>exception_format</code> 来修改返回的 <code>exception</code> 文件的格式:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> Mojolicious::Lite -signatures;<br><br>app-&gt;exception_format(<span class="hljs-string">&#x27;json&#x27;</span>);<br><br>get <span class="hljs-string">&#x27;/json&#x27;</span> =&gt; <span class="hljs-function"><span class="hljs-keyword">sub</span> ($<span class="hljs-title">c</span>) </span>&#123;<br>  <span class="hljs-keyword">die</span> <span class="hljs-string">&#x27;Just a test&#x27;</span>;<br>&#125;;<br><br>get <span class="hljs-string">&#x27;/txt&#x27;</span> =&gt; <span class="hljs-function"><span class="hljs-keyword">sub</span> ($<span class="hljs-title">c</span>) </span>&#123;<br>  $c-&gt;exception_format(<span class="hljs-string">&#x27;txt&#x27;</span>);<br>  <span class="hljs-keyword">die</span> <span class="hljs-string">&#x27;Just a test&#x27;</span>;<br>&#125;;<br><br>app-&gt;start;<br></code></pre></td></tr></table></figure>
+
+<p>可以用 <code>hook</code> 的 <code>before_render</code> 运行在 <code>render</code> 之前:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> Mojolicious::Lite -signatures;<br><br>hook <span class="hljs-string">before_render =&gt;</span> <span class="hljs-function"><span class="hljs-keyword">sub</span> ($<span class="hljs-title">c</span>, $<span class="hljs-title">args</span>) </span>&#123;<br><br>  <span class="hljs-comment"># Make sure we are rendering the exception template</span><br>  <span class="hljs-keyword">return</span> <span class="hljs-keyword">unless</span> <span class="hljs-keyword">my</span> $template = $args-&gt;&#123;template&#125;;<br>  <span class="hljs-keyword">return</span> <span class="hljs-keyword">unless</span> $template eq <span class="hljs-string">&#x27;exception&#x27;</span>;<br><br>  <span class="hljs-comment"># Switch to JSON rendering if content negotiation allows it</span><br>  <span class="hljs-keyword">return</span> <span class="hljs-keyword">unless</span> $c-&gt;accepts(<span class="hljs-string">&#x27;json&#x27;</span>);<br>  $args-&gt;&#123;json&#125; = &#123;<span class="hljs-string">exception =&gt;</span> $c-&gt;stash(<span class="hljs-string">&#x27;exception&#x27;</span>)&#125;;<br>&#125;;<br><br>get <span class="hljs-string">&#x27;/&#x27;</span> =&gt; <span class="hljs-function"><span class="hljs-keyword">sub</span> </span>&#123; <span class="hljs-keyword">die</span> <span class="hljs-string">&quot;This sho...ALL GLORY TO THE HYPNOTOAD!\n&quot;</span> &#125;;<br><br>app-&gt;start;<br></code></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                 
               </div>
             
