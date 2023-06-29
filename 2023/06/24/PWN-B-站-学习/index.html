@@ -40,7 +40,7 @@
 <meta property="og:image" content="http://example.com/img/dynamic-exe.png">
 <meta property="og:image" content="http://example.com/img/two-kinds-of-assem.png">
 <meta property="article:published_time" content="2023-06-24T13:28:56.000Z">
-<meta property="article:modified_time" content="2023-06-29T08:40:03.506Z">
+<meta property="article:modified_time" content="2023-06-29T12:16:35.262Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/c-to-machine.png">
@@ -252,7 +252,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3k 字
+          3.9k 字
         
       </span>
     
@@ -263,7 +263,7 @@
         
         
         
-          26 分钟
+          33 分钟
         
       </span>
     
@@ -462,7 +462,29 @@
 <p>注意两种汇编格式:</p>
 <p><img src="/../img/two-kinds-of-assem.png" srcset="/img/loading.gif" lazyload></p>
 <p>注意溢出只发生在有符号数.</p>
-<h1 id="6-Shellcode"><a href="#6-Shellcode" class="headerlink" title="6 Shellcode"></a>6 Shellcode</h1>
+<h1 id="6-Shellcode"><a href="#6-Shellcode" class="headerlink" title="6 Shellcode"></a>6 Shellcode</h1><p>shellcode 通常是软件漏洞利用过程中使用的一小段机器代码.</p>
+<p>如:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;stdlib.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;unistd.h&quot;</span></span><br><br><span class="hljs-type">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span> &#123;<br>    system(<span class="hljs-string">&quot;/bin/sh&quot;</span>);<br>    <span class="hljs-built_in">exit</span>(<span class="hljs-number">0</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>需注意, shellcode 允许输入普遍较短, 一般只有几十个字节. 且无法调用系统函数.</p>
+<blockquote>
+<p>解决方法</p>
+</blockquote>
+<ol>
+<li>触发中断 (<code>int 0x80</code> 或者 <code>syscall</code>), 进行系统调用</li>
+<li>用 <code>execve()</code> (execute with vector of arguments and environment) 函数</li>
+</ol>
+<p>如:</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-comment">;; nasm -f elf32 i386.asm</span><br><span class="hljs-comment">;; ld -m elf_i386 -o i386 i386.o</span><br><span class="hljs-comment">;; objdump -d i386</span><br><span class="hljs-meta">global</span> _start<br><span class="hljs-symbol">_start:</span><br>    <span class="hljs-keyword">push</span> <span class="hljs-string">&quot;/sh&quot;</span><br>    <span class="hljs-keyword">push</span> <span class="hljs-string">&quot;/bin&quot;</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">ebx</span>, <span class="hljs-built_in">esp</span> <span class="hljs-comment">;; ebx = &quot;/bin/sh&quot;</span><br>    <span class="hljs-keyword">xor</span> <span class="hljs-built_in">edx</span>, <span class="hljs-built_in">edx</span> <span class="hljs-comment">;; edx = 0</span><br>    <span class="hljs-keyword">xor</span> <span class="hljs-built_in">ecx</span>, <span class="hljs-built_in">ecx</span> <span class="hljs-comment">;; ecx = 0</span><br>    <span class="hljs-keyword">mov</span> <span class="hljs-built_in">al</span>, <span class="hljs-number">0xb</span>  <span class="hljs-comment">;; 设置 al = 0xb</span><br>    <span class="hljs-keyword">int</span> <span class="hljs-number">0x80</span><br></code></pre></td></tr></table></figure>
+<p>在汇编语言中，”global _start” 是一条指示符，用于告诉编译器将 _start 标号（label）导出为全局符号（global symbol），以便其他模块或者链接器可以使用。</p>
+<p>在这段汇编代码中，_start 是程序的入口点，也就是程序的起始地址。由于 _start 是一个全局符号，链接器可以根据这个符号将当前模块的代码与其他模块的代码进行链接，从而生成可执行文件。如果没有使用 “global _start” 指令，那么链接器就无法识别 _start 标号，并且在链接时会报错。</p>
+<p>需要注意的是，在一些汇编语言中，入口点的名称并不是固定的，可以使用其他名称代替。例如在 NASM（Netwide Assembler）中，可以使用 “global _main” 以及 “section .text ; global _start ; _start:” 等方式来指定程序的入口点。</p>
+<p><mark>64 位系统调用和 32 位系统调用的区别</mark></p>
+<ol>
+<li>穿参寄存器不同</li>
+<li>系统调用使用 syscall</li>
+</ol>
+
                 
               </div>
             
