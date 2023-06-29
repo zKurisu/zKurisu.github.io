@@ -40,7 +40,7 @@
 <meta property="og:image" content="http://example.com/img/dynamic-exe.png">
 <meta property="og:image" content="http://example.com/img/two-kinds-of-assem.png">
 <meta property="article:published_time" content="2023-06-24T13:28:56.000Z">
-<meta property="article:modified_time" content="2023-06-29T12:36:44.425Z">
+<meta property="article:modified_time" content="2023-06-29T13:47:33.394Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/c-to-machine.png">
@@ -252,7 +252,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          4.8k 字
+          5.3k 字
         
       </span>
     
@@ -263,7 +263,7 @@
         
         
         
-          40 分钟
+          44 分钟
         
       </span>
     
@@ -499,7 +499,22 @@
 <p>结果会生成:</p>
 <figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs x86asm">/* execve(path = <span class="hljs-string">&#x27;/bin///sh&#x27;</span>, argv = [<span class="hljs-string">&#x27;sh&#x27;</span>], envp = <span class="hljs-number">0</span>) */<br>/* <span class="hljs-keyword">push</span> b<span class="hljs-string">&#x27;/bin///sh\x00&#x27;</span> */<br>        <span class="hljs-keyword">push</span> <span class="hljs-number">0x68</span><br>        <span class="hljs-keyword">push</span> <span class="hljs-number">0x732f2f2f</span><br>        <span class="hljs-keyword">push</span> <span class="hljs-number">0x6e69622f</span><br>        <span class="hljs-keyword">mov</span> <span class="hljs-built_in">ebx</span>, <span class="hljs-built_in">esp</span><br>        /* <span class="hljs-keyword">push</span> argument array [<span class="hljs-string">&#x27;sh\x00&#x27;</span>] */<br>        /* <span class="hljs-keyword">push</span> <span class="hljs-string">&#x27;sh\x00\x00&#x27;</span> */<br>        <span class="hljs-keyword">push</span> <span class="hljs-number">0x1010101</span><br>        <span class="hljs-keyword">xor</span> <span class="hljs-built_in">dword</span> <span class="hljs-built_in">ptr</span> [<span class="hljs-built_in">esp</span>], <span class="hljs-number">0x1016972</span><br>        <span class="hljs-keyword">xor</span> <span class="hljs-built_in">ecx</span>, <span class="hljs-built_in">ecx</span><br>        <span class="hljs-keyword">push</span> <span class="hljs-built_in">ecx</span> /* null terminate */<br>        <span class="hljs-keyword">push</span> <span class="hljs-number">4</span><br>        <span class="hljs-keyword">pop</span> <span class="hljs-built_in">ecx</span><br>        <span class="hljs-keyword">add</span> <span class="hljs-built_in">ecx</span>, <span class="hljs-built_in">esp</span><br>        <span class="hljs-keyword">push</span> <span class="hljs-built_in">ecx</span> /* <span class="hljs-string">&#x27;sh\x00&#x27;</span> */<br>        <span class="hljs-keyword">mov</span> <span class="hljs-built_in">ecx</span>, <span class="hljs-built_in">esp</span><br>        <span class="hljs-keyword">xor</span> <span class="hljs-built_in">edx</span>, <span class="hljs-built_in">edx</span><br>        /* <span class="hljs-keyword">call</span> execve() */<br>        <span class="hljs-keyword">push</span> <span class="hljs-number">11</span> /* <span class="hljs-number">0xb</span> */<br>        <span class="hljs-keyword">pop</span> <span class="hljs-built_in">eax</span><br>        <span class="hljs-keyword">int</span> <span class="hljs-number">0x80</span><br><br></code></pre></td></tr></table></figure>
 
-<h1 id="7-栈溢出基础"><a href="#7-栈溢出基础" class="headerlink" title="7 栈溢出基础"></a>7 栈溢出基础</h1>
+<h1 id="7-栈溢出基础"><a href="#7-栈溢出基础" class="headerlink" title="7 栈溢出基础"></a>7 栈溢出基础</h1><p>几个知识点:</p>
+<ul>
+<li>函数调用栈是指程序运行时内存一段连续的区域, 用来保存函数运行时的状态信息, 包括函数参数与局部变量等</li>
+<li>发生函数调用时, 调用函数的状态被保存在栈内, 被调用函数的状态压入调用栈的栈顶</li>
+<li>在函数调用结束时, 栈顶的函数状态被弹出, 栈顶恢复到调用函数的状态</li>
+<li>函数调用栈在内存中从高地址向低地址生长, 即在压栈时变小, 在退栈时变大</li>
+</ul>
+<p>三个重要的寄存器:</p>
+<ul>
+<li><code>esp</code> (stack pointer), 用于指向当前栈顶的地址，也就是栈的最后一个元素的地址。</li>
+<li><code>ebp</code> (base pointer), 用于指向栈帧的基址。栈帧是一个包含局部变量、函数参数、返回地址等信息的数据结构，它通常被存储在栈上。ebp 寄存器通常在函数调用时被用来保存上一个栈帧的基址，并且在函数返回时恢复该基址值。</li>
+<li><code>eip</code> (instruction pointer), 用于存储下一条将要执行的指令的地址。当 CPU 执行一条指令时，它会从 eip 寄存器中读取下一条指令的地址，并将该地址加载到指令缓存中。然后 CPU 会执行该指令，并更新 eip 寄存器的值，使其指向下一条要执行的指令。</li>
+</ul>
+<p><code>ebp</code> 在函数运行时不变, 可以用来索引确定函数参数或局部变量的位置.</p>
+<p>cpu 依照 <code>eip</code> a的存储内容读取指令并执行, <code>eip</code> 随之指向相邻的下一条指令.</p>
+
                 
               </div>
             
