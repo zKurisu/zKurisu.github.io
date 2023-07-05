@@ -44,8 +44,9 @@
 <meta property="og:image" content="http://example.com/img/transfer-instruction-sort.png">
 <meta property="og:image" content="http://example.com/img/how-jcxz-functions.png">
 <meta property="og:image" content="http://example.com/img/how-loop=functions.png">
+<meta property="og:image" content="http://example.com/img/how-to-use-mul-instruction.png">
 <meta property="article:published_time" content="2023-07-03T11:21:41.000Z">
-<meta property="article:modified_time" content="2023-07-05T11:11:58.397Z">
+<meta property="article:modified_time" content="2023-07-05T12:53:33.972Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/how-assembly-to-machine.png">
@@ -257,7 +258,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          12k 字
+          13k 字
         
       </span>
     
@@ -268,7 +269,7 @@
         
         
         
-          98 分钟
+          105 分钟
         
       </span>
     
@@ -818,6 +819,68 @@
 <li>转移</li>
 </ol>
 <p><code>call</code> 指令不能实现短转移, 除此之外, <code>call</code> 指令实现转移的方法和 <code>jmp</code> 指令的原理相同.</p>
+<h2 id="10-3-依据位移进行转移的-call-指令"><a href="#10-3-依据位移进行转移的-call-指令" class="headerlink" title="10.3 依据位移进行转移的 call 指令"></a>10.3 依据位移进行转移的 <code>call</code> 指令</h2><p>格式为:</p>
+<figure class="highlight autoit"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs autoit"><span class="hljs-built_in">call</span> + 标号<br></code></pre></td></tr></table></figure>
+<p>结果: 将当前 <code>IP</code> 压栈后, 转到标号处执行指令.</p>
+<p>此时 CPU 的操作为:</p>
+<ol>
+<li>(sp) &#x3D; (sp) - 2<br>((ss)*16+(sp)) &#x3D; (IP)</li>
+<li>(IP) &#x3D; (IP) + 16 位位移</li>
+</ol>
+<p>相当于:</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-keyword">push</span> <span class="hljs-built_in">IP</span><br><span class="hljs-keyword">jmp</span> <span class="hljs-built_in">near</span> <span class="hljs-built_in">ptr</span> + 标号<br></code></pre></td></tr></table></figure>
+
+<h2 id="10-4-转移的目的地址在指令中的-call-指令"><a href="#10-4-转移的目的地址在指令中的-call-指令" class="headerlink" title="10.4 转移的目的地址在指令中的 call 指令"></a>10.4 转移的目的地址在指令中的 call 指令</h2><p>格式为:</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-keyword">call</span> <span class="hljs-built_in">far</span> <span class="hljs-built_in">ptr</span> + 标号<br></code></pre></td></tr></table></figure>
+<p>实现段间转移, 目的地址会出现在机器码中.</p>
+<p>CPU 此时的操作为:</p>
+<ol>
+<li>(sp) &#x3D; (sp) - 2<br>((ss)*16 + (sp)) &#x3D; (CS)<br>(sp) &#x3D; (sp) - 2</li>
+<li>(CS) &#x3D; 标号所在段的段地址<br>(IP) &#x3D; 标号在段中的偏移地址</li>
+</ol>
+<p>相当于:</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-keyword">push</span> <span class="hljs-built_in">CS</span><br><span class="hljs-keyword">push</span> <span class="hljs-built_in">IP</span><br><span class="hljs-keyword">jmp</span> <span class="hljs-built_in">far</span> <span class="hljs-built_in">ptr</span> + 标号<br></code></pre></td></tr></table></figure>
+
+<h2 id="10-5-转移地址在寄存器中的-call-指令"><a href="#10-5-转移地址在寄存器中的-call-指令" class="headerlink" title="10.5 转移地址在寄存器中的 call 指令"></a>10.5 转移地址在寄存器中的 call 指令</h2><p>格式为:</p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs vim"><span class="hljs-keyword">call</span> + <span class="hljs-number">16</span>位<span class="hljs-keyword">reg</span><br></code></pre></td></tr></table></figure>
+
+<p>CPU 的操作为:</p>
+<ol>
+<li>(sp) &#x3D; (sp) - 2<br>((ss)*16 + (sp)) &#x3D; (IP)<br>(IP) &#x3D; (16位reg)</li>
+</ol>
+<p>相当于:</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-keyword">push</span> <span class="hljs-built_in">IP</span><br><span class="hljs-keyword">jmp</span> <span class="hljs-number">16</span>位reg<br></code></pre></td></tr></table></figure>
+
+
+<h2 id="10-6-转移地址在内存中的-call-指令"><a href="#10-6-转移地址在内存中的-call-指令" class="headerlink" title="10.6 转移地址在内存中的 call 指令"></a>10.6 转移地址在内存中的 call 指令</h2><p>格式为:</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-keyword">call</span> <span class="hljs-built_in">word</span> <span class="hljs-built_in">ptr</span> + 内存单元地址<br></code></pre></td></tr></table></figure>
+<p>相当于:</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-keyword">push</span> <span class="hljs-built_in">IP</span><br><span class="hljs-keyword">jmp</span> <span class="hljs-built_in">word</span> <span class="hljs-built_in">ptr</span> + 内存单元地址<br></code></pre></td></tr></table></figure>
+
+<p>或:</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-keyword">call</span> <span class="hljs-built_in">dword</span> <span class="hljs-built_in">ptr</span> + 内存单元地址<br></code></pre></td></tr></table></figure>
+<p>相当于:</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-keyword">push</span> <span class="hljs-built_in">CS</span><br><span class="hljs-keyword">push</span> <span class="hljs-built_in">IP</span><br><span class="hljs-keyword">jmp</span> <span class="hljs-built_in">dword</span> <span class="hljs-built_in">ptr</span> + 内存单元地址<br></code></pre></td></tr></table></figure>
+
+<h2 id="10-7-call-和-ret-的配合使用"><a href="#10-7-call-和-ret-的配合使用" class="headerlink" title="10.7 call 和 ret 的配合使用"></a>10.7 call 和 ret 的配合使用</h2><p>如:</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-meta">assume</span> <span class="hljs-built_in">cs</span>:code<br>code <span class="hljs-meta">segment</span><br><span class="hljs-symbol">start:</span> <span class="hljs-keyword">mov</span> <span class="hljs-built_in">ax</span>, <span class="hljs-number">1</span><br>       <span class="hljs-keyword">mov</span> <span class="hljs-built_in">cx</span>, <span class="hljs-number">3</span><br>       <span class="hljs-keyword">call</span> s<br>       <span class="hljs-keyword">mov</span> <span class="hljs-built_in">bx</span>, <span class="hljs-built_in">ax</span><br><br>       <span class="hljs-keyword">mov</span> <span class="hljs-built_in">ax</span>, <span class="hljs-number">4c00h</span><br>       <span class="hljs-keyword">int</span> <span class="hljs-number">21h</span><br><span class="hljs-symbol"></span><br><span class="hljs-symbol">s:</span>     <span class="hljs-keyword">add</span> <span class="hljs-built_in">ax</span>, <span class="hljs-built_in">ax</span><br>       <span class="hljs-keyword">loop</span> s<br>       <span class="hljs-keyword">ret</span><br>code ends<br>end start<br></code></pre></td></tr></table></figure>
+
+<h2 id="10-8-mul-指令"><a href="#10-8-mul-指令" class="headerlink" title="10.8 mul 指令"></a>10.8 mul 指令</h2><p><code>mul</code> 是乘法指令, 需注意:</p>
+<p><img src="/../img/how-to-use-mul-instruction.png" srcset="/img/loading.gif" lazyload></p>
+<p>格式为:</p>
+<figure class="highlight armasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs armasm"><span class="hljs-keyword">mul</span> reg<br><span class="hljs-keyword">mul</span> 内存单元<br></code></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+
+
+
 
                 
               </div>
