@@ -46,8 +46,9 @@
 <meta property="og:image" content="http://example.com/img/how-loop=functions.png">
 <meta property="og:image" content="http://example.com/img/how-to-use-mul-instruction.png">
 <meta property="og:image" content="http://example.com/img/flag-register.png">
+<meta property="og:image" content="http://example.com/img/jump-following-compare-instruction.png">
 <meta property="article:published_time" content="2023-07-03T11:21:41.000Z">
-<meta property="article:modified_time" content="2023-07-06T00:28:49.031Z">
+<meta property="article:modified_time" content="2023-07-06T01:33:49.295Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/how-assembly-to-machine.png">
@@ -270,7 +271,7 @@
         
         
         
-          114 分钟
+          119 分钟
         
       </span>
     
@@ -892,7 +893,29 @@
 <h2 id="11-2-PF-标志"><a href="#11-2-PF-标志" class="headerlink" title="11.2 PF 标志"></a>11.2 PF 标志</h2><p><code>PF</code> (Parity Flag), 奇偶标志位, 其记录相关指令执行后, 其结果的所有 bit 位中 1 的个数是否为 <mark>偶数</mark> , 如果是, 则 <code>pf=1</code>, 反之.</p>
 <h2 id="11-3-SF-标志"><a href="#11-3-SF-标志" class="headerlink" title="11.3 SF 标志"></a>11.3 SF 标志</h2><p><code>SF</code> (Sign Flag), 符号标志位, 其记录相关指令执行后, 其结果是否为 <mark>负</mark> , 如果是, 则 <code>sf=1</code>, 反之.</p>
 <p>在我们将数据当作有符号数来运算时, 可以通过 <code>SF</code> 标志位来得知结果的正负, 如果我们将数据当作无符号数来运算, <code>SF</code> 的值则没有意义.</p>
-<h2 id="11-4-CF-标志"><a href="#11-4-CF-标志" class="headerlink" title="11.4 CF 标志"></a>11.4 CF 标志</h2><p><code>CF</code> (Carry Flag), 符号标志位, 其记录相关指令执行后, 其结果是否为 <mark>负</mark> , 如果是, 则 <code>sf=1</code>, 反之.</p>
+<h2 id="11-4-CF-标志"><a href="#11-4-CF-标志" class="headerlink" title="11.4 CF 标志"></a>11.4 CF 标志</h2><p><code>CF</code> (Carry Flag), 进位标志位, 一般情况下, 在进行<mark>无符号数</mark>运算的时候, 其记录了运算结果的最高有效位向更高位的进位值, 或借位值.</p>
+<h2 id="OF-标志"><a href="#OF-标志" class="headerlink" title="OF 标志"></a>OF 标志</h2><p>由于在进行有符号数运算时, 可能发生溢出而造成结果的错误, 则需要 CPU  对指令执行后是否产生溢出进行记录.</p>
+<p><code>OF</code> (Overflow Flag), 溢出标志, 一般情况下, <code>OF</code> 记录了有符号数运算的结果是否发生了溢出, 如果发生溢出, <code>OF=1</code>, 反之.</p>
+<p>注意, <code>CF</code> 是对无符号数运算有意义的标志位. <code>OF</code> 是对有符号数运算有意义的标志位.</p>
+<h2 id="11-6-abc-指令"><a href="#11-6-abc-指令" class="headerlink" title="11.6 abc 指令"></a>11.6 abc 指令</h2><p><code>abc</code> (add carry) 是带进位加法指令, 他利用了 <code>CF</code> 上记录的进位值.</p>
+<p>格式: <code>abc 操作对象1, 操作对象2</code></p>
+<p>功能: <code>操作对象1 = 操作对象1 + 操作对象2 + CF</code></p>
+<h2 id="11-7-sbb-指令"><a href="#11-7-sbb-指令" class="headerlink" title="11.7 sbb 指令"></a>11.7 sbb 指令</h2><p><code>sbb</code> (sub borrow) 是带借位减法指令, 其利用了 <code>CF</code> 上记录的借位值.</p>
+<p>格式: <code>sbb 操作对象1, 操作对象2</code></p>
+<p>功能: <code>操作对象1 = 操作对象1 - 操作对象2 - CF</code></p>
+<h2 id="11-8-cmp-指令"><a href="#11-8-cmp-指令" class="headerlink" title="11.8 cmp 指令"></a>11.8 cmp 指令</h2><p><code>cmp</code> (compare) 是比较指令, 其相当于减法指令, 只是不保存结果, 且其会对标志寄存器产生影响.</p>
+<p>格式: <code>cmp 操作对象1, 操作对象2</code></p>
+<p>功能: <code>操作对象1 - 操作对象2</code>, 但不保存结果, 仅仅根据计算结果对标志寄存器进行设置.</p>
+<p>如:</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-keyword">cmp</span> <span class="hljs-built_in">ax</span>, <span class="hljs-built_in">ax</span><br></code></pre></td></tr></table></figure>
+<p>相当于做 <code>(ax) - (ax)</code> 的操作, 但不保存结果, 根据这个结果来设置 flag 的相关位.</p>
+<h2 id="11-9-检测比较结果的条件转移指令"><a href="#11-9-检测比较结果的条件转移指令" class="headerlink" title="11.9 检测比较结果的条件转移指令"></a>11.9 检测比较结果的条件转移指令</h2><p>如:</p>
+<p><img src="/../img/jump-following-compare-instruction.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="11-10-DF-标志和串传送指令"><a href="#11-10-DF-标志和串传送指令" class="headerlink" title="11.10 DF 标志和串传送指令"></a>11.10 DF 标志和串传送指令</h2><p><code>DF</code> (Direction Flag), 方向标志位, 在串处理指令中, 控制每次操作后 <code>si</code>, <code>di</code> 的增减.</p>
+<ul>
+<li><code>df=0</code>, 每次操作后 <code>si</code>, <code>di</code> 递增</li>
+<li><code>df=1</code>, 每次操作后 <code>si</code>, <code>di</code> 递减</li>
+</ul>
 
                 
               </div>
