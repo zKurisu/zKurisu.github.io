@@ -48,7 +48,7 @@
 <meta property="og:image" content="http://example.com/img/flag-register.png">
 <meta property="og:image" content="http://example.com/img/jump-following-compare-instruction.png">
 <meta property="article:published_time" content="2023-07-03T11:21:41.000Z">
-<meta property="article:modified_time" content="2023-07-06T01:33:49.295Z">
+<meta property="article:modified_time" content="2023-07-06T02:02:48.946Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/how-assembly-to-machine.png">
@@ -260,7 +260,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          14k 字
+          15k 字
         
       </span>
     
@@ -271,7 +271,7 @@
         
         
         
-          119 分钟
+          125 分钟
         
       </span>
     
@@ -916,6 +916,39 @@
 <li><code>df=0</code>, 每次操作后 <code>si</code>, <code>di</code> 递增</li>
 <li><code>df=1</code>, 每次操作后 <code>si</code>, <code>di</code> 递减</li>
 </ul>
+<p>两种串传送指令:</p>
+<ul>
+<li><code>movsb</code> (move string byte)</li>
+<li><code>movsw</code> (move string word)</li>
+</ul>
+<p>其都是将 <code>ds:si</code> 指向的内存单元的字节&#x2F;字送入 <code>es:di</code> 中, 然后根据标志寄存器 <code>df</code> 位的值, 将 <code>si</code> 和 <code>di</code> 递增或递减.</p>
+<p><code>movsb</code> 相当于:</p>
+<ol>
+<li>((es)*16 + (di)) &#x3D; ((ds)*16 + (si))</li>
+<li>如果 <code>df=0</code>, (si) &#x3D; (si) + 1, (di) &#x3D; (di) + 1<br>如果 <code>df=1</code>, (si) &#x3D; (si) - 1, (di) &#x3D; (di) - 1</li>
+</ol>
+<p>这两个指令常配合 <code>rep</code> (repete) 指令执行, 其根据 <code>cx</code> 的值, 重复执行后面的指令, 如:</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs x86asm"><span class="hljs-keyword">rep</span> <span class="hljs-keyword">movsb</span><br></code></pre></td></tr></table></figure>
+<p>相当于:</p>
+<figure class="highlight vbnet"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs vbnet"><span class="hljs-symbol">s:</span>movsb<br>  <span class="hljs-keyword">loop</span> s<br></code></pre></td></tr></table></figure>
+
+<p>有两个指令来对 <code>df</code> 位进行设置.</p>
+<ul>
+<li><code>cld</code> (clear direction flag), 将标志寄存器的 <code>df</code> 位置置 0 </li>
+<li><code>std</code> (set direction flag), 将标志寄存器的 <code>df</code> 位置置 1</li>
+</ul>
+<h2 id="11-11-pushf-和-popf"><a href="#11-11-pushf-和-popf" class="headerlink" title="11.11 pushf 和 popf"></a>11.11 pushf 和 popf</h2><p><code>pushf</code> 的功能是将标志寄存器的值压栈.</p>
+<p><code>popf</code> 是从栈中弹出数据, 送入标志寄存器中.</p>
+<p>注意这里的 <code>pushf</code>, <code>popf</code> 和 <code>push</code>, <code>pop</code> 公用一个栈.</p>
+<h1 id="第12章-内中断"><a href="#第12章-内中断" class="headerlink" title="第12章 内中断"></a>第12章 内中断</h1><p>CPU 检测到从外部或内部产生的一种特殊信息后, 立即对所接收到的信息进行处理, 这种信息称为<mark>中断信息</mark>. 中断的含义是, CPU 不再接着 (刚执行完的指令) 向下执行, 而是转去处理这个特殊信息.</p>
+<h2 id="12-1-内中断的产生"><a href="#12-1-内中断的产生" class="headerlink" title="12.1 内中断的产生"></a>12.1 内中断的产生</h2><p>当 CPU 内部有下面情况发生的时候, 将产生相应的中断信息如:</p>
+<ol>
+<li>除法错误</li>
+<li>单步执行</li>
+<li>执行 <code>into</code> 指令</li>
+<li>执行 <code>int</code> 指令</li>
+</ol>
+<p>8086CPU 用 <mark>中断类型码</mark> 来标识中断信息的来源. 其为一个字节型数据 (8位), 可以表示 256 种中断信息的来源 (中断源).</p>
 
                 
               </div>
