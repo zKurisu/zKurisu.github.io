@@ -45,7 +45,7 @@
 <meta property="og:image" content="http://example.com/img/common-sql-sentences1.png">
 <meta property="og:image" content="http://example.com/img/common-sql-sentences2.png">
 <meta property="article:published_time" content="2023-07-02T09:15:34.000Z">
-<meta property="article:modified_time" content="2023-07-22T02:13:42.233Z">
+<meta property="article:modified_time" content="2023-07-22T02:42:55.087Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/new-mem-of-python.png">
@@ -257,7 +257,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          9.4k 字
+          10k 字
         
       </span>
     
@@ -268,7 +268,7 @@
         
         
         
-          79 分钟
+          87 分钟
         
       </span>
     
@@ -805,9 +805,44 @@
 <li>用户可控输入 (要有对话框让用户输入)</li>
 <li>输入内容与数据库交互 (输入的内容)</li>
 </ul>
-<p>简单的示例 – <mark>闭合</mark> (即一直为真), 如:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs html"><span class="hljs-meta">&lt;?php</span><br><span class="hljs-meta">    $id = $_GET[&#x27;id&#x27;]</span><br><span class="hljs-meta">?&gt;</span><br></code></pre></td></tr></table></figure>
+<p>简单的示例 – <mark>闭合</mark> (即利用双引号, 单引号的闭合构造一直为真的语句, 主要是为了让自己能够操作后端语句), 如:</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs html"><span class="hljs-meta">&lt;?php</span><br><span class="hljs-meta">    $id = $_GET[&#x27;id&#x27;]</span><br><span class="hljs-meta">    $sql = &quot;select * from data where id = &quot; . $id;</span><br><span class="hljs-meta">?&gt;</span><br></code></pre></td></tr></table></figure>
 
+<p>构造如 <code>select * from data where id = 1 or 1 = 1</code>, 就能输出所有数据.</p>
+<p>有时常见的注释符, 以及单引号会被 ban 掉, 此时可用的注释符有:</p>
+<ul>
+<li><code>%23</code></li>
+<li><code>--+</code></li>
+<li><code>;%00</code></li>
+<li>`</li>
+</ul>
+<p>示例:</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs html"><span class="hljs-meta">&lt;?php</span><br><span class="hljs-meta">    $id = $_GET[&#x27;id&#x27;]</span><br><span class="hljs-meta">    $sql = &quot;SELECT * FROM data WHERE username = &#x27;&quot; . $username . &quot;&#x27; and password = &#x27;&quot; . $password . &quot;&#x27; &quot;;</span><br><span class="hljs-meta">?&gt;</span><br></code></pre></td></tr></table></figure>
+<p>在这个语句中, <code>$username</code> 和 <code>$password</code> 变量两侧都有一对单引号, 此时如果输入 <code>\</code>, 则可以转义一个单引号, 如:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">select</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">from</span> data <span class="hljs-keyword">where</span> username <span class="hljs-operator">=</span> <span class="hljs-string">&#x27;\&#x27;</span> <span class="hljs-keyword">and</span> password <span class="hljs-operator">=</span> <span class="hljs-string">&#x27;&#x27;</span>;<br></code></pre></td></tr></table></figure>
+<p>此时第一个闭合为 <code>and password = </code> 这个值, 最后一个单引号多出来了, 不处理则会报错, 此时用 <code>;%00</code> 来把这个单引号注释掉, 并在前面加上自己的操作:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">select</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">from</span> data <span class="hljs-keyword">where</span> username <span class="hljs-operator">=</span> <span class="hljs-string">&#x27;\&#x27;</span> <span class="hljs-keyword">and</span> password <span class="hljs-operator">=</span> <span class="hljs-string">&#x27; or 1 = 1 ;%00&#x27;</span>;<br></code></pre></td></tr></table></figure>
+<p>此时 <code>or 1 = 1</code> 则可以运行.</p>
+<blockquote>
+<p>联合查询注入 – <code>Order by</code> 探测注入点</p>
+</blockquote>
+<p>利用 <code>union</code> 联合查询, 注意 <mark>联合查询</mark> 的基本要求:</p>
+<ol>
+<li>查询列数必须一致</li>
+<li>查询语句的查询的各列类型, 顺序最好一致</li>
+</ol>
+<p>联合查询的步骤:</p>
+<ol>
+<li>闭合</li>
+<li>判断字段数 (用 <code>Order by</code>)</li>
+</ol>
+<p>如:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">select</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">from</span> data <span class="hljs-keyword">where</span> id <span class="hljs-operator">=</span> <span class="hljs-string">&#x27;1&#x27;</span> <span class="hljs-keyword">order</span> <span class="hljs-keyword">by</span> <span class="hljs-number">1</span>;<br></code></pre></td></tr></table></figure>
+
+<p>接着试:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">select</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">from</span> data <span class="hljs-keyword">where</span> id <span class="hljs-operator">=</span> <span class="hljs-string">&#x27;1&#x27;</span> <span class="hljs-keyword">order</span> <span class="hljs-keyword">by</span> <span class="hljs-number">2</span>;<br></code></pre></td></tr></table></figure>
+<p>直到报错, 就能知道有多少行数据.</p>
+<p>一般情况下, 会限制返回数据的行数 (用了 <code>limit</code> 语句等). 此时需要判断结果输出的位置, 比如原本只输出第一行, 得知之后, 就可以让需要的数据输出在第一行.</p>
 
                 
               </div>
