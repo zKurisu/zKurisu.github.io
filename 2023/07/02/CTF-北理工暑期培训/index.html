@@ -45,8 +45,14 @@
 <meta property="og:image" content="http://example.com/img/common-sql-sentences1.png">
 <meta property="og:image" content="http://example.com/img/common-sql-sentences2.png">
 <meta property="og:image" content="http://example.com/img/common-sql-usage.png">
+<meta property="og:image" content="http://example.com/img/react-XSS-attack.png">
+<meta property="og:image" content="http://example.com/img/storable-XSS-attack.png">
+<meta property="og:image" content="http://example.com/img/DOM-XSS-attack.png">
+<meta property="og:image" content="http://example.com/img/insert-into-HTML-XSS-attack.png">
+<meta property="og:image" content="http://example.com/img/output-to-CSS-code-XSS-attack.png">
+<meta property="og:image" content="http://example.com/img/output-to-JavaScript-XSS-attack.png">
 <meta property="article:published_time" content="2023-07-02T09:15:34.000Z">
-<meta property="article:modified_time" content="2023-08-02T08:48:13.708Z">
+<meta property="article:modified_time" content="2023-08-02T09:16:25.457Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/new-mem-of-python.png">
@@ -269,7 +275,7 @@
         
         
         
-          108 分钟
+          113 分钟
         
       </span>
     
@@ -915,7 +921,73 @@
 <li><code>system</code> 函数在 <code>glibc</code> 中的地址</li>
 <li><code>glibc</code> 被链接到内存空间中的基址, 一般未知, 需要手段来泄漏.</li>
 </ul>
-<h1 id="Web-XSS"><a href="#Web-XSS" class="headerlink" title="Web XSS"></a>Web XSS</h1>
+<h1 id="13-Web-XSS-入门"><a href="#13-Web-XSS-入门" class="headerlink" title="13 Web XSS 入门"></a>13 Web XSS 入门</h1><p>XSS, Cross Site Scripting, 向网页中注入恶意代码, 导致用户浏览器在加载网页, 渲染 HTML 文档时就会执行攻击者的代码.</p>
+<p>按照漏洞成因, 一般分类为:</p>
+<ul>
+<li>反射型</li>
+<li>存储型</li>
+<li>DOM 型</li>
+</ul>
+<p>或按照输出点位置分为:</p>
+<ul>
+<li>输出在 HTML 属性中</li>
+<li>输出在 CSS 代码中</li>
+<li>输出在 JavaScript 代码中</li>
+</ul>
+<blockquote>
+<p>反射型 XSS</p>
+</blockquote>
+<p><img src="/../img/react-XSS-attack.png" srcset="/img/loading.gif" lazyload></p>
+<p>原型如:</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-meta">&lt;?</span><br>    <span class="hljs-keyword">echo</span> <span class="hljs-string">&#x27;your input:&#x27;</span> . <span class="hljs-variable">$_GET</span>[<span class="hljs-string">&#x27;input&#x27;</span>]<br><br><span class="hljs-meta">?&gt;</span><br></code></pre></td></tr></table></figure>
+
+<p>攻击者提交如:</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs awk">http:<span class="hljs-regexp">//</span>example.com<span class="hljs-regexp">/xss.php?&lt;script&gt;alert(/</span>xss<span class="hljs-regexp">/)&lt;/</span>script&gt;<br></code></pre></td></tr></table></figure>
+<p>则服务端解析后会通过 <code>echo</code> 语句将攻击者输入的内容完整的输出到 HTTP 响应, 从而导致弹窗.</p>
+<blockquote>
+<p>储存型 XSS</p>
+</blockquote>
+<p><img src="/../img/storable-XSS-attack.png" srcset="/img/loading.gif" lazyload></p>
+<p>也就是说用户点击页面上的链接而遇害 (链接即 JavaScript 代码, 存储在服务器中)</p>
+<blockquote>
+<p>DOM 型 XSS</p>
+</blockquote>
+<p><img src="/../img/DOM-XSS-attack.png" srcset="/img/loading.gif" lazyload></p>
+<p>其不需要服务器解析, 而通过浏览器解析.</p>
+<blockquote>
+<p>输出在 HTML 属性中</p>
+</blockquote>
+<p>这个和 SQL 注入类似:</p>
+<p><img src="/../img/insert-into-HTML-XSS-attack.png" srcset="/img/loading.gif" lazyload></p>
+<blockquote>
+<p>输出在 CSS 代码中</p>
+</blockquote>
+<p><img src="/../img/output-to-CSS-code-XSS-attack.png" srcset="/img/loading.gif" lazyload></p>
+<blockquote>
+<p>输出在 JavaScript 代码中</p>
+</blockquote>
+<p><img src="/../img/output-to-JavaScript-XSS-attack.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="Payload-和-Bypass"><a href="#Payload-和-Bypass" class="headerlink" title="Payload 和 Bypass"></a>Payload 和 Bypass</h2><blockquote>
+<p>特定标签过滤, 事件过滤</p>
+</blockquote>
+<p><a target="_blank" rel="noopener" href="https://www.w3school.com.cn/tags/html_ref_eventattributes.asp">完整的事件属性参考</a></p>
+<p>绕过方法如:</p>
+<ol>
+<li>用 JavaScript 伪协议</li>
+<li>HTML5 新属性</li>
+<li>对事件属性进行 Fuzz 测试</li>
+</ol>
+<blockquote>
+<p>铭感关键字过滤</p>
+</blockquote>
+<p>绕过方法如:</p>
+<ul>
+<li>字符串拼接</li>
+<li>编码</li>
+<li>svg 标签</li>
+<li>提交绕过</li>
+</ul>
+
                 
               </div>
             
