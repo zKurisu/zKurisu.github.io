@@ -29,7 +29,7 @@
 <meta property="og:image" content="http://example.com/img/cdecl-pass-args.png">
 <meta property="og:image" content="http://example.com/img/test-pass-args.png">
 <meta property="article:published_time" content="2023-08-04T10:22:29.000Z">
-<meta property="article:modified_time" content="2023-08-06T06:29:19.615Z">
+<meta property="article:modified_time" content="2023-08-06T07:07:06.730Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/dist-in-memory.png">
@@ -241,7 +241,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1k 字
+          1.8k 字
         
       </span>
     
@@ -252,7 +252,7 @@
         
         
         
-          9 分钟
+          16 分钟
         
       </span>
     
@@ -365,7 +365,43 @@
 <li>覆盖当前栈中函数的返回地址 (当前函数或之前的函数)</li>
 <li>覆盖栈中所存储的临时变量</li>
 <li>覆盖栈底寄存器 <code>bp</code></li>
+<li>关注的敏感函数</li>
 </ul>
+<blockquote>
+<p>利用 NX 保护</p>
+</blockquote>
+<p>若开启了 NX 保护, 则:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-type">char</span> shellcode[] = <span class="hljs-string">&quot;\x31\xc0\x48\xbb\xd1\x9d\x96\x91\xd0\x8c\x97\xff\x48\xf7\xdb\x53\x54\x5f\x99\x52\x57\x54\x5e\xb0\x3b\x0f\x05&quot;</span>;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-type">char</span> stack_buff[<span class="hljs-number">0x40</span>];<br>    <span class="hljs-type">char</span> *heap_buff = <span class="hljs-built_in">malloc</span>(<span class="hljs-number">0x40</span>);<br>    <span class="hljs-built_in">memcpy</span>(stack_buff, shellcode, <span class="hljs-keyword">sizeof</span>(shellcode));<br>    <span class="hljs-built_in">memcpy</span>(heap_buff, shellcode, <span class="hljs-keyword">sizeof</span>(shellcode));<br>    ((<span class="hljs-type">void</span> (*)(<span class="hljs-type">void</span>))stack_buff)();<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>会报错.</p>
+<p>未开启, 则能 get shell.</p>
+<blockquote>
+<p>关于 canary</p>
+</blockquote>
+<p>canary 是程序在每次进入函数前会被赋予的值, 在函数返回前检查该值是否发生了改变, 若检测出改变则报异常并退出. (此时加大了覆盖 <code>bp</code> 和 <code>ip</code> 的难度)</p>
+<p>虽然 canary 在程序中每次运行时都是随机的, 但是就程序的一次运行来说, 大部分情况下, 不同函数中的 canary 值是固定的.</p>
+<p>只要泄漏出 canary, 就可以绕过 canary 保护机制.</p>
+<blockquote>
+<p>容易发生栈覆盖的函数</p>
+</blockquote>
+<p>常见有:</p>
+<ul>
+<li><code>gets(buff)</code></li>
+<li><code>scanf(&quot;%s&quot;, buff)</code></li>
+</ul>
+<p>潜在的覆盖函数:</p>
+<ul>
+<li><code>read</code></li>
+<li><code>strcpy</code></li>
+<li><code>memcpy</code></li>
+</ul>
+<h2 id="12-3-栈的特殊利用"><a href="#12-3-栈的特殊利用" class="headerlink" title="12.3 栈的特殊利用"></a>12.3 栈的特殊利用</h2><ol>
+<li><code>libc</code> 信息泄漏</li>
+</ol>
+<p><code>main</code> 函数的栈底存放的是 <code>__libc_start_main_ret</code></p>
+<p>可以利用 <code>libc.so</code> 文件或使用 <code>libc_database</code> 来计算 <code>libc</code> 的基址以及 <code>system</code> 地址.</p>
+<ol start="2">
+<li>环境变量修改, 环境变量指针参数会压在栈上, 修改可以达到特殊目的</li>
+</ol>
 
                 
               </div>
