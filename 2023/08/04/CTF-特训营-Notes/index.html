@@ -24,8 +24,9 @@
 <meta property="og:description" content="第11章 PWN 基础gcc 的 -z execstack 可开启栈可执行功能. 修改 &#x2F;proc&#x2F;sys&#x2F;kernel&#x2F;randomize_va_space 里的值用于控制系统级的 ASLR. gcc 添加 -fno-stack-protector 可以关闭程序的 stack canary 栈保护. 11.3 PWN 类型 栈漏洞 堆漏洞 格式化字符串漏洞 整形漏洞 逻辑漏洞  11.4 常见的">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/dist-in-memory.png">
+<meta property="og:image" content="http://example.com/img/proc-stack-diagram.png">
 <meta property="article:published_time" content="2023-08-04T10:22:29.000Z">
-<meta property="article:modified_time" content="2023-08-06T02:03:58.692Z">
+<meta property="article:modified_time" content="2023-08-06T02:36:13.980Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/dist-in-memory.png">
@@ -237,7 +238,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          296 字
+          582 字
         
       </span>
     
@@ -248,7 +249,7 @@
         
         
         
-          3 分钟
+          5 分钟
         
       </span>
     
@@ -306,6 +307,34 @@
 <h2 id="11-5-程序内存布局"><a href="#11-5-程序内存布局" class="headerlink" title="11.5 程序内存布局"></a>11.5 程序内存布局</h2><p><img src="/../img/dist-in-memory.png" srcset="/img/loading.gif" lazyload></p>
 <p>Data 段用来存放可执行文件中已经初始化的变量, 包括静态分配的变量和全局变量.</p>
 <p>BSS 段主要包含程序中未初始化的全局变量, 在内存中 BSS 段全部置零.</p>
+<p>栈 (stack) 存放程序临时创建的局部变量, 包括函数内部的临时变量和调用函数时压入的参数.</p>
+<hr>
+
+<p>对于一些题, 需要找到 buffer 的大小, 以及读取 buffer 的长度.</p>
+<h1 id="第12章-栈相关漏洞"><a href="#第12章-栈相关漏洞" class="headerlink" title="第12章 栈相关漏洞"></a>第12章 栈相关漏洞</h1><h2 id="12-1-栈介绍"><a href="#12-1-栈介绍" class="headerlink" title="12.1 栈介绍"></a>12.1 栈介绍</h2><p>不同的函数栈之间是相互隔离的.</p>
+<p>函数栈上存储的信息一般包括:</p>
+<ul>
+<li>临时变量 (包括栈保护哨 canary)</li>
+<li>函数的返回栈基址 (bp)</li>
+<li>函数的返回地址 (ip)</li>
+</ul>
+<p>示意图如:</p>
+<p><img src="/../img/proc-stack-diagram.png" srcset="/img/loading.gif" lazyload></p>
+<h3 id="12-1-1-函数栈的调用机制"><a href="#12-1-1-函数栈的调用机制" class="headerlink" title="12.1.1 函数栈的调用机制"></a>12.1.1 函数栈的调用机制</h3><p>函数栈用于实现状态的隔离, 当前函数栈的边界就是:</p>
+<ul>
+<li>栈顶指针 (sp)</li>
+<li>栈底指针 (bp)</li>
+</ul>
+<p>压入过程, 函数调用时:</p>
+<ul>
+<li>首先将参数入栈</li>
+<li>压入返回地址 (通过 call 实现) </li>
+<li>压入栈底指针寄存器 <code>bp</code></li>
+</ul>
+<p>函数结束时:</p>
+<ul>
+<li><code>sp</code> 重新指向 <code>bp</code> 的位置</li>
+</ul>
 
                 
               </div>
