@@ -24,7 +24,7 @@
 <meta property="og:description" content="Archwiki 相关页面 默认情况下, 用 &#x2F;srv&#x2F;http 目录下的网页. 启动 apache: 1httpd 或: 1systemctl enable httpd; systemctl start httpd  配置配置选项列表可查阅 https:&#x2F;&#x2F;httpd.apache.org&#x2F;docs&#x2F;trunk&#x2F;mod&#x2F;directives.html Apache 默认用 http 用户. 修改">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-10-10T07:16:14.000Z">
-<meta property="article:modified_time" content="2023-10-10T08:19:42.442Z">
+<meta property="article:modified_time" content="2023-10-10T08:51:11.801Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.3k 字
+          1.6k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          11 分钟
+          14 分钟
         
       </span>
     
@@ -330,21 +330,29 @@
 </blockquote>
 <p>virtual hosts 即让服务器拥有多个 hosts.</p>
 <p>可通过修改 <code>/etc/httpd/conf/httpd.conf</code> 文件来配置.</p>
-<h1 id="mod-perl"><a href="#mod-perl" class="headerlink" title="mod_perl"></a>mod_perl</h1><p>安装:</p>
-<figure class="highlight arcade"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs arcade"><span class="hljs-string">``</span><span class="hljs-string">`</span><br><span class="hljs-string"></span><br><span class="hljs-string"></span><br><span class="hljs-string">添加配置至 `</span>httpd.conf<span class="hljs-string">` 文件中:</span><br></code></pre></td></tr></table></figure>
-<p>LoadModule perl_module modules&#x2F;mod_perl.so</p>
-<figure class="highlight clean"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs clean"><br>## 让 perl 能够对一些目录执行脚本<br>在 `httpd.conf` 中添加:<br></code></pre></td></tr></table></figure>
-<p>Alias &#x2F;perlwebtest&#x2F; &#x2F;srv&#x2F;http&#x2F;perlwebtest&#x2F;<br>&lt;Location &#x2F;perlwebtest&#x2F;&gt;<br>      AddHandler perl-script .pl<br>      AddHandler perl-script .cgi<br>      PerlResponseHandler ModPerl::Registry<br>      PerlOptions +ParseHeaders<br>      Options +ExecCGI<br>      Order allow,deny<br>      Allow from all<br></Location></p>
-<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs awk"><br>创建 `<span class="hljs-regexp">/etc/</span>httpd<span class="hljs-regexp">/conf/</span>extra/perl_module.conf` 文件:<br></code></pre></td></tr></table></figure>
-<h1 id="Required-modules-dir-module-perl-module"><a href="#Required-modules-dir-module-perl-module" class="headerlink" title="Required modules: dir_module, perl_module"></a>Required modules: dir_module, perl_module</h1><IfModule dir_module>
-        <IfModule perl_module>
-                DirectoryIndex index.pl index.html
-        </IfModule>
-</IfModule>
-<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs awk">并在 `<span class="hljs-regexp">/etc/</span>httpd<span class="hljs-regexp">/conf/</span>httpd.conf` 文件中添加:<br></code></pre></td></tr></table></figure>
-# Perl
-Include conf/extra/perl_module.conf
-```
+<h1 id="mod-perl"><a href="#mod-perl" class="headerlink" title="mod_perl"></a>mod_perl</h1><blockquote>
+<p>安装:</p>
+</blockquote>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs awk">git clone https:<span class="hljs-regexp">//gi</span>thub.com<span class="hljs-regexp">/apache/m</span>od_perl.git<br>cd mod_perl<br>perl Makefile.PL<br></code></pre></td></tr></table></figure>
+
+<p>可能会遇到:</p>
+<figure class="highlight smali"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs smali">[  error] Can&#x27;t find a<span class="hljs-built_in"> sub-directory </span>Apache-Test. Make sure that you are using a complete source distribution<br></code></pre></td></tr></table></figure>
+<p>的报错, 此时, 只需要在当前目录创建一个 <code>Apache-Test</code> 目录即可.</p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs vim"><span class="hljs-built_in">mkdir</span> Apache-Test<br><span class="hljs-keyword">make</span> &amp;&amp; <span class="hljs-keyword">make</span> test<br><span class="hljs-keyword">make</span> install<br></code></pre></td></tr></table></figure>
+
+<blockquote>
+<p>配置</p>
+</blockquote>
+<p>添加配置至 <code>httpd.conf</code> 文件中:</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">LoadModule</span> perl_module modules/mod_perl.so<br></code></pre></td></tr></table></figure>
+
+<h2 id="让-perl-能够对一些目录执行脚本"><a href="#让-perl-能够对一些目录执行脚本" class="headerlink" title="让 perl 能够对一些目录执行脚本"></a>让 perl 能够对一些目录执行脚本</h2><p>在 <code>httpd.conf</code> 中添加:</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs gradle">Alias <span class="hljs-regexp">/perlwebtest/</span> <span class="hljs-regexp">/srv/</span>http<span class="hljs-regexp">/perlwebtest/</span><br>&lt;Location <span class="hljs-regexp">/perlwebtest/</span>&gt;<br>      AddHandler perl-script .pl<br>      AddHandler perl-script .cgi<br>      PerlResponseHandler ModPerl::Registry<br>      PerlOptions +ParseHeaders<br>      <span class="hljs-keyword">Options</span> +ExecCGI<br>      Order allow,deny<br>      Allow <span class="hljs-keyword">from</span> all<br>&lt;/Location&gt;<br></code></pre></td></tr></table></figure>
+
+<p>创建 <code>/etc/httpd/conf/extra/perl_module.conf</code> 文件:</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-comment"># Required modules: dir_module, perl_module</span><br><br><span class="hljs-section">&lt;IfModule dir_module&gt;</span><br>        <span class="hljs-section">&lt;IfModule perl_module&gt;</span><br>                <span class="hljs-attribute">DirectoryIndex</span> index.pl index.html<br>        <span class="hljs-section">&lt;/IfModule&gt;</span><br><span class="hljs-section">&lt;/IfModule&gt;</span><br></code></pre></td></tr></table></figure>
+<p>并在 <code>/etc/httpd/conf/httpd.conf</code> 文件中添加:</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs awk"><span class="hljs-comment"># Perl</span><br>Include conf<span class="hljs-regexp">/extra/</span>perl_module.conf<br></code></pre></td></tr></table></figure>
 
 
 
