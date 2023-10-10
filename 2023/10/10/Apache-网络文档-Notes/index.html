@@ -16,15 +16,15 @@
   <meta name="author" content="John Doe">
   <meta name="keywords" content="">
   
-    <meta name="description" content="Archwiki 相关页面">
+    <meta name="description" content="Archwiki 相关页面 默认情况下, 用 &#x2F;srv&#x2F;http 目录下的网页. 启动 apache: 1httpd 或: 1systemctl enable httpd; systemctl start httpd  配置配置选项列表可查阅 https:&#x2F;&#x2F;httpd.apache.org&#x2F;docs&#x2F;trunk&#x2F;mod&#x2F;directives.html Apache 默认用 http 用户. 修改">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Apache-网络文档-Notes">
 <meta property="og:url" content="http://example.com/2023/10/10/Apache-%E7%BD%91%E7%BB%9C%E6%96%87%E6%A1%A3-Notes/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="Archwiki 相关页面">
+<meta property="og:description" content="Archwiki 相关页面 默认情况下, 用 &#x2F;srv&#x2F;http 目录下的网页. 启动 apache: 1httpd 或: 1systemctl enable httpd; systemctl start httpd  配置配置选项列表可查阅 https:&#x2F;&#x2F;httpd.apache.org&#x2F;docs&#x2F;trunk&#x2F;mod&#x2F;directives.html Apache 默认用 http 用户. 修改">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-10-10T07:16:14.000Z">
-<meta property="article:modified_time" content="2023-10-10T07:16:33.184Z">
+<meta property="article:modified_time" content="2023-10-10T07:51:21.876Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          12 字
+          644 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          1 分钟
+          6 分钟
         
       </span>
     
@@ -290,6 +290,49 @@
               <div class="markdown-body">
                 
                 <p><a target="_blank" rel="noopener" href="https://wiki.archlinux.org/title/Apache_HTTP_Server">Archwiki 相关页面</a></p>
+<p>默认情况下, 用 <code>/srv/http</code> 目录下的网页.</p>
+<p>启动 apache:</p>
+<figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ebnf"><span class="hljs-attribute">httpd</span><br></code></pre></td></tr></table></figure>
+<p>或:</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs nginx"><span class="hljs-attribute">systemctl</span> enable httpd; <span class="hljs-attribute">systemctl</span> start httpd<br></code></pre></td></tr></table></figure>
+
+<h1 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h1><p>配置选项列表可查阅 <a target="_blank" rel="noopener" href="https://httpd.apache.org/docs/trunk/mod/directives.html">https://httpd.apache.org/docs/trunk/mod/directives.html</a></p>
+<p>Apache 默认用 <code>http</code> 用户.</p>
+<p>修改 <code>/etc/httpd/conf/httpd.conf</code> 文件:</p>
+<blockquote>
+<p>修改服务端口</p>
+</blockquote>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">Listen</span> <span class="hljs-number">80</span><br></code></pre></td></tr></table></figure>
+
+<blockquote>
+<p>添加管理者邮箱</p>
+</blockquote>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs nginx"><span class="hljs-attribute">ServerAdmin</span> you<span class="hljs-variable">@example</span>.com<br></code></pre></td></tr></table></figure>
+
+<blockquote>
+<p>设置 Web page 的根目录</p>
+</blockquote>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">DocumentRoot</span> <span class="hljs-string">&quot;/srv/http&quot;</span><br></code></pre></td></tr></table></figure>
+<p>同时也需要修改 <code>&lt;Directory &quot;/srv/http&quot;&gt;</code></p>
+<p>注意需要将这个目录的 <code>Require all denied</code> 改为 <code>Require all granted</code>, 且需要给 DocumentRoot 目录可执行权限:</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs awk">chmod o+x <span class="hljs-regexp">/path/</span>to/DocumentRoot<br></code></pre></td></tr></table></figure>
+
+<blockquote>
+<p>设置用户目录</p>
+</blockquote>
+<p>相关配置位于 <code>/etc/httpd/conf/extra/httpd-userdir.conf</code>.</p>
+<p>可以通过访问 <code>http://localhost/~yourusername</code> 来访问 <code>~/public_html</code> 网页.</p>
+<p>前提需要让用户家目录以及 <code>public_html</code> 文件具有可执行权限:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">chmod</span> o+x ~<br><span class="hljs-built_in">chmod</span> o+x ~/public_html<br><span class="hljs-built_in">chmod</span> -R o+r ~/public_html<br></code></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
 
                 
               </div>
