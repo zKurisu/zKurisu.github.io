@@ -24,7 +24,7 @@
 <meta property="og:description" content="官方文档地址 User’s GuideGetting Start Include 指令  可以用 Include 指令来包含多个配置文件: 1234567ServerRoot &quot;&#x2F;etc&#x2F;httpd&quot;# Server-pool management (MPM specific)Include conf&#x2F;extra&#x2F;httpd-mpm.conf# Multi-language e">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-10-11T02:27:38.000Z">
-<meta property="article:modified_time" content="2023-10-11T04:26:26.576Z">
+<meta property="article:modified_time" content="2023-10-11T04:55:38.932Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.2k 字
+          3.5k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          19 分钟
+          29 分钟
         
       </span>
     
@@ -354,6 +354,52 @@
 <figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">LoadModule</span> status_module <span class="hljs-string">&quot;modules/mod_status.so&quot;</span><br></code></pre></td></tr></table></figure>
 
 <p>可以配合 <code>&lt;IfModule test&gt;...&lt;/IfModule&gt;</code> section 使用.</p>
+<h2 id="Configuration-Sections"><a href="#Configuration-Sections" class="headerlink" title="Configuration Sections"></a>Configuration Sections</h2><p>用于对服务的配置进行局部的处理, 用 configuration section containers 或者 <code>.htaccess</code> 文件.</p>
+<p>可用的 section containers 有:</p>
+<ul>
+<li><code>&lt;Directory&gt;</code></li>
+<li><code>&lt;DirectoryMatch&gt;</code></li>
+<li><code>&lt;Files&gt;</code></li>
+<li><code>&lt;FilesMatch&gt;</code></li>
+<li><code>&lt;If&gt;</code></li>
+<li><code>&lt;IfDefine&gt;</code></li>
+<li><code>&lt;IfModule&gt;</code></li>
+<li><code>&lt;IfVersion&gt;</code></li>
+<li><code>&lt;Location&gt;</code></li>
+<li><code>&lt;LocationMatch&gt;</code></li>
+<li><code>&lt;MDomainSet&gt;</code></li>
+<li><code>&lt;Proxy&gt;</code></li>
+<li><code>&lt;ProxyMatch&gt;</code></li>
+<li><code>&lt;VirtualHost&gt;</code></li>
+</ul>
+<p>其中: <code>&lt;DirectoryMatch&gt;</code>, <code>&lt;FilesMatch&gt;</code>, and <code>&lt;LocationMatch&gt;</code> that allow perl-compatible regular expressions </p>
+<p>如:</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-section">&lt;FilesMatch <span class="hljs-string">&quot;\.(?i:gif|jpe?g|png)$&quot;</span>&gt;</span><br>    <span class="hljs-attribute">Require</span> <span class="hljs-literal">all</span> denied<br><span class="hljs-section">&lt;/FilesMatch&gt;</span><br></code></pre></td></tr></table></figure>
+
+
+<blockquote>
+<p><code>Alias</code> 指令</p>
+</blockquote>
+<p>给文件路径起别名, 如:</p>
+<figure class="highlight gams"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs gams"><span class="hljs-keyword">Alias</span> <span class="hljs-string">&quot;/foo/bar&quot;</span> <span class="hljs-string">&quot;/srv/www/uncommon/bar&quot;</span><br><span class="hljs-keyword">Alias</span> <span class="hljs-string">&quot;/foo&quot;</span>     <span class="hljs-string">&quot;/srv/www/common/foo&quot;</span><br></code></pre></td></tr></table></figure>
+
+<blockquote>
+<p><code>ProxyPass</code> 指令</p>
+</blockquote>
+<p>用于将 remote server 映射到 local server 的 space.</p>
+<p>此时 local server 作为 reverse proxy 或者 gateway.</p>
+<p>一般用于 <code>&lt;Location&gt;</code> section 中, 不能用于 <code>&lt;Directory&gt;</code>, <code>&lt;If&gt;</code>, <code>&lt;File&gt;</code> containers 中.</p>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs pgsql">&lt;<span class="hljs-keyword">Location</span> &quot;/mirror/foo/&quot;&gt;<br>    ProxyPass &quot;http://backend.example.com/&quot;<br>&lt;/<span class="hljs-keyword">Location</span>&gt;<br></code></pre></td></tr></table></figure>
+
+<p>等价于:</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs nginx"><span class="hljs-attribute">ProxyPass</span> <span class="hljs-string">&quot;/mirror/foo/&quot;</span> <span class="hljs-string">&quot;http://backend.example.com/&quot;</span><br></code></pre></td></tr></table></figure>
+
+<p>若不想反向代理子目录, 则:</p>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs pgsql">&lt;<span class="hljs-keyword">Location</span> &quot;/mirror/foo/&quot;&gt;<br>    ProxyPass &quot;http://backend.example.com/&quot;<br>&lt;/<span class="hljs-keyword">Location</span>&gt;<br>&lt;<span class="hljs-keyword">Location</span> &quot;/mirror/foo/i&quot;&gt;<br>    ProxyPass &quot;!&quot;<br>&lt;/<span class="hljs-keyword">Location</span>&gt;<br></code></pre></td></tr></table></figure>
+
+<blockquote>
+<p><code>Options</code> 指令</p>
+</blockquote>
 
                 
               </div>
