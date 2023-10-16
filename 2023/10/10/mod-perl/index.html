@@ -24,7 +24,7 @@
 <meta property="og:description" content="mod_perl 的主要作用在于将 Perl 的解释器嵌入到 Apache 中. 感觉比较重要的几个模块:  CGI Apache::Registry Apache::PerlRun  学习 CGI 脚本的编写只需要处理好两件事:  how to accept data how to generate output  主要就是接收 header 内容, 做修改后将新的 header 发送给服务器软">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-10-10T11:52:17.000Z">
-<meta property="article:modified_time" content="2023-10-16T09:02:58.068Z">
+<meta property="article:modified_time" content="2023-10-16T09:40:56.092Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.3k 字
+          1.7k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          12 分钟
+          15 分钟
         
       </span>
     
@@ -319,7 +319,11 @@
 <p>注意 <code>QUERY_STRING</code> 的长度有限制, 在 Apache 中为 8KB. 更多的数据通过 POST 提交.</p>
 <h2 id="mod-perl-相对于-mod-cgi-的优势"><a href="#mod-perl-相对于-mod-cgi-的优势" class="headerlink" title="mod_perl 相对于 mod_cgi 的优势"></a><code>mod_perl</code> 相对于 <code>mod_cgi</code> 的优势</h2><p><code>mod_cgi</code> 中运行 Perl 程序时, 每一次请求都会加载和结束一次 Perl 解析器 (都会重新 fork), 且所有变量都会重新声明和使用.</p>
 <p>在使用 <code>mod_perl</code> 时, Perl 解析器在一个 child process 中只加载一次, 在这个 child process 处理完一个 Perl 脚本之后, 其不会 exit. 因此代码也只被载入和编译一次.</p>
-<p><code>mod_perl</code> 也包含 Apache core 的 API, 因此可以用 Perl 编写 Apache 的完整模块.</p>
+<p><code>mod_perl</code> 也包含 Apache core 的 API, 因此可以用 Perl 编写 Apache 的完整模块. 也可以完全用 Perl 配置 Apache.</p>
+<p>在加载 <code>mod_perl</code> 之后, 可以用一些 <code>mod_perl-specific</code> configuration directives 来配置, 其大多以 <code>Perl</code> 开头, 如:</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs awk"><span class="hljs-comment"># 指定加载 Perl 模块</span><br>PerlModule MyModule<br><br><span class="hljs-comment"># 指定 Apache 启动时要加载的 Perl 脚本</span><br>PerlRequire <span class="hljs-regexp">/path/</span>to/startup.pl<br></code></pre></td></tr></table></figure>
+<p>等.</p>
+<p>缺点为, 让 <code>httpd</code> 程序占用更多的内存.</p>
 <h1 id="htaccess-文件"><a href="#htaccess-文件" class="headerlink" title=".htaccess 文件"></a><code>.htaccess</code> 文件</h1><p><code>.htaccess</code> 是 Hypertext Access 的缩写。是 Apache 的配置文件.</p>
 <p>但其通常位于网站的根目录或特定目录中. 可以在不修改全局服务器配置文件而定制网站的行为.</p>
 <p>但是如果在 <code>httpd.conf</code> 文件中编写了:</p>
@@ -331,16 +335,15 @@
 <p>对于 <code>.ht*</code> 文件, Apache 会设置让其不被 Web 访问, 而自定义时, 需要添加:</p>
 <figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-section">&lt;Files .acl&gt;</span><br>    <span class="hljs-attribute">Order</span> <span class="hljs-literal">Allow</span>,<span class="hljs-literal">Deny</span><br>    <span class="hljs-attribute">Deny</span> from <span class="hljs-literal">all</span><br><span class="hljs-section">&lt;/Files&gt;</span><br></code></pre></td></tr></table></figure>
 
-
-
-
-
-
-
-
-
-
-
+<h1 id="用-mod-perl-运行-CGI-脚本"><a href="#用-mod-perl-运行-CGI-脚本" class="headerlink" title="用 mod_perl 运行 CGI 脚本"></a>用 <code>mod_perl</code> 运行 CGI 脚本</h1><p>主要用:</p>
+<ul>
+<li><code>Apache::PerlRun</code></li>
+<li><code>Apache::Registry</code></li>
+</ul>
+<p>这两个模块.</p>
+<p>注意两者的特点和区别:</p>
+<p><code>Apache::Registry</code>, 只编译脚本一次, 所有全局变量值在多个 requsts 之间会保留.</p>
+<p><code>Apache::PerlRun</code>, 每一个 requsts 都会编译脚本一次.</p>
 
                 
               </div>
