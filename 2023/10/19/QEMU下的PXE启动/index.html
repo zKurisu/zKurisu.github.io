@@ -27,7 +27,7 @@
 <meta property="og:image" content="http://example.com/img/how-PXE-works.png">
 <meta property="og:image" content="http://example.com/img/install-bridge-utils-on-archlinux.png">
 <meta property="article:published_time" content="2023-10-18T23:10:11.000Z">
-<meta property="article:modified_time" content="2023-10-19T03:28:52.798Z">
+<meta property="article:modified_time" content="2023-10-19T04:41:59.413Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/pxe-looks-like.png">
@@ -239,7 +239,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.6k 字
+          5.3k 字
         
       </span>
     
@@ -250,7 +250,7 @@
         
         
         
-          22 分钟
+          44 分钟
         
       </span>
     
@@ -370,13 +370,98 @@
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo pacman -S bridge-utils<br></code></pre></td></tr></table></figure>
 
 <p><img src="/../img/install-bridge-utils-on-archlinux.png" srcset="/img/loading.gif" lazyload></p>
-<p>编写 virtual network 的配置:</p>
+<p>编写 libvirt 网络定义文件:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">vim br-pxe-net.xml<br></code></pre></td></tr></table></figure>
 
 <p>内容如下:</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">network</span>&gt;</span><br>  <span class="hljs-tag">&lt;<span class="hljs-name">name</span>&gt;</span>br-pxe<span class="hljs-tag">&lt;/<span class="hljs-name">name</span>&gt;</span><br>  <span class="hljs-tag">&lt;<span class="hljs-name">forward</span> <span class="hljs-attr">mode</span>=<span class="hljs-string">&#x27;nat&#x27;</span>&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">nat</span>&gt;</span><br>      <span class="hljs-tag">&lt;<span class="hljs-name">port</span> <span class="hljs-attr">start</span>=<span class="hljs-string">&#x27;1024&#x27;</span> <span class="hljs-attr">end</span>=<span class="hljs-string">&#x27;65535&#x27;</span>/&gt;</span><br>    <span class="hljs-tag">&lt;/<span class="hljs-name">nat</span>&gt;</span><br>  <span class="hljs-tag">&lt;/<span class="hljs-name">forward</span>&gt;</span><br>  <span class="hljs-tag">&lt;<span class="hljs-name">bridge</span> <span class="hljs-attr">name</span>=<span class="hljs-string">&#x27;br-pxe&#x27;</span> <span class="hljs-attr">stp</span>=<span class="hljs-string">&#x27;on&#x27;</span> <span class="hljs-attr">delay</span>=<span class="hljs-string">&#x27;0&#x27;</span>/&gt;</span><br>  <span class="hljs-tag">&lt;<span class="hljs-name">ip</span> <span class="hljs-attr">address</span>=<span class="hljs-string">&#x27;192.168.177.1&#x27;</span> <span class="hljs-attr">netmask</span>=<span class="hljs-string">&#x27;255.255.255.0&#x27;</span>&gt;</span><br>  <span class="hljs-tag">&lt;/<span class="hljs-name">ip</span>&gt;</span><br><span class="hljs-tag">&lt;/<span class="hljs-name">network</span>&gt;</span><br></code></pre></td></tr></table></figure>
 
-<h2 id="配置文件语法"><a href="#配置文件语法" class="headerlink" title="配置文件语法"></a>配置文件语法</h2><p>Archlinux 安装 <code>virt-builder</code> 在 <code>guestfs-tools</code> 包中.</p>
+<blockquote>
+<p>libvirt 网络定义文件语法<br><a target="_blank" rel="noopener" href="https://libvirt.org/formatnetwork.html">可查阅官方文档</a></p>
+</blockquote>
+<hr>
+
+<p>用刚才定义的文件创建网络接口:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh net-define --file br-pxe-net.xml<br></code></pre></td></tr></table></figure>
+
+<p>让网络接口自动启动:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh net-autostart br-pxe<br></code></pre></td></tr></table></figure>
+
+<p>启动网络接口:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh net-start br-pxe<br></code></pre></td></tr></table></figure>
+
+<p>查看网络接口:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh net-list<br>brctl show<br></code></pre></td></tr></table></figure>
+
+<p>让网络接口 UP:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo ip <span class="hljs-built_in">link</span> <span class="hljs-built_in">set</span> dev br-pxe up<br></code></pre></td></tr></table></figure>
+
+<p>打开防火墙:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo iptables -t nat -A POSTROUTING -o enp0s31f6 -s 192.168.78.1/24 -j MASQUERADE<br></code></pre></td></tr></table></figure>
+
+<h2 id="创建堡垒虚拟机-DHCP-和-TFPT-HTTPD-服务器"><a href="#创建堡垒虚拟机-DHCP-和-TFPT-HTTPD-服务器" class="headerlink" title="创建堡垒虚拟机 (DHCP 和 TFPT, HTTPD 服务器)"></a>创建堡垒虚拟机 (DHCP 和 TFPT, HTTPD 服务器)</h2><p>在宿主机上需要使用 <code>virt-builder</code> 命令.</p>
+<p>Archlinux 下的安装为:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo pacman -S guestft-tools<br></code></pre></td></tr></table></figure>
+
+<p>列出可用的 OS templates:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virt-builder -l<br></code></pre></td></tr></table></figure>
+
+<p>使用一个 Fedora 的模板:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virt-builder fedora-38  --format qcow2 \<br>  --size 30G -o /var/lib/libvirt/images/kvm-bastion-server.qcow2 \<br>  --root-password password:StrongRootPassw0rd<br></code></pre></td></tr></table></figure>
+<p>这里:</p>
+<ul>
+<li><code>fedora-38</code> 指定要用哪一个模板创建虚拟机</li>
+<li><code>/var/lib/libvirt/images/kvm-bastion-server.qcow2</code> 是存放 VM qcow2 的路径</li>
+<li><code>StrongRootPassw0rd</code> 是设置的密码<br>(此时还没有安装虚拟机)</li>
+</ul>
+<p>安装虚拟机:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virt-install \<br>  --name kvm-bastion-server \<br>  --ram 2048 \<br>  --vcpus 2 \<br>  --disk path=/var/lib/libvirt/images/kvm-bastion-server.qcow2 \<br>  --os-type linux \<br>  --os-variant rhel8.0 \<br>  --network bridge=br-pxe \<br>  --graphics none \<br>  --serial pty \<br>  --console pty \<br>  --boot hd \<br>  --import<br></code></pre></td></tr></table></figure>
+
+<p>进入虚拟机后注意修改 root 密码, 毕竟之前指定了明文:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">[root@fedora ~] passwd<br></code></pre></td></tr></table></figure>
+
+<p>查看 IP 地址:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">[root@fedora ~] ip ad<br></code></pre></td></tr></table></figure>
+
+<p>可以发现并未分配 IP, 因为此时关闭了原来的 DHCP 服务.</p>
+<p>添加 IP:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs sh">[root@fedora ~] nmcli con show<br>[root@fedora ~] nmcli con mod enp1s0 \<br>  ipv4.method manual \<br>  ipv4.address 192.168.177.2/24 \<br>  ipv4.gateway 192.168.177.1 \<br>  ipv4.dns 192.168.177.1 \<br>  connection.autoconnect <span class="hljs-built_in">yes</span><br></code></pre></td></tr></table></figure>
+<p>(注意这里不一定叫 <code>enp1s0</code>, 看 <code>nmcli con show</code> 的输出)</p>
+<p>重新启用网络接口:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">[root@fedora ~] nmcli con down enp1s0 &amp;&amp; sudo nmcli con up enp1s0<br>[root@fedora ~] nmcli con show<br></code></pre></td></tr></table></figure>
+
+<p>设置堡垒机的 hostname:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">[root@fedora ~] hostnamectl set-hostname pxe-test.net<br></code></pre></td></tr></table></figure>
+
+<p>设置时区:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">[root@fedora ~] timedatectl set-timezone Asia/Shanghai<br>[root@fedora ~] chronyc sources<br></code></pre></td></tr></table></figure>
+
+<p>若在宿主机上想要让这个虚拟机每次自动开启:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh autostart kvm-bastion-server<br></code></pre></td></tr></table></figure>
+
+<h2 id="配置-DHCP-服务"><a href="#配置-DHCP-服务" class="headerlink" title="配置 DHCP 服务"></a>配置 DHCP 服务</h2><p>进入安装的 fedora 虚拟机, 之后先安装一些基本的软件:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">[root@fedora ~] dnf -y upgrade<br>[root@fedora ~] dnf -y install git vim wget curl bash-completion tree tar libselinux-python3 firewalld<br></code></pre></td></tr></table></figure>
+
+<p>重启虚拟机:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">[root@fedora ~] reboot<br></code></pre></td></tr></table></figure>
+
+<p>安装 DHCP server:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">[root@fedora ~] dnf -y install dhcp-server<br></code></pre></td></tr></table></figure>
+
+<p>备份配置文件:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">[root@fedora ~] <span class="hljs-built_in">mv</span> /etc/dhcp/dhcpd.conf&#123;,.bak&#125;<br></code></pre></td></tr></table></figure>
+
+<p>创建新的配置文件:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">[root@fedora ~] vim /etc/dhcp/dhcpd.conf<br></code></pre></td></tr></table></figure>
+
+<p>文件内容为:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs conf">authoritative;<br>ddns-update-style interim;<br>default-lease-time 14400;<br>max-lease-time 14400;<br>allow booting;<br>allow bootp;<br><br>    #Default gateway<br>    option routers                  192.168.177.1;<br>    #DHCP network broadcast address<br>    option broadcast-address        192.168.177.255;<br>    #DHCP network subnet mask<br>    option subnet-mask              255.255.255.0;<br>    #IP address of DNS server<br>    option domain-name-servers      192.168.177.1;<br>    #Default NTP server<br>    option ntp-servers              time.google.com;<br>    #Default domain name <br>    option domain-name              &quot;kvmlab.net&quot;;<br><br>    subnet 192.168.177.0 netmask 255.255.255.0 &#123;<br>      range 192.168.177.20 192.168.177.50;<br>      # this is PXE specific<br>      filename &quot;pxelinux.0&quot;;<br>      #PXE Server IP Address<br>      next-server 192.168.177.2;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><code>enable</code> 并启动 DHCP 服务:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">[root@fedora ~] systemctl <span class="hljs-built_in">enable</span> --now dhcpd<br>[root@fedora ~] systemctl status dhcpd<br></code></pre></td></tr></table></figure>
+
+<p>开启防火墙</p>
+<p>Archlinux 安装 <code>virt-builder</code> 在 <code>guestfs-tools</code> 包中.</p>
 <p>sudo nmcli con mod “Wired connection 1” <br>  ipv4.method manual <br>  ipv4.address 192.168.177.2&#x2F;24 <br>  ipv4.gateway 192.168.177.1 <br>  ipv4.dns 192.168.177.1 <br>  connection.autoconnect yes</p>
 <p>nmcli con mod ‘Wired connection 1’ connection.id ‘enp1s0’</p>
 <p>mkdir &#x2F;var&#x2F;www&#x2F;html&#x2F;pxe</p>
