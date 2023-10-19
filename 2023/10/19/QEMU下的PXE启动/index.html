@@ -16,17 +16,20 @@
   <meta name="author" content="John Doe">
   <meta name="keywords" content="">
   
-    <meta name="description" content="Archlinux 安装 virt-builder 在 guestfs-tools 包中. sudo nmcli con mod “Wired connection 1”   ipv4.method manual   ipv4.address 192.168.177.2&#x2F;24   ipv4.gateway 192.168.177.1   ipv4.dns 192.168.177.1">
+    <meta name="description" content="Archwiki 介绍 Youtube 介绍 B 站介绍 参考博客 KVM, libvirt 的关系 KVM, Kernel-based Virtual Machine, 是 Linux 内核的一部分 libvirt 是一个开源的虚拟化管理工具集，提供了用于管理虚拟化平台的 API 和工具  可就是说 libvirt 是用于管理虚拟化的. PXE 启动的组件和流程PXE, Preboot eXec">
 <meta property="og:type" content="article">
 <meta property="og:title" content="QEMU下的PXE启动">
 <meta property="og:url" content="http://example.com/2023/10/19/QEMU%E4%B8%8B%E7%9A%84PXE%E5%90%AF%E5%8A%A8/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="Archlinux 安装 virt-builder 在 guestfs-tools 包中. sudo nmcli con mod “Wired connection 1”   ipv4.method manual   ipv4.address 192.168.177.2&#x2F;24   ipv4.gateway 192.168.177.1   ipv4.dns 192.168.177.1">
+<meta property="og:description" content="Archwiki 介绍 Youtube 介绍 B 站介绍 参考博客 KVM, libvirt 的关系 KVM, Kernel-based Virtual Machine, 是 Linux 内核的一部分 libvirt 是一个开源的虚拟化管理工具集，提供了用于管理虚拟化平台的 API 和工具  可就是说 libvirt 是用于管理虚拟化的. PXE 启动的组件和流程PXE, Preboot eXec">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/pxe-looks-like.png">
+<meta property="og:image" content="http://example.com/img/how-PXE-works.png">
 <meta property="article:published_time" content="2023-10-18T23:10:11.000Z">
-<meta property="article:modified_time" content="2023-10-19T02:40:59.521Z">
+<meta property="article:modified_time" content="2023-10-19T03:10:47.604Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/pxe-looks-like.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -235,7 +238,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          695 字
+          1.8k 字
         
       </span>
     
@@ -246,7 +249,7 @@
         
         
         
-          6 分钟
+          15 分钟
         
       </span>
     
@@ -289,13 +292,72 @@
             
               <div class="markdown-body">
                 
-                <p>Archlinux 安装 <code>virt-builder</code> 在 <code>guestfs-tools</code> 包中.</p>
+                <p><a target="_blank" rel="noopener" href="https://wiki.archlinux.org/title/Preboot_Execution_Environment">Archwiki 介绍</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=zQ-TQhmjhuc">Youtube 介绍</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1gA411i7tv/?spm_id_from=333.337.search-card.all.click&vd_source=bc8ddbb1a08707dc809c3fd9bb85290d">B 站介绍</a></p>
+<p><a target="_blank" rel="noopener" href="https://computingforgeeks.com/install-virtual-machines-on-kvm-using-pxe-and-kickstart/?expand_article=1">参考博客</a></p>
+<h1 id="KVM-libvirt-的关系"><a href="#KVM-libvirt-的关系" class="headerlink" title="KVM, libvirt 的关系"></a>KVM, libvirt 的关系</h1><ul>
+<li>KVM, Kernel-based Virtual Machine, 是 Linux 内核的一部分</li>
+<li>libvirt 是一个开源的虚拟化管理工具集，提供了用于管理虚拟化平台的 API 和工具</li>
+</ul>
+<p>可就是说 <code>libvirt</code> 是用于管理虚拟化的.</p>
+<h1 id="PXE-启动的组件和流程"><a href="#PXE-启动的组件和流程" class="headerlink" title="PXE 启动的组件和流程"></a>PXE 启动的组件和流程</h1><p>PXE, Preboot eXecution Environment, 提供了一种通过网络引导计算机启动的方式.  使用 PXE, 计算机可以从网络上的服务器获取操作系统镜像, 并在启动时通过网络进行引导, 而不是从本地硬盘或其他存储设备引导。</p>
+<p>需要的组件:</p>
+<ul>
+<li>TFPT Server</li>
+<li>DHCP Server</li>
+<li>Kickstart and Media server</li>
+</ul>
+<p><img src="/../img/pxe-looks-like.png" srcset="/img/loading.gif" lazyload></p>
+<p>需要 NIC 支持 PXE 操作. 也需要在 BIOS 中开启.</p>
+<p>Wake On LAN 是 PXE NICs 的另一个 feature.</p>
+<p>PXE 可以用于 diskless 的主机 (即没有磁盘).</p>
+<p>PXE 的具体工作过程为:</p>
+<p><img src="/../img/how-PXE-works.png" srcset="/img/loading.gif" lazyload></p>
+<p>也就是说:</p>
+<ul>
+<li>TFTP Server 提供 boot images</li>
+<li>DHCP Server 提供 ip 分配以及 TFTP 的 ip 和引导文件的路径</li>
+<li>Kickstart and Media server 提供系统的自动安装以及自定义脚本</li>
+</ul>
+<p>正常情况下, 一个 Linux 系统安装完成之后, 其启动流程为:</p>
+<ol>
+<li>BIOS 自检</li>
+<li>读取引导程序<ol>
+<li>GRUB (一段固定的可执行代码)</li>
+<li>BIOS 执行引导程序</li>
+<li>引导程序读取配置文件 <code>/boot/grub/grub.conf</code></li>
+</ol>
+</li>
+</ol>
+<p>因此 PXE 启动的具体流程为:</p>
+<ol>
+<li>客户端启动系统, 选择从网卡启动</li>
+<li>从 DHCP 服务器中获取到 IP 地址等信息</li>
+<li>获取 tftp server 以及网络引导程序 <code>pxelinux.0</code> 的位置</li>
+<li>通过网卡读取 tftp server 上的 <code>pxelinux.0</code> 文件到内存中</li>
+<li>在内存中执行引导程序</li>
+<li>读取引导程序的配置文件</li>
+</ol>
+<p>Archlinux 安装 <code>virt-builder</code> 在 <code>guestfs-tools</code> 包中.</p>
 <p>sudo nmcli con mod “Wired connection 1” <br>  ipv4.method manual <br>  ipv4.address 192.168.177.2&#x2F;24 <br>  ipv4.gateway 192.168.177.1 <br>  ipv4.dns 192.168.177.1 <br>  connection.autoconnect yes</p>
 <p>nmcli con mod ‘Wired connection 1’ connection.id ‘enp1s0’</p>
 <p>mkdir &#x2F;var&#x2F;www&#x2F;html&#x2F;pxe</p>
 <p>mount -t iso9660 -o loop,ro Fedora-Server-dvd-x86_64-38-1.6.iso &#x2F;var&#x2F;www&#x2F;html&#x2F;pxe&#x2F;fedora38</p>
 <p>cp &#x2F;var&#x2F;www&#x2F;html&#x2F;pxe&#x2F;archlinux&#x2F;images&#x2F;pxeboot&#x2F;{vmlinuz,initrd.img} &#x2F;var&#x2F;lib&#x2F;tftpboot&#x2F;archlinux</p>
 <p>cp &#x2F;var&#x2F;www&#x2F;html&#x2F;pxe&#x2F;fedora38&#x2F;images&#x2F;pxeboot&#x2F;{initrd.img,vmlinuz} &#x2F;var&#x2F;lib&#x2F;tftpboot&#x2F;fedora</p>
+<h1 id="iso9660-文件类型"><a href="#iso9660-文件类型" class="headerlink" title="iso9660 文件类型"></a>iso9660 文件类型</h1><p>ISO 9660 文件系统定义了一种在光盘上组织和存储文件的结构.</p>
+<p>在 Linux 系统上, 挂载一个 iso9660 文件, 如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">mount -t iso9660 -o loop,ro Fedora-Server-dvd-x86_64-38-1.6.iso /var/www/html/pxe/fedora38<br></code></pre></td></tr></table></figure>
+<p><code>-t</code> (type) 指定文件系统类型.</p>
+<p><code>-o</code> (options) 指定挂载的参数, <code>loop</code> 选项表示将文件作为块设备挂载，<code>ro</code> 选项表示以只读模式挂载</p>
+<p>挂载之后可以查看其目录结构:</p>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs mipsasm">[root@<span class="hljs-keyword">bastion-server </span>fedora38]<span class="hljs-comment"># ls</span><br><span class="hljs-keyword">boot </span> Fedora-Legal-README.txt  LICENSE     Packages<br>EFI   images                   media.repo  repodata<br></code></pre></td></tr></table></figure>
+
+
+
+
+
 
                 
               </div>
