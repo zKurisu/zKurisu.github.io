@@ -34,7 +34,7 @@
 <meta property="og:image" content="http://example.com/img/cisco-packet-tracer-options.png">
 <meta property="og:image" content="http://example.com/img/cisco-packet-tracer-options-always-show-port.png">
 <meta property="article:published_time" content="2023-10-19T10:16:35.000Z">
-<meta property="article:modified_time" content="2023-10-21T13:06:23.745Z">
+<meta property="article:modified_time" content="2023-10-22T11:05:54.773Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/cisco-with-dhcp.png">
@@ -246,7 +246,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          8k 字
+          11k 字
         
       </span>
     
@@ -257,7 +257,7 @@
         
         
         
-          67 分钟
+          88 分钟
         
       </span>
     
@@ -315,7 +315,10 @@
 <p>进入 VLAN 配置模式, 用 <code>vlan &lt;VLAN 号&gt;</code> 或者 <code>interface vlan &lt;VLAN 号&gt;</code>:</p>
 <figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs reasonml"><span class="hljs-constructor">Switch(<span class="hljs-params">config</span>)</span># vlan <span class="hljs-number">10</span><br><span class="hljs-constructor">Switch(<span class="hljs-params">config</span>-<span class="hljs-params">vlan</span>)</span>#<br></code></pre></td></tr></table></figure>
 
-<h1 id="ACL-相关配置"><a href="#ACL-相关配置" class="headerlink" title="ACL 相关配置"></a>ACL 相关配置</h1><p>标准 ACL:</p>
+<h1 id="ACL-相关配置"><a href="#ACL-相关配置" class="headerlink" title="ACL 相关配置"></a>ACL 相关配置</h1><blockquote>
+<p>access-list 相关语法</p>
+</blockquote>
+<p>标准 ACL:</p>
 <figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs arduino"><span class="hljs-built_in">Router</span>(config)<span class="hljs-meta"># access-list <span class="hljs-string">&lt;ACL号&gt;</span> permit/deny <span class="hljs-string">&lt;源地址&gt;</span> <span class="hljs-string">&lt;源地址掩码&gt;</span></span><br></code></pre></td></tr></table></figure>
 <p>扩展 ACL:</p>
 <figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs arduino"><span class="hljs-built_in">Router</span>(config)<span class="hljs-meta"># access-list <span class="hljs-string">&lt;ACL号&gt;</span> permit/deny <span class="hljs-string">&lt;协议&gt;</span> <span class="hljs-string">&lt;源地址&gt;</span> <span class="hljs-string">&lt;源地址掩码&gt;</span> <span class="hljs-string">&lt;目的地址&gt;</span> <span class="hljs-string">&lt;目的地址掩码&gt;</span> [eq <span class="hljs-string">&lt;端口号&gt;</span>]</span><br></code></pre></td></tr></table></figure>
@@ -326,7 +329,17 @@
 <li><code>in</code>: ACL 作用于数据进入接口，即数据流进入设备的接口时进行匹配和控制。</li>
 <li><code>out</code>: ACL 作用于数据离开接口，即数据流离开设备的接口时进行匹配和控制</li>
 </ul>
-<h1 id="防火墙配置"><a href="#防火墙配置" class="headerlink" title="防火墙配置"></a>防火墙配置</h1><p>控制 inbound 和 outbound</p>
+<blockquote>
+<p>access-group 相关语法</p>
+</blockquote>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs xml">access-group <span class="hljs-tag">&lt;<span class="hljs-name">ACL号</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">方向</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">接口名称</span>&gt;</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><code>&lt;ACL号&gt;</code>：ACL的编号或名称。指定先前创建的ACL。</li>
+<li><code>&lt;方向&gt;</code>：指定ACL应用的流量方向，可以是in（流入接口）或out（流出接口）。</li>
+<li><code>&lt;接口名称&gt;</code>：要应用ACL的接口名称。</li>
+</ul>
+<h1 id="防火墙-ASA-配置"><a href="#防火墙-ASA-配置" class="headerlink" title="防火墙 ASA 配置"></a>防火墙 ASA 配置</h1><p>控制 inbound 和 outbound</p>
 <p>Cisco 的 ASA firewall 有以下功能:</p>
 <ul>
 <li>stateful inspection</li>
@@ -336,6 +349,21 @@
 <li>dhcp</li>
 <li>routing</li>
 </ul>
+<p>需要注意的一些不同 </p>
+<ul>
+<li>ASA 不能与 Router 相连</li>
+<li>一些命令在 ASA 中与 Switch 和 Router 中不同, 如 Switch 中的 <code>show ip route</code> 在 ASA 中为 <code>show route</code></li>
+<li>ASA 中只能有两个具名的 VLAN.</li>
+<li>ASA 中的接口不能启用 trunk 模式, 且不能配置 IP</li>
+</ul>
+<p>可能遇到的报错:</p>
+<ul>
+<li><code>ERROR: This license does not allow configuring more than 2 interfaces with nameif and without a &quot;no forward&quot; command on this interfaces or on 1 interfaces with nameif already configured</code></li>
+<li><code>ERROR: This command only be configured on VLAN interfaces</code></li>
+<li><code>ERROR: Trunk port is not supported with this license</code></li>
+<li><code>ERROR: Maximux number of interfaces already configured</code></li>
+</ul>
+<p>ASA(config-if)# name inside2<br>ERROR: Maximux number of interfaces already configured</p>
 <blockquote>
 <p>修改 hostname</p>
 </blockquote>
@@ -349,13 +377,41 @@
 <blockquote>
 <p>添加用户以及启动密码</p>
 </blockquote>
-<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs mipsasm">LAB-ASA(<span class="hljs-built_in">config</span>)<span class="hljs-comment"># username cisco password supersecret123</span><br>LAB-ASA(<span class="hljs-built_in">config</span>)<span class="hljs-comment"># enable password supersecret123</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs arduino">LAB-<span class="hljs-built_in">ASA</span>(config)<span class="hljs-meta"># password supersecret123</span><br>LAB-<span class="hljs-built_in">ASA</span>(config)<span class="hljs-meta"># enable password supersecret123</span><br></code></pre></td></tr></table></figure>
+
+<blockquote>
+<p>查看当前规则</p>
+</blockquote>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs lua">ciscoasa&gt;en<br>ciscoasa#sh <span class="hljs-built_in">running</span>-<span class="hljs-built_in">config</span><br></code></pre></td></tr></table></figure>
+
+<blockquote>
+<p>去掉一个规则</p>
+</blockquote>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs arduino">ciscoasa<span class="hljs-meta">#config t</span><br><span class="hljs-built_in">ciscoasa</span>(config)<span class="hljs-meta"># no ...</span><br></code></pre></td></tr></table></figure>
+
+<blockquote>
+<p>查看 security-level</p>
+</blockquote>
+<figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs angelscript">ciscoasa# show run <span class="hljs-keyword">interface</span> <span class="hljs-symbol">vlan</span> &lt;<span class="hljs-symbol">number</span>&gt;<br></code></pre></td></tr></table></figure>
+
+
+<blockquote>
+<p>查看 interface 的状态</p>
+</blockquote>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs dart">ciscoasa# <span class="hljs-keyword">show</span> <span class="hljs-class"><span class="hljs-keyword">interface</span></span><br></code></pre></td></tr></table></figure>
+
 
 <blockquote>
 <p>修改 interface 的名称</p>
 </blockquote>
 <figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs reasonml">LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>)</span># interface vlan <span class="hljs-number">1</span><br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>-<span class="hljs-params">if</span>)</span># nameif inside<br></code></pre></td></tr></table></figure>
 <p>(这里将 VLAN 1 的名称改为 inside)</p>
+<blockquote>
+<p>去除一个 vlan</p>
+</blockquote>
+<figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs angelscript">LAB-ASA(config)# no <span class="hljs-keyword">interface</span> <span class="hljs-symbol">vlan</span> <span class="hljs-symbol">1</span><br></code></pre></td></tr></table></figure>
+
+
 <blockquote>
 <p>给接口添加 ip</p>
 </blockquote>
@@ -381,48 +437,90 @@
 </blockquote>
 <figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs reasonml">LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>-<span class="hljs-params">if</span>)</span># show <span class="hljs-built_in">int</span> ip brief<br></code></pre></td></tr></table></figure>
 
-
-<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><code class="hljs reasonml">ciscoasa(config)# hostname LAB-ASA<br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>)</span># domain-name cisco.com<br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>)</span># username cisco password supersecret123<br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>)</span># enable password supersecret123<br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>)</span># ssh version <span class="hljs-number">2</span><br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>)</span># ssh <span class="hljs-number">10.0</span>.<span class="hljs-number">0.0</span> <span class="hljs-number">255.0</span>.<span class="hljs-number">0.0</span> management<br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>)</span># http server enable<br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>)</span># http <span class="hljs-number">10.0</span>.<span class="hljs-number">0.0</span> <span class="hljs-number">255.0</span>.<span class="hljs-number">0.0</span> management<br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>)</span># aaa authentication ssh console LOCAL<br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>)</span># aaa authentication http console LOCAL<br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>)</span># aaa authentication serial console LOCAL<br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>)</span># clock timezone <br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>)</span># show interface ip brief<br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>)</span># show interface m0/<span class="hljs-number">0</span><br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>-<span class="hljs-params">if</span>)</span># sh run <span class="hljs-built_in">int</span> m0/<span class="hljs-number">0</span><br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>-<span class="hljs-params">if</span>)</span># show interface ip brief<br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>-<span class="hljs-params">if</span>)</span># ip address <span class="hljs-number">10.0</span>.<span class="hljs-number">2.10</span> <span class="hljs-number">255.255</span>.<span class="hljs-number">255.0</span><br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>-<span class="hljs-params">if</span>)</span># security-level <span class="hljs-number">99</span><br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>-<span class="hljs-params">if</span>)</span># sh run route<br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>-<span class="hljs-params">if</span>)</span># exit<br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>)</span># route management <span class="hljs-number">10.0</span>.<span class="hljs-number">11.0</span> <span class="hljs-number">255.255</span>.<span class="hljs-number">255.0</span> <span class="hljs-number">10.0</span>.<span class="hljs-number">2.1</span><br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>)</span># logging enable<br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>)</span># logging buffered debugging<br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>)</span># logging trap infomational<br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>)</span># logging host management <span class="hljs-number">10.0</span>.<span class="hljs-number">3.4</span><br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>)</span># ntp server <span class="hljs-number">10.0</span>.<span class="hljs-number">2.1</span> management<br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>)</span># no snmp-server enable<br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>)</span># banner login unauthorized access is prohibited<br></code></pre></td></tr></table></figure>
-
-
-
+<blockquote>
+<p>查看路由表</p>
+</blockquote>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs reasonml">LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>-<span class="hljs-params">if</span>)</span># show route<br></code></pre></td></tr></table></figure>
 
 <blockquote>
-<p>查看当前规则</p>
+<p>设置静态路由</p>
 </blockquote>
-<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs lua">ciscoasa&gt;en<br>ciscoasa#sh <span class="hljs-built_in">running</span>-<span class="hljs-built_in">config</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">LAB</span>-ASA(config-if)# route outside <span class="hljs-number">0.0.0.0</span> <span class="hljs-number">0.0.0.0</span> <span class="hljs-number">209.165.200.225</span><br></code></pre></td></tr></table></figure>
+<p><code>outside</code> 指从 <code>outside</code> 这个 VLAN 出发, <code>0.0.0.0 0.0.0.0</code> 表示来自任意 IP 任意 IP mask. <code>209.165.200.225</code> 表示下一跳的地址.</p>
+<blockquote>
+<p>创建 object network 以及配置 NAT</p>
+</blockquote>
+<p>object network 即网络对象(就是自己定义的一个网络), 用于简化配置.</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs reasonml">LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>-<span class="hljs-params">if</span>)</span># exit<br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>)</span># <span class="hljs-keyword">object</span> network inside-net<br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>-<span class="hljs-params">network</span>-<span class="hljs-params">object</span>)</span># subnet <span class="hljs-number">192.168</span>.<span class="hljs-number">1.0</span> <span class="hljs-number">255.255</span>.<span class="hljs-number">255.0</span><br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>-<span class="hljs-params">network</span>-<span class="hljs-params">object</span>)</span># nat (inside, outside) dynamic interface<br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>-<span class="hljs-params">network</span>-<span class="hljs-params">object</span>)</span># <span class="hljs-keyword">end</span><br>LAB-ASA#<br></code></pre></td></tr></table></figure>
+<p><code>inside-net</code> 是随便取的名称.</p>
+<p><code>subnet 192.168.1.0 255.255.255.0</code> 配置 object network 中的一个子网.</p>
+<blockquote>
+<p>查看 nat</p>
+</blockquote>
+<figure class="highlight 1c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs 1c">LAB-ASA<span class="hljs-meta"># show nat</span><br></code></pre></td></tr></table></figure>
 
 <blockquote>
-<p>去掉一个规则</p>
+<p>配置 class-map, policy-map, service-policy</p>
 </blockquote>
-<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs arduino">ciscoasa<span class="hljs-meta">#config t</span><br><span class="hljs-built_in">ciscoasa</span>(config)<span class="hljs-meta"># no ...</span><br></code></pre></td></tr></table></figure>
+<p><code>class-map</code> 用于根据匹配条件将特定的流量分组到不同的类别中. 类别可用于后续使用</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs reasonml">LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>)</span># <span class="hljs-keyword">class</span>-map inspection_default<br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>-<span class="hljs-params">cmap</span>)</span># <span class="hljs-keyword">match</span> default-inspection-traffic<br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>-<span class="hljs-params">cmap</span>)</span># exit<br></code></pre></td></tr></table></figure>
+<p>这里的 <code>inspection_default</code> 是自己取的名称, 而 <code>default-inspection-traffic</code> 是一个默认的匹配条件, 检查一些常见的协议包.</p>
+<p><code>policy-map</code> 用于对不同的流量进行操作:</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs reasonml">LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>)</span># policy-map global_policy<br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>-<span class="hljs-params">pmap</span>)</span># <span class="hljs-keyword">class</span> inspection_default<br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>-<span class="hljs-params">pmap</span>-<span class="hljs-params">c</span>)</span># inspect icmp<br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>-<span class="hljs-params">pmap</span>-<span class="hljs-params">c</span>)</span># exit<br></code></pre></td></tr></table></figure>
+
+<p><code>service-policy</code> 用于将 <code>policy-map</code> 应用到特定的接口或虚拟专用网络 (VPN) 上.</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs arduino">LAB-<span class="hljs-built_in">ASA</span>(config)<span class="hljs-meta"># service-policy global_policy global</span><br></code></pre></td></tr></table></figure>
+<p>这里将 <code>global_policy</code> 这个 <code>policy-map</code> 应用到全局.</p>
+<blockquote>
+<p>开启 dhcpd 为网络下的主机分配 IP 和 配置 DNS</p>
+</blockquote>
+<figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs scss"><span class="hljs-built_in">LAB-ASA</span>(config)# dhcpd add <span class="hljs-number">192.168</span><span class="hljs-selector-class">.1</span><span class="hljs-selector-class">.10-192</span><span class="hljs-selector-class">.168</span><span class="hljs-selector-class">.1</span><span class="hljs-selector-class">.100</span> inside<br><span class="hljs-built_in">LAB-ASA</span>(config)# dhcpd dns <span class="hljs-number">8.8</span><span class="hljs-selector-class">.8</span><span class="hljs-selector-class">.8</span> interface inside<br><span class="hljs-built_in">LAB-ASA</span>(config)# dhcpd enable inside<br></code></pre></td></tr></table></figure>
+<p>这里的 <code>192.168.1.10-192.168.1.100</code> 是要用于动态分配的 IP, <code>inside</code> 是其要作用的 interface</p>
+<blockquote>
+<p>配置 AAA</p>
+</blockquote>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs mipsasm">LAB-ASA(<span class="hljs-built_in">config</span>)<span class="hljs-comment"># username test password hahaha11</span><br>LAB-ASA(<span class="hljs-built_in">config</span>)<span class="hljs-comment"># aaa authentication ssh console LOCAL</span><br>LAB-ASA(<span class="hljs-built_in">config</span>)<span class="hljs-comment"># username test password hahaha11</span><br>LAB-ASA(<span class="hljs-built_in">config</span>)<span class="hljs-comment"># ssh 192.168.1.0 255.255.255.0 inside</span><br>LAB-ASA(<span class="hljs-built_in">config</span>)<span class="hljs-comment"># ssh 172.16.3.3 255.255.255.255 outside</span><br></code></pre></td></tr></table></figure>
+<p>这里的几个参数:</p>
+<ul>
+<li><code>authentication</code>：指定此命令用于配置AAA身份验证。</li>
+<li><code>ssh</code>：指定此命令用于配置SSH连接的身份验证方式。</li>
+<li><code>console</code>：指定此命令用于配置控制台（console）访问的身份验证方式。</li>
+<li><code>LOCAL</code>：表示使用本地数据库进行身份验证。本地数据库是ASA防火墙上存储用户账户和密码的本地数据库。</li>
+</ul>
+<blockquote>
+<p>配置 dmz</p>
+</blockquote>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs reasonml">LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>)</span># interface vlan <span class="hljs-number">3</span><br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>-<span class="hljs-params">if</span>)</span># ip add <span class="hljs-number">192.168</span>.<span class="hljs-number">2.1</span> <span class="hljs-number">255.255</span>.<span class="hljs-number">255.0</span><br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>-<span class="hljs-params">if</span>)</span># no forward interface vlan <span class="hljs-number">1</span><br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>-<span class="hljs-params">if</span>)</span># nameif dmz<br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>-<span class="hljs-params">if</span>)</span># security-level <span class="hljs-number">70</span><br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>-<span class="hljs-params">if</span>)</span># interface e0/<span class="hljs-number">2</span><br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>-<span class="hljs-params">if</span>)</span># switchport access vlan <span class="hljs-number">3</span><br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>-<span class="hljs-params">if</span>)</span># show switch vlan<br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>-<span class="hljs-params">if</span>)</span># <span class="hljs-keyword">object</span> network dmz-server<br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>-<span class="hljs-params">network</span>-<span class="hljs-params">object</span>)</span># host <span class="hljs-number">192.168</span>.<span class="hljs-number">2.3</span><br>LAB-<span class="hljs-constructor">ASA(<span class="hljs-params">config</span>-<span class="hljs-params">network</span>-<span class="hljs-params">object</span>)</span># nat (dmz, outside) static <span class="hljs-number">209.165</span>.<span class="hljs-number">200.227</span><br></code></pre></td></tr></table></figure>
 
 <blockquote>
-<p>设置 inside</p>
+<p>配置 ACL</p>
 </blockquote>
-<figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs scss"><span class="hljs-built_in">ciscoasa</span>(config)# int vlan <span class="hljs-number">1</span><br><span class="hljs-built_in">ciscoasa</span>(config-if)# ip add <span class="hljs-number">10.1</span><span class="hljs-selector-class">.1</span><span class="hljs-selector-class">.1</span> <span class="hljs-number">255.0</span><span class="hljs-selector-class">.0</span><span class="hljs-selector-class">.0</span><br><span class="hljs-built_in">ciscoasa</span>(config-if)# no shut<br><span class="hljs-built_in">ciscoasa</span>(config-if)# nameif inside<br><span class="hljs-built_in">ciscoasa</span>(config-if)# security-level<br><span class="hljs-built_in">ciscoasa</span>(config-if)# no shut<br><span class="hljs-built_in">ciscoasa</span>(config-if)# no shut<br></code></pre></td></tr></table></figure>
-<p><code>security-level</code> 可以设置为 <code>0~100</code>, 数字越大, 安全级别越低. 一般来说用 <code>1~99</code>, 而 <code>0</code> 一般设为外部接口, 连接互联网或不受信的网络, <code>100</code> 设置为内部接口, 连接到受信的内部网络.</p>
+<p><code>access-list</code> 用于创建 ACL, 用于定义一系列规则来限制或允许网络流量通过.</p>
+<p><code>access-group</code> 用于将 ACL 应用到特定的接口.</p>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs mipsasm">LAB-ASA(<span class="hljs-built_in">config</span>-network-object)<span class="hljs-comment"># exit</span><br>LAB-ASA<span class="hljs-comment"># config t</span><br>LAB-ASA(<span class="hljs-built_in">config</span>)<span class="hljs-comment"># access-list OUTSIDE_DMZ permit icmp any host 192.168.2.3</span><br>LAB-ASA(<span class="hljs-built_in">config</span>)<span class="hljs-comment"># access-list OUTSIDE_DMZ permit tcp any host 192.168.2.3 eq 80</span><br>LAB-ASA(<span class="hljs-built_in">config</span>)<span class="hljs-comment"># access-group OUTSIDE_DMZ in interface outside</span><br></code></pre></td></tr></table></figure>
+<p>这里的 <code>any</code> 代表任何源地址, <code>host 192.168.2.3 eq 80</code> 指定目的地址和端口.</p>
 <blockquote>
-<p> 设置 dhcp</p>
+<p>启用日志</p>
 </blockquote>
-<figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs scss"><span class="hljs-built_in">ciscoasa</span>(config)# dhcpd <span class="hljs-selector-tag">address</span> <span class="hljs-number">10.1</span><span class="hljs-selector-class">.1</span><span class="hljs-selector-class">.10-10</span><span class="hljs-selector-class">.1</span><span class="hljs-selector-class">.1</span><span class="hljs-selector-class">.30</span> inside<br><span class="hljs-built_in">ciscoasa</span>(config)# dhcpd dns <span class="hljs-number">8.8</span><span class="hljs-selector-class">.8</span><span class="hljs-selector-class">.8</span> inside<br></code></pre></td></tr></table></figure>
-
-<blockquote>
-<p>设置 outside</p>
-</blockquote>
-<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">ciscoasa</span>(config)# route outside <span class="hljs-number">0.0.0.0</span> <span class="hljs-number">0.0.0.0</span> <span class="hljs-number">50.1.1.1</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs mipsasm">LAB-ASA(<span class="hljs-built_in">config</span>)<span class="hljs-comment"># logging enable</span><br>LAB-ASA(<span class="hljs-built_in">config</span>)<span class="hljs-comment"># logging buffered debugging</span><br>LAB-ASA(<span class="hljs-built_in">config</span>)<span class="hljs-comment"># logging trap infomational</span><br>LAB-ASA(<span class="hljs-built_in">config</span>)<span class="hljs-comment"># logging host management 10.0.3.4</span><br>LAB-ASA(<span class="hljs-built_in">config</span>)<span class="hljs-comment"># ntp server 10.0.2.1 management</span><br>LAB-ASA(<span class="hljs-built_in">config</span>)<span class="hljs-comment"># no snmp-server enable</span><br>LAB-ASA(<span class="hljs-built_in">config</span>)<span class="hljs-comment"># banner login unauthorized access is prohibited</span><br></code></pre></td></tr></table></figure>
 
 
-<blockquote>
-<p>设置 object network</p>
-</blockquote>
-<figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs scss"><span class="hljs-built_in">ciscoasa</span>(config)# <span class="hljs-selector-tag">object</span> network LAN<br><span class="hljs-built_in">ciscoasa</span>(config-network-object)# subnet <span class="hljs-number">10.0</span><span class="hljs-selector-class">.0</span><span class="hljs-selector-class">.0</span> <span class="hljs-number">255.0</span><span class="hljs-selector-class">.0</span><span class="hljs-selector-class">.0</span><br><span class="hljs-built_in">ciscoasa</span>(config-network-object)# nat (inside,Outside) dynamic interface<br></code></pre></td></tr></table></figure>
-
-<blockquote>
-<p>设置 ACL</p>
-</blockquote>
-<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs mipsasm">ciscoasa(<span class="hljs-built_in">config</span>)<span class="hljs-comment"># access-list test extended permit icmp any any</span><br>ciscoasa(<span class="hljs-built_in">config</span>)<span class="hljs-comment"># access-group test in interface outside</span><br></code></pre></td></tr></table></figure>
-<p>这里可以给 access-list 分配名称.</p>
+<ul>
+<li><p><code>logging enable</code>：启用ASA防火墙的日志功能。这将使防火墙开始记录事件和消息。</p>
+</li>
+<li><p><code>logging buffered debugging</code>：配置ASA防火墙将调试级别的日志消息缓存在防火墙内存中。调试级别的日志消息包含详细的调试信息，可以用于故障排除和问题分析。</p>
+</li>
+<li><p><code>logging trap informational</code>：设置ASA防火墙将发送信息级别（包括信息级别及以上）的日志消息到日志服务器或其他配置的日志接收器。这意味着防火墙将记录并发送信息级别及更高级别的日志消息。</p>
+</li>
+<li><p><code>logging host management 10.0.3.4</code>：配置ASA防火墙将日志消息发送到管理地址10.0.3.4的日志服务器。这将使防火墙将日志消息发送到指定的管理地址，以便集中存储和分析。</p>
+</li>
+<li><p><code>ntp server 10.0.2.1 management</code>：配置ASA防火墙使用地址10.0.2.1的NTP（Network Time Protocol）服务器进行时间同步。这将确保防火墙的时钟与NTP服务器同步，以便在日志和其他时间相关功能中使用准确的时间戳。</p>
+</li>
+<li><p><code>no snmp-server enable</code>：禁用ASA防火墙上的SNMP（Simple Network Management Protocol）。这将防止其他设备或管理系统通过SNMP访问和监控防火墙。</p>
+</li>
+<li><p><code>banner login unauthorized access is prohibited</code>：配置登录提示横幅，显示未经授权的访问是被禁止的消息。当用户尝试登录到防火墙时，将显示此横幅消息，以提醒他们未经授权访问的违规行为。</p>
+</li>
+</ul>
 <h1 id="配置-DHCP"><a href="#配置-DHCP" class="headerlink" title="配置 DHCP"></a>配置 DHCP</h1><p>拓扑如:</p>
 <p><img src="/../img/cisco-with-dhcp.png" srcset="/img/loading.gif" lazyload></p>
 <h1 id="路由表中的度量"><a href="#路由表中的度量" class="headerlink" title="路由表中的度量"></a>路由表中的度量</h1><p>如:</p>
@@ -472,6 +570,12 @@
 <p><code>100</code> 为进程号.</p>
 <p><code>0.255.255.255</code> 为反地址掩码(原来的地址掩码取反).</p>
 <p><code>area</code> 指定区域 (OSPF 协议要划分区域)</p>
+<blockquote>
+<p>停止 OSPF </p>
+</blockquote>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs arduino"><span class="hljs-built_in">Router</span>(config)<span class="hljs-meta"># no route ospf 100</span><br></code></pre></td></tr></table></figure>
+
+
 <blockquote>
 <p>启用 BGP 协议</p>
 </blockquote>
