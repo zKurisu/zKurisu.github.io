@@ -24,7 +24,7 @@
 <meta property="og:description" content="主要是三个命令:  getfacl (Get File ACL), 用于获取文件或目录的 ACL setfacl (Set File ACL), 用于设置文件或目录的 ACL chacl (Change ACL), 用于修改文件或目录的 ACL  getfacl 的使用对于文件或目录(不包括目录下的文件): 1getfacl notify.pl  输出如: 123456# file: notify">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-11-05T03:15:35.000Z">
-<meta property="article:modified_time" content="2023-11-05T03:39:47.579Z">
+<meta property="article:modified_time" content="2023-11-05T04:09:16.423Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          248 字
+          988 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          3 分钟
+          9 分钟
         
       </span>
     
@@ -301,8 +301,40 @@
 <p>输出如:</p>
 <figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs arduino"><span class="hljs-meta"># file: notify.pl</span><br><span class="hljs-meta"># owner: jie</span><br><span class="hljs-meta"># group: jie</span><br>user::rwx<br>group::r-x<br>other::r-x<br></code></pre></td></tr></table></figure>
 
-<p>若要作用域目录下的全部文件, </p>
-<p>递归作用于所有子目录</p>
+<p>若要作用域目录下的全部文件:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">getfacl <span class="hljs-built_in">test</span>/*<br></code></pre></td></tr></table></figure>
+
+<p>递归作用于所有子目录:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">getfacl -R <span class="hljs-built_in">test</span>/<br></code></pre></td></tr></table></figure>
+
+<h1 id="setfacl-的使用"><a href="#setfacl-的使用" class="headerlink" title="setfacl 的使用"></a>setfacl 的使用</h1><p>可以从命令行指定文件列表, 也可以从文件或 stdin 处获取文件列表.</p>
+<p>文件列表用 <code>,</code> (逗号) 分隔.</p>
+<p>可以设置, 也可以修改 ACL.</p>
+<p>设置时, 需要满足 ACL Entries 的格式.</p>
+<h2 id="ACL-Entries-的格式"><a href="#ACL-Entries-的格式" class="headerlink" title="ACL Entries 的格式"></a>ACL Entries 的格式</h2><p>如为 user 设置一个 entry:</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs markdown">[<span class="hljs-symbol">u[ser</span>]:<span class="hljs-link">]uid [:perms]</span><br></code></pre></td></tr></table></figure>
+<p>也就是可以写为:</p>
+<figure class="highlight avrasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs avrasm"><span class="hljs-symbol">user:</span>uid :perms<br></code></pre></td></tr></table></figure>
+<p>或:</p>
+<figure class="highlight avrasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs avrasm"><span class="hljs-symbol">u:</span>uid :perms<br></code></pre></td></tr></table></figure>
+<p>注意这里 <code>uid :perms</code> 之间的空白符其实可以忽略.</p>
+<p><code>uid</code> 可以直接写用户名.</p>
+<p><code>perms</code> 也可以为字符或数字的格式.</p>
+<p>同理设置 group, mask 和 other:</p>
+<figure class="highlight inform7"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs inform7">g<span class="hljs-comment">[roup]</span>:gid <span class="hljs-comment">[:perms]</span><br>m<span class="hljs-comment">[ask]</span><span class="hljs-comment">[:]</span> <span class="hljs-comment">[:perms]</span><br>o<span class="hljs-comment">[ther]</span><span class="hljs-comment">[:]</span> <span class="hljs-comment">[:perms]</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="默认的-ACL-Entries"><a href="#默认的-ACL-Entries" class="headerlink" title="默认的 ACL Entries"></a>默认的 ACL Entries</h2><p>一般文件和目录会有三个 base ACL entries 作用于 owner, group 和 others:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs sh">getfacl notify.pl<br>---<br><span class="hljs-comment"># file: notify.pl</span><br><span class="hljs-comment"># owner: jie</span><br><span class="hljs-comment"># group: jie</span><br>user::rwx<br>group::r-x<br>other::r-x<br></code></pre></td></tr></table></figure>
+
+<h2 id="ACL-Entries-起作用需要满足的条件"><a href="#ACL-Entries-起作用需要满足的条件" class="headerlink" title="ACL Entries 起作用需要满足的条件"></a>ACL Entries 起作用需要满足的条件</h2><ol>
+<li>base entries 不能被移除. user, group, 和 other 都至少需要设置一条</li>
+<li>当 entries 中有 named user entries 或 named group entries 时, 需要加上合适的 mask</li>
+</ol>
+<h2 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h2><p>有几个参数需要注意: </p>
+<ul>
+<li><code>-s</code> (<code>--set</code>), <code>-m</code> (<code>--modify</code>), 和 <code>-x</code> (<code>--remove</code>) 都从命令行获取文件列表.</li>
+<li><code>-S</code> (<code>--set-file</code>), <code>-M</code> (<code>--modify-file</code>), 和 <code>-X</code> (<code>--remove-file</code>) 从文件或 stdin 获取文件列表</li>
+</ul>
 
                 
               </div>
