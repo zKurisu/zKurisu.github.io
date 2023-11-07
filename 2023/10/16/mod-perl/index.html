@@ -25,7 +25,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/mod_perl-hooks.png">
 <meta property="article:published_time" content="2023-10-16T11:52:17.000Z">
-<meta property="article:modified_time" content="2023-11-07T02:42:13.182Z">
+<meta property="article:modified_time" content="2023-11-07T03:38:27.897Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/mod_perl-hooks.png">
@@ -237,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          5.5k 字
+          7.1k 字
         
       </span>
     
@@ -248,7 +248,7 @@
         
         
         
-          46 分钟
+          59 分钟
         
       </span>
     
@@ -422,7 +422,7 @@
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">perl Makefile.PL PERL_METHOD_HANDLERS=1<br></code></pre></td></tr></table></figure>
 
 <h2 id="复用配置参数"><a href="#复用配置参数" class="headerlink" title="复用配置参数"></a>复用配置参数</h2><p>将配置选项写入 <code>makepl_args.mod_perl</code> (还有其他形式) 文件中, <code>Makefile.PL</code> 会自动读取.</p>
-<h1 id="mod-perl-配置"><a href="#mod-perl-配置" class="headerlink" title="mod_perl 配置"></a><code>mod_perl</code> 配置</h1><h2 id="Apache-配置"><a href="#Apache-配置" class="headerlink" title="Apache 配置"></a>Apache 配置</h2><p>若不想 <code>.htaccess</code> 默认起作用, 可以在 <code>httpd.conf</code> 文件中加入:</p>
+<h1 id="Apache-和-mod-perl-配置"><a href="#Apache-和-mod-perl-配置" class="headerlink" title="Apache 和 mod_perl 配置"></a>Apache 和 <code>mod_perl</code> 配置</h1><h2 id="Apache-配置"><a href="#Apache-配置" class="headerlink" title="Apache 配置"></a>Apache 配置</h2><p>若不想 <code>.htaccess</code> 默认起作用, 可以在 <code>httpd.conf</code> 文件中加入:</p>
 <figure class="highlight mathematica"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs mathematica"><span class="hljs-operator">&lt;</span><span class="hljs-built_in">Directory</span> <span class="hljs-operator">/&gt;</span><br>    <span class="hljs-variable">AllowOverride</span> <span class="hljs-built_in">None</span><br><span class="hljs-operator">&lt;/</span><span class="hljs-built_in">Directory</span><span class="hljs-operator">&gt;</span><br></code></pre></td></tr></table></figure>
 <p>此时若还想 <code>.htaccess</code> 文件起作用, 需要在特定目录的配置中加入 <code>AllowOverride</code> 除 <code>None</code> 以外的值.</p>
 <p>为了防止外部访问, 一般需要加上:</p>
@@ -440,6 +440,9 @@
 <p>可以通过 <code>~</code> 启用扩展正则:</p>
 <figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-section">&lt;Files ~ <span class="hljs-string">&quot;\.(pl|cgi)$&quot;</span>&gt;</span><br>    <span class="hljs-attribute">SetHandler</span> perl-script<br>    <span class="hljs-attribute">PerlHandler</span> Apache::Registry<br>    <span class="hljs-attribute">Options</span> +ExecCGI<br><span class="hljs-section">&lt;/Files&gt;</span><br></code></pre></td></tr></table></figure>
 
+<p>嵌套的示例如:</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-section">&lt;Directory /home/httpd/docs&gt;</span><br>    <span class="hljs-section">&lt;FilesMatch <span class="hljs-string">&quot;\.(html|txt)$&quot;</span>&gt;</span><br>        <span class="hljs-attribute">PerlHandler</span> +Apache::Compress<br>    <span class="hljs-section">&lt;/FilesMatch&gt;</span><br><span class="hljs-section">&lt;/Directory&gt;</span><br></code></pre></td></tr></table></figure>
+<p>这里 <code>PerlHandler</code> 之后的 <code>+</code> 表明让 <code>mod_perl</code> 加载 <code>Apache::Compress</code> 模块.</p>
 <h4 id="lt-Location-gt"><a href="#lt-Location-gt" class="headerlink" title="&lt;Location&gt;"></a><code>&lt;Location&gt;</code></h4><p><code>&lt;Location URI&gt;...&lt;/Location&gt;</code> 可以写在 server 和 virtual host 的配置文件中.</p>
 <p><code>&lt;Location&gt;</code> 作用于 URI. 相对路径, 相对于设置的一些根目录:</p>
 <figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-section">&lt;Location /pub&gt;</span><br><span class="hljs-section">&lt;/Location&gt;</span><br></code></pre></td></tr></table></figure>
@@ -449,13 +452,55 @@
 
 <h4 id="处理顺序"><a href="#处理顺序" class="headerlink" title="处理顺序"></a>处理顺序</h4><ol>
 <li><code>&lt;Directory&gt;</code> 和 <code>.htaccess</code></li>
-<li><code>&lt;DirectoryMatch&gt;</code> 和 <code>&lt;Directory ~&gt;</code></li>
+<li><code>&lt;DirectoryMatch&gt;</code> 和 <code>&lt;Directory ~ &gt;</code></li>
+<li><code>&lt;Files&gt;</code> 和 <code>&lt;FilesMatch&gt;</code></li>
+<li><code>&lt;Location&gt;</code> 和 <code>&lt;LocationMatch&gt;</code></li>
 </ol>
-<h3 id="查看配置文件语法错误"><a href="#查看配置文件语法错误" class="headerlink" title="查看配置文件语法错误"></a>查看配置文件语法错误</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">apachectl configtest<br></code></pre></td></tr></table></figure>
+<p><code>&lt;Directory&gt;</code> 先处理短路径, 后处理长路径, 如先 <code>/</code>, 后 <code>/home/www</code>.</p>
+<h2 id="mod-perl-配置"><a href="#mod-perl-配置" class="headerlink" title="mod_perl 配置"></a><code>mod_perl</code> 配置</h2><p>最好是把 <code>mod_perl</code> 的配置放在 Apache 配置文件的最后.</p>
+<p>或者是外部引用, 如:</p>
+<figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs stata">&lt;IfModule mod_perl.c&gt;<br>    <span class="hljs-keyword">Include</span> <span class="hljs-keyword">conf</span>/mod_perl.<span class="hljs-keyword">conf</span><br>&lt;/IfModule&gt;<br></code></pre></td></tr></table></figure>
 
-<h3 id="查看加载的模块"><a href="#查看加载的模块" class="headerlink" title="查看加载的模块"></a>查看加载的模块</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">httpd -M<br></code></pre></td></tr></table></figure>
+<p><code>mod_perl</code> 引入了几个新的 directives:</p>
+<ul>
+<li><code>&lt;Perl&gt;</code></li>
+<li><code>&lt;PerlRequire&gt;</code></li>
+<li><code>&lt;PerlModule&gt;</code></li>
+</ul>
+<h3 id="lt-Perl-gt"><a href="#lt-Perl-gt" class="headerlink" title="&lt;Perl&gt;"></a><code>&lt;Perl&gt;</code></h3><p>其允许在 Apache 配置文件中嵌入 Perl 代码. 如:</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs elixir">&lt;<span class="hljs-title class_">Perl</span>&gt;<br><span class="hljs-comment"># 在 Apache 启动时执行的 Perl 代码</span><br><span class="hljs-keyword">use</span> strict;<br><span class="hljs-keyword">use</span> warnings;<br><span class="hljs-variable">$ENV</span>&#123;<span class="hljs-title class_">MY_VARIABLE</span>&#125; = <span class="hljs-string">&quot;Hello, World!&quot;</span>;<br>&lt;/<span class="hljs-title class_">Perl</span>&gt;<br></code></pre></td></tr></table></figure>
 
-<h3 id="查看编译进-httpd-的模块"><a href="#查看编译进-httpd-的模块" class="headerlink" title="查看编译进 httpd 的模块"></a>查看编译进 httpd 的模块</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">httpd -l<br></code></pre></td></tr></table></figure>
+<h3 id="lt-PerlRequire-gt"><a href="#lt-PerlRequire-gt" class="headerlink" title="&lt;PerlRequire&gt;"></a><code>&lt;PerlRequire&gt;</code></h3><p>用于加载一个 Perl 模块或脚本, 如:</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs awk">&lt;PerlRequire <span class="hljs-regexp">/path/</span>to/my_module.pl&gt;<br></code></pre></td></tr></table></figure>
+
+<h3 id="lt-PerlModule-gt"><a href="#lt-PerlModule-gt" class="headerlink" title="&lt;PerlModule&gt;"></a><code>&lt;PerlModule&gt;</code></h3><p>同样用于加载 Perl 模块:</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs arduino">PerlModule My::Module<br></code></pre></td></tr></table></figure>
+
+<h3 id="Alias-配置"><a href="#Alias-配置" class="headerlink" title="Alias 配置"></a>Alias 配置</h3><p>Web 中大多访问的路径都不是物理存在的, 而是通过映射到物理路径上.</p>
+<p>在 Apache 中可以用 <code>ScriptAlias</code> 和 <code>Alias</code> 进行映射, 如:</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs awk">Alias <span class="hljs-regexp">/foo /</span>home<span class="hljs-regexp">/httpd/</span>foo<br></code></pre></td></tr></table></figure>
+<p>这里将 <code>/foo</code> 的请求映射到 <code>/home/httpd/foo</code> 目录. 如一个请求为 <code>http://www.example.com/foo/test.pl</code>, 则会被处理为 <code>/http://www.example.com/home/httpd/foo/test.pl</code></p>
+<p><code>ScriptAlias</code> 不仅会进行映射操作, 还会运行匹配的文件:</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs awk">ScriptAlias <span class="hljs-regexp">/cgi-bin /</span>home<span class="hljs-regexp">/httpd/</span>cgi-bin<br></code></pre></td></tr></table></figure>
+
+<p>其相当于:</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs gradle">Alias <span class="hljs-regexp">/cgi-bin /</span>home<span class="hljs-regexp">/httpd/</span>cgi-bin<br>&lt;Location /cgi-bin&gt;<br>    SetHandler cgi-script<br>    <span class="hljs-keyword">Options</span> +ExecCGI<br>&lt;/Location&gt;<br></code></pre></td></tr></table></figure>
+
+<p>由于 <code>SetHandler</code> 调用 <code>mod_cgi</code> 模块, 因此若想使用 <code>mod_perl</code>, 最好还是用 <code>Alias</code>, 如:</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs gradle">Alias <span class="hljs-regexp">/perl/</span> <span class="hljs-regexp">/home/</span>httpd<span class="hljs-regexp">/perl/</span><br>&lt;Location /perl&gt;<br>    SetHandler perl-script<br>    PerlHandler Apache::Registry<br>    <span class="hljs-keyword">Options</span> +ExecCGI<br>&lt;/Location&gt;<br></code></pre></td></tr></table></figure>
+
+<h3 id="lt-Location-perl-gt-Sections"><a href="#lt-Location-perl-gt-Sections" class="headerlink" title="&lt;Location /perl&gt; Sections"></a><code>&lt;Location /perl&gt;</code> Sections</h3><p>如:</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs gradle">Alias <span class="hljs-regexp">/perl/</span> <span class="hljs-regexp">/home/</span>httpd<span class="hljs-regexp">/perl/</span><br>PerlModule Apache::Registry<br>&lt;Location /perl&gt;<br>    SetHandler perl-script<br>    PerlHandler Apache::Registry<br>    <span class="hljs-keyword">Options</span> +ExecCGI<br>    Allow <span class="hljs-keyword">from</span> all<br>    PerlSendHeader On<br>&lt;/Location&gt;<br></code></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+
 
 
 
