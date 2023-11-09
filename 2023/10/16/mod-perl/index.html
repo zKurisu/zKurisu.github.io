@@ -25,7 +25,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/mod_perl-hooks.png">
 <meta property="article:published_time" content="2023-10-16T11:52:17.000Z">
-<meta property="article:modified_time" content="2023-11-07T03:47:22.732Z">
+<meta property="article:modified_time" content="2023-11-09T08:46:24.918Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/mod_perl-hooks.png">
@@ -237,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          7.1k 字
+          8.4k 字
         
       </span>
     
@@ -248,7 +248,7 @@
         
         
         
-          60 分钟
+          70 分钟
         
       </span>
     
@@ -494,7 +494,63 @@
 <h3 id="lt-Location-perl-gt-Sections"><a href="#lt-Location-perl-gt-Sections" class="headerlink" title="&lt;Location /perl&gt; Sections"></a><code>&lt;Location /perl&gt;</code> Sections</h3><p>如:</p>
 <figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs gradle">Alias <span class="hljs-regexp">/perl/</span> <span class="hljs-regexp">/home/</span>httpd<span class="hljs-regexp">/perl/</span><br>PerlModule Apache::Registry<br>&lt;Location /perl&gt;<br>    SetHandler perl-script<br>    PerlHandler Apache::Registry<br>    <span class="hljs-keyword">Options</span> +ExecCGI<br>    Allow <span class="hljs-keyword">from</span> all<br>    PerlSendHeader On<br>&lt;/Location&gt;<br></code></pre></td></tr></table></figure>
 
+<h3 id="Perl-Handlers"><a href="#Perl-Handlers" class="headerlink" title="Perl*Handlers"></a><code>Perl*Handlers</code></h3><p>Apache 的 request loop 有 11 个 phases:</p>
+<ul>
+<li>Post-read-request</li>
+<li>URI translation</li>
+<li>header parsing</li>
+<li>access control</li>
+<li>authentication</li>
+<li>authorization</li>
+<li>MIME type checking</li>
+<li>fixup</li>
+<li>response</li>
+<li>logging</li>
+<li>cleanup</li>
+</ul>
+<p><code>mod_perl</code> 为每一个 phases 提供有 Handler:</p>
+<ul>
+<li>PerlPostReadRequestHandler</li>
+<li>PerlInitHandler</li>
+<li>PerlTransHandler</li>
+<li>PerlHeaderParseHandler</li>
+<li>PerlAccessHandler</li>
+<li>PerlAuthenHandler</li>
+<li>PerlAuthzHandler</li>
+<li>PerlTypeHandler</li>
+<li>PerlFixupHandler</li>
+<li>PerlHandler</li>
+<li>PerlLogHandler</li>
+<li>PerlCleanupHandler</li>
+</ul>
+<p><code>mod_perl</code> 还提供了一些额外的 Handler:</p>
+<ul>
+<li>PerlChildInitHandler</li>
+<li>PerlChildExitHandler</li>
+<li>PerlRestartHandler</li>
+<li>PerlDispatchHandler</li>
+</ul>
+<p>默认情况下, 大部分的 Handler 是 disable 的, 需要在编译 <code>mod_perl</code> 时启用.</p>
+<h3 id="The-handler-subroutine"><a href="#The-handler-subroutine" class="headerlink" title="The handler() subroutine"></a>The <code>handler()</code> subroutine</h3><p><code>handler()</code> 会在接收到 requests 时自动调用, 在一个 module 中定义了 <code>handler()</code> 后, 可以通过:</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs arduino">PerlHandler Apache::Foo<br></code></pre></td></tr></table></figure>
+<p>来使用, 但其不会预加载 <code>Apache::Foo</code>.</p>
+<p><code>handler()</code> 函数接收两个参数：<code>$r</code> 和 <code>$args</code>。其中，<code>$r</code> 是一个 <code>Apache::RequestRec</code> 对象，代表当前的请求对象，它包含了与请求相关的信息, 例如请求的 URI, 请求的头部信息等. <code>$args</code> 则是一个字符串, 包含了请求的查询参数.</p>
+<p>若想预加载, 可以:</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs arduino">PerlModule Apache::Foo<br></code></pre></td></tr></table></figure>
 
+<p>或者在 <code>startup.pl</code> 中加入:</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs elixir"><span class="hljs-keyword">use</span> <span class="hljs-title class_">Apache</span>::<span class="hljs-title class_">Foo</span> ();<br></code></pre></td></tr></table></figure>
+
+<p>或者写为:</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs arduino">PerlHandler +Apache::Foo<br></code></pre></td></tr></table></figure>
+<p>其相当于:</p>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs jboss-cli">PerlModule Apache:<span class="hljs-function">:Foo</span><br>&lt;Location <span class="hljs-string">..</span>&gt;<br>    <span class="hljs-string">...</span><br>    PerlHandler Apache:<span class="hljs-function">:Foo</span><br>&lt;<span class="hljs-string">/Location</span>&gt;<br></code></pre></td></tr></table></figure>
+<p>的 alias.</p>
+<p>若想使用 <code>handler()</code> 以外的名称如 <code>my_handler()</code>, 可以写为:</p>
+<figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs lasso">PerlModule Apache<span class="hljs-type">::Foo</span><br>&lt;Location ..&gt;<br>    <span class="hljs-params">...</span><br>    PerlHandler Apache<span class="hljs-type">::Foo</span><span class="hljs-type">::my_handler</span><br>&lt;/Location&gt;<br></code></pre></td></tr></table></figure>
+
+<p>查看当前运行的 handler:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">if</span> ($r-&gt;current_callback eq <span class="hljs-string">&quot;PerlLogHandler&quot;</span>) &#123;<br>    $r-&gt;<span class="hljs-keyword">warn</span>(<span class="hljs-string">&quot;Logging request&quot;</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
 
 
 
