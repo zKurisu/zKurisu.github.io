@@ -24,7 +24,7 @@
 <meta property="og:description" content="参考博客参考博客 -e 和 -E-E 相比于 -e 会开启所有的 optional features. 默认的 field separation-a 等价于 @F &#x3D; splite (也就是说会设置 @F 这个数组). 输入会以 one or more sequence of whitespace characters 来分隔, 且会去除头尾的空白字符. 其会隐式开启 -n 选项, 示例如: 12">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-11-12T23:45:07.000Z">
-<meta property="article:modified_time" content="2023-11-13T01:38:02.216Z">
+<meta property="article:modified_time" content="2023-11-13T03:47:28.974Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          4k 字
+          5.3k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          34 分钟
+          45 分钟
         
       </span>
     
@@ -323,6 +323,15 @@
 <h1 id="固定长度分隔"><a href="#固定长度分隔" class="headerlink" title="固定长度分隔"></a>固定长度分隔</h1><p>利用 <code>unpack</code>, 或者 <code>substr</code>:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ <span class="hljs-built_in">printf</span> <span class="hljs-string">&#x27;banana\x0050\x00&#x27;</span> | perl -nE <span class="hljs-string">&#x27;say join &quot;:&quot;, unpack &quot;Z*Z*&quot;&#x27;</span><br>banana:50<br><br><span class="hljs-comment"># first field is 5 characters, then 3 characters are ignored</span><br><span class="hljs-comment"># all the remaining characters are assigned to the second field</span><br>$ perl -lne <span class="hljs-string">&#x27;print join &quot;,&quot;, unpack &quot;a5x3a*&quot;&#x27;</span> items.txt<br>apple,fig banana<br>50   ,10  200<br></code></pre></td></tr></table></figure>
 
+<h1 id="设置-record-delimiter"><a href="#设置-record-delimiter" class="headerlink" title="设置 record delimiter"></a>设置 record delimiter</h1><p>可以设置 <code>$/</code> 或者使用 <code>-0</code> 参数.</p>
+<p>如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-comment"># change the input record separator to a comma character</span><br><span class="hljs-comment"># note the content of the 2nd record where newline is just another character</span><br><span class="hljs-comment"># by default, the record separator stays with the record contents</span><br>$ <span class="hljs-built_in">printf</span> <span class="hljs-string">&#x27;this,is\na,sample,text&#x27;</span> | perl -nE <span class="hljs-string">&#x27;BEGIN&#123;$/ = &quot;,&quot;&#125; say &quot;$.)$_&quot;&#x27;</span><br>1)this,<br>2)is<br>a,<br>3)sample,<br>4)text<br><br><span class="hljs-comment"># use the -l option to chomp the record separator</span><br>$ <span class="hljs-built_in">printf</span> <span class="hljs-string">&#x27;this,is\na,sample,text&#x27;</span> | perl -lne <span class="hljs-string">&#x27;BEGIN&#123;$/ = &quot;,&quot;&#125; print &quot;$.)$_&quot;&#x27;</span><br>1)this<br>2)is<br>a<br>3)sample<br>4)text<br></code></pre></td></tr></table></figure>
+
+<h1 id="将整个文件视作一个-record"><a href="#将整个文件视作一个-record" class="headerlink" title="将整个文件视作一个 record"></a>将整个文件视作一个 record</h1><p>用 <code>-0777</code>, 或者 <code>$/ = undef</code>:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ <span class="hljs-built_in">cat</span> paths.txt<br>/home/joe/report.log<br>/home/ram/power.log<br>/home/rambo/errors.log<br>$ perl -0777 -pe <span class="hljs-string">&#x27;s|(?&lt;!\A)/.+/|/|s&#x27;</span> paths.txt<br>/home/errors.log<br></code></pre></td></tr></table></figure>
+
+<h1 id="将一个-paragraph-视作一个-record"><a href="#将一个-paragraph-视作一个-record" class="headerlink" title="将一个 paragraph 视作一个 record"></a>将一个 paragraph 视作一个 record</h1><p>用 <code>-00</code> 或者 <code>$/ = &#39;&#39;</code>:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ <span class="hljs-built_in">cat</span> para.txt<br>Hello World<br><br>Hi there<br>How are you<br><br>Just do-it<br>Believe it<br><br>banana<br>papaya<br>mango<br><br>Much ado about nothing<br>He he he<br>Adios amigo<br><br><span class="hljs-comment"># all paragraphs containing &#x27;do&#x27;</span><br><span class="hljs-comment"># note that the record separator is preserved as there&#x27;s no chomp</span><br>$ perl -00 -ne <span class="hljs-string">&#x27;print if /do/&#x27;</span> para.txt<br>Just do-it<br>Believe it<br><br>Much ado about nothing<br>He he he<br>Adios amigo<br><br><span class="hljs-comment"># all paragraphs containing exactly two lines</span><br><span class="hljs-comment"># note that there&#x27;s an empty line after the last line</span><br>$ perl -F<span class="hljs-string">&#x27;\n&#x27;</span> -00 -ane <span class="hljs-string">&#x27;print if $#F == 1&#x27;</span> para.txt<br>Hi there<br>How are you<br><br>Just do-it<br>Believe it<br></code></pre></td></tr></table></figure>
 
 
 
