@@ -16,16 +16,16 @@
   <meta name="author" content="John Doe">
   <meta name="keywords" content="">
   
-    <meta name="description" content="在接受输入之前做处理利用 BEGIN &amp;#123;&amp;#125; block. 其会在接受 input 之前运行. END &amp;#123;&amp;#125; 会在代码运行之后运行. 如: 12345678# same as: awk &amp;#x27;BEGIN&amp;#123;print &quot;---&quot;&amp;#125; 1; END&amp;#123;print &quot;%%%&quot;&amp;#125;&amp;#x2">
+    <meta name="description" content="在修改文件后添加前缀用如 -ibak.* , 这里的 * 就会被替换为原来的文件名. 如: 12345678$ ls *colors.txt*colors.txt  colors.txt.bkp# single quotes is used here as * is a special shell character$ perl -i&amp;#x27;bkp.*&amp;#x27; -pe &amp;#x27;s&#x2F;-g">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Perl-技巧积累">
 <meta property="og:url" content="http://example.com/2022/10/27/Perl-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="在接受输入之前做处理利用 BEGIN &amp;#123;&amp;#125; block. 其会在接受 input 之前运行. END &amp;#123;&amp;#125; 会在代码运行之后运行. 如: 12345678# same as: awk &amp;#x27;BEGIN&amp;#123;print &quot;---&quot;&amp;#125; 1; END&amp;#123;print &quot;%%%&quot;&amp;#125;&amp;#x2">
+<meta property="og:description" content="在修改文件后添加前缀用如 -ibak.* , 这里的 * 就会被替换为原来的文件名. 如: 12345678$ ls *colors.txt*colors.txt  colors.txt.bkp# single quotes is used here as * is a special shell character$ perl -i&amp;#x27;bkp.*&amp;#x27; -pe &amp;#x27;s&#x2F;-g">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/output_of_perl_mod_Data_Dumper.png">
 <meta property="article:published_time" content="2022-10-27T01:28:56.000Z">
-<meta property="article:modified_time" content="2023-11-13T05:36:49.506Z">
+<meta property="article:modified_time" content="2023-11-13T06:52:08.087Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/output_of_perl_mod_Data_Dumper.png">
@@ -237,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          18k 字
+          19k 字
         
       </span>
     
@@ -248,7 +248,7 @@
         
         
         
-          154 分钟
+          163 分钟
         
       </span>
     
@@ -291,7 +291,28 @@
             
               <div class="markdown-body">
                 
-                <h1 id="在接受输入之前做处理"><a href="#在接受输入之前做处理" class="headerlink" title="在接受输入之前做处理"></a>在接受输入之前做处理</h1><p>利用 <code>BEGIN &#123;&#125;</code> block. 其会在接受 input 之前运行.</p>
+                <h1 id="在修改文件后添加前缀"><a href="#在修改文件后添加前缀" class="headerlink" title="在修改文件后添加前缀"></a>在修改文件后添加前缀</h1><p>用如 <code>-ibak.*</code> , 这里的 <code>*</code> 就会被替换为原来的文件名.</p>
+<p>如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ <span class="hljs-built_in">ls</span> *colors.txt*<br>colors.txt  colors.txt.bkp<br><br><span class="hljs-comment"># single quotes is used here as * is a special shell character</span><br>$ perl -i<span class="hljs-string">&#x27;bkp.*&#x27;</span> -pe <span class="hljs-string">&#x27;s/-green-/yellow/&#x27;</span> colors.txt<br><br>$ <span class="hljs-built_in">ls</span> *colors.txt*<br>bkp.colors.txt  colors.txt  colors.txt.bkp<br></code></pre></td></tr></table></figure>
+
+<p>同理可以将修改后的文件放在另一个目录下:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ <span class="hljs-built_in">mkdir</span> backups<br>$ perl -i<span class="hljs-string">&#x27;backups/*&#x27;</span> -pe <span class="hljs-string">&#x27;s/good/nice/&#x27;</span> t1.txt t2.txt<br>$ <span class="hljs-built_in">ls</span> backups/<br>t1.txt  t2.txt<br></code></pre></td></tr></table></figure>
+
+<h1 id="范围操作符的特殊用法"><a href="#范围操作符的特殊用法" class="headerlink" title="范围操作符的特殊用法"></a>范围操作符的特殊用法</h1><p>如, 从匹配到 <code>A</code> 的行开始, 一直打印到匹配 <code>B</code> 的行:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ perl -ne <span class="hljs-string">&#x27;print if /A/ .. /B/&#x27;</span> ip.txt<br></code></pre></td></tr></table></figure>
+
+<p>也可以配合行号一起:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ perl -ne <span class="hljs-string">&#x27;print if 6 .. /utter/&#x27;</span> ip.txt<br>There are so many delights to cherish<br>Apple, Banana and Cherry<br>Bread, Butter and Jelly<br></code></pre></td></tr></table></figure>
+
+<p>配合 <code>eof</code> 函数:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ perl -ne <span class="hljs-string">&#x27;print if !(/\bba/ .. eof)&#x27;</span> ip.txt table.txt<br>it is a warm and cozy day<br>listen to what I say<br>go play <span class="hljs-keyword">in</span> the park<br>brown bread mat hair 42<br>blue cake mug shirt -7<br></code></pre></td></tr></table></figure>
+
+
+
+<h1 id="判断是否读取到文件结尾"><a href="#判断是否读取到文件结尾" class="headerlink" title="判断是否读取到文件结尾"></a>判断是否读取到文件结尾</h1><p>用 <code>eof</code> 函数:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-comment"># same as: tail -n1 ip.txt</span><br>$ perl -ne <span class="hljs-string">&#x27;print if eof&#x27;</span> ip.txt<br>Try them all before you perish<br><br>$ perl -ne <span class="hljs-string">&#x27;print &quot;$.:$_&quot; if eof&#x27;</span> ip.txt<br>9:Try them all before you perish<br><br><span class="hljs-comment"># multiple file example</span><br><span class="hljs-comment"># same as: tail -q -n1 ip.txt table.txt</span><br>$ perl -ne <span class="hljs-string">&#x27;print if eof&#x27;</span> ip.txt table.txt<br>Try them all before you perish<br>yellow banana window shoes 3.14<br></code></pre></td></tr></table></figure>
+
+<h1 id="在接受输入之前做处理"><a href="#在接受输入之前做处理" class="headerlink" title="在接受输入之前做处理"></a>在接受输入之前做处理</h1><p>利用 <code>BEGIN &#123;&#125;</code> block. 其会在接受 input 之前运行.</p>
 <p><code>END &#123;&#125;</code> 会在代码运行之后运行.</p>
 <p>如:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-comment"># same as: awk &#x27;BEGIN&#123;print &quot;---&quot;&#125; 1; END&#123;print &quot;%%%&quot;&#125;&#x27;</span><br>$ <span class="hljs-built_in">seq</span> 4 | perl -pE <span class="hljs-string">&#x27;BEGIN&#123;say &quot;---&quot;&#125; END&#123;say &quot;%%%&quot;&#125;&#x27;</span><br>---<br>1<br>2<br>3<br>4<br>%%%<br></code></pre></td></tr></table></figure>
