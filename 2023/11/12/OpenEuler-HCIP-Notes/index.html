@@ -24,7 +24,7 @@
 <meta property="og:description" content="Web 服务简介长连接, 会在响应头中加入 “Connection: keep-alive”. HTTP 无状态. Apache 简介及配置mod_core 用于处理配置文件的配置指令. mod_so 用于动态加载其他模块. 过滤出主配置文件中除注释行和空行以外的配置: 1grep -Ev &quot;^[ ]*#|^$|^#&quot; httpd.conf  区分 Include 和 Incl">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-11-12T06:06:57.000Z">
-<meta property="article:modified_time" content="2023-11-19T03:44:04.027Z">
+<meta property="article:modified_time" content="2023-11-19T06:08:39.057Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          5.9k 字
+          6.9k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          50 分钟
+          58 分钟
         
       </span>
     
@@ -530,10 +530,33 @@
 <h3 id="限制使用-su-命令的账户"><a href="#限制使用-su-命令的账户" class="headerlink" title="限制使用 su 命令的账户"></a>限制使用 su 命令的账户</h3><p>通过修改 <code>/etc/pam.d/su</code> 文件:</p>
 <figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs dart">auth    <span class="hljs-keyword">required</span>    pam_wheel.so  use_uid<br></code></pre></td></tr></table></figure>
 
+<h3 id="更改账户口令复杂度"><a href="#更改账户口令复杂度" class="headerlink" title="更改账户口令复杂度"></a>更改账户口令复杂度</h3><p>通过 <code>/etc/pam.d/password-auth</code> 和 <code>/etc/pam.d/system-auth</code> 文件中的 <code>pam_pwquality.so</code> 和 <code>pam_pwhistory.so</code> 模块.</p>
+<h3 id="账户口令有效期"><a href="#账户口令有效期" class="headerlink" title="账户口令有效期"></a>账户口令有效期</h3><p>通过设置修改 <code>/etc/login.defs</code> 文件来实现. 该文件里的配置对root用户无效.</p>
+<h3 id="账户口令的加密算法"><a href="#账户口令的加密算法" class="headerlink" title="账户口令的加密算法"></a>账户口令的加密算法</h3><p>通过修改 <code>/etc/pam.d/password-auth</code> 和 <code>/etc/pam.d/system-auth</code> 实现, 如:</p>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs mipsasm">password sufficient pam_unix.so <span class="hljs-keyword">sha512 </span><span class="hljs-keyword">shadow </span>nullok try_first_pass use_authtok<br></code></pre></td></tr></table></figure>
 
+<h3 id="设置登录失败超过三次后锁定"><a href="#设置登录失败超过三次后锁定" class="headerlink" title="设置登录失败超过三次后锁定"></a>设置登录失败超过三次后锁定</h3><p>同样通过修改 <code>/etc/pam.d/password-auth</code> 和 <code>/etc/pam.d/system-auth</code> 实现, 如:</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs routeros">auth    required   pam_faillock.so preauth audit <span class="hljs-attribute">deny</span>=3 even_deny_root <span class="hljs-attribute">unlock_time</span>=300<br>auth    [<span class="hljs-attribute">default</span>=die]  pam_faillock.so authfail audit <span class="hljs-attribute">deny</span>=3 even_deny_root <span class="hljs-attribute">unlock_time</span>=300<br>auth    sufficient   pam_faillock.so authsucc audit <span class="hljs-attribute">deny</span>=3 even_deny_root <span class="hljs-attribute">unlock_time</span>=300<br></code></pre></td></tr></table></figure>
 
+<h3 id="加固-su-命令"><a href="#加固-su-命令" class="headerlink" title="加固 su 命令"></a>加固 <code>su</code> 命令</h3><p>防止使用 <code>su</code> 切换用户时将当前用户环境变量带入其他环境.</p>
+<p>修改 <code>/etc/login.defs</code>:</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ini"><span class="hljs-attr">ALWAYS_SET_PATH</span>=<span class="hljs-literal">yes</span><br></code></pre></td></tr></table></figure>
 
+<h2 id="文件权限加固"><a href="#文件权限加固" class="headerlink" title="文件权限加固"></a>文件权限加固</h2><h3 id="删除无主文件"><a href="#删除无主文件" class="headerlink" title="删除无主文件"></a>删除无主文件</h3><p>查找:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">find / -nouser<br>find / -nogroup<br></code></pre></td></tr></table></figure>
 
+<h3 id="空链接文件"><a href="#空链接文件" class="headerlink" title="空链接文件"></a>空链接文件</h3><p>查找:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">find <span class="hljs-built_in">dirname</span> -<span class="hljs-built_in">type</span> l -follow 2&gt;/dev/null<br></code></pre></td></tr></table></figure>
+
+<h3 id="Sticky-Bit"><a href="#Sticky-Bit" class="headerlink" title="Sticky Bit"></a>Sticky Bit</h3><p>粘滞位属性 (Sticky Bit) 是一种在Unix和类Unix系统中应用于目录的特殊权限属性. 当粘滞位属性被设置在一个目录上时, 该目录下的文件只能由文件的所有者, 目录的所有者或超级用户进行删除, 重命名或移动, 即使其他用户具有对该目录的写权限.</p>
+<p>粘滞位属性只对目录起作用, 不适用于文件.</p>
+<p>设置:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">chmod</span> 1xxx <span class="hljs-built_in">dirname</span><br></code></pre></td></tr></table></figure>
+<p>或:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">chmod</span> +t <span class="hljs-built_in">dirname</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="限制-sudo-命令的使用权限"><a href="#限制-sudo-命令的使用权限" class="headerlink" title="限制 sudo 命令的使用权限"></a>限制 sudo 命令的使用权限</h3><p>修改 <code>/etc/sudoers</code> 文件.</p>
+<h2 id="网络安全"><a href="#网络安全" class="headerlink" title="网络安全"></a>网络安全</h2><h3 id="Netfilter"><a href="#Netfilter" class="headerlink" title="Netfilter"></a>Netfilter</h3><h3 id="Iptables"><a href="#Iptables" class="headerlink" title="Iptables"></a>Iptables</h3><h3 id="Filrewalld"><a href="#Filrewalld" class="headerlink" title="Filrewalld"></a>Filrewalld</h3>
                 
               </div>
             
