@@ -25,8 +25,9 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/traceroute_usage.png">
 <meta property="og:image" content="http://example.com/img/domain-name-and-hostname.png">
+<meta property="og:image" content="http://example.com/img/named-ca.png">
 <meta property="article:published_time" content="2022-09-08T03:22:09.000Z">
-<meta property="article:modified_time" content="2024-01-11T08:53:42.395Z">
+<meta property="article:modified_time" content="2024-01-11T10:22:46.259Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/traceroute_usage.png">
@@ -238,7 +239,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          17k 字
+          19k 字
         
       </span>
     
@@ -249,7 +250,7 @@
         
         
         
-          145 分钟
+          159 分钟
         
       </span>
     
@@ -806,7 +807,38 @@
 <li><code>named.ca</code>, 由 bind 提供的 <code>.</code> 的正解文件</li>
 </ul>
 <h3 id="设置-named-conf-文件"><a href="#设置-named-conf-文件" class="headerlink" title="设置 named.conf 文件"></a>设置 named.conf 文件</h3><p>设置 <code>options</code> 以及 <code>zone</code>. 如:</p>
-<h1 id="第20章-WWW-服务器"><a href="#第20章-WWW-服务器" class="headerlink" title="第20章 WWW 服务器"></a>第20章 WWW 服务器</h1><p>用 SSL 加密通信时, 服务端会传送公钥用于客户端加密. 客户端将数据传送给服务端后, 服务端会用私钥解密.</p>
+<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs abnf">options &#123;<br>    directory  <span class="hljs-string">&quot;/var/named&quot;</span><span class="hljs-comment">;</span><br>    dump-file  <span class="hljs-string">&quot;/var/named/data/cache_dump.db&quot;</span><span class="hljs-comment">;</span><br>    statistics-file <span class="hljs-string">&quot;/var/named/data/named_stats.txt&quot;</span><span class="hljs-comment">;</span><br>    memstatistics-file <span class="hljs-string">&quot;/var/named/data/named_mem_stats.txt&quot;</span><span class="hljs-comment">;</span><br>    allow-query &#123; any<span class="hljs-comment">; &#125;;</span><br>    recursion yes<span class="hljs-comment">;</span><br>    allow-transfer &#123; none<span class="hljs-comment">; &#125;;</span><br>&#125;<span class="hljs-comment">;</span><br><br>zone <span class="hljs-string">&quot;.&quot;</span> IN &#123;<br>    type hint<span class="hljs-comment">;</span><br>    file <span class="hljs-string">&quot;named.ca&quot;</span><span class="hljs-comment">;</span><br>&#125;<br><br>zone <span class="hljs-string">&quot;centos.vbird&quot;</span> IN &#123;<br>    type master<span class="hljs-comment">;</span><br>    file <span class="hljs-string">&quot;named.centos.vbird&quot;</span><span class="hljs-comment">;</span><br>&#125;<br><br>zone <span class="hljs-string">&quot;100.168.192.in-addr.arpa&quot;</span> IN &#123;<br>    type master<span class="hljs-comment">;</span><br>    file <span class="hljs-string">&quot;named.192.168.100&quot;</span><span class="hljs-comment">;</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><code>allow-transfer</code> 决定是否允许来自 slave DNS 对数据的传送.</p>
+<p><code>zone</code> 中的 <code>type</code> 一般设定有 3 个值:</p>
+<ul>
+<li><code>hint</code> 用于 <code>.</code> 的设置</li>
+<li><code>master</code>, 用于手动更新数据库文件</li>
+<li><code>slave</code>, 用于自动更新数据库文件</li>
+</ul>
+<h3 id="named-ca"><a href="#named-ca" class="headerlink" title="named.ca"></a>named.ca</h3><p>文件内容如:</p>
+<p><img src="/../img/named-ca.png" srcset="/img/loading.gif" lazyload></p>
+<h3 id="正解文件设置"><a href="#正解文件设置" class="headerlink" title="正解文件设置"></a>正解文件设置</h3><p>一定需要设置的 RR 标志有:</p>
+<ul>
+<li>TTL (快取记忆时间), ORIGIN (领域名)</li>
+<li>SOA</li>
+<li>NS, A</li>
+<li>其他</li>
+</ul>
+<p>文件内容的格式要求:</p>
+<ul>
+<li>每一个 domain 的设置顶行写, 不顶行表明接着前一个 domain 的设置</li>
+<li><code>@</code>, 代表 zone</li>
+<li><code>;</code> 表示注释 (<code>#</code> 和 <code>~</code> 也是)</li>
+</ul>
+<p>示例如:</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs stylus"><span class="hljs-variable">$TTL</span> <span class="hljs-number">600</span><br>@                       IN SOA  master<span class="hljs-selector-class">.centos</span><span class="hljs-selector-class">.vbird</span>. vbird<span class="hljs-selector-class">.www</span><span class="hljs-selector-class">.centos</span><span class="hljs-selector-class">.vbird</span>. (<span class="hljs-number">2011080401</span> <span class="hljs-number">3</span>H <span class="hljs-number">15</span>M <span class="hljs-number">1</span>W <span class="hljs-number">1</span>D)<br>@                       IN NS   master<span class="hljs-selector-class">.centos</span><span class="hljs-selector-class">.vbird</span>.<br>master<span class="hljs-selector-class">.centos</span><span class="hljs-selector-class">.vbird</span>.    IN A    <span class="hljs-number">192.168</span>.<span class="hljs-number">100.254</span><br>@                       IN MX   <span class="hljs-number">10</span> www<span class="hljs-selector-class">.centos</span><span class="hljs-selector-class">.vbird</span>.<br><br>www<span class="hljs-selector-class">.centos</span><span class="hljs-selector-class">.vbird</span>.       IN A <span class="hljs-number">192.168</span>.<span class="hljs-number">100.254</span><br>linux<span class="hljs-selector-class">.centos</span><span class="hljs-selector-class">.vbird</span>.     IN CNAME www<span class="hljs-selector-class">.centos</span><span class="hljs-selector-class">.vbird</span><br>ftp<span class="hljs-selector-class">.centos</span><span class="hljs-selector-class">.vbird</span>.       IN CNAME www<span class="hljs-selector-class">.centos</span><span class="hljs-selector-class">.vbird</span><br>forum<span class="hljs-selector-class">.centos</span><span class="hljs-selector-class">.vbird</span>.     IN CNAME www<span class="hljs-selector-class">.centos</span><span class="hljs-selector-class">.vbird</span><br><br>slave<span class="hljs-selector-class">.centos</span><span class="hljs-selector-class">.vbird</span>.           IN A <span class="hljs-number">192.168</span>.<span class="hljs-number">100.10</span><br>clientlinux<span class="hljs-selector-class">.centos</span><span class="hljs-selector-class">.vbird</span>.     IN A <span class="hljs-number">192.168</span>.<span class="hljs-number">100.10</span><br>workstation<span class="hljs-selector-class">.centos</span><span class="hljs-selector-class">.vbird</span>.     IN A <span class="hljs-number">192.168</span>.<span class="hljs-number">1.101</span><br>winxp<span class="hljs-selector-class">.centos</span><span class="hljs-selector-class">.vbird</span>.           IN A <span class="hljs-number">192.168</span>.<span class="hljs-number">100.20</span><br>win7                          IN A <span class="hljs-number">192.168</span>.<span class="hljs-number">100.30</span><br></code></pre></td></tr></table></figure>
+<p>(注意一行一个记录)</p>
+<p>若域名后没有加上 <code>.</code>, 则会默认加上 <code>zone + .</code></p>
+<h3 id="反解文件设置"><a href="#反解文件设置" class="headerlink" title="反解文件设置"></a>反解文件设置</h3><p>至少设置 TTL, SOA, NS, PTR:</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs stylus"><span class="hljs-variable">$TTL</span>    <span class="hljs-number">600</span><br>@       IN  SOA master<span class="hljs-selector-class">.centos</span><span class="hljs-selector-class">.vbird</span>. vbird<span class="hljs-selector-class">.www</span><span class="hljs-selector-class">.centos</span><span class="hljs-selector-class">.vbird</span>. (<span class="hljs-number">2011080401</span> <span class="hljs-number">3</span>H <span class="hljs-number">15</span>M <span class="hljs-number">1</span>W <span class="hljs-number">1</span>D)<br>@       IN NS   master<span class="hljs-selector-class">.centos</span><span class="hljs-selector-class">.vbird</span>.<br><br><span class="hljs-number">254</span>     IN PTR  master<span class="hljs-selector-class">.centos</span><span class="hljs-selector-class">.vbird</span>.<br><span class="hljs-number">254</span>     IN PTR  www<span class="hljs-selector-class">.centos</span>.vbirt<br></code></pre></td></tr></table></figure>
+<p>因为 zone 为 <code>100.168.192.in-addr.arpa</code>, 因此这里写 <code>254</code> 就相当于 <code>254.100.168.192.in-addr.arpa.</code></p>
+<h2 id="Slave-DNS-和子域授权设定"><a href="#Slave-DNS-和子域授权设定" class="headerlink" title="Slave DNS 和子域授权设定"></a>Slave DNS 和子域授权设定</h2><h1 id="第20章-WWW-服务器"><a href="#第20章-WWW-服务器" class="headerlink" title="第20章 WWW 服务器"></a>第20章 WWW 服务器</h1><p>用 SSL 加密通信时, 服务端会传送公钥用于客户端加密. 客户端将数据传送给服务端后, 服务端会用私钥解密.</p>
 <p>服务端需要有 CA 证书才能发放密钥对.</p>
 <h2 id="Apache"><a href="#Apache" class="headerlink" title="Apache"></a>Apache</h2><blockquote>
 <p>配置文件</p>
