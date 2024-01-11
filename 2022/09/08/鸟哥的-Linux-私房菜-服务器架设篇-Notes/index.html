@@ -26,7 +26,7 @@
 <meta property="og:image" content="http://example.com/img/traceroute_usage.png">
 <meta property="og:image" content="http://example.com/img/domain-name-and-hostname.png">
 <meta property="article:published_time" content="2022-09-08T03:22:09.000Z">
-<meta property="article:modified_time" content="2024-01-10T05:53:37.862Z">
+<meta property="article:modified_time" content="2024-01-11T08:30:13.874Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/traceroute_usage.png">
@@ -249,7 +249,7 @@
         
         
         
-          141 分钟
+          143 分钟
         
       </span>
     
@@ -769,7 +769,7 @@
 <figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs abnf">options &#123;<br>    listen-on port <span class="hljs-number">53</span> &#123; any<span class="hljs-comment">; &#125;; // 监听哪一个网络接口, 这里是 any</span><br>    directory <span class="hljs-string">&quot;/var/named&quot;</span><span class="hljs-comment">;     // zone file 存放的位置</span><br>    dump-file <span class="hljs-string">&quot;/var/named/data/cache_dump.db&quot;</span><span class="hljs-comment">;</span><br>    statistics-file <span class="hljs-string">&quot;/var/named/data/named_stats.txt&quot;</span><span class="hljs-comment">;</span><br>    memstatistics-file <span class="hljs-string">&quot;/var/named/data/named_mem_stats.txt&quot;</span><span class="hljs-comment">;</span><br>    allow-query &#123; any<span class="hljs-comment">; &#125;;       // 哪些客户端可进行查询</span><br>    recursion yes<span class="hljs-comment">; </span><br>    forward only<span class="hljs-comment">;               // 设置为 cache only</span><br>    forwarders &#123;                // 转交给哪些 DNS 服务器<br>        <span class="hljs-number">168.95</span>.<span class="hljs-number">1.1</span><span class="hljs-comment">;</span><br>        <span class="hljs-number">139.175</span>.<span class="hljs-number">10.20</span><span class="hljs-comment">;</span><br>    &#125;<span class="hljs-comment">;</span><br>&#125;<span class="hljs-comment">;</span><br></code></pre></td></tr></table></figure>
 
 <p><code>named</code> 服务的日志保存在 <code>/var/log/messages</code> 文件中.</p>
-<h2 id="正解文件"><a href="#正解文件" class="headerlink" title="正解文件"></a>正解文件</h2><p>正解的 zone 常包括:</p>
+<h2 id="正解文件的-RR-数据"><a href="#正解文件的-RR-数据" class="headerlink" title="正解文件的 RR 数据"></a>正解文件的 RR 数据</h2><p>正解的 zone 常包括:</p>
 <ul>
 <li>RR (Resource Record) 资源记录, 这是一种格式(标志), 如:<figure class="highlight dns"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs dns">[domain]  <span class="hljs-keyword">IN</span> [[RR type] [RR data]]<br>主机名.   <span class="hljs-keyword">IN</span>  <span class="hljs-keyword">A</span>      IPv4地址<br>主机名.   <span class="hljs-keyword">IN</span>  <span class="hljs-keyword">AAAA</span>   IPv6地址<br>领域名.   <span class="hljs-keyword">IN</span>  <span class="hljs-keyword">NS</span>     管理这个领域名的服务器主机名字.<br>领域名.   <span class="hljs-keyword">IN</span>  <span class="hljs-keyword">SOA</span>    管理这个领域名的七个重要参数<br>领域名.   <span class="hljs-keyword">IN</span>  <span class="hljs-keyword">MX</span>     顺序数字 接收邮件的服务器主机名字<br>主机别名. <span class="hljs-keyword">IN</span>  <span class="hljs-keyword">CNAME</span>  实际代表这个主机别名的主机名字.<br></code></pre></td></tr></table></figure></li>
 </ul>
@@ -783,9 +783,15 @@
 <ul>
 <li>Master DNS 服务器主机名</li>
 <li>管理员的 email</li>
-<li>序号 (Serial)</li>
+<li>序号 (Serial), 越大表示数据库越新</li>
+<li>更新频率 (Refresh)</li>
+<li>失败重新尝试时间 (Retry)</li>
+<li>失效时间 (Expire)</li>
+<li>快取时间 (Minimum TTL)</li>
 </ul>
-<p><code>MX</code></p>
+<p><code>CNAME</code> 标志用于设置主机别名 (alias).</p>
+<p><code>MX</code>, 用于查询某领域名的邮件服务器主机名.</p>
+<h2 id="反解文件记录的-RR-数据"><a href="#反解文件记录的-RR-数据" class="headerlink" title="反解文件记录的 RR 数据"></a>反解文件记录的 RR 数据</h2><p>反解时的 zone 中 IP 反写的原因: 对于域名的解析, 如 <code>www.ksu.edu.tw</code> 越右边的网域越大, 因此查询是从右往左, 但是 IP 如 <code>120.114.100.101</code> 是越左边网域越大(此时就需要从左往右查询), 因此将 IP 反写(结尾加上 <code>.in-addr.arpa.</code>), 就可以设置为从右往左查询.</p>
 <h1 id="第20章-WWW-服务器"><a href="#第20章-WWW-服务器" class="headerlink" title="第20章 WWW 服务器"></a>第20章 WWW 服务器</h1><p>用 SSL 加密通信时, 服务端会传送公钥用于客户端加密. 客户端将数据传送给服务端后, 服务端会用私钥解密.</p>
 <p>服务端需要有 CA 证书才能发放密钥对.</p>
 <h2 id="Apache"><a href="#Apache" class="headerlink" title="Apache"></a>Apache</h2><blockquote>
