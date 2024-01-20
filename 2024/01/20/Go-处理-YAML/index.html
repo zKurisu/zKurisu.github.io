@@ -24,7 +24,7 @@
 <meta property="og:description" content="pkg.go.dev 中 yaml 文档 使用 gopkg.in&#x2F;yaml.v3 模块. 安装1go get gopkg.in&#x2F;yaml.v3  使用主要是一些函数接口的使用. MarshalMarshal 意为 “序列化”, 表示将数据对象转换为特定格式的过程. 在这里, yaml.Marshal() 将 Go 的数据结构转化为 YAML 格式. 函数签名为: 1func Marshal(in">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2024-01-20T05:30:17.000Z">
-<meta property="article:modified_time" content="2024-01-20T12:35:39.040Z">
+<meta property="article:modified_time" content="2024-01-20T13:05:46.178Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          392 字
+          1.2k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          4 分钟
+          10 分钟
         
       </span>
     
@@ -304,10 +304,22 @@
 
 <p>flag 可以是:</p>
 <ul>
-<li><code>omitempty</code></li>
+<li><code>omitempty</code>, 非空</li>
 <li><code>flow</code></li>
-<li><code>inline</code></li>
+<li><code>inline</code><br>(flag 决定 field 在一些场景下的 key 的取舍)</li>
 </ul>
+<p>示例:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> T <span class="hljs-keyword">struct</span> &#123;<br>    F <span class="hljs-type">int</span> <span class="hljs-string">`yaml:&quot;a,omitempty&quot;`</span><br>    B <span class="hljs-type">int</span><br>&#125;<br>yaml.Marshal(&amp;T&#123;B: <span class="hljs-number">2</span>&#125;)<br>yaml.Marshal(&amp;T&#123;F: <span class="hljs-number">1</span>&#125;&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="Unmarshal"><a href="#Unmarshal" class="headerlink" title="Unmarshal"></a>Unmarshal</h2><p>将序列化的数据转换为原始的数据对象.</p>
+<p>函数签名为:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Unmarshal</span><span class="hljs-params">(in []<span class="hljs-type">byte</span>, out <span class="hljs-keyword">interface</span>&#123;&#125;)</span></span> (err <span class="hljs-type">error</span>)<br></code></pre></td></tr></table></figure>
+
+<p>示例:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> T <span class="hljs-keyword">struct</span> &#123;<br>    F <span class="hljs-type">int</span> <span class="hljs-string">`yaml:&quot;a,omitempty&quot;`</span><br>    B <span class="hljs-type">int</span><br>&#125;<br><span class="hljs-keyword">var</span> t T<br>yaml.Unmarshal([]<span class="hljs-type">byte</span>(<span class="hljs-string">&quot;a: 1\nb: 2&quot;</span>), &amp;t)<br></code></pre></td></tr></table></figure>
+
+<h1 id="实例"><a href="#实例" class="headerlink" title="实例"></a>实例</h1><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-keyword">import</span> (<br>	<span class="hljs-string">&quot;fmt&quot;</span><br>	<span class="hljs-string">&quot;gopkg.in/yaml.v3&quot;</span><br>	<span class="hljs-string">&quot;log&quot;</span><br>)<br><br><span class="hljs-keyword">type</span> Person <span class="hljs-keyword">struct</span> &#123;<br>	Name <span class="hljs-type">string</span> <span class="hljs-string">`yaml:&quot;name&quot;`</span><br>	Age  <span class="hljs-type">int</span>    <span class="hljs-string">`yaml:&quot;age&quot;`</span><br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	<span class="hljs-keyword">var</span> p Person<br>	data := []<span class="hljs-type">byte</span>(<span class="hljs-string">`</span><br><span class="hljs-string">    name: John Doe</span><br><span class="hljs-string">    age: 30</span><br><span class="hljs-string">    `</span>)<br><br>	err := yaml.Unmarshal(data, &amp;p)<br>	<span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>		log.Fatalf(<span class="hljs-string">&quot;error: %v&quot;</span>, err)<br>	&#125;<br>	fmt.Printf(<span class="hljs-string">&quot;--- t:\n%v\n\n&quot;</span>, p)<br>&#125;<br></code></pre></td></tr></table></figure>
+
 
                 
               </div>
