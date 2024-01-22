@@ -16,15 +16,15 @@
   <meta name="author" content="John Doe">
   <meta name="keywords" content="">
   
-    <meta name="description" content="便利目录用 filepath.Walk() 函数, 其函数签名为: 1func Walk(root string, walkFn WalkFunc) error  root 指要遍历的目录. WalkFunc 会对每个访问到的文件&#x2F;目录做处理, 其定义需为: 1type WalkFunc func(path string, info os.FileInfo, err error) err">
+    <meta name="description" content="正则匹配使用标准库中的 regexp, 需要先编译正则表达式, 然后再使用. 编译用 regexp.Compile() 或 regexp.MustCompile(), 后者在编译失败时会引发 panic. 1pattern :&#x3D; regexp.MustCompile(&#96;\d+&#96;)  匹配用 pattern.MatchString(str) 或 FindString(), FindAllString">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Go-技巧积累">
 <meta property="og:url" content="http://example.com/2023/10/04/Go-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="便利目录用 filepath.Walk() 函数, 其函数签名为: 1func Walk(root string, walkFn WalkFunc) error  root 指要遍历的目录. WalkFunc 会对每个访问到的文件&#x2F;目录做处理, 其定义需为: 1type WalkFunc func(path string, info os.FileInfo, err error) err">
+<meta property="og:description" content="正则匹配使用标准库中的 regexp, 需要先编译正则表达式, 然后再使用. 编译用 regexp.Compile() 或 regexp.MustCompile(), 后者在编译失败时会引发 panic. 1pattern :&#x3D; regexp.MustCompile(&#96;\d+&#96;)  匹配用 pattern.MatchString(str) 或 FindString(), FindAllString">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-10-04T00:25:58.000Z">
-<meta property="article:modified_time" content="2024-01-21T08:09:13.444Z">
+<meta property="article:modified_time" content="2024-01-22T07:37:59.881Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.3k 字
+          2.1k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          11 分钟
+          18 分钟
         
       </span>
     
@@ -289,7 +289,21 @@
             
               <div class="markdown-body">
                 
-                <h1 id="便利目录"><a href="#便利目录" class="headerlink" title="便利目录"></a>便利目录</h1><p>用 <code>filepath.Walk()</code> 函数, 其函数签名为:</p>
+                <h1 id="正则匹配"><a href="#正则匹配" class="headerlink" title="正则匹配"></a>正则匹配</h1><p>使用标准库中的 <code>regexp</code>, 需要先编译正则表达式, 然后再使用.</p>
+<p>编译用 <code>regexp.Compile()</code> 或 <code>regexp.MustCompile()</code>, 后者在编译失败时会引发 panic.</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go">pattern := regexp.MustCompile(<span class="hljs-string">`\d+`</span>)<br></code></pre></td></tr></table></figure>
+
+<p>匹配用 <code>pattern.MatchString(str)</code> 或 <code>FindString()</code>, <code>FindAllString()</code> :</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go">matchedString := pattern.FindString(str)<br></code></pre></td></tr></table></figure>
+
+<p>示例如:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-keyword">import</span> (<br>	<span class="hljs-string">&quot;fmt&quot;</span><br>	<span class="hljs-string">&quot;regexp&quot;</span><br>)<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	str := <span class="hljs-string">&quot;Hello, 123 World!&quot;</span><br>	pattern := regexp.MustCompile(<span class="hljs-string">`\d+`</span>)<br><br>	matched := pattern.MatchString(str)<br>	fmt.Println(<span class="hljs-string">&quot;Matched:&quot;</span>, matched)<br><br>	matchedString := pattern.FindString(str)<br>	fmt.Println(<span class="hljs-string">&quot;Matched String:&quot;</span>, matchedString)<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="忽略变量中的特殊字符"><a href="#忽略变量中的特殊字符" class="headerlink" title="忽略变量中的特殊字符"></a>忽略变量中的特殊字符</h2><p>用 <code>regexp.QuoteMeta()</code> 进行转义, 如:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-keyword">import</span> (<br>	<span class="hljs-string">&quot;fmt&quot;</span><br>	<span class="hljs-string">&quot;regexp&quot;</span><br>)<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	str := <span class="hljs-string">&quot;Hello (World)!&quot;</span><br>	pattern := regexp.QuoteMeta(<span class="hljs-string">&quot;Hello (World)!&quot;</span>)<br><br>	reg := regexp.MustCompile(pattern)<br>	matched := reg.MatchString(str)<br><br>	fmt.Println(<span class="hljs-string">&quot;Matched:&quot;</span>, matched)<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+<h1 id="遍历目录"><a href="#遍历目录" class="headerlink" title="遍历目录"></a>遍历目录</h1><p>用 <code>filepath.Walk()</code> 函数, 其函数签名为:</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Walk</span><span class="hljs-params">(root <span class="hljs-type">string</span>, walkFn WalkFunc)</span></span> <span class="hljs-type">error</span><br></code></pre></td></tr></table></figure>
 
 <p><code>root</code> 指要遍历的目录.</p>
