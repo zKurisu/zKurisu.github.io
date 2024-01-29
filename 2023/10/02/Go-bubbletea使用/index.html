@@ -25,7 +25,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/bubbletea-architecture.png">
 <meta property="article:published_time" content="2023-10-02T08:47:56.000Z">
-<meta property="article:modified_time" content="2024-01-29T05:14:52.394Z">
+<meta property="article:modified_time" content="2024-01-29T08:25:49.619Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/bubbletea-architecture.png">
@@ -237,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          4.4k 字
+          4.5k 字
         
       </span>
     
@@ -248,7 +248,7 @@
         
         
         
-          37 分钟
+          38 分钟
         
       </span>
     
@@ -310,12 +310,12 @@
 <p>主要方法</p>
 </blockquote>
 <ul>
-<li><code>Init</code>, 得到一个处理 I&#x2F;O 的可执行程序, 其返回的程序似乎会异步执行</li>
-<li><code>Update</code>, 处理事件以及更新 model</li>
-<li><code>View</code>, 根据 model 渲染 UI<br>(这三个似乎会被自动调用)</li>
+<li><code>Init() Cmd</code>, 最开始执行, 其返回的 Cmd 函数会返回 Msg 给 Update 使用(可能是异步执行)</li>
+<li><code>Update(msg) (Model,Cmd)</code>, 处理事件以及更新 model, 其返回的 Cmd 也会立即执行</li>
+<li><code>View() string</code>, 根据 model 渲染 UI<br>(这三个似乎会被自动调用)</li>
 </ul>
 <p>利用这三个方法分别处理不同的功能.</p>
-<p>运行逻辑: <code>Init()</code> 函数在一开始运行一次, 之后由 <code>Update()</code> 函数接管, 当 I&#x2F;O 发生时, <code>Update()</code> 函数会根据 <code>msg tea.Msg</code> 类型的值更新调用者的参数, 之后 <code>View()</code> 根据最新参数绘制出 UI.</p>
+<p>运行逻辑: <code>NewProgram</code> 先初始化一个 model, 用 <code>Run</code> 运行后, 这个 model 会自动调用 <code>Init()</code> 函数一次, 之后由 <code>Update()</code> 函数接管, 当 I&#x2F;O 发生时, <code>Update()</code> 函数会根据 <code>msg tea.Msg</code> 类型的值更新调用者的参数, 之后 <code>View()</code> 根据最新参数绘制出 UI.</p>
 <p>主函数调用一般为:</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>    p := tea.NewProgram(initialModel())<br>    <span class="hljs-keyword">if</span> _, err := p.Run(); err != <span class="hljs-literal">nil</span> &#123;<br>        fmt.Printf(<span class="hljs-string">&quot;Alas, there&#x27;s been an error: %v&quot;</span>, err)<br>        os.Exit(<span class="hljs-number">1</span>)<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>通过 <code>tea.NewProgram()</code> 其参数是一个变量, 来创建一个 program, 然后用 <code>p.Run()</code> 来运行.</p>
@@ -324,7 +324,7 @@
 </blockquote>
 <ul>
 <li><code>bubbletea.Msg</code>, I&#x2F;O 会被自动捕获并存储在这个类型中</li>
-<li><code>bubbletea.Model</code>, 在 <code>tea.NewProgram(YourModel)</code> 中传入的初始状态</li>
+<li><code>bubbletea.Model</code>, 指实现了 <code>Init</code>, <code>Update</code>, <code>View</code> 函数的类型 (一个 interface)</li>
 <li><code>bubbletea.Cmd</code>, 返回值为 Msg 类型的 function, 也就是说, 这个函数运行结束后会返回一个有用信息, 如 <code>tea.Quit</code> 会返回 <code>Msg</code> 且不接受参数</li>
 </ul>
 <blockquote>
