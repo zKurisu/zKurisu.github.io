@@ -24,7 +24,7 @@
 <meta property="og:description" content="Github Cobra 地址 下载和调用安装 lib: 1go get -u github.com&#x2F;spf13&#x2F;cobra@latest  调用: 1import &quot;github.com&#x2F;spf13&#x2F;cobra&quot;  安装 cli 工具: 1go install github.com&#x2F;spf13&#x2F;cobra-cli@latest 其会安装在 $GOPATH&#x2F;bin 之下. co">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2024-01-29T05:15:11.000Z">
-<meta property="article:modified_time" content="2024-02-01T04:09:18.230Z">
+<meta property="article:modified_time" content="2024-02-01T05:29:15.995Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          5.3k 字
+          5.8k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          44 分钟
+          49 分钟
         
       </span>
     
@@ -328,7 +328,7 @@
 <ul>
 <li><code>Use: string</code></li>
 <li><code>Short: string</code> </li>
-<li><code>Long: string</code> </li>
+<li><code>Long: string</code>, 调用 <code>xxx --help</code> 时先出现的描述文本</li>
 <li><code>Args: func(cmd *cobra.Command, args []string) error</code></li>
 <li><code>Run: func(cmd *cobra.Command, args []string)</code></li>
 <li><code>RunE: func(cmd *cobra.Command, args []string) error</code><br>这几个键值对.</li>
@@ -405,7 +405,31 @@
 <p>另一个例子:</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">var</span> cmd = &amp;cobra.Command&#123;<br>  Short: <span class="hljs-string">&quot;hello&quot;</span>,<br>  Args: <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(cmd *cobra.Command, args []<span class="hljs-type">string</span>)</span></span> <span class="hljs-type">error</span> &#123;<br>    <span class="hljs-comment">// Optionally run one of the validators provided by cobra</span><br>    <span class="hljs-keyword">if</span> err := cobra.MinimumNArgs(<span class="hljs-number">1</span>)(cmd, args); err != <span class="hljs-literal">nil</span> &#123;<br>        <span class="hljs-keyword">return</span> err<br>    &#125;<br>    <span class="hljs-comment">// Run the custom validation logic</span><br>    <span class="hljs-keyword">if</span> myapp.IsValidColor(args[<span class="hljs-number">0</span>]) &#123;<br>      <span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span><br>    &#125;<br>    <span class="hljs-keyword">return</span> fmt.Errorf(<span class="hljs-string">&quot;invalid color specified: %s&quot;</span>, args[<span class="hljs-number">0</span>])<br>  &#125;,<br>  Run: <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(cmd *cobra.Command, args []<span class="hljs-type">string</span>)</span></span> &#123;<br>    fmt.Println(<span class="hljs-string">&quot;Hello, World!&quot;</span>)<br>  &#125;,<br>&#125;<br></code></pre></td></tr></table></figure>
 
-<h2 id="Help-command"><a href="#Help-command" class="headerlink" title="Help command"></a>Help command</h2>
+<h2 id="Help-command"><a href="#Help-command" class="headerlink" title="Help command"></a>Help command</h2><p>Cobra 会自动为 sub-command 添加 help (文本自己加, 即 <code>Short</code> 定义的部分).</p>
+<p>如此时的命令为 <code>test</code>, 有一个 sub-command 为 <code>hello</code>, 则存在:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">test</span> --<span class="hljs-built_in">help</span><br><span class="hljs-built_in">test</span> hello --<span class="hljs-built_in">help</span><br></code></pre></td></tr></table></figure>
+<p>(也可以用 <code>-h</code>)</p>
+<h2 id="Usage-Message"><a href="#Usage-Message" class="headerlink" title="Usage Message"></a>Usage Message</h2><p>Cobra 自动提供有. 在使用未定义的 flag 时会触发.</p>
+<p>也可以自定义.</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs go">cmd.SetUsageFunc(f <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(*Command)</span></span> <span class="hljs-type">error</span>)<br>cmd.SetUsageTemplate(s <span class="hljs-type">string</span>)<br></code></pre></td></tr></table></figure>
+
+<h2 id="Version-Flag"><a href="#Version-Flag" class="headerlink" title="Version Flag"></a>Version Flag</h2><p>即 <code>--version</code> 的输出, 用:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go">cmd.SetVersionTemplate(s <span class="hljs-type">string</span>)<br></code></pre></td></tr></table></figure>
+<p>来设置.</p>
+<h2 id="Error-Message-Prefix"><a href="#Error-Message-Prefix" class="headerlink" title="Error Message Prefix"></a>Error Message Prefix</h2><p>报错时的前缀, 默认为:</p>
+<figure class="highlight avrasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs avrasm"><span class="hljs-symbol">Error:</span><br></code></pre></td></tr></table></figure>
+<p>可以用:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go">cmd.SetErrPrefix(s <span class="hljs-type">string</span>)<br></code></pre></td></tr></table></figure>
+<p>修改.</p>
+<h2 id="PreRun-and-PostRun-Hooks"><a href="#PreRun-and-PostRun-Hooks" class="headerlink" title="PreRun and PostRun Hooks"></a>PreRun and PostRun Hooks</h2><p>即运行在 <code>Run</code> 之前或者之后. 顺序如下:</p>
+<ul>
+<li><code>PersistentPreRun</code></li>
+<li><code>PreRun</code></li>
+<li><code>Run</code></li>
+<li><code>PostRun</code></li>
+<li><code>PersistentPostRun</code></li>
+</ul>
+<h2 id="Suggestions-when-“unknown-command”-happens"><a href="#Suggestions-when-“unknown-command”-happens" class="headerlink" title="Suggestions when “unknown command” happens"></a>Suggestions when “unknown command” happens</h2>
                 
               </div>
             
