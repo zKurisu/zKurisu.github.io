@@ -24,7 +24,7 @@
 <meta property="og:description" content="Godoc os 文档 以 []byte 形式读取文件用 func Open(name string) (*File, error) 和 func (f *File) Read(b []byte) (n int, err error) 函数. Open 函数会返回一个文件指针, 而 Read 函数可以将文件内容保存到一个 []byte 变量中: 1234567891011file, err :&#x3D;">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2024-02-11T03:30:23.000Z">
-<meta property="article:modified_time" content="2024-02-11T05:45:53.644Z">
+<meta property="article:modified_time" content="2024-02-11T08:57:55.623Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.3k 字
+          2.5k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          11 分钟
+          21 分钟
         
       </span>
     
@@ -313,29 +313,40 @@
 <p>示例:</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-keyword">import</span> (<br>	<span class="hljs-string">&quot;log&quot;</span><br>	<span class="hljs-string">&quot;os&quot;</span><br>)<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	f, err := os.CreateTemp(<span class="hljs-string">&quot;&quot;</span>, <span class="hljs-string">&quot;example&quot;</span>)<br>	<span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>		log.Fatal(err)<br>	&#125;<br>	<span class="hljs-keyword">defer</span> os.Remove(f.Name()) <span class="hljs-comment">// clean up</span><br><br>	<span class="hljs-keyword">if</span> _, err := f.Write([]<span class="hljs-type">byte</span>(<span class="hljs-string">&quot;content&quot;</span>)); err != <span class="hljs-literal">nil</span> &#123;<br>		log.Fatal(err)<br>	&#125;<br>	<span class="hljs-keyword">if</span> err := f.Close(); err != <span class="hljs-literal">nil</span> &#123;<br>		log.Fatal(err)<br>	&#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 
+<h1 id="模拟字符串插值"><a href="#模拟字符串插值" class="headerlink" title="模拟字符串插值"></a>模拟字符串插值</h1><p>利用:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Expand</span><span class="hljs-params">(s <span class="hljs-type">string</span>, mapping <span class="hljs-keyword">func</span>(<span class="hljs-type">string</span>)</span></span> <span class="hljs-type">string</span>) <span class="hljs-type">string</span><br></code></pre></td></tr></table></figure>
+
+<p>如:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs go"><br><span class="hljs-keyword">import</span> (<br>	<span class="hljs-string">&quot;fmt&quot;</span><br>	<span class="hljs-string">&quot;os&quot;</span><br>)<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	mapper := <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(placeholderName <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">string</span> &#123;<br>		<span class="hljs-keyword">switch</span> placeholderName &#123;<br>		<span class="hljs-keyword">case</span> <span class="hljs-string">&quot;DAY_PART&quot;</span>:<br>			<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;morning&quot;</span><br>		<span class="hljs-keyword">case</span> <span class="hljs-string">&quot;NAME&quot;</span>:<br>			<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;Gopher&quot;</span><br>		&#125;<br><br>		<span class="hljs-keyword">return</span> <span class="hljs-string">&quot;&quot;</span><br>	&#125;<br><br>	fmt.Println(os.Expand(<span class="hljs-string">&quot;Good $&#123;DAY_PART&#125;, $NAME!&quot;</span>, mapper))<br><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h1 id="设置环境变量"><a href="#设置环境变量" class="headerlink" title="设置环境变量"></a>设置环境变量</h1><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Setenv</span><span class="hljs-params">(key, value <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">error</span><br></code></pre></td></tr></table></figure>
+
+<h1 id="获取环境变量"><a href="#获取环境变量" class="headerlink" title="获取环境变量"></a>获取环境变量</h1><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Getenv</span><span class="hljs-params">(key <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">string</span><br></code></pre></td></tr></table></figure>
 
 
+<h1 id="在字符串中展开环境变量"><a href="#在字符串中展开环境变量" class="headerlink" title="在字符串中展开环境变量"></a>在字符串中展开环境变量</h1><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">ExpandEnv</span><span class="hljs-params">(s <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">string</span><br></code></pre></td></tr></table></figure>
+<p>如:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-keyword">import</span> (<br>	<span class="hljs-string">&quot;fmt&quot;</span><br>	<span class="hljs-string">&quot;os&quot;</span><br>)<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	os.Setenv(<span class="hljs-string">&quot;NAME&quot;</span>, <span class="hljs-string">&quot;gopher&quot;</span>)<br>	os.Setenv(<span class="hljs-string">&quot;BURROW&quot;</span>, <span class="hljs-string">&quot;/usr/gopher&quot;</span>)<br><br>	fmt.Println(os.ExpandEnv(<span class="hljs-string">&quot;$NAME lives in $&#123;BURROW&#125;.&quot;</span>))<br><br>&#125;<br></code></pre></td></tr></table></figure>
 
+<h1 id="设置硬链接"><a href="#设置硬链接" class="headerlink" title="设置硬链接"></a>设置硬链接</h1><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Link</span><span class="hljs-params">(oldname, newname <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">error</span><br></code></pre></td></tr></table></figure>
 
+<h1 id="创建软链接"><a href="#创建软链接" class="headerlink" title="创建软链接"></a>创建软链接</h1><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Symlink</span><span class="hljs-params">(oldname, newname <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">error</span><br></code></pre></td></tr></table></figure>
 
+<h1 id="创建单个目录"><a href="#创建单个目录" class="headerlink" title="创建单个目录"></a>创建单个目录</h1><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Mkdir</span><span class="hljs-params">(name <span class="hljs-type">string</span>, perm FileMode)</span></span> <span class="hljs-type">error</span><br></code></pre></td></tr></table></figure>
 
+<h1 id="递归创建目录"><a href="#递归创建目录" class="headerlink" title="递归创建目录"></a>递归创建目录</h1><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">MkdirAll</span><span class="hljs-params">(path <span class="hljs-type">string</span>, perm FileMode)</span></span> <span class="hljs-type">error</span><br></code></pre></td></tr></table></figure>
 
+<h1 id="创建临时目录"><a href="#创建临时目录" class="headerlink" title="创建临时目录"></a>创建临时目录</h1><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">MkdirTemp</span><span class="hljs-params">(dir, pattern <span class="hljs-type">string</span>)</span></span> (<span class="hljs-type">string</span>, <span class="hljs-type">error</span>)<br></code></pre></td></tr></table></figure>
 
+<h1 id="直接读取文件内容并以-byte-形式返回"><a href="#直接读取文件内容并以-byte-形式返回" class="headerlink" title="直接读取文件内容并以 []byte 形式返回"></a>直接读取文件内容并以 []byte 形式返回</h1><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">ReadFile</span><span class="hljs-params">(name <span class="hljs-type">string</span>)</span></span> ([]<span class="hljs-type">byte</span>, <span class="hljs-type">error</span>)<br></code></pre></td></tr></table></figure>
 
+<h1 id="删除文件或空目录"><a href="#删除文件或空目录" class="headerlink" title="删除文件或空目录"></a>删除文件或空目录</h1><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Remove</span><span class="hljs-params">(name <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">error</span><br></code></pre></td></tr></table></figure>
 
+<h1 id="递归删除目录及其下内容"><a href="#递归删除目录及其下内容" class="headerlink" title="递归删除目录及其下内容"></a>递归删除目录及其下内容</h1><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">RemoveAll</span><span class="hljs-params">(path <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">error</span><br></code></pre></td></tr></table></figure>
 
+<h1 id="重命名文件"><a href="#重命名文件" class="headerlink" title="重命名文件"></a>重命名文件</h1><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Rename</span><span class="hljs-params">(oldpath, newpath <span class="hljs-type">string</span>)</span></span> <span class="hljs-type">error</span><br></code></pre></td></tr></table></figure>
 
-
-
-
-
-
-
-
-
-
-
-
+<h1 id=""><a href="#" class="headerlink" title=""></a></h1>
                 
               </div>
             
