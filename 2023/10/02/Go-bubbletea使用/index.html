@@ -25,7 +25,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/bubbletea-architecture.png">
 <meta property="article:published_time" content="2023-10-02T08:47:56.000Z">
-<meta property="article:modified_time" content="2024-02-08T03:22:15.995Z">
+<meta property="article:modified_time" content="2024-02-14T01:53:27.891Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/bubbletea-architecture.png">
@@ -237,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          6k 字
+          6.7k 字
         
       </span>
     
@@ -248,7 +248,7 @@
         
         
         
-          50 分钟
+          57 分钟
         
       </span>
     
@@ -382,7 +382,24 @@
 <p>If less than 1, the default value of 60 will be used. If over 120, the FPS will be capped at 120.</p>
 <h4 id="设置-filter"><a href="#设置-filter" class="headerlink" title="设置 filter"></a>设置 filter</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">WithFilter</span><span class="hljs-params">(filter <span class="hljs-keyword">func</span>(Model, Msg)</span></span> Msg) ProgramOption<br></code></pre></td></tr></table></figure>
 <p>其返回的 <code>tea.Msg</code> 替代原来的 Msg 给 bubble tea process 使用 (对原来的 Msg 进行处理), 但如果其返回的是 <code>nil</code>, 则会被忽略.</p>
-<h1 id="技巧积累"><a href="#技巧积累" class="headerlink" title="技巧积累"></a>技巧积累</h1><h2 id="函数声明"><a href="#函数声明" class="headerlink" title="函数声明"></a>函数声明</h2><p><code>Init</code>, <code>Update</code> 和 <code>View</code> 函数的声明是固定的.</p>
+<h1 id="技巧积累"><a href="#技巧积累" class="headerlink" title="技巧积累"></a>技巧积累</h1><h2 id="处理鼠标点击"><a href="#处理鼠标点击" class="headerlink" title="处理鼠标点击"></a>处理鼠标点击</h2><p>有五个相关的类型, 以及一些处理函数.</p>
+<h3 id="type-MouseAction"><a href="#type-MouseAction" class="headerlink" title="type MouseAction"></a>type MouseAction</h3><p>本质是 <code>int</code> 类型:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> MouseAction <span class="hljs-type">int</span><br></code></pre></td></tr></table></figure>
+<p>预定义有:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">const</span> (<br>	MouseActionPress MouseAction = <span class="hljs-literal">iota</span><br>	MouseActionRelease<br>	MouseActionMotion<br>)<br></code></pre></td></tr></table></figure>
+
+<h3 id="type-MouseButton"><a href="#type-MouseButton" class="headerlink" title="type MouseButton"></a>type MouseButton</h3><p>本质也是 <code>int</code> 类型:</p>
+<p>预定义有:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">const</span> (<br>	MouseButtonNone MouseButton = <span class="hljs-literal">iota</span><br>	MouseButtonLeft<br>	MouseButtonMiddle<br>	MouseButtonRight<br>	MouseButtonWheelUp<br>	MouseButtonWheelDown<br>	MouseButtonWheelLeft<br>	MouseButtonWheelRight<br>	MouseButtonBackward<br>	MouseButtonForward<br>	MouseButton10<br>	MouseButton11<br>)<br></code></pre></td></tr></table></figure>
+
+<h3 id="type-MouseEvent"><a href="#type-MouseEvent" class="headerlink" title="type MouseEvent"></a>type MouseEvent</h3><p>一个包含前两个类型的结构体:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> MouseEvent <span class="hljs-keyword">struct</span> &#123;<br>	X      <span class="hljs-type">int</span><br>	Y      <span class="hljs-type">int</span><br>	Shift  <span class="hljs-type">bool</span><br>	Alt    <span class="hljs-type">bool</span><br>	Ctrl   <span class="hljs-type">bool</span><br>	Action MouseAction<br>	Button MouseButton<br><br>	<span class="hljs-comment">// Deprecated: Use MouseAction &amp; MouseButton instead.</span><br>	Type MouseEventType<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="IsWheel-判断是否有鼠标滚动"><a href="#IsWheel-判断是否有鼠标滚动" class="headerlink" title="IsWheel 判断是否有鼠标滚动"></a>IsWheel 判断是否有鼠标滚动</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(m MouseEvent)</span></span> IsWheel() <span class="hljs-type">bool</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="String-返回表示鼠标事件的字符串"><a href="#String-返回表示鼠标事件的字符串" class="headerlink" title="String 返回表示鼠标事件的字符串"></a>String 返回表示鼠标事件的字符串</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(m MouseEvent)</span></span> String() (s <span class="hljs-type">string</span>)<br></code></pre></td></tr></table></figure>
+
+<h3 id="type-MouseMsg"><a href="#type-MouseMsg" class="headerlink" title="type MouseMsg"></a>type MouseMsg</h3><h2 id="函数声明"><a href="#函数声明" class="headerlink" title="函数声明"></a>函数声明</h2><p><code>Init</code>, <code>Update</code> 和 <code>View</code> 函数的声明是固定的.</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(m model)</span></span> Init() tea.Cmd &#123; <br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(m model)</span></span> Update(msg tea.Msg) (tea.Model, tea.Cmd) &#123;<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(m model)</span></span> View() <span class="hljs-type">string</span> &#123;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>似乎只有 <code>Update</code> 中才会使用 <code>msg tea.Msg</code> 变量的信息.</p>
 <p><code>Update</code> 所返回的 <code>Cmd</code> 是会运行的.</p>
