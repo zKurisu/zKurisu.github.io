@@ -24,7 +24,7 @@
 <meta property="og:description" content="参考 Archwiki 安装1sudo pacman -S networkmanager  主要两个工具:  nmcli, 命令行 nmtui, curses 界面  服务进程可用: 1sudo systemctl start NetworkManager.service  nmcli 语法和逻辑语法: 123nmcli [OPTIONS...] &amp;#123;help | general | ne">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2024-01-12T04:50:35.000Z">
-<meta property="article:modified_time" content="2024-03-02T05:46:50.609Z">
+<meta property="article:modified_time" content="2024-03-02T06:46:35.926Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          848 字
+          1.3k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          8 分钟
+          11 分钟
         
       </span>
     
@@ -316,7 +316,7 @@
 <blockquote>
 <p>连接 (connection)</p>
 </blockquote>
-<p>在 NetworkManager 中, 一个连接是指与网络相关的配置信息的集合, 它描述了如何与一个网络进行通信. 一个连接可以是有线连接, 无线连接, VPN 连接.</p>
+<p>在 NetworkManager 中, 一个连接是指与网络相关的配置信息的集合, 它描述了如何与一个网络进行通信. 一个连接可以是有线连接, 无线连接, VPN 连接. (相当于就是保存了一堆配置)</p>
 <p>一个连接包含:</p>
 <ul>
 <li>连接类型 (Connection Type), 如 <code>wifi</code>, <code>ethernet</code>, <code>vpn</code></li>
@@ -324,8 +324,22 @@
 <li>连接设置 (Connection Setting)</li>
 <li>连接状态 (Connection State)</li>
 </ul>
-<h1 id="nmcli-常用示例"><a href="#nmcli-常用示例" class="headerlink" title="nmcli 常用示例"></a>nmcli 常用示例</h1><h2 id="重新读取配置"><a href="#重新读取配置" class="headerlink" title="重新读取配置"></a>重新读取配置</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">nmcli connection reload<br></code></pre></td></tr></table></figure>
+<p>一个 <code>device</code> 可以有多个 connection 配置, 但在同一时间, 只能有一个 active connection.</p>
+<h2 id="nmcli-device"><a href="#nmcli-device" class="headerlink" title="nmcli device"></a>nmcli device</h2><h3 id="查看设备状态"><a href="#查看设备状态" class="headerlink" title="查看设备状态"></a>查看设备状态</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">nmcli dev[vice] [status]<br></code></pre></td></tr></table></figure>
+<p>(<code>[]</code> 里的都是可选)</p>
+<h3 id="断开一个设备的连接"><a href="#断开一个设备的连接" class="headerlink" title="断开一个设备的连接"></a>断开一个设备的连接</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">nmcli device disconnect enp7s0<br></code></pre></td></tr></table></figure>
+<p>(注意只是断开这个 connection 的连接, 也就是网卡和这个配置文件之间断开, 而不是 down 掉设备)</p>
+<h3 id="将一个设备设置为连接状态"><a href="#将一个设备设置为连接状态" class="headerlink" title="将一个设备设置为连接状态"></a>将一个设备设置为连接状态</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">nmcli device connect enp7s0<br></code></pre></td></tr></table></figure>
+<p>(这里相当于恢复了 enp7s0 和其配置文件的连接)</p>
+<h2 id="nmcli-connection"><a href="#nmcli-connection" class="headerlink" title="nmcli connection"></a>nmcli connection</h2><h3 id="查看配置文件的状态"><a href="#查看配置文件的状态" class="headerlink" title="查看配置文件的状态"></a>查看配置文件的状态</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">nmcli connection [show]<br></code></pre></td></tr></table></figure>
 
+<h3 id="激活一个配置文件"><a href="#激活一个配置文件" class="headerlink" title="激活一个配置文件"></a>激活一个配置文件</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">nmcli connection up con_name<br></code></pre></td></tr></table></figure>
+
+<h3 id="Deactivate-一个配置文件"><a href="#Deactivate-一个配置文件" class="headerlink" title="Deactivate 一个配置文件"></a>Deactivate 一个配置文件</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">nmcli connection down con_name<br></code></pre></td></tr></table></figure>
+
+<h3 id="修改配置-添加或删除项"><a href="#修改配置-添加或删除项" class="headerlink" title="修改配置, 添加或删除项"></a>修改配置, 添加或删除项</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">nmcli con modify con_name +ipv4.addresses 172.16.8.10/24<br></code></pre></td></tr></table></figure>
+<p>用 <code>+</code> 来添加, 用 <code>-</code> 删除.</p>
+<h1 id="nmcli-常用示例"><a href="#nmcli-常用示例" class="headerlink" title="nmcli 常用示例"></a>nmcli 常用示例</h1><h2 id="重新读取配置"><a href="#重新读取配置" class="headerlink" title="重新读取配置"></a>重新读取配置</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">nmcli connection reload<br></code></pre></td></tr></table></figure>
 
 <h2 id="显示附近-Wi-Fi-列表"><a href="#显示附近-Wi-Fi-列表" class="headerlink" title="显示附近 Wi-Fi 列表"></a>显示附近 Wi-Fi 列表</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">nmcli device wifi list<br></code></pre></td></tr></table></figure>
 
