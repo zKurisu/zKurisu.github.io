@@ -29,7 +29,7 @@
 <meta property="og:image" content="http://example.com/img/file_structure.png">
 <meta property="og:image" content="http://example.com/img/prefix_of_location_block.png">
 <meta property="article:published_time" content="2022-08-28T11:57:08.000Z">
-<meta property="article:modified_time" content="2024-03-03T05:54:43.240Z">
+<meta property="article:modified_time" content="2024-03-03T06:30:53.897Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/nginx-master-slave-work-mode.png">
@@ -241,7 +241,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          6.8k 字
+          7.7k 字
         
       </span>
     
@@ -252,7 +252,7 @@
         
         
         
-          57 分钟
+          65 分钟
         
       </span>
     
@@ -364,9 +364,17 @@
 <p>在 <code>nginx -s reload</code> 之后, 若配置文件正确, 其会创建一个新的 worker processes 然后向 old worker processes 发送信号, 要求其关闭, 但它不会立即关闭, 其会 stop accepting new connections and continue to service current requests until all such requests are serviced.</p>
 <p>nginx master process 的 PID 记录在 <code>/usr/local/nginx/logs/</code> 或 <code>/var/run/</code> 下的 <code>nginx.pid</code> 文件中. 可以使用 kill 命令和 nginx 交互.</p>
 <p>和 control 相关的 <a target="_blank" rel="noopener" href="http://nginx.org/en/docs/control.html">网站</a></p>
-<h2 id="负载均衡示例"><a href="#负载均衡示例" class="headerlink" title="负载均衡示例"></a>负载均衡示例</h2><p>用 <code>upstream</code> 关键字:</p>
+<h2 id="虚拟主机示例"><a href="#虚拟主机示例" class="headerlink" title="虚拟主机示例"></a>虚拟主机示例</h2><p>用 <code>server</code> 关键字:</p>
+<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs abnf">server &#123; <br>    listen <span class="hljs-number">81</span><span class="hljs-comment">;</span><br>    server_name localhost<span class="hljs-comment">;</span><br>    root /var/www/html/nginx1<span class="hljs-comment">;</span><br>    index index.html<span class="hljs-comment">;</span><br>&#125;<br><br>server &#123; <br>    listen <span class="hljs-number">82</span><span class="hljs-comment">;</span><br>    server_name localhost<span class="hljs-comment">;</span><br>    root /var/www/html/nginx2<span class="hljs-comment">;</span><br>    index index.html<span class="hljs-comment">;</span><br>&#125;<br><br>server &#123; <br>    listen <span class="hljs-number">83</span><span class="hljs-comment">;</span><br>    server_name localhost<span class="hljs-comment">;</span><br>    root /var/www/html/nginx3<span class="hljs-comment">;</span><br>    index index.html<span class="hljs-comment">;</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="轮询示例"><a href="#轮询示例" class="headerlink" title="轮询示例"></a>轮询示例</h2><p>用 <code>upstream</code> 关键字, 不添加 weight:</p>
 <figure class="highlight roboconf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs roboconf">upstream www.test.com &#123;<br>    <span class="hljs-attribute">server localhost</span>:81;<br>    <span class="hljs-attribute">server localhost</span>:82;<br>    <span class="hljs-attribute">server localhost</span>:83;<br>&#125;<br><br>server &#123;<br>    <span class="hljs-attribute">location / &#123;</span><br><span class="hljs-attribute">        proxy_pass http</span>://www<span class="hljs-variable">.test</span><span class="hljs-variable">.com</span>;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 
+<h2 id="权重轮询示例"><a href="#权重轮询示例" class="headerlink" title="权重轮询示例"></a>权重轮询示例</h2><figure class="highlight roboconf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs roboconf">upstream www.test.com &#123;<br>    <span class="hljs-attribute">server localhost</span>:81 weight=1;<br>    <span class="hljs-attribute">server localhost</span>:82 weight=2;<br>    <span class="hljs-attribute">server localhost</span>:83 weight=3;<br>&#125;<br><br>server &#123;<br>    <span class="hljs-attribute">location / &#123;</span><br><span class="hljs-attribute">        proxy_pass http</span>://www<span class="hljs-variable">.test</span><span class="hljs-variable">.com</span>;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="负载均衡备份示例"><a href="#负载均衡备份示例" class="headerlink" title="负载均衡备份示例"></a>负载均衡备份示例</h2><figure class="highlight roboconf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs roboconf">upstream www.test.com &#123;<br>    <span class="hljs-attribute">server localhost</span>:81 backup;<br>    <span class="hljs-attribute">server localhost</span>:82 weight=2;<br>    <span class="hljs-attribute">server localhost</span>:83 weight=3;<br>&#125;<br><br>server &#123;<br>    <span class="hljs-attribute">location / &#123;</span><br><span class="hljs-attribute">        proxy_pass http</span>://www<span class="hljs-variable">.test</span><span class="hljs-variable">.com</span>;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="负载均衡关闭-server-示例"><a href="#负载均衡关闭-server-示例" class="headerlink" title="负载均衡关闭 server 示例"></a>负载均衡关闭 server 示例</h2><figure class="highlight roboconf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs roboconf">upstream www.test.com &#123;<br>    <span class="hljs-attribute">server localhost</span>:81 backup;<br>    <span class="hljs-attribute">server localhost</span>:82 down;<br>    <span class="hljs-attribute">server localhost</span>:83 down;<br>&#125;<br><br>server &#123;<br>    <span class="hljs-attribute">location / &#123;</span><br><span class="hljs-attribute">        proxy_pass http</span>://www<span class="hljs-variable">.test</span><span class="hljs-variable">.com</span>;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <h1 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h1><h2 id="配置文件位置"><a href="#配置文件位置" class="headerlink" title="配置文件位置"></a>配置文件位置</h2><p>nginx 的配置文件为 <code>nginx.conf</code>, 路径为:</p>
 <ul>
