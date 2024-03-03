@@ -16,20 +16,23 @@
   <meta name="author" content="John Doe">
   <meta name="keywords" content="">
   
-    <meta name="description" content="中文文档 英文文档 官网相关教程和资料 参考书籍: &lt;&lt;Nginx 服务器架构初探&gt;&gt;, &lt;&lt;Nginx-高性能-Web-服务器详解&gt;&gt;, &lt;&lt;Nginx-高性能-Web-服务器实战教程&gt;&gt;, &lt;&lt;高性能 Linux 服务器 构建实战&gt;&gt; ArchWiki 上相关资料 谷歌找到的文档 知乎查询资料 一些">
+    <meta name="description" content="中文文档 英文文档 官网相关教程和资料 参考书籍: &lt;&lt;Nginx 服务器架构初探&gt;&gt;, &lt;&lt;Nginx-高性能-Web-服务器详解&gt;&gt;, &lt;&lt;Nginx-高性能-Web-服务器实战教程&gt;&gt;, &lt;&lt;高性能 Linux 服务器 构建实战&gt;&gt; ArchWiki 上相关资料 谷歌找到的文档 知乎查询资料 介绍">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Nginx 知识点">
 <meta property="og:url" content="http://example.com/2022/08/28/Nginx-%E7%9F%A5%E8%AF%86%E7%82%B9/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="中文文档 英文文档 官网相关教程和资料 参考书籍: &lt;&lt;Nginx 服务器架构初探&gt;&gt;, &lt;&lt;Nginx-高性能-Web-服务器详解&gt;&gt;, &lt;&lt;Nginx-高性能-Web-服务器实战教程&gt;&gt;, &lt;&lt;高性能 Linux 服务器 构建实战&gt;&gt; ArchWiki 上相关资料 谷歌找到的文档 知乎查询资料 一些">
+<meta property="og:description" content="中文文档 英文文档 官网相关教程和资料 参考书籍: &lt;&lt;Nginx 服务器架构初探&gt;&gt;, &lt;&lt;Nginx-高性能-Web-服务器详解&gt;&gt;, &lt;&lt;Nginx-高性能-Web-服务器实战教程&gt;&gt;, &lt;&lt;高性能 Linux 服务器 构建实战&gt;&gt; ArchWiki 上相关资料 谷歌找到的文档 知乎查询资料 介绍">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/nginx-master-slave-work-mode.png">
+<meta property="og:image" content="http://example.com/img/nginx-worker-preemption-mechanism.png">
+<meta property="og:image" content="http://example.com/img/nginx-async-not-block.png">
 <meta property="og:image" content="http://example.com/img/file_structure.png">
 <meta property="og:image" content="http://example.com/img/prefix_of_location_block.png">
 <meta property="article:published_time" content="2022-08-28T11:57:08.000Z">
-<meta property="article:modified_time" content="2022-11-28T03:06:44.723Z">
+<meta property="article:modified_time" content="2024-03-03T05:54:43.240Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="http://example.com/img/file_structure.png">
+<meta name="twitter:image" content="http://example.com/img/nginx-master-slave-work-mode.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -238,7 +241,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          6.5k 字
+          6.8k 字
         
       </span>
     
@@ -249,7 +252,7 @@
         
         
         
-          55 分钟
+          57 分钟
         
       </span>
     
@@ -299,26 +302,28 @@
 <p><a target="_blank" rel="noopener" href="https://wiki.archlinux.org/title/Nginx">ArchWiki 上相关资料</a></p>
 <p><a target="_blank" rel="noopener" href="https://www.digitalocean.com/community/tutorials/understanding-the-nginx-configuration-file-structure-and-configuration-contexts">谷歌找到的文档</a></p>
 <p><a target="_blank" rel="noopener" href="https://www.zhihu.com/question/502134901/answer/2598585626?utm_medium=social&utm_oi=1215946114580484096&utm_psn=1559612920740134912&utm_source=qq">知乎查询资料</a></p>
-<h1 id="一些理论概念"><a href="#一些理论概念" class="headerlink" title="一些理论概念"></a>一些理论概念</h1><h2 id="同步和异步，阻塞和非阻塞"><a href="#同步和异步，阻塞和非阻塞" class="headerlink" title="同步和异步，阻塞和非阻塞"></a>同步和异步，阻塞和非阻塞</h2><h3 id="同步和异步"><a href="#同步和异步" class="headerlink" title="同步和异步"></a>同步和异步</h3><ul>
-<li>同步, 当一个同步调用发出去后，调用者要一直等待调用的结果通知后，才能进行后续的执行</li>
-<li>异步，当一个异步调用发出去后，调用者不需要一直等待调用结果的返回，其想要获取调用结果一般采取两种方式<ol>
-<li>主动轮询异步调用结果</li>
-<li>被调用方通过 callback 来通知</li>
-</ol>
-</li>
-</ul>
-<h3 id="阻塞和非阻塞"><a href="#阻塞和非阻塞" class="headerlink" title="阻塞和非阻塞"></a>阻塞和非阻塞</h3><ul>
-<li>阻塞，调用在发出后，在消息返回前，当前线&#x2F;进程会被挂起，直到有消息返回，当前线&#x2F;进程才会被激活</li>
-<li>非阻塞，调用在发出去后，不会阻塞当前线&#x2F;进程，而会立即返回</li>
-</ul>
-<p>nginx 采用异步非阻塞方式工作。</p>
-<h3 id="epoll"><a href="#epoll" class="headerlink" title="epoll"></a>epoll</h3><p>当连接有 I&#x2F;O 产生时，epoll 就会告诉进程哪个连接有 I&#x2F;O 事件，然后进程就会去处理这个事件。其让 nginx 有高并发, 即同时处理多个连接.</p>
 <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>nginx (engine x) 是一个高性能的 HTTP 和反向代理服务器, 同时也提供 IMAP 和 SMTP 服务。其特点是占用内存少，并发能力强。</p>
+<p>关键特性:</p>
+<ul>
+<li>高并发</li>
+<li>内存占用低</li>
+<li>高扩展性</li>
+<li>高可靠性, 快速开启新 worker</li>
+</ul>
 <h2 id="工作模式"><a href="#工作模式" class="headerlink" title="工作模式"></a>工作模式</h2><p>两种工作模式.</p>
 <h3 id="master-worker-模式"><a href="#master-worker-模式" class="headerlink" title="master-worker 模式"></a>master-worker 模式</h3><p>有一个 master 进程和至少一个 worker 进程。</p>
-<p>master 进程负责处理系统信号，管理 worker 进程。</p>
+<p>master 进程负责处理系统信号，管理 worker 进程, 检查 Nginx 配置 等.</p>
 <p>worker 进程负责处理具体的业务逻辑。</p>
 <p>常用于生产环境。</p>
+<p><img src="/../img/nginx-master-slave-work-mode.png" srcset="/img/loading.gif" lazyload></p>
+<blockquote>
+<p>worker 的抢占机制</p>
+</blockquote>
+<p><img src="/../img/nginx-worker-preemption-mechanism.png" srcset="/img/loading.gif" lazyload></p>
+<blockquote>
+<p>Nginx 异步非阻塞事件处理机制</p>
+</blockquote>
+<p><img src="/../img/nginx-async-not-block.png" srcset="/img/loading.gif" lazyload></p>
 <h3 id="单进程模式"><a href="#单进程模式" class="headerlink" title="单进程模式"></a>单进程模式</h3><p>只有一个进程.</p>
 <p>方便使用 gdb 等工具进行调试。</p>
 <p>一般用于开发阶段和调试。</p>
@@ -359,6 +364,10 @@
 <p>在 <code>nginx -s reload</code> 之后, 若配置文件正确, 其会创建一个新的 worker processes 然后向 old worker processes 发送信号, 要求其关闭, 但它不会立即关闭, 其会 stop accepting new connections and continue to service current requests until all such requests are serviced.</p>
 <p>nginx master process 的 PID 记录在 <code>/usr/local/nginx/logs/</code> 或 <code>/var/run/</code> 下的 <code>nginx.pid</code> 文件中. 可以使用 kill 命令和 nginx 交互.</p>
 <p>和 control 相关的 <a target="_blank" rel="noopener" href="http://nginx.org/en/docs/control.html">网站</a></p>
+<h2 id="负载均衡示例"><a href="#负载均衡示例" class="headerlink" title="负载均衡示例"></a>负载均衡示例</h2><p>用 <code>upstream</code> 关键字:</p>
+<figure class="highlight roboconf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs roboconf">upstream www.test.com &#123;<br>    <span class="hljs-attribute">server localhost</span>:81;<br>    <span class="hljs-attribute">server localhost</span>:82;<br>    <span class="hljs-attribute">server localhost</span>:83;<br>&#125;<br><br>server &#123;<br>    <span class="hljs-attribute">location / &#123;</span><br><span class="hljs-attribute">        proxy_pass http</span>://www<span class="hljs-variable">.test</span><span class="hljs-variable">.com</span>;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
 <h1 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h1><h2 id="配置文件位置"><a href="#配置文件位置" class="headerlink" title="配置文件位置"></a>配置文件位置</h2><p>nginx 的配置文件为 <code>nginx.conf</code>, 路径为:</p>
 <ul>
 <li><code>/usr/local/nginx/conf</code></li>
@@ -469,6 +478,20 @@
 <li><code>|</code></li>
 <li><code>\d</code>, <code>\D</code>, <code>\w</code>, <code>\W</code><br>匹配模式是非贪婪的.</li>
 </ul>
+<h1 id="一些理论概念"><a href="#一些理论概念" class="headerlink" title="一些理论概念"></a>一些理论概念</h1><h2 id="同步和异步，阻塞和非阻塞"><a href="#同步和异步，阻塞和非阻塞" class="headerlink" title="同步和异步，阻塞和非阻塞"></a>同步和异步，阻塞和非阻塞</h2><h3 id="同步和异步"><a href="#同步和异步" class="headerlink" title="同步和异步"></a>同步和异步</h3><ul>
+<li>同步, 当一个同步调用发出去后，调用者要一直等待调用的结果通知后，才能进行后续的执行</li>
+<li>异步，当一个异步调用发出去后，调用者不需要一直等待调用结果的返回，其想要获取调用结果一般采取两种方式<ol>
+<li>主动轮询异步调用结果</li>
+<li>被调用方通过 callback 来通知</li>
+</ol>
+</li>
+</ul>
+<h3 id="阻塞和非阻塞"><a href="#阻塞和非阻塞" class="headerlink" title="阻塞和非阻塞"></a>阻塞和非阻塞</h3><ul>
+<li>阻塞，调用在发出后，在消息返回前，当前线&#x2F;进程会被挂起，直到有消息返回，当前线&#x2F;进程才会被激活</li>
+<li>非阻塞，调用在发出去后，不会阻塞当前线&#x2F;进程，而会立即返回</li>
+</ul>
+<p>nginx 采用异步非阻塞方式工作。</p>
+<h3 id="epoll"><a href="#epoll" class="headerlink" title="epoll"></a>epoll</h3><p>当连接有 I&#x2F;O 产生时，epoll 就会告诉进程哪个连接有 I&#x2F;O 事件，然后进程就会去处理这个事件。其让 nginx 有高并发, 即同时处理多个连接.</p>
 
                 
               </div>
