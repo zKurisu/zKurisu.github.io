@@ -16,25 +16,23 @@
   <meta name="author" content="John Doe">
   <meta name="keywords" content="">
   
-    <meta name="description" content="介绍NFS (Network File System), 一种用于在网络上共享文件的分布式文件系统, 适用于 Linux 与 Unix 之间的文件共享, 其只基于 IP 进行认证. NFS 会默认占用 2049 端口. 但是其启动的其他端口未知, 因此需要 RPC (Remote Procedure Call). 也可以说 NFS 是 RPC server 的一种. 注意 NFS 不能写入 &#x2F;et">
+    <meta name="description" content="设定概念autofs 不会在系统启动时立即挂载文件系统，而是在文件系统被访问时才进行挂载. (挂载到预设的目录下) 安装和启用12dnf -y install autofssystemctl enable --now autofs   配置主配置文件为 &#x2F;etc&#x2F;auto.master, 其内容示例: 1&#x2F;home&#x2F;nfsfile   &#x2F;etc&#x2F;auto.nfs   &#x2F;home&#x2F;nfsfile 为">
 <meta property="og:type" content="article">
-<meta property="og:title" content="NFS-服务搭建">
-<meta property="og:url" content="http://example.com/2024/03/03/NFS-%E6%9C%8D%E5%8A%A1%E6%90%AD%E5%BB%BA/index.html">
+<meta property="og:title" content="autofs-使用">
+<meta property="og:url" content="http://example.com/2024/03/03/autofs-%E4%BD%BF%E7%94%A8/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="介绍NFS (Network File System), 一种用于在网络上共享文件的分布式文件系统, 适用于 Linux 与 Unix 之间的文件共享, 其只基于 IP 进行认证. NFS 会默认占用 2049 端口. 但是其启动的其他端口未知, 因此需要 RPC (Remote Procedure Call). 也可以说 NFS 是 RPC server 的一种. 注意 NFS 不能写入 &#x2F;et">
+<meta property="og:description" content="设定概念autofs 不会在系统启动时立即挂载文件系统，而是在文件系统被访问时才进行挂载. (挂载到预设的目录下) 安装和启用12dnf -y install autofssystemctl enable --now autofs   配置主配置文件为 &#x2F;etc&#x2F;auto.master, 其内容示例: 1&#x2F;home&#x2F;nfsfile   &#x2F;etc&#x2F;auto.nfs   &#x2F;home&#x2F;nfsfile 为">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/img/how-rpc-work-with-nfs.png">
-<meta property="article:published_time" content="2024-03-03T08:08:25.000Z">
-<meta property="article:modified_time" content="2024-03-03T09:36:31.016Z">
+<meta property="article:published_time" content="2024-03-03T09:36:40.000Z">
+<meta property="article:modified_time" content="2024-03-03T09:47:43.102Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="http://example.com/img/how-rpc-work-with-nfs.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>NFS-服务搭建 - Hexo</title>
+  <title>autofs-使用 - Hexo</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -214,7 +212,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="NFS-服务搭建"></span>
+            <span id="subtitle" data-typed-text="autofs-使用"></span>
           
         </div>
 
@@ -225,7 +223,7 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2024-03-03 16:08" pubdate>
+        <time datetime="2024-03-03 17:36" pubdate>
           2024年3月3日 下午
         </time>
       </span>
@@ -237,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.6k 字
+          539 字
         
       </span>
     
@@ -248,7 +246,7 @@
         
         
         
-          22 分钟
+          5 分钟
         
       </span>
     
@@ -286,101 +284,26 @@
         <div id="board">
           <article class="post-content mx-auto">
             <!-- SEO header -->
-            <h1 style="display: none">NFS-服务搭建</h1>
+            <h1 style="display: none">autofs-使用</h1>
             
             
               <div class="markdown-body">
                 
-                <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>NFS (Network File System), 一种用于在网络上共享文件的分布式文件系统, 适用于 Linux 与 Unix 之间的文件共享, 其只基于 IP 进行认证.</p>
-<p>NFS 会默认占用 2049 端口. 但是其启动的其他端口未知, 因此需要 RPC (Remote Procedure Call). 也可以说 NFS 是 RPC server 的一种.</p>
-<p>注意 NFS 不能写入 <code>/etc/fstab</code> 来开机自动挂载. 但可以通过 <code>/etc/rc.d/rc.local</code> 实现.</p>
-<h1 id="工作模式"><a href="#工作模式" class="headerlink" title="工作模式"></a>工作模式</h1><p>NFS 为 C&#x2F;S (Client&#x2F;Server) 架构. 客户机通过 TCP&#x2F;IP 远程访问 NFS 服务器上的数据.</p>
-<p>NFS 需要基于 RPC (Remote Procedure Call) 服务才能正常工作.</p>
-<p>NFS 本身的服务并没有进行身份登入的识别, 所以当客户端试图读取服务端的文件时, 服务端会以客户端的使用者的 UID 和 GID 来读取. 因此在服务端和客户端具有同样的用户和组的才能最终具有全部权限. (可以匿名)</p>
-<p>要实际在客户端以 NFS 取用服务器端的文件系统时, 需要具有:</p>
+                <h1 id="设定概念"><a href="#设定概念" class="headerlink" title="设定概念"></a>设定概念</h1><p>autofs 不会在系统启动时立即挂载文件系统，而是在文件系统被访问时才进行挂载. (挂载到预设的目录下)</p>
+<h1 id="安装和启用"><a href="#安装和启用" class="headerlink" title="安装和启用"></a>安装和启用</h1><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">dnf -y install autofs<br>systemctl <span class="hljs-built_in">enable</span> --now autofs<br></code></pre></td></tr></table></figure>
+
+
+<h1 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h1><p>主配置文件为 <code>/etc/auto.master</code>, 其内容示例:</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs awk"><span class="hljs-regexp">/home/</span>nfsfile   <span class="hljs-regexp">/etc/</span>auto.nfs<br></code></pre></td></tr></table></figure>
+
 <ul>
-<li>NFS 服务器开放可写入权限 (与 <code>/etc/exports</code> 文件设置有关)</li>
-<li>实际的文件具有可写入 (<code>w</code>) 的权限</li>
+<li><code>/home/nfsfile</code> 为最顶层目录, 也是要侦测的目录</li>
+<li><code>/etc/auto.nfs</code> 为要挂载的信息</li>
 </ul>
-<p>注意需要先启动 <code>rpcbind</code> 程序之后再启动 <code>nfs</code>.</p>
-<h2 id="RPC-介绍"><a href="#RPC-介绍" class="headerlink" title="RPC 介绍"></a>RPC 介绍</h2><p>RPC (Remote Procedure Call), 用于通过网络远程向计算机请求服务, 同样采用 C&#x2F;S (Client&#x2F;Server) 架构, 客户端发送调用程序的请求, 服务端接收请求并调用程序.</p>
-<p>和 NFS 一同工作的流程:</p>
-<p><img src="/../img/how-rpc-work-with-nfs.png" srcset="/img/loading.gif" lazyload></p>
-<p>其固定使用 111 端口监听客户端的请求.</p>
-<h1 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h1><h2 id="相关配置文件"><a href="#相关配置文件" class="headerlink" title="相关配置文件"></a>相关配置文件</h2><ul>
-<li><code>/etc/exports</code>, NFS 的主配置文件.</li>
-<li><code>/var/lib/nfs/*tab</code>, 管理 NFS 的登录信息. <code>etab</code> 记录 NFS 共享的目录权限信息. <code>xtab</code> 记录曾经登录到 NFS 的客户端信息</li>
-</ul>
-<p><code>/etc/exports</code> 文件配置语法:</p>
-<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs stylus">/tmp        <span class="hljs-number">192.168</span>.<span class="hljs-number">100.0</span>/<span class="hljs-number">24</span>(ro)      <span class="hljs-built_in">localhost</span>(rw)         *<span class="hljs-selector-class">.ev</span><span class="hljs-selector-class">.ncku</span><span class="hljs-selector-class">.edu</span><span class="hljs-selector-class">.tw</span>(ro,sync)<br><span class="hljs-selector-attr">[共享目录]</span>  <span class="hljs-selector-attr">[第一台,ip指定主机及权限]</span> <span class="hljs-selector-attr">[第二台,主机名指定]</span>   <span class="hljs-selector-attr">[第三台,含通配符指定]</span><br></code></pre></td></tr></table></figure>
-<p>多个参数用 <code>,</code> 分隔.</p>
-<p>常用参数有:</p>
-<ul>
-<li><code>rw</code>, <code>ro</code>, “read-write”, “read-only”</li>
-<li><code>sync</code>, <code>async</code>, 数据同步到磁盘还是暂存于内存</li>
-<li><code>no_root_squash</code>, <code>root_squash</code>, 用 root 登录时压缩为 nfsnobody (<code>root_squash</code>) 或不压缩 (<code>no_root_squash</code>)</li>
-<li><code>all_squash</code>, 不论任何人登录都压缩为 nfsnobody</li>
-<li><code>anonuid</code>, <code>anongid</code>, 对匿名用户设置的 uid 和 gid 值 (需要分别存在于 <code>/etc/passwd</code>, <code>/etc/group</code> 中)</li>
-</ul>
-<h3 id="配置示例"><a href="#配置示例" class="headerlink" title="配置示例"></a>配置示例</h3><h4 id="允许任何人以-root-访问和修改-x2F-tmp"><a href="#允许任何人以-root-访问和修改-x2F-tmp" class="headerlink" title="允许任何人以 root 访问和修改 &#x2F;tmp"></a>允许任何人以 root 访问和修改 &#x2F;tmp</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">/tmp    *(rw,no_root_squash)<br></code></pre></td></tr></table></figure>
+<p><code>/etc/auto.nfs</code> 文件的内容为:</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs elixir">[子目录]    [-挂载参数]                             [服务器提供的目录]<br>public      -rw,bg,soft,rsize=<span class="hljs-number">32768</span>,wsize=<span class="hljs-number">32768</span>     <span class="hljs-number">192.168</span>.<span class="hljs-number">100.254</span><span class="hljs-symbol">:/home/public</span><br>testing     -rw,bg,soft,rsize=<span class="hljs-number">32768</span>,wsize=<span class="hljs-number">32768</span>     <span class="hljs-number">192.168</span>.<span class="hljs-number">100.254</span><span class="hljs-symbol">:/home/test</span><br>temp        -rw,bg,soft,rsize=<span class="hljs-number">32768</span>,wsize=<span class="hljs-number">32768</span>     <span class="hljs-number">192.168</span>.<span class="hljs-number">100.254</span><span class="hljs-symbol">:/tmp</span><br></code></pre></td></tr></table></figure>
 
-<h4 id="同一目录向不同范围开放不同权限"><a href="#同一目录向不同范围开放不同权限" class="headerlink" title="同一目录向不同范围开放不同权限"></a>同一目录向不同范围开放不同权限</h4><p>将一个公共的目录 <code>/home/public</code> 共享, <code>192.168.100.0/24</code> 这个网域且加入 <code>vbirdgroup</code> 的用户才能够读写, 其他来源则只能读取:</p>
-<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs gradle"><span class="hljs-regexp">/home/</span><span class="hljs-keyword">public</span>    <span class="hljs-number">192.168</span>.<span class="hljs-number">100.0</span>/<span class="hljs-number">24</span>(rw)    *(ro)<br></code></pre></td></tr></table></figure>
-
-<h4 id="开放给单一主机使用"><a href="#开放给单一主机使用" class="headerlink" title="开放给单一主机使用"></a>开放给单一主机使用</h4><figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs awk"><span class="hljs-regexp">/home/</span>test  <span class="hljs-number">192.168</span>.<span class="hljs-number">100.10</span>(rw)<br></code></pre></td></tr></table></figure>
-
-<h4 id="开放匿名登录并指定-uid-gid"><a href="#开放匿名登录并指定-uid-gid" class="headerlink" title="开放匿名登录并指定 uid, gid"></a>开放匿名登录并指定 uid, gid</h4><figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs jboss-cli"><span class="hljs-string">/home/linux</span> *<span class="hljs-string">.centos.vbird</span><span class="hljs-params">(rw,all_squash,<span class="hljs-attr">anonuid</span>=45,<span class="hljs-attr">anongid</span>=45)</span><br></code></pre></td></tr></table></figure>
-
-<h2 id="主要命令"><a href="#主要命令" class="headerlink" title="主要命令"></a>主要命令</h2><ul>
-<li><code>/usr/sbin/exportfs</code>, 可指定共享文件, 挂载卸载共享文件, 用于 server 端</li>
-<li><code>/usr/sbin/showmount</code>, 用于查看共享资源, 用于 server,client 端</li>
-<li><code>/usr/sbin/rpcinfo</code>, 可查看每个 RPC 服务的注册情况, 如 <code>rpcinfo -p localhost</code></li>
-</ul>
-<h3 id="exportfs"><a href="#exportfs" class="headerlink" title="exportfs"></a>exportfs</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sh">exportfs [-aruv]<br>-a: 全部挂载或卸载(配合其他参数) /etc/exports 中的目录<br>-r: 重新挂载 /etc/exports 中的目录<br>-u: 卸载某一目录<br>-v: 打印共享的目录<br></code></pre></td></tr></table></figure>
-
-<blockquote>
-<p>全部挂载</p>
-</blockquote>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">exports -arv<br></code></pre></td></tr></table></figure>
-
-<blockquote>
-<p>全部卸载</p>
-</blockquote>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">exportfs -auv<br></code></pre></td></tr></table></figure>
-
-
-<h3 id="showmount"><a href="#showmount" class="headerlink" title="showmount"></a>showmount</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">showmount [-ae] [hostname;IP]<br>-a: 显示当前主机与 NFS 客户端的共享情况<br>-e: 显示某部主机 /etc/exports 所共享的目录数据<br></code></pre></td></tr></table></figure>
-
-
-<h2 id="Server"><a href="#Server" class="headerlink" title="Server"></a>Server</h2><p>安装以及设置开机自启:</p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">yum -y install rpcbind nfs-utils<br>systemctl <span class="hljs-built_in">enable</span> --now rpcbind nfs-server<br></code></pre></td></tr></table></figure>
-<ul>
-<li><code>rpcbind</code> 提供 <code>rpcbind</code> daemon 程序</li>
-<li><code>nfs-utils</code>, 提供 <code>rpc.nfsd</code>, <code>rpc.mountd</code> 这两个 daemon 以及其他文档及可执行文件</li>
-</ul>
-<p><code>rpc.nfsd</code> 提供 NFS 的主要功能, 包含登入者 ID 的判断, 确认客户端是否能够使用服务端文件系统等</p>
-<p><code>rpc.mountd</code> 提供 NFS 文件系统的管理. 其会通过 <code>/etc/exports</code> 文件确认客户端的权限以及确认客户端访问的文件的权限.</p>
-<p>之后设置 <code>/etc/exports</code> 文件. 开启防火墙.</p>
-<h2 id="Client"><a href="#Client" class="headerlink" title="Client"></a>Client</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">dnf install -y rpcbind nfs-utils<br></code></pre></td></tr></table></figure>
-
-<p>启用 <code>rpcbind</code>:</p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">systemctl <span class="hljs-built_in">enable</span> --now rpcbind<br></code></pre></td></tr></table></figure>
-
-<p>查看可用资源:</p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">showmount -e 192.168.100.254<br></code></pre></td></tr></table></figure>
-
-<p>挂载:</p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">mkdir</span> /homt/nfs/public<br>mount -t nfs -o nosuid,noexec,nodev,rw 192.168.100.254:/home/public /home/nfs/public<br><span class="hljs-built_in">df</span> -Th<br></code></pre></td></tr></table></figure>
-<p>(注意特殊情况下设置 mount 的参数 <code>-o</code>)</p>
-<p>卸载:</p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">umount /home/nfs/public<br></code></pre></td></tr></table></figure>
-
-<h3 id="自动挂载"><a href="#自动挂载" class="headerlink" title="自动挂载"></a>自动挂载</h3><p>向 <code>/etc/rc.d/rc.local</code> 写入:</p>
-<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs gradle">mount -t nfs -o<br>nosuid,noexec,nodev,rw,bg,soft,rsize=<span class="hljs-number">32768</span>,wsize=<span class="hljs-number">32768</span> \<br><span class="hljs-number">192.168</span>.<span class="hljs-number">100.254</span>:<span class="hljs-regexp">/home/</span><span class="hljs-keyword">public</span> <span class="hljs-regexp">/home/</span>nfs/<span class="hljs-keyword">public</span><br></code></pre></td></tr></table></figure>
-
-
-<h2 id="防火墙设置"><a href="#防火墙设置" class="headerlink" title="防火墙设置"></a>防火墙设置</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">firewall-cmd --permanent --add-service=nfs<br></code></pre></td></tr></table></figure>
-
+<p>此时, 如果客户端使用 <code>/home/nfsfile/public</code> 里的内容时, autofs 会自动挂载 <code>192.168.100.254:/home/public</code> 到 public 目录.</p>
 
                 
               </div>
@@ -419,8 +342,8 @@
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>NFS-服务搭建</div>
-      <div>http://example.com/2024/03/03/NFS-服务搭建/</div>
+      <div>autofs-使用</div>
+      <div>http://example.com/2024/03/03/autofs-使用/</div>
     </div>
     <div class="license-meta">
       
@@ -462,18 +385,12 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2024/03/03/autofs-%E4%BD%BF%E7%94%A8/" title="autofs-使用">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">autofs-使用</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2024/03/03/Github-%E5%A4%9A%E4%BA%BA%E5%90%88%E4%BD%9C%E7%9B%B8%E5%85%B3/" title="Github-多人合作相关">
-                        <span class="hidden-mobile">Github-多人合作相关</span>
+                      <a href="/2024/03/03/NFS-%E6%9C%8D%E5%8A%A1%E6%90%AD%E5%BB%BA/" title="NFS-服务搭建">
+                        <span class="hidden-mobile">NFS-服务搭建</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
