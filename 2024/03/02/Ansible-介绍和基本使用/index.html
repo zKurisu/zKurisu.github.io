@@ -24,7 +24,7 @@
 <meta property="og:description" content="Ansible 官网 Ansible 官方文档 特点不需要在管理节点上安装任何软件 (使用 ssh 进行控制和通信), 且可以模块化扩充 ansible 的功能. 基本概念Ansible 由三个主要部分组成:  Control node Inventory Managed node  Control node指安装了 ansible 的主机. Inventory一组 managed node 的逻">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2024-03-02T07:58:45.000Z">
-<meta property="article:modified_time" content="2024-03-04T09:31:52.683Z">
+<meta property="article:modified_time" content="2024-03-04T09:43:13.185Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          10k 字
+          11k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          84 分钟
+          91 分钟
         
       </span>
     
@@ -456,7 +456,16 @@
 <p>如果目标主机的 hostname 为 “hello” 则最后 <code>/tmp/hostname</code> 文件的内容为:</p>
 <figure class="highlight delphi"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs delphi">My <span class="hljs-keyword">name</span> <span class="hljs-keyword">is</span> hello<br></code></pre></td></tr></table></figure>
 
-<h1 id="命令行工具"><a href="#命令行工具" class="headerlink" title="命令行工具"></a>命令行工具</h1><h2 id="ad-hoc-commands"><a href="#ad-hoc-commands" class="headerlink" title="ad hoc commands"></a>ad hoc commands</h2><p>用 <code>/usr/bin/ansible</code> 命令对 one or more managed nodes 运行单个 task.</p>
+<h2 id="Handlers-和-Notify"><a href="#Handlers-和-Notify" class="headerlink" title="Handlers 和 Notify"></a>Handlers 和 Notify</h2><p><code>notify</code> 用于指定一个 handler 的 <code>name</code>.</p>
+<p>示例:</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs yaml"><span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Play</span> <span class="hljs-string">Test</span><br>  <span class="hljs-attr">hosts:</span> <span class="hljs-string">test</span><br>  <span class="hljs-attr">remote_user:</span> <span class="hljs-string">root</span><br>  <span class="hljs-attr">gather_fact:</span> <span class="hljs-literal">no</span><br>  <span class="hljs-attr">tasks:</span><br>    <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">task1</span><br>      <span class="hljs-attr">replace:</span><br>        <span class="hljs-attr">path:</span> <span class="hljs-string">/etc/zabbix/zabbix_agent2.conf</span><br>        <span class="hljs-attr">regexp:</span> <span class="hljs-string">&#x27;^Server=127.0.0.1$&#x27;</span><br>        <span class="hljs-attr">replace:</span> <span class="hljs-string">&#x27;Server=192.168.1.4&#x27;</span><br>      <span class="hljs-attr">notify:</span> <span class="hljs-string">restart</span> <span class="hljs-string">agent2</span><br>  <span class="hljs-attr">handlers:</span><br>    <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">restart</span> <span class="hljs-string">agent2</span><br>      <span class="hljs-attr">service:</span><br>        <span class="hljs-attr">name:</span> <span class="hljs-string">zabbix-agent2</span><br>        <span class="hljs-attr">state:</span> <span class="hljs-string">restarted</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="Tags"><a href="#Tags" class="headerlink" title="Tags"></a>Tags</h2><p>可用于指定开始运行的位置 (从那个 task 开始):</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs yaml"><span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Play</span> <span class="hljs-string">Test</span><br>  <span class="hljs-attr">hosts:</span> <span class="hljs-string">test</span><br>  <span class="hljs-attr">remote_user:</span> <span class="hljs-string">root</span><br>  <span class="hljs-attr">gather_fact:</span> <span class="hljs-literal">no</span><br>  <span class="hljs-attr">tasks:</span><br>    <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">task1</span><br>      <span class="hljs-attr">tags:</span> <span class="hljs-string">modify</span><br>      <span class="hljs-attr">replace:</span><br>        <span class="hljs-attr">path:</span> <span class="hljs-string">/etc/zabbix/zabbix_agent2.conf</span><br>        <span class="hljs-attr">regexp:</span> <span class="hljs-string">&#x27;^Server=127.0.0.1$&#x27;</span><br>        <span class="hljs-attr">replace:</span> <span class="hljs-string">&#x27;Server=192.168.1.4&#x27;</span><br>      <span class="hljs-attr">notify:</span> <span class="hljs-string">restart</span> <span class="hljs-string">agent2</span><br>  <span class="hljs-attr">handlers:</span><br>    <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">restart</span> <span class="hljs-string">agent2</span><br>      <span class="hljs-attr">service:</span><br>        <span class="hljs-attr">name:</span> <span class="hljs-string">zabbix-agent2</span><br>        <span class="hljs-attr">state:</span> <span class="hljs-string">restarted</span><br></code></pre></td></tr></table></figure>
+<p>之后在执行时指定:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ansible-playbook -t modify playbook.yml -i inventory<br></code></pre></td></tr></table></figure>
+
+<h2 id="Roles"><a href="#Roles" class="headerlink" title="Roles"></a>Roles</h2><h1 id="命令行工具"><a href="#命令行工具" class="headerlink" title="命令行工具"></a>命令行工具</h1><h2 id="ad-hoc-commands"><a href="#ad-hoc-commands" class="headerlink" title="ad hoc commands"></a>ad hoc commands</h2><p>用 <code>/usr/bin/ansible</code> 命令对 one or more managed nodes 运行单个 task.</p>
 <p>语法为:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ ansible [pattern] -m [module] -a <span class="hljs-string">&quot;[module options]&quot;</span><br></code></pre></td></tr></table></figure>
 <p><code>[module options]</code> 为 <code>key=value</code> 的形式或者是 JSON string starting with <code>&#123;</code> and ending with <code>&#125;</code>.</p>
