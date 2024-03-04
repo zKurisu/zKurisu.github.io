@@ -24,7 +24,7 @@
 <meta property="og:description" content="Ansible 官网 Ansible 官方文档 特点不需要在管理节点上安装任何软件 (使用 ssh 进行控制和通信), 且可以模块化扩充 ansible 的功能. 基本概念Ansible 由三个主要部分组成:  Control node Inventory Managed node  Control node指安装了 ansible 的主机. Inventory一组 managed node 的逻">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2024-03-02T07:58:45.000Z">
-<meta property="article:modified_time" content="2024-03-04T06:07:11.544Z">
+<meta property="article:modified_time" content="2024-03-04T07:13:56.001Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          4.3k 字
+          5.9k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          36 分钟
+          49 分钟
         
       </span>
     
@@ -312,6 +312,10 @@
 <li>删除临时文件</li>
 </ol>
 <h2 id="Execution-Environment"><a href="#Execution-Environment" class="headerlink" title="Execution Environment"></a>Execution Environment</h2><p>Execution Environment (EEs) 是把 Ansible control nodes 打包好的 containier images.</p>
+<h2 id="Ad-hoc-command"><a href="#Ad-hoc-command" class="headerlink" title="Ad hoc command"></a>Ad hoc command</h2><p>指直接通过命令快速执行的单个任务, 而无需编写完整的 playbook 如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ansible &lt;hosts&gt; -m &lt;module&gt; -a <span class="hljs-string">&quot;&lt;module_arguments&gt;&quot;</span><br></code></pre></td></tr></table></figure>
+
+
 <h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><p>一般有两个可选包:</p>
 <ul>
 <li><code>ansible-core</code>, 较小, 包含 a set of Ansible.Builtin</li>
@@ -414,6 +418,10 @@
 <p><code>group_vars/</code> 目录用于存放与特定 group 相关的变量, 文件名与 group name 相同, 这样文件中的变量会自动应用于 group 中对应的主机.</p>
 <p><code>host_vars/</code> 目录用于存放与特定 host 相关的变量, 文件名与 host name 相同, 这些变量会应用于特定主机.</p>
 <p>注意这些变量是用于 playbook 的, 因此目录也是和 playbook 在同一目录下.</p>
+<p>假如定义有 <code>test</code> group, 则目录结构可为:</p>
+<figure class="highlight asciidoc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs asciidoc"><span class="hljs-bullet">.</span><br><span class="hljs-bullet"></span>├── group<span class="hljs-emphasis">_vars</span><br><span class="hljs-emphasis">│   └── test</span><br><span class="hljs-emphasis">│       └── haha.yml</span><br><span class="hljs-emphasis">├── host_vars</span><br><span class="hljs-emphasis">├── inventory</span><br><span class="hljs-emphasis">│   └── inventory_test.yaml</span><br><span class="hljs-emphasis">└── playbook_</span>test.yaml<br></code></pre></td></tr></table></figure>
+
+<p>注意 variable 的冲突和覆盖问题.</p>
 <h1 id="创建-playbook"><a href="#创建-playbook" class="headerlink" title="创建 playbook"></a>创建 playbook</h1><p>Playbook 用 <code>YAML</code> 的格式. 用于部署和管理 nodes.</p>
 <p>几个概念:</p>
 <ul>
@@ -432,8 +440,53 @@
 </blockquote>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ansible-playbook -i inventory.ini playbook.yaml<br></code></pre></td></tr></table></figure>
 
+<h1 id="命令行工具"><a href="#命令行工具" class="headerlink" title="命令行工具"></a>命令行工具</h1><h2 id="ad-hoc-commands"><a href="#ad-hoc-commands" class="headerlink" title="ad hoc commands"></a>ad hoc commands</h2><p>用 <code>/usr/bin/ansible</code> 命令对 one or more managed nodes 运行单个 task.</p>
+<p>语法为:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ ansible [pattern] -m [module] -a <span class="hljs-string">&quot;[module options]&quot;</span><br></code></pre></td></tr></table></figure>
+<p><code>[module options]</code> 为 <code>key=value</code> 的形式或者是 JSON string starting with <code>&#123;</code> and ending with <code>&#125;</code>.</p>
+<p><code>ansible</code> 默认调用的 module 为 <code>ansible.builtin.command</code>. 但其不支持 piping 和 redirects. (若要使用这些功能则使用 <code>ansible.builtin.shell</code> 模块)</p>
+<p><code>ansible</code> 默认只会同时开启 5 个 simultaneous process, 如果有很多 hosts, 则不能同时运行命令, 此时可以用 <code>-f</code> 参数来指定.</p>
+<p><code>ansible</code> 默认用当前用户来执行命令, 若要指定其他用户, 可用 <code>-u</code> 参数指定.</p>
+<p>若要以 <code>root</code> 用户运行, 需要加上 <code>--become</code> 参数. 若加上 <code>--ask-become-pass</code> 参数则会要求密码输入.</p>
+<h3 id="Rebooting-servers"><a href="#Rebooting-servers" class="headerlink" title="Rebooting servers"></a>Rebooting servers</h3><p>假设已经有 <code>atlanta</code> 这个 group, 则:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ ansible atlanta -a <span class="hljs-string">&quot;/sbin/reboot&quot;</span> -f 10<br></code></pre></td></tr></table></figure>
 
-<h1 id="关键模块"><a href="#关键模块" class="headerlink" title="关键模块"></a>关键模块</h1><ul>
+
+<h1 id="Pattern-的使用"><a href="#Pattern-的使用" class="headerlink" title="Pattern 的使用"></a>Pattern 的使用</h1><p>在 ad hoc command 中应用:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ansible &lt;hosts&gt; -m &lt;module&gt; -a <span class="hljs-string">&quot;&lt;module_arguments&gt;&quot;</span><br></code></pre></td></tr></table></figure>
+
+<p>在 playbook 中则应用于 <code>hosts:</code> 中:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">- name: &lt;play_name&gt;<br>  hosts: &lt;pattern&gt;<br></code></pre></td></tr></table></figure>
+
+<h2 id="常用-patterns"><a href="#常用-patterns" class="headerlink" title="常用 patterns"></a>常用 patterns</h2><ul>
+<li><code>*</code></li>
+<li><code>:</code>, <code>,</code>, 指定多个, 如 <code>host1:host2</code>, <code>host1,host2</code></li>
+<li><code>!</code>, 排除, 如 <code>group1:!group2</code></li>
+<li><code>&amp;</code>, intersection, 如 <code>webservers:&amp;staging</code></li>
+</ul>
+<h2 id="Pattern-的处理顺序"><a href="#Pattern-的处理顺序" class="headerlink" title="Pattern 的处理顺序"></a>Pattern 的处理顺序</h2><ol>
+<li><code>:</code> 和 <code>,</code></li>
+<li><code>&amp;</code></li>
+<li><code>!</code></li>
+</ol>
+<h2 id="高阶使用"><a href="#高阶使用" class="headerlink" title="高阶使用"></a>高阶使用</h2><p>需要 <code>ansible-playbook</code> 开启 <code>-e</code> 选项, 此时可以在 pattern 中使用变量, 如:</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs yaml"><span class="hljs-string">webservers:!&#123;&#123;</span> <span class="hljs-string">excluded</span> <span class="hljs-string">&#125;&#125;:&amp;&#123;&#123;</span> <span class="hljs-string">required</span> <span class="hljs-string">&#125;&#125;</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="使用索引"><a href="#使用索引" class="headerlink" title="使用索引"></a>使用索引</h2><p>索引从 <code>0</code> 开始, 也可以是负数, 切片:</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">webservers</span>[<span class="hljs-number">0</span>]<br><span class="hljs-attribute">webservers</span>[-<span class="hljs-number">1</span>]<br><span class="hljs-attribute">webservers</span>[<span class="hljs-number">0</span>:<span class="hljs-number">2</span>]<br></code></pre></td></tr></table></figure>
+
+<h2 id="使用正则表达式"><a href="#使用正则表达式" class="headerlink" title="使用正则表达式"></a>使用正则表达式</h2><p>需要以 <code>~</code> 开头:</p>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs jboss-cli">~<span class="hljs-params">(web|db)</span>.*\<span class="hljs-string">.example</span>\<span class="hljs-string">.com</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="ad-hoc-commands-1"><a href="#ad-hoc-commands-1" class="headerlink" title="ad-hoc commands"></a>ad-hoc commands</h2><p>结合 <code>--limit</code> option:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ ansible all -m &lt;module&gt; -a <span class="hljs-string">&quot;&lt;module options&gt;&quot;</span> --<span class="hljs-built_in">limit</span> <span class="hljs-string">&#x27;all:!host1&#x27;</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="从文件中读取-hosts-列表"><a href="#从文件中读取-hosts-列表" class="headerlink" title="从文件中读取 hosts 列表"></a>从文件中读取 hosts 列表</h2><p>用 <code>--limit</code> option, 需要在文件名前加上 <code>@</code>:</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs css">ansible-playbook site<span class="hljs-selector-class">.yml</span> <span class="hljs-attr">--limit</span> <span class="hljs-keyword">@retry_hosts</span>.txt<br></code></pre></td></tr></table></figure>
+
+
+<h1 id="常用模块"><a href="#常用模块" class="headerlink" title="常用模块"></a>常用模块</h1><p>Ansible 中的关键模块为:</p>
+<ul>
 <li>Paramike, 提供 ssh 的 python 库</li>
 <li>PyYAML, 处理 YAML 格式的数据</li>
 <li>Jinja2, 处理 template</li>
