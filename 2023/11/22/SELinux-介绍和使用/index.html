@@ -24,7 +24,7 @@
 <meta property="og:description" content="简介SELinux, Security Enhanced Linux. SELinux 是 Linux 内核的一个模块, 也是 Linux 的一个安全子系统. SELinux 基于 MAC (Mandatory Access Control, 强制访问控制) 来实现安全增强. 区别与传统的 DAC (Discretionary Access Control), 其基于用户, 组和其他权限.  MA">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-11-22T06:21:30.000Z">
-<meta property="article:modified_time" content="2024-03-05T02:19:46.027Z">
+<meta property="article:modified_time" content="2024-03-05T03:03:25.397Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.1k 字
+          2.8k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          18 分钟
+          24 分钟
         
       </span>
     
@@ -357,7 +357,15 @@
 
 <h3 id="restorecon"><a href="#restorecon" class="headerlink" title="restorecon"></a><code>restorecon</code></h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">restorecon -[option] file/directory<br></code></pre></td></tr></table></figure>
 
-<h1 id="SELinux-的布尔值"><a href="#SELinux-的布尔值" class="headerlink" title="SELinux 的布尔值"></a>SELinux 的布尔值</h1><p>设置 SELinux 的布尔值为 <code>on</code>, 则开启对应 SELinux 的规则.</p>
+<h1 id="SELinux-的布尔值"><a href="#SELinux-的布尔值" class="headerlink" title="SELinux 的布尔值"></a>SELinux 的布尔值</h1><p>SELinux 布尔值直接影响某个安全策略的开启或关闭, 如:</p>
+<ul>
+<li><code>httpd_can_network_connect</code>: 允许 HTTP 服务器 (如 Apache) 发起网络连接</li>
+<li><code>httpd_can_network_connect_db</code>: 允许 HTTP 服务器连接到数据库</li>
+<li><code>samba_enable_home_dirs</code>: 允许 Samba 共享访问用户的个人主目录</li>
+<li><code>ftpd_anon_write</code>: 允许 FTP 服务器接受匿名用户上传文件</li>
+<li><code>allow_mount_anyfile</code>: 允许任意文件系统类型的挂载</li>
+</ul>
+<p>设置 SELinux 的布尔值为 <code>on</code>, 则开启对应 SELinux 的规则.</p>
 <p>设置为 <code>off</code> 则表示禁用对应规则.</p>
 <h2 id="查看所有-SELinux-的布尔值"><a href="#查看所有-SELinux-的布尔值" class="headerlink" title="查看所有 SELinux 的布尔值"></a>查看所有 SELinux 的布尔值</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">semanage boolean -l<br></code></pre></td></tr></table></figure>
 
@@ -366,9 +374,37 @@
 <h2 id="设置布尔值"><a href="#设置布尔值" class="headerlink" title="设置布尔值"></a>设置布尔值</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">setsebool -P rule on/off<br></code></pre></td></tr></table></figure>
 <p>加了 <code>-P</code> 选项才会将配置写入配置文件.</p>
 <h1 id="查询-SELinux-type"><a href="#查询-SELinux-type" class="headerlink" title="查询 SELinux type"></a>查询 SELinux type</h1><p>使用 <code>seinfo</code>, <code>sesearch</code> 等工具.</p>
+<h2 id="seinfo"><a href="#seinfo" class="headerlink" title="seinfo"></a>seinfo</h2><p>用于查看 SELinux 的类型, 角色, 用户, 扩展属性, 类别, 模块等信息.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">seinfo [-option]<br></code></pre></td></tr></table></figure>
+
+<h3 id="列出所有的-SELinux-type-attributes"><a href="#列出所有的-SELinux-type-attributes" class="headerlink" title="列出所有的 SELinux type attributes"></a>列出所有的 SELinux type attributes</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">seinfo -a<br></code></pre></td></tr></table></figure>
+
+<h3 id="列出所有-SELinux-types"><a href="#列出所有-SELinux-types" class="headerlink" title="列出所有 SELinux types"></a>列出所有 SELinux types</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">seinfo -t<br></code></pre></td></tr></table></figure>
+
+<h3 id="列出所有-SELinux-roles"><a href="#列出所有-SELinux-roles" class="headerlink" title="列出所有 SELinux roles"></a>列出所有 SELinux roles</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">seinfo -r<br></code></pre></td></tr></table></figure>
+
+<h3 id="列出所有-SELinux-users"><a href="#列出所有-SELinux-users" class="headerlink" title="列出所有 SELinux users"></a>列出所有 SELinux users</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">seinfo -u<br></code></pre></td></tr></table></figure>
+
+<h2 id="sesearch"><a href="#sesearch" class="headerlink" title="sesearch"></a>sesearch</h2><h3 id="限制查询-rule-为-allow-和-allowxperm"><a href="#限制查询-rule-为-allow-和-allowxperm" class="headerlink" title="限制查询 rule 为 allow 和 allowxperm"></a>限制查询 rule 为 allow 和 allowxperm</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sesearch -A [otheroptions]<br></code></pre></td></tr></table></figure>
+
+<h3 id="查询一个-type-x2F-role-所放行的-rules"><a href="#查询一个-type-x2F-role-所放行的-rules" class="headerlink" title="查询一个 type&#x2F;role 所放行的 rules"></a>查询一个 type&#x2F;role 所放行的 rules</h3><p>如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sesearch -A -s cron_t<br></code></pre></td></tr></table></figure>
+<p><code>-s</code> 指 “Source” type or role.</p>
+<h3 id="查询一个-type-x2F-role-对目标-type-x2F-role-放行的-rules"><a href="#查询一个-type-x2F-role-对目标-type-x2F-role-放行的-rules" class="headerlink" title="查询一个 type&#x2F;role 对目标 type&#x2F;role 放行的 rules"></a>查询一个 type&#x2F;role 对目标 type&#x2F;role 放行的 rules</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sesearch -A -s cron_t -t xxxx<br></code></pre></td></tr></table></figure>
+<p><code>-t</code> 指 “Target” type or role.</p>
 <h1 id="日志"><a href="#日志" class="headerlink" title="日志"></a>日志</h1><p>默认使用 auditd 服务. 位于 <code>/var/log/audidt/audit.log</code></p>
 <p>setroubleshoot 服务会将错误写入 <code>/ver/log/messages</code> 和 <code>/ver/log/setroubleshoot/*</code> 文件中. 需安装 <code>setroubleshoot</code> 和 setroubleshoot-server 包. (但其现在被整合到了 auditd 服务中)</p>
-<h1 id="基本使用"><a href="#基本使用" class="headerlink" title="基本使用"></a>基本使用</h1><h2 id="还原所有的-SELinux-类型"><a href="#还原所有的-SELinux-类型" class="headerlink" title="还原所有的 SELinux 类型"></a>还原所有的 SELinux 类型</h2><p><code>restorecon</code> 用于将文件和目录的安全上下文恢复为默认值:</p>
+<h1 id="基本使用"><a href="#基本使用" class="headerlink" title="基本使用"></a>基本使用</h1><h2 id="相关命令集合"><a href="#相关命令集合" class="headerlink" title="相关命令集合"></a>相关命令集合</h2><ul>
+<li><code>getenforce</code></li>
+<li><code>setenforce</code></li>
+<li><code>semanage</code></li>
+<li><code>chcon</code></li>
+<li><code>getsebool</code></li>
+<li><code>setsebool</code></li>
+<li><code>seinfo</code></li>
+<li><code>sesearch</code></li>
+</ul>
+<h2 id="还原所有的-SELinux-类型"><a href="#还原所有的-SELinux-类型" class="headerlink" title="还原所有的 SELinux 类型"></a>还原所有的 SELinux 类型</h2><p><code>restorecon</code> 用于将文件和目录的安全上下文恢复为默认值:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">restorecon -Rv /<br></code></pre></td></tr></table></figure>
 <ul>
 <li><code>-R</code> 表示递归恢复</li>
@@ -387,6 +423,7 @@
 <p>则安全上下文恢复为:</p>
 <figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs arduino">unconfined_u:object_r:<span class="hljs-type">admin_home_t</span>:s0<br></code></pre></td></tr></table></figure>
 
+<h2 id="查看-SELinux-的统计状态"><a href="#查看-SELinux-的统计状态" class="headerlink" title="查看 SELinux 的统计状态"></a>查看 SELinux 的统计状态</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">seinfo<br></code></pre></td></tr></table></figure>
 
                 
               </div>
