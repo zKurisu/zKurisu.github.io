@@ -24,7 +24,7 @@
 <meta property="og:description" content="简介SELinux, Security Enhanced Linux. SELinux 是 Linux 内核的一个模块, 也是 Linux 的一个安全子系统. SELinux 基于 MAC (Mandatory Access Control, 强制访问控制) 来实现安全增强. 区别与传统的 DAC (Discretionary Access Control), 其基于用户, 组和其他权限.  MA">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-11-22T06:21:30.000Z">
-<meta property="article:modified_time" content="2024-03-02T07:44:55.038Z">
+<meta property="article:modified_time" content="2024-03-05T02:19:46.027Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.5k 字
+          2.1k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          13 分钟
+          18 分钟
         
       </span>
     
@@ -335,6 +335,11 @@
 
 <h2 id="查看安全上下文"><a href="#查看安全上下文" class="headerlink" title="查看安全上下文"></a>查看安全上下文</h2><h3 id="默认上下文"><a href="#默认上下文" class="headerlink" title="默认上下文"></a>默认上下文</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">semanage fcontext -l<br></code></pre></td></tr></table></figure>
 
+<p>输出如:</p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs vim">SELinux fcontext      <span class="hljs-built_in">type</span>               Context<br><br>/                     directory          system_u:object_r:root_<span class="hljs-variable">t:s0</span><br>/.*                   <span class="hljs-keyword">all</span> <span class="hljs-keyword">files</span>          system_u:object_r:default_<span class="hljs-variable">t:s0</span><br>/[^/]+                regular <span class="hljs-keyword">file</span>       system_u:object_r:etc_runtime_<span class="hljs-variable">t:s0</span><br>/\.autofsck           regular <span class="hljs-keyword">file</span>       system_u:object_r:etc_runtime_<span class="hljs-variable">t:s0</span><br>/\.autorelabel        regular <span class="hljs-keyword">file</span>       system_u:object_r:etc_runtime_<span class="hljs-variable">t:s0</span><br></code></pre></td></tr></table></figure>
+
+
+
 <h3 id="进程"><a href="#进程" class="headerlink" title="进程"></a>进程</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ps axZ<br></code></pre></td></tr></table></figure>
 
 <h3 id="文件"><a href="#文件" class="headerlink" title="文件"></a>文件</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">ls</span> -Z<br></code></pre></td></tr></table></figure>
@@ -363,6 +368,25 @@
 <h1 id="查询-SELinux-type"><a href="#查询-SELinux-type" class="headerlink" title="查询 SELinux type"></a>查询 SELinux type</h1><p>使用 <code>seinfo</code>, <code>sesearch</code> 等工具.</p>
 <h1 id="日志"><a href="#日志" class="headerlink" title="日志"></a>日志</h1><p>默认使用 auditd 服务. 位于 <code>/var/log/audidt/audit.log</code></p>
 <p>setroubleshoot 服务会将错误写入 <code>/ver/log/messages</code> 和 <code>/ver/log/setroubleshoot/*</code> 文件中. 需安装 <code>setroubleshoot</code> 和 setroubleshoot-server 包. (但其现在被整合到了 auditd 服务中)</p>
+<h1 id="基本使用"><a href="#基本使用" class="headerlink" title="基本使用"></a>基本使用</h1><h2 id="还原所有的-SELinux-类型"><a href="#还原所有的-SELinux-类型" class="headerlink" title="还原所有的 SELinux 类型"></a>还原所有的 SELinux 类型</h2><p><code>restorecon</code> 用于将文件和目录的安全上下文恢复为默认值:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">restorecon -Rv /<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>-R</code> 表示递归恢复</li>
+<li><code>-v</code> 显示详细信息</li>
+<li><code>/</code> 指定从根目录</li>
+</ul>
+<p>例如, 一个 <code>/root</code> 目录下的脚本 <code>hello.sh</code>, 原本的安全上下文为:</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs arduino">unconfined_u:object_r:<span class="hljs-type">admin_home_t</span>:s0<br></code></pre></td></tr></table></figure>
+
+<p>利用 <code>chcon</code> 修改为;</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs arduino">unconfined_u:object_r:<span class="hljs-type">user_home_t</span>:s0<br></code></pre></td></tr></table></figure>
+
+<p>运行:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">restorecon -v hello.sh<br></code></pre></td></tr></table></figure>
+
+<p>则安全上下文恢复为:</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs arduino">unconfined_u:object_r:<span class="hljs-type">admin_home_t</span>:s0<br></code></pre></td></tr></table></figure>
+
 
                 
               </div>
