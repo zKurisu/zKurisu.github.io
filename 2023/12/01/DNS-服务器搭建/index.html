@@ -16,19 +16,19 @@
   <meta name="author" content="John Doe">
   <meta name="keywords" content="">
   
-    <meta name="description" content="关于 SOA 记录 这里的域名 master.test.com., 这里的最后一个 . 就表示根 DNS 服务器. bind-chroot 命令其将 bind 程序限定在某一个目录下. 设置为 forward only修改 &#x2F;etc&#x2F;named.conf 文件: 12345forward only;forwarders &amp;#123;    8.8.8.8;    8.8.8.4;&amp;#125;;">
+    <meta name="description" content="简介DNS (Domain Name System), 用于将域名和服务器的 IP 地址进行对应和解析. TCP&#x2F;UDP 一般使用 53 端口. 通常使用 BIND (Berkeley Internet Name Domain) 服务实现. 除了让 DNS 本身做解析服务外, 也可以设置为:  Cache-only, 只有 . 这个 zone file, 需要自己向其他 DNS 服务器查">
 <meta property="og:type" content="article">
 <meta property="og:title" content="DNS-服务器搭建">
 <meta property="og:url" content="http://example.com/2023/12/01/DNS-%E6%9C%8D%E5%8A%A1%E5%99%A8%E6%90%AD%E5%BB%BA/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="关于 SOA 记录 这里的域名 master.test.com., 这里的最后一个 . 就表示根 DNS 服务器. bind-chroot 命令其将 bind 程序限定在某一个目录下. 设置为 forward only修改 &#x2F;etc&#x2F;named.conf 文件: 12345forward only;forwarders &amp;#123;    8.8.8.8;    8.8.8.4;&amp;#125;;">
+<meta property="og:description" content="简介DNS (Domain Name System), 用于将域名和服务器的 IP 地址进行对应和解析. TCP&#x2F;UDP 一般使用 53 端口. 通常使用 BIND (Berkeley Internet Name Domain) 服务实现. 除了让 DNS 本身做解析服务外, 也可以设置为:  Cache-only, 只有 . 这个 zone file, 需要自己向其他 DNS 服务器查">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/img/SOA-template.png">
+<meta property="og:image" content="http://example.com/img/DNS-domain-levels.png">
 <meta property="article:published_time" content="2023-12-01T07:19:23.000Z">
-<meta property="article:modified_time" content="2024-01-08T01:22:59.600Z">
+<meta property="article:modified_time" content="2024-03-05T07:18:08.894Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="http://example.com/img/SOA-template.png">
+<meta name="twitter:image" content="http://example.com/img/DNS-domain-levels.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -237,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          169 字
+          1.5k 字
         
       </span>
     
@@ -248,7 +248,7 @@
         
         
         
-          2 分钟
+          13 分钟
         
       </span>
     
@@ -291,11 +291,64 @@
             
               <div class="markdown-body">
                 
-                <h1 id="关于-SOA-记录"><a href="#关于-SOA-记录" class="headerlink" title="关于 SOA 记录"></a>关于 SOA 记录</h1><p><img src="/../img/SOA-template.png" srcset="/img/loading.gif" lazyload></p>
-<p>这里的域名 <code>master.test.com.</code>, 这里的最后一个 <code>.</code> 就表示根 DNS 服务器.</p>
-<h1 id="bind-chroot-命令"><a href="#bind-chroot-命令" class="headerlink" title="bind-chroot 命令"></a>bind-chroot 命令</h1><p>其将 bind 程序限定在某一个目录下.</p>
-<h1 id="设置为-forward-only"><a href="#设置为-forward-only" class="headerlink" title="设置为 forward only"></a>设置为 forward only</h1><p>修改 <code>/etc/named.conf</code> 文件:</p>
-<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs abnf">forward only<span class="hljs-comment">;</span><br>forwarders &#123;<br>    <span class="hljs-number">8.8</span>.<span class="hljs-number">8.8</span><span class="hljs-comment">;</span><br>    <span class="hljs-number">8.8</span>.<span class="hljs-number">8.4</span><span class="hljs-comment">;</span><br>&#125;<span class="hljs-comment">;</span><br></code></pre></td></tr></table></figure>
+                <h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>DNS (Domain Name System), 用于将域名和服务器的 IP 地址进行对应和解析.</p>
+<p>TCP&#x2F;UDP 一般使用 53 端口.</p>
+<p>通常使用 BIND (Berkeley Internet Name Domain) 服务实现.</p>
+<p>除了让 DNS 本身做解析服务外, 也可以设置为:</p>
+<ul>
+<li>Cache-only, 只有 <code>.</code> 这个 zone file, 需要自己向其他 DNS 服务器查询</li>
+<li>Forwarding, 没有任何 zone file, 需指定一个上层 DNS 服务器, 将查询任务传送过去</li>
+</ul>
+<p>两种模式.</p>
+<h1 id="一些基本概念"><a href="#一些基本概念" class="headerlink" title="一些基本概念"></a>一些基本概念</h1><h2 id="顶级域-二级域名"><a href="#顶级域-二级域名" class="headerlink" title="顶级域, 二级域名"></a>顶级域, 二级域名</h2><p><img src="/../img/DNS-domain-levels.png" srcset="/img/loading.gif" lazyload></p>
+<p>根域 <code>.</code> 的下一级则为顶级域.</p>
+<h2 id="正向解析"><a href="#正向解析" class="headerlink" title="正向解析"></a>正向解析</h2><p>指通过 “域名” 查找 “IP”.</p>
+<h2 id="反向解析"><a href="#反向解析" class="headerlink" title="反向解析"></a>反向解析</h2><p>通过 “IP” 查找 “域名”.</p>
+<p>主要用于邮箱域名解析.</p>
+<p>此时的顶级域为 <code>arpa</code> (Address and Routing Parameter Area)</p>
+<h2 id="FQDN"><a href="#FQDN" class="headerlink" title="FQDN"></a>FQDN</h2><p>FQDN (Fully Qualified Domain Name), 指包含完整域名层级的 domain name (包含 <code>.</code> 根域), 如:</p>
+<ul>
+<li><code>www.example.com.</code></li>
+<li><code>mail.google.com.</code></li>
+</ul>
+<h2 id="zone"><a href="#zone" class="headerlink" title="zone"></a>zone</h2><p>Zone 指一个 domain 之下的数据文件. 包含解析条目.</p>
+<h1 id="客户端域名正向解析流程"><a href="#客户端域名正向解析流程" class="headerlink" title="客户端域名正向解析流程"></a>客户端域名正向解析流程</h1><ol>
+<li>在本地缓存中查找是否有对应 IP 地址</li>
+<li>查看本地 hosts 文件中是否有静态域名解析</li>
+<li>向本地 DNS 服务器发送查询请求</li>
+<li>本地 DNS 服务器将地址返回给客户端</li>
+</ol>
+<h1 id="DNS-服务器的查询流程"><a href="#DNS-服务器的查询流程" class="headerlink" title="DNS 服务器的查询流程"></a>DNS 服务器的查询流程</h1><ol>
+<li>若本身无记录, 则向 <code>.</code> 查询</li>
+<li>逐层向下询问</li>
+<li>找到记录后暂存内存并返回给用户</li>
+</ol>
+<h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">dnf install -y <span class="hljs-built_in">bind</span><br></code></pre></td></tr></table></figure>
+
+<h1 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h1><p>主要要设置好两类数据:</p>
+<ul>
+<li>BIND 本身的配置文件, <code>/etc/named.conf</code></li>
+<li>正反解数据库档案 (zone file), 可以在 <code>/etc/named.conf</code> 中指定 (因此名字随便取)</li>
+</ul>
+<p>相关文件:</p>
+<ul>
+<li><code>/etc/named.conf</code>, 主配置文件</li>
+<li><code>/etc/sysconfig/named</code>, 启动 <code>chroot</code> 的额外参数</li>
+<li><code>/var/named</code>, 数据库文件默认存放</li>
+<li><code>/var/run/named</code>, pid-file</li>
+</ul>
+<h2 id="设置为-forwarding-模式"><a href="#设置为-forwarding-模式" class="headerlink" title="设置为 forwarding 模式"></a>设置为 forwarding 模式</h2><p>修改 <code>/etc/named.conf</code> 文件为:</p>
+<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs abnf">options &#123;<br>    listen-on port <span class="hljs-number">53</span> &#123; any<span class="hljs-comment">; &#125;; // 监听哪一个网络接口, 这里是 any</span><br>    directory <span class="hljs-string">&quot;/var/named&quot;</span><span class="hljs-comment">;     // zone file 存放的位置</span><br>    dump-file <span class="hljs-string">&quot;/var/named/data/cache_dump.db&quot;</span><span class="hljs-comment">;</span><br>    statistics-file <span class="hljs-string">&quot;/var/named/data/named_stats.txt&quot;</span><span class="hljs-comment">;</span><br>    memstatistics-file <span class="hljs-string">&quot;/var/named/data/named_mem_stats.txt&quot;</span><span class="hljs-comment">;</span><br>    allow-query &#123; any<span class="hljs-comment">; &#125;;       // 哪些客户端可进行查询</span><br>    recursion yes<span class="hljs-comment">; </span><br>    forward only<span class="hljs-comment">;               // 设置为 cache only</span><br>    forwarders &#123;                // 转交给哪些 DNS 服务器<br>        <span class="hljs-number">168.95</span>.<span class="hljs-number">1.1</span><span class="hljs-comment">;</span><br>        <span class="hljs-number">139.175</span>.<span class="hljs-number">10.20</span><span class="hljs-comment">;</span><br>    &#125;<span class="hljs-comment">;</span><br>&#125;<span class="hljs-comment">;</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="编写正解-zone-file"><a href="#编写正解-zone-file" class="headerlink" title="编写正解 zone file"></a>编写正解 zone file</h2><h2 id="设置-bind-程序启动的-root-目录"><a href="#设置-bind-程序启动的-root-目录" class="headerlink" title="设置 bind 程序启动的 root 目录"></a>设置 bind 程序启动的 root 目录</h2><p>用 <code>bind-chroot</code> 命令, 其将 bind 程序限定在某一个目录下. (暂时无示例)</p>
+<h1 id="相关命令行工具"><a href="#相关命令行工具" class="headerlink" title="相关命令行工具"></a>相关命令行工具</h1><h2 id="dig"><a href="#dig" class="headerlink" title="dig"></a>dig</h2><h3 id="查看查询流程"><a href="#查看查询流程" class="headerlink" title="查看查询流程"></a>查看查询流程</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">dig +trace www.google.com<br></code></pre></td></tr></table></figure>
+
+<h3 id="指定查询类型"><a href="#指定查询类型" class="headerlink" title="指定查询类型"></a>指定查询类型</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">dig -t a www.google.com <br></code></pre></td></tr></table></figure>
+
+<h3 id="反向解析-1"><a href="#反向解析-1" class="headerlink" title="反向解析"></a>反向解析</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">dig -x 154.83.14.134<br></code></pre></td></tr></table></figure>
+
+<h2 id="whois"><a href="#whois" class="headerlink" title="whois"></a>whois</h2><h3 id="查询域名管理者"><a href="#查询域名管理者" class="headerlink" title="查询域名管理者"></a>查询域名管理者</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">whois centos.org<br></code></pre></td></tr></table></figure>
+
 
                 
               </div>
