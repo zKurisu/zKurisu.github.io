@@ -16,17 +16,19 @@
   <meta name="author" content="John Doe">
   <meta name="keywords" content="">
   
-    <meta name="description" content="简介LVS (Linux Virtual Server),  相关概念使用两台及以上的计算机完成一个人物模式称为 集群. LB 集群LB (Load Balance) 集群, 将访问请求转发给后端节点, 使所有节点的负载相对平衡. HA 集群HA (Highly Available) 集群, 提供持久服务, 当一个节点故障时, 可以切换到另一个节点. HPC 集群HPC (High Perform">
+    <meta name="description" content="简介LVS (Linux Virtual Server), 用于四层 (传输层) 负载均衡. 它提供了一种可扩展和高可用性的方式来分发网络流量, 将请求平均分配给多个后端服务器. LVS 本身只有负载均衡的功能, 一般和 Keepalive 配合使用以形成高可用. 相关概念使用两台及以上的计算机完成一个人物模式称为 集群. LB 集群LB (Load Balance) 集群, 将访问请求转发给后端">
 <meta property="og:type" content="article">
 <meta property="og:title" content="LVS-服务搭建">
 <meta property="og:url" content="http://example.com/2024/03/06/LVS-%E6%9C%8D%E5%8A%A1%E6%90%AD%E5%BB%BA/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="简介LVS (Linux Virtual Server),  相关概念使用两台及以上的计算机完成一个人物模式称为 集群. LB 集群LB (Load Balance) 集群, 将访问请求转发给后端节点, 使所有节点的负载相对平衡. HA 集群HA (Highly Available) 集群, 提供持久服务, 当一个节点故障时, 可以切换到另一个节点. HPC 集群HPC (High Perform">
+<meta property="og:description" content="简介LVS (Linux Virtual Server), 用于四层 (传输层) 负载均衡. 它提供了一种可扩展和高可用性的方式来分发网络流量, 将请求平均分配给多个后端服务器. LVS 本身只有负载均衡的功能, 一般和 Keepalive 配合使用以形成高可用. 相关概念使用两台及以上的计算机完成一个人物模式称为 集群. LB 集群LB (Load Balance) 集群, 将访问请求转发给后端">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/LVS-VIP-example.png">
 <meta property="article:published_time" content="2024-03-06T00:51:21.000Z">
-<meta property="article:modified_time" content="2024-03-06T00:58:42.344Z">
+<meta property="article:modified_time" content="2024-03-06T01:58:35.501Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/LVS-VIP-example.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -235,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          214 字
+          1k 字
         
       </span>
     
@@ -246,7 +248,7 @@
         
         
         
-          2 分钟
+          9 分钟
         
       </span>
     
@@ -289,11 +291,46 @@
             
               <div class="markdown-body">
                 
-                <h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>LVS (Linux Virtual Server), </p>
+                <h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>LVS (Linux Virtual Server), 用于四层 (传输层) 负载均衡. 它提供了一种可扩展和高可用性的方式来分发网络流量, 将请求平均分配给多个后端服务器.</p>
+<p>LVS 本身只有负载均衡的功能, 一般和 Keepalive 配合使用以形成高可用.</p>
 <h1 id="相关概念"><a href="#相关概念" class="headerlink" title="相关概念"></a>相关概念</h1><p>使用两台及以上的计算机完成一个人物模式称为 <mark>集群</mark>.</p>
 <h2 id="LB-集群"><a href="#LB-集群" class="headerlink" title="LB 集群"></a>LB 集群</h2><p>LB (Load Balance) 集群, 将访问请求转发给后端节点, 使所有节点的负载相对平衡.</p>
 <h2 id="HA-集群"><a href="#HA-集群" class="headerlink" title="HA 集群"></a>HA 集群</h2><p>HA (Highly Available) 集群, 提供持久服务, 当一个节点故障时, 可以切换到另一个节点.</p>
 <h2 id="HPC-集群"><a href="#HPC-集群" class="headerlink" title="HPC 集群"></a>HPC 集群</h2><p>HPC (High Performance Computing) 集群, 通过并行算法或分布式计算提高计算机运算速度.</p>
+<h2 id="VIP"><a href="#VIP" class="headerlink" title="VIP"></a>VIP</h2><p>VIP (Virtual IP), 用作负载均衡器的入口, 将传入的请求分发给后端服务器. 客户端通过访问 VIP 来访问服务, 而不需要直接连接到后端服务器.</p>
+<p><img src="/../img/LVS-VIP-example.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="DIP"><a href="#DIP" class="headerlink" title="DIP"></a>DIP</h2><p>DIP (Director IP), 用于连接业务主机, VIP 将请求转发给 DIP, 而 DIP 再将其转发给业务主机.</p>
+<h2 id="RIP"><a href="#RIP" class="headerlink" title="RIP"></a>RIP</h2><p>RIP (Real IP), 指业务主机 (Real Server) 的 IP 地址.</p>
+<h2 id="地址漂移"><a href="#地址漂移" class="headerlink" title="地址漂移"></a>地址漂移</h2><p>指 VIP 从一台主机迁移到另一台主机 (IP 没变, 只是机器变了).</p>
+<h2 id="心跳"><a href="#心跳" class="headerlink" title="心跳"></a>心跳</h2><p>Heartbeat, 主机之间相互监控彼此的状态, 以决定哪台主机提供服务的机制.</p>
+<h2 id="脑裂"><a href="#脑裂" class="headerlink" title="脑裂"></a>脑裂</h2><p>Split brain, 指节点心跳通信中断或不正常导致的资源争夺.</p>
+<h1 id="工作模式"><a href="#工作模式" class="headerlink" title="工作模式"></a>工作模式</h1><h2 id="NAT"><a href="#NAT" class="headerlink" title="NAT"></a>NAT</h2><h2 id="DR"><a href="#DR" class="headerlink" title="DR"></a>DR</h2><h2 id="TUN"><a href="#TUN" class="headerlink" title="TUN"></a>TUN</h2><h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">dnf install -y ipvsadm keepalive<br></code></pre></td></tr></table></figure>
+
+<p>LVS 相关的重要组件:</p>
+<ul>
+<li><code>IPVS</code> (IP Virtual Server), Linux 内核模块, 提供负载均衡功能</li>
+<li><code>/usr/sbin/ipvsadm</code>, LVS 的管理工具, 用于配置</li>
+<li><code>/etc/sysconfig/ipvsadm-config</code>, LVS 的配置文件</li>
+</ul>
+<h1 id="配置和使用"><a href="#配置和使用" class="headerlink" title="配置和使用"></a>配置和使用</h1><h2 id="清除当前所有规则"><a href="#清除当前所有规则" class="headerlink" title="清除当前所有规则"></a>清除当前所有规则</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ipvsadm -C<br></code></pre></td></tr></table></figure>
+<p><code>-C</code> 为 “–clear”.</p>
+<h2 id="保存当前规则到配置文件"><a href="#保存当前规则到配置文件" class="headerlink" title="保存当前规则到配置文件"></a>保存当前规则到配置文件</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ipvsadm -Sn &gt; /etc/sysconfig/ipvsadm<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>-S</code>, 为 <code>--save</code></li>
+<li><code>-n</code> 为 <code>--numeric</code>, 指以数字形式输出 IP 和端口, 而不是 hostname 和 services</li>
+</ul>
+<h2 id="从一个配置文件加载规则"><a href="#从一个配置文件加载规则" class="headerlink" title="从一个配置文件加载规则"></a>从一个配置文件加载规则</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ipvsadm -R &lt; /etc/sysconfig/ipvsadm<br></code></pre></td></tr></table></figure>
+<p><code>-R</code> 指 <code>--restore</code></p>
+<h2 id="查看当前规则"><a href="#查看当前规则" class="headerlink" title="查看当前规则"></a>查看当前规则</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ipvsadm -Ln<br></code></pre></td></tr></table></figure>
+<p><code>-L</code> 指 <code>--list</code>.</p>
+<h2 id="添加-VIP"><a href="#添加-VIP" class="headerlink" title="添加 VIP"></a>添加 VIP</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ipvsadm -A -t 192.168.1.10:80 -s rr<br></code></pre></td></tr></table></figure>
+
+
+
+
+
+
+
 
                 
               </div>
