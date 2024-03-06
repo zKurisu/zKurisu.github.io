@@ -24,7 +24,7 @@
 <meta property="og:description" content="简介HAProxy (High Available Proxy), 用于四层和七层的负载均衡. 相关概念空连接空连接即, 上游的负载均衡器或者监控系统为了探测该服务是否存活可用时, 需要定期的连接或者获取某一固定组件或页面, 或者探测扫描端口是否开放等动作. 安装1dnf install -y haproxy  配置配置文件为: &#x2F;etc&#x2F;haproxy&#x2F;haproxy.cfg cfg 格式文件c">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2024-03-06T03:33:43.000Z">
-<meta property="article:modified_time" content="2024-03-06T10:12:55.713Z">
+<meta property="article:modified_time" content="2024-03-06T10:40:52.450Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3k 字
+          3.8k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          25 分钟
+          33 分钟
         
       </span>
     
@@ -310,7 +310,7 @@
 <h2 id="log-配置"><a href="#log-配置" class="headerlink" title="log 配置"></a>log 配置</h2><p>log 中指定的 <code>local0</code>, <code>local1</code> 为 “日志设置”, 用于分类和过滤日志消息.</p>
 <h2 id="HAProxy-ACL-规则"><a href="#HAProxy-ACL-规则" class="headerlink" title="HAProxy ACL 规则"></a>HAProxy ACL 规则</h2><p>ACL (Access Control List), 即访问控制列表.</p>
 <p>语法如:</p>
-<figure class="highlight pf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs pf">acl  <span class="hljs-variable">&lt;acl_name&gt;</span> <span class="hljs-variable">&lt;condition&gt;</span> [<span class="hljs-keyword">flags</span>]<br></code></pre></td></tr></table></figure>
+<figure class="highlight pf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs pf">acl  <span class="hljs-variable">&lt;acl_name&gt;</span> <span class="hljs-variable">&lt;condition&gt;</span> [<span class="hljs-keyword">flags</span>] [values]<br></code></pre></td></tr></table></figure>
 <ul>
 <li><code>&lt;acl_name&gt;</code>, 设置的 ACL 规则名称, 可以在配置中引用</li>
 <li><code>&lt;condition&gt;</code>, 是 ACL 规则的匹配条件表达式, 可以是 Source IP, Destination IP, 请求头, 请求方法</li>
@@ -327,11 +327,38 @@
 <li><code>hdr_dir</code>, 匹配请求的路径</li>
 <li><code>url_sub</code>, 匹配请求的 url 中是否包含指定的子字符串</li>
 <li><code>path_beg</code>, 匹配请求路径是否以指定字符串开头</li>
-<li><code>path_end</code>, 匹配请求路径是否以指定字符串结尾<br>(<code>hdr</code> 指 “header”)</li>
+<li><code>path_end</code>, 匹配请求路径是否以指定字符串结尾</li>
+<li><code>base_beg</code>, 匹配 base 前缀, 指 <code>&lt;scheme&gt;://&lt;user&gt;:&lt;password&gt;@&lt;host&gt;:&lt;port&gt;/&lt;path&gt;;&lt;params&gt;?&lt;query&gt;</code>, 中的 <code>&lt;host&gt;:&lt;port&gt;/&lt;path&gt;;&lt;params&gt;</code> 部分</li>
+<li><code>src</code>, 匹配 source ip</li>
+<li><code>src_port</code>, 匹配 source port</li>
+<li><code>dst</code>, 匹配 destination ip</li>
+<li><code>dst_port</code>, 匹配 destination port</li>
+<li><code>method</code>, 匹配 http 请求方式<br>(<code>hdr</code> 指 “header”)</li>
 </ul>
-<p>示例:</p>
+<p>常用的 <code>[flags]</code> 有:</p>
+<ul>
+<li><code>-i</code>, 不区分大小写</li>
+<li><code>-m</code>, 使用指定的 pattern</li>
+<li><code>-n</code>, 不做 DNS 解析</li>
+<li><code>-u</code>, 禁止 acl 重名</li>
+</ul>
+<h3 id="ACL-编写示例"><a href="#ACL-编写示例" class="headerlink" title="ACL 编写示例"></a>ACL 编写示例</h3><p>示例:</p>
 <figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-comment"># 根据请求的 URI 进行匹配</span><br><span class="hljs-attribute">acl</span> is_static_path path_beg -i /static<br><span class="hljs-attribute">acl</span> is_api_path path_beg -i /api<br><br><span class="hljs-comment"># 根据请求的源 IP 进行匹配</span><br><span class="hljs-attribute">acl</span> is_internal_ip src <span class="hljs-number">192.168.0.0</span>/<span class="hljs-number">24</span><br><span class="hljs-attribute">acl</span> is_allowed_ip src <span class="hljs-number">10.0.0.1</span><br><br><span class="hljs-comment"># 根据请求的请求头进行匹配</span><br><span class="hljs-attribute">acl</span> is_mobile hdr_sub(User-Agent) -i mobile<br><br><span class="hljs-comment"># 根据请求的请求方法进行匹配</span><br><span class="hljs-attribute">acl</span> is_post_method method POST<br><br><span class="hljs-comment"># 使用逻辑运算符组合多个条件</span><br><span class="hljs-attribute">acl</span> is_secure_request is_ssl is_post_method<br><br><span class="hljs-comment"># 使用标志进行进一步的调整</span><br><span class="hljs-attribute">acl</span> is_not_static_path path_beg -i /static  # 排除 /static 路径<br><span class="hljs-attribute">acl</span> is_not_internal_ip src <span class="hljs-number">192.168.0.0</span>/<span class="hljs-number">24</span> !  # 否定 <span class="hljs-number">192.168.0.0</span>/<span class="hljs-number">24</span> 的 IP<br></code></pre></td></tr></table></figure>
 
+<h3 id="ACL-调用"><a href="#ACL-调用" class="headerlink" title="ACL 调用"></a>ACL 调用</h3><p>表示是否使用一个 <code>backend</code>, 用 <code>use_backend</code>:</p>
+<figure class="highlight dust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs dust"><span class="language-xml">use_backend <span class="hljs-tag">&lt;<span class="hljs-name">backend</span>&gt;</span> [</span><span class="hljs-template-variable">&#123;<span class="hljs-keyword">if</span> | unless&#125;</span><span class="language-xml"> <span class="hljs-tag">&lt;<span class="hljs-name">condition</span>&gt;</span>]</span><br></code></pre></td></tr></table></figure>
+
+<p>是否拒绝请求, 用 <code>block</code>:</p>
+<figure class="highlight dust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs dust"><span class="language-xml">block </span><span class="hljs-template-variable">&#123;<span class="hljs-keyword">if</span> | unless&#125;</span><span class="language-xml"> <span class="hljs-tag">&lt;<span class="hljs-name">condition</span>&gt;</span></span><br></code></pre></td></tr></table></figure>
+
+<p>处理 http 请求:</p>
+<figure class="highlight coq"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs coq">http-request &#123;allow | <span class="hljs-type">auth</span> [realm &lt;realm&gt;] | <span class="hljs-type">redirect</span> &lt;rule&gt; | <span class="hljs-type">deny</span> [deny_status &lt;status]&#125; [&#123;<span class="hljs-keyword">if</span> | <span class="hljs-type">unless</span>&#125; &lt;condition&gt;]<br></code></pre></td></tr></table></figure>
+
+<p>处理 tcp 请求:</p>
+<figure class="highlight dust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs dust"><span class="language-xml">tcp-request connection </span><span class="hljs-template-variable">&#123;accept | reject&#125;</span><span class="language-xml"> [</span><span class="hljs-template-variable">&#123;<span class="hljs-keyword">if</span> | unless&#125;</span><span class="language-xml"> <span class="hljs-tag">&lt;<span class="hljs-name">condition</span>&gt;</span>]</span><br></code></pre></td></tr></table></figure>
+
+<p>处理 tcp 响应报文:</p>
+<figure class="highlight coq"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs coq">tcp-response connection &lt;accept | <span class="hljs-type">reject</span> | <span class="hljs-type">close</span>&gt; [&#123;<span class="hljs-keyword">if</span> | <span class="hljs-type">unless</span>&#125; &lt;condition&gt;]<br></code></pre></td></tr></table></figure>
 
                 
               </div>
