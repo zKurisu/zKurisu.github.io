@@ -16,17 +16,19 @@
   <meta name="author" content="John Doe">
   <meta name="keywords" content="">
   
-    <meta name="description" content="参考 Archwiki 介绍相关概念Virtual Router Redundancy Protocol (VRRP)其原理为:  虚拟路由器组 (VRID): 多个路由器 (或交换机) 被组织成一个虚拟路由器组. 每个虚拟路由器组都有一个唯一的标识符, 称为虚拟路由器 ID (Virtual Router ID, 简称 VRID).  主备关系: 在每个虚拟路由器组中, 通过选举产生一个主路由器">
+    <meta name="description" content="参考 Archwiki 介绍Keepalived 使用 VRRP 协议来实现故障转移. 其本身不具备负载均衡的功能, 需要依赖运行在 Linux 内核的 LVS. 相关概念Virtual Router Redundancy Protocol (VRRP)VRRP 是一个网络协议, 用于实现在多个路由器间的故障转移. 三种状态其定义了三种状态机:  Initialize, 表明不可用, 此时设备不对">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Keepalived-了解">
 <meta property="og:url" content="http://example.com/2023/10/11/Keepalived-%E4%BA%86%E8%A7%A3/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="参考 Archwiki 介绍相关概念Virtual Router Redundancy Protocol (VRRP)其原理为:  虚拟路由器组 (VRID): 多个路由器 (或交换机) 被组织成一个虚拟路由器组. 每个虚拟路由器组都有一个唯一的标识符, 称为虚拟路由器 ID (Virtual Router ID, 简称 VRID).  主备关系: 在每个虚拟路由器组中, 通过选举产生一个主路由器">
+<meta property="og:description" content="参考 Archwiki 介绍Keepalived 使用 VRRP 协议来实现故障转移. 其本身不具备负载均衡的功能, 需要依赖运行在 Linux 内核的 LVS. 相关概念Virtual Router Redundancy Protocol (VRRP)VRRP 是一个网络协议, 用于实现在多个路由器间的故障转移. 三种状态其定义了三种状态机:  Initialize, 表明不可用, 此时设备不对">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/VRRP-detail-work-flow.png">
 <meta property="article:published_time" content="2023-10-11T10:56:29.000Z">
-<meta property="article:modified_time" content="2024-03-06T12:14:56.597Z">
+<meta property="article:modified_time" content="2024-03-06T13:14:41.574Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/VRRP-detail-work-flow.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -235,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.3k 字
+          2.6k 字
         
       </span>
     
@@ -246,7 +248,7 @@
         
         
         
-          12 分钟
+          23 分钟
         
       </span>
     
@@ -290,13 +292,21 @@
               <div class="markdown-body">
                 
                 <p><a target="_blank" rel="noopener" href="https://wiki.archlinux.org/title/Keepalived">参考 Archwiki</a></p>
-<h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><h1 id="相关概念"><a href="#相关概念" class="headerlink" title="相关概念"></a>相关概念</h1><h2 id="Virtual-Router-Redundancy-Protocol-VRRP"><a href="#Virtual-Router-Redundancy-Protocol-VRRP" class="headerlink" title="Virtual Router Redundancy Protocol (VRRP)"></a>Virtual Router Redundancy Protocol (VRRP)</h2><p>其原理为:</p>
-<ol>
-<li><p>虚拟路由器组 (VRID): 多个路由器 (或交换机) 被组织成一个虚拟路由器组. 每个虚拟路由器组都有一个唯一的标识符, 称为虚拟路由器 ID (Virtual Router ID, 简称 VRID).</p>
+<h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>Keepalived 使用 VRRP 协议来实现故障转移. 其本身不具备负载均衡的功能, 需要依赖运行在 Linux 内核的 LVS.</p>
+<h1 id="相关概念"><a href="#相关概念" class="headerlink" title="相关概念"></a>相关概念</h1><h2 id="Virtual-Router-Redundancy-Protocol-VRRP"><a href="#Virtual-Router-Redundancy-Protocol-VRRP" class="headerlink" title="Virtual Router Redundancy Protocol (VRRP)"></a>Virtual Router Redundancy Protocol (VRRP)</h2><p>VRRP 是一个网络协议, 用于实现在多个路由器间的故障转移.</p>
+<h3 id="三种状态"><a href="#三种状态" class="headerlink" title="三种状态"></a>三种状态</h3><p>其定义了三种状态机:</p>
+<ul>
+<li><code>Initialize</code>, 表明不可用, 此时设备不对 VRRP 通告报文做处理</li>
+<li><code>Master</code>, 承担虚拟路由设备的所有转发工作, 并定期向整个虚拟组发送 VRRP 通告报文</li>
+<li><code>Backup</code>, 不承担路由设备的转发工作, 定期接受 Master 设备的 VRRP 通告报文, 判断 Master 的工作状态是否正常</li>
+</ul>
+<h3 id="设备优先级"><a href="#设备优先级" class="headerlink" title="设备优先级"></a>设备优先级</h3><p>每一台设备都会设置一个优先级, 值越大, 在选举时会成为 Master 设备.</p>
+<h3 id="工作原理"><a href="#工作原理" class="headerlink" title="工作原理"></a>工作原理</h3><ol>
+<li><p>确定虚拟路由器组 (VRID): 多个路由器 (或交换机) 被组织成一个虚拟路由器组. 每个虚拟路由器组都有一个唯一的标识符, 称为虚拟路由器 ID (Virtual Router ID, 简称 VRID).</p>
 </li>
-<li><p>主备关系: 在每个虚拟路由器组中, 通过选举产生一个主路由器和一个或多个备用路由器. 主路由器负责处理流量, 而备用路由器处于待命状态.</p>
+<li><p>确定主备关系: 在每个虚拟路由器组中, 通过选举产生一个主路由器和一个或多个备用路由器. 主路由器负责处理流量, 而备用路由器处于待命状态.</p>
 </li>
-<li><p>虚拟 IP 地址: 虚拟路由器组中的主路由器分配一个虚拟 IP 地址, 作为默认网关提供给客户端. 客户端将其流量发送到虚拟 IP 地址.</p>
+<li><p>分配虚拟 IP 地址: 虚拟路由器组中的主路由器分配一个虚拟 IP 地址, 作为默认网关提供给客户端. 客户端将其流量发送到虚拟 IP 地址.</p>
 </li>
 <li><p>心跳检测: 主路由器和备用路由器之间定期发送心跳消息, 以检测主路由器的可用性. 心跳消息通常使用组播(multicast) 或广播 (roadcast) 方式发送.</p>
 </li>
@@ -307,29 +317,47 @@
 <li><p>主路由器恢复: 如果主路由器恢复, 它将尝试重新接管虚拟 IP 地址, 并恢复为主路由器. 备用路由器将检测到主路由器的恢复, 并将虚拟 IP 地址转移回主路由器. 这个过程称为故障恢复 (Failback)</p>
 </li>
 </ol>
+<p>详细工作过程:</p>
+<p><img src="/../img/VRRP-detail-work-flow.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="Gratuitous-ARP"><a href="#Gratuitous-ARP" class="headerlink" title="Gratuitous ARP"></a>Gratuitous ARP</h2><p>GARP 是一种网络协议, 用于通知网络中的其他设备更新其 ARP 缓存, 以便更快地将流量转发到新的虚拟 IP 地址.</p>
+<h2 id="Gratuitous-Neighbor-Advertisement"><a href="#Gratuitous-Neighbor-Advertisement" class="headerlink" title="Gratuitous Neighbor Advertisement"></a>Gratuitous Neighbor Advertisement</h2><p>GNA 类似于 GARP, 用于通知其他设备更新其邻居缓存.</p>
+<h1 id="Keepalived-工作原理"><a href="#Keepalived-工作原理" class="headerlink" title="Keepalived 工作原理"></a>Keepalived 工作原理</h1><ol>
+<li><p>配置 VRRP 实例: 在每台服务器上配置 Keepalived, 并定义一个或多个 VRRP 实例. 每个 VRRP 实例都有一个唯一的虚拟路由器 ID (Virtual Router ID), 用于区分不同的实例.</p>
+</li>
+<li><p>选举主服务器: 在 VRRP 实例中, 服务器将根据优先级 (Priority) 进行选举, 以确定主服务器. 具有最高优先级的服务器将成为主服务器, 负责处理流量.</p>
+</li>
+<li><p>分配虚拟 IP 地址: 主服务器将分配一个虚拟 IP 地址 (Virtual IP Address), 并将该地址绑定到网络接口上. 客户端将通过该虚拟 IP 地址访问服务.</p>
+</li>
+<li><p>心跳检测: 主服务器和备份服务器之间进行心跳检测, 以确定主服务器的可用性. 主服务器定期发送心跳消息, 并备份服务器接收并确认这些消息. 如果主服务器不再发送心跳消息, 备份服务器将检测到主服务器的故障.</p>
+</li>
+<li><p>备份服务器接管: 一旦备份服务器检测到主服务器故障, 它将成为新的主服务器, 并接管虚拟 IP 地址. 这个过程称为故障切换 (Failover), 它确保服务的连续性, 并将流量重新路由到新的主服务器.</p>
+</li>
+<li><p>主服务器恢复:如果主服务器恢复, 它将尝试重新接管虚拟 IP 地址.备份服务器将检测到主服务器的恢复, 并将虚拟 IP 地址转移回主服务器. 这个过程称为故障恢复 (Failback).</p>
+</li>
+<li><p>配置同步: Keepalived 还提供了配置同步的功能, 即将配置更改从主服务器同步到备份服务器. 这确保在故障切换后, 新的主服务器具有相同的配置.</p>
+</li>
+</ol>
 <h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><p>Archlinux 下安装:</p>
 <figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ebnf"><span class="hljs-attribute">sudo pacman -S keepalived</span><br></code></pre></td></tr></table></figure>
+
+<p>CentOS 系列下:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">dnf install -y keepalived<br></code></pre></td></tr></table></figure>
 
 <h1 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h1><p>配置文件位于:</p>
 <figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs awk"><span class="hljs-regexp">/etc/</span>keepalived/keepalived.conf<br></code></pre></td></tr></table></figure>
 
-<p>其基于 VRRP.</p>
-<h1 id="Keepalived-工作原理"><a href="#Keepalived-工作原理" class="headerlink" title="Keepalived 工作原理"></a>Keepalived 工作原理</h1><ol>
-<li><p>配置 VRRP 实例: 在每台服务器上配置 Keepalived, 并定义一个或多个 VRRP 实例. 每个 VRRP 实例都有一个唯一的虚拟路由器 ID(((Virtual Router ID）,用于区分不同的实例.</p>
-</li>
-<li><p>选举主服务器:在VRRP实例中,服务器将根据优先级(((Priority）进行选举,以确定主服务器.具有最高优先级的服务器将成为主服务器,负责处理流量.</p>
-</li>
-<li><p>分配虚拟 IP 地址:主服务器将分配一个虚拟 IP 地址(((Virtual  IP  Address）,并将该地址绑定到网络接口上.客户端将通过该虚拟 IP 地址访问服务.</p>
-</li>
-<li><p>心跳检测:主服务器和备份服务器之间进行心跳检测,以确定主服务器的可用性.主服务器定期发送心跳消息,并备份服务器接收并确认这些消息.如果主服务器不再发送心跳消息,备份服务器将检测到主服务器的故障.</p>
-</li>
-<li><p>备份服务器接管:一旦备份服务器检测到主服务器故障,它将成为新的主服务器,并接管虚拟 IP 地址.这个过程称为故障切换(((Failover）,它确保服务的连续性,并将流量重新路由到新的主服务器.</p>
-</li>
-<li><p>主服务器恢复:如果主服务器恢复,它将尝试重新接管虚拟 IP 地址.备份服务器将检测到主服务器的恢复,并将虚拟 IP 地址转移回主服务器.这个过程称为故障恢复(((Failback）.</p>
-</li>
-<li><p>配置同步:Keepalived还提供了配置同步的功能,即将配置更改从主服务器同步到备份服务器.这确保在故障切换后,新的主服务器具有相同的配置.</p>
-</li>
-</ol>
+<h2 id="全局配置"><a href="#全局配置" class="headerlink" title="全局配置"></a>全局配置</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs conf">global_defs &#123;<br>    notification_email &#123;         # 设置管理员邮箱列表, 接收警告邮箱<br>        acassen@firewall.loc<br>        failover@firewall.loc<br>    &#125;<br>    notification_email_from sysadmin@firewall.loc   # 设置发送邮箱<br>    smtp_server 192.168.200.1    # 设置邮箱服务器IP<br>    smtp_connect_timeout 300     # 邮箱服务器连接的超时时间<br>    router_id LVS_DEVEL          # 物理节点的标识符, 一般使用主机名<br>    vrrp_skip_check_adv_addr     # 检查广播地址是否与虚拟IP地址不匹配<br>    vrrp_strict                  # 启用严格模式处理VRRP包<br>    vrrp_garp_interval 0         # 定义发送GARP包的时间间隔, 设置成0禁用<br>    vrrp_gna_interval 0          # 定义发送GNA包的时间间隔, 设置成0禁用<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="VRRP-配置"><a href="#VRRP-配置" class="headerlink" title="VRRP 配置"></a>VRRP 配置</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs conf">vrrp_instance VI_1 &#123;      # VI_1为自定义标识符, 用于区分不同的VRRP实例<br>    state MASTER          # 指定实例的初始状态<br>    interface eth0        # 实例绑定的接口,用于发送VRRP包<br>    virtual_router_id 51  # 指定VRRP实例ID<br>    priority 100          # 指定优先级<br>    advert_int 1          # 通告间隔为1s<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+
+<h1 id="Keepalived-支持的健康检查"><a href="#Keepalived-支持的健康检查" class="headerlink" title="Keepalived 支持的健康检查"></a>Keepalived 支持的健康检查</h1><ul>
+<li><code>TCT_CHECK</code>, 运行在 OSI 第四层 (传输层), Keepalived 向后端服务器发送 TCP 连接请求, 如果收不到响应或超时, 则认为该服务器不可用, 从服务器池中移除</li>
+<li><code>HTTP_GET</code>, 运行在 OSI 第五层 (会话层), 向指定 URL 执行 http 请求, 将得到的结果用 md5 加密并与指定的 md5 值比较看是否匹配, 不匹配则从服务器池中移除. (也可以通过指定 http 返回码来判断)</li>
+<li><code>SSL_GET</code>, 同 <code>HTTP_GET</code>, 只不过使用 SSL 连接</li>
+<li><code>MISC_CHECK</code>, 使用脚本对服务器状态进行检查, 脚本的返回值为 0 表示状态正常.</li>
+</ul>
 
                 
               </div>
