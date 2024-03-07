@@ -26,7 +26,7 @@
 <meta property="og:image" content="http://example.com/img/keepalived-example1.png">
 <meta property="og:image" content="http://example.com/img/VRRP-detail-work-flow.png">
 <meta property="article:published_time" content="2023-10-11T10:56:29.000Z">
-<meta property="article:modified_time" content="2024-03-07T01:25:34.381Z">
+<meta property="article:modified_time" content="2024-03-07T02:41:55.865Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/keepalived-example1.png">
@@ -238,7 +238,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          4.6k 字
+          4.8k 字
         
       </span>
     
@@ -249,7 +249,7 @@
         
         
         
-          39 分钟
+          40 分钟
         
       </span>
     
@@ -361,6 +361,12 @@
 
 <h3 id="vrrp-script-和-track-script-设置"><a href="#vrrp-script-和-track-script-设置" class="headerlink" title="vrrp_script 和 track_script 设置"></a>vrrp_script 和 track_script 设置</h3><h2 id="LVS-配置"><a href="#LVS-配置" class="headerlink" title="LVS 配置"></a>LVS 配置</h2><p>这里设置负载均衡的几台后端服务器:</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs conf">virtual_server 192.168.200.100 443 &#123;  # 指定监听的虚拟服务器IP和端口<br>    delay_loop 6    # 健康检查间隔时间 <br>    lb_algo rr      # LVS的调度算法<br>    lb_kind NAT     # LVS模式<br>    persistence_timeout 50  # 持久化时间, 持久化用于确保客户端在多次请求中被路由到同一台后端服务器<br>    protocol TCP    # 表明虚拟服务器用什么协议来传入连接<br>    real_server 192.168.201.100 443 &#123;   # 配置后端的real server的IP和端口<br>        weight 1    # 负载均衡的权重<br>        SSL_GET &#123;   # 设置健康检查的方式<br>            url &#123;<br>                path /<br>                digest 640205b7b0fc66c1ea91c463fac6334d<br>            &#125;<br>            connect_timeout     # 连接超时时间<br>            retry 3             # 重试次数<br>            delay_before_retry  # 重试之间的间隔<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>注意这里配置成 <code>NAT</code>, 需要开启内核参数 <code>net.ipv4.ip_forward</code>:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sysctl -w net.ipv4.ip_forward=1<br></code></pre></td></tr></table></figure>
+
+<p>若配置成 <code>DR</code>, 则需要开启:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">sysctl -w net.ipv4.conf.all.arp_ignore=1<br>sysctl -w net.ipv4.conf.all.arp_announce=1<br></code></pre></td></tr></table></figure>
 
 <h3 id="HTTP-CHECK-和-SSL-GET-健康检查设置"><a href="#HTTP-CHECK-和-SSL-GET-健康检查设置" class="headerlink" title="HTTP_CHECK 和 SSL_GET 健康检查设置"></a>HTTP_CHECK 和 SSL_GET 健康检查设置</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs conf">HTTP_GET | SSL_GET &#123;<br>    url &#123;<br>        path &lt;string&gt;   # 指定要检查的URL路径<br>        digest &lt;string&gt; # 用上述路径进行哈希计算生成<br>        status_code &lt;INI&gt; # 指定状态码<br>    &#125;<br>    nb_get_retry &lt;INT&gt; # 用GET尝试的次数<br>    delay_before_retry &lt;INT&gt; # 用GET尝试的间隔<br>    connect_ip &lt;IP ADDRESS&gt; # 连接的ip, 默认为real server的ip地址<br>    connect_port &lt;PORT&gt;     # 连接的端口, 默认是real server的端口<br>    bindto &lt;IP ADDRESS&gt; # 发起连接的接口的地址<br>    bind_port &lt;PORT&gt;    # 发起连接的源端口<br>    connect_timeout &lt;INT&gt; # 连接超时时间, 默认是5s<br>    fwmark &lt;INTEGER&gt;    # 使用fwmark对搜有出去的检查数据包进行标记<br>    warmup &lt;INT&gt;        # 指定随即延迟<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>可以用:</p>
