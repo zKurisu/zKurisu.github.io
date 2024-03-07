@@ -24,7 +24,7 @@
 <meta property="og:description" content="介绍NTP (Network Time Protocol) 服务, 用于提供准确的时间同步给客户端设备.  它通过与时间服务器进行通信, 获取准确的时间信息并将其应用到本地系统中. 其通常由专门的时间服务器提供商或组织管理和维护. 这些服务器通过使用高精度的原子钟或 GPS 接收器等可靠的时间源来确保提供准确的时间. 客户端设备可以通过与 NTP 远程服务器进行通信, 从服务器获取时间信息并将其应">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2024-03-07T10:06:26.000Z">
-<meta property="article:modified_time" content="2024-03-07T11:10:28.810Z">
+<meta property="article:modified_time" content="2024-03-07T11:54:31.720Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.3k 字
+          2.6k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          11 分钟
+          22 分钟
         
       </span>
     
@@ -323,15 +323,65 @@
 <p>命令有:</p>
 <ul>
 <li><code>/bin/date</code>, 修改和显示 Linux 软件时间</li>
-<li><code>/usr/bin/hwclock</code>, 修改和显示 BIOS 硬件时间</li>
+<li><code>/usr/bin/hwclock</code>, 修改和显示 BIOS 硬件时间 (hwclock 指 “hardware clock”)</li>
 <li><code>/usr/sbin/ntpd</code>, 提供 NTP 服务</li>
 <li><code>/usr/sbin/ntpdate</code>, 客户端时间矫正</li>
 </ul>
 <h2 id="时间调整示例"><a href="#时间调整示例" class="headerlink" title="时间调整示例"></a>时间调整示例</h2><p>若想将时区修改为美国纽约:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-comment"># date</span><br><span class="hljs-comment"># vim /etc/sysconfig/clock</span><br>ZONE=<span class="hljs-string">&quot;America/New_York&quot;</span><br><span class="hljs-comment"># cp /usr/share/zoneinfo/America/New_York /etc/localtime</span><br><span class="hljs-comment"># date</span><br></code></pre></td></tr></table></figure>
 
+<h1 id="服务端配置"><a href="#服务端配置" class="headerlink" title="服务端配置"></a>服务端配置</h1><p>修改 <code>/etc/ntp.conf</code> 文件.</p>
+<h2 id="访问控制"><a href="#访问控制" class="headerlink" title="访问控制"></a>访问控制</h2><p>若想仅对一个网段内提供服务, 可以用 <code>restrict</code> 指令来控制 (管理权限), 语法为:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs conf">restrict [IP] mask [netmast_IP] [parameter]<br></code></pre></td></tr></table></figure>
+<p><code>[parameter]</code> 可以指定多个.</p>
+<p>可用的 <code>[parameter]</code> (提供约束) 主要为:</p>
+<ul>
+<li><code>ignore</code>, 拒绝所有类型的 NTP 连接</li>
+<li><code>nomodify</code>, 客户端不能通过 <code>ntpc</code> 和 <code>ntpq</code> 命令来修改服务器的时间参数, 但客户端可以用这台主机来进行网络校时</li>
+<li><code>noquery</code>, 客户端不能用 <code>ntpq</code>, <code>ntpc</code> 命令来查询时间服务器 (也就是不提供 NTP 网络校时)</li>
+<li><code>notrap</code>, 不提供 <code>trap</code> 远程事件登录</li>
+<li><code>notrust</code>, 拒绝没有认证的客户端</li>
+</ul>
+<p>若不添加参数, 则为, 不受任何限制.</p>
+<h2 id="设定上层服务器"><a href="#设定上层服务器" class="headerlink" title="设定上层服务器"></a>设定上层服务器</h2><p>用 <code>server</code> 指令, 语法为:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">server [IP or hostname] [prefer]<br></code></pre></td></tr></table></figure>
+<p><code>[prefer]</code> 表明是否优先使用.</p>
+<h2 id="记录时间差异"><a href="#记录时间差异" class="headerlink" title="记录时间差异"></a>记录时间差异</h2><p>用 <code>driftfile</code> 指令, 将时间差异记录到一个文件中, 语法为:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">driftfile [能够被 ntpd 写入的目录和文件]<br></code></pre></td></tr></table></figure>
+<p>这里的时间差异指, NTP server 本身的震荡周期频率与客户端主机的频率之间的误差.</p>
+<h2 id="设置客户认证"><a href="#设置客户认证" class="headerlink" title="设置客户认证"></a>设置客户认证</h2><p>用 <code>keys</code> 指令:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">keys [key_file]<br></code></pre></td></tr></table></figure>
+<p>(暂时忽略)</p>
+<h2 id="配置示例"><a href="#配置示例" class="headerlink" title="配置示例"></a>配置示例</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs conf">restrict default kod nomodify notrap nopeer noquery # 拒绝 IPv4 的用户<br>restrict -6 default kod nomodify notrap nopeer noquery # 拒绝 IPv6 的用户<br>restrict 220.130.158.71 # 放行一台主机<br>restrict 59.124.196.83<br>restrict 127.0.0.1 # 放行本机<br>restrict -6 ::1<br>restrict 192.168.100.0 mask 255.255.255.0 nomodify # 放行一个网段<br><br>server 220.130.158.71 prefer<br>server 59.124.196.83<br></code></pre></td></tr></table></figure>
+<p>注意设置的上层服务器也需要先放行才行.</p>
+<h1 id="服务启动和使用"><a href="#服务启动和使用" class="headerlink" title="服务启动和使用"></a>服务启动和使用</h1><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">systemctl start ntpd.service<br>netstat -ntplu | grep ntp<br></code></pre></td></tr></table></figure>
 
+<h2 id="确认-NTP-服务器是否顺利更新时间"><a href="#确认-NTP-服务器是否顺利更新时间" class="headerlink" title="确认 NTP 服务器是否顺利更新时间"></a>确认 NTP 服务器是否顺利更新时间</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ntpstat<br></code></pre></td></tr></table></figure>
+<p>或:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ntpq -p<br></code></pre></td></tr></table></figure>
 
+<h1 id="客户端时间更新"><a href="#客户端时间更新" class="headerlink" title="客户端时间更新"></a>客户端时间更新</h1><h2 id="手动校准"><a href="#手动校准" class="headerlink" title="手动校准"></a>手动校准</h2><p>用 <code>date</code> 调整软件时间:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">date</span> MMDDhhmmYYYY<br></code></pre></td></tr></table></figure>
+
+<p>用 <code>hwclock</code> 调整硬件时间:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">hwclock [-rw]<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>-r</code>, <code>--read</code>, 读取当前的 BIOS 内的时间参数</li>
+<li><code>-w</code>, <code>--write</code>, 将当前 Linux 系统时间写入 BIOS</li>
+</ul>
+<p>即, 先用 <code>date</code> 调整, 然后用:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">hwclock -w<br></code></pre></td></tr></table></figure>
+<p>修改.</p>
+<h2 id="网络校时"><a href="#网络校时" class="headerlink" title="网络校时"></a>网络校时</h2><p>使用 <code>ntpdate</code> 命令.</p>
+<p>注意 <code>ntpd</code> 服务开启时, 不能运行 <code>ntpdate</code> (即 NTP 服务器不可以使用 <code>ntpdate</code>)</p>
+<p>语法为:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ntpdate [-dv] [NTP IP/hostname]<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>-d</code>, 进入 “debug” 模式, 显示更多有效信息</li>
+<li><code>-v</code>, 显示较多信息</li>
+</ul>
+<p>如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ntpdate 192.168.100.254<br></code></pre></td></tr></table></figure>
 
                 
               </div>
