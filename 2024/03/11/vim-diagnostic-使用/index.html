@@ -16,15 +16,15 @@
   <meta name="author" content="John Doe">
   <meta name="keywords" content="">
   
-    <meta name="description" content="可查阅 :h vim.diagnostic. Nvim 提供了一个 framework 来显示外部工具产生的 errors or warnings, 即 diagnostics. 其来源可以是 linters or LSP servers. 在 Nvim 中 reports diagnostics 的步骤为:  用 nvim_create_namespace() 创建一个具名 namespace">
+    <meta name="description" content="可查阅 :h vim.diagnostic. Nvim 提供了一个 framework 来显示外部工具产生的 errors or warnings, 即 diagnostics. 其来源可以是 linters or LSP servers. reports diagnostics 的步骤 用 nvim_create_namespace() 创建一个具名 namespace 用 vim.diagno">
 <meta property="og:type" content="article">
 <meta property="og:title" content="vim-diagnostic-使用">
 <meta property="og:url" content="http://example.com/2024/03/11/vim-diagnostic-%E4%BD%BF%E7%94%A8/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="可查阅 :h vim.diagnostic. Nvim 提供了一个 framework 来显示外部工具产生的 errors or warnings, 即 diagnostics. 其来源可以是 linters or LSP servers. 在 Nvim 中 reports diagnostics 的步骤为:  用 nvim_create_namespace() 创建一个具名 namespace">
+<meta property="og:description" content="可查阅 :h vim.diagnostic. Nvim 提供了一个 framework 来显示外部工具产生的 errors or warnings, 即 diagnostics. 其来源可以是 linters or LSP servers. reports diagnostics 的步骤 用 nvim_create_namespace() 创建一个具名 namespace 用 vim.diagno">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2024-03-11T13:46:31.000Z">
-<meta property="article:modified_time" content="2024-03-12T01:44:10.552Z">
+<meta property="article:modified_time" content="2024-03-12T02:53:53.776Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          172 字
+          3.1k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          2 分钟
+          26 分钟
         
       </span>
     
@@ -291,10 +291,72 @@
                 
                 <p>可查阅 <code>:h vim.diagnostic</code>.</p>
 <p>Nvim 提供了一个 framework 来显示外部工具产生的 errors or warnings, 即 diagnostics. 其来源可以是 linters or LSP servers.</p>
-<p>在 Nvim 中 reports diagnostics 的步骤为:</p>
-<ol>
+<h1 id="reports-diagnostics-的步骤"><a href="#reports-diagnostics-的步骤" class="headerlink" title="reports diagnostics 的步骤"></a>reports diagnostics 的步骤</h1><ol>
 <li>用 <code>nvim_create_namespace()</code> 创建一个具名 namespace</li>
+<li>用 <code>vim.diagnostic.config()</code> 给 diagnostic namespace 设置选项</li>
+<li>产生 diagnostics</li>
+<li>用 <code>vim.diagnostics.set()</code> 将 diagnostics 设置到一个 buffer</li>
+<li>Repeat fron step 3</li>
 </ol>
+<p>Report diagnostics 的被称为 “diagnostic producers”, 而阅读 diagnostics 的被称为 “diagnostic consumers”.</p>
+<h1 id="diagnostic-的结构"><a href="#diagnostic-的结构" class="headerlink" title="diagnostic 的结构"></a>diagnostic 的结构</h1><p>一个 <code>diagnostic</code> 是一个 lua table with the following keys. 必要的 key are indicated with (+):</p>
+<pre><code class="hljs">bufnr: Buffer number
+lnum(+): The starting line of the diagnostic
+end_lnum: The final line of the diagnostic
+col(+): The starting column of the diagnostic
+end_col: The final column of the diagnostic
+severity: The severity of the diagnostic vim.diagnostic.severity
+message(+): The diagnostic text
+source: The source of the diagnostic
+code: The diagnostic code
+user_data: Arbitrary data plugins or users can add
+</code></pre>
+<p>这里指定的行和列都是 0-based.</p>
+<h1 id="Severity"><a href="#Severity" class="headerlink" title="Severity"></a>Severity</h1><p>可用的 severity 定义在 <code>vim.diagnostic.severity</code> 这个 table 中:</p>
+<pre><code class="hljs">vim.diagnostic.severity.ERROR
+vim.diagnostic.severity.WARN
+vim.diagnostic.severity.INFO
+vim.diagnostic.severity.HINT
+</code></pre>
+<h1 id="Handler"><a href="#Handler" class="headerlink" title="Handler"></a>Handler</h1><p>Diagnostics are shown to user with <code>vim.diagnostic.show()</code>. 而 display of diagnostics 是由 handlers 来处理.</p>
+<p>一个 handler 是一个 table with a “show” and (optionally) a “hide” function, 其通过在 <code>vim.diagnostic.handlers</code> 这个 table 中添加一个键值来注册.</p>
+<p>默认可用的 handler 有:</p>
+<ul>
+<li><code>vim.diagnostic.handlers.virtual_text</code></li>
+<li><code>vim.diagnostic.handlers.signs</code></li>
+<li><code>vim.diagnostic.handlers.underline</code></li>
+</ul>
+<p>这些 handler 都可以被覆盖.</p>
+<h2 id="show-function"><a href="#show-function" class="headerlink" title="show function"></a>show function</h2><p>show function 的函数签名为:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(namespace, bufnr, diagnostics, opts)</span></span><br></code></pre></td></tr></table></figure>
+<p>其用于处理 the display of diagnostics.</p>
+<h2 id="hide-function"><a href="#hide-function" class="headerlink" title="hide function"></a>hide function</h2><p>hide function 的函数签名为:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(namespace, bufnr)</span></span><br></code></pre></td></tr></table></figure>
+<p>其用于清理 any actions taken by the “show” function.</p>
+<h2 id="handler-configuration"><a href="#handler-configuration" class="headerlink" title="handler configuration"></a>handler configuration</h2><p>用 <code>vim.diagnostic.confg()</code> 来设置. 其实际设置的为传入 show function 的 opts 参数.</p>
+<h2 id="handler-example"><a href="#handler-example" class="headerlink" title="handler example"></a>handler example</h2><p>如:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-comment">-- It&#x27;s good practice to namespace custom handlers to avoid collisions</span><br>vim.diagnostic.handlers[<span class="hljs-string">&quot;my/notify&quot;</span>] = &#123;<br>  show = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(namespace, bufnr, diagnostics, opts)</span></span><br>    <span class="hljs-comment">-- In our example, the opts table has a &quot;log_level&quot; option</span><br>    <span class="hljs-keyword">local</span> level = opts[<span class="hljs-string">&quot;my/notify&quot;</span>].log_level<br><br>    <span class="hljs-keyword">local</span> name = vim.diagnostic.get_namespace(namespace).name<br>    <span class="hljs-keyword">local</span> msg = <span class="hljs-built_in">string</span>.<span class="hljs-built_in">format</span>(<span class="hljs-string">&quot;%d diagnostics in buffer %d from %s&quot;</span>,<br>                              #diagnostics,<br>                              bufnr,<br>                              name)<br>    vim.notify(msg, level)<br>  <span class="hljs-keyword">end</span>,<br>&#125;<br><br><span class="hljs-comment">-- Users can configure the handler</span><br>vim.diagnostic.<span class="hljs-built_in">config</span>(&#123;<br>  [<span class="hljs-string">&quot;my/notify&quot;</span>] = &#123;<br>    log_level = vim.<span class="hljs-built_in">log</span>.levels.INFO<br>  &#125;<br>&#125;)<br></code></pre></td></tr></table></figure>
+
+<h1 id="Highlights"><a href="#Highlights" class="headerlink" title="Highlights"></a>Highlights</h1><p>所有与 diagnostic 相关的 highlights 都定义以 <code>Diagnostic</code> 开头. 紧接着 the type of highlight (如 <code>Sign</code>, <code>Underline</code>) 和 the severity (如 <code>Error</code>, <code>Warn</code>).</p>
+<h1 id="Signs"><a href="#Signs" class="headerlink" title="Signs"></a>Signs</h1><p>Signs 定义给每一个 diagnostic severity 使用, 默认的 sign 是 severity name 的第一个字母 (如 “E” for ERROR).</p>
+<p>可以通过 <code>vim.diagnostic.config()</code> 来自定义:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-comment">-- Highlight entire line for errors</span><br><span class="hljs-comment">-- Highlight the line number for warnings</span><br>vim.diagnostic.<span class="hljs-built_in">config</span>(&#123;<br>    signs = &#123;<br>        text = &#123;<br>            [vim.diagnostic.severity.ERROR] = <span class="hljs-string">&#x27;&#x27;</span>,<br>            [vim.diagnostic.severity.WARN] = <span class="hljs-string">&#x27;&#x27;</span>,<br>        &#125;,<br>        linehl = &#123;<br>            [vim.diagnostic.severity.ERROR] = <span class="hljs-string">&#x27;ErrorMsg&#x27;</span>,<br>        &#125;,<br>        numhl = &#123;<br>            [vim.diagnostic.severity.WARN] = <span class="hljs-string">&#x27;WarningMsg&#x27;</span>,<br>        &#125;,<br>    &#125;,<br>&#125;)<br></code></pre></td></tr></table></figure>
+
+<h1 id="Events"><a href="#Events" class="headerlink" title="Events"></a>Events</h1><p>用于触发 autocommand.</p>
+<p>有 <code>DiagnosticChanged</code>, 即每一次 diagnostic 改变之后.</p>
+<p>示例:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs lua">vim.api.nvim_create_autocmd(<span class="hljs-string">&#x27;DiagnosticChanged&#x27;</span>, &#123;<br>  callback = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(args)</span></span><br>    <span class="hljs-keyword">local</span> diagnostics = args.data.diagnostics<br>    vim.<span class="hljs-built_in">print</span>(diagnostics)<br>  <span class="hljs-keyword">end</span>,<br>&#125;)<br></code></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+
+
 
                 
               </div>
