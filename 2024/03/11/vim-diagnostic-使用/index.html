@@ -24,7 +24,7 @@
 <meta property="og:description" content="可查阅 :h vim.diagnostic. Nvim 提供了一个 framework 来显示外部工具产生的 errors or warnings, 即 diagnostics. 其来源可以是 linters or LSP servers. reports diagnostics 的步骤 用 nvim_create_namespace() 创建一个具名 namespace 用 vim.diagno">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2024-03-11T13:46:31.000Z">
-<meta property="article:modified_time" content="2024-03-12T02:53:53.776Z">
+<meta property="article:modified_time" content="2024-03-12T03:44:57.747Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3.1k 字
+          4.3k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          26 分钟
+          36 分钟
         
       </span>
     
@@ -299,19 +299,6 @@
 <li>Repeat fron step 3</li>
 </ol>
 <p>Report diagnostics 的被称为 “diagnostic producers”, 而阅读 diagnostics 的被称为 “diagnostic consumers”.</p>
-<h1 id="diagnostic-的结构"><a href="#diagnostic-的结构" class="headerlink" title="diagnostic 的结构"></a>diagnostic 的结构</h1><p>一个 <code>diagnostic</code> 是一个 lua table with the following keys. 必要的 key are indicated with (+):</p>
-<pre><code class="hljs">bufnr: Buffer number
-lnum(+): The starting line of the diagnostic
-end_lnum: The final line of the diagnostic
-col(+): The starting column of the diagnostic
-end_col: The final column of the diagnostic
-severity: The severity of the diagnostic vim.diagnostic.severity
-message(+): The diagnostic text
-source: The source of the diagnostic
-code: The diagnostic code
-user_data: Arbitrary data plugins or users can add
-</code></pre>
-<p>这里指定的行和列都是 0-based.</p>
 <h1 id="Severity"><a href="#Severity" class="headerlink" title="Severity"></a>Severity</h1><p>可用的 severity 定义在 <code>vim.diagnostic.severity</code> 这个 table 中:</p>
 <pre><code class="hljs">vim.diagnostic.severity.ERROR
 vim.diagnostic.severity.WARN
@@ -347,10 +334,43 @@ vim.diagnostic.severity.HINT
 <p>示例:</p>
 <figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs lua">vim.api.nvim_create_autocmd(<span class="hljs-string">&#x27;DiagnosticChanged&#x27;</span>, &#123;<br>  callback = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(args)</span></span><br>    <span class="hljs-keyword">local</span> diagnostics = args.data.diagnostics<br>    vim.<span class="hljs-built_in">print</span>(diagnostics)<br>  <span class="hljs-keyword">end</span>,<br>&#125;)<br></code></pre></td></tr></table></figure>
 
-
-
-
-
+<h1 id="可用的-structure"><a href="#可用的-structure" class="headerlink" title="可用的 structure"></a>可用的 structure</h1><p>这些 structure (都是 lua table), 并不是预定义有的, 只是定义了这些 table 需要满足的结构, 用于传入给一些 function 使用, 或者是作为 function 的返回值. </p>
+<h2 id="vimm-Diagnostic"><a href="#vimm-Diagnostic" class="headerlink" title="vimm.Diagnostic"></a>vimm.Diagnostic</h2><p>一个 lua table with the following keys. 必要的 key are indicated with (+):</p>
+<pre><code class="hljs">bufnr: Buffer number
+lnum(+): The starting line of the diagnostic
+end_lnum: The final line of the diagnostic
+col(+): The starting column of the diagnostic
+end_col: The final column of the diagnostic
+severity: The severity of the diagnostic vim.diagnostic.severity
+message(+): The diagnostic text
+source: The source of the diagnostic
+code: The diagnostic code
+user_data: Arbitrary data plugins or users can add
+</code></pre>
+<p>这里指定的行和列都是 0-based.</p>
+<h1 id="vim-diagnostic-的使用"><a href="#vim-diagnostic-的使用" class="headerlink" title="vim.diagnostic 的使用"></a>vim.diagnostic 的使用</h1><h2 id="vim-diagnostic-config"><a href="#vim-diagnostic-config" class="headerlink" title="vim.diagnostic.config()"></a>vim.diagnostic.config()</h2><figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lua">vim.diagnostic.<span class="hljs-built_in">config</span>(&#123;opts&#125;, &#123;namespace&#125;)<br></code></pre></td></tr></table></figure>
+<p>可以全局设置或者对指定 namespace 设置.</p>
+<p>使用配置的优先级为:</p>
+<ul>
+<li>Ephemeral configuration, 最高 (用 <code>vim.diagnostic.set</code> 或 <code>vim.diagnostic.show</code> 设置)</li>
+<li>Per-namespace</li>
+<li>Global configuration</li>
+</ul>
+<h2 id="vim-diagnostic-disable"><a href="#vim-diagnostic-disable" class="headerlink" title="vim.diagnostic.disable()"></a>vim.diagnostic.disable()</h2><figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs vim"><span class="hljs-keyword">vim</span>.diagnostic.disable(&#123;<span class="hljs-built_in">bufnr</span>&#125;, &#123;namespace&#125;)<br></code></pre></td></tr></table></figure>
+<p>禁用一个 buffer 或者 namespace 的 diagnostic.</p>
+<h2 id="vim-diagnostic-enable"><a href="#vim-diagnostic-enable" class="headerlink" title="vim.diagnostic.enable()"></a>vim.diagnostic.enable()</h2><figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs vim"><span class="hljs-keyword">vim</span>.diagnostic.enable(&#123;<span class="hljs-built_in">bufnr</span>&#125;, &#123;namespace&#125;)<br></code></pre></td></tr></table></figure>
+<p>启用一个 buffer 或者 namespace 的 diagnostic.</p>
+<h2 id="vim-diagnostic-fromqflist"><a href="#vim-diagnostic-fromqflist" class="headerlink" title="vim.diagnostic.fromqflist()"></a>vim.diagnostic.fromqflist()</h2><figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs vim"><span class="hljs-keyword">vim</span>.diagnostic.fromqflist(&#123;<span class="hljs-keyword">list</span>&#125;)<br></code></pre></td></tr></table></figure>
+<p>将 quickfix list 转换为 a list of diagnostics.</p>
+<h2 id="vim-diagnostic-get"><a href="#vim-diagnostic-get" class="headerlink" title="vim.diagnostic.get()"></a>vim.diagnostic.get()</h2><figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs vim"><span class="hljs-keyword">vim</span>.diagnostic.<span class="hljs-built_in">get</span>(&#123;<span class="hljs-built_in">bufnr</span>&#125;, &#123;opts&#125;)<br></code></pre></td></tr></table></figure>
+<p>获取当前的 diagnostics.</p>
+<h2 id="vim-diagnostic-set"><a href="#vim-diagnostic-set" class="headerlink" title="vim.diagnostic.set()"></a>vim.diagnostic.set()</h2><figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs vim"><span class="hljs-keyword">vim</span>.diagnostic.<span class="hljs-keyword">set</span>(&#123;namespace&#125;, &#123;<span class="hljs-built_in">bufnr</span>&#125;, &#123;diagnostics&#125;, &#123;opts&#125;)<br></code></pre></td></tr></table></figure>
+<p>设置指定 namespace 和 buffer 的 diagnostics.</p>
+<h2 id="vim-diagnostic-get-namespace"><a href="#vim-diagnostic-get-namespace" class="headerlink" title="vim.diagnostic.get_namespace()"></a>vim.diagnostic.get_namespace()</h2><figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs vim"><span class="hljs-keyword">vim</span>.diagnostic.get_namespace(&#123;namespace&#125;)<br></code></pre></td></tr></table></figure>
+<p>获取指定 namespace 的 metadata 信息.</p>
+<h2 id="vim-diagnostic-get-namespaces"><a href="#vim-diagnostic-get-namespaces" class="headerlink" title="vim.diagnostic.get_namespaces()"></a>vim.diagnostic.get_namespaces()</h2><figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs vim"><span class="hljs-keyword">vim</span>.diagnostic.get_namespaces(&#123;namespace&#125;)<br></code></pre></td></tr></table></figure>
+<p>获取当前 namespace 的 metadata 信息.</p>
+<h2 id="vim-diagnostic-hide"><a href="#vim-diagnostic-hide" class="headerlink" title="vim.diagnostic.hide()"></a>vim.diagnostic.hide()</h2><figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs vim"><span class="hljs-keyword">vim</span>.diagnostic.<span class="hljs-keyword">hide</span>(&#123;namespace&#125;, &#123;<span class="hljs-built_in">bufnr</span>&#125;)<br></code></pre></td></tr></table></figure>
 
 
 
