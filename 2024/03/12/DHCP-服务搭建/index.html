@@ -24,7 +24,7 @@
 <meta property="og:description" content="介绍DHCP, Dynamic Host Configuration Protocol, 是一个自动给 client machines 分发 TCP&#x2F;IP 信息的网络协议. 每一个 client 通过连接 DHCP server, 来获取自己的网络配置信息 (包括, IP address, gateway, 和 DNS servers). 安装1yum install -y dhcp">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2024-03-12T13:57:48.000Z">
-<meta property="article:modified_time" content="2024-03-13T01:07:18.597Z">
+<meta property="article:modified_time" content="2024-03-13T01:49:18.139Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.5k 字
+          3.6k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          21 分钟
+          30 分钟
         
       </span>
     
@@ -302,7 +302,7 @@
 <li>Declaration, 就是有 <code>&#123;&#125;</code> 的部分</li>
 </ul>
 <h2 id="重新加载配置"><a href="#重新加载配置" class="headerlink" title="重新加载配置"></a>重新加载配置</h2><p>借助 <code>omshell</code> 命令.</p>
-<h2 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h2><h3 id="Subnet-Declaration"><a href="#Subnet-Declaration" class="headerlink" title="Subnet Declaration"></a>Subnet Declaration</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs conf">subnet 192.168.1.0 netmask 255.255.255.0 &#123;<br>        option routers                  192.168.1.254;<br>        option subnet-mask              255.255.255.0;<br>        option domain-search              &quot;example.com&quot;;<br>        option domain-name-servers       192.168.1.1;<br>        option time-offset              -18000;     # Eastern Standard Time<br>	range 192.168.1.10 192.168.1.100;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="DHCP-服务配置示例"><a href="#DHCP-服务配置示例" class="headerlink" title="DHCP 服务配置示例"></a>DHCP 服务配置示例</h2><h3 id="Subnet-Declaration"><a href="#Subnet-Declaration" class="headerlink" title="Subnet Declaration"></a>Subnet Declaration</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs conf">subnet 192.168.1.0 netmask 255.255.255.0 &#123;<br>        option routers                  192.168.1.254;<br>        option subnet-mask              255.255.255.0;<br>        option domain-search              &quot;example.com&quot;;<br>        option domain-name-servers       192.168.1.1;<br>        option time-offset              -18000;     # Eastern Standard Time<br>	range 192.168.1.10 192.168.1.100;<br>&#125;<br></code></pre></td></tr></table></figure>
 <ul>
 <li><code>subnet</code> 定义一个子网</li>
 <li><code>netmask</code> 指定这个子网的范围.</li>
@@ -321,12 +321,39 @@
 <li><code>option broadcast-address</code>, 指定网段中的广播地址</li>
 </ul>
 <h3 id="Static-IP-Address-Using-DHCP"><a href="#Static-IP-Address-Using-DHCP" class="headerlink" title="Static IP Address Using DHCP"></a>Static IP Address Using DHCP</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs conf">host apex &#123;<br>   option host-name &quot;apex.example.com&quot;;<br>   hardware ethernet 00:A0:78:8E:9E:AA;<br>   fixed-address 192.168.1.4;<br>&#125;<br></code></pre></td></tr></table></figure>
-
+<ul>
+<li><code>host apex</code>, 指定对一个特定的主机起作用, <code>apex</code> 为主机名条目 (在 dhcp 中的一个标识符, 用于区别多个配置)</li>
+<li><code>option host-name</code>, 指定主机名</li>
+<li><code>hardware ethernet</code>, 指定 MAC 地址</li>
+<li><code>fixed-address</code>, 指定对这个主机分配的固定 IP</li>
+</ul>
+<h3 id="Static-IP-Address-Using-DHCP-on-Multiple-Interface"><a href="#Static-IP-Address-Using-DHCP-on-Multiple-Interface" class="headerlink" title="Static IP Address Using DHCP on Multiple Interface"></a>Static IP Address Using DHCP on Multiple Interface</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs conf">Host apex.0 &#123;<br>    option host-name “apex.example.com”;<br>    hardware ethernet 00:A0:78:8E:9E:AA;<br>    option dhcp-client-identifier=ff:00:00:00:00:00:02:00:00:02:c9:00:00:02:c9:03:00:31:7b:11;<br>    fixed-address 172.31.0.50,172.31.2.50,172.31.1.50,172.31.3.50;<br>&#125;<br><br>host apex.1 &#123;<br>    option host-name “apex.example.com”;<br>    hardware ethernet 00:A0:78:8E:9E:AB;<br>    option dhcp-client-identifier=ff:00:00:00:00:00:02:00:00:02:c9:00:00:02:c9:03:00:31:7b:12;<br>    fixed-address 172.31.0.50,172.31.2.50,172.31.1.50,172.31.3.50;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>option dhcp-client-identifier</code>, 指定 DHCP 客户端标识符</li>
+</ul>
+<p>DHCP client identifier 是一种替代使用 MAC 地址作为客户端标识的方式.</p>
 <h3 id="Shared-network-Declaration"><a href="#Shared-network-Declaration" class="headerlink" title="Shared-network Declaration"></a>Shared-network Declaration</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs conf">shared-network name &#123;<br>    option domain-search            &quot;test.redhat.com&quot;;<br>    option domain-name-servers      ns1.redhat.com, ns2.redhat.com;<br>    option routers                  192.168.0.254;<br>    #more parameters for EXAMPLE shared-network<br>    subnet 192.168.1.0 netmask 255.255.252.0 &#123;<br>        #parameters for subnet<br>        range 192.168.1.1 192.168.1.254;<br>    &#125;<br>    subnet 192.168.2.0 netmask 255.255.252.0 &#123;<br>        #parameters for subnet<br>        range 192.168.2.1 192.168.2.254;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
-
+<ul>
+<li><code>shared-network name</code> 定义一个名为 “name” 的共享网络.</li>
+</ul>
+<p>通常情况下, 一个 dhcp 服务器只为一个子网提供 IP 地址分配, 而使用 <code>shared-network</code> 则能为多个子网提供.</p>
 <h3 id="Group-Declaration"><a href="#Group-Declaration" class="headerlink" title="Group Declaration"></a>Group Declaration</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs conf">group &#123;<br>   option routers                  192.168.1.254;<br>   option subnet-mask              255.255.255.0;<br>   option domain-search              &quot;example.com&quot;;<br>   option domain-name-servers       192.168.1.1;<br>   option time-offset              -18000;     # Eastern Standard Time<br>   host apex &#123;<br>      option host-name &quot;apex.example.com&quot;;<br>      hardware ethernet 00:A0:78:8E:9E:AA;<br>      fixed-address 192.168.1.4;<br>   &#125;<br>   host raleigh &#123;<br>      option host-name &quot;raleigh.example.com&quot;;<br>      hardware ethernet 00:A1:DD:74:C3:F2;<br>      fixed-address 192.168.1.6;<br>   &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>group</code>, 定义了一个 dhcp group, 对组内的设备应用相同的配置</li>
+</ul>
+<h2 id="Lease-Database"><a href="#Lease-Database" class="headerlink" title="Lease Database"></a>Lease Database</h2><p><code>/var/lib/dhcp/dhcpd.leases</code> 文件存储 DHCP client 的 lease 信息. 一般不对这个文件做修改.</p>
+<p>DHCP lease information 包含:</p>
+<ul>
+<li>lease 的时长</li>
+<li>lease 的开始和结束时间</li>
+<li>哪一个 IP 被分配</li>
+<li>Client 的 MAC 地址</li>
+</ul>
+<h1 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h1><h2 id="服务的启用和停止"><a href="#服务的启用和停止" class="headerlink" title="服务的启用和停止"></a>服务的启用和停止</h2><p>启用:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">systemctl start dhcpd.servise<br></code></pre></td></tr></table></figure>
 
-
+<p>停止:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">systemctl stop dhcpd.servise<br></code></pre></td></tr></table></figure>
 
                 
               </div>
@@ -407,6 +434,12 @@
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2024/03/13/TFTP-%E6%9C%8D%E5%8A%A1%E6%90%AD%E5%BB%BA/" title="TFTP-服务搭建">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">TFTP-服务搭建</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">
