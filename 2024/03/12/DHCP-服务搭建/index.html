@@ -16,15 +16,15 @@
   <meta name="author" content="John Doe">
   <meta name="keywords" content="">
   
-    <meta name="description" content="介绍">
+    <meta name="description" content="介绍DHCP, Dynamic Host Configuration Protocol, 是一个自动给 client machines 分发 TCP&#x2F;IP 信息的网络协议. 每一个 client 通过连接 DHCP server, 来获取自己的网络配置信息 (包括, IP address, gateway, 和 DNS servers). 安装1yum install -y dhcp">
 <meta property="og:type" content="article">
 <meta property="og:title" content="DHCP-服务搭建">
 <meta property="og:url" content="http://example.com/2024/03/12/DHCP-%E6%9C%8D%E5%8A%A1%E6%90%AD%E5%BB%BA/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="介绍">
+<meta property="og:description" content="介绍DHCP, Dynamic Host Configuration Protocol, 是一个自动给 client machines 分发 TCP&#x2F;IP 信息的网络协议. 每一个 client 通过连接 DHCP server, 来获取自己的网络配置信息 (包括, IP address, gateway, 和 DNS servers). 安装1yum install -y dhcp">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2024-03-12T13:57:48.000Z">
-<meta property="article:modified_time" content="2024-03-12T13:58:44.890Z">
+<meta property="article:modified_time" content="2024-03-13T01:07:18.597Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2 字
+          2.5k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          1 分钟
+          21 分钟
         
       </span>
     
@@ -289,7 +289,45 @@
             
               <div class="markdown-body">
                 
-                <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1>
+                <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>DHCP, Dynamic Host Configuration Protocol, 是一个自动给 client machines 分发 TCP&#x2F;IP 信息的网络协议.</p>
+<p>每一个 client 通过连接 DHCP server, 来获取自己的网络配置信息 (包括, IP address, gateway, 和 DNS servers).</p>
+<h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">yum install -y dhcp<br></code></pre></td></tr></table></figure>
+
+<h1 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h1><p>配置文件为: <code>/etc/dhcp/dhcp.conf</code>, 这是一个空的配置文件, 在 <code>/usr/share/doc/dhcp-your-version/</code> 目录下有示例配置文件.</p>
+<p><code>DHCP</code> 还是用 <code>/var/lib/dhcpd/dhcpd.leases</code> 文件存放 client lease database.</p>
+<h2 id="配置语法"><a href="#配置语法" class="headerlink" title="配置语法"></a>配置语法</h2><p><code>#</code> 为注释符号.</p>
+<p>有两种语句:</p>
+<ul>
+<li>Parameters, 单独的语句, 以 <code>;</code> 结尾</li>
+<li>Declaration, 就是有 <code>&#123;&#125;</code> 的部分</li>
+</ul>
+<h2 id="重新加载配置"><a href="#重新加载配置" class="headerlink" title="重新加载配置"></a>重新加载配置</h2><p>借助 <code>omshell</code> 命令.</p>
+<h2 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h2><h3 id="Subnet-Declaration"><a href="#Subnet-Declaration" class="headerlink" title="Subnet Declaration"></a>Subnet Declaration</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs conf">subnet 192.168.1.0 netmask 255.255.255.0 &#123;<br>        option routers                  192.168.1.254;<br>        option subnet-mask              255.255.255.0;<br>        option domain-search              &quot;example.com&quot;;<br>        option domain-name-servers       192.168.1.1;<br>        option time-offset              -18000;     # Eastern Standard Time<br>	range 192.168.1.10 192.168.1.100;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>subnet</code> 定义一个子网</li>
+<li><code>netmask</code> 指定这个子网的范围.</li>
+<li><code>option routers</code> 指定 router 的 IP</li>
+<li><code>option subnet-mask</code> 为后面的客户端指定子网掩码</li>
+<li><code>option domain-search</code> 指定域名解析的搜索域</li>
+<li><code>option domain-name-servers</code> 指定 DNS 服务器 IP</li>
+<li><code>option time-offset</code> 用于时间同步</li>
+<li><code>range</code> 指定 DHCP 服务器可分配的 IP 范围</li>
+</ul>
+<h3 id="Range-Parameter"><a href="#Range-Parameter" class="headerlink" title="Range Parameter"></a>Range Parameter</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs conf">default-lease-time 600;<br>max-lease-time 7200;<br>option subnet-mask 255.255.255.0;<br>option broadcast-address 192.168.1.255;<br>option routers 192.168.1.254;<br>option domain-name-servers 192.168.1.1, 192.168.1.2;<br>option domain-search &quot;example.com&quot;;<br>subnet 192.168.1.0 netmask 255.255.255.0 &#123;<br>   range 192.168.1.10 192.168.1.100;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>在 declaration 语句之外的 parameter 语句可以作用于其后的所有 section.</p>
+<ul>
+<li><code>default-lease-time</code>, 指定默认的 ip lease time, 即 client 获取这个 ip 的有效时间</li>
+<li><code>max-lease-time</code>, 指定最大 ip lease time</li>
+<li><code>option broadcast-address</code>, 指定网段中的广播地址</li>
+</ul>
+<h3 id="Static-IP-Address-Using-DHCP"><a href="#Static-IP-Address-Using-DHCP" class="headerlink" title="Static IP Address Using DHCP"></a>Static IP Address Using DHCP</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs conf">host apex &#123;<br>   option host-name &quot;apex.example.com&quot;;<br>   hardware ethernet 00:A0:78:8E:9E:AA;<br>   fixed-address 192.168.1.4;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="Shared-network-Declaration"><a href="#Shared-network-Declaration" class="headerlink" title="Shared-network Declaration"></a>Shared-network Declaration</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs conf">shared-network name &#123;<br>    option domain-search            &quot;test.redhat.com&quot;;<br>    option domain-name-servers      ns1.redhat.com, ns2.redhat.com;<br>    option routers                  192.168.0.254;<br>    #more parameters for EXAMPLE shared-network<br>    subnet 192.168.1.0 netmask 255.255.252.0 &#123;<br>        #parameters for subnet<br>        range 192.168.1.1 192.168.1.254;<br>    &#125;<br>    subnet 192.168.2.0 netmask 255.255.252.0 &#123;<br>        #parameters for subnet<br>        range 192.168.2.1 192.168.2.254;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="Group-Declaration"><a href="#Group-Declaration" class="headerlink" title="Group Declaration"></a>Group Declaration</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs conf">group &#123;<br>   option routers                  192.168.1.254;<br>   option subnet-mask              255.255.255.0;<br>   option domain-search              &quot;example.com&quot;;<br>   option domain-name-servers       192.168.1.1;<br>   option time-offset              -18000;     # Eastern Standard Time<br>   host apex &#123;<br>      option host-name &quot;apex.example.com&quot;;<br>      hardware ethernet 00:A0:78:8E:9E:AA;<br>      fixed-address 192.168.1.4;<br>   &#125;<br>   host raleigh &#123;<br>      option host-name &quot;raleigh.example.com&quot;;<br>      hardware ethernet 00:A1:DD:74:C3:F2;<br>      fixed-address 192.168.1.6;<br>   &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+
                 
               </div>
             
