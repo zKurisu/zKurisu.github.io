@@ -24,7 +24,7 @@
 <meta property="og:description" content="Redis 官网Redis 中文网 简介Redis (Remote Dictionary Server) 是一种开源的键值存储的 NoSQL 数据库, 其由 C 语言编写, 提供多种数据结构的支持, 且所有数据存储在内存中, 可以实现快速的读写访问. 相关概念RDBMSRDBMS 指 Relation Database Management System, 关系型数据库管理系统. 存储的数据结构化">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2024-03-14T12:12:57.000Z">
-<meta property="article:modified_time" content="2024-03-16T04:01:39.180Z">
+<meta property="article:modified_time" content="2024-03-16T05:07:49.356Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          9.9k 字
+          12k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          83 分钟
+          98 分钟
         
       </span>
     
@@ -456,7 +456,47 @@
 
 <h3 id="获取指定区间的元素个数"><a href="#获取指定区间的元素个数" class="headerlink" title="获取指定区间的元素个数"></a>获取指定区间的元素个数</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">127.0.0.1:6379&gt; zcount salary 1000 3000<br>(<span class="hljs-built_in">integer</span>) 3<br></code></pre></td></tr></table></figure>
 
-<h1 id="三种特殊数据类型"><a href="#三种特殊数据类型" class="headerlink" title="三种特殊数据类型"></a>三种特殊数据类型</h1><h2 id="Geospatial"><a href="#Geospatial" class="headerlink" title="Geospatial"></a>Geospatial</h2><h2 id="Hyperloglog"><a href="#Hyperloglog" class="headerlink" title="Hyperloglog"></a>Hyperloglog</h2><h2 id="Bitmap"><a href="#Bitmap" class="headerlink" title="Bitmap"></a>Bitmap</h2><h1 id="基本使用"><a href="#基本使用" class="headerlink" title="基本使用"></a>基本使用</h1><p><a target="_blank" rel="noopener" href="https://redis.io/commands/">官网命令查看</a></p>
+<h1 id="三种特殊数据类型"><a href="#三种特殊数据类型" class="headerlink" title="三种特殊数据类型"></a>三种特殊数据类型</h1><h2 id="Geospatial"><a href="#Geospatial" class="headerlink" title="Geospatial"></a>Geospatial</h2><p>Geospatial 类型用于存储和处理地理空间信息. 如两地的距离, 方圆几里内的人数等.</p>
+<p>与 Geospatial 相关的命令都以 <code>geo</code> 开头.</p>
+<p>由于 Geospatial 的底层由 Zset 实现, 因此 Zset 命令可以作用于 Geospatial.</p>
+<h3 id="向-Geospatial-添加一个地理位置"><a href="#向-Geospatial-添加一个地理位置" class="headerlink" title="向 Geospatial 添加一个地理位置"></a>向 Geospatial 添加一个地理位置</h3><p>语法为:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">127.0.0.1:6379&gt; geoadd key [NX|XX] [CH] longitude latitude member [longitude latitude member ...]<br></code></pre></td></tr></table></figure>
+
+<p>注意添加时需要满足一定的规则:</p>
+<ul>
+<li>有效的经度为 <code>-180~180</code></li>
+<li>有效的纬度为 <code>-85.05~85.05</code></li>
+</ul>
+<p>如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs sh">127.0.0.1:6379&gt; GEOADD china:city 116.40 39.90 beijin<br>(<span class="hljs-built_in">integer</span>) 1<br>127.0.0.1:6379&gt; GEOADD china:city 121.47 31.23 shanghai<br>(<span class="hljs-built_in">integer</span>) 1<br>127.0.0.1:6379&gt; GEOADD china:city 106.50 29.53 chongqin 114.05 22.52 1shengzhen<br>(<span class="hljs-built_in">integer</span>) 2<br>127.0.0.1:6379&gt; GEOADD china:city 120.16 30.24 hangzhou 108.96 34.26 xian<br>(<span class="hljs-built_in">integer</span>) 2<br></code></pre></td></tr></table></figure>
+
+<h3 id="获取某一个-Position-的经度和纬度"><a href="#获取某一个-Position-的经度和纬度" class="headerlink" title="获取某一个 Position 的经度和纬度"></a>获取某一个 Position 的经度和纬度</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">127.0.0.1:6379&gt; GEOPOS china:city beijing<br>1) 1) <span class="hljs-string">&quot;116.3999&quot;</span><br>   1) <span class="hljs-string">&quot;39.90000&quot;</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="获取两地之间的距离"><a href="#获取两地之间的距离" class="headerlink" title="获取两地之间的距离"></a>获取两地之间的距离</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">127.0.0.1:6379&gt; GEODIST key member1 member2 [M|KM|FT|MI]<br></code></pre></td></tr></table></figure>
+
+<h3 id="以给定的经度纬度为中心-找出指定半径内的元素"><a href="#以给定的经度纬度为中心-找出指定半径内的元素" class="headerlink" title="以给定的经度纬度为中心, 找出指定半径内的元素"></a>以给定的经度纬度为中心, 找出指定半径内的元素</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">127.0.0.1:6379&gt; GEORADIUS key longitude latitude radius M|KM|FT|MI [WITHCOORD] [WITHDIST] [WITHHASH] [COUNT count [ANY]] [ASC|DESC]<br></code></pre></td></tr></table></figure>
+<p>如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">127.0.0.1:6379&gt; GEORADIUS china:city 110 30 500 km<br>1) <span class="hljs-string">&quot;chongqin&quot;</span><br>2) <span class="hljs-string">&quot;xian&quot;</span><br></code></pre></td></tr></table></figure>
+<p><code>count</code> 可以限制查询的个数.</p>
+<h3 id="以给定元素为中心-找出指定半径内的元素"><a href="#以给定元素为中心-找出指定半径内的元素" class="headerlink" title="以给定元素为中心, 找出指定半径内的元素"></a>以给定元素为中心, 找出指定半径内的元素</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">127.0.0.1:6379&gt; GEORADIUSBYMEMBER key member radius M|KM|FT|MI [WITHDIST] [WITHCOORD] [WITHHASH] [COUNT count [ANY]] [ASC|DESC]<br></code></pre></td></tr></table></figure>
+
+<p>如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">127.0.0.1:6379&gt; GEORADIUSBYMEMBER china:city beijing 1000 km<br>1) <span class="hljs-string">&quot;beijing&quot;</span><br>2) <span class="hljs-string">&quot;xian&quot;</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="返回一个元素信息的-hash-表示"><a href="#返回一个元素信息的-hash-表示" class="headerlink" title="返回一个元素信息的 hash 表示"></a>返回一个元素信息的 hash 表示</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">127.0.0.1:6379&gt; GEOHASH key [member [member ...]]<br></code></pre></td></tr></table></figure>
+
+<h3 id="删除某个地理位置"><a href="#删除某个地理位置" class="headerlink" title="删除某个地理位置"></a>删除某个地理位置</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">127.0.0.1:6379&gt; zrem china:city beijing<br>(<span class="hljs-built_in">integer</span>) 1<br></code></pre></td></tr></table></figure>
+
+<h2 id="Hyperloglog"><a href="#Hyperloglog" class="headerlink" title="Hyperloglog"></a>Hyperloglog</h2><p>HyperLogLog 是 Redis 中一种基数估计算法的实现, 用于估计集合中不重复元素的数量. 其内存占用极小. 但可能有 0.81% 的错误率.</p>
+<p>所有和 HyperLogLog 相关的命令都以 <code>PF</code> 开头.</p>
+<h3 id="向-HyperLogLog-中添加元素"><a href="#向-HyperLogLog-中添加元素" class="headerlink" title="向 HyperLogLog 中添加元素"></a>向 HyperLogLog 中添加元素</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">127.0.0.1:6379&gt; PFADD key [element [element ...]]<br></code></pre></td></tr></table></figure>
+
+<h3 id="获取-HyperLogLog-的基数估计值"><a href="#获取-HyperLogLog-的基数估计值" class="headerlink" title="获取 HyperLogLog 的基数估计值"></a>获取 HyperLogLog 的基数估计值</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">127.0.0.1:6379&gt; PFCOUNT key [key ...]<br></code></pre></td></tr></table></figure>
+
+<h3 id="合并两个-HyperLogLog"><a href="#合并两个-HyperLogLog" class="headerlink" title="合并两个 HyperLogLog"></a>合并两个 HyperLogLog</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">127.0.0.1:6379&gt; PFMERGE destkey [sourcekey [sourcekey ...]]<br></code></pre></td></tr></table></figure>
+
+<h2 id="Bitmaps"><a href="#Bitmaps" class="headerlink" title="Bitmaps"></a>Bitmaps</h2><p>Bitmaps (位图) 是 Redis 中一种特殊的数据类型, 用于存储和操作位级别的数据. 它可以用于表示一系列的开关状态, 标记用户的在线状态, 记录某个事件在时间轴上的发生情况等.</p>
+<h1 id="基本使用"><a href="#基本使用" class="headerlink" title="基本使用"></a>基本使用</h1><p><a target="_blank" rel="noopener" href="https://redis.io/commands/">官网命令查看</a></p>
 <h2 id="查看所有键值"><a href="#查看所有键值" class="headerlink" title="查看所有键值"></a>查看所有键值</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">127.0.0.1:6379&gt; keys *<br></code></pre></td></tr></table></figure>
 
 <h2 id="关断-redis"><a href="#关断-redis" class="headerlink" title="关断 redis"></a>关断 redis</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">127.0.0.1:6379&gt; shutdown<br>not connected&gt; <br></code></pre></td></tr></table></figure>
