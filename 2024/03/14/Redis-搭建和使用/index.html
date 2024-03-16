@@ -25,8 +25,10 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/redis-RDB.png">
 <meta property="og:image" content="http://example.com/img/redis-AOF.png">
+<meta property="og:image" content="http://example.com/img/redis-sentinel.png">
+<meta property="og:image" content="http://example.com/img/redis-multi-sentinel.png">
 <meta property="article:published_time" content="2024-03-14T12:12:57.000Z">
-<meta property="article:modified_time" content="2024-03-16T08:05:27.796Z">
+<meta property="article:modified_time" content="2024-03-16T09:07:45.737Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/redis-RDB.png">
@@ -238,7 +240,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          14k 字
+          15k 字
         
       </span>
     
@@ -249,7 +251,7 @@
         
         
         
-          115 分钟
+          125 分钟
         
       </span>
     
@@ -571,9 +573,44 @@
 
 <h2 id="取消一个频道的订阅"><a href="#取消一个频道的订阅" class="headerlink" title="取消一个频道的订阅"></a>取消一个频道的订阅</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">127.0.0.1:6379&gt; UNSUBSCRIBE [channel [channel ...]]<br></code></pre></td></tr></table></figure>
 
+<h1 id="Redis-主从复制"><a href="#Redis-主从复制" class="headerlink" title="Redis 主从复制"></a>Redis 主从复制</h1><p>主从复制, 指将一台 Redis 服务器的数据, 复制到其他的 Redis 服务器, 前者称为主节点 (master&#x2F;leader), 后者称为从节点 (slave&#x2F;follower), 数据只能从主节点复制到从节点.</p>
+<p>在 Redis 集群中, master 节点一般用于写, 而 slave 节点用于读.</p>
+<p>一个 master 能有多个 slave, 而一个 slave 只能对应一个 master.</p>
+<p>默认情况下, Redis 服务都是以 master 启动. 可以在 <code>redis-cli</code> 中获取与主从复制相关的信息:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">127.0.0.1:6379&gt; info replication<br></code></pre></td></tr></table></figure>
 
+<p>当一个 <code>redis-server</code> 设置为 slave 后, 其不再可写 (此时只有 master 可写), 但是会同步 master 的信息.</p>
+<p>Slave 启动且成功连接到 master 后会发送一个 sync 同步命令, master 接到命令后, 会启动后台的存盘进程, 同时收集所有接收到的用于修改数据集的命令, 在后台进程执行完毕之后, master 将传送整个数据文件到 slave.</p>
+<p>有几种复制方式:</p>
+<ul>
+<li>全量复制, slave 服务在接收到数据库文件数据后, 将其存盘并加载到内存中 (在 slave 刚连接的时候执行)</li>
+<li>增量复制, master 将新的所有收集到的修改命令依次传送给 slave (一次全量复制之后执行)</li>
+</ul>
+<h2 id="从机配置"><a href="#从机配置" class="headerlink" title="从机配置"></a>从机配置</h2><p>在 <code>redis-cli</code> 中配置为:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">127.0.0.1:6379&gt; SLAVEOF host port|NO ONE<br></code></pre></td></tr></table></figure>
 
+<p><code>SLAVEOF NO ONE</code> 表示把自己设置为 master.</p>
+<p>或修改配置文件为:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">replicaof &lt;host&gt; &lt;port&gt;<br></code></pre></td></tr></table></figure>
 
+<h2 id="哨兵模式"><a href="#哨兵模式" class="headerlink" title="哨兵模式"></a>哨兵模式</h2><p>哨兵模式 (Sentinel) 即主从切换, 当 master 宕机后, 让一台 slave 会升级为 master (通过哨兵间的投票), 接替进行写操作, 并同步给其他的 slaves.</p>
+<p>哨兵是一个独立的进程, 其通过发送命令, 等待 Redis server 响应, 以此监控多个 Redis 实例:</p>
+<p><img src="/../img/redis-sentinel.png" srcset="/img/loading.gif" lazyload></p>
+<p>为避免哨兵进程也出现故障, 一般会配置多个:</p>
+<p><img src="/../img/redis-multi-sentinel.png" srcset="/img/loading.gif" lazyload></p>
+<p>哨兵之间也会相互监控.</p>
+<h3 id="最基本的哨兵配置"><a href="#最基本的哨兵配置" class="headerlink" title="最基本的哨兵配置"></a>最基本的哨兵配置</h3><p>在 <code>sentinel.conf</code> (文件名任意) 中写入:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs conf">sentinel monitor myredis 127.0.0.1 6379 1<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>sentinel</code> 表明该配置是针对 Redis 哨兵模式</li>
+<li><code>monitor</code> 表明要监控某一个 Redis 服务器</li>
+<li><code>myredis</code> 为被监控的 Redis 服务器的名称, 可以自定义</li>
+<li><code>1</code> 表明需要哨兵投票的数量, 这里表明只要一个哨兵投票则可认为 Redis master 失效.</li>
+</ul>
+<p>然后用:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">redis-sentinel sentinel.conf<br></code></pre></td></tr></table></figure>
+<p>启动一个哨兵.</p>
+<p>此时若监控的 redis server 挂掉了, 则会从其 slave 中选举出一个作为新的 master.</p>
 <h1 id="基本使用"><a href="#基本使用" class="headerlink" title="基本使用"></a>基本使用</h1><p><a target="_blank" rel="noopener" href="https://redis.io/commands/">官网命令查看</a></p>
 <h2 id="查看所有键值"><a href="#查看所有键值" class="headerlink" title="查看所有键值"></a>查看所有键值</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">127.0.0.1:6379&gt; keys *<br></code></pre></td></tr></table></figure>
 
