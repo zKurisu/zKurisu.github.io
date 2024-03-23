@@ -28,7 +28,7 @@
 <meta property="og:image" content="http://example.com/img/RAID-1-0-structure.png">
 <meta property="og:image" content="http://example.com/img/RAID-5-structure.png">
 <meta property="article:published_time" content="2024-03-23T03:25:09.000Z">
-<meta property="article:modified_time" content="2024-03-23T06:20:01.996Z">
+<meta property="article:modified_time" content="2024-03-23T07:30:25.086Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/RAID-0-work-show.png">
@@ -240,7 +240,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.9k 字
+          5.3k 字
         
       </span>
     
@@ -251,7 +251,7 @@
         
         
         
-          17 分钟
+          44 分钟
         
       </span>
     
@@ -338,6 +338,65 @@
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">[root@localhost]<span class="hljs-comment"># mdadm --detail /dev/md0</span><br>[root@localhost]<span class="hljs-comment"># mdadm --create /dev/md[0-9] --auto=yes --level=[015] --chunk=Nk --raid-devices=N --spare-devices=N /dev/sdx /dev/hdx ...</span><br></code></pre></td></tr></table></figure>
 
 <p>命令最后接的是设备文件名, 其可以是一整块磁盘, 也可以是分区, 注意提供的数量要与 <code>--raid-devices</code> 和 <code>--spare-devices</code> 指定数目的和相同.</p>
+<h2 id="创建和挂载示例"><a href="#创建和挂载示例" class="headerlink" title="创建和挂载示例"></a>创建和挂载示例</h2><p>假设要创建一个 RAID 5 环境:</p>
+<ul>
+<li>利用 4 个 partition 组成 RAID 5</li>
+<li>每个 partition 大小为 1G</li>
+<li>再用 1 个 partition 作为 spare disk, 也是 1G</li>
+<li>chunk 设置为 256K</li>
+<li>将 RAID 5 设备挂载到 <code>/srv/raid</code> 目录下</li>
+</ul>
+<h3 id="创建-5-个分区以供使用"><a href="#创建-5-个分区以供使用" class="headerlink" title="创建 5 个分区以供使用"></a>创建 5 个分区以供使用</h3><p>这里通过一个 loop 设备来模拟:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">dd</span> <span class="hljs-keyword">if</span>=/dev/zero of=/root/disk bs=5M count=1024<br>losetup /dev/loop1 /root/disk<br>gdisk /dev/loop1<br>partprobe /dev/loop1<br></code></pre></td></tr></table></figure>
+
+<p>创建出的分区结构大概为:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs sh">[root@localhost ~]<span class="hljs-comment"># lsblk</span><br>NAME      MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT<br>loop1       7:1    0    5G  0 loop<br>├─loop1p1 259:0    0    1G  0 loop<br>├─loop1p2 259:1    0    1G  0 loop<br>├─loop1p3 259:2    0    1G  0 loop<br>├─loop1p4 259:3    0    1G  0 loop<br>└─loop1p5 259:4    0 1023M  0 loop<br>vda       253:0    0   30G  0 disk<br>├─vda1    253:1    0    3G  0 part [SWAP]<br>└─vda2    253:2    0   27G  0 part /<br></code></pre></td></tr></table></figure>
+
+<h3 id="创建-RAID"><a href="#创建-RAID" class="headerlink" title="创建 RAID"></a>创建 RAID</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">[root@localhost]<span class="hljs-comment"># mdadm --create /dev/md0 --auto=yes --level=5 --chunk=256K \</span><br>&gt; --raid-devices=4 --spare-devices=1 /dev/loop1p&#123;1,2,3,4,5&#125;<br>mdadm: Defaulting to version 1.2 metadata<br>mdadm: array /dev/md0 started.<br></code></pre></td></tr></table></figure>
+
+<h3 id="查看-RAID-信息"><a href="#查看-RAID-信息" class="headerlink" title="查看 RAID 信息"></a>查看 RAID 信息</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><code class="hljs sh">[root@localhost]<span class="hljs-comment"># mdadm --detail /dev/md0</span><br>/dev/md0:<br>           Version : 1.2<br>     Creation Time : Sat Mar 23 06:44:09 2024<br>        Raid Level : raid5<br>        Array Size : 3135744 (2.99 GiB 3.21 GB)<br>     Used Dev Size : 1045248 (1020.75 MiB 1070.33 MB)<br>      Raid Devices : 4<br>     Total Devices : 5<br>       Persistence : Superblock is persistent<br><br>       Update Time : Sat Mar 23 06:44:16 2024<br>             State : clean<br>    Active Devices : 4<br>   Working Devices : 5<br>    Failed Devices : 0<br>     Spare Devices : 1<br><br>            Layout : left-symmetric<br>        Chunk Size : 256K<br><br>Consistency Policy : resync<br><br>              Name : zabbix1:0  (<span class="hljs-built_in">local</span> to host zabbix1)<br>              UUID : 9a543106:d79123c0:ff6655de:81ad7034<br>            Events : 18<br><br>    Number   Major   Minor   RaidDevice State<br>       0     259        0        0      active <span class="hljs-built_in">sync</span>   /dev/loop1p1<br>       1     259        1        1      active <span class="hljs-built_in">sync</span>   /dev/loop1p2<br>       2     259        2        2      active <span class="hljs-built_in">sync</span>   /dev/loop1p3<br>       5     259        3        3      active <span class="hljs-built_in">sync</span>   /dev/loop1p4<br><br>       4     259        4        -      spare   /dev/loop1p5<br></code></pre></td></tr></table></figure>
+
+<p>也可以通过:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sh">[root@localhost]<span class="hljs-comment"># cat /proc/mdstat</span><br>Personalities : [raid6] [raid5] [raid4]<br>md0 : active raid5 loop1p4[5] loop1p5[4](S) loop1p3[2] loop1p2[1] loop1p1[0]<br>      3135744 blocks super 1.2 level 5, 256k chunk, algorithm 2 [4/4] [UUUU]<br><br>unused devices: &lt;none&gt;<br></code></pre></td></tr></table></figure>
+<p>来查看阵列信息.</p>
+<h3 id="格式化与挂载使用-RAID"><a href="#格式化与挂载使用-RAID" class="headerlink" title="格式化与挂载使用 RAID"></a>格式化与挂载使用 RAID</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sh">[root@localhost]<span class="hljs-comment"># mkfs.ext4 /dev/md0</span><br>[root@localhost]<span class="hljs-comment"># mkdir /srv/raid</span><br>[root@localhost]<span class="hljs-comment"># mount /dev/md0 /srv/raid</span><br>[root@localhost]<span class="hljs-comment"># df -Th /srv/raid</span><br>Filesystem     Type      Size  Used Avail Use% Mounted on<br>/dev/md0       ext4      2.9G   24K  2.8G   1% /srv/raid<br></code></pre></td></tr></table></figure>
+
+<h2 id="RAID-的救援模式"><a href="#RAID-的救援模式" class="headerlink" title="RAID 的救援模式"></a>RAID 的救援模式</h2><p>语法为:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">mdadm --manage /dev/md[0-9] [--add device] [--remove device] [--fail device]<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>--add</code>, 指添加 device 到 md 中</li>
+<li><code>--remove</code>, 指将指定 device 从 md 中移除</li>
+<li><code>--fail</code>, 将指定 device 设置为出错的状态</li>
+</ul>
+<p>将一个 device 标记为 <code>fail</code> 之后, RAID 会自动用 spare disk 进行重建.</p>
+<h3 id="标记一个-device-为-fail"><a href="#标记一个-device-为-fail" class="headerlink" title="标记一个 device 为 fail"></a>标记一个 device 为 fail</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">[root@localhost]<span class="hljs-comment"># mdadm --manage /dev/md0 --fail /dev/loop1p4</span><br>mdadm: <span class="hljs-built_in">set</span> /dev/loop1p4 faulty <span class="hljs-keyword">in</span> /dev/md0<br></code></pre></td></tr></table></figure>
+
+<h3 id="将一个-device-移出-RAID"><a href="#将一个-device-移出-RAID" class="headerlink" title="将一个 device 移出 RAID"></a>将一个 device 移出 RAID</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">[root@localhost]<span class="hljs-comment"># mdadm --manage /dev/md0 --remove /dev/loop1p4</span><br>mdadm: hot removed /dev/loop1p4 from /dev/md0<br></code></pre></td></tr></table></figure>
+
+<h3 id="将一个-device-添加回-RAID"><a href="#将一个-device-添加回-RAID" class="headerlink" title="将一个 device 添加回 RAID"></a>将一个 device 添加回 RAID</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">[root@localhost]<span class="hljs-comment"># mdadm --manage /dev/md0 --add /dev/loop1p4</span><br>mdadm: added /dev/loop1p4<br></code></pre></td></tr></table></figure>
+
+<h2 id="开机自动启动-RAID-并自动挂载"><a href="#开机自动启动-RAID-并自动挂载" class="headerlink" title="开机自动启动 RAID 并自动挂载"></a>开机自动启动 RAID 并自动挂载</h2><p>大多数 Linux 发行版都会自己搜寻 <code>/dev/md[0-9]</code> 并在开机时设置好所需的功能.</p>
+<p>也可以自行配置 software RAID, 其配置文件为 <code>/etc/mdadm.conf</code>.</p>
+<p>只需要知道 RAID 设备的 UUID 即可设置:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">[root@localhost]<span class="hljs-comment"># mdadm --detail /dev/md0 | grep -i uuid</span><br></code></pre></td></tr></table></figure>
+
+<p>修改 <code>/etc/mdadm.conf</code> 内容来自动启动 RAID:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-comment">#     RAID device   UUID</span><br>ARRAY /dev/md0      UUID=2256da5f:4870775e:cf2fe320:4dfabbc6<br></code></pre></td></tr></table></figure>
+
+<p>修改 <code>/etc/fstab</code> 自动挂载 RAID:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">UUID=2256da5f:4870775e:cf2fe320:4dfabbc6    /srv/raid   ext4 defaults 0 0<br></code></pre></td></tr></table></figure>
+
+<h2 id="关闭-RAID"><a href="#关闭-RAID" class="headerlink" title="关闭 RAID"></a>关闭 RAID</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">[root@localhost]<span class="hljs-comment"># umount /srv/raid</span><br></code></pre></td></tr></table></figure>
+<p>之后注释掉写在 <code>/etc/fstab</code> 以及 <code>/etc/mdadm.conf</code> 中的条目.</p>
+<p>覆盖掉 RAID 中的 metadata:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">[root@localhost]<span class="hljs-comment"># dd if=/dev/zero of=/dev/md0 bs=1M count=50</span><br></code></pre></td></tr></table></figure>
+
+<p>关闭 RAID:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">[root@localhost]<span class="hljs-comment"># mdadm --stop /dev/md0</span><br></code></pre></td></tr></table></figure>
+
+<p>覆盖掉各分区中的 RAID 的 metadata:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sh">[root@localhost]<span class="hljs-comment"># dd if=/dev/zero of=/dev/loop1p1 bs=1M count=10</span><br>[root@localhost]<span class="hljs-comment"># dd if=/dev/zero of=/dev/loop1p2 bs=1M count=10</span><br>[root@localhost]<span class="hljs-comment"># dd if=/dev/zero of=/dev/loop1p3 bs=1M count=10</span><br>[root@localhost]<span class="hljs-comment"># dd if=/dev/zero of=/dev/loop1p4 bs=1M count=10</span><br>[root@localhost]<span class="hljs-comment"># dd if=/dev/zero of=/dev/loop1p5 bs=1M count=10</span><br></code></pre></td></tr></table></figure>
+
 
                 
               </div>
