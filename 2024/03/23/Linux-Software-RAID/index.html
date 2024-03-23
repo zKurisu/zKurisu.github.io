@@ -16,17 +16,22 @@
   <meta name="author" content="John Doe">
   <meta name="keywords" content="">
   
-    <meta name="description" content="介绍什么是 RAIDRAID (Redundant Arrays of Inexpensive Disk, 容错式廉价磁盘阵列), 指一种硬件&#x2F;软件技术, 将多个较小的磁盘整合成一个较大的磁盘设备. 用于数据存储以及保护. software, hardware RAID">
+    <meta name="description" content="介绍什么是 RAIDRAID (Redundant Arrays of Inexpensive Disk, 容错式廉价磁盘阵列), 指一种硬件&#x2F;软件技术, 将多个较小的磁盘整合成一个较大的磁盘设备. 用于数据存储以及保护. RAID 分为多个 level, 分别对应不同的功能, 各 level 之间互有优劣: RAID-0, 性能最佳RAID-0 模式下, 数据会被等量的放置在各个磁盘中">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Linux-Software-RAID">
 <meta property="og:url" content="http://example.com/2024/03/23/Linux-Software-RAID/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="介绍什么是 RAIDRAID (Redundant Arrays of Inexpensive Disk, 容错式廉价磁盘阵列), 指一种硬件&#x2F;软件技术, 将多个较小的磁盘整合成一个较大的磁盘设备. 用于数据存储以及保护. software, hardware RAID">
+<meta property="og:description" content="介绍什么是 RAIDRAID (Redundant Arrays of Inexpensive Disk, 容错式廉价磁盘阵列), 指一种硬件&#x2F;软件技术, 将多个较小的磁盘整合成一个较大的磁盘设备. 用于数据存储以及保护. RAID 分为多个 level, 分别对应不同的功能, 各 level 之间互有优劣: RAID-0, 性能最佳RAID-0 模式下, 数据会被等量的放置在各个磁盘中">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/RAID-0-work-show.png">
+<meta property="og:image" content="http://example.com/img/RAID-1-mirror.png">
+<meta property="og:image" content="http://example.com/img/RAID-1-0-structure.png">
+<meta property="og:image" content="http://example.com/img/RAID-5-structure.png">
 <meta property="article:published_time" content="2024-03-23T03:25:09.000Z">
-<meta property="article:modified_time" content="2024-03-23T04:38:21.602Z">
+<meta property="article:modified_time" content="2024-03-23T05:37:59.361Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/RAID-0-work-show.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -235,7 +240,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          127 字
+          1.4k 字
         
       </span>
     
@@ -246,7 +251,7 @@
         
         
         
-          2 分钟
+          12 分钟
         
       </span>
     
@@ -290,7 +295,35 @@
               <div class="markdown-body">
                 
                 <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><h2 id="什么是-RAID"><a href="#什么是-RAID" class="headerlink" title="什么是 RAID"></a>什么是 RAID</h2><p>RAID (Redundant Arrays of Inexpensive Disk, 容错式廉价磁盘阵列), 指一种硬件&#x2F;软件技术, 将多个较小的磁盘整合成一个较大的磁盘设备. 用于数据存储以及保护.</p>
-<h2 id="software-hardware-RAID"><a href="#software-hardware-RAID" class="headerlink" title="software, hardware RAID"></a>software, hardware RAID</h2>
+<p>RAID 分为多个 level, 分别对应不同的功能, 各 level 之间互有优劣:</p>
+<h3 id="RAID-0-性能最佳"><a href="#RAID-0-性能最佳" class="headerlink" title="RAID-0, 性能最佳"></a>RAID-0, 性能最佳</h3><p>RAID-0 模式下, 数据会被等量的放置在各个磁盘中.</p>
+<p><img src="/../img/RAID-0-work-show.png" srcset="/img/loading.gif" lazyload></p>
+<p>如有两个磁盘组成 RAID-0, 当要写入 100MB 数据时, 每个磁盘会分配到 50MB 的存储量.</p>
+<p>读取数据时也是从 RAID-0 中所有磁盘读取.</p>
+<p>如果 RAID-0 中所有的磁盘为相同型号以及容量, 此时效果最好.</p>
+<p>其缺点就在于, 只要其中一块磁盘损坏, 则所有的数据都无法被读取 (因为一份数据是均匀分散到所有磁盘上的).</p>
+<p>且当组成 RAID-0 磁盘容量不一致时, 如 200G 和 500G 的两块磁盘, 当 200G 的磁盘被用完之后, 新增的所有数据都会写入 500G 的磁盘中.</p>
+<h3 id="RAID-1-完整备份"><a href="#RAID-1-完整备份" class="headerlink" title="RAID-1, 完整备份"></a>RAID-1, 完整备份</h3><p>RAID-1 模式下, 会让同一份数据完整的保存在两块磁盘上:</p>
+<p><img src="/../img/RAID-1-mirror.png" srcset="/img/loading.gif" lazyload></p>
+<p>如有两块磁盘组成 RAID-1, 当写入一个 100MB 的文件时, 两块磁盘都会同步写入 100MB 的数据.</p>
+<p>RAID-1 模式也最好是使用一样的磁盘来组建. 但如果容量不同, 则以总容量最小的一块磁盘为主.</p>
+<p>缺点在与 RAID 的容量相当于只有 50%. 且文件写入时性能较差. (主要是软件磁盘阵列比较差, 会占用系统 I&#x2F;O 总线)</p>
+<p>但优点就是任何一块磁盘损坏时, 数据还是能完整保存, 且读取性能还行 (当多个 process 读取同一笔数据时, RAID 会自行平衡).</p>
+<h3 id="RAID-1-0-RAID-0-1"><a href="#RAID-1-0-RAID-0-1" class="headerlink" title="RAID 1+0, RAID 0+1"></a>RAID 1+0, RAID 0+1</h3><p>RAID 1+0 指, 先将磁盘组成 RAID-1 阵列, 在将多个 RAID-1 阵列组成 RAID-0 阵列:</p>
+<p><img src="/../img/RAID-1-0-structure.png" srcset="/img/loading.gif" lazyload></p>
+<p>(RAID 0+1 就是先组 RAID-0 再组 RAID-1)</p>
+<h3 id="RAID-5-性能和数据备份的均衡考虑"><a href="#RAID-5-性能和数据备份的均衡考虑" class="headerlink" title="RAID-5, 性能和数据备份的均衡考虑"></a>RAID-5, 性能和数据备份的均衡考虑</h3><p>RAID-5 至少需要三块以上的磁盘才能组成, 在数据写入时类似 RAID-0, 不过在均匀循环写入的过程中, 会在每块磁盘中写入一个 Parity, 用以记录其他磁盘的备份数据, 用于当有磁盘损毁时修复.</p>
+<p><img src="/../img/RAID-5-structure.png" srcset="/img/loading.gif" lazyload></p>
+<p>由于 Parity 的存在, RAID-5 实际上的总体容量是整体磁盘数量减一块. 如由 3 块磁盘组成 RAID-5, 就只会剩下 2 块的存储容量.</p>
+<p>RAID-5 仅支持一块磁盘损毁, 如果损毁的磁盘数量大于等于两块, 整组的数据都会被损毁.</p>
+<p>优点在与读取性能和 RAID-0 接近, 但写入时由于要计算 parity, 则几乎没有性能的提升.</p>
+<h3 id="RAID-6-使用两块磁盘存储-parity"><a href="#RAID-6-使用两块磁盘存储-parity" class="headerlink" title="RAID-6, 使用两块磁盘存储 parity"></a>RAID-6, 使用两块磁盘存储 parity</h3><p>RAID-6 和 RAID-5 类似, 只是会使用两块磁盘来存储 parity, 也即整体磁盘容量会减少两块.</p>
+<p>此时容错的磁盘数量为 2.</p>
+<h3 id="Spare-Disk"><a href="#Spare-Disk" class="headerlink" title="Spare Disk"></a>Spare Disk</h3><p>Spare Disk 指一块或多块没有包含在原本磁盘阵列中的磁盘, 平时不会被磁盘阵列使用, 但当阵列中有磁盘损毁时, spare disk 会被主动拉进磁盘阵列中, 并将损坏的磁盘移除磁盘阵列.</p>
+<h2 id="software-hardware-RAID"><a href="#software-hardware-RAID" class="headerlink" title="software, hardware RAID"></a>software, hardware RAID</h2><p>Hardware RAID, 指通过磁盘阵列卡来达成阵列. 磁盘阵列卡上有一块专门的芯片处理 RAID 的任务, 因此在性能上会比较好. (毕竟不消耗系统 I&#x2F;O 了) 且一般的中高阶磁盘阵列卡都支持热插拔, 即在不关机的情况下抽换损坏的磁盘.</p>
+<p>但好的磁盘阵列卡价格比较贵, 而低端的磁盘阵列卡仅支持低端功能. 且需要操作系统有磁盘阵列卡的驱动.</p>
+<p>Software RAID 则是用软件来仿真阵列, </p>
+
                 
               </div>
             
