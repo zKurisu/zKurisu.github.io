@@ -25,7 +25,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/GPT-structure.png">
 <meta property="article:published_time" content="2024-03-24T02:57:25.000Z">
-<meta property="article:modified_time" content="2024-03-24T06:49:45.869Z">
+<meta property="article:modified_time" content="2024-03-24T07:45:27.663Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/GPT-structure.png">
@@ -237,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.3k 字
+          4.2k 字
         
       </span>
     
@@ -248,7 +248,7 @@
         
         
         
-          11 分钟
+          36 分钟
         
       </span>
     
@@ -321,7 +321,7 @@
 <li>取得各种信息后, 进行开机自检 (Power-on Self Test, POST), 之后执行硬件侦测的初始化</li>
 <li>BIOS 侦测到硬盘并其第一个扇区中前 446 Bytes 中存放的 boot loader 程序如 grub2</li>
 <li>Boot loader 中选择直接载入内核 (kernel) 以及虚拟文件系统 (Initial RAM FileSystem, initramfs) 到内存或转交给其他 loader (这里以 Linux 内核为例)</li>
-<li>Initramfs 在内存中被解压为根目录, 向 kernel 提供适当的内核模块, 让其能侦测硬件并载入驱动程序</li>
+<li>Initramfs 在内存中被解压为根目录, 向 kernel 提供适当的内核模块, 让其能侦测硬件并载入驱动程序, 并卸载 initramfs 以挂载实际的根目录</li>
 <li>硬件被成功驱动后, 内核调用 <code>systemd</code> 程序, 并以 <code>default.target</code> 的流程运行服务, <code>systemd</code> 会依次执行:<ul>
 <li><code>sysinit.target</code> 来初始化系统</li>
 <li><code>basic.target</code> 来准备操作系统环境</li>
@@ -332,6 +332,49 @@
 </ul>
 </li>
 </ol>
+<h1 id="Initramfs-的内容"><a href="#Initramfs-的内容" class="headerlink" title="Initramfs 的内容"></a>Initramfs 的内容</h1><p>Initramfs 是在挂载实际根目录前为 kernel 提供核心模块的临时根目录. 这里以 Archlinux 的为例. Initramfs 存放在 <code>/boot</code> 目录下, 为 <code>/boot/initramfs-linux.img</code>.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sh">[root@localhost]<span class="hljs-comment"># mkdir /tmp/initramfs</span><br>[root@localhost]<span class="hljs-comment"># cp /boot/initramfs-linux.img /tmp/initramfs</span><br>[root@localhost]<span class="hljs-comment"># cd /tmp/initramfs</span><br>[root@localhost]<span class="hljs-comment"># file initramfs-linux.img</span><br>initramfs-linux.img: Zstandard compressed data (v0.8+), Dictionary ID: None<br></code></pre></td></tr></table></figure>
+
+<p>这里可以看到, <code>initramfs-linux.img</code> 文件是 <code>Zstandard</code> 格式的压缩文件, 因此可以进行解压:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">[root@localhost]<span class="hljs-comment"># unzstd initramfs-linux.img -o initramfs</span><br>[root@localhost]<span class="hljs-comment"># file initramfs</span><br>initramfs: ASCII cpio archive (SVR4 with no CRC)<br></code></pre></td></tr></table></figure>
+
+<p>再使用 <code>cpio</code> 解压到当前目录:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs sh">[root@localhost]<span class="hljs-comment"># cpio -idmv &lt; initramfs</span><br>[root@localhost]<span class="hljs-comment"># ll</span><br>Permissions Size User Date Modified Name<br>lrwxrwxrwx     - jie   1 Jan  1970  bin -&gt; usr/bin<br>.rw-r--r--  2.8k jie   1 Jan  1970  buildconfig<br>.rw-r--r--   107 jie   1 Jan  1970  config<br>drwxr-xr-x     - jie   1 Jan  1970  dev<br>drwxr-xr-x     - jie  24 Mar 14:52  etc<br>drwxr-xr-x     - jie  24 Mar 14:52  hooks<br>.rwxr-xr-x  3.4k jie   1 Jan  1970  init<br>.rw-r--r--   15k jie   1 Jan  1970  init_functions<br>.rwxr-xr-x   89M jie  24 Mar 14:52  initramfs<br>.rwxr-xr-x   58M jie  24 Mar 14:52  initramfs-linux.img<br>.rw-r--r--  2.6k jie   1 Jan  1970  keymap.bin<br>.rw-r--r--     0 jie   1 Jan  1970  keymap.utf8<br>lrwxrwxrwx     - jie   1 Jan  1970  lib -&gt; usr/lib<br>lrwxrwxrwx     - jie   1 Jan  1970  lib64 -&gt; usr/lib<br>drwxr-xr-x     - jie   1 Jan  1970  new_root<br>drwxr-xr-x     - jie   1 Jan  1970  proc<br>drwxr-xr-x     - jie   1 Jan  1970  run<br>lrwxrwxrwx     - jie   1 Jan  1970  sbin -&gt; usr/bin<br>drwxr-xr-x     - jie   1 Jan  1970  sys<br>drwxr-xr-x     - jie   1 Jan  1970  tmp<br>drwxr-xr-x     - jie  24 Mar 14:52  usr<br>drwxr-xr-x     - jie  24 Mar 14:52  var<br>.rw-r--r--     4 jie   1 Jan  1970  VERSION<br></code></pre></td></tr></table></figure>
+
+<p>这样就可以看到这个临时根目录内的内容.</p>
+<p>这个根目录也是使用 <code>systemd</code> 来管理, 因此可以查看其 <code>default.target</code> 是什么 (注意这个时候是在 initramfs 的目录下):</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">[root@localhost]<span class="hljs-comment"># pwd</span><br>/tmp/initram<br>[root@localhost]<span class="hljs-comment"># ll usr/lib/systemd/system/default.target</span><br>lrwxrwxrwx     - root  4 Mar 01:04  /usr/lib/systemd/system/default.target -&gt; initrd.target<br></code></pre></td></tr></table></figure>
+<p>(这里在 Arch 上其实没有)</p>
+<p>可以看出其以 <code>initrd.target</code> 来进行启动, 可以在自己系统上查看其依赖项:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs sh">[root@localhost]<span class="hljs-comment"># systemctl list-dependencies initrd.target</span><br>initrd.target<br>○ ├─initrd-parse-etc.service<br>○ ├─systemd-battery-check.service<br>○ ├─systemd-bsod.service<br>○ ├─systemd-pcrphase-initrd.service<br>● ├─basic.target<br>● │ ├─-.mount<br>● │ ├─tmp.mount<br>● │ ├─paths.target<br>● │ ├─slices.target<br>...<br>...<br></code></pre></td></tr></table></figure>
+<p>在 <code>initrd.target</code> 启用这一系列服务, 并让系统顺利运行后, 就会写在 initramfs 小型文件系统, 并挂载实际的根目录.</p>
+<h1 id="systemd-使用-default-target-的开机流程"><a href="#systemd-使用-default-target-的开机流程" class="headerlink" title="systemd 使用 default.target 的开机流程"></a>systemd 使用 default.target 的开机流程</h1><p>在主机硬件准备完毕后, kernel 会主动调用第一个程序 <code>systemd</code>, 其 PID 为 1.</p>
+<p><code>systemd</code> 的主要功能是准备软件的执行环境, 包括系统主机名, 网络, 语言, 文件系统格式的设置以及其他服务的启动. 而一个 <code>target</code> 则是要启用的环境, 一般是 <code>multi-user.target</code> 和 <code>graphical.target</code> (一个 <code>target</code> 可以启用另外的 <code>target</code>).</p>
+<p><code>systemd</code> 默认会启用 <code>/etc/systemd/system/default.target</code> (某个 <code>target</code> 的链接文件). 可以用:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">systemctl list-dependencies default.target<br></code></pre></td></tr></table></figure>
+<p>来具体分析启动的流程. 大概为:</p>
+<ol>
+<li><code>local-fs.target</code> 和 <code>swap.target</code>, 挂载 <code>/etc/fstab</code> 里规范的文件系统和内存交换空间</li>
+<li><code>sysinit.target</code>, 侦测硬件, 载入所需的核心模块等</li>
+<li><code>basic.target</code>, 载入主要的硬件驱动和防火墙设置等</li>
+<li><code>multi-user.target</code>, 一般服务以及网络服务的载入</li>
+<li>图形界面相关服务的载入</li>
+</ol>
+<h2 id="模块载入的配置文件"><a href="#模块载入的配置文件" class="headerlink" title="模块载入的配置文件"></a>模块载入的配置文件</h2><p>主要有两个目录:</p>
+<ul>
+<li><code>/etc/modules-load.d/*.conf</code>, 单纯载入</li>
+<li><code>/etc/modprobe.d/*.conf</code>, 可加上参数</li>
+</ul>
+<p>如想要添加 <code>nf_conntrack_ftp</code> 模块, 若不指定参数, 可以创建 <code>/etc/modules-load.d/vbird.conf</code>:</p>
+<figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ebnf"><span class="hljs-attribute">nf_conntrack_ftp</span><br></code></pre></td></tr></table></figure>
+<p>(一个模块写一行)</p>
+<p>若想要添加参数, 则创建 <code>/etc/modprobe.d/vbird.conf</code>:</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">options</span> nf_conntrack_ftp ports=<span class="hljs-number">555</span><br></code></pre></td></tr></table></figure>
+
+<p>然后:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">systemctl restart systemd-modules-load.service<br>lsmod | grep nf_conntrack_ftp<br></code></pre></td></tr></table></figure>
+
+<h1 id="内核与内核模块"><a href="#内核与内核模块" class="headerlink" title="内核与内核模块"></a>内核与内核模块</h1><p>内核用于在开机时驱动主机上的硬件设备, 而这些驱动程序大多被编译为内核模块 (由厂商提供), 在需要时由内核读取.</p>
 
                 
               </div>
