@@ -16,15 +16,15 @@
   <meta name="author" content="John Doe">
   <meta name="keywords" content="">
   
-    <meta name="description" content="开机流程大概如下:  按下电源键后, 计算机硬件会读取 BIOS 或 UEFI BIOS 来载入硬件信息和自检">
+    <meta name="description" content="相关概念MBRMBR (Master Boot Record), 存放在磁盘的第一个扇区, 有 512 Bytes 大小. 其中:  前 446 Bytes 用于安装 boot loader 后 64 Bytes 用于记录分区表  64 Bytes 容量仅能保存四组分区记录. 分 3 个主分区 (primary partition) 和 1 个扩展分区 (extended partition).">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Linux-开机流程与模块管理">
 <meta property="og:url" content="http://example.com/2024/03/24/Linux-%E5%BC%80%E6%9C%BA%E6%B5%81%E7%A8%8B%E4%B8%8E%E6%A8%A1%E5%9D%97%E7%AE%A1%E7%90%86/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="开机流程大概如下:  按下电源键后, 计算机硬件会读取 BIOS 或 UEFI BIOS 来载入硬件信息和自检">
+<meta property="og:description" content="相关概念MBRMBR (Master Boot Record), 存放在磁盘的第一个扇区, 有 512 Bytes 大小. 其中:  前 446 Bytes 用于安装 boot loader 后 64 Bytes 用于记录分区表  64 Bytes 容量仅能保存四组分区记录. 分 3 个主分区 (primary partition) 和 1 个扩展分区 (extended partition).">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2024-03-24T02:57:25.000Z">
-<meta property="article:modified_time" content="2024-03-24T04:49:45.201Z">
+<meta property="article:modified_time" content="2024-03-24T05:42:22.275Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          47 字
+          607 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          1 分钟
+          6 分钟
         
       </span>
     
@@ -289,9 +289,29 @@
             
               <div class="markdown-body">
                 
-                <h1 id="开机流程"><a href="#开机流程" class="headerlink" title="开机流程"></a>开机流程</h1><p>大概如下:</p>
+                <h1 id="相关概念"><a href="#相关概念" class="headerlink" title="相关概念"></a>相关概念</h1><h2 id="MBR"><a href="#MBR" class="headerlink" title="MBR"></a>MBR</h2><p>MBR (Master Boot Record), 存放在磁盘的第一个扇区, 有 512 Bytes 大小. 其中:</p>
+<ul>
+<li>前 446 Bytes 用于安装 boot loader</li>
+<li>后 64 Bytes 用于记录分区表</li>
+</ul>
+<p>64 Bytes 容量仅能保存四组分区记录. 分 3 个主分区 (primary partition) 和 1 个扩展分区 (extended partition).</p>
+<p>扩展分区的目的是使用额外的扇区来记录分区信息, 也即, 其会指向磁盘中的其他区块来做分区记录信息.</p>
+<p>尽管有扩展分区, 上限也是 64 个.</p>
+<h2 id="GPT"><a href="#GPT" class="headerlink" title="GPT"></a>GPT</h2><p>GPT (GUID partition table)</p>
+<h1 id="开机流程"><a href="#开机流程" class="headerlink" title="开机流程"></a>开机流程</h1><p>大概如下:</p>
 <ol>
 <li>按下电源键后, 计算机硬件会读取 BIOS 或 UEFI BIOS 来载入硬件信息和自检</li>
+<li>BIOS 读取磁盘第一个扇区中的 MBR 或 GPT 分区表, 进而读取 boot loader 程序如 grub2</li>
+<li>Boot load 载入 Linux 内核 (Kernel), 内核开始侦测硬件并载入驱动程序</li>
+<li>硬件被成功驱动后, 内核调用 <code>systemd</code> 程序, 并以 <code>default.target</code> 的流程运行服务, <code>systemd</code> 会依次执行:<ul>
+<li><code>sysinit.target</code> 来初始化系统</li>
+<li><code>basic.target</code> 来准备操作系统环境</li>
+<li><code>multi-user.target</code> 下的服务</li>
+<li><code>multi-user.target</code> 下的 <code>/etc/rc.d/rc.local</code> 文件</li>
+<li><code>multi-user.target</code> 下的 <code>getty.target</code> 服务</li>
+<li><code>graphical.target</code> 来启用图形界面</li>
+</ul>
+</li>
 </ol>
 
                 
