@@ -23,10 +23,12 @@
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="相关概念MBRMBR (Master Boot Record), 存放在磁盘的第一个扇区, 有 512 Bytes 大小. 其中:  前 446 Bytes 用于安装 boot loader 后 64 Bytes 用于记录分区表  64 Bytes 容量仅能保存四组分区记录. 分 3 个主分区 (primary partition) 和 1 个扩展分区 (extended partition).">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/GPT-structure.png">
 <meta property="article:published_time" content="2024-03-24T02:57:25.000Z">
-<meta property="article:modified_time" content="2024-03-24T05:42:22.275Z">
+<meta property="article:modified_time" content="2024-03-24T06:49:45.869Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/GPT-structure.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -235,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          607 字
+          1.3k 字
         
       </span>
     
@@ -246,7 +248,7 @@
         
         
         
-          6 分钟
+          11 分钟
         
       </span>
     
@@ -297,12 +299,29 @@
 <p>64 Bytes 容量仅能保存四组分区记录. 分 3 个主分区 (primary partition) 和 1 个扩展分区 (extended partition).</p>
 <p>扩展分区的目的是使用额外的扇区来记录分区信息, 也即, 其会指向磁盘中的其他区块来做分区记录信息.</p>
 <p>尽管有扩展分区, 上限也是 64 个.</p>
-<h2 id="GPT"><a href="#GPT" class="headerlink" title="GPT"></a>GPT</h2><p>GPT (GUID partition table)</p>
+<h2 id="GPT"><a href="#GPT" class="headerlink" title="GPT"></a>GPT</h2><p>GPT (GUID partition table), 使用逻辑区块地址 (Logical Block Address, LBA, 默认为 512 Bytes 大小) 来规划分区, 第一个 LBA 称为 LBA0.</p>
+<p>GPT 使用磁盘最开始的 34 个 LBA 来记录分区信息, 使用磁盘最后的 33 个 LBA 来做备份.</p>
+<p>结构如:<br><img src="/../img/GPT-structure.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>LBA0, 称为 MBR 相容区块, 其与 MBR 模式类似, 前 446 Bytes 存储 boot loader 程序, 而剩下的区域放入一个特殊标志, 来表示此磁盘为 GPT 格式</li>
+<li>LBA1, 是 GPT 表头记录, 用于记录分区表本身的位置和大小, 备份用的 GPT 分区位置, 以及分区表的检验机制码. 操作系统根据这个检验码来判断 GPT 是否正确, 若有错误, 则取用备用 GPT 来恢复</li>
+<li>LBA2-33, 为实际记录分区信息处, 每个 LBA 可以记录 4 个分区记录, 因此默认情况可以有 128 个分区. 每个 LBA 有 512 Bytes 大小, 每个记录用到 128 Bytes, 剩下的 64 Bytes 用来记载开始&#x2F;结束的分区号码 (这里限制了一个分区的最大容量)</li>
+</ul>
+<h2 id="Boot-loader"><a href="#Boot-loader" class="headerlink" title="Boot loader"></a>Boot loader</h2><p>其主要用于提供:</p>
+<ul>
+<li>开机菜单</li>
+<li>加载内核文件</li>
+<li>转交给其他 loader</li>
+</ul>
+<p>理解第三点时需要注意, 每一个分区都会保留一块开机扇区给操作体统安装 boot loader (主要是各操作系统的 boot loader 不同).</p>
+<p>在 Linux 安装时, </p>
 <h1 id="开机流程"><a href="#开机流程" class="headerlink" title="开机流程"></a>开机流程</h1><p>大概如下:</p>
 <ol>
-<li>按下电源键后, 计算机硬件会读取 BIOS 或 UEFI BIOS 来载入硬件信息和自检</li>
-<li>BIOS 读取磁盘第一个扇区中的 MBR 或 GPT 分区表, 进而读取 boot loader 程序如 grub2</li>
-<li>Boot load 载入 Linux 内核 (Kernel), 内核开始侦测硬件并载入驱动程序</li>
+<li>按下电源键后, 计算机硬件会读取 BIOS 或 UEFI BIOS 来载入硬件信息</li>
+<li>取得各种信息后, 进行开机自检 (Power-on Self Test, POST), 之后执行硬件侦测的初始化</li>
+<li>BIOS 侦测到硬盘并其第一个扇区中前 446 Bytes 中存放的 boot loader 程序如 grub2</li>
+<li>Boot loader 中选择直接载入内核 (kernel) 以及虚拟文件系统 (Initial RAM FileSystem, initramfs) 到内存或转交给其他 loader (这里以 Linux 内核为例)</li>
+<li>Initramfs 在内存中被解压为根目录, 向 kernel 提供适当的内核模块, 让其能侦测硬件并载入驱动程序</li>
 <li>硬件被成功驱动后, 内核调用 <code>systemd</code> 程序, 并以 <code>default.target</code> 的流程运行服务, <code>systemd</code> 会依次执行:<ul>
 <li><code>sysinit.target</code> 来初始化系统</li>
 <li><code>basic.target</code> 来准备操作系统环境</li>
