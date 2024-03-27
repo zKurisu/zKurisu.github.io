@@ -25,11 +25,13 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/STM32f103c8-structure.png">
 <meta property="og:image" content="http://example.com/img/basic-structure-of-EXTI.png">
+<meta property="og:image" content="http://example.com/img/AFIO-structure.png">
 <meta property="og:image" content="http://example.com/img/nvic-structure-in-stm32.png">
 <meta property="og:image" content="http://example.com/img/mason-clangd-install.png">
 <meta property="og:image" content="http://example.com/img/relative-path-adding-header-file.png">
+<meta property="og:image" content="http://example.com/img/basic-structure-of-EXTI.png">
 <meta property="article:published_time" content="2024-03-25T03:17:07.000Z">
-<meta property="article:modified_time" content="2024-03-26T13:22:37.178Z">
+<meta property="article:modified_time" content="2024-03-26T14:18:07.124Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/STM32f103c8-structure.png">
@@ -241,7 +243,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          5.4k 字
+          5.6k 字
         
       </span>
     
@@ -252,7 +254,7 @@
         
         
         
-          45 分钟
+          47 分钟
         
       </span>
     
@@ -328,11 +330,14 @@
 <p>EXTI 的通道 (即哪些东西可以触发) 有: 16 个 GPIO_Pin, PVD 输出, RTC 闹钟, USB 唤醒和以太网唤醒.<br>EXTI 的基本结构如下:</p>
 <p><img src="/../img/basic-structure-of-EXTI.png" srcset="/img/loading.gif" lazyload></p>
 <p>可以看出从 GPIO 引脚到 EXTI 的只有 16 个通道, 而每一个 GPIO 引脚有 16 个引脚, 因此相同 Pin 不能同处用于触发 (这个时候就可以选出 16 个了).</p>
+<p>AFIO, Alternate Function I&#x2F;O, 其实就是 16 个并联的多路复用器:</p>
+<p><img src="/../img/AFIO-structure.png" srcset="/img/loading.gif" lazyload></p>
 <p>触发中断后, 有两种响应方式:</p>
 <ul>
 <li>中断响应, 即申请中断, 让 CPU 执行中断函数</li>
 <li>事件响应, 此时中断信号不会通向 CPU, 而是通向其他外设, 用来触发其他外设的操作</li>
 </ul>
+<p>有中断屏蔽寄存器和事件屏蔽寄存器用来 “屏蔽中断” (也就是不管这个中断信号).</p>
 <p>除了外部中断 EXTI, STM32 还有很多类的中断, 具体可以上网搜, 这里不具体介绍. </p>
 <h3 id="中断优先级"><a href="#中断优先级" class="headerlink" title="中断优先级"></a>中断优先级</h3><p>当有多个中断源同时申请中断时, CPU 会根据中断的优先级来判断先执行哪一个中断程序.</p>
 <h3 id="中断嵌套"><a href="#中断嵌套" class="headerlink" title="中断嵌套"></a>中断嵌套</h3><p>当一个中断程序正在运行时, 如果有新的更高优先级的中断源 (也就是触发中断的事件) 申请中断, CPU 会暂停当前中断程序, 转而去处理新的中断程序, 处理完后依次进行返回.</p>
@@ -408,7 +413,16 @@
 <ul>
 <li><code>0x0001</code>, 表示二进制 <code>0000 0000 0000 0001</code>, 二进制的每一位表示一个引脚, 置 <code>1</code> 表示给引脚通高电平, 置 <code>0</code> 表示给引脚通低电平</li>
 </ul>
-
+<h1 id="外部中断-EXTI"><a href="#外部中断-EXTI" class="headerlink" title="外部中断 EXTI"></a>外部中断 EXTI</h1><p>设置 EXTI 一般有 5 步:</p>
+<ol>
+<li>配置 RCC, 开启外设时钟</li>
+<li>配置 GPIO, 选择端口为输入模式</li>
+<li>配置 AFIO, 选择输出到 EXTI 的信号</li>
+<li>配置 EXTI, 选择触发方式以及响应方式</li>
+<li>配置 NVIC, 给中断一个合适的优先级<br>之后外部中断信号就能够进入 CPU. 同样可以结合这个结构图来理解:</li>
+</ol>
+<p><img src="/../img/basic-structure-of-EXTI.png" srcset="/img/loading.gif" lazyload></p>
+<h1 id="需要注意的事"><a href="#需要注意的事" class="headerlink" title="需要注意的事"></a>需要注意的事</h1><h2 id="按键抖动和松手检测"><a href="#按键抖动和松手检测" class="headerlink" title="按键抖动和松手检测"></a>按键抖动和松手检测</h2><h2 id="编码器输出正交波形"><a href="#编码器输出正交波形" class="headerlink" title="编码器输出正交波形"></a>编码器输出正交波形</h2>
                 
               </div>
             
