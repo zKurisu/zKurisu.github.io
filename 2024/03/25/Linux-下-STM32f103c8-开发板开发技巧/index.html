@@ -27,12 +27,16 @@
 <meta property="og:image" content="http://example.com/img/basic-structure-of-EXTI.png">
 <meta property="og:image" content="http://example.com/img/AFIO-structure.png">
 <meta property="og:image" content="http://example.com/img/nvic-structure-in-stm32.png">
+<meta property="og:image" content="http://example.com/img/rotary-encoder-types.png">
+<meta property="og:image" content="http://example.com/img/block-through-block.png">
+<meta property="og:image" content="http://example.com/img/B-delay-90-degree.png">
+<meta property="og:image" content="http://example.com/img/B-advance-90-degree.png">
 <meta property="og:image" content="http://example.com/img/mason-clangd-install.png">
 <meta property="og:image" content="http://example.com/img/relative-path-adding-header-file.png">
 <meta property="og:image" content="http://example.com/img/basic-structure-of-EXTI.png">
 <meta property="og:image" content="http://example.com/img/external-interrupt-of-stm32f103c8.png">
 <meta property="article:published_time" content="2024-03-25T03:17:07.000Z">
-<meta property="article:modified_time" content="2024-03-28T03:38:05.860Z">
+<meta property="article:modified_time" content="2024-03-28T13:21:18.515Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/STM32f103c8-structure.png">
@@ -244,7 +248,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          10k 字
+          11k 字
         
       </span>
     
@@ -255,7 +259,7 @@
         
         
         
-          85 分钟
+          96 分钟
         
       </span>
     
@@ -358,6 +362,37 @@
 <li>抢占优先级用 0 位寄存器 (取值只有 <code>0</code>), 那么响应优先级就可以使用 4 位寄存器 (取值有 <code>0~15</code>)</li>
 <li>抢占优先级用 1 位寄存器 (取值只有 <code>0~1</code>), 那么响应优先级就可以使用 3 位寄存器 (取值有 <code>0~7</code>)<br>等等组合.</li>
 </ul>
+<h2 id="旋转编码器判断方向的原理"><a href="#旋转编码器判断方向的原理" class="headerlink" title="旋转编码器判断方向的原理"></a>旋转编码器判断方向的原理</h2><p>旋转编码器, 是用于测量位置, 速度或旋转方向的装置, 当其旋转轴旋转时, 其输出端可以输出与旋转速度和方向对应的方波信号, 读取方波信号的频率和相位信息即可得知旋转轴的速度和方向.</p>
+<p>常见的旋转编码器类别有:</p>
+<ul>
+<li>机械触点式</li>
+<li>霍尔传感器式</li>
+<li>光栅式</li>
+</ul>
+<p><img src="/../img/rotary-encoder-types.png" srcset="/img/loading.gif" lazyload></p>
+<p>如图中的第一个就是一种光栅式旋转编码器, 配合对射式红外传感器 (一侧射出红外线, 一侧感应), 由于光栅的存在, 红外光会出现遮挡, 透过, 遮挡, 透过的现象 (遮挡时高电平, 透过时低电平). 因此会出现高低电平交替的方波:</p>
+<p><img src="/../img/block-through-block.png" srcset="/img/loading.gif" lazyload></p>
+<p>方波的个数表示转过的角度, 方波的频率表示转速. 可以用外部中断来捕获方波边沿, 以此判断位置和速度. 但第一种无法判断方向.</p>
+<p>第二三图是利用金属触点的旋转编码器, 在旋转时, 以此断开和导通两侧的触点, 由于金属盘的特殊设计, 其能够让两侧触点的通断产生一个 90 度的相位差 (假设两侧触点为 A, B).</p>
+<p>当正转时, B 相输出的波形比 A 相滞后 90 度:</p>
+<p><img src="/../img/B-delay-90-degree.png" srcset="/img/loading.gif" lazyload></p>
+<p>当反转时, B 相输出的波形比 A 相超前 90 度:</p>
+<p><img src="/../img/B-advance-90-degree.png" srcset="/img/loading.gif" lazyload></p>
+<p>这样就能区分出方向, 而这种相位相差 90 度的波形就叫正交波形. 带正交波形的编码器一般都能用于测量方向.</p>
+<p>还有编码器是利用: 一个引脚输出方波信号表示转速, 另一个引脚输出高低电平表示方向.</p>
+<h2 id="TIM-定时器中断"><a href="#TIM-定时器中断" class="headerlink" title="TIM 定时器中断"></a>TIM 定时器中断</h2><p>TIM, TIMer, 定时器. 其可以对输入的时钟进行计数, 并在计数值达到设定值时触发中断.</p>
+<p>当输入时钟为基准时钟 (一般是主频 72MHz) 时, 计数器进行计数的过程, 实际上就是计时的过程 (记 72M 次就是 1s).</p>
+<p>在 STM32 中, 计数器为 16 位, 每一次时钟则加一, 在 72MHz 计数时钟下可以实现最大 59.65s (72M&#x2F;65536&#x2F;65536, 分频器最大值 65536, 重装计数器设置最大目标值为 65536) 的定时.</p>
+<p>16 位的计数器, 预分频器 (对输入时钟进行分频, 比如输入 72MHz, 可以设置预分频器值为 100, 此时输入的时钟频率则为 72MHz&#x2F;100), 自动重装寄存器 (存储计数的目标值, 也就是记多少次进行中断) 一起组成时基单元.</p>
+<p>STM32 计时器还支持级联模式, 即一个定时器的输出能当作另一个计时器的输入, 此时最大计时时间可以为 $59.65s \times 65536 \times 65536$ (过 59.65s 第二个计时器才记一次数, 由于分频 65536 次, 则 $59.65s \times 65536$ 之后记一次数, 由于目标计数最大可以是 65536, 则最长为 $59.65s \times 65536 \times 65536$).</p>
+<p>STM32 的定时器, 除基本的定时中断外, 还包含内外时钟源选择, 输入捕获, 输出比较, 编码器接口, 主从触发等多种功能.</p>
+<p>根据定时器的复杂度, 可以分为:</p>
+<ul>
+<li>高级定时器</li>
+<li>通用定时器</li>
+<li>基本定时器</li>
+</ul>
+<p>这些定时器在库函数中的编号, 总线不同, 功能不同.</p>
 <h1 id="Neovim-简单配置"><a href="#Neovim-简单配置" class="headerlink" title="Neovim 简单配置"></a>Neovim 简单配置</h1><p>用 Mason 和 lsp-config 来配置出简单的自动补全体验, 基本上在 Mason 中安装 clangd 即可.<br><img src="/../img/mason-clangd-install.png" srcset="/img/loading.gif" lazyload></p>
 <p>由于 keil 5 添加头文件路径的方式我不是很明白, 这里添加头文件就直接使用相对路径, 这样 clangd 也能找到用于补全提示:<br><img src="/../img/relative-path-adding-header-file.png" srcset="/img/loading.gif" lazyload></p>
 <h1 id="arm-none-eabi-objcopy-系列工具的使用"><a href="#arm-none-eabi-objcopy-系列工具的使用" class="headerlink" title="arm-none-eabi-objcopy 系列工具的使用"></a>arm-none-eabi-objcopy 系列工具的使用</h1><p>这里主要用 <code>arm-none-eabi-objcopy</code> 来进行格式转换.</p>
@@ -482,7 +517,10 @@
 <p>一般先进行中断标志位的判断, 确保是想要的中断源触发的函数.</p>
 <p>中断函数中执行完主体工作后, 记得调用将中断标志位清除的函数. 如果不清除标志位, 则会一直申请中断, 导致程序不断响应中断, 执行中断函数, 从而卡死.</p>
 <p>注意中断函数不需要在 header 文件中声明, 因为其不需要被手动调用, 而是自动执行.</p>
-<h1 id="需要注意的事"><a href="#需要注意的事" class="headerlink" title="需要注意的事"></a>需要注意的事</h1><h2 id="按键抖动和松手检测"><a href="#按键抖动和松手检测" class="headerlink" title="按键抖动和松手检测"></a>按键抖动和松手检测</h2><h2 id="编码器输出正交波形"><a href="#编码器输出正交波形" class="headerlink" title="编码器输出正交波形"></a>编码器输出正交波形</h2>
+<p>中断函数中建议不执行过长的代码, 要简短快速, 因为中断是处理突发的事情, 如果处理中断时间过长, 主程序就会受到严重阻塞.</p>
+<p>最好不要在中断函数和主函数中调用相同的函数或者操作同一个硬件. 对于 CPU, 在进入中断时会有现场保护操作, 但是对于外设硬件, 就没有, 此时中断返回后容易出错.</p>
+<h1 id="需要注意的事"><a href="#需要注意的事" class="headerlink" title="需要注意的事"></a>需要注意的事</h1><h2 id="按键抖动和松手检测"><a href="#按键抖动和松手检测" class="headerlink" title="按键抖动和松手检测"></a>按键抖动和松手检测</h2><p>对于外部中断, 不容易处理按键抖动和松手检测.</p>
+<h2 id="编码器输出正交波形"><a href="#编码器输出正交波形" class="headerlink" title="编码器输出正交波形"></a>编码器输出正交波形</h2>
                 
               </div>
             
