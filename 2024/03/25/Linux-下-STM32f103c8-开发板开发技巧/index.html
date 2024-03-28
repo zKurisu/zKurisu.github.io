@@ -30,8 +30,9 @@
 <meta property="og:image" content="http://example.com/img/mason-clangd-install.png">
 <meta property="og:image" content="http://example.com/img/relative-path-adding-header-file.png">
 <meta property="og:image" content="http://example.com/img/basic-structure-of-EXTI.png">
+<meta property="og:image" content="http://example.com/img/external-interrupt-of-stm32f103c8.png">
 <meta property="article:published_time" content="2024-03-25T03:17:07.000Z">
-<meta property="article:modified_time" content="2024-03-28T03:12:17.933Z">
+<meta property="article:modified_time" content="2024-03-28T03:38:05.860Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/STM32f103c8-structure.png">
@@ -243,7 +244,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          9.1k 字
+          10k 字
         
       </span>
     
@@ -254,7 +255,7 @@
         
         
         
-          76 分钟
+          85 分钟
         
       </span>
     
@@ -458,22 +459,28 @@
 <p>创建和初始化如:</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c">EXTI_InitTypeDef EXTI_InitStructure;<br><br>EXTI_InitStructure.EXTI_Line = EXTI_Line14;<br>EXTI_InitStructure.EXTI_LineCmd = ENABLE;<br>EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;<br>EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;<br></code></pre></td></tr></table></figure>
 
-<h3 id="NVIC-相关库函数"><a href="#NVIC-相关库函数" class="headerlink" title="NVIC 相关库函数"></a>NVIC 相关库函数</h3><p>NVIC 的相关库函数在 <code>misc.h</code> 和 <code>misc.c</code> 中. 有:</p>
+<h2 id="NVIC-相关库函数"><a href="#NVIC-相关库函数" class="headerlink" title="NVIC 相关库函数"></a>NVIC 相关库函数</h2><p>NVIC 的相关库函数在 <code>misc.h</code> 和 <code>misc.c</code> 中. 有:</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">NVIC_PriorityGroupConfig</span><span class="hljs-params">(<span class="hljs-type">uint32_t</span> NVIC_PriorityGroup)</span>;<br><span class="hljs-type">void</span> <span class="hljs-title function_">NVIC_Init</span><span class="hljs-params">(NVIC_InitTypeDef* NVIC_InitStruct)</span>;<br><span class="hljs-type">void</span> <span class="hljs-title function_">NVIC_SetVectorTable</span><span class="hljs-params">(<span class="hljs-type">uint32_t</span> NVIC_VectTab, <span class="hljs-type">uint32_t</span> Offset)</span>;<br><span class="hljs-type">void</span> <span class="hljs-title function_">NVIC_SystemLPConfig</span><span class="hljs-params">(<span class="hljs-type">uint8_t</span> LowPowerMode, FunctionalState NewState)</span>;<br></code></pre></td></tr></table></figure>
 <ul>
 <li><code>NVIC_PriorityGroupConfig()</code> 用于 NVIC 分组, 就是指用几位来抢占, 几位来响应. (注意分组对于一个芯片只设计一次, 也就是一种)</li>
-<li><code>NVIC_Init()</code>, 根据结构体内容初始化 NVIC</li>
+<li><code>NVIC_Init()</code>, 根据 <code>NVIC_InitTypeDef</code> 类型结构体内容初始化 NVIC</li>
 <li><code>NVIC_SetVectorTable()</code> 用于设置中断向量表 (用得不多)</li>
 <li><code>NVIC_SystemLPConfig()</code> 用于系统低功耗配置 (用得不多)</li>
 </ul>
 <p>“pre-emption priority” (先占) 指抢占优先级, “subpriority” (从占) 指响应优先级.</p>
-<p>相关结构体: <code>NVIC_InitTypeDef</code>, 常用成员:</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c">NVIC_InitStructure.NVIC_IRQChannel = ; <span class="hljs-comment">// 指定中断通道</span><br>NVIC_InitStructure.NVIC_IRQChannelCmd = ; <span class="hljs-comment">// 指定中断通道是 enable 还是 disable</span><br>NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = ; <span class="hljs-comment">// 指定 pre-emption priority</span><br>NVIC_InitStructure.NVIC_IRQChannelSubPriority = ; <span class="hljs-comment">// 指定 subpriority</span><br></code></pre></td></tr></table></figure>
+<h3 id="NVIC-初始化相关结构体"><a href="#NVIC-初始化相关结构体" class="headerlink" title="NVIC 初始化相关结构体"></a>NVIC 初始化相关结构体</h3><p><code>NVIC_InitTypeDef</code>, 其定义为:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> &#123;</span><br>  <span class="hljs-type">uint8_t</span> NVIC_IRQChannel;                    <span class="hljs-comment">/*!&lt; Specifies the IRQ channel to be enabled or disabled.</span><br><span class="hljs-comment">                                                   This parameter can be a value of @ref IRQn_Type </span><br><span class="hljs-comment">                                                   (For the complete STM32 Devices IRQ Channels list, please</span><br><span class="hljs-comment">                                                    refer to stm32f10x.h file) */</span><br><br>  <span class="hljs-type">uint8_t</span> NVIC_IRQChannelPreemptionPriority;  <span class="hljs-comment">/*!&lt; Specifies the pre-emption priority for the IRQ channel</span><br><span class="hljs-comment">                                                   specified in NVIC_IRQChannel. This parameter can be a value</span><br><span class="hljs-comment">                                                   between 0 and 15 as described in the table @ref NVIC_Priority_Table */</span><br><br>  <span class="hljs-type">uint8_t</span> NVIC_IRQChannelSubPriority;         <span class="hljs-comment">/*!&lt; Specifies the subpriority level for the IRQ channel specified</span><br><span class="hljs-comment">                                                   in NVIC_IRQChannel. This parameter can be a value</span><br><span class="hljs-comment">                                                   between 0 and 15 as described in the table @ref NVIC_Priority_Table */</span><br><br>  FunctionalState NVIC_IRQChannelCmd;         <span class="hljs-comment">/*!&lt; Specifies whether the IRQ channel defined in NVIC_IRQChannel</span><br><span class="hljs-comment">                                                   will be enabled or disabled. </span><br><span class="hljs-comment">                                                   This parameter can be set either to ENABLE or DISABLE */</span>   <br>&#125; NVIC_InitTypeDef;<br></code></pre></td></tr></table></figure>
 
-<p>在 STM32 中, 中断函数的名称都是固定的, 每个中断通道都对应一个中断函数. 名字可以参考启动文件, 如这里的 <code>startup_stm32f10x_md.s</code>, 以 <code>IRQHandler</code> 结尾的就是中断函数的名称. 如中断函数都是没有参数和返回值的:</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><br></code></pre></td></tr></table></figure>
+<p>创建和初始化如:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c">NVIC_InitTypeDef NVIC_InitStructure;<br>NVIC_InitStructure.NVIC_IRQChannel = ; <span class="hljs-comment">// 指定中断通道</span><br>NVIC_InitStructure.NVIC_IRQChannelCmd = ; <span class="hljs-comment">// 指定中断通道是 enable 还是 disable</span><br>NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = ; <span class="hljs-comment">// 指定 pre-emption priority</span><br>NVIC_InitStructure.NVIC_IRQChannelSubPriority = ; <span class="hljs-comment">// 指定 subpriority</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="中断函数编写"><a href="#中断函数编写" class="headerlink" title="中断函数编写"></a>中断函数编写</h2><p>在 STM32 中, 中断函数的名称都是固定的, 每个中断通道都对应一个中断函数. 名字可以参考启动文件, 如这里的 <code>startup_stm32f10x_md.s</code>, 以 <code>IRQHandler</code> (Interrupt Request Handler) 结尾的就是中断函数的名称. 如:</p>
+<p><img src="/../img/external-interrupt-of-stm32f103c8.png" srcset="/img/loading.gif" lazyload></p>
+<p>中断函数都是没有参数和返回值的, 示例如:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">EXTI15_10_IRQHandler</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> &#123;<br>    <span class="hljs-keyword">if</span> (EXTI_GetITStatus(EXTI_Line14) == SET) &#123;<br>        CountSensor_Count++;<br>        EXTI_ClearITPendingBit(EXTI_Line14);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
 <p>一般先进行中断标志位的判断, 确保是想要的中断源触发的函数.</p>
-<p>中断函数后, 记得调用将中断标志位清除的函数. 如果不清除标志位, 则会一直申请中断, 导致程序不断响应中断, 执行中断函数, 从而卡死.</p>
+<p>中断函数中执行完主体工作后, 记得调用将中断标志位清除的函数. 如果不清除标志位, 则会一直申请中断, 导致程序不断响应中断, 执行中断函数, 从而卡死.</p>
 <p>注意中断函数不需要在 header 文件中声明, 因为其不需要被手动调用, 而是自动执行.</p>
 <h1 id="需要注意的事"><a href="#需要注意的事" class="headerlink" title="需要注意的事"></a>需要注意的事</h1><h2 id="按键抖动和松手检测"><a href="#按键抖动和松手检测" class="headerlink" title="按键抖动和松手检测"></a>按键抖动和松手检测</h2><h2 id="编码器输出正交波形"><a href="#编码器输出正交波形" class="headerlink" title="编码器输出正交波形"></a>编码器输出正交波形</h2>
                 
