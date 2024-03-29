@@ -34,12 +34,14 @@
 <meta property="og:image" content="http://example.com/img/TIM-kinds-in-stm32.png">
 <meta property="og:image" content="http://example.com/img/basic-structure-of-TIM.png">
 <meta property="og:image" content="http://example.com/img/PWM-in-TIM.png">
+<meta property="og:image" content="http://example.com/img/eight-mode-of-output-compare.png">
+<meta property="og:image" content="http://example.com/img/PWM-structure-of-TIM.png">
 <meta property="og:image" content="http://example.com/img/mason-clangd-install.png">
 <meta property="og:image" content="http://example.com/img/relative-path-adding-header-file.png">
 <meta property="og:image" content="http://example.com/img/basic-structure-of-EXTI.png">
 <meta property="og:image" content="http://example.com/img/external-interrupt-of-stm32f103c8.png">
 <meta property="article:published_time" content="2024-03-25T03:17:07.000Z">
-<meta property="article:modified_time" content="2024-03-29T08:33:51.003Z">
+<meta property="article:modified_time" content="2024-03-29T08:53:27.135Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/STM32f103c8-structure.png">
@@ -251,7 +253,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          15k 字
+          16k 字
         
       </span>
     
@@ -262,7 +264,7 @@
         
         
         
-          129 分钟
+          131 分钟
         
       </span>
     
@@ -420,8 +422,29 @@
 <h3 id="PWM"><a href="#PWM" class="headerlink" title="PWM"></a>PWM</h3><p>PWM, Pulse Width Modulation, 脉冲宽度调制. 宽度调制, 其实就是调整占空比. $T_{ON}&#x2F;T_{Total}$</p>
 <p><img src="/../img/PWM-in-TIM.png" srcset="/img/loading.gif" lazyload></p>
 <p>在具有惯性的系统中, 才能够用 PWM 进行调整, 比如电机的转速, LED 的亮度.</p>
-<p>不同的占空比, 对应不同的 RMS (Root Mean Square) 值, 也就是有效值. 比如 PWM 输出方波的 Peak Voltage 为 2V, 当占空比为 1 时:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>RMS &amp;&#x3D; sqrt{ \frac{1}{T} \int_0^T f(t)^2 dt } \<br>V_{RMS} &amp;&#x3D; sqrt{ \frac{1}{T} \int_0^T 2^2 dt } \<br>&amp;&#x3D; 2V<br>\end{aligned}<br>}<br>$$</p>
-<p>当占空比为 0.5 时:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>RMS &amp;&#x3D; sqrt{ \frac{1}{T} \int_0^T f(t)^2 dt } \<br>V_{RMS} &amp;&#x3D; sqrt{ \frac{1}{T} \int_0^{0.5T} 2^2 dt } \<br>&amp;&#x3D; sqrt{2}<br>\end{aligned}<br>}<br>$$</p>
+<p>不同的占空比, 对应不同有效电压. 计算公式为:</p>
+<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs abnf">有效电压 <span class="hljs-operator">=</span> Peak Voltage x 占空比<br></code></pre></td></tr></table></figure>
+
+<p>比如 PWM 输出方波的 Peak Voltage 为 2V, 当占空比为 1 时, 有效电压就为 $2 \times 1 &#x3D; 2V$.</p>
+<p>当占空比为 0.5 时, 有效电压为 $2 \times 0.5 &#x3D; 1V$.</p>
+<p>PWM 一般需要设置三个参数:</p>
+<ul>
+<li>频率</li>
+<li>占空比</li>
+<li>分辨率 (就是最小步长, 用于改变占空比, 比如 <code>1%</code> 就是占空比每次变化 <code>1%</code>)</li>
+</ul>
+<p>利用这个电压有效值, 就可以用 PWM 通过输入数字量来输出模拟量.</p>
+<h3 id="输出比较的八种模式"><a href="#输出比较的八种模式" class="headerlink" title="输出比较的八种模式"></a>输出比较的八种模式</h3><p><img src="/../img/eight-mode-of-output-compare.png" srcset="/img/loading.gif" lazyload></p>
+<p>REF 指 “REFerence”, 这里是输出的电平.</p>
+<p>在 TIM 中, 产生 PWM 的基本结构为:</p>
+<p><img src="/../img/PWM-structure-of-TIM.png" srcset="/img/loading.gif" lazyload></p>
+<p>(这里蓝色线是 CNT 的值, 黄色线是 ARR 的值, CNT 的值从 0 开始自增, 到达 ARR 值时清零, 这里红色线是 CCR 的值, 在这里, 占空比相当于是 0.3, 也就是 $CCR&#x2F;ARR+1$)</p>
+<p>PWM 三个参数的计算分别为:</p>
+<ul>
+<li>PWM 频率<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>Freq &#x3D; CK_PSC \times \frac{1}{PSC+1} \times \frac{1}{ARR + 1}<br>\end{aligned}<br>}<br>$$</li>
+<li>PWM 占空比<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>Duty &#x3D; \frac{CCR}{ARR + 1}<br>\end{aligned}<br>}<br>$$</li>
+<li>PWM 分辨率<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>Reso &#x3D; \frac{1}{ARR + 1}<br>\end{aligned}<br>}<br>$$</li>
+</ul>
 <h1 id="Neovim-简单配置"><a href="#Neovim-简单配置" class="headerlink" title="Neovim 简单配置"></a>Neovim 简单配置</h1><p>用 Mason 和 lsp-config 来配置出简单的自动补全体验, 基本上在 Mason 中安装 clangd 即可.<br><img src="/../img/mason-clangd-install.png" srcset="/img/loading.gif" lazyload></p>
 <p>由于 keil 5 添加头文件路径的方式我不是很明白, 这里添加头文件就直接使用相对路径, 这样 clangd 也能找到用于补全提示:<br><img src="/../img/relative-path-adding-header-file.png" srcset="/img/loading.gif" lazyload></p>
 <h1 id="arm-none-eabi-objcopy-系列工具的使用"><a href="#arm-none-eabi-objcopy-系列工具的使用" class="headerlink" title="arm-none-eabi-objcopy 系列工具的使用"></a>arm-none-eabi-objcopy 系列工具的使用</h1><p>这里主要用 <code>arm-none-eabi-objcopy</code> 来进行格式转换.</p>
