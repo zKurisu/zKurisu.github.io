@@ -24,7 +24,7 @@
 <meta property="og:description" content="Github 相关 介绍在 github 上和 archwiki 上有很多有用的资料. ranger 是一个命令行下的文件管理器 (file manager). 可以在 man ranger 和 &#x2F;usr&#x2F;share&#x2F;doc&#x2F;ranger&#x2F;HACKING.md 中查看信息. 对于配置，可以查看 &#x2F;usr&#x2F;share&#x2F;doc&#x2F;ranger&#x2F;config 目录下的文件来仿照着配置, 或者用 range">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2022-09-05T05:30:26.000Z">
-<meta property="article:modified_time" content="2024-03-29T02:28:46.411Z">
+<meta property="article:modified_time" content="2024-03-29T03:27:52.700Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.3k 字
+          4.4k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          20 分钟
+          37 分钟
         
       </span>
     
@@ -362,9 +362,88 @@
 <li><code>self.args</code>, attributes, list, 包含 command 的所有参数</li>
 <li><code>self.quantifier</code>, attributes, string, 比如有一个 command 映射为按下 <code>K</code> 触发, 当按下 <code>6K</code> 时, 这个变量的值则为 6</li>
 <li><code>self.arg(n)</code>, method, 返回 string, 获取第 n 个参数, 当指定参数不存在时返回空字符串</li>
-<li><code>self.rest(n)</code>, method, 返回 list, 获取第 n 个及其以后的参数</li>
+<li><code>self.rest(n)</code>, method, 返回 string, 获取第 n 个及其以后的参数, 如 <code>search foo bar a b c</code>, 则 <code>rest(2)</code> 返回 <code>bar a b c</code></li>
 <li><code>self.start(n)</code>, method, 返回 string, 获取第 n 个参数及其之前的所有内容, 如 <code>search foo bar a b c</code>, 则 <code>start(2)</code> 返回 <code>search foo</code></li>
 </ul>
+<p>一些通用的 ranger functions 和 objects (“fm” 指 “file manager”):</p>
+<ul>
+<li><code>self.fm</code>, 一个 <code>fm</code> object 的引用, 包含 ranger 的绝大多数信息</li>
+<li><code>self.fm.notify(string)</code>, 在 screen 打印出指定 string</li>
+<li><code>self.fm.notify(string, bad=True)</code>, 用红色字体输出指定 string</li>
+<li><code>self.fm.reload_cwd()</code>, 重新加载 current working directory (可能是添加了一个文件后刷新下显示的列表)</li>
+<li><code>self.fm.thisdir()</code>, 当前目录 (一个 File object)</li>
+<li><code>self.fm.thisfile()</code>, 当前文件 (也是一个 File object)</li>
+<li><code>self.fm.thistab.get_selection()</code>, 一个包含 selected file 的 list</li>
+<li><code>self.fm.execute_console(string)</code>, 将 string 作为 ranger command 执行</li>
+<li><code>self.fm.open_console(string)</code>, 打开一个 console 并填写好指定 string (相当于把命令字符串输好了, 就差回车执行)</li>
+<li><code>self.fm.move(direction)</code>, 移动光标, 比如 <code>down=3</code>, <code>up=5</code>, <code>right=1</code>, <code>left=1</code>…</li>
+</ul>
+<p>一个 File object 包含的 attributes 和 methods (“tfile” 指 “temporary file”):</p>
+<ul>
+<li><code>tfile.path</code>, attributes, 文件的路径</li>
+<li><code>tfile.basename</code>, attributes, 文件的 base name</li>
+<li><code>tfile.load_content()</code>, method, 强制加载一个 directory 的内容 (只对 directory 有用)</li>
+<li><code>tfile.is_directory()</code>, method, 判断 File object 是否为目录</li>
+</ul>
+<h2 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h2><p>先解释下定义 command 的文件中导入的 class 和 function:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> __future__ <span class="hljs-keyword">import</span> (absolute_import, division, print_function)<br><br><span class="hljs-keyword">from</span> collections <span class="hljs-keyword">import</span> deque<br><span class="hljs-keyword">import</span> os<br><span class="hljs-keyword">import</span> re<br><span class="hljs-keyword">from</span> io <span class="hljs-keyword">import</span> <span class="hljs-built_in">open</span><br><br><span class="hljs-keyword">from</span> ranger <span class="hljs-keyword">import</span> PY3<br><span class="hljs-keyword">from</span> ranger.api.commands <span class="hljs-keyword">import</span> Command<br></code></pre></td></tr></table></figure>
+
+
+<p>以 <code>~/.config/ranger/commands_full.py</code> 文件中定义的最简单的命令 <code>echo</code> 为例:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">echo</span>(<span class="hljs-title class_ inherited__">Command</span>):<br>    <span class="hljs-string">&quot;&quot;&quot;:echo &lt;text&gt;</span><br><span class="hljs-string"></span><br><span class="hljs-string">    Display the text in the statusbar.</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">execute</span>(<span class="hljs-params">self</span>):<br>        self.fm.notify(self.rest(<span class="hljs-number">1</span>))<br></code></pre></td></tr></table></figure>
+
+
+<h1 id="rc-conf-的配置语法"><a href="#rc-conf-的配置语法" class="headerlink" title="rc.conf 的配置语法"></a>rc.conf 的配置语法</h1><p>该文件中的所有命令都会在 user interface 初始化之前运行. 因此在该文件中, 无法运行一些在 UI 中的指令, 如 <code>:delete</code>, <code>:mark</code>.</p>
+<h2 id="设置-options"><a href="#设置-options" class="headerlink" title="设置 options"></a>设置 options</h2><p>设置 option 的语法为:</p>
+<figure class="highlight gams"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs gams"><span class="hljs-keyword">set</span> option_name <span class="hljs-comment">option_value</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="设置-local-options"><a href="#设置-local-options" class="headerlink" title="设置 local options"></a>设置 local options</h2><p>设置只对一个目录起作用的 local option, 语法为:</p>
+<figure class="highlight dos"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs dos"><span class="hljs-built_in">setlocal</span> <span class="hljs-built_in">path</span>=/your/local/<span class="hljs-built_in">dir</span> option_name option_value<br></code></pre></td></tr></table></figure>
+
+<h2 id="给-command-起别名"><a href="#给-command-起别名" class="headerlink" title="给 command 起别名"></a>给 command 起别名</h2><p>语法为:</p>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs jboss-cli"><span class="hljs-keyword">alias</span> <span class="hljs-keyword">alias</span>_name <span class="hljs-keyword">command</span>_name <span class="hljs-keyword">command</span>_args<br></code></pre></td></tr></table></figure>
+
+<h2 id="键盘映射"><a href="#键盘映射" class="headerlink" title="键盘映射"></a>键盘映射</h2><h3 id="定义-user-interface-中的-keymapping"><a href="#定义-user-interface-中的-keymapping" class="headerlink" title="定义 user interface 中的 keymapping"></a>定义 user interface 中的 keymapping</h3><p>语法为:</p>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs jboss-cli">map key <span class="hljs-keyword">command</span>_name <span class="hljs-keyword">command</span>_args<br></code></pre></td></tr></table></figure>
+
+<h3 id="将一个键值对应的作用-copy-给其他键"><a href="#将一个键值对应的作用-copy-给其他键" class="headerlink" title="将一个键值对应的作用 copy 给其他键"></a>将一个键值对应的作用 copy 给其他键</h3><p>语法为:</p>
+<figure class="highlight gams"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs gams"><span class="hljs-function"><span class="hljs-title">copymap</span></span> src_key dest_key1 dest_key2...<br></code></pre></td></tr></table></figure>
+
+<p>如:</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs css">copymap <span class="hljs-selector-tag">q</span> ZZ ZQ<br></code></pre></td></tr></table></figure>
+<p>此时, 按下 <code>ZZ</code> 和 <code>ZQ</code> 都等价于按下 <code>q</code>.</p>
+<h3 id="定义-console-中的-keymapping"><a href="#定义-console-中的-keymapping" class="headerlink" title="定义 console 中的 keymapping"></a>定义 console 中的 keymapping</h3><p>console 指, 在 user interface 中, 按下 <code>:</code> (默认的键) 呼出的输入界面.</p>
+<p>语法为:</p>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs jboss-cli">cmap key <span class="hljs-keyword">command</span>_name <span class="hljs-keyword">command</span>_args<br></code></pre></td></tr></table></figure>
+
+<p>如:</p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs vim"><span class="hljs-keyword">cmap</span> <span class="hljs-symbol">&lt;tab&gt;</span> <span class="hljs-built_in">eval</span> fm.ui.console.<span class="hljs-keyword">tab</span>()<br></code></pre></td></tr></table></figure>
+
+<h3 id="定义-pager-中的-keymapping"><a href="#定义-pager-中的-keymapping" class="headerlink" title="定义 pager 中的 keymapping"></a>定义 pager 中的 keymapping</h3><p>pager 指, 在选中一个文件, 按下 <code>i</code> (默认的键) 时进入的预览界面.</p>
+<p>语法为:</p>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs jboss-cli">pmap key <span class="hljs-keyword">command</span>_name <span class="hljs-keyword">command</span>_args<br></code></pre></td></tr></table></figure>
+
+<p>如:</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs routeros">pmap &lt;down&gt; pager_move <span class="hljs-attribute">down</span>=1<br></code></pre></td></tr></table></figure>
+
+
+<h3 id="定义-taskview-中的-keymapping"><a href="#定义-taskview-中的-keymapping" class="headerlink" title="定义 taskview 中的 keymapping"></a>定义 taskview 中的 keymapping</h3><p>taskview 指, 在 ranger user interface 中, 按下 <code>w</code> (默认的键) 时进入的界面.</p>
+<p>语法为:</p>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs jboss-cli">tmap key <span class="hljs-keyword">command</span>_name <span class="hljs-keyword">command</span>_args<br></code></pre></td></tr></table></figure>
+
+<p>如:</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs routeros">tmap &lt;up&gt; taskview_move <span class="hljs-attribute">up</span>=1<br></code></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+
+
 
                 
               </div>
