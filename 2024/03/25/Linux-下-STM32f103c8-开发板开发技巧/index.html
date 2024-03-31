@@ -39,12 +39,13 @@
 <meta property="og:image" content="http://example.com/img/PWM-duty-control-angle.png">
 <meta property="og:image" content="http://example.com/img/steering-gear-connection.png">
 <meta property="og:image" content="http://example.com/img/TB6612-structure.png">
+<meta property="og:image" content="http://example.com/img/cal-pwm-frequency-on-stm32.png">
 <meta property="og:image" content="http://example.com/img/mason-clangd-install.png">
 <meta property="og:image" content="http://example.com/img/relative-path-adding-header-file.png">
 <meta property="og:image" content="http://example.com/img/basic-structure-of-EXTI.png">
 <meta property="og:image" content="http://example.com/img/external-interrupt-of-stm32f103c8.png">
 <meta property="article:published_time" content="2024-03-25T03:17:07.000Z">
-<meta property="article:modified_time" content="2024-03-31T05:17:40.532Z">
+<meta property="article:modified_time" content="2024-03-31T06:37:04.296Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/STM32f103c8-structure.png">
@@ -256,7 +257,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          17k 字
+          18k 字
         
       </span>
     
@@ -267,7 +268,7 @@
         
         
         
-          144 分钟
+          152 分钟
         
       </span>
     
@@ -458,7 +459,18 @@
 <p>注意, <code>PWMA</code>, <code>AIN2</code> 和 <code>AIN1</code> 用于控制 <code>AO1</code> 和 <code>AO2</code>.</p>
 <p><code>PWMB</code>, <code>BIN2</code> 和 <code>BIN1</code> 控制 <code>BO1</code> 和 <code>BO2</code>.</p>
 <p>右下角的表解释了怎么控制电机的方向.</p>
-<h1 id="TIM-输入捕获"><a href="#TIM-输入捕获" class="headerlink" title="TIM 输入捕获"></a>TIM 输入捕获</h1><h1 id="Neovim-简单配置"><a href="#Neovim-简单配置" class="headerlink" title="Neovim 简单配置"></a>Neovim 简单配置</h1><p>用 Mason 和 lsp-config 来配置出简单的自动补全体验, 基本上在 Mason 中安装 clangd 即可.<br><img src="/../img/mason-clangd-install.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="TIM-输入捕获"><a href="#TIM-输入捕获" class="headerlink" title="TIM 输入捕获"></a>TIM 输入捕获</h2><p>IC, Input Capture, 输入捕获, 是定时器的功能. 输入捕获模式下, 当通道输入引脚出现指定电平跳变 (上升沿, 下降沿等) 时, 当前 CNT (CouNT) 的值将被锁存到 CCR (Capture&#x2F;Compare Register) 中, 可用于测量 PWM 波形的频率, 占空比, 脉冲间隔, 电平持续时间等参数.</p>
+<p>每个高级定时器和通用定时器都拥有 4 各输入捕获通道. 而基本定时器没有输入捕获功能.</p>
+<p>当配置为 PWMI 模式 (PWM Input 模式, 是专门为测量 PWM 频率和占空比设计的) 时, 可用于测量频率和占空比.</p>
+<p>可以配合主从触发模式, 实现硬件全自动测量.</p>
+<h3 id="频率测量"><a href="#频率测量" class="headerlink" title="频率测量"></a>频率测量</h3><p>对于 STM32 而言, 其只能测量高低电平组成的数字信号, 若想要测量正弦波, 还需要搭建一个信号预处理电路 (用运放搭建一个比较器, 把正弦波转换为数字信号, 再输入给 STM32, 还需要考虑隔离等).</p>
+<p>有两种方法可用于测频率:</p>
+<ol>
+<li>测频法, 在闸门时间 T (就是一定时间) 内, 对上升沿&#x2F;下降沿计次, 得到 N, 那么频率为:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>f_x &#x3D; \frac{N}{T}<br>\end{aligned}<br>}<br>$$<br>(适合测量高频信号, 结果更新慢, 也就是如果频率慢慢在变化, 这时测出来的频率变化较慢, 因为这里实际上测的是平均值)</li>
+<li>测周法, 两个上升沿内, 以标准频率 $f_c$ (定时器记一个的时间) 计次, 得到 N (这里的 N 表示定时器记了多少次, 用来算时间, 也就是先求一个周期的时间, 然后取个倒数得到频率), 则频率为:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>f_x &#x3D; \frac{f_c}{N}<br>\end{aligned}<br>}<br>$$<br>(适合测量低频信号, 因为此时计次能比较多, 误差比较小, 结果更新比较快, 因为测量一个周期就得出结果)</li>
+</ol>
+<p>这里需要注意 <mark>中界频率</mark> 的概念, 即测频法与测周法误差相等的频率点, 示意如:<br><img src="/../img/cal-pwm-frequency-on-stm32.png" srcset="/img/loading.gif" lazyload><br>有:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>f_m &#x3D; \sqrt{f_C &#x2F; T}<br>\end{aligned}<br>}<br>$$<br>(减小测频法与测周法的 $\pm 1$ 误差, 这里是两个 N 相等时计算得出)<br>这个 $f_m$ 用来决定是用测频法还是测周法, 当待测频率小于 $f_m$ 时, 用测频法误差更小, 当待测频率大于 $f_m$ 时, 用测周法误差更小.</p>
+<h1 id="Neovim-简单配置"><a href="#Neovim-简单配置" class="headerlink" title="Neovim 简单配置"></a>Neovim 简单配置</h1><p>用 Mason 和 lsp-config 来配置出简单的自动补全体验, 基本上在 Mason 中安装 clangd 即可.<br><img src="/../img/mason-clangd-install.png" srcset="/img/loading.gif" lazyload></p>
 <p>由于 keil 5 添加头文件路径的方式我不是很明白, 这里添加头文件就直接使用相对路径, 这样 clangd 也能找到用于补全提示:<br><img src="/../img/relative-path-adding-header-file.png" srcset="/img/loading.gif" lazyload></p>
 <h1 id="arm-none-eabi-objcopy-系列工具的使用"><a href="#arm-none-eabi-objcopy-系列工具的使用" class="headerlink" title="arm-none-eabi-objcopy 系列工具的使用"></a>arm-none-eabi-objcopy 系列工具的使用</h1><p>这里主要用 <code>arm-none-eabi-objcopy</code> 来进行格式转换.</p>
 <h2 id="将-axf-文件转换为-bin-文件"><a href="#将-axf-文件转换为-bin-文件" class="headerlink" title="将 axf 文件转换为 bin 文件"></a>将 axf 文件转换为 bin 文件</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">arm-none-eabi-objcopy -O binary test.axf test.bin<br></code></pre></td></tr></table></figure>
