@@ -33,6 +33,7 @@
 <meta property="og:image" content="http://example.com/img/B-advance-90-degree.png">
 <meta property="og:image" content="http://example.com/img/TIM-kinds-in-stm32.png">
 <meta property="og:image" content="http://example.com/img/basic-structure-of-TIM.png">
+<meta property="og:image" content="http://example.com/img/master-slave-toggle-mode.png">
 <meta property="og:image" content="http://example.com/img/PWM-in-TIM.png">
 <meta property="og:image" content="http://example.com/img/eight-mode-of-output-compare.png">
 <meta property="og:image" content="http://example.com/img/PWM-structure-of-TIM.png">
@@ -40,12 +41,14 @@
 <meta property="og:image" content="http://example.com/img/steering-gear-connection.png">
 <meta property="og:image" content="http://example.com/img/TB6612-structure.png">
 <meta property="og:image" content="http://example.com/img/cal-pwm-frequency-on-stm32.png">
+<meta property="og:image" content="http://example.com/img/basic-structure-of-input-capture.png">
+<meta property="og:image" content="http://example.com/img/basic-structure-of-PWMI.png">
 <meta property="og:image" content="http://example.com/img/mason-clangd-install.png">
 <meta property="og:image" content="http://example.com/img/relative-path-adding-header-file.png">
 <meta property="og:image" content="http://example.com/img/basic-structure-of-EXTI.png">
 <meta property="og:image" content="http://example.com/img/external-interrupt-of-stm32f103c8.png">
 <meta property="article:published_time" content="2024-03-25T03:17:07.000Z">
-<meta property="article:modified_time" content="2024-03-31T06:37:04.296Z">
+<meta property="article:modified_time" content="2024-03-31T07:02:37.488Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/STM32f103c8-structure.png">
@@ -268,7 +271,7 @@
         
         
         
-          152 分钟
+          154 分钟
         
       </span>
     
@@ -419,6 +422,10 @@
 <h3 id="TRGO"><a href="#TRGO" class="headerlink" title="TRGO"></a>TRGO</h3><p>TRGO, Timer Gated Reset Output, 定时器门控复位输出, 是一个定时器输出的选项. 当定时器满足一定的触发条件时, 就会从 TRGO 输出信号到其他外设执行操作.</p>
 <p>可以用 TRGO 来级联定时器等.</p>
 <h3 id="主从触发模式"><a href="#主从触发模式" class="headerlink" title="主从触发模式"></a>主从触发模式</h3><p>让内部的硬件在不受程序的控制下实现自动运行.</p>
+<p>主从触发模式是选择 “主模式”, “从模式” 和 “触发源选择” 的简称:<br><img src="/../img/master-slave-toggle-mode.png" srcset="/img/loading.gif" lazyload></p>
+<p>主模式指, 将定时器内部的信号, 映射到 TRGO (Timer Gated Reset Output) 引脚, 用于触发别的外设.</p>
+<p>从模式指, 通过接收其他外设或者自身外设的一些信号 (触发源选择来指定) 来控制自身定时器的运行 (从模式主要是选择定时器执行什么操作).</p>
+<p>触发源选择指, 选择用什么信号源来触发从模式. (可以认为是从模式的一部分)</p>
 <h2 id="TIM-输出比较"><a href="#TIM-输出比较" class="headerlink" title="TIM 输出比较"></a>TIM 输出比较</h2><p>OC, Output Compare, 输出比较. 其通过比较 CNT (Counter) 与 CCR (Compare&#x2F;Capture Register) 寄存器值之间的关系, 来对输出电平进行置 1, 置 0 或翻转的操作, 用于输出一定频率和占空比的 PWM 波形.</p>
 <p>CCR 寄存器是输入和输出共用的, 当输入时, 则用于 Capture, 当输出时, 则用于 Compare.</p>
 <p>一般 CNT 值是自增, 而 CCR 是一个给定的值.</p>
@@ -470,6 +477,9 @@
 <li>测周法, 两个上升沿内, 以标准频率 $f_c$ (定时器记一个的时间) 计次, 得到 N (这里的 N 表示定时器记了多少次, 用来算时间, 也就是先求一个周期的时间, 然后取个倒数得到频率), 则频率为:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>f_x &#x3D; \frac{f_c}{N}<br>\end{aligned}<br>}<br>$$<br>(适合测量低频信号, 因为此时计次能比较多, 误差比较小, 结果更新比较快, 因为测量一个周期就得出结果)</li>
 </ol>
 <p>这里需要注意 <mark>中界频率</mark> 的概念, 即测频法与测周法误差相等的频率点, 示意如:<br><img src="/../img/cal-pwm-frequency-on-stm32.png" srcset="/img/loading.gif" lazyload><br>有:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>f_m &#x3D; \sqrt{f_C &#x2F; T}<br>\end{aligned}<br>}<br>$$<br>(减小测频法与测周法的 $\pm 1$ 误差, 这里是两个 N 相等时计算得出)<br>这个 $f_m$ 用来决定是用测频法还是测周法, 当待测频率小于 $f_m$ 时, 用测频法误差更小, 当待测频率大于 $f_m$ 时, 用测周法误差更小.</p>
+<h3 id="输入捕获的基本结构"><a href="#输入捕获的基本结构" class="headerlink" title="输入捕获的基本结构"></a>输入捕获的基本结构</h3><p>如图:<br><img src="/../img/basic-structure-of-input-capture.png" srcset="/img/loading.gif" lazyload></p>
+<p>“TI1FP1” 指 “Timer Input 1 Filter, Prescaler and Prescaler”, 定时器输入触发极性选择位. 用于配置定时器的输入触发极性，以确定何时触发定时器的计数操作.</p>
+<h3 id="PWMI-基本结构"><a href="#PWMI-基本结构" class="headerlink" title="PWMI 基本结构"></a>PWMI 基本结构</h3><p>如图:<br><img src="/../img/basic-structure-of-PWMI.png" srcset="/img/loading.gif" lazyload></p>
 <h1 id="Neovim-简单配置"><a href="#Neovim-简单配置" class="headerlink" title="Neovim 简单配置"></a>Neovim 简单配置</h1><p>用 Mason 和 lsp-config 来配置出简单的自动补全体验, 基本上在 Mason 中安装 clangd 即可.<br><img src="/../img/mason-clangd-install.png" srcset="/img/loading.gif" lazyload></p>
 <p>由于 keil 5 添加头文件路径的方式我不是很明白, 这里添加头文件就直接使用相对路径, 这样 clangd 也能找到用于补全提示:<br><img src="/../img/relative-path-adding-header-file.png" srcset="/img/loading.gif" lazyload></p>
 <h1 id="arm-none-eabi-objcopy-系列工具的使用"><a href="#arm-none-eabi-objcopy-系列工具的使用" class="headerlink" title="arm-none-eabi-objcopy 系列工具的使用"></a>arm-none-eabi-objcopy 系列工具的使用</h1><p>这里主要用 <code>arm-none-eabi-objcopy</code> 来进行格式转换.</p>
