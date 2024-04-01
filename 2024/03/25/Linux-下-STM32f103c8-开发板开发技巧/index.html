@@ -48,7 +48,7 @@
 <meta property="og:image" content="http://example.com/img/basic-structure-of-EXTI.png">
 <meta property="og:image" content="http://example.com/img/external-interrupt-of-stm32f103c8.png">
 <meta property="article:published_time" content="2024-03-25T03:17:07.000Z">
-<meta property="article:modified_time" content="2024-04-01T02:21:51.332Z">
+<meta property="article:modified_time" content="2024-04-01T03:10:48.582Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/STM32f103c8-structure.png">
@@ -271,7 +271,7 @@
         
         
         
-          164 分钟
+          168 分钟
         
       </span>
     
@@ -480,6 +480,13 @@
 <h3 id="输入捕获的基本结构"><a href="#输入捕获的基本结构" class="headerlink" title="输入捕获的基本结构"></a>输入捕获的基本结构</h3><p>如图:<br><img src="/../img/basic-structure-of-input-capture.png" srcset="/img/loading.gif" lazyload></p>
 <p>“TI1FP1” 指 “Timer Input 1 Filter, Prescaler and Prescaler”, 定时器输入触发极性选择位. 用于配置定时器的输入触发极性，以确定何时触发定时器的计数操作.</p>
 <h3 id="PWMI-基本结构"><a href="#PWMI-基本结构" class="headerlink" title="PWMI 基本结构"></a>PWMI 基本结构</h3><p>如图:<br><img src="/../img/basic-structure-of-PWMI.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="定时器编码接口"><a href="#定时器编码接口" class="headerlink" title="定时器编码接口"></a>定时器编码接口</h2><p>Encoder Interface, 编码接口.</p>
+<p>对于需要频繁执行, 操作又比较简单的任务, 一般都会设计一个硬件电路模块. 来自动完成.</p>
+<p>这里用定时器编码接口, 来自动给编码器进行计次的硬件模块.</p>
+<p>编码器接口可接收增量 (正交) 编码器的信号, 根据编码器旋转产生的正交信号脉冲, 自动控制 CNT 自增或自减 (一个脉冲加1或减1), 从而指示编码器的位置, 旋转方向和旋转速度.</p>
+<p>正交信号脉冲指, 输出的两个方波信号, 相位相差 90 度, 超前 90 度或者滞后 90 度, 分别代表正转和反转</p>
+<p>每个高级定时器和通用定时器都拥有 1 个编码器接口. (一个定时器如果设置为编码器接口模式, 基本上就干不了其他事了)</p>
+<p>编码器的两个输入引脚会借用输入捕获的 channel1 和 channel2.</p>
 <h1 id="Neovim-简单配置"><a href="#Neovim-简单配置" class="headerlink" title="Neovim 简单配置"></a>Neovim 简单配置</h1><p>用 Mason 和 lsp-config 来配置出简单的自动补全体验, 基本上在 Mason 中安装 clangd 即可.<br><img src="/../img/mason-clangd-install.png" srcset="/img/loading.gif" lazyload></p>
 <p>由于 keil 5 添加头文件路径的方式我不是很明白, 这里添加头文件就直接使用相对路径, 这样 clangd 也能找到用于补全提示:<br><img src="/../img/relative-path-adding-header-file.png" srcset="/img/loading.gif" lazyload></p>
 <h1 id="arm-none-eabi-objcopy-系列工具的使用"><a href="#arm-none-eabi-objcopy-系列工具的使用" class="headerlink" title="arm-none-eabi-objcopy 系列工具的使用"></a>arm-none-eabi-objcopy 系列工具的使用</h1><p>这里主要用 <code>arm-none-eabi-objcopy</code> 来进行格式转换.</p>
@@ -695,8 +702,8 @@
 <p>分别读取四个通道的 CCR 寄存器的函数为:</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">uint16_t</span> <span class="hljs-title function_">TIM_GetCapture1</span><span class="hljs-params">(TIM_TypeDef* TIMx)</span>;<br><span class="hljs-type">uint16_t</span> <span class="hljs-title function_">TIM_GetCapture2</span><span class="hljs-params">(TIM_TypeDef* TIMx)</span>;<br><span class="hljs-type">uint16_t</span> <span class="hljs-title function_">TIM_GetCapture3</span><span class="hljs-params">(TIM_TypeDef* TIMx)</span>;<br><span class="hljs-type">uint16_t</span> <span class="hljs-title function_">TIM_GetCapture4</span><span class="hljs-params">(TIM_TypeDef* TIMx)</span>;<br></code></pre></td></tr></table></figure>
 
-
-
+<p><code>TIM_PWMIConfig()</code> 只支持 channel1 和 channel2 的配置, 不能传给 channel3 和 channel4. 当配置 channel1 后, 其会自动把 channel2 配置为相反的参数.</p>
+<p>正负1误差可以认为是 1&#x2F;计数值. 比如: 要求误差等于千分之一, 则频率上限为 $1M&#x2F;1000 &#x3D; 1kHz$. 要求误差等于百分之一, 则频率上限为 $1M&#x2F;100 &#x3D; 10kHz$</p>
 <h1 id="需要注意的事"><a href="#需要注意的事" class="headerlink" title="需要注意的事"></a>需要注意的事</h1><h2 id="按键抖动和松手检测"><a href="#按键抖动和松手检测" class="headerlink" title="按键抖动和松手检测"></a>按键抖动和松手检测</h2><p>对于外部中断, 不容易处理按键抖动和松手检测.</p>
 <h2 id="编码器输出正交波形"><a href="#编码器输出正交波形" class="headerlink" title="编码器输出正交波形"></a>编码器输出正交波形</h2><h2 id="预分频器的实际分频系数"><a href="#预分频器的实际分频系数" class="headerlink" title="预分频器的实际分频系数"></a>预分频器的实际分频系数</h2><figure class="highlight fix"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs fix"><span class="hljs-attr">实际分频系数 </span>=<span class="hljs-string"> 预分频器值 + 1</span><br></code></pre></td></tr></table></figure>
 <p>如, 设置预分频器值为 1, 假设输入频率为 72MHz, 则变为 72MHz&#x2F;2. 如果设置值为 2, 则频率为 72MHz&#x2F;3.</p>
