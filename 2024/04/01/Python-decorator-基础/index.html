@@ -16,15 +16,15 @@
   <meta name="author" content="John Doe">
   <meta name="keywords" content="">
   
-    <meta name="description" content="Python decorator 是一个高阶函数, 接受一个函数作为参数, 在">
+    <meta name="description" content="参考 tutorial Python decorator 是一个高阶函数, 接受一个函数作为参数, 扩展这个函数后返回 (本质上是返回了一个新函数). 语法示例为: 1234567891011def uppercase(func):    def wrapper(*args, **kwargs):        result &#x3D; func(*args, **kwargs)        retur">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Python-decorator-基础">
 <meta property="og:url" content="http://example.com/2024/04/01/Python-decorator-%E5%9F%BA%E7%A1%80/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="Python decorator 是一个高阶函数, 接受一个函数作为参数, 在">
+<meta property="og:description" content="参考 tutorial Python decorator 是一个高阶函数, 接受一个函数作为参数, 扩展这个函数后返回 (本质上是返回了一个新函数). 语法示例为: 1234567891011def uppercase(func):    def wrapper(*args, **kwargs):        result &#x3D; func(*args, **kwargs)        retur">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2024-04-01T07:21:27.000Z">
-<meta property="article:modified_time" content="2024-04-01T07:22:32.571Z">
+<meta property="article:modified_time" content="2024-04-01T08:37:05.347Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          35 字
+          2.8k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          1 分钟
+          23 分钟
         
       </span>
     
@@ -289,7 +289,37 @@
             
               <div class="markdown-body">
                 
-                <p>Python decorator 是一个高阶函数, 接受一个函数作为参数, 在</p>
+                <p><a target="_blank" rel="noopener" href="https://www.datacamp.com/tutorial/decorators-python">参考 tutorial</a></p>
+<p>Python decorator 是一个高阶函数, 接受一个函数作为参数, 扩展这个函数后返回 (本质上是返回了一个新函数). 语法示例为:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">uppercase</span>(<span class="hljs-params">func</span>):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">wrapper</span>(<span class="hljs-params">*args, **kwargs</span>):<br>        result = func(*args, **kwargs)<br>        <span class="hljs-keyword">return</span> result.upper()<br>    <span class="hljs-keyword">return</span> wrapper<br><br><span class="hljs-meta">@uppercase</span><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">say_hello</span>(<span class="hljs-params">name</span>):<br>    <span class="hljs-keyword">return</span> <span class="hljs-string">f&quot;hello, <span class="hljs-subst">&#123;name&#125;</span>&quot;</span><br><br><span class="hljs-built_in">print</span>(say_hello(<span class="hljs-string">&quot;Alice&quot;</span>))  <span class="hljs-comment"># 输出: HELLO, ALICE</span><br></code></pre></td></tr></table></figure>
+<p>这里 <code>uppercase</code> 为定义的 decorator 函数, <code>say_hello</code> 为传入的函数.</p>
+<p><code>@</code> 是一种特殊的语法 (语法糖), 其等价于:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">uppercase</span>(<span class="hljs-params">func</span>):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">wrapper</span>(<span class="hljs-params">*args, **kwargs</span>):<br>        result = func(*args, **kwargs)<br>        <span class="hljs-keyword">return</span> result.upper()<br>    <span class="hljs-keyword">return</span> wrapper<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">say_hello</span>(<span class="hljs-params">name</span>):<br>    <span class="hljs-keyword">return</span> <span class="hljs-string">f&quot;hello, <span class="hljs-subst">&#123;name&#125;</span>&quot;</span><br><br>say_hello = uppercase(say_hello)<br><span class="hljs-built_in">print</span>(say_hello(<span class="hljs-string">&quot;Alice&quot;</span>))  <span class="hljs-comment"># 输出: HELLO, ALICE</span><br></code></pre></td></tr></table></figure>
+
+<p>后面具体解释这些步骤.</p>
+<h1 id="创建-decorator"><a href="#创建-decorator" class="headerlink" title="创建 decorator"></a>创建 decorator</h1><p>Decorator 起作用的本质就是返回一个新函数, 因此需要在函数中定义新函数 (嵌套定义), 由于本意是扩充当前的一个函数, 因此要传入一个函数作为参数, 然后调用, 如:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">uppercase_decorator</span>(<span class="hljs-params">function</span>):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">wrapper</span>():<br>        func_result = function()<br>        make_uppercase = func_result.upper()<br>        <span class="hljs-keyword">return</span> make_uppercase<br><br>    <span class="hljs-keyword">return</span> wrapper<br></code></pre></td></tr></table></figure>
+
+<h1 id="对一个函数应用多个-decorator"><a href="#对一个函数应用多个-decorator" class="headerlink" title="对一个函数应用多个 decorator"></a>对一个函数应用多个 decorator</h1><p>一个函数可以经多个 decorator 按顺序处理, 如:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> functools<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">uppercase_decorator</span>(<span class="hljs-params">function</span>):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">wrapper</span>():<br>        func = function()<br>        make_uppercase = func.upper()<br>        <span class="hljs-keyword">return</span> make_uppercase<br><br>    <span class="hljs-keyword">return</span> wrapper<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">split_string</span>(<span class="hljs-params">function</span>):<br><span class="hljs-meta">    @functools.wraps(<span class="hljs-params">function</span>)</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">wrapper</span>():<br>        func = function()<br>        splitted_string = func.split()<br>        <span class="hljs-keyword">return</span> splitted_string<br><br>    <span class="hljs-keyword">return</span> wrapper <br><br><span class="hljs-meta">@split_string</span><br><span class="hljs-meta">@uppercase_decorator</span><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">say_hi</span>():<br>    <span class="hljs-keyword">return</span> <span class="hljs-string">&#x27;hello there&#x27;</span><br><br><span class="hljs-built_in">print</span>(say_hi())<br></code></pre></td></tr></table></figure>
+
+<p>输出为:</p>
+<figure class="highlight scheme"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs scheme">[<span class="hljs-symbol">&#x27;HELLO</span>&#x27;, <span class="hljs-symbol">&#x27;THERE</span>&#x27;]<br></code></pre></td></tr></table></figure>
+
+<p>需要注意:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-meta">@split_string</span><br><span class="hljs-meta">@uppercase_decorator</span><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">say_hi</span>():<br>    <span class="hljs-keyword">return</span> <span class="hljs-string">&#x27;hello there&#x27;</span><br></code></pre></td></tr></table></figure>
+<p>这里 <code>uppercase_decorator</code> 先运行, 然后再运行 <code>split_string</code>.</p>
+<h1 id="在-Decorator-中使用接收函数的参数-已知参数个数"><a href="#在-Decorator-中使用接收函数的参数-已知参数个数" class="headerlink" title="在 Decorator 中使用接收函数的参数 (已知参数个数)"></a>在 Decorator 中使用接收函数的参数 (已知参数个数)</h1><p>如:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">decorator_with_arguments</span>(<span class="hljs-params">function</span>):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">wrapper_accepting_arguments</span>(<span class="hljs-params">arg1, arg2</span>):<br>        <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;My arguments are: &#123;0&#125;, &#123;1&#125;&quot;</span>.<span class="hljs-built_in">format</span>(arg1,arg2))<br>        function(arg1, arg2)<br>    <span class="hljs-keyword">return</span> wrapper_accepting_arguments<br><br><br><span class="hljs-meta">@decorator_with_arguments</span><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">cities</span>(<span class="hljs-params">city_one, city_two</span>):<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Cities I love are &#123;0&#125; and &#123;1&#125;&quot;</span>.<span class="hljs-built_in">format</span>(city_one, city_two))<br><br>cities(<span class="hljs-string">&quot;Nairobi&quot;</span>, <span class="hljs-string">&quot;Accra&quot;</span>)<br></code></pre></td></tr></table></figure>
+<p>这里的 <code>arg1</code> 和 <code>arg2</code> 形参名是自己定义的, 这里需要注意参数个数的对应.</p>
+<h1 id="定义通用的-decorator-任意数量的参数"><a href="#定义通用的-decorator-任意数量的参数" class="headerlink" title="定义通用的 decorator (任意数量的参数)"></a>定义通用的 decorator (任意数量的参数)</h1><p>借助 Python 中不定参数的定义语法:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">test</span>(<span class="hljs-params">*args</span>):<br>    <span class="hljs-built_in">print</span>(args[<span class="hljs-number">0</span>])<br><br>test(<span class="hljs-string">&quot;Hello&quot;</span>, <span class="hljs-string">&quot;World&quot;</span>)<br></code></pre></td></tr></table></figure>
+<p>则只会输出 <code>Hello</code>. 这里 <code>args</code> 包含了所有的位置参数, 即直接传入值.</p>
+<p>若想使用指定形参名的方式, 则需要借助 <code>**</code> 的语法:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">test</span>(<span class="hljs-params">*args, **kwargs</span>):<br>    <span class="hljs-built_in">print</span>(args[<span class="hljs-number">0</span>], kwargs[<span class="hljs-string">&#x27;haha&#x27;</span>])<br><br>test(<span class="hljs-string">&quot;Hello&quot;</span>, <span class="hljs-string">&quot;World&quot;</span>, haha=<span class="hljs-string">&quot;hahah&quot;</span>)<br></code></pre></td></tr></table></figure>
+<p>此时的输出则为 <code>Hallo hahah</code>.</p>
+<p>应用到 decorator 中如:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">a_decorator_passing_arbitrary_arguments</span>(<span class="hljs-params">function_to_decorate</span>):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">a_wrapper_accepting_arbitrary_arguments</span>(<span class="hljs-params">*args,**kwargs</span>):<br>        <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;The positional arguments are&#x27;</span>, args)<br>        <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;The keyword arguments are&#x27;</span>, kwargs)<br>        function_to_decorate(*args)<br>    <span class="hljs-keyword">return</span> a_wrapper_accepting_arbitrary_arguments<br><br><span class="hljs-meta">@a_decorator_passing_arbitrary_arguments</span><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">function_with_no_argument</span>():<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;No arguments here.&quot;</span>)<br><br>function_with_no_argument()<br></code></pre></td></tr></table></figure>
 
                 
               </div>
@@ -370,6 +400,12 @@
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2024/04/01/Python-%E4%B8%AD%E5%87%BD%E6%95%B0%E7%9A%84%E6%9C%AC%E8%B4%A8/" title="Python-中函数的本质">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Python-中函数的本质</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">
