@@ -48,7 +48,7 @@
 <meta property="og:image" content="http://example.com/img/basic-structure-of-EXTI.png">
 <meta property="og:image" content="http://example.com/img/external-interrupt-of-stm32f103c8.png">
 <meta property="article:published_time" content="2024-03-25T03:17:07.000Z">
-<meta property="article:modified_time" content="2024-03-31T07:02:37.488Z">
+<meta property="article:modified_time" content="2024-04-01T01:43:03.466Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/STM32f103c8-structure.png">
@@ -260,7 +260,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          18k 字
+          19k 字
         
       </span>
     
@@ -271,7 +271,7 @@
         
         
         
-          154 分钟
+          162 分钟
         
       </span>
     
@@ -652,7 +652,7 @@
 
 <h2 id="相关结构体"><a href="#相关结构体" class="headerlink" title="相关结构体"></a>相关结构体</h2><p><code>TIM_TypeDef</code> 的定义为:</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><br></code></pre></td></tr></table></figure>
-
+<p>就是指 <code>TIM1</code>, <code>TIM2</code> 这些.</p>
 <h1 id="TIM-输出比较-1"><a href="#TIM-输出比较-1" class="headerlink" title="TIM 输出比较"></a>TIM 输出比较</h1><h2 id="PWM-驱动基础"><a href="#PWM-驱动基础" class="headerlink" title="PWM 驱动基础"></a>PWM 驱动基础</h2><p>基本步骤:</p>
 <ol>
 <li>RCC 开启 TIM 外设和 GPIO 外设的时钟</li>
@@ -671,7 +671,28 @@
 <p>可以在运行时更改占空比.</p>
 <p>重映射时需要参考手册中的重映射表. 若重映射到调试端口, 记得解除调试映射.</p>
 <p>当同时初始化同一个定时器的不同通道的 Output Compare 时, 由于他们共用一个计数器, 因此频率需要一致, 但占空比可以各自设定 (即设置 CCR 的值). 由于在计数器更新时, 所有 PWM 同时跳变, 因此它们的相位都一致.</p>
-<h2 id="和-OC-相关结构体"><a href="#和-OC-相关结构体" class="headerlink" title="和 OC 相关结构体"></a>和 OC 相关结构体</h2><h3 id="TIM-OCInitTypeDef"><a href="#TIM-OCInitTypeDef" class="headerlink" title="TIM_OCInitTypeDef"></a>TIM_OCInitTypeDef</h3><h1 id="TIM-输入捕获-1"><a href="#TIM-输入捕获-1" class="headerlink" title="TIM 输入捕获"></a>TIM 输入捕获</h1><h1 id="需要注意的事"><a href="#需要注意的事" class="headerlink" title="需要注意的事"></a>需要注意的事</h1><h2 id="按键抖动和松手检测"><a href="#按键抖动和松手检测" class="headerlink" title="按键抖动和松手检测"></a>按键抖动和松手检测</h2><p>对于外部中断, 不容易处理按键抖动和松手检测.</p>
+<h2 id="和-OC-相关结构体"><a href="#和-OC-相关结构体" class="headerlink" title="和 OC 相关结构体"></a>和 OC 相关结构体</h2><h3 id="TIM-OCInitTypeDef"><a href="#TIM-OCInitTypeDef" class="headerlink" title="TIM_OCInitTypeDef"></a>TIM_OCInitTypeDef</h3><h1 id="TIM-输入捕获-1"><a href="#TIM-输入捕获-1" class="headerlink" title="TIM 输入捕获"></a>TIM 输入捕获</h1><p>一般步骤为:</p>
+<ol>
+<li>RCC 开启 GPIO 和 TIM 的时钟</li>
+<li>GPIO 初始化, 把 GPIO 配置成输入模式, 这里一般为上拉输入或者浮空输入模式</li>
+<li>配置时基单元, 让 CNT 计数器在内部时钟的驱动下自增运行</li>
+<li>配置输入捕获单元, 包括滤波器, 极性, 直连通道, 交叉通道, 分频器等参数</li>
+<li>选择从模式触发源</li>
+<li>选择触发之后的操作</li>
+<li>当电路都配置好之后, 调用 <code>TIM_Cmd</code> 函数, 开启定时器</li>
+</ol>
+<p>当到读取最新一个周期的频率时, 直接读取 CCR 寄存器, 然后按照 $fc&#x2F;N$ 来计算.</p>
+<h2 id="相关库函数"><a href="#相关库函数" class="headerlink" title="相关库函数"></a>相关库函数</h2><p>位于 <code>stm32f10x_tim.c</code> 和 <code>stm32f10x_tim.h</code> 文件中:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">TIM_ICInit</span><span class="hljs-params">(TIM_TypeDef* TIMx, TIM_ICInitTypeDef* TIM_ICInitStruct)</span>;<br><span class="hljs-type">void</span> <span class="hljs-title function_">TIM_PWMIConfig</span><span class="hljs-params">(TIM_TypeDef* TIMx, TIM_ICInitTypeDef* TIM_ICInitStruct)</span>;<br><span class="hljs-type">void</span> <span class="hljs-title function_">TIM_ICStructInit</span><span class="hljs-params">(TIM_ICInitTypeDef* TIM_ICInitStruct)</span>;<br><span class="hljs-type">void</span> <span class="hljs-title function_">TIM_SelectInputTrigger</span><span class="hljs-params">(TIM_TypeDef* TIMx, <span class="hljs-type">uint16_t</span> TIM_InputTriggerSource)</span>;<br><span class="hljs-type">void</span> <span class="hljs-title function_">TIM_SelectOutputTrigger</span><span class="hljs-params">(TIM_TypeDef* TIMx, <span class="hljs-type">uint16_t</span> TIM_TRGOSource)</span>;<br><span class="hljs-type">void</span> <span class="hljs-title function_">TIM_SelectSlaveMode</span><span class="hljs-params">(TIM_TypeDef* TIMx, <span class="hljs-type">uint16_t</span> TIM_SlaveMode)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>TIM_ICInit()</code>, 用 <code>TIM_ICInitTypeDef</code> 类型结构体来初始化 <code>TIM_TypeDef</code> 也就是具体的定时器, 这里需要指定具体配置哪一个通道</li>
+<li><code>TIM_PWMIConfig()</code>, 可以把定时器设置为 PWMI 模式, 并同时初始化两个通道</li>
+<li><code>TIM_ICStructInit()</code>, 可以给 <code>TIM_ICInitTypeDef</code> 类型结构体赋一个初始值</li>
+<li><code>TIM_SelectInputTrigger()</code>, 选择输入触发源 TRGI</li>
+<li><code>TIM_SelectOutputTrigger()</code>, 选择输出触发源 TRGO</li>
+<li><code>TIM_SelectSlaveMode()</code>, 选择从模式</li>
+</ul>
+<h1 id="需要注意的事"><a href="#需要注意的事" class="headerlink" title="需要注意的事"></a>需要注意的事</h1><h2 id="按键抖动和松手检测"><a href="#按键抖动和松手检测" class="headerlink" title="按键抖动和松手检测"></a>按键抖动和松手检测</h2><p>对于外部中断, 不容易处理按键抖动和松手检测.</p>
 <h2 id="编码器输出正交波形"><a href="#编码器输出正交波形" class="headerlink" title="编码器输出正交波形"></a>编码器输出正交波形</h2><h2 id="预分频器的实际分频系数"><a href="#预分频器的实际分频系数" class="headerlink" title="预分频器的实际分频系数"></a>预分频器的实际分频系数</h2><figure class="highlight fix"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs fix"><span class="hljs-attr">实际分频系数 </span>=<span class="hljs-string"> 预分频器值 + 1</span><br></code></pre></td></tr></table></figure>
 <p>如, 设置预分频器值为 1, 假设输入频率为 72MHz, 则变为 72MHz&#x2F;2. 如果设置值为 2, 则频率为 72MHz&#x2F;3.</p>
 <h2 id="消除-Motor-里的电流声"><a href="#消除-Motor-里的电流声" class="headerlink" title="消除 Motor 里的电流声"></a>消除 Motor 里的电流声</h2><p>当 PWM 的频率超过人耳听到声音的频率范围, 即 $20Hz ~ 20kHz$, 即可.</p>
