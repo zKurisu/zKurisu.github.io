@@ -43,12 +43,16 @@
 <meta property="og:image" content="http://example.com/img/cal-pwm-frequency-on-stm32.png">
 <meta property="og:image" content="http://example.com/img/basic-structure-of-input-capture.png">
 <meta property="og:image" content="http://example.com/img/basic-structure-of-PWMI.png">
+<meta property="og:image" content="http://example.com/img/quadrature-coder-two-square-wave.png">
+<meta property="og:image" content="http://example.com/img/two-input-pin-of-encoder-in-timer.png">
+<meta property="og:image" content="http://example.com/img/timer-channel-connect-to-encoder.png">
+<meta property="og:image" content="http://example.com/img/basic-structure-of-encoder-interface.png">
 <meta property="og:image" content="http://example.com/img/mason-clangd-install.png">
 <meta property="og:image" content="http://example.com/img/relative-path-adding-header-file.png">
 <meta property="og:image" content="http://example.com/img/basic-structure-of-EXTI.png">
 <meta property="og:image" content="http://example.com/img/external-interrupt-of-stm32f103c8.png">
 <meta property="article:published_time" content="2024-03-25T03:17:07.000Z">
-<meta property="article:modified_time" content="2024-04-01T03:10:48.582Z">
+<meta property="article:modified_time" content="2024-04-01T06:03:04.794Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/STM32f103c8-structure.png">
@@ -260,7 +264,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          20k 字
+          21k 字
         
       </span>
     
@@ -271,7 +275,7 @@
         
         
         
-          168 分钟
+          177 分钟
         
       </span>
     
@@ -467,7 +471,7 @@
 <p><code>PWMB</code>, <code>BIN2</code> 和 <code>BIN1</code> 控制 <code>BO1</code> 和 <code>BO2</code>.</p>
 <p>右下角的表解释了怎么控制电机的方向.</p>
 <h2 id="TIM-输入捕获"><a href="#TIM-输入捕获" class="headerlink" title="TIM 输入捕获"></a>TIM 输入捕获</h2><p>IC, Input Capture, 输入捕获, 是定时器的功能. 输入捕获模式下, 当通道输入引脚出现指定电平跳变 (上升沿, 下降沿等) 时, 当前 CNT (CouNT) 的值将被锁存到 CCR (Capture&#x2F;Compare Register) 中, 可用于测量 PWM 波形的频率, 占空比, 脉冲间隔, 电平持续时间等参数.</p>
-<p>每个高级定时器和通用定时器都拥有 4 各输入捕获通道. 而基本定时器没有输入捕获功能.</p>
+<p>每个高级定时器和通用定时器都拥有 4 个输入捕获通道. 而基本定时器没有输入捕获功能.</p>
 <p>当配置为 PWMI 模式 (PWM Input 模式, 是专门为测量 PWM 频率和占空比设计的) 时, 可用于测量频率和占空比.</p>
 <p>可以配合主从触发模式, 实现硬件全自动测量.</p>
 <h3 id="频率测量"><a href="#频率测量" class="headerlink" title="频率测量"></a>频率测量</h3><p>对于 STM32 而言, 其只能测量高低电平组成的数字信号, 若想要测量正弦波, 还需要搭建一个信号预处理电路 (用运放搭建一个比较器, 把正弦波转换为数字信号, 再输入给 STM32, 还需要考虑隔离等).</p>
@@ -484,9 +488,18 @@
 <p>对于需要频繁执行, 操作又比较简单的任务, 一般都会设计一个硬件电路模块. 来自动完成.</p>
 <p>这里用定时器编码接口, 来自动给编码器进行计次的硬件模块.</p>
 <p>编码器接口可接收增量 (正交) 编码器的信号, 根据编码器旋转产生的正交信号脉冲, 自动控制 CNT 自增或自减 (一个脉冲加1或减1), 从而指示编码器的位置, 旋转方向和旋转速度.</p>
-<p>正交信号脉冲指, 输出的两个方波信号, 相位相差 90 度, 超前 90 度或者滞后 90 度, 分别代表正转和反转</p>
+<p>正交编码器一般可以测量位置, 或者带有方向的速度值, 一般有两个输出引脚, 一个是 A 相, 一个是 B 相.</p>
+<p>正交信号脉冲指, A, B 相输出的两个方波信号, 相位相差 90 度, 超前 90 度或者滞后 90 度, 分别代表正转和反转.</p>
+<p><img src="/../img/quadrature-coder-two-square-wave.png" srcset="/img/loading.gif" lazyload></p>
+<p>对于带旋转轴的编码器, 一般转得越快, 这个方波的频率就越高 (也就代表速度, 此时取任意一相来测频率即可得到速度)</p>
+<p>正交信号测速度和方向相比于单独输出一个高电平表示正转, 低电平表示反转的精度更高 (因为此时 A, B 相都可以用于计次, 且可以抗噪声)</p>
 <p>每个高级定时器和通用定时器都拥有 1 个编码器接口. (一个定时器如果设置为编码器接口模式, 基本上就干不了其他事了)</p>
+<p>定时器编码器接口有两个输入端, 分别接外设编码器的 A 相和 B 相:</p>
+<p><img src="/../img/two-input-pin-of-encoder-in-timer.png" srcset="/img/loading.gif" lazyload></p>
 <p>编码器的两个输入引脚会借用输入捕获的 channel1 和 channel2.</p>
+<p><img src="/../img/timer-channel-connect-to-encoder.png" srcset="/img/loading.gif" lazyload></p>
+<p>编码器接口的输出部分, 相当于是从模式控制器.</p>
+<h3 id="编码器接口基本结构"><a href="#编码器接口基本结构" class="headerlink" title="编码器接口基本结构"></a>编码器接口基本结构</h3><p><img src="/../img/basic-structure-of-encoder-interface.png" srcset="/img/loading.gif" lazyload></p>
 <h1 id="Neovim-简单配置"><a href="#Neovim-简单配置" class="headerlink" title="Neovim 简单配置"></a>Neovim 简单配置</h1><p>用 Mason 和 lsp-config 来配置出简单的自动补全体验, 基本上在 Mason 中安装 clangd 即可.<br><img src="/../img/mason-clangd-install.png" srcset="/img/loading.gif" lazyload></p>
 <p>由于 keil 5 添加头文件路径的方式我不是很明白, 这里添加头文件就直接使用相对路径, 这样 clangd 也能找到用于补全提示:<br><img src="/../img/relative-path-adding-header-file.png" srcset="/img/loading.gif" lazyload></p>
 <h1 id="arm-none-eabi-objcopy-系列工具的使用"><a href="#arm-none-eabi-objcopy-系列工具的使用" class="headerlink" title="arm-none-eabi-objcopy 系列工具的使用"></a>arm-none-eabi-objcopy 系列工具的使用</h1><p>这里主要用 <code>arm-none-eabi-objcopy</code> 来进行格式转换.</p>
@@ -656,9 +669,8 @@
 <p>与获取标志位和清除标志位相关的函数:</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c">FlagStatus <span class="hljs-title function_">TIM_GetFlagStatus</span><span class="hljs-params">(TIM_TypeDef* TIMx, <span class="hljs-type">uint16_t</span> TIM_FLAG)</span>;<br><span class="hljs-type">void</span> <span class="hljs-title function_">TIM_ClearFlag</span><span class="hljs-params">(TIM_TypeDef* TIMx, <span class="hljs-type">uint16_t</span> TIM_FLAG)</span>;<br>ITStatus <span class="hljs-title function_">TIM_GetITStatus</span><span class="hljs-params">(TIM_TypeDef* TIMx, <span class="hljs-type">uint16_t</span> TIM_IT)</span>;<br><span class="hljs-type">void</span> <span class="hljs-title function_">TIM_ClearITPendingBit</span><span class="hljs-params">(TIM_TypeDef* TIMx, <span class="hljs-type">uint16_t</span> TIM_IT)</span>;<br></code></pre></td></tr></table></figure>
 
-
 <h2 id="相关结构体"><a href="#相关结构体" class="headerlink" title="相关结构体"></a>相关结构体</h2><p><code>TIM_TypeDef</code> 的定义为:</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><br></code></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span></span><br><span class="hljs-class">&#123;</span><br>  __IO <span class="hljs-type">uint16_t</span> CR1;<br>  <span class="hljs-type">uint16_t</span>  RESERVED0;<br>  __IO <span class="hljs-type">uint16_t</span> CR2;<br>  <span class="hljs-type">uint16_t</span>  RESERVED1;<br>  __IO <span class="hljs-type">uint16_t</span> SMCR;<br>  <span class="hljs-type">uint16_t</span>  RESERVED2;<br>  __IO <span class="hljs-type">uint16_t</span> DIER;<br>  <span class="hljs-type">uint16_t</span>  RESERVED3;<br>  __IO <span class="hljs-type">uint16_t</span> SR;<br>  <span class="hljs-type">uint16_t</span>  RESERVED4;<br>  __IO <span class="hljs-type">uint16_t</span> EGR;<br>  <span class="hljs-type">uint16_t</span>  RESERVED5;<br>  __IO <span class="hljs-type">uint16_t</span> CCMR1;<br>  <span class="hljs-type">uint16_t</span>  RESERVED6;<br>  __IO <span class="hljs-type">uint16_t</span> CCMR2;<br>  <span class="hljs-type">uint16_t</span>  RESERVED7;<br>  __IO <span class="hljs-type">uint16_t</span> CCER;<br>  <span class="hljs-type">uint16_t</span>  RESERVED8;<br>  __IO <span class="hljs-type">uint16_t</span> CNT;<br>  <span class="hljs-type">uint16_t</span>  RESERVED9;<br>  __IO <span class="hljs-type">uint16_t</span> PSC;<br>  <span class="hljs-type">uint16_t</span>  RESERVED10;<br>  __IO <span class="hljs-type">uint16_t</span> ARR;<br>  <span class="hljs-type">uint16_t</span>  RESERVED11;<br>  __IO <span class="hljs-type">uint16_t</span> RCR;<br>  <span class="hljs-type">uint16_t</span>  RESERVED12;<br>  __IO <span class="hljs-type">uint16_t</span> CCR1;<br>  <span class="hljs-type">uint16_t</span>  RESERVED13;<br>  __IO <span class="hljs-type">uint16_t</span> CCR2;<br>  <span class="hljs-type">uint16_t</span>  RESERVED14;<br>  __IO <span class="hljs-type">uint16_t</span> CCR3;<br>  <span class="hljs-type">uint16_t</span>  RESERVED15;<br>  __IO <span class="hljs-type">uint16_t</span> CCR4;<br>  <span class="hljs-type">uint16_t</span>  RESERVED16;<br>  __IO <span class="hljs-type">uint16_t</span> BDTR;<br>  <span class="hljs-type">uint16_t</span>  RESERVED17;<br>  __IO <span class="hljs-type">uint16_t</span> DCR;<br>  <span class="hljs-type">uint16_t</span>  RESERVED18;<br>  __IO <span class="hljs-type">uint16_t</span> DMAR;<br>  <span class="hljs-type">uint16_t</span>  RESERVED19;<br>&#125; TIM_TypeDef;<br></code></pre></td></tr></table></figure>
 <p>就是指 <code>TIM1</code>, <code>TIM2</code> 这些.</p>
 <h1 id="TIM-输出比较-1"><a href="#TIM-输出比较-1" class="headerlink" title="TIM 输出比较"></a>TIM 输出比较</h1><h2 id="PWM-驱动基础"><a href="#PWM-驱动基础" class="headerlink" title="PWM 驱动基础"></a>PWM 驱动基础</h2><p>基本步骤:</p>
 <ol>
@@ -709,10 +721,6 @@
 <p>如, 设置预分频器值为 1, 假设输入频率为 72MHz, 则变为 72MHz&#x2F;2. 如果设置值为 2, 则频率为 72MHz&#x2F;3.</p>
 <h2 id="消除-Motor-里的电流声"><a href="#消除-Motor-里的电流声" class="headerlink" title="消除 Motor 里的电流声"></a>消除 Motor 里的电流声</h2><p>当 PWM 的频率超过人耳听到声音的频率范围, 即 $20Hz ~ 20kHz$, 即可.</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c">TIM_TimeBaseInitStructure.TIM_Period = <span class="hljs-number">100</span> - <span class="hljs-number">1</span>;		<span class="hljs-comment">//ARR</span><br>TIM_TimeBaseInitStructure.TIM_Prescaler = <span class="hljs-number">36</span> - <span class="hljs-number">1</span>;		<span class="hljs-comment">//PSC</span><br>TIM_TimeBaseInitStructure.TIM_RepetitionCounter = <span class="hljs-number">0</span>;<br></code></pre></td></tr></table></figure>
-
-
-
-
 
                 
               </div>
