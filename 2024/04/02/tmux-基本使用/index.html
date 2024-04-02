@@ -26,8 +26,11 @@
 <meta property="og:image" content="http://example.com/img/tmux_with_panes.png">
 <meta property="og:image" content="http://example.com/img/tmux_status_line_diagram.png">
 <meta property="og:image" content="http://example.com/img/tmux_list_keys.png">
+<meta property="og:image" content="http://example.com/img/tmux_command_prompt.png">
+<meta property="og:image" content="http://example.com/img/tmux_split_h.png">
+<meta property="og:image" content="http://example.com/img/tmux_split_v.png">
 <meta property="article:published_time" content="2024-04-02T03:23:27.000Z">
-<meta property="article:modified_time" content="2024-04-02T07:39:52.007Z">
+<meta property="article:modified_time" content="2024-04-02T08:39:01.131Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/tmux_with_panes.png">
@@ -239,7 +242,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.3k 字
+          3.8k 字
         
       </span>
     
@@ -250,7 +253,7 @@
         
         
         
-          19 分钟
+          32 分钟
         
       </span>
     
@@ -366,7 +369,69 @@
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ tmux new-session -d -nmysession<br></code></pre></td></tr></table></figure>
 
 <p>在 tmux 中, 可以设置一个 keybinding 对应执行某个 command, 如 <code>C-b c</code> 执行 <code>new-window</code>.</p>
+<h2 id="命令模式"><a href="#命令模式" class="headerlink" title="命令模式"></a>命令模式</h2><p>在 tmux 中, 可以呼出命令提示符 <code>:</code> 以输入控制指令 (和 vim 的 normal 模式类似), 默认为 <code>C-b :</code>.<br><img src="/../img/tmux_command_prompt.png" srcset="/img/loading.gif" lazyload></p>
+<p>默认情况下, 在 prompt 下使用 emacs 的编辑方式, 但如果设置了 <code>VISUAL</code> 或 <code>EDITOR</code> 环境变量的值为 <code>vi</code> (或 <code>vim</code>, <code>nvi</code>), 则会启用 vim 的编辑模式.</p>
+<p>当想要连续调用多个指令时, 可以用 <code>;</code> 分隔.</p>
+<h2 id="Attaching-和-detaching"><a href="#Attaching-和-detaching" class="headerlink" title="Attaching 和 detaching"></a>Attaching 和 detaching</h2><p>Detaching 意味着 client 退出 tmux 到 outside terminal, 与此同时, tmux session 中的程序会放于 background 运行. 默认键为 <code>C-b d</code>, 当成功 detaching 时, 会得到输出:</p>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs pgsql">[detached (<span class="hljs-keyword">from</span> <span class="hljs-keyword">session</span> mysession)]<br></code></pre></td></tr></table></figure>
 
+<p>若想 attach 到一个已有的 session, 用 <code>attach-session</code> (<code>attach</code>) 指令, 在不加参数时, 会 attach 到 most recently used session:</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs arduino">$ tmux attach<br></code></pre></td></tr></table></figure>
+
+<p>也可以用 <code>-t</code> 指定 session name:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ tmux attach -tmysession<br></code></pre></td></tr></table></figure>
+
+<p>这样连接时, 不会让其他 client 掉线, 若向让其他 client detach, 则加上 <code>-d</code> 参数:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ tmux attach -tmysession -d<br></code></pre></td></tr></table></figure>
+
+<p>也可以用 <code>new-session</code> 指令配合 <code>-A</code> 参数, 若指定的 session 不存在, 则创建, 若存在, 则 attach:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ tmux new -Amysession<br></code></pre></td></tr></table></figure>
+<p>(这里也可以用 <code>-D</code> 参数达到 <code>attach-session</code> 命令的 <code>-d</code> 参数的效果)</p>
+<h2 id="完全关闭-tmux-server"><a href="#完全关闭-tmux-server" class="headerlink" title="完全关闭 tmux server"></a>完全关闭 tmux server</h2><p>可以在 terminal 下运行:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ tmux kill-server<br></code></pre></td></tr></table></figure>
+
+<p>或者在 command prompt 下运行:</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs elixir"><span class="hljs-symbol">:kill-server</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="创建-new-windows"><a href="#创建-new-windows" class="headerlink" title="创建 new windows"></a>创建 new windows</h2><p>默认按键 <code>C-b c</code> 来运行 <code>new-window</code> 命令. 如果当前只有 <code>0</code> 这一个 window, 则此时创建的 window index 为 <code>1</code> 且成为 current window of the session.</p>
+<p>如果当前 window index 有 <code>0</code>, <code>2</code>, 则新创建的 window index 为 <code>1</code></p>
+<p><code>new-window</code> 命令的常用参数有:</p>
+<ul>
+<li><code>-d</code>, 创建后不设置为 current window</li>
+<li><code>-n</code>, 指定 window name</li>
+<li><code>-t</code>, 简单使用为指定 index, 还有其他特殊语法指定其他内容<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">tmux new-window -t 999<br></code></pre></td></tr></table></figure></li>
+</ul>
+<p>也可以在创建 window 时运行命令:</p>
+<figure class="highlight coq"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs coq">:neww <span class="hljs-built_in">top</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="Window-窗口-splitting"><a href="#Window-窗口-splitting" class="headerlink" title="Window 窗口 splitting"></a>Window 窗口 splitting</h2><p>当 splitting 一个 window 时, 就会创建一个 pane.</p>
+<p>默认的 <code>C-b %</code>, horizontally splits 当前 pane:<br><img src="/../img/tmux_split_h.png" srcset="/img/loading.gif" lazyload></p>
+<p><code>C-b &quot;</code> vertically splits 当前 pane:<br><img src="/../img/tmux_split_v.png" srcset="/img/loading.gif" lazyload></p>
+<p>或者用 <code>split-window</code> 命令:</p>
+<ul>
+<li><code>-h</code>, 表示 horizontally splits</li>
+<li><code>-v</code>, 表示 vertically splits</li>
+<li><code>-d</code>, 不将 new pane 设置为 active pane</li>
+<li><code>-f</code>, 让 new pane 全屏占据 window</li>
+<li><code>-b</code>, 将 new pane 创建在 above 或 left, 而不是 below 和 right</li>
+</ul>
+<p>也可以直接跟一个命令来运行:</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs elixir"><span class="hljs-symbol">:split-window</span> top<br></code></pre></td></tr></table></figure>
+
+<h2 id="改变-current-window"><a href="#改变-current-window" class="headerlink" title="改变 current window"></a>改变 current window</h2><p>可以用 <code>select-window</code> 加上 index 或 window name 来改变:</p>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs pgsql">:<span class="hljs-keyword">select</span>-<span class="hljs-keyword">window</span> -t &lt;<span class="hljs-keyword">window</span>-<span class="hljs-keyword">index</span>&gt;<br></code></pre></td></tr></table></figure>
+
+
+
+<p>或者用一系列默认键位:</p>
+<ul>
+<li><code>C-b 0</code>, change 到 window 0, <code>C-b 1</code> change 的 window 1, 以此类推到 window 9</li>
+<li><code>C-b &#39;</code>, 之后会 prompts 要求输入 index</li>
+<li><code>C-b n</code>, 按照 index change 到 next window</li>
+<li><code>C-b p</code>, 按照 index change 到 previous window</li>
+<li><code>C-b l</code>, 按照 index change 到 last window</li>
+</ul>
+<h1 id="使用技巧"><a href="#使用技巧" class="headerlink" title="使用技巧"></a>使用技巧</h1><h2 id="以初始配置启用-tmux"><a href="#以初始配置启用-tmux" class="headerlink" title="以初始配置启用 tmux"></a>以初始配置启用 tmux</h2>
                 
               </div>
             
