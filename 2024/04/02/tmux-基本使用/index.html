@@ -39,8 +39,11 @@
 <meta property="og:image" content="http://example.com/img/tmux-after-swap-pane.png">
 <meta property="og:image" content="http://example.com/img/tmux_marked_pane.png">
 <meta property="og:image" content="http://example.com/img/tmux-panes-layouts.png">
+<meta property="og:image" content="http://example.com/img/tmux_buffer_mode.png">
+<meta property="og:image" content="http://example.com/img/tmux-paste-mode-keybindings.png">
+<meta property="og:image" content="http://example.com/img/tmux_find_window.png">
 <meta property="article:published_time" content="2024-04-02T03:23:27.000Z">
-<meta property="article:modified_time" content="2024-04-02T12:27:41.072Z">
+<meta property="article:modified_time" content="2024-04-02T13:11:00.442Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/tmux_with_panes.png">
@@ -252,7 +255,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          5.9k 字
+          6.7k 字
         
       </span>
     
@@ -263,7 +266,7 @@
         
         
         
-          49 分钟
+          57 分钟
         
       </span>
     
@@ -477,7 +480,30 @@
 <p>也可以直接用 <code>resize-pane</code> 命令来调整.</p>
 <p>可以用 <code>C-b z</code> 来让 active pane 扩充到整个 window (隐藏其他 pane, 可以 toggle).</p>
 <h2 id="选择-window-layout"><a href="#选择-window-layout" class="headerlink" title="选择 window layout"></a>选择 window layout</h2><p>在一个 window 中, 所有 pane 都会以一个 named layout 的形式排列, 可以用 <code>C-b Space</code> 在这些 layouts 之间切换. 或者用 <code>C-b M-1</code>, <code>C-b M-2</code> 这样来选择, 可用的有:<br><img src="/../img/tmux-panes-layouts.png" srcset="/img/loading.gif" lazyload></p>
-<h2 id="Copy-and-paste"><a href="#Copy-and-paste" class="headerlink" title="Copy and paste"></a>Copy and paste</h2><h1 id="使用技巧"><a href="#使用技巧" class="headerlink" title="使用技巧"></a>使用技巧</h1><h2 id="以初始配置启用-tmux"><a href="#以初始配置启用-tmux" class="headerlink" title="以初始配置启用 tmux"></a>以初始配置启用 tmux</h2>
+<h2 id="Copy-and-paste"><a href="#Copy-and-paste" class="headerlink" title="Copy and paste"></a>Copy and paste</h2><p>Tmux 自己有一套 copy 和 paste 的系统. 一段 copied text 被称为 a paste buffer.</p>
+<p>用 <code>C-b [</code> 进入 copy mode 来 copy 文本, 然后用 <code>C-b ]</code> 来 paste 文本.</p>
+<p>Paste buffers 都会被自动分配名称, 如 <code>buffer0</code>, <code>buffer1</code>, 最多存储 50 个. 当超出时, 最老的会被删除. 也可以自己命名 buffer, 而这种 paste buffer 不会因为个数达到上限而被自动删除. 用 <code>set-buffer</code> 命令来设置, <code>-b</code> 参数指定存在的 buffer name, <code>-n</code> 指定 new name :</p>
+<figure class="highlight dsconfig"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs dsconfig">:<span class="hljs-built_in">set-buffer</span> -<span class="hljs-string">bbuffer0</span> -<span class="hljs-string">nmybuffer</span><br></code></pre></td></tr></table></figure>
+<p>其也可以用于创建一个 buffer, 如:</p>
+<figure class="highlight dsconfig"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs dsconfig">:<span class="hljs-built_in">set-buffer</span> -<span class="hljs-string">bfoo</span> <span class="hljs-string">bar</span><br></code></pre></td></tr></table></figure>
+<p>即创建了一个名为 <code>foo</code> 的 paste buffer, 内容为 <code>bar</code>.</p>
+<p>可以用 <code>load-buffer</code> 命令加载文件内容到一个 paste buffer 中, 同样用 <code>-b</code> 指定 buffer name:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-symbol">:load-buffer</span> -bbufile ~<span class="hljs-regexp">/a/file</span><br></code></pre></td></tr></table></figure>
+
+<p>可以用 <code>save-buffer</code> 命令将一个 existing buffer 的内容保存到文件中:</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs elixir"><span class="hljs-symbol">:save-buffer</span> -bbuffer0 ~/saved_buffer<br></code></pre></td></tr></table></figure>
+
+<p>在 vi 模式下进入 copy mode, 可通过 visual mode 选中文本, 然后按下 <code>enter</code> 来确认.</p>
+<p>可以用 <code>C-b =</code> 来查看所有的 paste buffer, 其 navigate 和 tag 的操作方式和 tree mode 类似, 但其他 keybindings 不同:<br><img src="/../img/tmux_buffer_mode.png" srcset="/img/loading.gif" lazyload></p>
+<p><img src="/../img/tmux-paste-mode-keybindings.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="查找-windows-和-panes"><a href="#查找-windows-和-panes" class="headerlink" title="查找 windows 和 panes"></a>查找 windows 和 panes</h2><p>按下 <code>C-b f</code> 之后, 会 promtps 询问 some text 用于查找 window 或 pane, pane 中显示的内容会用于进行匹配, 之后会弹出 tree mode 并选中匹配项:<br><img src="/../img/tmux_find_window.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="启用鼠标支持"><a href="#启用鼠标支持" class="headerlink" title="启用鼠标支持"></a>启用鼠标支持</h2><p>运行:</p>
+<figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs applescript">:<span class="hljs-keyword">set</span> -g mouse <span class="hljs-keyword">on</span><br></code></pre></td></tr></table></figure>
+<p>这时可用鼠标 change the active pane or window, to resize panes, to copy text, or to choose items for menus.</p>
+<h1 id="使用技巧"><a href="#使用技巧" class="headerlink" title="使用技巧"></a>使用技巧</h1><h2 id="以初始配置启用-tmux"><a href="#以初始配置启用-tmux" class="headerlink" title="以初始配置启用 tmux"></a>以初始配置启用 tmux</h2><p>只有在 tmux server 没启用时有效:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">tmux -f <span class="hljs-string">&quot;&quot;</span><br></code></pre></td></tr></table></figure>
+
+
                 
               </div>
             
