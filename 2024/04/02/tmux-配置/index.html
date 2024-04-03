@@ -24,7 +24,7 @@
 <meta property="og:description" content="参考 github wiki 的内容 配置文件当 tmux server 启动时, 其会运行 ~&#x2F;.tmux.conf 文件中的内容. 若想在 tmux server 运行时加载一个文件中的 tmux commands, 可用 source-file (简写为 source) 命令, 如: 1:source ~&#x2F;tmux_command.conf  这些文件中, 每一个命令占据一行, 用 # 做为">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2024-04-02T13:21:30.000Z">
-<meta property="article:modified_time" content="2024-04-02T13:43:31.520Z">
+<meta property="article:modified_time" content="2024-04-02T14:13:21.881Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.4k 字
+          3.1k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          12 分钟
+          26 分钟
         
       </span>
     
@@ -332,7 +332,55 @@
 <li>Pane options, 作用于一个或全部 panes</li>
 <li>User options, 用户自定义的选项</li>
 </ul>
-<p>对于 session 和 window 的 options 而言都有 global 和 local 之分.</p>
+<p>对于 session 和 window 的 options 而言都有 global 和 local 之分. 当一个选项没有在 current session&#x2F;window 中设置时, 则应用 global option. Pane options 和上述类似, 但其还会参考 window options.</p>
+<h2 id="查看-options"><a href="#查看-options" class="headerlink" title="查看 options"></a>查看 options</h2><p>可以用 <code>show-options</code> 命令查看, 加上 <code>-g</code> 则会查看 global options. 用 <code>-s</code> flag 查看 server options:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ tmux show -s<br>backspace C-?<br>buffer-limit 50<br>...<br></code></pre></td></tr></table></figure>
+
+<p>只用 <code>-g</code> 选项时显示 global session options:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ tmux show -g<br>activity-action other<br>assume-paste-time 1<br>...<br></code></pre></td></tr></table></figure>
+
+<p>用 <code>-w</code> 查看 window options, <code>-wg</code> 查看 global window options:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ tmux show -wg<br>aggressive-resize off<br>allow-rename off<br>...<br></code></pre></td></tr></table></figure>
+
+<p>可以通过给出 option name 来单独查看一个 option 的设置:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ tmux show -g status<br>status on<br></code></pre></td></tr></table></figure>
+
+<h2 id="更改-options"><a href="#更改-options" class="headerlink" title="更改 options"></a>更改 options</h2><p>一个 option 可以用 <code>set-option</code> (简写为 <code>set</code>) 命令来设置 (也可以用于 unset), 其不需要 <code>-s</code>, <code>-w</code> 等 flag 来区分一个 option 是属于 session 还是 window 之类的, tmux 会自己识别出. 只需要 <code>-g</code> 来表明是否为 global.</p>
+<p>如关闭 <code>status</code> 选项:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs tmux">set -g status off<br></code></pre></td></tr></table></figure>
+
+<p>若想取消一个 option 的设置 (即恢复默认设置), 则加上 <code>-u</code> flag, 如:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs tmux">set -gu status<br></code></pre></td></tr></table></figure>
+
+<h2 id="option-的部分设置-Formats"><a href="#option-的部分设置-Formats" class="headerlink" title="option 的部分设置 Formats"></a>option 的部分设置 Formats</h2><p>这种 Formats 一般用于控制 text 的显示, 可以显示 tmux server, a session, window or pane 的 attributes.</p>
+<p>具体语法为, 用 <code>#&#123;&#125;</code> 包裹 (注意得用引号包裹), 如 <code>status-right</code> 的默认设置为:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ tmux show -s status-right<br>status-right <span class="hljs-string">&quot;#&#123;?window_bigger,[#&#123;window_offset_x&#125;#,#&#123;window_offset_y&#125;] ,&#125;\&quot;#&#123;=21:pane_title&#125;\&quot; %H:%M %d-%b-%y&quot;</span><br></code></pre></td></tr></table></figure>
+
+<p>具体语法位于 <a target="_blank" rel="noopener" href="https://github.com/tmux/tmux/wiki/Formats">github 中 formats 相关 wiki</a>.</p>
+<h2 id="嵌入-shell-命令"><a href="#嵌入-shell-命令" class="headerlink" title="嵌入 shell 命令"></a>嵌入 shell 命令</h2><p>可以用 <code>#()</code> 包裹来显示 shell 命令的输出, 如:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs tmux">set -g status-left &#x27;#(uptime)&#x27;<br></code></pre></td></tr></table></figure>
+
+<h2 id="设置-colours-and-styles"><a href="#设置-colours-and-styles" class="headerlink" title="设置 colours and styles"></a>设置 colours and styles</h2><p>有两个地方可以设置 style:</p>
+<ul>
+<li><code>status-style</code> 这个 option</li>
+<li><code>#[]</code> 包裹的 option value (embedded style 语法)</li>
+</ul>
+<p>一个 style 由多个用空格或 <code>,</code> 分隔的 terms 组成, 常用的有:</p>
+<ul>
+<li><code>default</code>, 使用默认颜色</li>
+<li><code>bg</code>, 设置 background colour, 如 <code>bg=red</code></li>
+<li><code>fg</code>, 设置 foreground colour, 如 <code>fg=green</code></li>
+<li><code>bright</code> or <code>bold</code>, <code>underscore</code>, <code>reverse</code>, <code>italics</code>, 这些都 appear alone 如 <code>bright,reverse</code> (也就是不设置值)</li>
+</ul>
+<p>其他的 term 可以在 <a target="_blank" rel="noopener" href="https://man.openbsd.org/tmux#STYLES">manual page</a> 中查询.</p>
+<p>一个示例如:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs tmux">set -g status-style &#x27;bg=blue&#x27;<br></code></pre></td></tr></table></figure>
+
+<h2 id="Embedded-style"><a href="#Embedded-style" class="headerlink" title="Embedded style"></a>Embedded style</h2><p>即用 <code>#[]</code> 包裹的部分, 如:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs tmux">set -g status-left &#x27;default #[fg=red] red #[fg=blue] blue&#x27;<br>set -g status-left-length 100<br></code></pre></td></tr></table></figure>
+
+<h1 id="常用设置更改"><a href="#常用设置更改" class="headerlink" title="常用设置更改"></a>常用设置更改</h1><h2 id="更改-prefix-key"><a href="#更改-prefix-key" class="headerlink" title="更改 prefix key"></a>更改 prefix key</h2><p>Prefix key 通过 <code>prefix</code> option 来设置, 之后绑定到 <code>send-prefix</code> command 上, 若想改变 prefix key 为 <code>C-a</code>, 如:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs tmux">set -g prefix C-a<br>unbind C-b<br>bind C-a send-prefix<br></code></pre></td></tr></table></figure>
 
                 
               </div>
