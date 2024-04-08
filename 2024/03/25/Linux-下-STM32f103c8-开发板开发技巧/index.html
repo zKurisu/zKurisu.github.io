@@ -51,8 +51,9 @@
 <meta property="og:image" content="http://example.com/img/relative-path-adding-header-file.png">
 <meta property="og:image" content="http://example.com/img/basic-structure-of-EXTI.png">
 <meta property="og:image" content="http://example.com/img/external-interrupt-of-stm32f103c8.png">
+<meta property="og:image" content="http://example.com/img/basic-structure-of-encoder.png">
 <meta property="article:published_time" content="2024-03-25T03:17:07.000Z">
-<meta property="article:modified_time" content="2024-04-01T06:03:04.794Z">
+<meta property="article:modified_time" content="2024-04-08T13:16:06.323Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/STM32f103c8-structure.png">
@@ -264,7 +265,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          21k 字
+          22k 字
         
       </span>
     
@@ -275,7 +276,7 @@
         
         
         
-          177 分钟
+          180 分钟
         
       </span>
     
@@ -716,6 +717,30 @@
 
 <p><code>TIM_PWMIConfig()</code> 只支持 channel1 和 channel2 的配置, 不能传给 channel3 和 channel4. 当配置 channel1 后, 其会自动把 channel2 配置为相反的参数.</p>
 <p>正负1误差可以认为是 1&#x2F;计数值. 比如: 要求误差等于千分之一, 则频率上限为 $1M&#x2F;1000 &#x3D; 1kHz$. 要求误差等于百分之一, 则频率上限为 $1M&#x2F;100 &#x3D; 10kHz$</p>
+<h1 id="TIM-编码器接口"><a href="#TIM-编码器接口" class="headerlink" title="TIM 编码器接口"></a>TIM 编码器接口</h1><p>编码器接口的基本结构为:</p>
+<p><img src="/../img/basic-structure-of-encoder.png" srcset="/img/loading.gif" lazyload></p>
+<p>驱动编写的基本步骤为:</p>
+<ol>
+<li>RCC 开启时钟, 开启 GPIO 和定时器的时钟</li>
+<li>配置 GPIO, 这里把 PA6 和 PA7 配置成输入模式</li>
+<li>配置时基单元, 这里的预分频器就设置为不分频, 自动重装设最大 65535</li>
+<li>配置输入捕获单元</li>
+<li>配置编码器接口模式</li>
+<li>调用 <code>TIM_Cmd()</code> 启动定时器</li>
+</ol>
+<p>这里不需要配置定时器内部时钟, 因为编码器接口会托管时钟, 也就是说, 其为一个带方向控制的外部时钟.</p>
+<h2 id="相关库函数-1"><a href="#相关库函数-1" class="headerlink" title="相关库函数"></a>相关库函数</h2><p>这里列出之前没列出的函数:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">TIM_EncoderInterfaceConfig</span><span class="hljs-params">(TIM_TypeDef* TIMx, <span class="hljs-type">uint16_t</span> TIM_EncoderMode,</span><br><span class="hljs-params">                                <span class="hljs-type">uint16_t</span> TIM_IC1Polarity, <span class="hljs-type">uint16_t</span> TIM_IC2Polarity)</span>;<br></code></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+
 <h1 id="需要注意的事"><a href="#需要注意的事" class="headerlink" title="需要注意的事"></a>需要注意的事</h1><h2 id="按键抖动和松手检测"><a href="#按键抖动和松手检测" class="headerlink" title="按键抖动和松手检测"></a>按键抖动和松手检测</h2><p>对于外部中断, 不容易处理按键抖动和松手检测.</p>
 <h2 id="编码器输出正交波形"><a href="#编码器输出正交波形" class="headerlink" title="编码器输出正交波形"></a>编码器输出正交波形</h2><h2 id="预分频器的实际分频系数"><a href="#预分频器的实际分频系数" class="headerlink" title="预分频器的实际分频系数"></a>预分频器的实际分频系数</h2><figure class="highlight fix"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs fix"><span class="hljs-attr">实际分频系数 </span>=<span class="hljs-string"> 预分频器值 + 1</span><br></code></pre></td></tr></table></figure>
 <p>如, 设置预分频器值为 1, 假设输入频率为 72MHz, 则变为 72MHz&#x2F;2. 如果设置值为 2, 则频率为 72MHz&#x2F;3.</p>
