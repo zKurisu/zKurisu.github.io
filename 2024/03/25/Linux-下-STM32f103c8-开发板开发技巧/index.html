@@ -55,13 +55,14 @@
 <meta property="og:image" content="http://example.com/img/stm32-USART-basic-structure.png">
 <meta property="og:image" content="http://example.com/img/typical-circuit-of-I2C.png">
 <meta property="og:image" content="http://example.com/img/basic-serial-time-structure-of-I2C.png">
+<meta property="og:image" content="http://example.com/img/low-power-mode-of-stm32.png">
 <meta property="og:image" content="http://example.com/img/mason-clangd-install.png">
 <meta property="og:image" content="http://example.com/img/relative-path-adding-header-file.png">
 <meta property="og:image" content="http://example.com/img/basic-structure-of-EXTI.png">
 <meta property="og:image" content="http://example.com/img/external-interrupt-of-stm32f103c8.png">
 <meta property="og:image" content="http://example.com/img/basic-structure-of-encoder.png">
 <meta property="article:published_time" content="2024-03-25T03:17:07.000Z">
-<meta property="article:modified_time" content="2024-04-11T05:20:26.499Z">
+<meta property="article:modified_time" content="2024-04-11T09:15:18.324Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/STM32f103c8-structure.png">
@@ -273,7 +274,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          27k 字
+          29k 字
         
       </span>
     
@@ -284,7 +285,7 @@
         
         
         
-          229 分钟
+          239 分钟
         
       </span>
     
@@ -349,7 +350,7 @@
 
 <h2 id="AHB-总线"><a href="#AHB-总线" class="headerlink" title="AHB 总线"></a>AHB 总线</h2><p>AHB (Advanced High-performance Bus) 总线是一种在计算机系统中用于连接处理器, 内存和外设的总线架构.</p>
 <p>AHB 总线被设计为高性能和高效的总线架构, 用于实现高速数据传输和协调不同部件之间的通信. 它提供了一种可靠的, 高带宽的数据传输通道, 以满足处理器和外设之间的数据交换需求.</p>
-<h2 id="外部中断-EXIT"><a href="#外部中断-EXIT" class="headerlink" title="外部中断 EXIT"></a>外部中断 EXIT</h2><p>EXIT, EXternal InTerrupt, 外部中断, 指通过外部引脚来触发中断事件. 当特定的外部事件, 如电平变化, 边沿触发等发生时, 单片机可以通过外部中断来及时响应并执行相应的中断程序.</p>
+<h2 id="外部中断-EXTI"><a href="#外部中断-EXTI" class="headerlink" title="外部中断 EXTI"></a>外部中断 EXTI</h2><p>EXTI, EXTernal Interrupt, 外部中断, 指通过外部引脚来触发中断事件. 当特定的外部事件, 如电平变化, 边沿触发等发生时, 单片机可以通过外部中断来及时响应并执行相应的中断程序.</p>
 <p>具体为, EXTI 检测指定 GPIO 口的电平信号, 当其指定的 GPIO 口产生电平变化时, EXTI 将立即向 NVIC (后面有讲) 发出中断申请, 经 NVIC 裁决后中断 CPU 主程序, 执行对应的 EXTI 中断程序.</p>
 <p>支持的触发方式有:</p>
 <ul>
@@ -619,6 +620,27 @@
 <p>一般第二个发送的字节表示要写入的寄存器地址.</p>
 <p>第三个发送的字节表示要写入的寄存器内的值.</p>
 <p>这是指定地址写的时序, 即指定设备 (Slave Address), 在指定地址 (Reg Address) 下, 写入指定数据 (Data).</p>
+<p>对于当前地址读的时序, 则为, 对于指定设备 (Slave Address), 在当前地址指针指示的地址下, 读取从机数据 (Data).</p>
+<p>第一个字节发送从机地址 (高 7 位) 和读 (1 位), 在接收到应答后就开始读取数据</p>
+<p>当从机中, 所有的寄存器被分配到了一个线性区域中, 并且会有一个单独的指针变量, 指示着其中一个寄存器, 这个指针在上电时一般默认指向 0 地址并在没写入和读出一个字节后, 该指针会自动自增一次移动到下一个位置. 这个指针即 “当前地址指针”.</p>
+<p>对于指定地址读的时序, 则为, 指定设备 (Slave Address), 在指定地址 (Reg Address) 下, 读取从机数据 (Data).</p>
+<p>第一个字节发送从机地址 (高 7 位) 和写 (1 位), 在接收到应答后再发送一个字节指定寄存器地址, 应答后, 下一个字节再发送一个起始字节, 7 位地址和读 (1 位), 应答后接收数据.</p>
+<p>多次执行最后一部分时序, 可以多读或多写. 此时, 前几个字节给应答, 最后一个字节给非应答.</p>
+<h3 id="MPU6050"><a href="#MPU6050" class="headerlink" title="MPU6050"></a>MPU6050</h3><p>MPU6050 是一个 6 轴姿态传感器, 可以测量芯片自身 X, Y, Z 轴的加速度, 角速度参数, 通过数据融合, 得到姿态角 (欧拉角).</p>
+<p>由于其有 3 轴加速度计 (Accelerometer), 用于测量 X, Y, Z 轴的加速度以及 3 轴陀螺仪传感器 (Gyroscope), 用于测量 X, Y, Z 的角速度, 因此总的是 6 轴.</p>
+<h2 id="PWR"><a href="#PWR" class="headerlink" title="PWR"></a>PWR</h2><p>PWR, PoWeR Control, 电源控制.</p>
+<p>PWR 负责管理 STM32 内部的电源供电部分, 可以实现可编程电压监测器和低功耗模式的功能.</p>
+<p>可编程电压监测器 (PVD, Programmable Voltage Monitor), 可以监控 VDD 电源电压, 当 VDD 下降到 PVD 阈值以下或上升到 PVD 阈值之上时, PVD 会触发中断, 用于执行紧急关闭任务.</p>
+<p>低功耗模式包括睡眠模式 (Sleep), 停机模式 (Stop) 和待机模式 (Standby), 可在系统空闲时, 降低 STM32 的功耗, 延长设备使用时间. </p>
+<p>在设备空闲时, 关闭不使用的硬件, 保留必要的唤醒电路, 比如串口接收数据的中断唤醒, 外部中断唤醒, RTC 闹钟唤醒等, 在设备需要工作时, STM32 能够立刻重新投入工作. (如果只考虑进入低功耗而不考虑唤醒则与断电无异)</p>
+<p>PVD 的中断是通过 EXTI 实现的 (因此需要配置外部中断), 因为低功耗模式设计的是只有外部中断可以唤醒停止模式, 其他设备若想唤醒停止模式, 都可以借助 EXTI.</p>
+<h3 id="低功耗模式"><a href="#低功耗模式" class="headerlink" title="低功耗模式"></a>低功耗模式</h3><p>三种模式的基本信息如:<br><img src="/../img/low-power-mode-of-stm32.png" srcset="/img/loading.gif" lazyload></p>
+<p>WFI, Wait For Interrupt, 等待中断.</p>
+<p>WFE, Wait For Event, 等待事件.</p>
+<p>睡眠模式只是关闭了时钟.</p>
+<p>这里的电压调节器其实就是 1.8V 区域的电源.</p>
+<p>停机模式主要把运行的高速时钟关闭, CPU 和外设都暂停工作, 但是电压调节器没有关闭. 因此存储器和寄存器数据可以维持原样.</p>
+<p>待机模式会关闭电压调节器, 也就是说存储器和寄存器数据会丢失, 但是低速时钟 (LSI, LSE) 不会关闭 (用于维持 RTC, WDG 等的运行)</p>
 <h1 id="Neovim-简单配置"><a href="#Neovim-简单配置" class="headerlink" title="Neovim 简单配置"></a>Neovim 简单配置</h1><p>用 Mason 和 lsp-config 来配置出简单的自动补全体验, 基本上在 Mason 中安装 clangd 即可.<br><img src="/../img/mason-clangd-install.png" srcset="/img/loading.gif" lazyload></p>
 <p>由于 keil 5 添加头文件路径的方式我不是很明白, 这里添加头文件就直接使用相对路径, 这样 clangd 也能找到用于补全提示:<br><img src="/../img/relative-path-adding-header-file.png" srcset="/img/loading.gif" lazyload></p>
 <h1 id="arm-none-eabi-objcopy-系列工具的使用"><a href="#arm-none-eabi-objcopy-系列工具的使用" class="headerlink" title="arm-none-eabi-objcopy 系列工具的使用"></a>arm-none-eabi-objcopy 系列工具的使用</h1><p>这里主要用 <code>arm-none-eabi-objcopy</code> 来进行格式转换.</p>
@@ -675,7 +697,7 @@
 <ul>
 <li><code>0x0001</code>, 表示二进制 <code>0000 0000 0000 0001</code>, 二进制的每一位表示一个引脚, 置 <code>1</code> 表示给引脚通高电平, 置 <code>0</code> 表示给引脚通低电平</li>
 </ul>
-<h1 id="外部中断-EXTI"><a href="#外部中断-EXTI" class="headerlink" title="外部中断 EXTI"></a>外部中断 EXTI</h1><p>设置 EXTI 一般有 5 步:</p>
+<h1 id="外部中断-EXTI-1"><a href="#外部中断-EXTI-1" class="headerlink" title="外部中断 EXTI"></a>外部中断 EXTI</h1><p>设置 EXTI 一般有 5 步:</p>
 <ol>
 <li>配置 RCC, 开启外设时钟</li>
 <li>配置 GPIO, 选择端口为输入模式</li>
