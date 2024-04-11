@@ -56,13 +56,14 @@
 <meta property="og:image" content="http://example.com/img/typical-circuit-of-I2C.png">
 <meta property="og:image" content="http://example.com/img/basic-serial-time-structure-of-I2C.png">
 <meta property="og:image" content="http://example.com/img/low-power-mode-of-stm32.png">
+<meta property="og:image" content="http://example.com/img/register-configuration-to-low-power-mode.png">
 <meta property="og:image" content="http://example.com/img/mason-clangd-install.png">
 <meta property="og:image" content="http://example.com/img/relative-path-adding-header-file.png">
 <meta property="og:image" content="http://example.com/img/basic-structure-of-EXTI.png">
 <meta property="og:image" content="http://example.com/img/external-interrupt-of-stm32f103c8.png">
 <meta property="og:image" content="http://example.com/img/basic-structure-of-encoder.png">
 <meta property="article:published_time" content="2024-03-25T03:17:07.000Z">
-<meta property="article:modified_time" content="2024-04-11T09:15:18.324Z">
+<meta property="article:modified_time" content="2024-04-11T09:39:12.242Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/STM32f103c8-structure.png">
@@ -285,7 +286,7 @@
         
         
         
-          239 分钟
+          245 分钟
         
       </span>
     
@@ -641,6 +642,23 @@
 <p>这里的电压调节器其实就是 1.8V 区域的电源.</p>
 <p>停机模式主要把运行的高速时钟关闭, CPU 和外设都暂停工作, 但是电压调节器没有关闭. 因此存储器和寄存器数据可以维持原样.</p>
 <p>待机模式会关闭电压调节器, 也就是说存储器和寄存器数据会丢失, 但是低速时钟 (LSI, LSE) 不会关闭 (用于维持 RTC, WDG 等的运行)</p>
+<p>对于需要设置的寄存器以进入某种特定模式如下:<br><img src="/../img/register-configuration-to-low-power-mode.png" srcset="/img/loading.gif" lazyload></p>
+<h4 id="睡眠模式特点总结"><a href="#睡眠模式特点总结" class="headerlink" title="睡眠模式特点总结"></a>睡眠模式特点总结</h4><p>执行完 WFI&#x2F;WFE 指令后, STM32 进入睡眠模式, 程序暂停运行, 唤醒后程序从暂停的地方继续运行.</p>
+<p>SLEEPONEXIT 位决定 STM32 执行完 WFI 或 WFE 后, 是立刻进入睡眠, 还是等 STM32 从最低优先级的中断处理程序中退出时进入睡眠.</p>
+<p>在睡眠模式下, 所有的 I&#x2F;O 引脚都保持它们在运行模式时的状态,.</p>
+<p>WFI 指令进入睡眠模式, 可被任意一个 NVIC 响应的中断唤醒.</p>
+<p>WFE 指令进入睡眠模式, 可被唤醒事件唤醒.</p>
+<h4 id="停机模式特点总结"><a href="#停机模式特点总结" class="headerlink" title="停机模式特点总结"></a>停机模式特点总结</h4><p>执行完 WFI&#x2F;WFE 指令后, STM32 进入睡眠模式, 程序暂停运行, 唤醒后程序从暂停的地方继续运行.</p>
+<p>1.8V 供电区域的所有时钟都被停止, PLL, HSI 和 HSE 被禁止, SRAM 和寄存器内容被保留下来.</p>
+<p>在停止模式, 所有的 I&#x2F;O 引脚都保持它们在运行模式时的状态.</p>
+<p>当一个中断或唤醒事件导致退出停止模式时, HSI 被选为系统时钟.</p>
+<p>当电压调节器处于低功耗模式下, 系统从停止模式退出时, 会有一段额外的启动延时.</p>
+<p>WFI 指令进入睡眠模式, 可被任意一个 EXTI 中断唤醒.</p>
+<p>WFE 指令进入睡眠模式, 可被任意一个 EXTI 事件唤醒.</p>
+<h4 id="待机模式特点总结"><a href="#待机模式特点总结" class="headerlink" title="待机模式特点总结"></a>待机模式特点总结</h4><p>执行完 WFI&#x2F;WFE 指令后, STM32 进入待机模式, 唤醒后程序从头开始运行. (因为数据丢失了)</p>
+<p>整个 1.8V 供电区域被断电, PLL, HSI 和 HSE 也被断电, SRAM 和寄存器内容丢失, 只有备份的寄存器和待机电路维持供电.</p>
+<p>在待机模式下, 所有的 I&#x2F;O 引脚变为高阻态 (浮空输入).</p>
+<p>WKUP 引脚的上升沿, RTC 闹钟事件的上升沿, NRST 引脚上外部复位, IWDG 复位退出待机模式.</p>
 <h1 id="Neovim-简单配置"><a href="#Neovim-简单配置" class="headerlink" title="Neovim 简单配置"></a>Neovim 简单配置</h1><p>用 Mason 和 lsp-config 来配置出简单的自动补全体验, 基本上在 Mason 中安装 clangd 即可.<br><img src="/../img/mason-clangd-install.png" srcset="/img/loading.gif" lazyload></p>
 <p>由于 keil 5 添加头文件路径的方式我不是很明白, 这里添加头文件就直接使用相对路径, 这样 clangd 也能找到用于补全提示:<br><img src="/../img/relative-path-adding-header-file.png" srcset="/img/loading.gif" lazyload></p>
 <h1 id="arm-none-eabi-objcopy-系列工具的使用"><a href="#arm-none-eabi-objcopy-系列工具的使用" class="headerlink" title="arm-none-eabi-objcopy 系列工具的使用"></a>arm-none-eabi-objcopy 系列工具的使用</h1><p>这里主要用 <code>arm-none-eabi-objcopy</code> 来进行格式转换.</p>
