@@ -53,13 +53,15 @@
 <meta property="og:image" content="http://example.com/img/serial-communication-hardware-common-structure.png">
 <meta property="og:image" content="http://example.com/img/serial-communication-argument-and-time.png">
 <meta property="og:image" content="http://example.com/img/stm32-USART-basic-structure.png">
+<meta property="og:image" content="http://example.com/img/typical-circuit-of-I2C.png">
+<meta property="og:image" content="http://example.com/img/basic-serial-time-structure-of-I2C.png">
 <meta property="og:image" content="http://example.com/img/mason-clangd-install.png">
 <meta property="og:image" content="http://example.com/img/relative-path-adding-header-file.png">
 <meta property="og:image" content="http://example.com/img/basic-structure-of-EXTI.png">
 <meta property="og:image" content="http://example.com/img/external-interrupt-of-stm32f103c8.png">
 <meta property="og:image" content="http://example.com/img/basic-structure-of-encoder.png">
 <meta property="article:published_time" content="2024-03-25T03:17:07.000Z">
-<meta property="article:modified_time" content="2024-04-11T04:19:57.698Z">
+<meta property="article:modified_time" content="2024-04-11T05:20:26.499Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/STM32f103c8-structure.png">
@@ -271,7 +273,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          26k 字
+          27k 字
         
       </span>
     
@@ -282,7 +284,7 @@
         
         
         
-          217 分钟
+          229 分钟
         
       </span>
     
@@ -593,6 +595,30 @@
 <p>若流控有两个引脚 nRTS (Request To Send, 是请求发送, 输出脚, 告诉别的设备是否准备好), nCTS (Clear To Send, 清除发送, 是输入脚, 接收别的 nRTS 信号), 这里的 <code>n</code> 表示低电平有效.</p>
 <h3 id="USART-的基本结构"><a href="#USART-的基本结构" class="headerlink" title="USART 的基本结构"></a>USART 的基本结构</h3><p><img src="/../img/stm32-USART-basic-structure.png" srcset="/img/loading.gif" lazyload></p>
 <h3 id="波特率发生器处的计算"><a href="#波特率发生器处的计算" class="headerlink" title="波特率发生器处的计算"></a>波特率发生器处的计算</h3><p>发送器和接收器的波特率由波特率寄存器 BRR 里的 DIV 确定, 计算公式为:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>波特率 &#x3D; \frac{f_{PCLK2&#x2F;1}}{16 \times DIV}<br>\end{aligned}<br>}<br>$$</p>
+<h2 id="I2C-通信"><a href="#I2C-通信" class="headerlink" title="I2C 通信"></a>I2C 通信</h2><p>I2C, Inter-Integrated Circuit.</p>
+<p>I2C 总线是一种通用的数据总线, 包括两条通信线: SCL (Serial Clock, 由主机控制), SDA (Serial Data).</p>
+<p>I2C 通信的特点为同步通信以及半双工. 具有数据应答功能 (即接收到了数据会回传一个接收到了的 bit). 其也支持总线挂载多设备 (一主多从, 多主多从)</p>
+<p>异步时序的好处在于可以节省一根时钟线的资源, 缺点就是对时间要求严格, 对硬件电路依赖比较严重.</p>
+<p>同步时序的好处在于, 对时间要求不严格, 对硬件电路不怎么依赖, 在低端单片机没有硬件支持的情况下, 也容易使用软件来模拟时序. 缺点在于需要多使用一条时钟线资源.</p>
+<h3 id="典型的硬件电路"><a href="#典型的硬件电路" class="headerlink" title="典型的硬件电路"></a>典型的硬件电路</h3><p>如:<br><img src="/../img/typical-circuit-of-I2C.png" srcset="/img/loading.gif" lazyload></p>
+<p>可以看到, 所有 I2C 设备的 SCL 需要连在一起, SDA 需要连在一起. 且设备的 SCL, SDA 均要配置成开漏输出模式 (避免强上拉导致的电源短路).</p>
+<p>对于 SDA 数据线, 从机不允许主动发起对 SDA 的控制, 只有在主机发送读取从机的命令后或者从机应答的时候, 从机才能短暂地获取 SDA 的控制权.</p>
+<p>SCL 和 SDA 各需要添加一个上拉电阻, 阻值一般为 $4.7k \Omega$ 左右 (弱上拉).</p>
+<h3 id="I2C-时序基本单元"><a href="#I2C-时序基本单元" class="headerlink" title="I2C 时序基本单元"></a>I2C 时序基本单元</h3><p>起始条件: 在 SCL 高电平期间, SDA 从高电平切换到低电平.</p>
+<p>终止条件: 在 SCL 高电平期间, SDA 从低电平切换到高电平.</p>
+<p><img src="/../img/basic-serial-time-structure-of-I2C.png" srcset="/img/loading.gif" lazyload><br>(注意起始和终止都是由主机产生的)</p>
+<p>主机发送字节的过程为: 在 SCL 低电平期间, 主机将数据位放到 SDA 线上 (这里是高位先行), 然后释放 SCL, 从机在 SCL 高电平期间读取数据位, 因此在 SCL 高电平期间 SDA 不允许有数据变化. 重复 8 次后, 即可发送一个字节.</p>
+<p>主机接收字节的过程为: 在 SCL 低电平期间, 从机将数据位放到 SDA 线上 (这里是高位先行), 然后释放 SCL, 主机在 SCL 高电平期间读取数据位, 因此在 SCL 高电平期间 SDA 不允许有数据变化. 重复 8 次后, 即可接收一个字节. (主机在接收之前, 需要释放 SDA, 即让从机能够控制 SDA)</p>
+<p>由主机发送应答: 主机在接收完一个字节之后, 在下一个时钟发送一位数据, 数据 0 表示应答, 数据 1 表示非应答.</p>
+<p>由主机接收应答: 主机在发送完一个字节之后, 在下一个时钟接收一位数据, 判断从机是否应答, 数据 0 表示应答, 数据 1 表示非应答. (主机在接收之前, 需要释放 SDA, 即让从机能够控制 SDA)</p>
+<h3 id="I2C-具体通信"><a href="#I2C-具体通信" class="headerlink" title="I2C 具体通信"></a>I2C 具体通信</h3><p>这里用 I2C 的一主多从模型, 主机可以访问总线上的任何一个设备, 需要先把每个从设备都确定一个唯一的设备地址, 从机设备地址就相当于每个设备的名字, 主机在起始条件之后, 要先发送一个字节 (即从机的地址) 确定从机, 这里所有的从机都会收到这个字节, 与自己的地址进行比较, 如果不同, 则认为没有被主机选中, 之后的时序便不管, 若相同, 则需要响应之后主机的读写操作</p>
+<p>从机设备地址, 在 I2C 协议标准中分为 7 位地址和 10 位地址, 这里考虑 7 位地址的模式.</p>
+<p>在每个 I2C 设备出厂时, 厂商都会为它分配一个 7 位的地址, 具体可以在芯片手册中查询. 一般不同型号的芯片地址不同, 相同型号的地址相同. 当挂载多个相同型号的模块时, 则利用地址中的可变部分 (一般最后几位可以在电路中改变, 如由某几个引脚来改变)</p>
+<p>第一个字节是从机地址 (高 7 位) 加上读写位 (最后 1 位).</p>
+<p>接下来需要先读取一个应答位后才发送数据.</p>
+<p>一般第二个发送的字节表示要写入的寄存器地址.</p>
+<p>第三个发送的字节表示要写入的寄存器内的值.</p>
+<p>这是指定地址写的时序, 即指定设备 (Slave Address), 在指定地址 (Reg Address) 下, 写入指定数据 (Data).</p>
 <h1 id="Neovim-简单配置"><a href="#Neovim-简单配置" class="headerlink" title="Neovim 简单配置"></a>Neovim 简单配置</h1><p>用 Mason 和 lsp-config 来配置出简单的自动补全体验, 基本上在 Mason 中安装 clangd 即可.<br><img src="/../img/mason-clangd-install.png" srcset="/img/loading.gif" lazyload></p>
 <p>由于 keil 5 添加头文件路径的方式我不是很明白, 这里添加头文件就直接使用相对路径, 这样 clangd 也能找到用于补全提示:<br><img src="/../img/relative-path-adding-header-file.png" srcset="/img/loading.gif" lazyload></p>
 <h1 id="arm-none-eabi-objcopy-系列工具的使用"><a href="#arm-none-eabi-objcopy-系列工具的使用" class="headerlink" title="arm-none-eabi-objcopy 系列工具的使用"></a>arm-none-eabi-objcopy 系列工具的使用</h1><p>这里主要用 <code>arm-none-eabi-objcopy</code> 来进行格式转换.</p>
