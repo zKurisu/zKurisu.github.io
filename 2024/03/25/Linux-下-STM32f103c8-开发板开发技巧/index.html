@@ -49,13 +49,15 @@
 <meta property="og:image" content="http://example.com/img/basic-structure-of-encoder-interface.png">
 <meta property="og:image" content="http://example.com/img/stm32-memory-map-function-and-address.png">
 <meta property="og:image" content="http://example.com/img/basic-structure-of-DMA.png">
+<meta property="og:image" content="http://example.com/img/stm32-commu-interface-table.png">
+<meta property="og:image" content="http://example.com/img/serial-communication-hardware-common-structure.png">
 <meta property="og:image" content="http://example.com/img/mason-clangd-install.png">
 <meta property="og:image" content="http://example.com/img/relative-path-adding-header-file.png">
 <meta property="og:image" content="http://example.com/img/basic-structure-of-EXTI.png">
 <meta property="og:image" content="http://example.com/img/external-interrupt-of-stm32f103c8.png">
 <meta property="og:image" content="http://example.com/img/basic-structure-of-encoder.png">
 <meta property="article:published_time" content="2024-03-25T03:17:07.000Z">
-<meta property="article:modified_time" content="2024-04-11T02:20:29.666Z">
+<meta property="article:modified_time" content="2024-04-11T03:20:17.384Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/STM32f103c8-structure.png">
@@ -267,7 +269,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          24k 字
+          25k 字
         
       </span>
     
@@ -278,7 +280,7 @@
         
         
         
-          198 分钟
+          207 分钟
         
       </span>
     
@@ -536,7 +538,41 @@
 </ol>
 <p>当要手动修改传输寄存器的值, 需要先 <code>DMA_Cmd()</code> disable, 再进行.</p>
 <p>注意每一个通道支持的硬件触发源不同 (每个通道的软件触发源相同). 比如用 ADC1 触发, 就需要使用通道 1.</p>
-<h1 id="Neovim-简单配置"><a href="#Neovim-简单配置" class="headerlink" title="Neovim 简单配置"></a>Neovim 简单配置</h1><p>用 Mason 和 lsp-config 来配置出简单的自动补全体验, 基本上在 Mason 中安装 clangd 即可.<br><img src="/../img/mason-clangd-install.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="USART-串口协议"><a href="#USART-串口协议" class="headerlink" title="USART 串口协议"></a>USART 串口协议</h2><p>STM32 中支持的通信接口及其简单配置和参数大致有:<br><img src="/../img/stm32-commu-interface-table.png" srcset="/img/loading.gif" lazyload></p>
+<p>通信的目的: 将一个设备的数据传输到另一个设备, 扩展硬件系统 (与一些通信模块互联).</p>
+<p>通信协议指: 指定通信的规则, 通信双方按照协议规则进行数据收发.</p>
+<p>TX (Transmit eXchange), 数据发送脚.</p>
+<p>RX (Receive eXchange), 数据接收脚.</p>
+<p>SCL (Serial CLock), 时钟.</p>
+<p>SDA (Serial DAta), 数据.</p>
+<p>SCLK (Serial CLocK), 指时钟.</p>
+<p>MOSI (Master Output Slave Input), 主机输出数据脚.</p>
+<p>MISO (Master Input Slave Output), 主机输入数据脚.</p>
+<p>CS (Chip Select), 片选, 用于指定通信的对象.</p>
+<p>全双工指发送线路和接受线路互不影响, 可同时进行 (两根数据线).</p>
+<p>半双工指同一时刻只能发送或接收数据 (一根数据线).</p>
+<p>有单独的时钟线, 则是 “同步” 的, 发送和接收方在时钟信号的指引下进行采样.</p>
+<p>没有单独的时钟线, 需要双方约定一个采样频率, 则是 “异步”, 同时需要添加一些帧头帧尾等, 进行采样位置的对齐.</p>
+<p>单端信号通信的双方需要共地, 因为其引脚的高低电平都是对 GND 的电压差.</p>
+<p>而差分信号是靠两个差分引脚的电压差来传输信号, 在通信时, 可以不需要 GND (可以极大控制抗干扰, 一般传输速度和距离都非常高).</p>
+<p>点对点就是 1 对 1, 多设备就是 1 对 多, 通信时需要寻址选择设备.</p>
+<h3 id="串口通信"><a href="#串口通信" class="headerlink" title="串口通信"></a>串口通信</h3><p>串口是一种应用十分广泛的通讯接口, 其成本低, 容易使用, 通信线路简单, 可实现两个设备的互相通信 (一般都是点对点).</p>
+<p>单片机的串口可以使单片机与单片机, 单片机与电脑, 单片机与各种模块互相通信.</p>
+<p>串口通信, Serial Communication, 即使用串行传输方式，将数据一位一位地按顺序发送和接收.</p>
+<p>除串口外, 还有:</p>
+<ul>
+<li>并行通信, 多个数据位同时传输，每个数据位使用独立的通信线路, 更快地传输数据</li>
+<li>以太网通信, 使用包交换的方式传输数据<br>等等.</li>
+</ul>
+<h3 id="串口通信的硬件电路"><a href="#串口通信的硬件电路" class="headerlink" title="串口通信的硬件电路"></a>串口通信的硬件电路</h3><p>最简单的一般为:<br><img src="/../img/serial-communication-hardware-common-structure.png" srcset="/img/loading.gif" lazyload></p>
+<p>一般都有四个引脚, 其中 TX 和 RX 交叉连接.</p>
+<h3 id="串口通信常用电平标准"><a href="#串口通信常用电平标准" class="headerlink" title="串口通信常用电平标准"></a>串口通信常用电平标准</h3><p>电平标准定义了在串口通信中使用的电压级别 (即多大电压是高电平, 多大是低电平) 和信号极性 (大的电压是高电平还是小的电压是高电平) , 以确保发送方和接收方之间的正确数据传输, 常见的有三种:</p>
+<ul>
+<li>TTL 电平 (Transistor-Transistor Logic), <code>+3.3V</code> 或 <code>+5V</code> 表示 1, <code>0V</code> 表示 0 (单片机中最常见)</li>
+<li>RS232 电平, <code>-3~-15V</code> 表示 1, <code>+3~+15V</code> 表示 0</li>
+<li>RS485 电平, 两线压差 <code>+2~+6V</code> 表示 1, <code>-2~-6V</code> 表示 0 (差分信号, 通信距离可以很长)</li>
+</ul>
+<h3 id="串口参数及时序"><a href="#串口参数及时序" class="headerlink" title="串口参数及时序"></a>串口参数及时序</h3><h1 id="Neovim-简单配置"><a href="#Neovim-简单配置" class="headerlink" title="Neovim 简单配置"></a>Neovim 简单配置</h1><p>用 Mason 和 lsp-config 来配置出简单的自动补全体验, 基本上在 Mason 中安装 clangd 即可.<br><img src="/../img/mason-clangd-install.png" srcset="/img/loading.gif" lazyload></p>
 <p>由于 keil 5 添加头文件路径的方式我不是很明白, 这里添加头文件就直接使用相对路径, 这样 clangd 也能找到用于补全提示:<br><img src="/../img/relative-path-adding-header-file.png" srcset="/img/loading.gif" lazyload></p>
 <h1 id="arm-none-eabi-objcopy-系列工具的使用"><a href="#arm-none-eabi-objcopy-系列工具的使用" class="headerlink" title="arm-none-eabi-objcopy 系列工具的使用"></a>arm-none-eabi-objcopy 系列工具的使用</h1><p>这里主要用 <code>arm-none-eabi-objcopy</code> 来进行格式转换.</p>
 <h2 id="将-axf-文件转换为-bin-文件"><a href="#将-axf-文件转换为-bin-文件" class="headerlink" title="将 axf 文件转换为 bin 文件"></a>将 axf 文件转换为 bin 文件</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">arm-none-eabi-objcopy -O binary test.axf test.bin<br></code></pre></td></tr></table></figure>
