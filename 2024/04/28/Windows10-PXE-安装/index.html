@@ -25,8 +25,11 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/download-win10iso-select-version.png">
 <meta property="og:image" content="http://example.com/img/download-win10iso-select-bit.png">
+<meta property="og:image" content="http://example.com/img/win10install-can-not-find-driver1.png">
+<meta property="og:image" content="http://example.com/img/win10install-can-not-find-driver2.png">
+<meta property="og:image" content="http://example.com/img/win10install-can-not-find-driver3.png">
 <meta property="article:published_time" content="2024-04-28T04:30:51.000Z">
-<meta property="article:modified_time" content="2024-04-28T09:09:42.233Z">
+<meta property="article:modified_time" content="2024-04-28T10:29:04.810Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/download-win10iso-select-version.png">
@@ -238,7 +241,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.4k 字
+          2.5k 字
         
       </span>
     
@@ -249,7 +252,7 @@
         
         
         
-          20 分钟
+          21 分钟
         
       </span>
     
@@ -335,14 +338,18 @@
 <p>内容为:</p>
 <figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs awk"><span class="hljs-comment">#!ipxe</span><br><br>set boot-url http:<span class="hljs-regexp">//</span><span class="hljs-number">192.168</span>.<span class="hljs-number">177.2</span>:<span class="hljs-number">8080</span><span class="hljs-regexp">/pxe/</span>win10<br>set kernel-url tftp:<span class="hljs-regexp">//</span><span class="hljs-number">192.168</span>.<span class="hljs-number">177.2</span><br><br>kernel <span class="hljs-variable">$&#123;kernel-url&#125;</span>/wimboot<br>initrd <span class="hljs-variable">$&#123;boot-url&#125;</span><span class="hljs-regexp">/boot/</span>bcd BCD<br>initrd <span class="hljs-variable">$&#123;boot-url&#125;</span><span class="hljs-regexp">/boot/</span>boot.sdi boot.sdi<br>initrd <span class="hljs-variable">$&#123;boot-url&#125;</span><span class="hljs-regexp">/sources/</span>boot.wim boot.wim<br>echo Before boot<br>boot<br></code></pre></td></tr></table></figure>
 
+<p>若不使用 <code>boot.wim</code>, 直接指定 iso 文件, 可以用 <code>sanboot</code> 启动的语法:</p>
+<figure class="highlight d"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs d"><span class="hljs-meta">#!ipxe</span><br><br>set boot-url http:<span class="hljs-comment">//192.168.177.2:8080/pxe/win10</span><br>sanboot/xxx.iso<br></code></pre></td></tr></table></figure>
+
 <h2 id="编写-grub-default-文件"><a href="#编写-grub-default-文件" class="headerlink" title="编写 grub default 文件"></a>编写 grub default 文件</h2><p>在 <code>/var/lib/tftpboot/pxelinux.cfg</code> 目录下, 创建 <code>default</code> 文件, 内容为:</p>
 <figure class="highlight clean"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs clean">default menu.c32<br>#default vesamenu.c32<br>prompt <span class="hljs-number">0</span><br>timeout <span class="hljs-number">600</span><br>ONTIMEOUT <span class="hljs-number">1</span><br><br>menu title ######## PXE Boot Menu ########<br> label <span class="hljs-number">1</span><br> menu label ^<span class="hljs-number">1</span>) Install Windows <span class="hljs-number">10</span><br> kernel ipxe.lkrn<br> append dhcp &amp;&amp; chain tftp:<span class="hljs-comment">//192.168.177.2/win10/win10.ipxe</span><br></code></pre></td></tr></table></figure>
 
-<p>此时基本完成.</p>
+<p>此时基本完成. (出现了暂时无法解决的问题, 见下一个 title)</p>
 <h1 id="Problem"><a href="#Problem" class="headerlink" title="Problem"></a>Problem</h1><h2 id="MEMDISK-报错"><a href="#MEMDISK-报错" class="headerlink" title="MEMDISK 报错"></a>MEMDISK 报错</h2><figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">MEMDISK</span>: Image has fractional end sector<br><span class="hljs-attribute">MEMDISK</span>: Image seems to have fractional end cylinder<br><span class="hljs-attribute">Disk</span> is hd0, <span class="hljs-number">726956</span>K, C/H/S = <span class="hljs-number">709</span>/<span class="hljs-number">64</span>/<span class="hljs-number">32</span> (guess/guess), EDD <span class="hljs-literal">on</span>, rw<br><span class="hljs-attribute">Using</span> safe INT <span class="hljs-number">15</span>h access to high memory<br><span class="hljs-attribute">Code</span> <span class="hljs-number">1744</span>, meminfo <span class="hljs-number">252</span>. cmdline <span class="hljs-number">1</span>, stack <span class="hljs-number">512</span><br><span class="hljs-attribute">Total</span> size needed = <span class="hljs-number">2509</span> bytes, allocating <span class="hljs-number">3</span>K<br><span class="hljs-attribute">Old</span> dos memory at <span class="hljs-number">0</span>x9bc99 (map says <span class="hljs-number">0</span>x9fc00), loading at <span class="hljs-number">0</span>x9b000<br><span class="hljs-attribute">1588</span>: <span class="hljs-number">0</span>xffff <span class="hljs-number">15</span>E801: <span class="hljs-number">0</span>x3c00 <span class="hljs-number">0</span>x5256<br><span class="hljs-attribute">INT</span> <span class="hljs-number">13</span> <span class="hljs-number">08</span>: Success, count = <span class="hljs-number">1</span>, BPT = <span class="hljs-number">0000</span>:<span class="hljs-number">0000</span><br><span class="hljs-attribute">Drive</span> probing gives drive shift limit: <span class="hljs-number">0</span>x82<br><span class="hljs-attribute">old</span>: int13 = f000e3f3 int15 = f000f859 int1e = f00072fc<br><span class="hljs-attribute">new</span>: int13 = <span class="hljs-number">9</span>b00000a int15 = <span class="hljs-number">9</span>b0003ba int1e = f00072fc<br><span class="hljs-attribute">Loading</span> boot sector... booting...<br></code></pre></td></tr></table></figure>
 
 <p>这里是使用了错误的 kernel 导致的.</p>
-<h2 id="找不到驱动"><a href="#找不到驱动" class="headerlink" title="找不到驱动"></a>找不到驱动</h2>
+<h2 id="找不到驱动"><a href="#找不到驱动" class="headerlink" title="找不到驱动"></a>找不到驱动</h2><p><img src="/../img/win10install-can-not-find-driver1.png" srcset="/img/loading.gif" lazyload><br><img src="/../img/win10install-can-not-find-driver2.png" srcset="/img/loading.gif" lazyload><br><img src="/../img/win10install-can-not-find-driver3.png" srcset="/img/loading.gif" lazyload></p>
+
                 
               </div>
             
