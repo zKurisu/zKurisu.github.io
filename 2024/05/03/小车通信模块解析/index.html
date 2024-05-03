@@ -23,10 +23,12 @@
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="这个 Blog 是记录 TDPS 课程寻际小车搭建中的部分代码解析. 代码的根目录这里记为 TDPS&#x2F;, 目录结构大致为: 123456789$ tree -d -L 1.├── Communication├── Control├── Core├── Drivers├── HC_SR04├── MDK-ARM└── Middlewares (只列出了 1 级) 这里门通信相关似乎只编写了小车部分,">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/how-stm32-commum-with-bluetooth.png">
 <meta property="article:published_time" content="2024-05-03T03:01:58.000Z">
-<meta property="article:modified_time" content="2024-05-03T08:25:24.678Z">
+<meta property="article:modified_time" content="2024-05-03T08:57:14.324Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/how-stm32-commum-with-bluetooth.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -235,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          8.2k 字
+          8.4k 字
         
       </span>
     
@@ -246,7 +248,7 @@
         
         
         
-          69 分钟
+          71 分钟
         
       </span>
     
@@ -295,6 +297,11 @@
 <p>(只列出了 1 级)</p>
 <p>这里门通信相关似乎只编写了小车部分, 而没有门部分.</p>
 <p>这里主要借助 STM32F405RGTx 芯片的 <code>PC10_UART3_TX</code> 和 <code>PC11_UART3_RX</code> 引脚与 HC-05 蓝牙模块, 以 UART 协议发送信息.<br>(需要找下 STM32F405RGTx 的手册)</p>
+<h1 id="通信原理简述"><a href="#通信原理简述" class="headerlink" title="通信原理简述"></a>通信原理简述</h1><p>UART 通信本身是不能无线传输的, 但借助蓝牙模块之后便可以了.</p>
+<p>蓝牙模块接收到来自 STM32 微控制器的 UART 信号后，将其转换为蓝牙无线信号。这些蓝牙信号可以被其他蓝牙设备接收和解码.</p>
+<p>蓝牙设备接收到蓝牙信号后, 将其转换回 UART 信号, 然后通过 UART 接口发送给另一个 STM32 微控制器或其他设备, 这样，数据就可以在两个设备之间无线传输.</p>
+<p>其过程可以简单描述为:<br><img src="/../img/how-stm32-commum-with-bluetooth.png" srcset="/img/loading.gif" lazyload></p>
+<p>需要注意, 这种通信方式需要蓝牙模块和接收设备之间的蓝牙连接已经建立, 也就是说, 需要提前设置好两个蓝牙模块.</p>
 <h1 id="代码文件拆分"><a href="#代码文件拆分" class="headerlink" title="代码文件拆分"></a>代码文件拆分</h1><h2 id="TDPS-x2F-Core-x2F-Inc-x2F-main-h"><a href="#TDPS-x2F-Core-x2F-Inc-x2F-main-h" class="headerlink" title="TDPS&#x2F;Core&#x2F;Inc&#x2F;main.h"></a>TDPS&#x2F;Core&#x2F;Inc&#x2F;main.h</h2><p>这里的 <code>Inc</code> 指 <code>Include</code>, 表明该目录下放的是头文件.</p>
 <p><code>main.h</code> 是程序主体的函数声明文件, 这里主要导入了 <code>stm32f4xx_hal.h</code> 库.</p>
 <h2 id="TDPS-x2F-Control-x2F-Control-h"><a href="#TDPS-x2F-Control-x2F-Control-h" class="headerlink" title="TDPS&#x2F;Control&#x2F;Control.h"></a>TDPS&#x2F;Control&#x2F;Control.h</h2><p>定义了几个类型:</p>
@@ -431,6 +438,12 @@
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2024/05/03/Linux-%E4%B8%8B%E4%B8%B2%E5%8F%A3%E9%80%9A%E4%BF%A1%E5%B7%A5%E5%85%B7/" title="Linux-下串口通信工具">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Linux-下串口通信工具</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">
