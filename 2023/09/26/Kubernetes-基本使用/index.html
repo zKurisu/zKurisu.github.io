@@ -24,13 +24,15 @@
 <meta property="og:description" content="Kubernetes 官网Kubernetes 官方文档 介绍Kubernetes (K8S) 是一个开源的容器编排和管理平台. 用于管理多部主机上的容器. (使用容器, 虚拟机部署的好处在于环境隔离) Kubernetes 一词源于希腊语, 意为 “舵手”, 这从其 logo 就能看出  和 Kubernetes 类似功能的应用还有:  Apache Mesos Docker Swarm  相关">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/kubernetes-logo.png">
+<meta property="og:image" content="http://example.com/img/K8S-simple-pod.png">
 <meta property="og:image" content="http://example.com/img/K8S-architecture.png">
 <meta property="og:image" content="http://example.com/img/multi-layer-struct-of-K8S.png">
 <meta property="og:image" content="http://example.com/img/K8S-related-components.png">
 <meta property="og:image" content="http://example.com/img/K8S-control-plane-components-relation.png">
 <meta property="og:image" content="http://example.com/img/K8S-node-components-relation.png">
+<meta property="og:image" content="http://example.com/img/K8S-resourses-classify.png">
 <meta property="article:published_time" content="2023-09-26T02:46:12.000Z">
-<meta property="article:modified_time" content="2024-05-05T06:15:02.339Z">
+<meta property="article:modified_time" content="2024-05-05T07:12:09.870Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/kubernetes-logo.png">
@@ -242,7 +244,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.6k 字
+          2.4k 字
         
       </span>
     
@@ -253,7 +255,7 @@
         
         
         
-          14 分钟
+          21 分钟
         
       </span>
     
@@ -310,6 +312,12 @@
 <p>它会实时监测节点的网络状态来平衡服务器的负载, 或者临时下发指令来应对突发的情况.</p>
 <h2 id="Node"><a href="#Node" class="headerlink" title="Node"></a>Node</h2><p>Node (节点), 为 K8S 管理的主机.</p>
 <h2 id="Pod"><a href="#Pod" class="headerlink" title="Pod"></a>Pod</h2><p>Pod 是 K8S 中可以部署的最小执行单元, 是每个 Node 下运行的相互独立的程序. (一个或者多个容器的集合)</p>
+<p><img src="/../img/K8S-simple-pod.png" srcset="/img/loading.gif" lazyload></p>
+<p>在同一个 Pod 中的所有容器共享同一个网络命名空间, 包括 IP 地址和端口范围, 这使得它们可以通过 localhost 相互通信. 此外, 这些容器还可以共享存储卷.</p>
+<h3 id="Pause-容器"><a href="#Pause-容器" class="headerlink" title="Pause 容器"></a>Pause 容器</h3><p>在 Kubernetes 的 Pod 中, 除了用户创建的应用容器外, 还有一个特殊的容器被称为 “Pause” 容器, 或者叫 “Infra” 容器.</p>
+<p>Pause 容器是 Pod 中的第一个启动的容器, 它的主要职责是为 Pod 中的其他容器提供共享的 Linux Namespace. 这意味着所有在同一个 Pod 中的容器都会共享同一个网络和 UTS (Unix Timesharing System) 命名空间, 这使得它们可以通过 localhost 相互通信, 并共享同一个主机名.</p>
+<p>Pause 容器的另一个重要作用是保持 PID (Process ID) 命名空间的持续运行. 这是因为在 Linux 中, 如果父进程退出, 其子进程会被 init 进程接管, 这可能会导致一些不可预期的行为. 而 Pause 容器作为 Pod 中所有其他容器的父进程, 可以保证在其它容器运行期间一直存活, 从而避免这种问题.</p>
+<p>Pause 容器本身并不运行任何实际的应用, 它只执行一个简单的程序(通常是一个无限循环), 主要目的是为 Pod 中的其他容器提供一个稳定的运行环境.</p>
 <h2 id="Replica-Set"><a href="#Replica-Set" class="headerlink" title="Replica Set"></a>Replica Set</h2><p>Replica Set (副本集合), 用于替换无法工作的 pod.</p>
 <h2 id="REST"><a href="#REST" class="headerlink" title="REST"></a>REST</h2><p>REST, REpresentational State Transfer (代表性状态转移), 是一种设计模式, 强调易于理解和使用.</p>
 <p>Kubernetes API 采用了 RESTful 设计. 这意味着你可以通过 HTTP 请求对 Kubernetes API 服务器执行 CRUD (创建, 读取, 更新, 删除) 操作. 这些操作可以用来管理 Kubernetes 中的资源对象.</p>
@@ -328,7 +336,13 @@
 <h2 id="Object-的-Spec-和-Status"><a href="#Object-的-Spec-和-Status" class="headerlink" title="Object 的 Spec 和 Status"></a>Object 的 Spec 和 Status</h2><p>在 Kubernetes 中, 许多 API 对象 (例如 Pod, Service, Deployment 等) 都包含 “spec” 和 “status” 这两个字段.</p>
 <p>Spec, 指规格, 这是由用户创建或修改 Kubernetes 对象时提供的字段. 它描述了用户期望的系统状态, 也就是用户想要的对象的特性. 例如, 对于一个 Pod 对象, spec 可能会包含应运行的容器, 容器的镜像, 端口映射等.</p>
 <p>Status, 指状态, 这是 Kubernetes 系统观察到的对象的当前状态. Kubernetes 系统通过控制循环不断地使对象的实际状态接近用户在 spec 中指定的期望状态. 例如, Pod 的 status 字段可能会包含当前的运行状态, 容器状态, Pod IP 地址等.</p>
-<h2 id="Resource-的简单分类"><a href="#Resource-的简单分类" class="headerlink" title="Resource 的简单分类"></a>Resource 的简单分类</h2><h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><p>可以用 minikube 来简单模拟 K8S 的使用.</p>
+<h2 id="Resource-的简单分类"><a href="#Resource-的简单分类" class="headerlink" title="Resource 的简单分类"></a>Resource 的简单分类</h2><ul>
+<li>Meta-resources, 元数据型资源, 这些资源并不对应于具体的 Kubernetes 对象, 而是提供 API 的一些额外功能 (如 Horizontal Pod Autoscaler, PodTemplate, LimitRange)</li>
+<li>Cluster-level resources, 集群级资源, 这些资源在整个 Kubernetes 集群中是全局的, 不属于任何特定的命名空间 (如 Namespace, Node, ClusterRole, ClusterRoleBinding)</li>
+<li>Namespace-level resources, 命名空间级资源, 这些资源属于特定的命名空间, 只能在其所属的命名空间内部被访问和操作. 例如, Pod, Service, ReplicaSet, Deployment 等都是命名空间级资源</li>
+</ul>
+<p><img src="/../img/K8S-resourses-classify.png" srcset="/img/loading.gif" lazyload></p>
+<h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><p>可以用 minikube 来简单模拟 K8S 的使用.</p>
 
                 
               </div>
