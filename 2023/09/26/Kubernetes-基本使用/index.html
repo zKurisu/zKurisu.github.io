@@ -32,7 +32,7 @@
 <meta property="og:image" content="http://example.com/img/K8S-node-components-relation.png">
 <meta property="og:image" content="http://example.com/img/K8S-resourses-classify.png">
 <meta property="article:published_time" content="2023-09-26T02:46:12.000Z">
-<meta property="article:modified_time" content="2024-05-05T07:53:11.539Z">
+<meta property="article:modified_time" content="2024-05-05T09:06:27.350Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/kubernetes-logo.png">
@@ -244,7 +244,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.7k 字
+          3.5k 字
         
       </span>
     
@@ -255,7 +255,7 @@
         
         
         
-          23 分钟
+          30 分钟
         
       </span>
     
@@ -310,7 +310,7 @@
 <h1 id="相关概念"><a href="#相关概念" class="headerlink" title="相关概念"></a>相关概念</h1><h2 id="Cluster"><a href="#Cluster" class="headerlink" title="Cluster"></a>Cluster</h2><p>Control Plane 加上所有的控制节点即 Cluster. 其代表了 K8S 所管理的全部主机节点.</p>
 <h2 id="Control-Plane"><a href="#Control-Plane" class="headerlink" title="Control Plane"></a>Control Plane</h2><p>Control Plane (控制平面), 通过专有的 API 与各个节点进行通信. </p>
 <p>它会实时监测节点的网络状态来平衡服务器的负载, 或者临时下发指令来应对突发的情况.</p>
-<p>Control Plane 中有 Controller (有很多类型, 如 Deployment, 可滚动升级, 平滑扩缩容, 可回滚), 一种抽象概念, 而不是实体. 它们是一组特殊的进程, 运行在 Kubernetes Master 节点上, 负责维护集群的期望状态</p>
+<p>Control Plane 中有 Controller (有很多类型, 如 Deployment, 可滚动升级, 平滑扩缩容, 可回滚; Stateful, 控制有状态服务; DeamonSet, 为每一个 “匹配” 的 Node 部署守护进程进行日志收集等; Job, CronJob 等), 一种抽象概念, 而不是实体. 它们是一组特殊的进程, 运行在 Kubernetes Master 节点上, 负责维护集群的期望状态</p>
 <p>控制器与 Pod 的关系是管理和维护. 例如, Deployment 控制器会管理一组具有相同应用的 Pod. 如果某个 Pod 失败, 控制器会创建一个新的 Pod 来替换它, 以保持集群的稳定.</p>
 <h2 id="Node"><a href="#Node" class="headerlink" title="Node"></a>Node</h2><p>Node (节点), 为 K8S 管理的主机.</p>
 <h2 id="Pod"><a href="#Pod" class="headerlink" title="Pod"></a>Pod</h2><p>Pod 是 K8S 中可以部署的最小执行单元, 是每个 Node 下运行的相互独立的程序. (一个或者多个容器的集合)</p>
@@ -345,7 +345,15 @@
 <li>Namespace-level resources, 命名空间级资源, 这些资源属于特定的命名空间, 只能在其所属的命名空间内部被访问和操作. 例如, Pod, Service, ReplicaSet, Deployment 等都是命名空间级资源</li>
 </ul>
 <p><img src="/../img/K8S-resourses-classify.png" srcset="/img/loading.gif" lazyload></p>
-<h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><p>可以用 minikube 来简单模拟 K8S 的使用.</p>
+<h1 id="Ingress-对象"><a href="#Ingress-对象" class="headerlink" title="Ingress 对象"></a>Ingress 对象</h1><p>Ingress 对象, 管理外部访问到集群内部服务的路由. 其还可以提供 HTTP 和 HTTPS 路由到集群内部服务, 且可以基于主机名和 URL 路径进行路由.</p>
+<h1 id="minikube-方式搭建"><a href="#minikube-方式搭建" class="headerlink" title="minikube 方式搭建"></a>minikube 方式搭建</h1><h1 id="kubeadm-方式搭建"><a href="#kubeadm-方式搭建" class="headerlink" title="kubeadm 方式搭建"></a>kubeadm 方式搭建</h1><p>这里用 3 台虚拟机搭建集群:</p>
+<ul>
+<li>k8s-master: 192.168.113.120</li>
+<li>k8s-node1: 192.168.113.121</li>
+<li>k8s-node2: 192.168.113.122</li>
+</ul>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-comment"># 关闭防火墙</span><br>systemctl stop firewalld<br>systemctl <span class="hljs-built_in">disable</span> firewalld<br><br><span class="hljs-comment"># 关闭 selinux</span><br>sed -i <span class="hljs-string">&#x27;s/enforcing/disabled/&#x27;</span> /etc/selinux/config<br><br><span class="hljs-comment"># 关闭 swap</span><br>sed -ri <span class="hljs-string">&#x27;s/.*swap.*/#&amp;/&#x27;</span> /etc/fstab<br><br><span class="hljs-comment"># 修改主机名</span><br>hostnamectl set-hostname &lt;hostname&gt;<br><br><span class="hljs-comment"># 添加静态域名解析</span><br><span class="hljs-built_in">cat</span> &gt;&gt; /etc/hosts &lt;&lt; <span class="hljs-string">EOF</span><br><span class="hljs-string">192.168.113.120 k8s-master</span><br><span class="hljs-string">192.168.113.121 k8s-node1</span><br><span class="hljs-string">192.168.113.122 k8s-node2</span><br><span class="hljs-string">EOF</span><br><br><span class="hljs-built_in">cat</span> &gt; /etc/sysctl.d/k8s.conf &lt;&lt; <span class="hljs-string">EOF</span><br><span class="hljs-string">net.bridge.bridge-nf-call-ip6tables = 1</span><br><span class="hljs-string">net.bridge.bridge-nf-call-iptables = 1</span><br><span class="hljs-string">EOF</span><br><br>sysctl --system<br><br>dnf install docker kubelet kubeadm kubectl<br></code></pre></td></tr></table></figure>
+<p>(注意添加软件源)</p>
 
                 
               </div>
