@@ -24,7 +24,7 @@
 <meta property="og:description" content="GlusterFS 官方文档 简介Gluster 是一个可扩展的分布式文件系统, 其将多个服务器的存储整合到一个 global namespace 中. 其能够自动检测存储节点的故障, 并将数据转移到其他节点上. 也能够将数据均匀分布在不同的存储节点上已实现负载均衡. 特点 高可用性, 自动检测存储节点的故障, 并将数据转移到其他节点 负载均衡, 分布式存储, 且自动将数据均匀分散在不同的存储节点">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2024-03-07T02:29:19.000Z">
-<meta property="article:modified_time" content="2024-05-14T01:05:23.388Z">
+<meta property="article:modified_time" content="2024-05-14T05:35:12.062Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          8.3k 字
+          8.4k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          70 分钟
+          71 分钟
         
       </span>
     
@@ -332,6 +332,13 @@
 <h2 id="Replicated"><a href="#Replicated" class="headerlink" title="Replicated"></a>Replicated</h2><p>将文件同步到多个 Brick Server 上, 每个文件都有多个副本. (有冗余)</p>
 <p>若想有两个副本, 则至少要两个 brick, 所想有 3 个副本, 则至少要三个 brick.</p>
 <p>卷中的所有 brick 都会有一个副本. (也可以自定义数量)</p>
+<p>文件的副本数量, 需要是存储节点的倍数, 如:</p>
+<ul>
+<li>复制卷, 2 个存储单元 (Brick), 副本数可设置为 2, 4, 6 等</li>
+<li>复制卷, 3 个存储单元 (Brick), 副本数可设置为 3, 6, 9 等</li>
+</ul>
+<p>同时, 需要保证存储单元的容量是相同的.</p>
+<p>此时文件是不分片的, 会完整存储在某个节点上. 一般配合条带卷使用.</p>
 <h2 id="Distribute-Replication"><a href="#Distribute-Replication" class="headerlink" title="Distribute Replication"></a>Distribute Replication</h2><p>Brick Server 数量为副本数的倍数. 且相邻的 Brick 会成为彼此的副本.</p>
 <p>如副本数为 2, 则 Brick 则至少为 8. 若此时 Brick 为 8, 则前两块为彼此的副本, 然后是下两块, 以此类推. 表示为 4x2 卷. (第一个数字为 Brick 数处以副本数, 第二个数字为副本数)</p>
 <p>如果副本为 4, Brick 为 8, 则前四个为彼此的副本. 这种表示为 2x4 卷.</p>
@@ -379,9 +386,11 @@
 <p>如创建一个名为 <code>gv0</code> 的 volume, 类型为 <code>replica</code>, <code>count</code> 为 2 (表示每一个数据有两个副本), 指定可用的 brick 为:</p>
 <ul>
 <li>192.168.177.24 下的 <code>/data/brick1/gv0</code> 目录</li>
-<li>192.168.177.25 下的 <code>/data/brick1/gv0</code> 目录<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">gluster volume create gv0 replica 2 192.168.177.24:/data/brick1/gv0 192.168.177.25:/data/brick1/gv0<br></code></pre></td></tr></table></figure>
-如果创建成功, 输出则为:<figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs livecodeserver">volume <span class="hljs-built_in">create</span>: gv0: success: please <span class="hljs-built_in">start</span> <span class="hljs-keyword">the</span> volume <span class="hljs-built_in">to</span> access data<br></code></pre></td></tr></table></figure></li>
+<li>192.168.177.25 下的 <code>/data/brick1/gv0</code> 目录<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">gluster volume create gv0 replica 2 192.168.177.24:/data/brick1/gv0 192.168.177.25:/data/brick1/gv0<br></code></pre></td></tr></table></figure></li>
 </ul>
+<p>如果创建成功, 输出则为:</p>
+<figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs livecodeserver">volume <span class="hljs-built_in">create</span>: gv0: success: please <span class="hljs-built_in">start</span> <span class="hljs-keyword">the</span> volume <span class="hljs-built_in">to</span> access data<br></code></pre></td></tr></table></figure>
+
 <h3 id="查看-Volume-的状态"><a href="#查看-Volume-的状态" class="headerlink" title="查看 Volume 的状态"></a>查看 Volume 的状态</h3><p>有多条子命令可用于查询 Volume 的状态:</p>
 <ul>
 <li><code>status</code>, 可查询 volume 中各 brick 所属, 以及与 gluster 服务器连接的 tcp, pid 等信息</li>
