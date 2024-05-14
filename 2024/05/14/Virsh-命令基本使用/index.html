@@ -23,10 +23,13 @@
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="Libvirt 官网RedHat virsh 相关教程 介绍virsh 是一个用于管理 libvirt 的虚拟机和其他虚拟化功能的命令行工具. 而 libvirt 是一个开源的 API, 守护进程和管理工具, 用于管理各种不同的虚拟化能力. 它支持多种不同的虚拟化后端, 包括 QEMU, KVM, Xen 等. 安装virsh 会随 libvirt 一起安装, 在 Archlinux 上如: 1s">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/virsh-connect-interactive-mode.png">
+<meta property="og:image" content="http://example.com/img/virsh-add-sub-command-not-interactive.png">
 <meta property="article:published_time" content="2024-05-14T01:09:25.000Z">
-<meta property="article:modified_time" content="2024-05-14T01:37:29.482Z">
+<meta property="article:modified_time" content="2024-05-14T02:34:36.907Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/virsh-connect-interactive-mode.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -235,7 +238,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          344 字
+          3k 字
         
       </span>
     
@@ -246,7 +249,7 @@
         
         
         
-          3 分钟
+          25 分钟
         
       </span>
     
@@ -294,12 +297,116 @@
 <h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><p><code>virsh</code> 会随 <code>libvirt</code> 一起安装, 在 Archlinux 上如:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo pacman -S libvirt<br></code></pre></td></tr></table></figure>
 
-<h1 id="基本使用"><a href="#基本使用" class="headerlink" title="基本使用"></a>基本使用</h1><h2 id="连接到一个-hypervisor"><a href="#连接到一个-hypervisor" class="headerlink" title="连接到一个 hypervisor"></a>连接到一个 hypervisor</h2><p>Hypervisor, 指虚拟机监视器 (Virtual Machine Monitor), 可以是软件, 固件和硬件, 用于创建并运行虚拟机.</p>
+<h1 id="基本使用"><a href="#基本使用" class="headerlink" title="基本使用"></a>基本使用</h1><h2 id="查看当前-hypervisor-连接"><a href="#查看当前-hypervisor-连接" class="headerlink" title="查看当前 hypervisor 连接"></a>查看当前 hypervisor 连接</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh uri<br></code></pre></td></tr></table></figure>
+
+<p>返回如:</p>
+<figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs dts"><span class="hljs-symbol">qemu:</span><span class="hljs-comment">///system</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="连接到一个-hypervisor"><a href="#连接到一个-hypervisor" class="headerlink" title="连接到一个 hypervisor"></a>连接到一个 hypervisor</h2><p>Hypervisor, 指虚拟机监视器 (Virtual Machine Monitor), 可以是软件, 固件和硬件, 用于创建并运行虚拟机.</p>
 <p>Hypervisor 分两类:</p>
 <ul>
-<li>Bare-Metal Hypervisor, 指直接安装在物理硬件上, 以提供高性能</li>
-<li>Hosted Hypervisor</li>
+<li>Bare-Metal Hypervisor, 指直接安装在物理硬件上, 以提供高性能和高效率, 代表的有 Xen, KVM (Linux 内核的一部分), Microsoft Hyper-V</li>
+<li>Hosted Hypervisor, 指安装在宿主操作系统上, 像普通应用程序一样使用, 代表有 VMware Workstation, QEMU (通常和 KVM 一起使用)</li>
 </ul>
+<h3 id="远程"><a href="#远程" class="headerlink" title="远程"></a>远程</h3><p>假如 <code>10.10.0.105</code> 主机上以 <code>root</code> 用于运行 QEMU&#x2F;KVM hypervisor, 则连接如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh -c qemu+ssh://root@10.10.0.105/system<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>-c</code>, <code>--connect</code>, 指定要连接的 hypervisor URI</li>
+<li><code>qemu+ssh://root@10.10.0.105/system</code> 中:<ul>
+<li><code>qemu</code> 是 hypervisor 类型</li>
+<li><code>+ssh</code> 指连接方式</li>
+<li><code>root</code> 是运行 hypervisor 的用户</li>
+<li><code>@10.10.0.105</code> 指定 IP 地址</li>
+<li><code>/system</code> 表示连接级别</li>
+</ul>
+</li>
+</ul>
+<p>连接级别一般有:</p>
+<ul>
+<li><code>system</code>, 系统级连接, 是默认的连接类型, 通常用于管理全系统的虚拟机, 这种连接类型需要 root 权限或者属于 libvirt 群组的用户权限</li>
+<li><code>session</code>, 会话级连接, 单个用户的会话创建的, 不需要 root 权限, 虚拟机的生命周期与用户会话的生命周期相同, 当用户注销时, 所有的虚拟机都会被关闭</li>
+</ul>
+<p>注意这里连接后, 会进入交互模式:<br><img src="/../img/virsh-connect-interactive-mode.png" srcset="/img/loading.gif" lazyload></p>
+<p>若只想运行单个命令, 则加上子命令:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh -c qemu+ssh://root@10.10.0.105/system list --all<br></code></pre></td></tr></table></figure>
+<p><img src="/../img/virsh-add-sub-command-not-interactive.png" srcset="/img/loading.gif" lazyload></p>
+<h3 id="本地"><a href="#本地" class="headerlink" title="本地"></a>本地</h3><p>如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">virsh -c qemu:///session<br></code></pre></td></tr></table></figure>
+
+<p>或:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">virsh -c qemu:///system<br></code></pre></td></tr></table></figure>
+
+<h2 id="查看所有虚拟机"><a href="#查看所有虚拟机" class="headerlink" title="查看所有虚拟机"></a>查看所有虚拟机</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh list --all<br></code></pre></td></tr></table></figure>
+
+<p>输出如:</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs markdown"><span class="hljs-section"> Id   Name            State</span><br><span class="hljs-section">--------------------------------</span><br> 1    pxe             running<br><span class="hljs-bullet"> -</span>    fedora38-1      shut off<br><span class="hljs-bullet"> -</span>    fedora38-2      shut off<br><span class="hljs-bullet"> -</span>    openEuler20-1   shut off<br><span class="hljs-bullet"> -</span>    openEuler22-1   shut off<br><span class="hljs-bullet"> -</span>    openEuler22-2   shut off<br><span class="hljs-bullet"> -</span>    rocky8-2        shut off<br><span class="hljs-bullet"> -</span>    win10           shut off<br><span class="hljs-bullet"> -</span>    win11           shut off<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>Id</code> 指 domain id, 其会在虚拟机 “启动” 时自动分配, 在关闭时释放</li>
+<li><code>Name</code> 指 domain name (不是网络上的 domain, 这里就是创建时虚拟机的名称)</li>
+<li><code>State</code> 指虚拟机状态, 有:<ul>
+<li><code>running</code></li>
+<li><code>paused</code></li>
+<li><code>inactive</code></li>
+<li><code>crashed</code></li>
+<li><code>shutdown</code></li>
+<li><code>dying</code></li>
+</ul>
+</li>
+</ul>
+<h2 id="查看已启动的虚拟机"><a href="#查看已启动的虚拟机" class="headerlink" title="查看已启动的虚拟机"></a>查看已启动的虚拟机</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh list<br></code></pre></td></tr></table></figure>
+
+<h2 id="查看虚拟机的-XML-配置"><a href="#查看虚拟机的-XML-配置" class="headerlink" title="查看虚拟机的 XML 配置"></a>查看虚拟机的 XML 配置</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh dumpxml &#123;domain-id, domain-name or domain-uuid&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这里的 domain-id 和 domain-name 都可以用 <code>virsh list --all</code> 来查看.</p>
+<p>而 <code>domain-uuid</code> 需要用 <code>virsh domuuid &#123;domain-id, domain-name&#125;</code> 或者 <code>virsh list --all --uuid</code> 来查看.</p>
+<p>如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh domuuid fedora38-1<br></code></pre></td></tr></table></figure>
+
+<p>输出如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">fcb54802-8a61-4bea-8ae7-a35d4f8e48a9<br></code></pre></td></tr></table></figure>
+
+<p>则查看其 XML 配置如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh dumpxml fedora38-1<br></code></pre></td></tr></table></figure>
+
+<h2 id="修改一个虚拟机的-XML-配置"><a href="#修改一个虚拟机的-XML-配置" class="headerlink" title="修改一个虚拟机的 XML 配置"></a>修改一个虚拟机的 XML 配置</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh edit &#123;domain-id, domain-name or domain-uuid&#125;<br></code></pre></td></tr></table></figure>
+
+<p>其会读取 <code>EDITOR</code> 环境变量来选择用于编辑的编辑器 (默认用 <code>vi</code>), 若设置了该变量不起作用, 可选择:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">export</span> EDITOR=vim<br>sudo -E virsh edit &lt;domain&gt;<br></code></pre></td></tr></table></figure>
+
+<p>或:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo EDITOR=vim virsh edit &lt;domain&gt;<br></code></pre></td></tr></table></figure>
+
+<h2 id="用一个-XML-配置文件创建一个-guest"><a href="#用一个-XML-配置文件创建一个-guest" class="headerlink" title="用一个 XML 配置文件创建一个 guest"></a>用一个 XML 配置文件创建一个 guest</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh create configuration_file.xml<br></code></pre></td></tr></table></figure>
+
+<h2 id="挂起一个-guest"><a href="#挂起一个-guest" class="headerlink" title="挂起一个 guest"></a>挂起一个 guest</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh <span class="hljs-built_in">suspend</span> &#123;domain-id, domain-name or domain-uuid&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="从挂起中恢复一个-guest"><a href="#从挂起中恢复一个-guest" class="headerlink" title="从挂起中恢复一个 guest"></a>从挂起中恢复一个 guest</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh resume &#123;domain-id, domain-name or domain-uuid&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="save-a-guest"><a href="#save-a-guest" class="headerlink" title="save a guest"></a>save a guest</h2><p><code>save</code>, 指保存虚拟机在特定时间点的完整状态, 包括虚拟机的内存状态 (即 RAM 中的内容), CPU 状态, 设备状态和磁盘状态并会停止虚拟机.</p>
+<p><code>save</code> 和 <code>snapshot</code> (快照) 类似, 但是会停止虚拟机, 用于以后完整恢复虚拟机状态, 常用于长期保存.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">virsh save &#123;domain-name, domain-id or domain-uuid&#125; filename<br></code></pre></td></tr></table></figure>
+
+<h2 id="restore-a-guest"><a href="#restore-a-guest" class="headerlink" title="restore a guest"></a>restore a guest</h2><p>可以从一个 <code>save</code> 的文件中恢复虚拟机:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh restore filename<br></code></pre></td></tr></table></figure>
+
+<h2 id="关机-a-guest"><a href="#关机-a-guest" class="headerlink" title="关机 a guest"></a>关机 a guest</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">virsh shutdown &#123;domain-id, domain-name or domain-uuid&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="重启-a-guest"><a href="#重启-a-guest" class="headerlink" title="重启 a guest"></a>重启 a guest</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh reboot &#123;domain-id, domain-name or domain-uuid&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="强制关闭-a-guest"><a href="#强制关闭-a-guest" class="headerlink" title="强制关闭 a guest"></a>强制关闭 a guest</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh destroy &#123;domain-id, domain-name or domain-uuid&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="获取某-guest-的基本信息"><a href="#获取某-guest-的基本信息" class="headerlink" title="获取某 guest 的基本信息"></a>获取某 guest 的基本信息</h2><h3 id="domain-id"><a href="#domain-id" class="headerlink" title="domain id"></a>domain id</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh domid &#123;domain-name or domain-uuid&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="domain-name"><a href="#domain-name" class="headerlink" title="domain name"></a>domain name</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh domname &#123;domain-id or domain-uuid&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="uuid"><a href="#uuid" class="headerlink" title="uuid"></a>uuid</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh domuuid &#123;domain-id or domain-name&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="全部"><a href="#全部" class="headerlink" title="全部"></a>全部</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh dominfo &#123;domain-id, domain-name or domain-uuid&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="查看宿主机的信息"><a href="#查看宿主机的信息" class="headerlink" title="查看宿主机的信息"></a>查看宿主机的信息</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh nodeinfo<br></code></pre></td></tr></table></figure>
+
+<h2 id="查看-guest-的-cpu-信息"><a href="#查看-guest-的-cpu-信息" class="headerlink" title="查看 guest 的 cpu 信息"></a>查看 guest 的 cpu 信息</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh vcpuinfo &#123;domain-id, domain-name or domain-uuid&#125;<br></code></pre></td></tr></table></figure>
+
 
                 
               </div>
