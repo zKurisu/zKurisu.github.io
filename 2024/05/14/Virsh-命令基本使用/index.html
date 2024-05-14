@@ -26,7 +26,7 @@
 <meta property="og:image" content="http://example.com/img/virsh-connect-interactive-mode.png">
 <meta property="og:image" content="http://example.com/img/virsh-add-sub-command-not-interactive.png">
 <meta property="article:published_time" content="2024-05-14T01:09:25.000Z">
-<meta property="article:modified_time" content="2024-05-14T02:34:36.907Z">
+<meta property="article:modified_time" content="2024-05-14T03:37:49.059Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/virsh-connect-interactive-mode.png">
@@ -238,7 +238,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3k 字
+          4.4k 字
         
       </span>
     
@@ -249,7 +249,7 @@
         
         
         
-          25 分钟
+          37 分钟
         
       </span>
     
@@ -406,6 +406,56 @@
 <h2 id="查看宿主机的信息"><a href="#查看宿主机的信息" class="headerlink" title="查看宿主机的信息"></a>查看宿主机的信息</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh nodeinfo<br></code></pre></td></tr></table></figure>
 
 <h2 id="查看-guest-的-cpu-信息"><a href="#查看-guest-的-cpu-信息" class="headerlink" title="查看 guest 的 cpu 信息"></a>查看 guest 的 cpu 信息</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh vcpuinfo &#123;domain-id, domain-name or domain-uuid&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="配置-virtual-CPU-affinity"><a href="#配置-virtual-CPU-affinity" class="headerlink" title="配置 virtual CPU affinity"></a>配置 virtual CPU affinity</h2><p>Virtual CPU Affinity 指虚拟机的 vCPU 与物理 CPU 核心间的关联, 这个过程一般称 “CPU Pinning”.</p>
+<p>在默认情况下, 虚拟机的 vCPU 可以在物理 CPU 的任何核心上运行, 由操作系统的调度器决定. 然而, 有时候, 为了优化性能或满足特定的需求, 你可能想要将特定的 vCPU 固定到特定的物理 CPU 核心上. 这就是所谓的 “CPU affinity” 或 “CPU pinning”.</p>
+<p>配置 CPU affinity 能够减少 CPU 上下文切换的次数以提高性能.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh vcpupin domain-id vcpu cpulist<br></code></pre></td></tr></table></figure>
+
+<p>如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">virsh vcpupin myvm 0 0,1<br></code></pre></td></tr></table></figure>
+
+<p>固定到多个物理 CPU 核心时, 需要用逗号分隔, 或范围指定:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">virsh vcpupin myvm 0 0-3,5<br></code></pre></td></tr></table></figure>
+
+<h2 id="配置-virtual-CPU-数量"><a href="#配置-virtual-CPU-数量" class="headerlink" title="配置 virtual CPU 数量"></a>配置 virtual CPU 数量</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh setvcpus &#123;domain-name, domain-id or domain-uuid&#125; count<br></code></pre></td></tr></table></figure>
+
+<h2 id="配置-guest-的内存大小"><a href="#配置-guest-的内存大小" class="headerlink" title="配置 guest 的内存大小"></a>配置 guest 的内存大小</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh setmem &#123;domain-id or domain-name&#125; count<br></code></pre></td></tr></table></figure>
+<p>最少需要分配 64MB.</p>
+<h2 id="显示-guest-块设备信息"><a href="#显示-guest-块设备信息" class="headerlink" title="显示 guest 块设备信息"></a>显示 guest 块设备信息</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh domblkstat GuestName block-device<br></code></pre></td></tr></table></figure>
+
+<p>如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh domblkstat fedora38-1 vda<br></code></pre></td></tr></table></figure>
+<p><code>domblkstat</code> 指 “domain block statistics”.</p>
+<p>输出如:</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">vda</span> rd_req <span class="hljs-number">0</span><br><span class="hljs-attribute">vda</span> rd_bytes <span class="hljs-number">0</span><br><span class="hljs-attribute">vda</span> wr_req <span class="hljs-number">147</span><br><span class="hljs-attribute">vda</span> wr_bytes <span class="hljs-number">9614848</span><br><span class="hljs-attribute">vda</span> flush_operations <span class="hljs-number">59</span><br><span class="hljs-attribute">vda</span> rd_total_times <span class="hljs-number">0</span><br><span class="hljs-attribute">vda</span> wr_total_times <span class="hljs-number">233585203</span><br><span class="hljs-attribute">vda</span> flush_total_times <span class="hljs-number">277395016</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="显示-guest-网络接口信息"><a href="#显示-guest-网络接口信息" class="headerlink" title="显示 guest 网络接口信息"></a>显示 guest 网络接口信息</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">virsh domifstat GuestName interface-device <br></code></pre></td></tr></table></figure>
+
+<p>可以先用 <code>domiflist</code> 查看一个 guest 有什么网络接口:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh domiflist fedora38-1<br></code></pre></td></tr></table></figure>
+
+<p>输出如:</p>
+<figure class="highlight asciidoc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs asciidoc"><span class="hljs-section"> 接口    类型      源        型号     MAC</span><br><span class="hljs-section">---------------------------------------------------------</span><br><span class="hljs-code"> vnet3   network   default   virtio   52:54:00:6b:2c:9f</span><br></code></pre></td></tr></table></figure>
+
+<p>如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh domifstat fedora38-1 vnet3<br></code></pre></td></tr></table></figure>
+
+<p>输出如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs sh">vnet3 rx_bytes 127934<br>vnet3 rx_packets 2250<br>vnet3 rx_errs 0<br>vnet3 rx_drop 0<br>vnet3 tx_bytes 30008<br>vnet3 tx_packets 385<br>vnet3 tx_errs 0<br>vnet3 tx_drop 0<br></code></pre></td></tr></table></figure>
+
+<h2 id="迁移-guest-到另一台主机"><a href="#迁移-guest-到另一台主机" class="headerlink" title="迁移 guest 到另一台主机"></a>迁移 guest 到另一台主机</h2><p>可以用:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo virsh migrate --live GuestName DestinationURL<br></code></pre></td></tr></table></figure>
+
+<p>将运行中的虚拟机从一台物理主机迁移到另一台物理主机, 这个过程通常被称为”实时迁移” (live migration), 因为在迁移过程中, 虚拟机会持续运行, 不会出现停机时间.</p>
+<p>如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">virsh migrate --live GuestName qemu+ssh://DestinationHost/system<br></code></pre></td></tr></table></figure>
+
+
+
+
+
+
 
 
                 
