@@ -32,7 +32,7 @@
 <meta property="og:image" content="http://example.com/img/K8S-node-components-relation.png">
 <meta property="og:image" content="http://example.com/img/K8S-resourses-classify.png">
 <meta property="article:published_time" content="2023-09-26T02:46:12.000Z">
-<meta property="article:modified_time" content="2024-05-05T09:46:57.788Z">
+<meta property="article:modified_time" content="2024-05-18T05:44:13.034Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/kubernetes-logo.png">
@@ -255,7 +255,7 @@
         
         
         
-          33 分钟
+          32 分钟
         
       </span>
     
@@ -348,9 +348,9 @@
 <h1 id="Ingress-对象"><a href="#Ingress-对象" class="headerlink" title="Ingress 对象"></a>Ingress 对象</h1><p>Ingress 对象, 管理外部访问到集群内部服务的路由. 其还可以提供 HTTP 和 HTTPS 路由到集群内部服务, 且可以基于主机名和 URL 路径进行路由.</p>
 <h1 id="minikube-方式搭建"><a href="#minikube-方式搭建" class="headerlink" title="minikube 方式搭建"></a>minikube 方式搭建</h1><h1 id="kubeadm-方式搭建"><a href="#kubeadm-方式搭建" class="headerlink" title="kubeadm 方式搭建"></a>kubeadm 方式搭建</h1><p>这里用 3 台虚拟机搭建集群:</p>
 <ul>
-<li>k8s-master: 192.168.113.120</li>
-<li>k8s-node1: 192.168.113.121</li>
-<li>k8s-node2: 192.168.113.122</li>
+<li>k8s-master: 192.168.177.1</li>
+<li>k8s-node1: 192.168.177.20</li>
+<li>k8s-node2: 192.168.177.25</li>
 </ul>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-comment"># 关闭防火墙</span><br>systemctl stop firewalld<br>systemctl <span class="hljs-built_in">disable</span> firewalld<br><br><span class="hljs-comment"># 关闭 selinux</span><br>sed -i <span class="hljs-string">&#x27;s/enforcing/disabled/&#x27;</span> /etc/selinux/config<br><br><span class="hljs-comment"># 关闭 swap</span><br>sed -ri <span class="hljs-string">&#x27;s/.*swap.*/#&amp;/&#x27;</span> /etc/fstab<br><br><span class="hljs-comment"># 修改主机名</span><br>hostnamectl set-hostname &lt;hostname&gt;<br><br><span class="hljs-comment"># 添加静态域名解析</span><br><span class="hljs-built_in">cat</span> &gt;&gt; /etc/hosts &lt;&lt; <span class="hljs-string">EOF</span><br><span class="hljs-string">192.168.113.120 k8s-master</span><br><span class="hljs-string">192.168.113.121 k8s-node1</span><br><span class="hljs-string">192.168.113.122 k8s-node2</span><br><span class="hljs-string">EOF</span><br><br><span class="hljs-built_in">cat</span> &gt; /etc/sysctl.d/k8s.conf &lt;&lt; <span class="hljs-string">EOF</span><br><span class="hljs-string">net.bridge.bridge-nf-call-ip6tables = 1</span><br><span class="hljs-string">net.bridge.bridge-nf-call-iptables = 1</span><br><span class="hljs-string">EOF</span><br><br>sysctl --system<br><br><span class="hljs-built_in">cat</span> &lt;&lt;<span class="hljs-string">EOF | sudo tee /etc/yum.repos.d/kubernetes.repo</span><br><span class="hljs-string">[kubernetes]</span><br><span class="hljs-string">name=Kubernetes</span><br><span class="hljs-string">baseurl=https://pkgs.k8s.io/core:/stable:/v1.30/rpm/</span><br><span class="hljs-string">enabled=1</span><br><span class="hljs-string">gpgcheck=1</span><br><span class="hljs-string">gpgkey=https://pkgs.k8s.io/core:/stable:/v1.30/rpm/repodata/repomd.xml.key</span><br><span class="hljs-string">exclude=kubelet kubeadm kubectl cri-tools kubernetes-cni</span><br><span class="hljs-string">EOF</span><br><br>yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes<br>systemctl <span class="hljs-built_in">enable</span> --now kubelet<br></code></pre></td></tr></table></figure>
 
