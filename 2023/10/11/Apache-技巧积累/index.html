@@ -16,18 +16,18 @@
   <meta name="author" content="John Doe">
   <meta name="keywords" content="">
   
-    <meta name="description" content="以服务器任意地址访问用 Listen 指定端口时, 不指定地址即可: 1Listen 80  而非: 1Listen 192.168.177.1:80    设置基于用户的访问需要用 htpasswd 来创建用户和对应的密码文件: 1htpasswd -cb .passwd test Huawei@123  -c 为覆盖原有文件并创建一个新文件 -b 表示从命令行接受密码而不是交互式 test 指">
+    <meta name="description" content="SetHandlerSetHandler xxx 是指定 url, 文件, 或目录由 xxx handler 来处理, 如: 1234&lt;Directory &quot;&#x2F;var&#x2F;www&#x2F;cgi-bin&quot;&gt;    Options +ExecCGI    SetHandler cgi-script&lt;&#x2F;Directory&gt; 如果此时访问 &#x2F;var&#x2F;www&#x2F;cgi-bin">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Apache-技巧积累">
 <meta property="og:url" content="http://example.com/2023/10/11/Apache-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="以服务器任意地址访问用 Listen 指定端口时, 不指定地址即可: 1Listen 80  而非: 1Listen 192.168.177.1:80    设置基于用户的访问需要用 htpasswd 来创建用户和对应的密码文件: 1htpasswd -cb .passwd test Huawei@123  -c 为覆盖原有文件并创建一个新文件 -b 表示从命令行接受密码而不是交互式 test 指">
+<meta property="og:description" content="SetHandlerSetHandler xxx 是指定 url, 文件, 或目录由 xxx handler 来处理, 如: 1234&lt;Directory &quot;&#x2F;var&#x2F;www&#x2F;cgi-bin&quot;&gt;    Options +ExecCGI    SetHandler cgi-script&lt;&#x2F;Directory&gt; 如果此时访问 &#x2F;var&#x2F;www&#x2F;cgi-bin">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/apache-prefork.png">
 <meta property="og:image" content="http://example.com/img/apache-worker.png">
 <meta property="og:image" content="http://example.com/img/apache-event.png">
 <meta property="article:published_time" content="2023-10-11T09:34:20.000Z">
-<meta property="article:modified_time" content="2024-07-15T05:48:49.873Z">
+<meta property="article:modified_time" content="2024-07-15T13:12:18.603Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/apache-prefork.png">
@@ -239,7 +239,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          4.3k 字
+          5k 字
         
       </span>
     
@@ -250,7 +250,7 @@
         
         
         
-          36 分钟
+          42 分钟
         
       </span>
     
@@ -293,7 +293,21 @@
             
               <div class="markdown-body">
                 
-                <h1 id="以服务器任意地址访问"><a href="#以服务器任意地址访问" class="headerlink" title="以服务器任意地址访问"></a>以服务器任意地址访问</h1><p>用 <code>Listen</code> 指定端口时, 不指定地址即可:</p>
+                <h1 id="SetHandler"><a href="#SetHandler" class="headerlink" title="SetHandler"></a>SetHandler</h1><p><code>SetHandler xxx</code> 是指定 url, 文件, 或目录由 <code>xxx</code> handler 来处理, 如:</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-section">&lt;Directory <span class="hljs-string">&quot;/var/www/cgi-bin&quot;</span>&gt;</span><br>    <span class="hljs-attribute">Options</span> +ExecCGI<br>    <span class="hljs-attribute">SetHandler</span> cgi-script<br><span class="hljs-section">&lt;/Directory&gt;</span><br></code></pre></td></tr></table></figure>
+<p>如果此时访问 <code>/var/www/cgi-bin/test.pl</code>, 那么:</p>
+<ol>
+<li>识别请求路径: Apache 服务器会识别到你请求的是位于 <code>/var/www/cgi-bin</code> 目录下的 <code>test.pl</code> 文件</li>
+<li>应用目录配置: 根据配置文件中的 <code>&lt;Directory &quot;/var/www/cgi-bin&quot;&gt;</code> 指令，Apache 会应用该目录的配置</li>
+<li>启用 CGI 执行: 由于 Options +ExecCGI 指令的存在，Apache 允许在该目录下执行 CGI 脚本</li>
+<li>设置处理程序: SetHandler cgi-script 指令告诉 Apache，所有在该目录下的请求都应该通过 cgi-script 处理程序处理</li>
+<li>执行 CGI 脚本: Apache 会将请求传递给 <code>cgi-script</code> 处理程序, 该处理程序会执行 <code>test.pl</code> 脚本. <code>test.pl</code> 脚本需要具有执行权限, 并且应该正确输出 HTTP 头和内容</li>
+</ol>
+<p>也就是说 <code>cgi-script</code> 这个 handler 能执行访问的脚本.</p>
+<p>另一个例子:</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-section">&lt;Location <span class="hljs-string">&quot;/server-status&quot;</span>&gt;</span><br>    <span class="hljs-attribute">SetHandler</span> server-status<br>    <span class="hljs-attribute">Require</span> ip <span class="hljs-number">192.168.1.0</span>/<span class="hljs-number">24</span><br><span class="hljs-section">&lt;/Location&gt;</span><br></code></pre></td></tr></table></figure>
+<p>该请求会传递给 <code>server-status</code> 这个 handler 处理, 其返回服务器的状态.</p>
+<h1 id="以服务器任意地址访问"><a href="#以服务器任意地址访问" class="headerlink" title="以服务器任意地址访问"></a>以服务器任意地址访问</h1><p>用 <code>Listen</code> 指定端口时, 不指定地址即可:</p>
 <figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">Listen</span> <span class="hljs-number">80</span><br></code></pre></td></tr></table></figure>
 
 <p>而非:</p>
@@ -304,8 +318,8 @@
 <h1 id="设置基于用户的访问"><a href="#设置基于用户的访问" class="headerlink" title="设置基于用户的访问"></a>设置基于用户的访问</h1><p>需要用 <code>htpasswd</code> 来创建用户和对应的密码文件:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">htpasswd -cb .passwd <span class="hljs-built_in">test</span> Huawei@123<br></code></pre></td></tr></table></figure>
 <ul>
-<li><code>-c</code> 为覆盖原有文件并创建一个新文件</li>
-<li><code>-b</code> 表示从命令行接受密码而不是交互式</li>
+<li><code>-c</code>, “create”, 为覆盖原有文件并创建一个新文件</li>
+<li><code>-b</code>, “batch mode”, 表示从命令行接受密码而不是交互式</li>
 <li><code>test</code> 指定用户名</li>
 <li><code>Huawei@123</code> 指定密码</li>
 </ul>
