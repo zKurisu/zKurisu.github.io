@@ -26,7 +26,7 @@
 <meta property="og:image" content="http://example.com/img/realise-components.png">
 <meta property="og:image" content="http://example.com/img/prototype-to-hierarchical-structure.png">
 <meta property="article:published_time" content="2024-07-13T07:09:53.000Z">
-<meta property="article:modified_time" content="2024-07-16T02:13:25.235Z">
+<meta property="article:modified_time" content="2024-07-16T03:36:06.769Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/realise-components.png">
@@ -238,7 +238,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          6.7k 字
+          7.5k 字
         
       </span>
     
@@ -249,7 +249,7 @@
         
         
         
-          57 分钟
+          63 分钟
         
       </span>
     
@@ -312,12 +312,34 @@
 <li>渲染组件</li>
 <li>提交到 DOM</li>
 </ol>
+<p>也就是说, 组件是先分别渲染好了, 才显示到页面上. (在渲染完成并且 React 更新 DOM 之后, 浏览器才会重新绘制屏幕)</p>
+<p>React 中的渲染必须是一次 “纯计算”, 即:</p>
+<ul>
+<li>输入相同, 输出相同. 给定相同的输入, 组件应始终返回相同的 JSX</li>
+<li>只做它自己的事情. 它不应更改任何存在于渲染之前的对象或变量</li>
+</ul>
 <h1 id="为什么需要-state"><a href="#为什么需要-state" class="headerlink" title="为什么需要 state"></a>为什么需要 state</h1><ol>
 <li>局部变量无法在多次渲染中持久保存</li>
 <li>更改局部变量不会触发渲染</li>
 </ol>
 <h1 id="state-更新的时机"><a href="#state-更新的时机" class="headerlink" title="state 更新的时机"></a>state 更新的时机</h1><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-keyword">const</span> [count, setCount] = <span class="hljs-title function_">useState</span>(<span class="hljs-number">0</span>);<br><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(count);  <span class="hljs-comment">// 0</span><br><span class="hljs-title function_">setCount</span>(count + <span class="hljs-number">1</span>); <span class="hljs-comment">// 请求用 1 重新渲染</span><br><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(count);  <span class="hljs-comment">// 仍然是 0！</span><br></code></pre></td></tr></table></figure>
 <p>也就是说, 当次渲染中, <code>count</code> 的值不会立即改变, 而是在重新渲染时更新值.</p>
+<p>总结来说:</p>
+<ul>
+<li>设置 state 只会为下一次渲染变更 state 的值</li>
+<li>一个 state 变量的值永远不会在一次渲染的内部发生变化</li>
+</ul>
+<h1 id="state-的批处理更新"><a href="#state-的批处理更新" class="headerlink" title="state 的批处理更新"></a>state 的批处理更新</h1><p>React 会等到事件处理函数中的 所有代码都运行完毕再处理 state 更新</p>
+<p>这可以更新多个 state 变量, 甚至来自多个组件的 state 变量, 而不会触发太多的重新渲染. 但这也意味着只有在事件处理函数及其中任何代码执行完成之后, UI 才会更新. 这种特性也就是批处理.</p>
+<p>示例:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-keyword">function</span> <span class="hljs-title function_">handleClick</span>(<span class="hljs-params"></span>) &#123;<br>    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(count);<br>    <span class="hljs-title function_">setCount</span>(count+<span class="hljs-number">1</span>);<br>    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(count);<br>    <span class="hljs-title function_">setCount</span>(count+<span class="hljs-number">1</span>);<br>    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(count);<br>    <span class="hljs-title function_">setCount</span>(count+<span class="hljs-number">1</span>);<br>    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(count);<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>对当次渲染的影响是, <code>count</code> 值不变, 对下一次渲染的影响是 <code>count</code> 值加一.</p>
+<p>这里实际上是先执行了:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(count);<br><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(count);<br><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(count);<br><span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(count);<br></code></pre></td></tr></table></figure>
+
+<p>然后再执行:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs javascript"><span class="hljs-title function_">setCount</span>(count+<span class="hljs-number">1</span>);<br><span class="hljs-title function_">setCount</span>(count+<span class="hljs-number">1</span>);<br><span class="hljs-title function_">setCount</span>(count+<span class="hljs-number">1</span>);<br></code></pre></td></tr></table></figure>
+<p>即批处理.</p>
 <h1 id="传递事件函数的误区"><a href="#传递事件函数的误区" class="headerlink" title="传递事件函数的误区"></a>传递事件函数的误区</h1><p>如:</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs javascript">&lt;button onClick=&#123;<span class="hljs-title function_">handleClick</span>()&#125;&gt;<br></code></pre></td></tr></table></figure>
 <p>其会在 React 渲染时就触发.</p>
