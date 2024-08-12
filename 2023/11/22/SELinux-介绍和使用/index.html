@@ -24,7 +24,7 @@
 <meta property="og:description" content="简介SELinux, Security Enhanced Linux. SELinux 是 Linux 内核的一个模块, 也是 Linux 的一个安全子系统. SELinux 基于 MAC (Mandatory Access Control, 强制访问控制) 来实现安全增强. 区别与传统的 DAC (Discretionary Access Control), 其基于用户, 组和其他权限.  MA">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-11-22T06:21:30.000Z">
-<meta property="article:modified_time" content="2024-08-12T04:59:20.405Z">
+<meta property="article:modified_time" content="2024-08-12T05:55:16.005Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3.8k 字
+          5.1k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          33 分钟
+          43 分钟
         
       </span>
     
@@ -373,17 +373,45 @@
 
 <h3 id="端口"><a href="#端口" class="headerlink" title="端口"></a>端口</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ss -lnpZ<br></code></pre></td></tr></table></figure>
 
-<h2 id="修改安全上下文"><a href="#修改安全上下文" class="headerlink" title="修改安全上下文"></a>修改安全上下文</h2><h3 id="chcon"><a href="#chcon" class="headerlink" title="chcon"></a><code>chcon</code></h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">chcon</span> -t TYPE file/directory<br></code></pre></td></tr></table></figure>
+<h2 id="修改安全上下文"><a href="#修改安全上下文" class="headerlink" title="修改安全上下文"></a>修改安全上下文</h2><p>注意使用 <code>chcon</code> 和 <code>semanage fcontext</code> 的区别:</p>
+<ul>
+<li>使用 <code>chcon</code> 修改的 SELinux 上下文不会记录到文件系统, 可用 <code>restorecon</code> 恢复为默认的上<br>下文; 使用 <code>semanage fcontext</code> 修改的 SELinux 上下文会被记录到文件系统, 修改的是默认<br>上下文</li>
+</ul>
+<h3 id="chcon"><a href="#chcon" class="headerlink" title="chcon"></a><code>chcon</code></h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">chcon</span> -t TYPE file/directory<br></code></pre></td></tr></table></figure>
 
 <p>如:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">chcon</span> unconfined_u:object_r:httpd_sys_content_t:s0 filename<br></code></pre></td></tr></table></figure>
 
 <h3 id="semanage-fcontext"><a href="#semanage-fcontext" class="headerlink" title="semanage fcontext"></a><code>semanage fcontext</code></h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">semanage fcontext -[option] file/directory<br></code></pre></td></tr></table></figure>
 
+<h4 id="给目录设置-httpd-sys-content-t-类型安全上下文"><a href="#给目录设置-httpd-sys-content-t-类型安全上下文" class="headerlink" title="给目录设置 httpd_sys_content_t 类型安全上下文"></a>给目录设置 <code>httpd_sys_content_t</code> 类型安全上下文</h4><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">semanage -a -t httpd_sys_content_t <span class="hljs-string">&quot;/home/myweb(/.*)?&quot;</span><br>restorecon -R -v /home/myweb<br>setsebool -P httpd_enable_homedirs=on<br></code></pre></td></tr></table></figure>
+
+<p>允许第二条命令的原因如下:</p>
+<ul>
+<li>使用 <code>semanage fcontext</code> 命令只是设置了一个规则, 定义了某个目录或文件匹配的安全上下文类型. 但这个规则只存在于 SELinux 的数据库中, 并没有应用到实际的文件或目录上</li>
+<li><code>restorecon</code> 命令会将文件或目录的实际安全上下文设置为之前使用 semanage 命令定义的类型</li>
+</ul>
+<p>若是直接重启电脑实际上也能实施新规则</p>
 <h3 id="semanage-port"><a href="#semanage-port" class="headerlink" title="semanage port"></a><code>semanage port</code></h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">semanage port -[option] port<br></code></pre></td></tr></table></figure>
 
+<h4 id="查看-SELinux-允许-httpd-监听的端口"><a href="#查看-SELinux-允许-httpd-监听的端口" class="headerlink" title="查看 SELinux 允许 httpd 监听的端口"></a>查看 SELinux 允许 httpd 监听的端口</h4><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">semanage port -l | grep -w http_port_t<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>-l</code>, <code>--list</code></li>
+</ul>
+<h4 id="添加允许-httpd-监听的端口"><a href="#添加允许-httpd-监听的端口" class="headerlink" title="添加允许 httpd 监听的端口"></a>添加允许 httpd 监听的端口</h4><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">semanage port -a -t http_port_t -p tcp 1982<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>-a</code>, <code>--add</code>, 添加一个指定 object type 的记录</li>
+<li><code>-t</code>, <code>--type</code>, 指定 object 的 SELinux type</li>
+<li><code>-p</code>, <code>--proto</code>, 指定端口的协议</li>
+</ul>
 <h3 id="restorecon"><a href="#restorecon" class="headerlink" title="restorecon"></a><code>restorecon</code></h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">restorecon -[option] file/directory<br></code></pre></td></tr></table></figure>
 
+<h2 id="修复安全上下文"><a href="#修复安全上下文" class="headerlink" title="修复安全上下文"></a>修复安全上下文</h2><p>修复安全上下文检查文件的安全上下文以确保系统中所有文件的安全上下文都与 SELinux 策略保持一致.</p>
+<p>用 <code>fixfiles</code> 命令, 如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">fixfiles -F onboot<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>-F</code>, force reset, <code>onboot</code> 指在系统启动时实施</li>
+</ul>
 <h1 id="SELinux-的布尔值"><a href="#SELinux-的布尔值" class="headerlink" title="SELinux 的布尔值"></a>SELinux 的布尔值</h1><p>SELinux 布尔值直接影响某个安全策略的开启或关闭, 如:</p>
 <ul>
 <li><code>httpd_can_network_connect</code>: 允许 HTTP 服务器 (如 Apache) 发起网络连接</li>
@@ -421,6 +449,29 @@
 <p><code>-t</code> 指 “Target” type or role.</p>
 <h1 id="日志"><a href="#日志" class="headerlink" title="日志"></a>日志</h1><p>默认使用 auditd 服务. 位于 <code>/var/log/audidt/audit.log</code></p>
 <p>setroubleshoot 服务会将错误写入 <code>/ver/log/messages</code> 和 <code>/ver/log/setroubleshoot/*</code> 文件中. 需安装 <code>setroubleshoot</code> 和 setroubleshoot-server 包. (但其现在被整合到了 auditd 服务中)</p>
+<h2 id="启用和查看"><a href="#启用和查看" class="headerlink" title="启用和查看"></a>启用和查看</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">systemctl <span class="hljs-built_in">enable</span> --now auditd.service<br>systemctl status auditd.service<br></code></pre></td></tr></table></figure>
+
+<h2 id="搜索日志"><a href="#搜索日志" class="headerlink" title="搜索日志"></a>搜索日志</h2><p>用 <code>ausearch</code> 命令.</p>
+<h3 id="查看与-httpd-进程相关的-avc-事件"><a href="#查看与-httpd-进程相关的-avc-事件" class="headerlink" title="查看与 httpd 进程相关的 avc 事件"></a>查看与 httpd 进程相关的 avc 事件</h3><p>AVC, Access Vector Cache, 访问向量缓存.</p>
+<p>在 SELinux 中, 当一个进程尝试访问某个资源时, SELinux 会根据预定义的安全策略来判断是否允许该访问. 这个判断过程会产生一个 “Access Vector” 对象, 记录了该次访问请求的详细信息.</p>
+<p>而 AVC 事件指:</p>
+<ul>
+<li>当进程第一次尝试访问某个资源时, SELinux 会评估访问策略, 生成一个访问向量对象</li>
+<li>如果 SELinux 策略允许该访问, 则不会产生任何 AVC 事件</li>
+<li>但如果 SELinux 策略拒绝了该访问请求, 则会记录一个 AVC 事件, 记录该次被拒绝的访问行为</li>
+</ul>
+<p>其会记录:</p>
+<ul>
+<li>哪个进程尝试访问了什么资源</li>
+<li>访问被拒绝的原因</li>
+<li>SELinux 策略中相关的规则信息</li>
+</ul>
+<p>示例:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ausearch -m avc -c httpd<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>-m</code>, <code>--message message-type</code></li>
+<li><code>-c</code>, <code>--comm comm-name</code>, 即 command name, 对于这里来说是 <code>httpd</code></li>
+</ul>
 <h1 id="基本使用"><a href="#基本使用" class="headerlink" title="基本使用"></a>基本使用</h1><h2 id="相关命令集合"><a href="#相关命令集合" class="headerlink" title="相关命令集合"></a>相关命令集合</h2><ul>
 <li><code>getenforce</code></li>
 <li><code>setenforce</code></li>
