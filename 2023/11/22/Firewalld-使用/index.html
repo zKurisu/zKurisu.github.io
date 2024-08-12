@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="技巧积累查看已存在的 zones1firewall-cmd --get-zones  查看现有的所有规则1firewall-cmd --list-all  查看指定 zone 的规则1firewall-cmd --zone&lt;zone&gt; --list-all  查看放行的服务列表1firewall-cmd --list-services  重新加载 firewalld1firewall-">
+    <meta name="description" content="技巧积累禁止其他主机 ping 本机1firewall-cmd --add-rich-rule&#x3D;&amp;#x27;rule family&#x3D;ipv4 protocol value&#x3D;icmp reject&amp;#x27;  配置源地址转换源地址转换 (Source Network Address Translation, SNAT) 指, 内部服务器访问外网时, 数据包经过边界网关, 其源地址信息改为边界网关的">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Firewalld-使用">
 <meta property="og:url" content="http://example.com/2023/11/22/Firewalld-%E4%BD%BF%E7%94%A8/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="技巧积累查看已存在的 zones1firewall-cmd --get-zones  查看现有的所有规则1firewall-cmd --list-all  查看指定 zone 的规则1firewall-cmd --zone&lt;zone&gt; --list-all  查看放行的服务列表1firewall-cmd --list-services  重新加载 firewalld1firewall-">
+<meta property="og:description" content="技巧积累禁止其他主机 ping 本机1firewall-cmd --add-rich-rule&#x3D;&amp;#x27;rule family&#x3D;ipv4 protocol value&#x3D;icmp reject&amp;#x27;  配置源地址转换源地址转换 (Source Network Address Translation, SNAT) 指, 内部服务器访问外网时, 数据包经过边界网关, 其源地址信息改为边界网关的">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-11-22T06:04:54.000Z">
-<meta property="article:modified_time" content="2024-05-17T01:47:32.924Z">
+<meta property="article:modified_time" content="2024-08-12T03:22:24.530Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          4.8k 字
+          5.3k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          41 分钟
+          45 分钟
         
       </span>
     
@@ -289,7 +289,16 @@
             
               <div class="markdown-body">
                 
-                <h1 id="技巧积累"><a href="#技巧积累" class="headerlink" title="技巧积累"></a>技巧积累</h1><h2 id="查看已存在的-zones"><a href="#查看已存在的-zones" class="headerlink" title="查看已存在的 zones"></a>查看已存在的 zones</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">firewall-cmd --get-zones<br></code></pre></td></tr></table></figure>
+                <h1 id="技巧积累"><a href="#技巧积累" class="headerlink" title="技巧积累"></a>技巧积累</h1><h2 id="禁止其他主机-ping-本机"><a href="#禁止其他主机-ping-本机" class="headerlink" title="禁止其他主机 ping 本机"></a>禁止其他主机 ping 本机</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">firewall-cmd --add-rich-rule=<span class="hljs-string">&#x27;rule family=ipv4 protocol value=icmp reject&#x27;</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="配置源地址转换"><a href="#配置源地址转换" class="headerlink" title="配置源地址转换"></a>配置源地址转换</h2><p>源地址转换 (Source Network Address Translation, SNAT) 指, 内部服务器访问外网时, 数据包经过边界网关, 其源地址信息改为边界网关的 IP:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">sysctl -w net.ipv4.ip_forward=1 <span class="hljs-comment"># 开启路由转发</span><br>firewall-cmd --add-masquerade <span class="hljs-comment"># 开启地址伪装</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="配置目的地址转换"><a href="#配置目的地址转换" class="headerlink" title="配置目的地址转换"></a>配置目的地址转换</h2><p>目的地址转换 (Destination Network Address Translation, DNAT) 指, 外部服务器访问内网资源时, 通过访问边界网关的某个端口, 能够映射到内部服务器的 IP 和端口.</p>
+<p>添加端口转发规则如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">firewall-cmd --zone=public --add-forward-port=port=80:proto=tcp:toport=80:toaddr=192.168.0.86<br></code></pre></td></tr></table></figure>
+<p>这里为: 访问边界网关的 80 端口, 相当于访问内部 <code>192.168.0.86:80</code>. 多个参数之间用 <code>:</code> 隔离.</p>
+<h2 id="查看已存在的-zones"><a href="#查看已存在的-zones" class="headerlink" title="查看已存在的 zones"></a>查看已存在的 zones</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">firewall-cmd --get-zones<br></code></pre></td></tr></table></figure>
 
 <h2 id="查看现有的所有规则"><a href="#查看现有的所有规则" class="headerlink" title="查看现有的所有规则"></a>查看现有的所有规则</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">firewall-cmd --list-all<br></code></pre></td></tr></table></figure>
 
