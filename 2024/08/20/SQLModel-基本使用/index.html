@@ -25,7 +25,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/SQLite-structure.png">
 <meta property="article:published_time" content="2024-08-20T09:29:19.000Z">
-<meta property="article:modified_time" content="2024-08-20T13:23:48.123Z">
+<meta property="article:modified_time" content="2024-08-20T14:20:32.161Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/SQLite-structure.png">
@@ -237,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          492 字
+          1.5k 字
         
       </span>
     
@@ -248,7 +248,7 @@
         
         
         
-          5 分钟
+          13 分钟
         
       </span>
     
@@ -308,6 +308,24 @@
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo pacman -S sqlitebrowser<br></code></pre></td></tr></table></figure>
 
 <h1 id="语法"><a href="#语法" class="headerlink" title="语法"></a>语法</h1><h2 id="创建一个-table-model-class"><a href="#创建一个-table-model-class" class="headerlink" title="创建一个 table model class"></a>创建一个 table model class</h2><p>一个用于表示数据的 class 称一个 model (这也是为什么这个包叫 SQLModel 的原因)</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> sqlmodel <span class="hljs-keyword">import</span> Field, SQLModel, create_engine<br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">Hero</span>(SQLModel, table=<span class="hljs-literal">True</span>):<br>    <span class="hljs-built_in">id</span>: <span class="hljs-built_in">int</span> | <span class="hljs-literal">None</span> = Field(default=<span class="hljs-literal">None</span>, primary_key=<span class="hljs-literal">True</span>)<br>    name: <span class="hljs-built_in">str</span><br>    secret_name: <span class="hljs-built_in">str</span><br>    age: <span class="hljs-built_in">int</span> | <span class="hljs-literal">None</span> = <span class="hljs-literal">None</span><br><br><span class="hljs-comment"># More code here later 👇</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>Hero</code> 表示表名, <code>table=True</code> 表明创建 table model</li>
+<li>其下的每一个成员为列名</li>
+<li>用该类创建的每一个实例都为表中的行</li>
+</ul>
+<p>注意这里 <code>id</code> 虽然为 primary key 但为可选的, 因为数据库会自动生成.</p>
+<h2 id="创建-SQLAlchemy-Engine"><a href="#创建-SQLAlchemy-Engine" class="headerlink" title="创建 SQLAlchemy Engine"></a>创建 SQLAlchemy Engine</h2><p>Engine 是一个处理 Python 与数据库间通信的对象.</p>
+<p>用 <code>create_engine()</code> 来创建:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> sqlmodel <span class="hljs-keyword">import</span> Field, SQLModel, create_engine<br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">Hero</span>(SQLModel, table=<span class="hljs-literal">True</span>):<br>    <span class="hljs-built_in">id</span>: <span class="hljs-built_in">int</span> | <span class="hljs-literal">None</span> = Field(default=<span class="hljs-literal">None</span>, primary_key=<span class="hljs-literal">True</span>)<br>    name: <span class="hljs-built_in">str</span><br>    secret_name: <span class="hljs-built_in">str</span><br>    age: <span class="hljs-built_in">int</span> | <span class="hljs-literal">None</span> = <span class="hljs-literal">None</span><br><br>sqlite_file_name = <span class="hljs-string">&quot;database.db&quot;</span><br>sqlite_url = <span class="hljs-string">f&quot;sqlite:///<span class="hljs-subst">&#123;sqlite_file_name&#125;</span>&quot;</span><br><br>engine = create_engine(sqlite_url, echo=<span class="hljs-literal">True</span>)<br><br>SQLModel.metadata.create_all(engine)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>echo=True</code> 表明, 每执行一个 SQL 语句就将其打印出 (便于 debugging)</li>
+<li><code>SQLModel.metadata.create_all(engine)</code> 会创建对应的 <code>database.db</code> 数据库文件以及 table</li>
+</ul>
+<p>一般情况下只需要一个 engine 对象.</p>
+<p>也可以使用在内存中创建的特殊 database, 其高速, 但会在程序结束后删除, 用 <code>sqlite://</code> 来指定 (也就是说不指定文件名).</p>
+<p>当一个类继承自 <code>SQLModel</code> 时, 也同时继承了 metadata (是 <code>MetaData</code> 类) 这个成员, 而添加了 <code>table=True</code> 之后, 就会将其注册到 <code>metadata</code> 成员中.</p>
+<p>而 <code>MetaData</code> 类的 <code>create_all</code> 方法, 会根据 engine 创建数据库文件以及所有注册的 table.</p>
 
                 
               </div>
