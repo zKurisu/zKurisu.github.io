@@ -16,16 +16,16 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="简介CORS, Cross-Origin Response Sharing, 跨域资源共享. 是一个 Web 安全机制, 用于管理跨域 HTTP 请求. 当一个网页的资源需要从另一个域名&#x2F;来源 (origin) 请求时, 就会涉及到跨域问题. 出于安全原因, 大多数现代浏览器都会阻止这种跨域请求, 除非目标服务器明确允许这种跨域访问. 比如: 1234567891011121314151">
+    <meta name="description" content="简介CORS, Cross-Origin Response Sharing, 跨域资源共享. 是一个 Web 安全机制, 用于管理跨域 HTTP 请求. 其通常指浏览器中运行的前端拥有与后端通信的 JavaScript 代码, 而后端处于与前端不同的 “源” 的情况. 源是协议 (http，https), 域 (myapp.com, localhost, localhost.tiangolo.co">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Go-CORS-设置">
 <meta property="og:url" content="http://example.com/2024/08/07/Go-CORS-%E8%AE%BE%E7%BD%AE/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="简介CORS, Cross-Origin Response Sharing, 跨域资源共享. 是一个 Web 安全机制, 用于管理跨域 HTTP 请求. 当一个网页的资源需要从另一个域名&#x2F;来源 (origin) 请求时, 就会涉及到跨域问题. 出于安全原因, 大多数现代浏览器都会阻止这种跨域请求, 除非目标服务器明确允许这种跨域访问. 比如: 1234567891011121314151">
+<meta property="og:description" content="简介CORS, Cross-Origin Response Sharing, 跨域资源共享. 是一个 Web 安全机制, 用于管理跨域 HTTP 请求. 其通常指浏览器中运行的前端拥有与后端通信的 JavaScript 代码, 而后端处于与前端不同的 “源” 的情况. 源是协议 (http，https), 域 (myapp.com, localhost, localhost.tiangolo.co">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/CORS-error-example.png">
 <meta property="article:published_time" content="2024-08-07T11:59:51.000Z">
-<meta property="article:modified_time" content="2024-08-07T12:21:21.520Z">
+<meta property="article:modified_time" content="2024-08-20T07:46:22.949Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/CORS-error-example.png">
@@ -237,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3.1k 字
+          3.4k 字
         
       </span>
     
@@ -248,7 +248,7 @@
         
         
         
-          27 分钟
+          28 分钟
         
       </span>
     
@@ -292,7 +292,16 @@
               <div class="markdown-body">
                 
                 <h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>CORS, Cross-Origin Response Sharing, 跨域资源共享. 是一个 Web 安全机制, 用于管理跨域 HTTP 请求.</p>
-<p>当一个网页的资源需要从另一个域名&#x2F;来源 (origin) 请求时, 就会涉及到跨域问题. 出于安全原因, 大多数现代浏览器都会阻止这种跨域请求, 除非目标服务器明确允许这种跨域访问.</p>
+<p>其通常指浏览器中运行的前端拥有与后端通信的 JavaScript 代码, 而后端处于与前端不同的 “源” 的情况.</p>
+<p>源是协议 (http，https), 域 (myapp.com, localhost, localhost.tiangolo.com) 以及端口 (80, 443, 8080) 的组合.</p>
+<p>因此, 这些都是不同的源:</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="http://localhost/">http://localhost</a></li>
+<li><a target="_blank" rel="noopener" href="https://localhost/">https://localhost</a></li>
+<li><a target="_blank" rel="noopener" href="http://localhost:8080/">http://localhost:8080</a><br>即使它们都在 localhost 中, 但是它们使用不同的协议或者端口, 所以它们都是不同的 “源”.</li>
+</ul>
+<p>出于安全原因, 大多数现代浏览器都会阻止这种跨域请求, 除非目标服务器明确允许这种跨域访问.</p>
+<p>除非设置一个 “允许的源” 的列表.</p>
 <p>比如:</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-keyword">import</span> (<br>	<span class="hljs-string">&quot;encoding/json&quot;</span><br>	<span class="hljs-string">&quot;net/http&quot;</span><br>)<br><br><span class="hljs-keyword">type</span> ApiResponse <span class="hljs-keyword">struct</span> &#123;<br>	Message <span class="hljs-type">string</span> <span class="hljs-string">`json:&quot;message&quot;`</span><br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	http.HandleFunc(<span class="hljs-string">&quot;/&quot;</span>, dataHandler)<br><br>	http.ListenAndServe(<span class="hljs-string">&quot;:8080&quot;</span>, <span class="hljs-literal">nil</span>)<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">dataHandler</span><span class="hljs-params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;<br>	<span class="hljs-comment">//</span><br>	response := ApiResponse&#123;Message: <span class="hljs-string">&quot;Hello from the Golang API!&quot;</span>&#125;<br>	json.NewEncoder(w).Encode(response)<br>&#125;<br><br></code></pre></td></tr></table></figure>
 
