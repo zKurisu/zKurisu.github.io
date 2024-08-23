@@ -24,7 +24,7 @@
 <meta property="og:description" content="Proxmoxer 官方文档 Proxmoxer Github 仓库 介绍proxmoxer 是一个开源的 Python 库, 其提供简单接口与 PVE (Proxmox Virtual Environment) API 交互. 其提供了四种连接方法 (backend), 需要安装不同的依赖包:  HTTPS, 对应 requests 包 SSH (openSSH), 对应 openssh_wra">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2024-08-23T01:43:46.000Z">
-<meta property="article:modified_time" content="2024-08-23T01:58:39.790Z">
+<meta property="article:modified_time" content="2024-08-23T03:03:41.313Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          619 字
+          1.5k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          6 分钟
+          13 分钟
         
       </span>
     
@@ -304,10 +304,35 @@
 <p>可以先安装所有依赖:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">pip install requests requests_toolbelt openssh_wrapper paramiko<br></code></pre></td></tr></table></figure>
 
-<h1 id="基本使用"><a href="#基本使用" class="headerlink" title="基本使用"></a>基本使用</h1><p>需要先创建一个 ProxmoxerAPI instance 来处理 authentication, abstraction 等:</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> proxmoxer <span class="hljs-keyword">import</span> ProxmoxAPI<br><br>proxmox = ProxmoxAPI(<span class="hljs-string">&#x27;&lt;host_ip_or_domain&gt;:&lt;port&gt;&#x27;</span>, user=<span class="hljs-string">&#x27;&lt;username&gt;@&lt;realm&gt;&#x27;</span>, password=<span class="hljs-string">&#x27;&lt;password&gt;&#x27;</span>, backend=<span class="hljs-string">&#x27;openssh&#x27;</span>, verify_ssl=<span class="hljs-literal">False</span>)<br></code></pre></td></tr></table></figure>
+<h1 id="基本使用"><a href="#基本使用" class="headerlink" title="基本使用"></a>基本使用</h1><h2 id="连接"><a href="#连接" class="headerlink" title="连接"></a>连接</h2><p>需要先创建一个 ProxmoxerAPI instance 来处理 authentication, abstraction 等:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> proxmoxer <span class="hljs-keyword">import</span> ProxmoxAPI<br><br>proxmox = ProxmoxAPI(<br>    <span class="hljs-string">&#x27;&lt;host_ip_or_domain&gt;:&lt;port&gt;&#x27;</span>,<br>    user=<span class="hljs-string">&#x27;&lt;username&gt;@&lt;realm&gt;&#x27;</span>,<br>    password=<span class="hljs-string">&#x27;&lt;password&gt;&#x27;</span>,<br>    backend=<span class="hljs-string">&#x27;https&#x27;</span>,<br>    verify_ssl=<span class="hljs-literal">False</span><br>    )<br></code></pre></td></tr></table></figure>
 <ul>
 <li>若不指定 <code>backend</code>, 默认使用 HTTPS</li>
+</ul>
+<p>其他 backend 连接用的参数可看<a target="_blank" rel="noopener" href="https://proxmoxer.github.io/docs/latest/authentication/">官方文档</a>. </p>
+<h2 id="两种-API-调用方式"><a href="#两种-API-调用方式" class="headerlink" title="两种 API 调用方式"></a>两种 API 调用方式</h2><p>Proxmox 的 API 文档为 <a target="_blank" rel="noopener" href="https://pve.proxmox.com/pve-docs/api-viewer/index.html">https://pve.proxmox.com/pve-docs/api-viewer/index.html</a>.</p>
+<p>获取用户信息为 <code>/access/users</code>, 有两种访问方式:</p>
+<ul>
+<li>Dotted Notation: <code>prox.access.users.get()</code></li>
+<li>String Notation: <code>prox(&quot;/access/users)</code></li>
+</ul>
+<p>另一个示例, 获取某节点上 Linux 容器信息, api 为 <code>/nodes/&#123;node&#125;/lxc</code>:</p>
+<ul>
+<li>Dotted Notation: <code>prox.nodes(&quot;example-node&quot;).lxc.get()</code></li>
+<li>String Notation: <code>prox(&quot;/nodes/example-node/lxc&quot;).get()</code></li>
+</ul>
+<p>两种记法也可以混用.</p>
+<h2 id="更新-Authentication"><a href="#更新-Authentication" class="headerlink" title="更新 Authentication"></a>更新 Authentication</h2><p><code>ProxmoxAPI</code> 创建的连接持续两小时后会 expire, 而任意发送一个 request 都能触发 authentication renewal.</p>
+<h2 id="Tasks-Tools"><a href="#Tasks-Tools" class="headerlink" title="Tasks Tools"></a>Tasks Tools</h2><p>Proxmox 基于 tasks 的执行方式, 每一个 task 有一个唯一的 UPID (Unique Process ID) 标识:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-variable constant_">UPID</span><span class="hljs-symbol">:&lt;node_name&gt;</span><span class="hljs-symbol">:&lt;pid_in_hex&gt;</span><span class="hljs-symbol">:&lt;pstart_in_hex&gt;</span><span class="hljs-symbol">:&lt;starttime_in_hex&gt;</span><span class="hljs-symbol">:&lt;type&gt;</span><span class="hljs-symbol">:&lt;id</span> (optional)&gt;<span class="hljs-symbol">:&lt;user&gt;</span>@&lt;realm&gt;<span class="hljs-symbol">:</span><br></code></pre></td></tr></table></figure>
+
+<p>如:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ruby"><span class="hljs-variable constant_">UPID</span><span class="hljs-symbol">:example-node</span><span class="hljs-symbol">:</span>000<span class="hljs-symbol">AE992:</span>00<span class="hljs-symbol">A21BA7:</span>618<span class="hljs-symbol">C1D55:</span><span class="hljs-symbol">vzdump:</span><span class="hljs-number">100</span><span class="hljs-symbol">:root</span><span class="hljs-variable">@pam</span><span class="hljs-symbol">:</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="获取-task-IDs"><a href="#获取-task-IDs" class="headerlink" title="获取 task IDs"></a>获取 task IDs</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">prox.nodes(<span class="hljs-string">&quot;example-node&quot;</span>).tasks.get(limit=<span class="hljs-number">3</span>, source=<span class="hljs-string">&quot;all&quot;</span>)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>limit</code> 指定要获取的 task IDs 的个数, 默认 50</li>
+<li><code>source</code>, 可以指定为 <code>archive</code> (已完成), <code>active</code> (正在执行), <code>all</code> (所有)</li>
 </ul>
 
                 
