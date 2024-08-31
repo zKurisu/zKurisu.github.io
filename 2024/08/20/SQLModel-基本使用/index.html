@@ -26,7 +26,7 @@
 <meta property="og:image" content="http://example.com/img/SQLite-structure.png">
 <meta property="og:image" content="http://example.com/img/function-of-back-polulates.png">
 <meta property="article:published_time" content="2024-08-20T09:29:19.000Z">
-<meta property="article:modified_time" content="2024-08-28T03:58:23.584Z">
+<meta property="article:modified_time" content="2024-08-31T08:50:32.373Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/SQLite-structure.png">
@@ -238,7 +238,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          14k 字
+          15k 字
         
       </span>
     
@@ -249,7 +249,7 @@
         
         
         
-          121 分钟
+          123 分钟
         
       </span>
     
@@ -452,6 +452,11 @@
 
 <p>等价于:</p>
 <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> hero.id, hero.name, team.name<br><span class="hljs-keyword">FROM</span> hero<br><span class="hljs-keyword">LEFT</span> <span class="hljs-keyword">OUTER</span> <span class="hljs-keyword">JOIN</span> team<br><span class="hljs-keyword">ON</span> hero.team_id <span class="hljs-operator">=</span> team.id<br></code></pre></td></tr></table></figure>
+
+<h2 id="使用聚合函数"><a href="#使用聚合函数" class="headerlink" title="使用聚合函数"></a>使用聚合函数</h2><p>需导入 <code>func</code>, 然后用其内部的方法.</p>
+<p>如:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> sqlmodel <span class="hljs-keyword">import</span> select, func<br><br>statement = select(func.<span class="hljs-built_in">sum</span>(Tasks.task_score)).join(SubLog).where(SubLog.sub_user_id == <span class="hljs-number">2</span>)<br>result = <span class="hljs-keyword">await</span> session.<span class="hljs-built_in">exec</span>(statement)<br>total_score = result.scalar()<br></code></pre></td></tr></table></figure>
+
 
 <h1 id="Relationship-Attributes"><a href="#Relationship-Attributes" class="headerlink" title="Relationship Attributes"></a>Relationship Attributes</h1><p>Relationship Attributes 是一种特殊的成员, 用于定义两个模型之间的关系. 可以由此建立一对一, 一对多或多对多的关系.</p>
 <h2 id="创建-Relationship"><a href="#创建-Relationship" class="headerlink" title="创建 Relationship"></a>创建 Relationship</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> sqlmodel <span class="hljs-keyword">import</span> Field, Relationship, Session, SQLModel, create_engine<br><br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">Team</span>(SQLModel, table=<span class="hljs-literal">True</span>):<br>    <span class="hljs-built_in">id</span>: <span class="hljs-built_in">int</span> | <span class="hljs-literal">None</span> = Field(default=<span class="hljs-literal">None</span>, primary_key=<span class="hljs-literal">True</span>)<br>    name: <span class="hljs-built_in">str</span> = Field(index=<span class="hljs-literal">True</span>)<br>    headquarters: <span class="hljs-built_in">str</span><br><br>    heroes: <span class="hljs-built_in">list</span>[<span class="hljs-string">&quot;Hero&quot;</span>] = Relationship(back_populates=<span class="hljs-string">&quot;team&quot;</span>)<br><br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">Hero</span>(SQLModel, table=<span class="hljs-literal">True</span>):<br>    <span class="hljs-built_in">id</span>: <span class="hljs-built_in">int</span> | <span class="hljs-literal">None</span> = Field(default=<span class="hljs-literal">None</span>, primary_key=<span class="hljs-literal">True</span>)<br>    name: <span class="hljs-built_in">str</span> = Field(index=<span class="hljs-literal">True</span>)<br>    secret_name: <span class="hljs-built_in">str</span><br>    age: <span class="hljs-built_in">int</span> | <span class="hljs-literal">None</span> = Field(default=<span class="hljs-literal">None</span>, index=<span class="hljs-literal">True</span>)<br><br>    team_id: <span class="hljs-built_in">int</span> | <span class="hljs-literal">None</span> = Field(default=<span class="hljs-literal">None</span>, foreign_key=<span class="hljs-string">&quot;team.id&quot;</span>)<br>    team: Team | <span class="hljs-literal">None</span> = Relationship(back_populates=<span class="hljs-string">&quot;heroes&quot;</span>)<br><br><span class="hljs-comment"># Code below omitted 👇</span><br></code></pre></td></tr></table></figure>
