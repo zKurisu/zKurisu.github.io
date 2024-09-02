@@ -26,7 +26,7 @@
 <meta property="og:image" content="http://example.com/img/SQLite-structure.png">
 <meta property="og:image" content="http://example.com/img/function-of-back-polulates.png">
 <meta property="article:published_time" content="2024-08-20T09:29:19.000Z">
-<meta property="article:modified_time" content="2024-08-31T08:50:32.373Z">
+<meta property="article:modified_time" content="2024-09-02T05:37:31.797Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/SQLite-structure.png">
@@ -249,7 +249,7 @@
         
         
         
-          123 分钟
+          128 分钟
         
       </span>
     
@@ -480,11 +480,11 @@
 <h1 id="技巧积累"><a href="#技巧积累" class="headerlink" title="技巧积累"></a>技巧积累</h1><h2 id="指定-table-name"><a href="#指定-table-name" class="headerlink" title="指定 table name"></a>指定 table name</h2><p>使用 <code>__tablename__</code> 魔术变量:</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> sqlmodel <span class="hljs-keyword">import</span> SQLModel, Field<br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">MyTable</span>(SQLModel, table=<span class="hljs-literal">True</span>):<br>    __tablename__ = <span class="hljs-string">&quot;my_table&quot;</span><br>    <span class="hljs-built_in">id</span>: <span class="hljs-built_in">int</span> = Field(primary_key=<span class="hljs-literal">True</span>)<br>    name: <span class="hljs-built_in">str</span><br></code></pre></td></tr></table></figure>
 
-
-
-
-
-
+<h2 id="清除一个-table"><a href="#清除一个-table" class="headerlink" title="清除一个 table"></a>清除一个 table</h2><p>如:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">clear_user_table</span>():<br>    <span class="hljs-keyword">with</span> Session(engine) <span class="hljs-keyword">as</span> session:<br>        statement = select(User)<br>        result = session.<span class="hljs-built_in">exec</span>(statement)<br>        results = result.<span class="hljs-built_in">all</span>()<br>        <span class="hljs-keyword">for</span> item <span class="hljs-keyword">in</span> results:<br>            session.delete(item)<br>        session.commit()<br></code></pre></td></tr></table></figure>
+<p>也就是 <code>select</code> 所有数据, 然后一个一个 <code>delete</code>. 这种方法需要注意外键问题, 不然会有如:</p>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs pgsql">Traceback (most recent <span class="hljs-keyword">call</span> last):<br>File &quot;/home/jie/.local/lib/python3.12/site-packages/sqlalchemy/engine/base.py&quot;, <span class="hljs-type">line</span> <span class="hljs-number">1936</span>, <span class="hljs-keyword">in</span> _exec_single_context<br>self.dialect.do_executemany(<br>File &quot;/home/jie/.local/lib/python3.12/site-packages/sqlalchemy/engine/default.py&quot;, <span class="hljs-type">line</span> <span class="hljs-number">938</span>, <span class="hljs-keyword">in</span> do_executemany<br><span class="hljs-keyword">cursor</span>.executemany(<span class="hljs-keyword">statement</span>, parameters)<br>sqlite3.IntegrityError: <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">NULL</span> <span class="hljs-keyword">constraint</span> failed: post.user_id<br></code></pre></td></tr></table></figure>
+<p>的报错.</p>
 
                 
               </div>
