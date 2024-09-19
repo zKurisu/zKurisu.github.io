@@ -28,7 +28,7 @@
 <meta property="og:image" content="http://example.com/img/gitlab-ci-unable-to-access.png">
 <meta property="og:image" content="http://example.com/img/DAG_pipline.png">
 <meta property="article:published_time" content="2022-11-05T02:47:18.000Z">
-<meta property="article:modified_time" content="2024-09-19T07:25:43.115Z">
+<meta property="article:modified_time" content="2024-09-19T08:09:45.847Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/whereis_token.png">
@@ -240,7 +240,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          7.8k 字
+          8.2k 字
         
       </span>
     
@@ -251,7 +251,7 @@
         
         
         
-          65 分钟
+          69 分钟
         
       </span>
     
@@ -353,6 +353,12 @@
 <p>查看启动状态:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">docker logs -f gitlab<br></code></pre></td></tr></table></figure>
 
+<p>若装在 arm 机器上:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo docker run --detach \<br>    --hostname gitlab \<br>    --publish 443:443 --publish 80:80 --publish 222:22 \<br>    --name gitlab \<br>    --restart always \<br>    --volume /srv/gitlab/config:/etc/gitlab \<br>    --volume /srv/gitlab/logs:/var/log/gitlab \<br>    --volume /srv/gitlab/data:/var/opt/gitlab \<br>    zengxs/gitlab:latest<br></code></pre></td></tr></table></figure>
+<p><a target="_blank" rel="noopener" href="https://github.com/zengxs/gitlab-arm64">参考</a></p>
+<h2 id="修改-root-密码-new"><a href="#修改-root-密码-new" class="headerlink" title="修改 root 密码 (new)"></a>修改 root 密码 (new)</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">gitlab-rake <span class="hljs-string">&quot;gitlab:password:reset[root]&quot;</span><br></code></pre></td></tr></table></figure>
+
+
 <h2 id="gitlab-CI-x2F-CD-new"><a href="#gitlab-CI-x2F-CD-new" class="headerlink" title="gitlab CI&#x2F;CD (new)"></a>gitlab CI&#x2F;CD (new)</h2><ul>
 <li>gitlab ci&#x2F;cd</li>
 <li>gitlab runner</li>
@@ -366,13 +372,10 @@
 <p>安装 gitlab-runner:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo docker run -d --name gitlab-runner --restart always \<br>    -v /srv/gitlab-runner/config:/etc/gitlab-runner \<br>    -v /var/run/docker.sock:/var/run/docker.sock \<br>    gitlab/gitlab-runner:latest<br></code></pre></td></tr></table></figure>
 <p>(一般不对外开端口, 毕竟只是跑跑功能)</p>
-<p>到这里为止, gitlab-runner 还没有同 gitlab 起联系. 此时就需要注册一个 token.</p>
+<p>到这里为止, gitlab-runner 还没有同 gitlab 起联系. 此时就需要让 gitlab 注册一个 runner.</p>
 <p>注册命令为:</p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs sh">docker run --<span class="hljs-built_in">rm</span> -v /srv/gitlab-runner/config:/etc/gitlab-runner gitlab/gitlab-runner register \<br>    --non-interactive \<br>    --executor <span class="hljs-string">&quot;docker&quot;</span> \<br>    --docker-image alpine:latest \<br>    --url <span class="hljs-string">&quot;http://xxx/&quot;</span> \<br>    --registration-token <span class="hljs-string">&quot;xxxx&quot;</span> \<br>    --description <span class="hljs-string">&quot;first-register-runner&quot;</span> \<br>    --tag-list <span class="hljs-string">&quot;test-cicd, dockercicd&quot;</span> \<br>    --run-untagged=<span class="hljs-string">&quot;true&quot;</span> \<br>    --locked=<span class="hljs-string">&quot;false&quot;</span> \<br>    --access-level=<span class="hljs-string">&quot;not_protected&quot;</span><br></code></pre></td></tr></table></figure>
-
-
-
-
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs sh">docker run --<span class="hljs-built_in">rm</span> -v /srv/gitlab-runner/config:/etc/gitlab-runner gitlab/gitlab-runner register \<br>    --non-interactive \<br>    --executor <span class="hljs-string">&quot;docker&quot;</span> \<br>    --docker-image alpine:latest \<br>    --url <span class="hljs-string">&quot;http://10.11.30.43/&quot;</span> \<br>    --registration-token <span class="hljs-string">&quot;xkv75oaLHDHyKGy3bYev&quot;</span> \<br>    --description <span class="hljs-string">&quot;first-register-runner&quot;</span> \<br>    --tag-list <span class="hljs-string">&quot;test-cicd, dockercicd&quot;</span> \<br>    --run-untagged=<span class="hljs-string">&quot;true&quot;</span> \<br>    --locked=<span class="hljs-string">&quot;false&quot;</span> \<br>    --access-level=<span class="hljs-string">&quot;not_protected&quot;</span><br></code></pre></td></tr></table></figure>
+<p>注意 <code>--url</code> 需要指定 gitlab 的地址, <code>--registration-token</code> 也需要在 gitlab 上查看.</p>
 <h2 id="利用-docker-搭建-gitlab"><a href="#利用-docker-搭建-gitlab" class="headerlink" title="利用 docker 搭建 gitlab"></a>利用 docker 搭建 gitlab</h2><p><a target="_blank" rel="noopener" href="https://www.bilibili.com/read/mobile?id=14636241&share_medium=android&share_plat=android&share_session_id=9f648ec4-b6af-4a38-aa41-0d689585fc0b&share_source=COPY&share_tag=s_i&timestamp=1640852403&unique_k=qmhoF8p">参考</a></p>
 <p>如下:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ <span class="hljs-built_in">export</span> GITLAB_HOME=/srv/gitlab<br>$ <span class="hljs-built_in">mkdir</span> -p /opt/docker-compose/gitlab<br>$ vim /opt/docker-compose/gitlab/docker-compose.yml<br></code></pre></td></tr></table></figure>
