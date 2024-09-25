@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="目标文件中使用的地址目标文件在链接之前, 其使用的地址都是相对地址 (或未重定向的地址):  起始位置为 0 开始 (真实地址是链接后加上一个地址)  示例: 123456789101112131415#include &lt;stdio.h&gt;void foo() &amp;#123;    printf(&quot;In foo\n&quot;);&amp;#125;void bar() &amp;#123;">
+    <meta name="description" content="目标文件中使用的地址目标文件在链接之前, 其使用的地址都是相对地址 (或未重定向的地址):  起始位置为 0 开始 (真实地址是链接后加上一个地址)  这些相对地址记录在目标文件的符号表中. 示例: 123456789101112131415#include &lt;stdio.h&gt;void foo() &amp;#123;    printf(&quot;In foo\n&quot;);&amp;#125">
 <meta property="og:type" content="article">
 <meta property="og:title" content="C-技巧积累">
 <meta property="og:url" content="http://example.com/2024/09/25/C-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="目标文件中使用的地址目标文件在链接之前, 其使用的地址都是相对地址 (或未重定向的地址):  起始位置为 0 开始 (真实地址是链接后加上一个地址)  示例: 123456789101112131415#include &lt;stdio.h&gt;void foo() &amp;#123;    printf(&quot;In foo\n&quot;);&amp;#125;void bar() &amp;#123;">
+<meta property="og:description" content="目标文件中使用的地址目标文件在链接之前, 其使用的地址都是相对地址 (或未重定向的地址):  起始位置为 0 开始 (真实地址是链接后加上一个地址)  这些相对地址记录在目标文件的符号表中. 示例: 123456789101112131415#include &lt;stdio.h&gt;void foo() &amp;#123;    printf(&quot;In foo\n&quot;);&amp;#125">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2024-09-25T05:58:14.000Z">
-<meta property="article:modified_time" content="2024-09-25T07:40:58.606Z">
+<meta property="article:modified_time" content="2024-09-25T07:52:01.713Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -246,7 +246,7 @@
         
         
         
-          10 分钟
+          11 分钟
         
       </span>
     
@@ -293,6 +293,7 @@
 <ul>
 <li>起始位置为 0 开始 (真实地址是链接后加上一个地址)</li>
 </ul>
+<p>这些相对地址记录在目标文件的符号表中.</p>
 <p>示例:</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><br><span class="hljs-type">void</span> <span class="hljs-title function_">foo</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;In foo\n&quot;</span>);<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">bar</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;In bar\n&quot;</span>);<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span> &#123;<br>    foo();<br>    bar();<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
 
@@ -317,6 +318,7 @@
 <td>32</td>
 </tr>
 </tbody></table>
+<p>(这里函数的长度先不管)</p>
 <p>则链接后, 连接器会将其转换为绝对地址, 加入是被加载到内存中的 <code>0x1000</code> 处, 则为:</p>
 <table>
 <thead>
@@ -327,17 +329,18 @@
 </thead>
 <tbody><tr>
 <td>foo</td>
-<td>0</td>
+<td>0x1000</td>
 </tr>
 <tr>
 <td>bar</td>
-<td>16</td>
+<td>0x1000 + 16</td>
 </tr>
 <tr>
 <td>main</td>
-<td>32</td>
+<td>0x1000 + 32</td>
 </tr>
 </tbody></table>
+<p>一般在调用时会动态链接, 此时才会决定在内存中的位置.</p>
 <h1 id="main-函数是否有函数声明"><a href="#main-函数是否有函数声明" class="headerlink" title="main 函数是否有函数声明"></a>main 函数是否有函数声明</h1><blockquote>
 <p>无</p>
 </blockquote>
