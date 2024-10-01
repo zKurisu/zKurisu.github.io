@@ -23,10 +23,13 @@
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="Slurm 官方文档 介绍Slurm, Simple Linux Utility for Resource Management, 是一个开源的集群管理和作业调度工具. 比如  管理计算资源 (CPU, 内存, 存储) 的分配  当用户提交作业时, 根据资源合理调度作业的执行 并行计算以及监控作业队列等.  Slurm 也具有扩展性, 可添加插件. Slurm 有命令行以及可视化工具, 管理比较便">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/slurm-components.png">
+<meta property="og:image" content="http://example.com/img/slurm-entities.png">
 <meta property="article:published_time" content="2024-09-30T07:13:52.000Z">
-<meta property="article:modified_time" content="2024-09-30T07:50:03.461Z">
+<meta property="article:modified_time" content="2024-10-01T07:04:14.995Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/slurm-components.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -235,7 +238,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          175 字
+          1.4k 字
         
       </span>
     
@@ -246,7 +249,7 @@
         
         
         
-          2 分钟
+          12 分钟
         
       </span>
     
@@ -298,6 +301,30 @@
 </ul>
 <p>Slurm 也具有扩展性, 可添加插件.</p>
 <p>Slurm 有命令行以及可视化工具, 管理比较便利.</p>
+<h1 id="基本结构"><a href="#基本结构" class="headerlink" title="基本结构"></a>基本结构</h1><h2 id="slurmd"><a href="#slurmd" class="headerlink" title="slurmd"></a>slurmd</h2><p>每一个 node 都会运行一个 <code>slurmd</code> 进程.</p>
+<h2 id="slurmctld"><a href="#slurmctld" class="headerlink" title="slurmctld"></a>slurmctld</h2><p>中心节点运行 <code>slurmctld</code> 进程.</p>
+<h2 id="相关命令"><a href="#相关命令" class="headerlink" title="相关命令"></a>相关命令</h2><p>所有节点上都能运行: <code>sacct</code>, <code>sacctmgr</code>, <code>salloc</code>, <code>sattach</code>, <code>sbatch</code>, <code>sbcast</code>, <code>scancel</code>, <code>scontrol</code>, <code>scrontab</code>, <code>sdiag</code>, <code>sh5util</code>, <code>sinfo</code>, <code>sprio</code>, <code>squeue</code>, <code>sreport</code>, <code>srun</code>, <code>sshare</code>, <code>sstat</code>, <code>strigger</code> and <code>sview</code> 命令.<br>(各命令详细一点的介绍和示例在文末)</p>
+<h2 id="结构图"><a href="#结构图" class="headerlink" title="结构图"></a>结构图</h2><p><img src="/../img/slurm-components.png" srcset="/img/loading.gif" lazyload></p>
+<p>哪个 node 运行命令, 哪个就需要与 <code>slurmctld</code> 交互.</p>
+<h2 id="Partitions"><a href="#Partitions" class="headerlink" title="Partitions"></a>Partitions</h2><p>可以将节点分组成多个逻辑集合 (也就是分区, 每一个名称唯一), 每个分区就是一个作业队列 (可以添加多个 Jobs, 而每个 Job 包含多个 Job Steps), </p>
+<p><img src="/../img/slurm-entities.png" srcset="/img/loading.gif" lazyload></p>
+<h1 id="命令示例"><a href="#命令示例" class="headerlink" title="命令示例"></a>命令示例</h1><ul>
+<li><code>sacct</code>, “slurm accounting”: 用于报告活动或已完成作业的会计信息, 提供作业或作业步骤的状态</li>
+<li><code>salloc</code>, “slurm allocate”: 实时分配作业所需资源, 通常用于分配资源并启动一个 shell, 随后可以使用 <code>srun</code> 命令来启动并行任务</li>
+<li><code>sattach</code>, “slurm attach”: 将标准输入, 输出和错误, 以及信号功能附加到当前运行的作业或作业步骤, 可以多次附加和分离</li>
+<li><code>sbatch</code>, “slurm batch”: 提交作业脚本以供后续执行, 脚本通常包含一个或多个 <code>srun</code> 命令, 用于启动并行任务</li>
+<li><code>sbcast</code>, “slurm broadcast”: 从本地磁盘向分配给作业的节点之间传输文件. 适用于无盘计算节点或提高共享文件系统的性能</li>
+<li><code>scancel</code>, “slurm cancel”: 用于取消待处理或正在运行的作业或作业步骤. 也可以向所有与运行作业或作业步骤相关的进程发送信号</li>
+<li><code>scontrol</code>, “slurm control”: 管理工具, 用于查看和&#x2F;或修改 <code>Slurm</code> 状态. 许多 <code>scontrol</code> 命令需要以 root 用户身份执行</li>
+<li><code>sinfo</code>, “slurm information”: 报告 <code>Slurm</code> 管理的分区和节点状态, 支持多种过滤, 排序和格式化选项</li>
+<li><code>sprio</code>, “slurm priority”: 显示影响作业优先级的详细信息</li>
+<li><code>squeue</code>, “slurm queue”: 报告作业或作业步骤的状态, 默认按优先级顺序报告正在运行的作业, 然后是待处理的作业, 支持多种过滤和排序选项</li>
+<li><code>srun</code>, “slurm run”: 用于提交作业执行或实时启动作业步骤, 支持指定资源需求的多种选项, 包括节点数, 处理器数, 特定节点等</li>
+<li><code>sshare</code>, “slurm share”: 显示集群中公平共享的详细信息, 仅在使用优先级&#x2F;多因素插件时有效</li>
+<li><code>sstat</code>, “slurm status”: 获取正在运行的作业或作业步骤所使用的资源信息</li>
+<li><code>strigger</code>, “slurm trigger”: 设置, 获取或查看事件触发器, 如节点故障或作业接近时间限制的事件</li>
+<li><code>sview</code>, “slurm view”: 提供图形用户界面, 用于获取和更新 <code>Slurm</code> 管理的作业, 分区和节点的状态信息</li>
+</ul>
 
                 
               </div>
