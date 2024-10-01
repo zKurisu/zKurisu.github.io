@@ -26,7 +26,7 @@
 <meta property="og:image" content="http://example.com/img/slurm-components.png">
 <meta property="og:image" content="http://example.com/img/slurm-entities.png">
 <meta property="article:published_time" content="2024-09-30T07:13:52.000Z">
-<meta property="article:modified_time" content="2024-10-01T07:04:14.995Z">
+<meta property="article:modified_time" content="2024-10-01T07:35:04.559Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/slurm-components.png">
@@ -238,7 +238,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.4k 字
+          2.7k 字
         
       </span>
     
@@ -249,7 +249,7 @@
         
         
         
-          12 分钟
+          23 分钟
         
       </span>
     
@@ -308,6 +308,7 @@
 <p>哪个 node 运行命令, 哪个就需要与 <code>slurmctld</code> 交互.</p>
 <h2 id="Partitions"><a href="#Partitions" class="headerlink" title="Partitions"></a>Partitions</h2><p>可以将节点分组成多个逻辑集合 (也就是分区, 每一个名称唯一), 每个分区就是一个作业队列 (可以添加多个 Jobs, 而每个 Job 包含多个 Job Steps), </p>
 <p><img src="/../img/slurm-entities.png" srcset="/img/loading.gif" lazyload></p>
+<h1 id="部分概念"><a href="#部分概念" class="headerlink" title="部分概念"></a>部分概念</h1><h2 id="MPI"><a href="#MPI" class="headerlink" title="MPI"></a>MPI</h2><p>MPI, Message Passing Interface, 是一种用于并行计算的标准协议, 广泛应用于高性能计算 (HPC) 环境. MPI 允许多个计算节点之间进行高效通信, 使得可以在多个处理器上并行执行程序.</p>
 <h1 id="命令示例"><a href="#命令示例" class="headerlink" title="命令示例"></a>命令示例</h1><ul>
 <li><code>sacct</code>, “slurm accounting”: 用于报告活动或已完成作业的会计信息, 提供作业或作业步骤的状态</li>
 <li><code>salloc</code>, “slurm allocate”: 实时分配作业所需资源, 通常用于分配资源并启动一个 shell, 随后可以使用 <code>srun</code> 命令来启动并行任务</li>
@@ -325,6 +326,49 @@
 <li><code>strigger</code>, “slurm trigger”: 设置, 获取或查看事件触发器, 如节点故障或作业接近时间限制的事件</li>
 <li><code>sview</code>, “slurm view”: 提供图形用户界面, 用于获取和更新 <code>Slurm</code> 管理的作业, 分区和节点的状态信息</li>
 </ul>
+<h2 id="sinfo-查看分区和节点信息"><a href="#sinfo-查看分区和节点信息" class="headerlink" title="sinfo 查看分区和节点信息"></a>sinfo 查看分区和节点信息</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sinfo<br></code></pre></td></tr></table></figure>
+
+<p>输出如:</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">PARTITION</span> AVAIL  TIMELIMIT NODES  STATE NODELIST<br><span class="hljs-attribute">debug</span>*       up      <span class="hljs-number">30</span>:<span class="hljs-number">00</span>     <span class="hljs-number">2</span>  down* adev[<span class="hljs-number">1</span>-<span class="hljs-number">2</span>]<br><span class="hljs-attribute">debug</span>*       up      <span class="hljs-number">30</span>:<span class="hljs-number">00</span>     <span class="hljs-number">3</span>   idle adev[<span class="hljs-number">3</span>-<span class="hljs-number">5</span>]<br><span class="hljs-attribute">batch</span>        up      <span class="hljs-number">30</span>:<span class="hljs-number">00</span>     <span class="hljs-number">3</span>  down* adev[<span class="hljs-number">6</span>,<span class="hljs-number">13</span>,<span class="hljs-number">15</span>]<br><span class="hljs-attribute">batch</span>        up      <span class="hljs-number">30</span>:<span class="hljs-number">00</span>     <span class="hljs-number">3</span>  alloc adev[<span class="hljs-number">7</span>-<span class="hljs-number">8</span>,<span class="hljs-number">14</span>]<br><span class="hljs-attribute">batch</span>        up      <span class="hljs-number">30</span>:<span class="hljs-number">00</span>     <span class="hljs-number">4</span>   idle adev[<span class="hljs-number">9</span>-<span class="hljs-number">12</span>]<br></code></pre></td></tr></table></figure>
+<ul>
+<li>若分区名有 <code>*</code>, 则说明其为 default partition (如果提交 job 而不指定分区则会交给它)</li>
+<li><code>AVAIL</code> 列为 <code>up</code>, 表示该分区可用</li>
+<li>一个分区的信息分多行显示, 因为其下的 node 状态不同</li>
+<li><code>STATE</code> 下的 <code>down*</code>, 其中 <code>*</code> 表示 node 无响应</li>
+</ul>
+<h2 id="squeue-查看当前-jobs-信息"><a href="#squeue-查看当前-jobs-信息" class="headerlink" title="squeue 查看当前 jobs 信息"></a>squeue 查看当前 jobs 信息</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">squeue<br></code></pre></td></tr></table></figure>
+
+<p>输出如:</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">JOBID</span> PARTITION  NAME  USER ST  TIME NODES NODELIST(REASON)<br><span class="hljs-attribute">65646</span>     batch  chem  mike  R <span class="hljs-number">24</span>:<span class="hljs-number">19</span>     <span class="hljs-number">2</span> adev[<span class="hljs-number">7</span>-<span class="hljs-number">8</span>]<br><span class="hljs-attribute">65647</span>     batch   bio  joan  R  <span class="hljs-number">0</span>:<span class="hljs-number">09</span>     <span class="hljs-number">1</span> adev14<br><span class="hljs-attribute">65648</span>     batch  math  phil PD  <span class="hljs-number">0</span>:<span class="hljs-number">00</span>     <span class="hljs-number">6</span> (Resources)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>ST</code>, “STatus” 列表示 jobs 状态, <code>R</code> 表示 “Running”, <code>PD</code> 表示 “PenDing”</li>
+<li><code>TIME</code> 列表明 job 已经运行的时间</li>
+<li><code>NODELIST(REASON)</code> 列显示 job 在哪个 node 执行, 或者当前 “pending” 的原因, 如 <code>Resources</code> 或 <code>Priority</code></li>
+</ul>
+<h2 id="scontrol-查看-node-详细信息"><a href="#scontrol-查看-node-详细信息" class="headerlink" title="scontrol 查看 node 详细信息"></a>scontrol 查看 node 详细信息</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">scontrol show partition<br>scontrol show node adev1<br>scontrol show job<br></code></pre></td></tr></table></figure>
+
+<h2 id="srun-分配资源以及执行-job"><a href="#srun-分配资源以及执行-job" class="headerlink" title="srun 分配资源以及执行 job"></a>srun 分配资源以及执行 job</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">srun -N3 -l /bin/hostname<br></code></pre></td></tr></table></figure>
+<ul>
+<li>这里没指定 partition, 因此会使用 default partition</li>
+<li><code>-N3</code> 表示在三个 nodes 上运行后面的 task</li>
+<li><code>-l</code> 表示会打印出 job id</li>
+</ul>
+<p>也可以指定 partition:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">srun -p &lt;partition_name&gt; &lt;<span class="hljs-built_in">command</span>&gt;<br></code></pre></td></tr></table></figure>
+
+<p>创建 4 个 tasks 并分别占用一个 processor, 可以用 <code>-n</code>:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">srun -n4 -l /bin/hostname<br></code></pre></td></tr></table></figure>
+
+<h2 id="sbatch"><a href="#sbatch" class="headerlink" title="sbatch"></a>sbatch</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sbatch -n4 -w <span class="hljs-string">&quot;adev[9-10]&quot;</span> -o my.stdout my.script<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>-w</code> 显示指定要使用的 nodes</li>
+<li><code>-o</code> 指定将结果输出到哪个文件</li>
+<li><code>my.script</code> 是要提交的脚本名</li>
+</ul>
+<p>脚本内容如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-meta">#!/bin/sh</span><br><span class="hljs-comment">#SBATCH --time=1</span><br>/bin/hostname<br>srun -l /bin/hostname<br>srun -l /bin/pwd<br></code></pre></td></tr></table></figure>
+
+<p>以 <code>#SBATCH</code> 开头的行, 可以设置一些选项</p>
 
                 
               </div>
