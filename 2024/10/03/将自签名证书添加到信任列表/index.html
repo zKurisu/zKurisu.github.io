@@ -24,7 +24,7 @@
 <meta property="og:description" content="可能为 (后续查证中): 12sudo cp your_certificate.pem &#x2F;usr&#x2F;local&#x2F;share&#x2F;ca-certificates&#x2F;sudo update-ca-certificates  一些概念PEM 格式PEM, Privacy Enhaced Mail, 是广泛用于存储和传输加密数据的文件格式. 下面后缀的文件都属于 PEM 格式:  .pem .crt（证书） .c">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2024-10-03T09:37:10.000Z">
-<meta property="article:modified_time" content="2024-10-06T14:36:08.037Z">
+<meta property="article:modified_time" content="2024-10-07T04:10:34.411Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          612 字
+          1.6k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          6 分钟
+          14 分钟
         
       </span>
     
@@ -301,16 +301,30 @@
 <li><code>.p7b</code>（PKCS#7）</li>
 </ul>
 <p>文件内容都是 ASCII 编码, 便于传输.</p>
+<h2 id="Root-CA-certificates"><a href="#Root-CA-certificates" class="headerlink" title="Root CA certificates"></a>Root CA certificates</h2><p>即可信机构发布的数字证书, 用于建立和验证 SSL&#x2F;TLS 连接的信任链.</p>
+<h2 id="CA-certificate-bundle-file"><a href="#CA-certificate-bundle-file" class="headerlink" title="CA certificate bundle file"></a>CA certificate bundle file</h2><p>是一个包含多个根证书的文件 (一个文件里有多个证书信息), 用于验证 SSL&#x2F;TLS 连接的安全性.</p>
 <h1 id="查看-update-ca-trust-命令"><a href="#查看-update-ca-trust-命令" class="headerlink" title="查看 update-ca-trust 命令"></a>查看 update-ca-trust 命令</h1><p>具体内容可查看 <code>man update-ca-trust</code>.</p>
 <p><code>/usr/share/ca-certificates/trust-source/</code> 目录的优先级低于 <code>/etc/ca-certificates/trust-source/</code></p>
 <p><code>/usr/share/ca-certificates/trust-source/</code> 目录的文件结构为:</p>
 <figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs stylus">.<br>├── anchors<br>├── blocklist<br>├── mozilla<span class="hljs-selector-class">.trust</span><span class="hljs-selector-class">.p11-kit</span><br>└── README<br></code></pre></td></tr></table></figure>
 <ul>
-<li><code>anchors</code> 目录, 存放受信的证书</li>
-<li><code>blocklist</code> 目录, 存放不信任证书</li>
+<li><code>anchors</code> 目录, 存放受信的证书, 比如:<figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs stata">anchors/<br>├── example-root-<span class="hljs-keyword">ca</span>.pem<br>├── another-root-<span class="hljs-keyword">ca</span>.crt<br>└── my-custom-<span class="hljs-keyword">ca</span>.pem<br></code></pre></td></tr></table></figure></li>
+<li><code>blocklist</code> 目录, 存放不信任证书, 比如:<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs mipsasm"><span class="hljs-keyword">blocklist/</span><br><span class="hljs-keyword"></span>├── revoked-cert.pem<br>└── untrusted-ca.crt<br></code></pre></td></tr></table></figure></li>
 <li><code>mozilla.trust.p11-kit</code> 这个文件通常是由 Mozilla 提供的信任根证书的集合, 经过适当格式化以便与 p11-kit 一起使用. 它可以用于将 Mozilla 的根证书集成到其他应用程序中</li>
 <li><code>README</code> 文件包含这个目录的说明</li>
 </ul>
+<p>将证书添加到 <code>anchors</code> 或 <code>blocklist</code> 目录后, 运行:</p>
+<figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs stata"><span class="hljs-keyword">update</span>-<span class="hljs-keyword">ca</span>-trust extract<br></code></pre></td></tr></table></figure>
+<p>其会将生成的 CA certificate bundle file (把多个证书提取到一个文件中) 并放在 <code>/etc/ca-certificates/extracted/</code> 目录下.</p>
+<p>也可以提取证书到指定目录:</p>
+<figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs stata"><span class="hljs-keyword">update</span>-<span class="hljs-keyword">ca</span>-trust extract -o <span class="hljs-keyword">DIR</span><br></code></pre></td></tr></table></figure>
+
+
+<h1 id="相关文件"><a href="#相关文件" class="headerlink" title="相关文件"></a>相关文件</h1><h2 id="x2F-etc-x2F-ssl-x2F-cert-pem"><a href="#x2F-etc-x2F-ssl-x2F-cert-pem" class="headerlink" title="&#x2F;etc&#x2F;ssl&#x2F;cert.pem"></a>&#x2F;etc&#x2F;ssl&#x2F;cert.pem</h2><p>其为一个符号链接, 指向 <code>update-ca-trust</code> 命令生成的 bundle 文件, 包含 CA 证书列表.</p>
+<h2 id="x2F-etc-x2F-ssl-x2F-certs-x2F"><a href="#x2F-etc-x2F-ssl-x2F-certs-x2F" class="headerlink" title="&#x2F;etc&#x2F;ssl&#x2F;certs&#x2F;"></a>&#x2F;etc&#x2F;ssl&#x2F;certs&#x2F;</h2><p>该目录包含各个单独的 CA 证书, 同样是符号链接 <code>/etc/ca-certificates/extracted/catdir/</code> 目录下的证书文件.</p>
+<h2 id="x2F-etc-x2F-ssl-x2F-certs-x2F-ca-certificates-crt"><a href="#x2F-etc-x2F-ssl-x2F-certs-x2F-ca-certificates-crt" class="headerlink" title="&#x2F;etc&#x2F;ssl&#x2F;certs&#x2F;ca-certificates.crt"></a>&#x2F;etc&#x2F;ssl&#x2F;certs&#x2F;ca-certificates.crt</h2><p>为了与 RHEL&#x2F;Fedora 兼容, 同样是一个符号链接, 指向 <code>update-ca-trust</code> 命令生成的 bundle 文件, 包含 CA 证书列表.</p>
+<h2 id="x2F-etc-x2F-ssl-x2F-certs-x2F-ca-certificates-crt-1"><a href="#x2F-etc-x2F-ssl-x2F-certs-x2F-ca-certificates-crt-1" class="headerlink" title="&#x2F;etc&#x2F;ssl&#x2F;certs&#x2F;ca-certificates.crt"></a>&#x2F;etc&#x2F;ssl&#x2F;certs&#x2F;ca-certificates.crt</h2><p>为了与 Debian 兼容, 同样是一个符号链接, 指向 <code>update-ca-trust</code> 命令生成的 bundle 文件, 包含 CA 证书列表.</p>
+<h2 id="x2F-etc-x2F-ssl-x2F-certs-x2F-java-x2F-cacerts"><a href="#x2F-etc-x2F-ssl-x2F-certs-x2F-java-x2F-cacerts" class="headerlink" title="&#x2F;etc&#x2F;ssl&#x2F;certs&#x2F;java&#x2F;cacerts"></a>&#x2F;etc&#x2F;ssl&#x2F;certs&#x2F;java&#x2F;cacerts</h2><p>以 Java 密钥库文件格式存储, 同样是一个符号链接, 指向 <code>update-ca-trust</code> 命令生成的 bundle 文件, 包含 CA 证书列表.</p>
 
                 
               </div>
