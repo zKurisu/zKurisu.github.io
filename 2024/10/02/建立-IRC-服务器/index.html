@@ -25,8 +25,10 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/unrealircd-start-error.png">
 <meta property="og:image" content="http://example.com/img/unrealircd-change-oper-passwd.png">
+<meta property="og:image" content="http://example.com/img/unrealircd-webpanel-dir-wrong-user-perm.png">
+<meta property="og:image" content="http://example.com/img/true-user-for-httpd.png">
 <meta property="article:published_time" content="2024-10-02T12:46:11.000Z">
-<meta property="article:modified_time" content="2024-10-07T12:14:35.145Z">
+<meta property="article:modified_time" content="2024-10-07T12:59:19.666Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/unrealircd-start-error.png">
@@ -238,7 +240,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          7.8k 字
+          9k 字
         
       </span>
     
@@ -249,7 +251,7 @@
         
         
         
-          65 分钟
+          75 分钟
         
       </span>
     
@@ -511,6 +513,51 @@
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo dnf install -y httpd php php-zip php-curl php-mbstring composer<br></code></pre></td></tr></table></figure>
 
 <p>之后需要让 unrealircd 加载 JSON-RPC 模块, 在 <code>unrealircd.conf</code> 文件中加入:</p>
+<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs abnf">include <span class="hljs-string">&quot;rpc.modules.default.conf&quot;</span><span class="hljs-comment">;</span><br></code></pre></td></tr></table></figure>
+
+<p>之后添加监听的端口以及用户:</p>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs pgsql"><span class="hljs-comment">/* HTTPS on port 8600 for the JSON-RPC API */</span><br><span class="hljs-keyword">listen</span> &#123;<br>        ip *;<br>        port <span class="hljs-number">8600</span>;<br>        <span class="hljs-keyword">options</span> &#123; rpc; &#125;<br>&#125;<br><br><span class="hljs-comment">/* API user */</span><br>rpc-<span class="hljs-keyword">user</span> adminpanel &#123;<br>        match &#123; ip <span class="hljs-number">127.</span>*; &#125;<br>        rpc-<span class="hljs-keyword">class</span> <span class="hljs-keyword">full</span>;<br>        <span class="hljs-keyword">password</span> &quot;password&quot;;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="配置-1"><a href="#配置-1" class="headerlink" title="配置"></a>配置</h2><p>假设:</p>
+<ul>
+<li>Webroot 为 <code>/var/www/html</code></li>
+<li>panel 相关位于 Webroot 下的 <code>unrealircd-webpanel</code> 目录</li>
+<li>Webuser 为 <code>www-data</code> 或 <code>nobody</code> (或 <code>http</code> 等)</li>
+</ul>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">cd</span> /var/www/html<br>sudo -u www-data git <span class="hljs-built_in">clone</span> https://github.com/unrealircd/unrealircd-webpanel<br><span class="hljs-built_in">cd</span> unrealircd-webpanel<br>sudo -u www-data composer install<br></code></pre></td></tr></table></figure>
+
+<p>之后就能用 <code>http://localhost/unrealircd-webpanel/</code> 来访问.</p>
+<p>注意配置好 apache 的 php 模块. 这里是一些可能遇到的问题.</p>
+<h3 id="打开页面是-php-源码"><a href="#打开页面是-php-源码" class="headerlink" title="打开页面是 php 源码"></a>打开页面是 php 源码</h3><p>安装相关包, 以 Archlinux 为例:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo pacman -S apache php php-apache<br></code></pre></td></tr></table></figure>
+
+
+<p>在 <code>httpd.conf</code> 中添加:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash">AddType application/x-httpd-php .php<br>LoadModule php_module modules/libphp.so<br></code></pre></td></tr></table></figure>
+
+<p>也要修改线程类型:</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-comment">#LoadModule mpm_event_module modules/mod_mpm_event.so</span><br><span class="hljs-attribute">LoadModule</span> mpm_prefork_module modules/mod_mpm_prefork.so<br></code></pre></td></tr></table></figure>
+
+<p>之后:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo systemctl restart httpd<br></code></pre></td></tr></table></figure>
+
+<h3 id="未启用-sodium-扩展"><a href="#未启用-sodium-扩展" class="headerlink" title="未启用 sodium 扩展"></a>未启用 sodium 扩展</h3><p>安装 <code>php-sodium</code>:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo pacman -S php-sodium<br></code></pre></td></tr></table></figure>
+
+<p>配置, 修改 <code>/etc/php/php.ini</code> 文件, 添加:</p>
+<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs abnf"><span class="hljs-attribute">extension</span><span class="hljs-operator">=</span>sodium<br></code></pre></td></tr></table></figure>
+
+<p>之后:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">php -m | grep sodium<br>sudo systemctl restart httpd<br></code></pre></td></tr></table></figure>
+
+<h3 id="unrealircd-webpanel-目录权限有误"><a href="#unrealircd-webpanel-目录权限有误" class="headerlink" title="unrealircd-webpanel 目录权限有误"></a>unrealircd-webpanel 目录权限有误</h3><p>如:<br><img src="/../img/unrealircd-webpanel-dir-wrong-user-perm.png" srcset="/img/loading.gif" lazyload></p>
+<p>这里的提示命令其实是错误的, 可以查看运行 <code>httpd</code> 的用户是谁, 然后重新修改:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ps aux | grep httpd<br></code></pre></td></tr></table></figure>
+
+<p><img src="/../img/true-user-for-httpd.png" srcset="/img/loading.gif" lazyload></p>
+<p>因此需要运行:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo <span class="hljs-built_in">chown</span> http:http /srv/http/download/unrealircd-webpanel -R<br></code></pre></td></tr></table></figure>
+
 <h1 id="JSON-RPC"><a href="#JSON-RPC" class="headerlink" title="JSON-RPC"></a>JSON-RPC</h1><p>JSON-RPC 提供了一些 API 与 UnrealIRCd 交互, 可获取&#x2F;修改&#x2F;添加, 包括 user&#x2F;channel&#x2F;severs&#x2F;bans 等信息. (需要额外配置)</p>
 
                 
