@@ -28,7 +28,7 @@
 <meta property="og:image" content="http://example.com/img/unrealircd-webpanel-dir-wrong-user-perm.png">
 <meta property="og:image" content="http://example.com/img/true-user-for-httpd.png">
 <meta property="article:published_time" content="2024-10-02T12:46:11.000Z">
-<meta property="article:modified_time" content="2024-10-08T06:07:56.205Z">
+<meta property="article:modified_time" content="2024-10-08T15:03:10.870Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/unrealircd-start-error.png">
@@ -240,7 +240,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          9.6k 字
+          9.9k 字
         
       </span>
     
@@ -251,7 +251,7 @@
         
         
         
-          80 分钟
+          83 分钟
         
       </span>
     
@@ -559,7 +559,8 @@
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo <span class="hljs-built_in">chown</span> http:http /srv/http/download/unrealircd-webpanel -R<br></code></pre></td></tr></table></figure>
 
 <h1 id="JSON-RPC"><a href="#JSON-RPC" class="headerlink" title="JSON-RPC"></a>JSON-RPC</h1><p>JSON-RPC 提供了一些 API 与 UnrealIRCd 交互, 可获取&#x2F;修改&#x2F;添加, 包括 user&#x2F;channel&#x2F;severs&#x2F;bans 等信息. (需要额外配置)</p>
-<h1 id="添加-channel-history-功能"><a href="#添加-channel-history-功能" class="headerlink" title="添加 channel history 功能"></a>添加 channel history 功能</h1><p>默认情况下, channel 不会记录历史消息, 可以通过修改 channel mode 来 enable (也需要 client 支持才行):</p>
+<h1 id="添加-channel-history-功能"><a href="#添加-channel-history-功能" class="headerlink" title="添加 channel history 功能"></a>添加 channel history 功能</h1><p>默认情况下, channel 不会记录历史消息, 可以通过修改 channel mode 来 enable (也需要 client 支持才行).</p>
+<p>用 Channel 创建者或者具有 override 权限的 OPER 用户运行:</p>
 <figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs jboss-cli"><span class="hljs-string">/MODE</span> <span class="hljs-comment">#channel +H 15:1440</span><br></code></pre></td></tr></table></figure>
 <ul>
 <li><code>+H</code> 表明开启 history 记录</li>
@@ -568,6 +569,16 @@
 <p>History 可以在 server 端具体配置, 如:</p>
 <figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs pgsql"><span class="hljs-keyword">set</span> &#123;<br>    history &#123;<br>        channel &#123;<br>            <span class="hljs-comment">/* How many lines to playback on join? */</span><br>            playback-<span class="hljs-keyword">on</span>-<span class="hljs-keyword">join</span> &#123;<br>                lines <span class="hljs-number">15</span>;<br>                <span class="hljs-type">time</span> <span class="hljs-number">1</span>d;<br>            &#125;<br>            <span class="hljs-comment">/* How much history to keep. These are the</span><br><span class="hljs-comment">             * upper maximums for channel mode +H lines:time</span><br><span class="hljs-comment">             */</span><br>            max-<span class="hljs-keyword">storage</span>-per-channel &#123;<br>                <span class="hljs-comment">/* +r channels have larger maximums: */</span><br>                registered &#123;<br>                    lines <span class="hljs-number">5000</span>;<br>                    <span class="hljs-type">time</span> <span class="hljs-number">31</span>d;<br>                &#125;<br>                <span class="hljs-comment">/* -r channels have less: */</span><br>                unregistered &#123;<br>                    lines <span class="hljs-number">200</span>;<br>                    <span class="hljs-type">time</span> <span class="hljs-number">31</span>d;<br>                &#125;<br>            &#125;<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>其中 <code>set::history::channel::playback-on-join</code> 定义了 <code>+H</code> 的行为.</p>
+<h1 id="添加-channel-持久化"><a href="#添加-channel-持久化" class="headerlink" title="添加 channel 持久化"></a>添加 channel 持久化</h1><p>需要加载 <code>channeldb.so</code> 模块, 在 <code>unrealircd.conf</code> 文件中加入:</p>
+<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs abnf">loadmodule <span class="hljs-string">&quot;channeldb.so&quot;</span><span class="hljs-comment">;</span><br></code></pre></td></tr></table></figure>
+
+<p>让一个 channel 持久化需要给其加上 <code>+P</code> mode. 先创建一个 channel:</p>
+<figure class="highlight axapta"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs axapta">/<span class="hljs-keyword">join</span> <span class="hljs-meta">#hello</span><br></code></pre></td></tr></table></figure>
+
+<p>之后切换到另一个 window, 需要一个具有 override 的 OPER 用户来修改其 mode:</p>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs jboss-cli"><span class="hljs-string">/OPER</span><br><span class="hljs-string">/MODE</span> <span class="hljs-comment">#hello +P</span><br></code></pre></td></tr></table></figure>
+
+<p>此时 channel 即为持续的.</p>
 
                 
               </div>
