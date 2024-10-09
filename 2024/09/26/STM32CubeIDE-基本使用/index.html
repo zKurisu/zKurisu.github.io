@@ -32,8 +32,11 @@
 <meta property="og:image" content="http://example.com/img/clock-tree-for-STM32-F103RB.png">
 <meta property="og:image" content="http://example.com/img/clock-tree-for-NUCLEO-F103RB.png">
 <meta property="og:image" content="http://example.com/img/stm32-cubeide-set-tim2-example.png">
+<meta property="og:image" content="http://example.com/img/timer-counter-value.png">
+<meta property="og:image" content="http://example.com/img/cubeide-enable-nvic.png">
+<meta property="og:image" content="http://example.com/img/set-gpio-pin-to-external-EXIT.png">
 <meta property="article:published_time" content="2024-09-26T08:07:21.000Z">
-<meta property="article:modified_time" content="2024-10-09T08:03:01.183Z">
+<meta property="article:modified_time" content="2024-10-09T09:16:56.798Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/stm32cubeide-switch-workspace1.jpg">
@@ -245,7 +248,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3.3k 字
+          4.1k 字
         
       </span>
     
@@ -256,7 +259,7 @@
         
         
         
-          28 分钟
+          34 分钟
         
       </span>
     
@@ -398,7 +401,47 @@
 <li><code>timer_val</code> 存储的是上一次用于比较的值, 当变化超过 1000 时触发</li>
 </ul>
 <p>这里使用 timer 的好处在与其 unblocking, 不会阻断其他程序运行.</p>
-<h1 id="Interrupt"><a href="#Interrupt" class="headerlink" title="Interrupt"></a>Interrupt</h1>
+<h1 id="Interrupt"><a href="#Interrupt" class="headerlink" title="Interrupt"></a>Interrupt</h1><p>中断可来自外部, 如:</p>
+<ul>
+<li>button press</li>
+<li>sensor output</li>
+</ul>
+<p>也可来自内部, 如:</p>
+<ul>
+<li>timer overflow</li>
+<li>data transfer completion</li>
+</ul>
+<p>当中断发生时, microcontroller 会 suspend 当前任务, 转去处理中断任务, 待完成后, 又从中断处继续运行.</p>
+<h2 id="Timer-Interrupt-Internal"><a href="#Timer-Interrupt-Internal" class="headerlink" title="Timer Interrupt (Internal)"></a>Timer Interrupt (Internal)</h2><p>Counter 计数如:</p>
+<p><img src="/../img/timer-counter-value.png" srcset="/img/loading.gif" lazyload></p>
+<p>(ISR 指 “Interrupt Service Routine”, 即中断服务程序)</p>
+<ul>
+<li>也就是说, counter 到一定数之后, 就触发一次中断</li>
+</ul>
+<p>启用 timer 的中断功能需要配置 NVIC (Nested Vector Interrupt Controller, 嵌套向量中断控制器), 如:<br><img src="/../img/cubeide-enable-nvic.png" srcset="/img/loading.gif" lazyload></p>
+<p>此时启动 timer 需要用:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">HAL_TIM_Base_Start_IT(&amp;htim2);<br></code></pre></td></tr></table></figure>
+
+<p>一个中断函数的示例:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">HAL_TIM_PeriodElapsedCallback</span><span class="hljs-params">(TIM_HandleTypeDef *htim)</span> &#123;<br>    <span class="hljs-keyword">if</span> (htim == &amp;htim2) &#123;<br>        HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>(这个函数名应该要查表)</p>
+<ul>
+<li>这里会先检查触发中断的计时器是否为 TIM2</li>
+</ul>
+<p>这个函数会由 timer 定时触发 (看前面的图就知道了, 这个函数就是 ISR).</p>
+<h2 id="Interrupt-External"><a href="#Interrupt-External" class="headerlink" title="Interrupt (External)"></a>Interrupt (External)</h2><p>这个外部中断由 GPIO Pin 来触发, 比如:</p>
+<ul>
+<li>falling edge</li>
+<li>rising edge</li>
+<li>changing edge</li>
+</ul>
+<p>设置一个 pin 为 Interrupt pin:</p>
+<p><img src="/../img/set-gpio-pin-to-external-EXIT.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>点 PC13, 选 <code>GPIO_EXTI13</code></li>
+</ul>
+<p>选择触发 Interrupt 的方式</p>
+
                 
               </div>
             
