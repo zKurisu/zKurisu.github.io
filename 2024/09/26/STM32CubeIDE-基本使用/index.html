@@ -30,8 +30,10 @@
 <meta property="og:image" content="http://example.com/img/GPIOX_IDR-register.png">
 <meta property="og:image" content="http://example.com/img/RTOS-components-of-a-timer.png">
 <meta property="og:image" content="http://example.com/img/clock-tree-for-STM32-F103RB.png">
+<meta property="og:image" content="http://example.com/img/clock-tree-for-NUCLEO-F103RB.png">
+<meta property="og:image" content="http://example.com/img/stm32-cubeide-set-tim2-example.png">
 <meta property="article:published_time" content="2024-09-26T08:07:21.000Z">
-<meta property="article:modified_time" content="2024-10-09T07:02:30.612Z">
+<meta property="article:modified_time" content="2024-10-09T08:03:01.183Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/stm32cubeide-switch-workspace1.jpg">
@@ -243,7 +245,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.1k 字
+          3.3k 字
         
       </span>
     
@@ -254,7 +256,7 @@
         
         
         
-          18 分钟
+          28 分钟
         
       </span>
     
@@ -371,10 +373,32 @@
 </ul>
 <p>这里以 TIM2, 3 和 4 为例说明:</p>
 <ul>
-<li>都为 16 位计时器, 意味着能够计数的范围是从 0 到 65535 ($2^16 - 1$)</li>
+<li>都为 16 位计时器, 意味着能够计数的范围是从 0 到 65535 ($2^{16} - 1$)</li>
 <li>每个定时器最多可以支持 4 个输入捕获 (IC), 输出比较 (OC), 脉宽调制 (PWM) 或脉冲计数器功能, 以及增量编码器输入</li>
 </ul>
+<p>一个示例:</p>
+<blockquote>
+<p>主频为 80MHz, 要求 prescaler 和 counter 都是 16 位, 且 2.5s 触发一次 event, 求 prescaler 和 counter 的可能值</p>
+</blockquote>
+<p>因为 prescaler 和 counter 是 16 位, 因此其取值为 <code>0~65535</code> ($2^{16}-1$), 设 prescaler 为 8000, 则:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>prescaler\ frequency &#x3D; \frac{80MHz}{8000} &#x3D; 10000Hz<br>\end{aligned}<br>}<br>$$</p>
+<p>计算 counter 的值为:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>interval &#x3D; \frac{1}{10000Hz} &#x3D; 0.0001s \newline~ \newline<br>counter\ value &#x3D; \frac{2.5s}{0.0001s} &#x3D; 25000<br>\end{aligned}<br>}<br>$$</p>
+<h2 id="具体示例"><a href="#具体示例" class="headerlink" title="具体示例"></a>具体示例</h2><p>NUCLEO-F103RB 的默认 clock tree 为:<br><img src="/../img/clock-tree-for-NUCLEO-F103RB.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>默认 prescaler 为 1, 频率 64MHz, 最大可为 72MHz</li>
+</ul>
+<p>对 TIM2 的配置示例:<br><img src="/../img/stm32-cubeide-set-tim2-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>注意, 这里的 prescaler 和 counter 值总是比自己想设的小 1. (也就是说这里写的 0, 实际上是 1)</p>
+<p>在生成代码后, 可以用:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">HAL_TIM_Base_Start(&amp;htim2).<br></code></pre></td></tr></table></figure>
 
+<p>来启用 timer. 如:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// starting the timer</span><br>HAL_TIM_Base_Start(&amp;htim2);<br><br><span class="hljs-comment">// getting the timer value</span><br>uint_16t timer_val = __HAL_TIM_GET_COUNTER(&amp;htim2);<br><span class="hljs-comment">/* USER CODE END */</span><br><br><span class="hljs-comment">/* Infinite loop */</span><br><span class="hljs-comment">/* USER CODE BEGIN WHILE */</span><br><span class="hljs-keyword">while</span> (<span class="hljs-number">1</span>)<br>&#123;<br>    <span class="hljs-comment">// Checking the value of the counter if reached the counter period</span><br>    <span class="hljs-keyword">if</span> ((__HAL_TIM_GET_COUNTER(&amp;htim2) - timer_val) &gt;= <span class="hljs-number">1000</span>) &#123;<br>        HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);<br>        timer_val = __HAL_TIM_GET_COUNTER(&amp;htim2);<br>    &#125;<br>    <span class="hljs-comment">/* USER CODE END WHILE */</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<p>(注意这里的写法不规范, 有一个问题, 当到 <code>if</code> 时, timer 不是想要的值, 就往下执行, 但往下执行到某处时, timer 值可能已经重置了, 此时又返回 <code>if</code> 又执行不了)</p>
+<ul>
+<li><code>timer_val</code> 存储的是上一次用于比较的值, 当变化超过 1000 时触发</li>
+</ul>
+<p>这里使用 timer 的好处在与其 unblocking, 不会阻断其他程序运行.</p>
+<h1 id="Interrupt"><a href="#Interrupt" class="headerlink" title="Interrupt"></a>Interrupt</h1>
                 
               </div>
             
