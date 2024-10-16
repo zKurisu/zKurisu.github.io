@@ -41,8 +41,10 @@
 <meta property="og:image" content="http://example.com/img/stm32cubeide-timer-and-external-interrupt-handler.png">
 <meta property="og:image" content="http://example.com/img/stm32cubeide-label-micro.png">
 <meta property="og:image" content="http://example.com/img/stm32cubeide-true-handler-for-pin.png">
+<meta property="og:image" content="http://example.com/img/stm32cubeide-UART-configuration-plot.png">
+<meta property="og:image" content="http://example.com/img/stm32cubeide-UART-enable-interrupt.png">
 <meta property="article:published_time" content="2024-09-26T08:07:21.000Z">
-<meta property="article:modified_time" content="2024-10-16T12:02:42.937Z">
+<meta property="article:modified_time" content="2024-10-16T13:11:18.345Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/stm32cubeide-switch-workspace1.jpg">
@@ -254,7 +256,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          5k 字
+          6.8k 字
         
       </span>
     
@@ -265,7 +267,7 @@
         
         
         
-          42 分钟
+          57 分钟
         
       </span>
     
@@ -470,7 +472,40 @@
 <li><code>HAL_TIM_Base_Start_IT</code> 用于启用 TIM 内部中断</li>
 <li><code>HAL_TIM_Base_Stop_IT</code> 用于暂停 TIM 内部中断</li>
 </ul>
-<h1 id="UART"><a href="#UART" class="headerlink" title="UART"></a>UART</h1>
+<h1 id="UART"><a href="#UART" class="headerlink" title="UART"></a>UART</h1><p>在 CubeMX 的配置图示意如下:</p>
+<p><img src="/../img/stm32cubeide-UART-configuration-plot.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="数据传输"><a href="#数据传输" class="headerlink" title="数据传输"></a>数据传输</h2><p>在 HAL 库中, 用 UART 传输数据的函数为:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">HAL_UART_Transmit(&amp;uart_port, (string_pointer*)<span class="hljs-built_in">string</span>, string_lenght, DELAY);<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>DELAY</code> 是一段确认数据已经传送完成的时间</li>
+</ul>
+<p>一段示例代码, 发送 “hello world”:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;main.h&quot;</span></span><br><br><span class="hljs-comment">/* USER CODE BEGIN Includes */</span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;string.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-comment">/* USER CODE END Includes */</span><br>...<br>...<br><span class="hljs-comment">/* USER CODE BEGIN 1 */</span><br><span class="hljs-type">int</span> num = <span class="hljs-number">0</span>;<br><span class="hljs-type">char</span> char_str[] = <span class="hljs-string">&quot;hello world&quot;</span>;<br><span class="hljs-type">char</span> num_str[<span class="hljs-number">10</span>];<br><span class="hljs-comment">/* USER CODE END 1 */</span><br>...<br>...<br><span class="hljs-keyword">while</span> (<span class="hljs-number">1</span>) <br>&#123;<br>    num = num + <span class="hljs-number">1</span>; <span class="hljs-comment">// addming every time a new hello world is printed</span><br>    <span class="hljs-built_in">sprintf</span>(num_str, <span class="hljs-string">&quot; %hu\n&quot;</span>, num); <span class="hljs-comment">// converting int to string</span><br>    <span class="hljs-comment">// transmitting to the UART PORT 2</span><br>    HAL_UART_Transmit(&amp;huart2, (<span class="hljs-type">uint8_t</span>*)char_str, <span class="hljs-built_in">strlen</span>(char_str), HAL_MAX_DELAY);<br>    HAL_UART_Transmit(&amp;huart2, (<span class="hljs-type">uint8_t</span>*)num_str, <span class="hljs-built_in">strlen</span>(num_str), HAL_MAX_DELAY);<br>    HAL_Delay(<span class="hljs-number">1000</span>); <span class="hljs-comment">// delay of a second</span><br><br>    <span class="hljs-comment">/* USER CODE END WHILE */</span><br>    <span class="hljs-comment">/* USER CODE BEGIN 3 */</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>注意这里格式化输出的占位符 <code>%hu</code>, <code>%h</code> 表示 <code>short</code> 类型, <code>u</code> 表示 <code>unsigned</code> 类型 (即输出一个 <code>unsigned short</code>, 范围在 <code>0-65535</code>)</li>
+</ul>
+<h2 id="数据接收"><a href="#数据接收" class="headerlink" title="数据接收"></a>数据接收</h2><p>对于接收方而言, 有三种接收方式:</p>
+<ul>
+<li>Polling method, 在接收到数据之前一直 blocks the CPU</li>
+<li>Interrupt method, 在得知数据发送到时用中断处理数据</li>
+<li>Direct Memory Access (DMA), 数据直接经 DMA 传输到 memory</li>
+</ul>
+<p>这里以 Interrupt method 为例, 需要先在 NVIC 部分进行配置, 开启中断:<br><img src="/../img/stm32cubeide-UART-enable-interrupt.png" srcset="/img/loading.gif" lazyload></p>
+<p>与 UART 数据接收相关的 HAL 函数为:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">HAL_UART_Receive_IT (&amp;huart, rx buffer, no. of bits)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>rx_buffer</code> 指存储数据的位置 (一个变量)</li>
+<li><code>no. of bits</code> 指要接收的数据长度</li>
+</ul>
+<p>相对应的中断处理函数为:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">HAL_UART_RxCpltCallback</span><span class="hljs-params">(UART_HandleTypeDef *huart)</span><br></code></pre></td></tr></table></figure>
+
+<p>同样举一个示例, 发送一个 ID, 并在接收后打印到 serial monitor, 部分代码如下:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs c">...<br><br><span class="hljs-comment">/* Private variables ---- */</span><br>UART_HandleTypeDef huart2;<br><span class="hljs-type">uint8_t</span> rx_data[<span class="hljs-number">10</span>];<br><span class="hljs-comment">/* USER CODE BEGIN PV */</span><br>...<br><br><span class="hljs-comment">/* USER CODE BEGIN 2 */</span><br>HAL_UART_Receive_IT(&amp;huart2, rx_data, <span class="hljs-number">9</span>);<br><br>...<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">HAL_UART_RxCpltCallback</span><span class="hljs-params">(UART_HandleTypeDef *huart)</span><br>&#123;<br>    HAL_UART_Transmit(&amp;huart, (<span class="hljs-type">uint8_t</span>*)rx_data, <span class="hljs-built_in">strlen</span>(rx_data), HAL_MAX_DELAY);<br>    HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);<br>    rx_data[<span class="hljs-number">0</span>] = <span class="hljs-string">&#x27;\0&#x27;</span>;<br>    HAL_UART_Receive_IT(&amp;huart2, rx_data, <span class="hljs-number">9</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>每次运行 <code>HAL_UART_Receive_IT(&amp;huart2, rx_data, 9);</code> 之后, 都会触发 <code>HAL_UART_RxCpltCallback</code> 函数</li>
+</ul>
+
                 
               </div>
             
