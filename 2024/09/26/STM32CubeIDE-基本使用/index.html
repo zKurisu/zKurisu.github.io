@@ -48,8 +48,9 @@
 <meta property="og:image" content="http://example.com/img/cutecom-send-msg-for-stm32-UART.png">
 <meta property="og:image" content="http://example.com/img/cutecom-get-msg-from-stm32-UART.png">
 <meta property="og:image" content="http://example.com/img/RTOS-lab2-stm32-connect-to-Arduino.png">
+<meta property="og:image" content="http://example.com/img/stm32cubeide-NUCLEO-F103RB-enable-I2C.png">
 <meta property="article:published_time" content="2024-09-26T08:07:21.000Z">
-<meta property="article:modified_time" content="2024-10-17T00:59:32.586Z">
+<meta property="article:modified_time" content="2024-10-17T01:57:12.977Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/stm32cubeide-switch-workspace1.jpg">
@@ -261,7 +262,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          7.2k 字
+          9k 字
         
       </span>
     
@@ -272,7 +273,7 @@
         
         
         
-          61 分钟
+          75 分钟
         
       </span>
     
@@ -523,11 +524,63 @@
 <ul>
 <li><code>&amp;hi2c#</code> 指要使用的 I2C 接口</li>
 <li><code>buffer</code> 是要发送的数据或要存储到的位置</li>
-<li><code>#_of_bytes</code> 指数据长度</li>
+<li><code>#_of_bytes</code> 指数据长度, 注意这里是 <code>bytes</code> 而非 <code>bits</code></li>
 <li><code>DELAY</code> 是确保 communication session 结束的时间</li>
 </ul>
-<p>这里以, 用 NUCLEO-F103RB Board 发送数据给 Arduino 来观察现象 (Arduino 的代码在课程文件里), 为示例.</p>
+<p>这里以, 用 NUCLEO-F103RB Board 发送数据给 Arduino 来观察现象 (Arduino 的代码在课程文件里), 为示例, Arduino 接收到的信息和要做的行为如下:</p>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0x83</td>
+<td>Blink built in LED once a second</td>
+</tr>
+<tr>
+<td>0x82</td>
+<td>Blink built in LED once 75 ms</td>
+</tr>
+<tr>
+<td>0x81</td>
+<td>Blink built in LED once a 500 ms</td>
+</tr>
+<tr>
+<td>0x80</td>
+<td>LED to remain on</td>
+</tr>
+<tr>
+<td>0x00</td>
+<td>Address of analog value measured by Arduino</td>
+</tr>
+<tr>
+<td>0x01</td>
+<td>Address of 4 bytes of message in the Arduino</td>
+</tr>
+</tbody></table>
 <p>接线为:<br><img src="/../img/RTOS-lab2-stm32-connect-to-Arduino.png" srcset="/img/loading.gif" lazyload></p>
+<p>具体为:</p>
+<ul>
+<li><code>Nucleo SCL =&gt; ARDUINO A5</code></li>
+<li><code>Nucleo SDA =&gt; ARDUINO A4</code></li>
+<li><code>Nucleo GND =&gt; GND</code></li>
+<li><code>Variable Resistor out =&gt; Arduino A1</code></li>
+</ul>
+<p>之后对 NUCLEO-F103RB 的引脚设置如:</p>
+<p><img src="/../img/stm32cubeide-NUCLEO-F103RB-enable-I2C.png" srcset="/img/loading.gif" lazyload></p>
+<p>相关变量的设置代码如下:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;main.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;string.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br>...<br>...<br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-comment">/* USER CODE BEGIN 1 */</span><br>    HAL_StatusTypeDef ret;<br>    <span class="hljs-type">static</span> <span class="hljs-type">const</span> <span class="hljs-type">uint8_t</span> nano_addr = <span class="hljs-number">0x55</span> &lt;&lt; <span class="hljs-number">1</span>; <span class="hljs-comment">// left shifting as bit0 used to indicate read write</span><br>    <span class="hljs-type">uint8_t</span> buff[<span class="hljs-number">12</span>]; <span class="hljs-comment">// Buffer ti receive and send 8 bit data</span><br>    <span class="hljs-type">uint8_t</span> cmd_buff[<span class="hljs-number">12</span>]; <span class="hljs-comment">// buffer save the data when a command sent</span><br>    <span class="hljs-type">uint8_t</span> analog_buff[<span class="hljs-number">12</span>]; <span class="hljs-comment">// buffer to save analog data</span><br>    <span class="hljs-type">uint8_t</span> message_buff[<span class="hljs-number">12</span>]; <span class="hljs-comment">// buffer to save the message received</span><br>    <span class="hljs-type">uint16_t</span> analog_val; <span class="hljs-comment">// 16 bit analog value</span><br>    <span class="hljs-type">uint8_t</span> cmd_0 = <span class="hljs-number">0x83</span>; <span class="hljs-comment">// send to make the LED blink once a second</span><br>    <span class="hljs-type">uint8_t</span> cmd_1 = <span class="hljs-number">0x82</span>; <span class="hljs-comment">// send to make the LED blink once 750 ms</span><br>    <span class="hljs-type">uint8_t</span> cmd_2 = <span class="hljs-number">0x81</span>; <span class="hljs-comment">// send to make the LED blink once 500 ms</span><br>    <span class="hljs-type">uint8_t</span> cmd_3 = <span class="hljs-number">0x80</span>; <span class="hljs-comment">// send to make the LED to remain on</span><br><br>    <span class="hljs-type">uint8_t</span> REG_0 = <span class="hljs-number">0x0</span>; <span class="hljs-comment">// receive analog value</span><br>    <span class="hljs-type">uint8_t</span> REG_1 = <span class="hljs-number">0x1</span>; <span class="hljs-comment">// Receive the message</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>HAL_StatusTypeDef ret</code>, 是一个用来存储 communication 是否成功的 flag</li>
+<li><code>nano_addr</code> 表明 Arduino nano slave 的地址, <code>&lt;&lt; 1</code> 表明是 read</li>
+</ul>
+<p><code>while</code> 中的部分代码如下:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// sending the command to adjust the light blinking speed</span><br>buff[<span class="hljs-number">0</span>] = cmd_1; <span class="hljs-comment">// adding blinking command to the buffer</span><br>ret = HAL_I2C_Master_Transmit(&amp;hi2c1, nano_addr, buff, <span class="hljs-number">1</span>, HAL_MAX_DELAY);<br><br><span class="hljs-keyword">if</span> (ref != HAL_OK) <span class="hljs-comment">// if communication not successful</span><br>&#123;<br>    <span class="hljs-built_in">strcpy</span>((<span class="hljs-type">char</span>*)buff, <span class="hljs-string">&quot;Error Rx\n&quot;</span>);<br>    HAL_UART_Transmit(&amp;huart2, buff, <span class="hljs-built_in">strlen</span>((<span class="hljs-type">char</span>*)buff), HAL_MAX_DELAY);<br>&#125;<br><span class="hljs-comment">// reseting buffer</span><br><span class="hljs-built_in">memset</span>(buff, <span class="hljs-string">&#x27;\0&#x27;</span>, <span class="hljs-keyword">sizeof</span>(buff));<br><br><span class="hljs-comment">// delay of 2 seconds</span><br>HAL_Delay(<span class="hljs-number">2000</span>);<br></code></pre></td></tr></table></figure>
+<ul>
+<li>这里用了 serial monitor 来调试</li>
+</ul>
 
                 
               </div>
