@@ -25,7 +25,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/arduino-nano-every-connect-pinout.png">
 <meta property="article:published_time" content="2024-10-18T13:38:39.000Z">
-<meta property="article:modified_time" content="2024-10-19T03:33:14.260Z">
+<meta property="article:modified_time" content="2024-10-19T04:20:12.200Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/arduino-nano-every-connect-pinout.png">
@@ -237,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.3k 字
+          3.7k 字
         
       </span>
     
@@ -248,7 +248,7 @@
         
         
         
-          20 分钟
+          32 分钟
         
       </span>
     
@@ -316,7 +316,7 @@
 </ol>
 </li>
 <li><code>Serial.available()</code> 用于检查串口缓冲区中是否有可读取得数据, 返回可读取得字节数</li>
-<li><code>Serial.read()</code> 可读取一个字节, 其返回一个 <code>0-255</code> 之间的整数, 表示接收到的单个字节数据的 ASCII 编码, 若想返回 <code>char</code>, 可强制类型转换</li>
+<li><code>Serial.read()</code> 可读取一个字节, 其返回一个 <code>0-255</code> 之间的整数, 表示接收到的单个字节数据的 ASCII 编码 (比如输入 1, 读取到的其实是 49, 即 1 的 ASCII 编码值), 若想返回 <code>char</code>, 可强制类型转换</li>
 <li><code>Serial.readStringUntil(&#39;\n&#39;)</code> 可读取一行</li>
 </ul>
 <h1 id="Wire-库"><a href="#Wire-库" class="headerlink" title="Wire 库"></a>Wire 库</h1><p>Wire 库实现了 I2C 通信.</p>
@@ -327,12 +327,30 @@
 <li>A4, SDA (Data line)</li>
 <li>A5, SCL (Clock line)</li>
 </ul>
-<p>一般用 7 bits 表示 I2C address, 用第 8 位表示读写.</p>
-<p>一个示例程序:</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// Wire Controller Reader</span><br><span class="hljs-comment">// by Nicholas Zambetti [http://www.zambetti.com](http://www.zambetti.com)</span><br><br><span class="hljs-comment">// Demonstrates use of the Wire library</span><br><span class="hljs-comment">// Reads data from an I2C/TWI peripheral device</span><br><span class="hljs-comment">// Refer to the &quot;Wire Peripheral Sender&quot; example for use with this</span><br><br><span class="hljs-comment">// Created 29 March 2006</span><br><br><span class="hljs-comment">// This example code is in the public domain.</span><br><br><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;Wire.h&gt;</span></span><br><br><span class="hljs-type">void</span> <span class="hljs-title function_">setup</span><span class="hljs-params">()</span> &#123;<br>  Wire.begin();        <span class="hljs-comment">// join i2c bus (address optional for master)</span><br>  Serial.begin(<span class="hljs-number">9600</span>);  <span class="hljs-comment">// start serial for output</span><br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">loop</span><span class="hljs-params">()</span> &#123;<br>  Wire.requestFrom(<span class="hljs-number">8</span>, <span class="hljs-number">6</span>);    <span class="hljs-comment">// request 6 bytes from peripheral device #8</span><br><br>  <span class="hljs-keyword">while</span> (Wire.available()) &#123; <span class="hljs-comment">// peripheral may send less than requested</span><br>    <span class="hljs-type">char</span> c = Wire.read(); <span class="hljs-comment">// receive a byte as character</span><br>    Serial.print(c);         <span class="hljs-comment">// print the character</span><br>  &#125;<br><br>  delay(<span class="hljs-number">500</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="示例1-master-从-slave-读取指定长度的数据"><a href="#示例1-master-从-slave-读取指定长度的数据" class="headerlink" title="示例1: master 从 slave 读取指定长度的数据"></a>示例1: master 从 slave 读取指定长度的数据</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// Wire Controller Reader</span><br><span class="hljs-comment">// by Nicholas Zambetti [http://www.zambetti.com](http://www.zambetti.com)</span><br><br><span class="hljs-comment">// Demonstrates use of the Wire library</span><br><span class="hljs-comment">// Reads data from an I2C/TWI peripheral device</span><br><span class="hljs-comment">// Refer to the &quot;Wire Peripheral Sender&quot; example for use with this</span><br><br><span class="hljs-comment">// Created 29 March 2006</span><br><br><span class="hljs-comment">// This example code is in the public domain.</span><br><br><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;Wire.h&gt;</span></span><br><br><span class="hljs-type">void</span> <span class="hljs-title function_">setup</span><span class="hljs-params">()</span> &#123;<br>  Wire.begin();        <span class="hljs-comment">// join i2c bus (address optional for master)</span><br>  Serial.begin(<span class="hljs-number">9600</span>);  <span class="hljs-comment">// start serial for output</span><br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">loop</span><span class="hljs-params">()</span> &#123;<br>  Wire.requestFrom(<span class="hljs-number">8</span>, <span class="hljs-number">6</span>);    <span class="hljs-comment">// request 6 bytes from peripheral device #8</span><br><br>  <span class="hljs-keyword">while</span> (Wire.available()) &#123; <span class="hljs-comment">// peripheral may send less than requested</span><br>    <span class="hljs-type">char</span> c = Wire.read(); <span class="hljs-comment">// receive a byte as character</span><br>    Serial.print(c);         <span class="hljs-comment">// print the character</span><br>  &#125;<br><br>  delay(<span class="hljs-number">500</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
 <ul>
 <li><code>Wire.begin()</code> 不加参数说明是 master</li>
+<li><code>Wire.requestFrom()</code> 用来指定请求的字节数以及 slave 地址</li>
+<li><code>Wire.available()</code> 同样用于检查缓冲区中是否接收到了数据</li>
 </ul>
+<h2 id="示例2-master-向-slave-发送数据"><a href="#示例2-master-向-slave-发送数据" class="headerlink" title="示例2: master 向 slave 发送数据"></a>示例2: master 向 slave 发送数据</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;Wire.h&gt;</span></span><br><br><span class="hljs-type">void</span> <span class="hljs-title function_">setup</span><span class="hljs-params">()</span> &#123;<br>  Wire.begin();           <span class="hljs-comment">// 初始化 I2C 作为主设备</span><br>  Serial.begin(<span class="hljs-number">9600</span>);      <span class="hljs-comment">// 初始化串口，用于调试</span><br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">loop</span><span class="hljs-params">()</span> &#123;<br>  Wire.beginTransmission(<span class="hljs-number">8</span>);  <span class="hljs-comment">// 开始传输，目标地址为 8</span><br>  Wire.write(<span class="hljs-string">&quot;Hello&quot;</span>);         <span class="hljs-comment">// 加入数据</span><br>  byte result = Wire.endTransmission();  <span class="hljs-comment">// 结束传输</span><br><br>  <span class="hljs-keyword">if</span> (result == <span class="hljs-number">0</span>) &#123;<br>    Serial.println(<span class="hljs-string">&quot;传输成功&quot;</span>);<br>  &#125; <span class="hljs-keyword">else</span> &#123;<br>    Serial.println(<span class="hljs-string">&quot;传输失败&quot;</span>);<br>  &#125;<br><br>  delay(<span class="hljs-number">1000</span>);  <span class="hljs-comment">// 等待1秒后再发送</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="示例3-slave-用回调函数发送和接收数据"><a href="#示例3-slave-用回调函数发送和接收数据" class="headerlink" title="示例3: slave 用回调函数发送和接收数据"></a>示例3: slave 用回调函数发送和接收数据</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;Wire.h&gt;</span></span><br><br><span class="hljs-type">void</span> <span class="hljs-title function_">setup</span><span class="hljs-params">()</span> &#123;<br>  Wire.begin(<span class="hljs-number">8</span>);  <span class="hljs-comment">// 设置从设备地址为 8</span><br>  Wire.onReceive(I2C_RxHandler);  <span class="hljs-comment">// 设置接收回调函数</span><br>  Wire.onRequest(I2C_TxHandler);   <span class="hljs-comment">// 设置请求回调函数</span><br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">loop</span><span class="hljs-params">()</span> &#123;<br>  <span class="hljs-comment">// 主循环可以执行其他任务</span><br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">I2C_RxHandler</span><span class="hljs-params">(<span class="hljs-type">int</span> numBytes)</span> &#123;<br>  <span class="hljs-keyword">while</span> (Wire.available()) &#123;<br>    <span class="hljs-type">char</span> c = Wire.read();  <span class="hljs-comment">// 读取接收到的数据</span><br>    <span class="hljs-comment">// 处理数据，例如保存或响应</span><br>  &#125;<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">I2C_TxHandler</span><span class="hljs-params">()</span> &#123;<br>  Wire.write(<span class="hljs-string">&quot;Data&quot;</span>);  <span class="hljs-comment">// 向主设备发送数据</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>Wire.onReceive(&lt;function_name&gt;)</code> 当设备接收到数据是自动调用</li>
+<li><code>Wire.onRequest(&lt;function_name&gt;)</code> 当设备接收到读取请求时自动调用</li>
+<li><code>Wire.write()</code> 用于发送数据</li>
+</ul>
+<h1 id="处理模拟信号"><a href="#处理模拟信号" class="headerlink" title="处理模拟信号"></a>处理模拟信号</h1><h2 id="读取模拟信号值"><a href="#读取模拟信号值" class="headerlink" title="读取模拟信号值"></a>读取模拟信号值</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> analogPin = A3; <span class="hljs-comment">// potentiometer wiper (middle terminal) connected to analog pin 3</span><br>                    <span class="hljs-comment">// outside leads to ground and +5V</span><br><span class="hljs-type">int</span> val = <span class="hljs-number">0</span>;  <span class="hljs-comment">// variable to store the value read</span><br><br><span class="hljs-type">void</span> <span class="hljs-title function_">setup</span><span class="hljs-params">()</span> &#123;<br>    Serial.begin(<span class="hljs-number">9600</span>);           <span class="hljs-comment">//  setup serial</span><br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">loop</span><span class="hljs-params">()</span> &#123;<br>    val = analogRead(analogPin);  <span class="hljs-comment">// read the input pin</span><br>    Serial.println(val);          <span class="hljs-comment">// debug value</span><br>K&#125;K<br></code></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
 
                 
               </div>
@@ -413,6 +431,12 @@
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2024/10/19/Linux-%E6%A8%A1%E6%8B%9F-I2C-%E9%80%9A%E4%BF%A1/" title="Linux-模拟-I2C-通信">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Linux-模拟-I2C-通信</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">
