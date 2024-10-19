@@ -47,11 +47,16 @@
 <meta property="og:image" content="http://example.com/img/cutecom-open-port-for-stm32-UART.png">
 <meta property="og:image" content="http://example.com/img/cutecom-send-msg-for-stm32-UART.png">
 <meta property="og:image" content="http://example.com/img/cutecom-get-msg-from-stm32-UART.png">
+<meta property="og:image" content="http://example.com/img/stm32cubeide-i2c-block-diagram.png">
+<meta property="og:image" content="http://example.com/img/stm32cubeide-i2c-working-mode.png">
 <meta property="og:image" content="http://example.com/img/RTOS-lab2-stm32-connect-to-Arduino.png">
 <meta property="og:image" content="http://example.com/img/arduino-programmer-on-board.png">
 <meta property="og:image" content="http://example.com/img/stm32cubeide-NUCLEO-F103RB-enable-I2C.png">
+<meta property="og:image" content="http://example.com/img/stm32cubeide-spi-block-diagram.png">
+<meta property="og:image" content="http://example.com/img/stm32cubeide-spi-working.png">
+<meta property="og:image" content="http://example.com/img/stm32cubeide-PWM-Explanation.png">
 <meta property="article:published_time" content="2024-09-26T08:07:21.000Z">
-<meta property="article:modified_time" content="2024-10-17T09:30:10.936Z">
+<meta property="article:modified_time" content="2024-10-19T07:19:04.342Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/stm32cubeide-switch-workspace1.jpg">
@@ -263,7 +268,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          9.7k 字
+          12k 字
         
       </span>
     
@@ -274,7 +279,7 @@
         
         
         
-          81 分钟
+          100 分钟
         
       </span>
     
@@ -520,7 +525,9 @@
 <p><img src="/../img/cutecom-send-msg-for-stm32-UART.png" srcset="/img/loading.gif" lazyload></p>
 <p>可以看到回显:</p>
 <p><img src="/../img/cutecom-get-msg-from-stm32-UART.png" srcset="/img/loading.gif" lazyload></p>
-<h1 id="I2C"><a href="#I2C" class="headerlink" title="I2C"></a>I2C</h1><p>HAL 库中, 使用 I2C 传输和接收数据的函数为:</p>
+<h1 id="I2C"><a href="#I2C" class="headerlink" title="I2C"></a>I2C</h1><p><img src="/../img/stm32cubeide-i2c-block-diagram.png" srcset="/img/loading.gif" lazyload></p>
+<p><img src="/../img/stm32cubeide-i2c-working-mode.png" srcset="/img/loading.gif" lazyload></p>
+<p>HAL 库中, 使用 I2C 传输和接收数据的函数为:</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c">HAL_I2C_Master_Transmit(&amp;hi2c#, I2C_Slave_address, buffer, #_of_bytes, DELAY);<br>HAL_I2C_Master_Receive(&amp;hi2c#, I2C_Slave_address, buffer, #_of_bytes, DELAY);<br></code></pre></td></tr></table></figure>
 <ul>
 <li><code>&amp;hi2c#</code> 指要使用的 I2C 接口</li>
@@ -583,7 +590,24 @@
 <ul>
 <li>这里用了 serial monitor 来调试</li>
 </ul>
-<h1 id="SPI"><a href="#SPI" class="headerlink" title="SPI"></a>SPI</h1>
+<h1 id="SPI"><a href="#SPI" class="headerlink" title="SPI"></a>SPI</h1><p><img src="/../img/stm32cubeide-spi-block-diagram.png" srcset="/img/loading.gif" lazyload></p>
+<p><img src="/../img/stm32cubeide-spi-working.png" srcset="/img/loading.gif" lazyload></p>
+<p>可以看到发送和接收数据可以同时进行.</p>
+<p>HAL 库中用于处理 SPI 的函数为:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c">HAL_SPI_Transmit(&amp;hspi#, buffer, <span class="hljs-meta"># of bits, delay);</span><br>HAL_SPI_Receive(&amp;hsp#, buffer, <span class="hljs-meta"># of bits, delay);</span><br></code></pre></td></tr></table></figure>
+<p>(注意和 I2C 的区别, 没有 address, 要发给哪个 slave 靠拉低 CS 线)</p>
+<p>下面同样有一段示例, <code>main</code> 函数中的部分代码为:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-type">uint8_t</span> buff[<span class="hljs-number">12</span>]; <span class="hljs-comment">// Buffer to receive and send 8 bit data</span><br>    <span class="hljs-type">uint16_t</span> analog_val; <span class="hljs-comment">// 16 bit analog value</span><br>    <span class="hljs-type">uint8_t</span> cmd_0 = <span class="hljs-number">0x83</span>; <span class="hljs-comment">// send to make the LED blink once a second</span><br>    <span class="hljs-type">uint8_t</span> cmd_0 = <span class="hljs-number">0x82</span>; <span class="hljs-comment">// send to make the LED blink once 750 ms</span><br>    <span class="hljs-type">uint8_t</span> cmd_0 = <span class="hljs-number">0x81</span>; <span class="hljs-comment">// send to make the LED blink once 500 ms</span><br>    <span class="hljs-type">uint8_t</span> cmd_0 = <span class="hljs-number">0x80</span>; <span class="hljs-comment">// send to make the LED to blink once every 250 ms</span><br>    <span class="hljs-type">uint8_t</span> reg_0 = <span class="hljs-number">0x0</span>;  <span class="hljs-comment">// make the lower byte ready to be transfered</span><br>    <span class="hljs-type">uint8_t</span> reg_1 = <span class="hljs-number">0x1</span>;  <span class="hljs-comment">// make the higher byte ready to be transfered</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><code>while</code> 中的部分代码为:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs c">HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);<br><span class="hljs-keyword">while</span> (<span class="hljs-number">1</span>)<br>&#123;<br>    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);<br>    <span class="hljs-built_in">memset</span>(buff, <span class="hljs-string">&#x27;\0&#x27;</span>, <span class="hljs-keyword">sizeof</span>(buff));<br>    buff[<span class="hljs-number">0</span>] = cmd_0;<br>    HAL_SPI_Transmit(&amp;hspi1, buff, <span class="hljs-number">1</span>, HAL_MAX_DELAY);<br>    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);<br>    HAL_Delay(<span class="hljs-number">100</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>完成一组交替的通信:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// sending the Address</span><br>HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);<br><span class="hljs-built_in">memset</span>(buff, <span class="hljs-string">&#x27;\0&#x27;</span>, <span class="hljs-keyword">sizeof</span>(buff));<br>buff[<span class="hljs-number">0</span>] = <span class="hljs-number">0x0</span>;<br>HAL_SPI_Transmit(&amp;hspi1, buff, <span class="hljs-number">1</span>, HAL_MAX_DELAY);<br>HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);<br>HAL_Delay(<span class="hljs-number">100</span>);<br><br><span class="hljs-comment">// Receiving the Data of the Address sent</span><br><span class="hljs-built_in">memset</span>(buff, <span class="hljs-string">&#x27;\0&#x27;</span>, <span class="hljs-keyword">sizeof</span>(buff));<br>HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);<br>HAL_SPI_Receive(&amp;hspi1, buff, <span class="hljs-number">1</span>, HAL_MAX_DELAY);<br>HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);<br>analog_val = buff[<span class="hljs-number">0</span>];<br>HAL_Delay(<span class="hljs-number">100</span>);<br><br><span class="hljs-comment">// sending the Address</span><br><span class="hljs-built_in">memset</span>(buff, <span class="hljs-string">&#x27;\0&#x27;</span>, <span class="hljs-keyword">sizeof</span>(buff));<br>buf[<span class="hljs-number">0</span>] = <span class="hljs-number">0x1</span>;<br>HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);<br>HAL_SPI_Transmit(&amp;hspi1, buff, <span class="hljs-number">1</span>, HAL_MAX_DELAY);<br>HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);<br>HAL_Delay(<span class="hljs-number">100</span>);<br><br><span class="hljs-comment">// Receiving the Data of the Address sent</span><br><span class="hljs-built_in">memset</span>(buff, <span class="hljs-string">&#x27;\0&#x27;</span>, <span class="hljs-keyword">sizeof</span>(buff));<br>HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);<br>HAL_SPI_Receive(&amp;hspi1, buff, <span class="hljs-number">1</span>, HAL_MAX_DELAY);<br>HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);<br>HAL_Delay(<span class="hljs-number">100</span>);<br><br>analog_val = (buff[<span class="hljs-number">0</span>] &lt;&lt; <span class="hljs-number">8</span>) | (analog_val);<br><span class="hljs-built_in">memset</span>(buff, <span class="hljs-string">&#x27;\0&#x27;</span>, <span class="hljs-keyword">sizeof</span>(buff));<br><span class="hljs-built_in">sprintf</span>(buff, <span class="hljs-string">&quot; %hu\n&quot;</span>, analog_val);<br><br><span class="hljs-comment">// printing data</span><br>HAL_UART_Transmit(&amp;huart2, buff, <span class="hljs-built_in">strlen</span>((<span class="hljs-type">char</span>*)buff), HAL_MAX_DELAY);<br></code></pre></td></tr></table></figure>
+
+<h1 id="PWM"><a href="#PWM" class="headerlink" title="PWM"></a>PWM</h1><p><img src="/../img/stm32cubeide-PWM-Explanation.png" srcset="/img/loading.gif" lazyload></p>
+<p>在 STM32 中, PWM 是借助 Timer 产生的.</p>
+
                 
               </div>
             
