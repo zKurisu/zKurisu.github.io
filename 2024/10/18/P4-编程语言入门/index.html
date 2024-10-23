@@ -32,7 +32,7 @@
 <meta property="og:image" content="http://example.com/img/vagrant-do-not-open-gui.png">
 <meta property="og:image" content="http://example.com/img/vagrant-login-withou-password.png">
 <meta property="article:published_time" content="2024-10-18T01:43:47.000Z">
-<meta property="article:modified_time" content="2024-10-23T07:39:19.051Z">
+<meta property="article:modified_time" content="2024-10-23T08:08:45.847Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/p4-env-virtualbox-version-wrong.png">
@@ -244,7 +244,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.7k 字
+          2.5k 字
         
       </span>
     
@@ -255,7 +255,7 @@
         
         
         
-          14 分钟
+          21 分钟
         
       </span>
     
@@ -345,6 +345,20 @@
 </ul>
 <p>BMV2 由 C++ 编写, 用 P4 compiler 编译 P4 程序产生的 JSON 文件作为输入, 解释得到要对 packet 做的操作.</p>
 <h2 id="V1Model-architecture"><a href="#V1Model-architecture" class="headerlink" title="V1Model architecture"></a>V1Model architecture</h2><p>V1Model 是 P4 程序语言中使用的一个标准架构模型，专门为基于软件的 BMv2 (Behavioral Model v2) 交换机而设计。</p>
+<h2 id="P4Runtime"><a href="#P4Runtime" class="headerlink" title="P4Runtime"></a>P4Runtime</h2><p>P4Runtime 是 P4 语言生态中的一个重要组件, 它提供了一种控制平面与数据平面之间的通信接口, 用于在和控制器之间进行实时的控制和管理. 通过 P4Runtime, 控制器可以动态下发, 更新或删除 P4 数据平面中的匹配表项和状态, 实现灵活的网络管理.</p>
+<figure class="highlight gherkin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs gherkin">+-----------------+       P4Runtime API       +-----------------+<br>|<span class="hljs-string">     控制器      </span>|<span class="hljs-string"> &lt;-----------------------&gt; </span>|<span class="hljs-string">  P4 交换机 (BMv2)</span>|<br>+-----------------+                           +-----------------+<br>         |<span class="hljs-string">                                              </span>|<br>         |<span class="hljs-string">                  数据包流                    </span>|<br>         +----------------------------------------------+<br></code></pre></td></tr></table></figure>
+
+<p>流程:</p>
+<ul>
+<li>编译阶段: P4 程序首先使用 P4 编译器 (如 <code>p4c</code>) 编译, 生成数据平面的二进制文件 (如 BMv2 程序), 并生成 P4Runtime API 文件 (如 <code>.p4info</code> 文件). P4Info 文件描述了数据平面中的表结构, 动作, 元数据 等信息</li>
+<li>运行阶段: 控制器通过 P4Runtime 读取 P4Info 文件, 了解设备支持的表项和元数据. 然后控制器可以动态与交换机交互, 如下发表项, 添加流规则, 或接收数据包事件</li>
+</ul>
+<h1 id="P4-程序基本结构"><a href="#P4-程序基本结构" class="headerlink" title="P4 程序基本结构"></a>P4 程序基本结构</h1><h1 id="Tutorial-使用指南"><a href="#Tutorial-使用指南" class="headerlink" title="Tutorial 使用指南"></a>Tutorial 使用指南</h1><p>下面都以 <code>basic</code> 为例.</p>
+<p>要做的内容是补全 <code>basic.p4</code> 中 <code>TODO</code> 注释的部分.</p>
+<p>每个题其实都有示例答案可以参考:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs sh">p4@p4:~/tutorials/exercises/basic$ tree -L 1<br>.<br>├── basic.p4<br>├── build<br>├── logs<br>├── Makefile<br>├── pcaps<br>├── pod-topo<br>├── README.md<br>├── receive.py<br>├── send.py<br>├── solution<br>└── triangle-topo<br></code></pre></td></tr></table></figure>
+
+<p>这里的 <code>solution</code> 目录下有示例答案.</p>
 <h1 id="Basic-Forwarding"><a href="#Basic-Forwarding" class="headerlink" title="Basic Forwarding"></a>Basic Forwarding</h1><p>要实现 IPv4 forwarding, 交换机需要对每个 packet 执行下面操作:</p>
 <ol>
 <li>更新 source (当前 switch 吧) 和 destination (下一跳 switch 吧) MAC 地址</li>
