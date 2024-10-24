@@ -26,7 +26,7 @@
 <meta property="og:image" content="http://example.com/img/how-x11-server-and-client-works.png">
 <meta property="og:image" content="http://example.com/img/display-manager-example.png">
 <meta property="article:published_time" content="2024-10-24T05:40:00.000Z">
-<meta property="article:modified_time" content="2024-10-24T11:13:36.921Z">
+<meta property="article:modified_time" content="2024-10-24T11:29:14.013Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/how-x11-server-and-client-works.png">
@@ -238,7 +238,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.1k 字
+          1.5k 字
         
       </span>
     
@@ -249,7 +249,7 @@
         
         
         
-          10 分钟
+          13 分钟
         
       </span>
     
@@ -299,6 +299,9 @@
 <h2 id="X-Client"><a href="#X-Client" class="headerlink" title="X Client"></a>X Client</h2><p>指运行在远程服务器上的 GUI 程序, 通过网络将显示请求发送给 X Server.</p>
 <h2 id="工作模式"><a href="#工作模式" class="headerlink" title="工作模式"></a>工作模式</h2><p>X Client 会将所有的绘图请求 (如窗口, 按钮等) 发送给 X Server. X Server 负责在显示设备上绘制这些图形元素.</p>
 <p><img src="/../img/how-x11-server-and-client-works.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="会话"><a href="#会话" class="headerlink" title="会话"></a>会话</h2><p>X11 用 <code>:x</code> (x 是一个数字, 比如 <code>1</code>, <code>2</code>) 这种格式标识会话, 可以通过设置 <code>DISPLAY</code> 环境变量指示 X11 将图形输出到哪个会话, 默认是 <code>:0</code>:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">export</span> DISPLAY=:0<br></code></pre></td></tr></table></figure>
+
 <h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><h2 id="X11-Client"><a href="#X11-Client" class="headerlink" title="X11 Client"></a>X11 Client</h2><p>安装 <code>xauth</code> 和可用的 X11 client, 可以先安装 <code>x11-apps</code> 测试, 在 ubuntu 上如:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo apt install -y xauth x11-apps<br></code></pre></td></tr></table></figure>
 
@@ -316,10 +319,20 @@
 <p>一般可直接选择安装 <code>xf86-video</code>:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo pacman -S xf86-video<br></code></pre></td></tr></table></figure>
 
-<h1 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h1><h2 id="X11-Server-1"><a href="#X11-Server-1" class="headerlink" title="X11 Server"></a>X11 Server</h2><p>一般 Xorg (也就是 X) 不会自动启用, 而是由 display manager 或 xinit (即 <code>startx</code>) 启动.</p>
+<h1 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h1><h2 id="启动-X11-Server"><a href="#启动-X11-Server" class="headerlink" title="启动 X11 Server"></a>启动 X11 Server</h2><p>一般 Xorg (也就是 X) 不会自动启用, 而是由 display manager 或 xinit (即 <code>startx</code>) 启动.</p>
 <p><img src="/../img/display-manager-example.png" srcset="/img/loading.gif" lazyload></p>
 <p>(display manager 的示例)</p>
-<h1 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h1><p>在 Archlinux 上, 配置文件位于 <code>/usr/share/X11/xorg.conf.d/</code> 目录下, <code>xorg.conf</code> 或以 <code>.conf</code> 结尾的文件都会在启用时自动读取. 读取顺序根据 ASCII 字符</p>
+<h2 id="启用新的-X11-会话"><a href="#启用新的-X11-会话" class="headerlink" title="启用新的 X11 会话"></a>启用新的 X11 会话</h2><p>启用并指定新的编号:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">X :1 &amp;<br></code></pre></td></tr></table></figure>
+
+
+<h1 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h1><p>在 Archlinux 上, 一部分配置文件位于 <code>/usr/share/X11/xorg.conf.d/</code> 目录下, <code>xorg.conf</code> 或以 <code>.conf</code> 结尾的文件都会在启用时自动读取. 读取顺序根据 ASCII 字符, 且必须以 <code>XX-</code> (两位数字) 开头, 注意 <code>xorg.conf</code> 会在最后读取 (越后的其实权限越大), 比如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">cd</span> /usr/share/X11/xorg.conf.d/<br>tree -L 1<br>.<br>├── 10-nvidia-drm-outputclass.conf<br>├── 10-quirks.conf<br>├── 40-libinput.conf<br>├── 70-synaptics.conf<br>└── 70-wacom.conf<br></code></pre></td></tr></table></figure>
+
+<p>另外还可编辑 <code>/etc/X11/xorg.conf</code> 或 <code>/etc/xorg.conf</code> 文件, 可以先用:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">Xorg :2 -configure<br></code></pre></td></tr></table></figure>
+
+<p>在 <code>/root/</code> 下生成一个 <code>xorg.conf.new</code> 文件, 可以把这个拷贝到上面两个路径.</p>
 
                 
               </div>
