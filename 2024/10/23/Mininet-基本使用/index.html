@@ -26,8 +26,10 @@
 <meta property="og:image" content="http://example.com/img/mininet-installation-from-vm-image.png">
 <meta property="og:image" content="http://example.com/img/mininet-qemu-kvm-start-vnc.png">
 <meta property="og:image" content="http://example.com/img/mininet-fin-vncviewer-connection.png">
+<meta property="og:image" content="http://example.com/img/mininet-check-available-nodes.png">
+<meta property="og:image" content="http://example.com/img/mininet-check-all-connections.png">
 <meta property="article:published_time" content="2024-10-23T13:21:13.000Z">
-<meta property="article:modified_time" content="2024-10-24T02:28:29.378Z">
+<meta property="article:modified_time" content="2024-10-24T02:58:32.156Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/mininet-installation-from-vm-image.png">
@@ -239,7 +241,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.4k 字
+          1.6k 字
         
       </span>
     
@@ -250,7 +252,7 @@
         
         
         
-          12 分钟
+          13 分钟
         
       </span>
     
@@ -314,17 +316,28 @@
 
 <p>之后打开 VirtualBox 就能看到了.</p>
 <h1 id="基本使用"><a href="#基本使用" class="headerlink" title="基本使用"></a>基本使用</h1><p>Mininet 的命令行工具为 <code>mn</code>.</p>
+<p>每次用 <code>sudo mn</code> 启动网络时, 它仅仅创建一个临时的网络拓扑, 在退出后会清理. 也可以手动清理所有遗留组件:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo mn -c<br></code></pre></td></tr></table></figure>
+
+
 <h2 id="创建一个-network"><a href="#创建一个-network" class="headerlink" title="创建一个 network"></a>创建一个 network</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo mn --switch ovs --controller ref --topo tree,depth=2,fanout=8 --<span class="hljs-built_in">test</span> pingall<br></code></pre></td></tr></table></figure>
 <ul>
 <li><code>--switch ovs</code>, 指定交换机类型为 ovs (Open vSwitch, 一个高性能, 可编程的虚拟交换机)</li>
 <li><code>--controller ref</code>, 指定 <code>ref</code> (一个默认的控制器实现) 作为 SDN 控制器</li>
 <li><code>--topo tree,depth=2,fanout=8</code>, 指定网络的拓扑结构, 这里指定为树形, 深度为 2, 每个非叶节点连接 8 个子节点 (一共 64 hosts 以及 9 各 switches)</li>
-<li><code>--test pingall</code>, 会让所有虚拟主机互相发送 ping 命令, 测试相互之间是否连通</li>
+<li><code>--test pingall</code>, 会让所有虚拟主机互相发送 ping 命令, 测试相互之间是否连通 (不加这个能直接进入交互)</li>
 </ul>
-<h2 id="与-network-交互"><a href="#与-network-交互" class="headerlink" title="与 network 交互"></a>与 network 交互</h2><p>比如让一台 host 去 ping 另一台:</p>
+<h2 id="与-network-交互"><a href="#与-network-交互" class="headerlink" title="与 network 交互"></a>与 network 交互</h2><h3 id="显示网络中的所有节点"><a href="#显示网络中的所有节点" class="headerlink" title="显示网络中的所有节点"></a>显示网络中的所有节点</h3><p>包括主机和交换机:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet&gt; nodes<br></code></pre></td></tr></table></figure>
+
+<p><img src="/../img/mininet-check-available-nodes.png" srcset="/img/loading.gif" lazyload></p>
+<h3 id="显示网络中的所有连接"><a href="#显示网络中的所有连接" class="headerlink" title="显示网络中的所有连接"></a>显示网络中的所有连接</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet&gt; net<br></code></pre></td></tr></table></figure>
+
+<p><img src="/../img/mininet-check-all-connections.png" srcset="/img/loading.gif" lazyload></p>
+<h3 id="ping-测试"><a href="#ping-测试" class="headerlink" title="ping 测试"></a>ping 测试</h3><p>比如让一台 host 去 ping 另一台:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet&gt; h2 ping h3<br></code></pre></td></tr></table></figure>
 
-<p>也可以让一台 host 运行 linux 命令, 比如开启一个 http server, 让另一台 host 访问:</p>
+<h3 id="运行-Linux-命令"><a href="#运行-Linux-命令" class="headerlink" title="运行 Linux 命令"></a>运行 Linux 命令</h3><p>比如开启一个 http server, 让另一台 host 访问:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet&gt; h2 python -m SimpleHTTPServer 80 &gt;&amp; /tmp/http.log &amp;<br>mininet&gt; h3 wget -O - h2<br></code></pre></td></tr></table></figure>
 
 <h2 id="定制-network"><a href="#定制-network" class="headerlink" title="定制 network"></a>定制 network</h2><p>可以用 python 编写特定的 network:</p>
