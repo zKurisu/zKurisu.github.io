@@ -27,7 +27,7 @@
 <meta property="og:image" content="http://example.com/img/mininet-qemu-kvm-start-vnc.png">
 <meta property="og:image" content="http://example.com/img/mininet-fin-vncviewer-connection.png">
 <meta property="article:published_time" content="2024-10-23T13:21:13.000Z">
-<meta property="article:modified_time" content="2024-10-24T02:14:26.441Z">
+<meta property="article:modified_time" content="2024-10-24T02:28:29.378Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/mininet-installation-from-vm-image.png">
@@ -239,7 +239,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          920 字
+          1.4k 字
         
       </span>
     
@@ -250,7 +250,7 @@
         
         
         
-          8 分钟
+          12 分钟
         
       </span>
     
@@ -318,8 +318,18 @@
 <ul>
 <li><code>--switch ovs</code>, 指定交换机类型为 ovs (Open vSwitch, 一个高性能, 可编程的虚拟交换机)</li>
 <li><code>--controller ref</code>, 指定 <code>ref</code> (一个默认的控制器实现) 作为 SDN 控制器</li>
-<li><code>--topo tree,depth=2,fanout=8</code>, 指定网络的拓扑结构, 这里指定为树形, 深度为 2, 每个非叶节点连接 8 个子节点</li>
+<li><code>--topo tree,depth=2,fanout=8</code>, 指定网络的拓扑结构, 这里指定为树形, 深度为 2, 每个非叶节点连接 8 个子节点 (一共 64 hosts 以及 9 各 switches)</li>
+<li><code>--test pingall</code>, 会让所有虚拟主机互相发送 ping 命令, 测试相互之间是否连通</li>
 </ul>
+<h2 id="与-network-交互"><a href="#与-network-交互" class="headerlink" title="与 network 交互"></a>与 network 交互</h2><p>比如让一台 host 去 ping 另一台:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet&gt; h2 ping h3<br></code></pre></td></tr></table></figure>
+
+<p>也可以让一台 host 运行 linux 命令, 比如开启一个 http server, 让另一台 host 访问:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet&gt; h2 python -m SimpleHTTPServer 80 &gt;&amp; /tmp/http.log &amp;<br>mininet&gt; h3 wget -O - h2<br></code></pre></td></tr></table></figure>
+
+<h2 id="定制-network"><a href="#定制-network" class="headerlink" title="定制 network"></a>定制 network</h2><p>可以用 python 编写特定的 network:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> mininet.net <span class="hljs-keyword">import</span> Mininet<br><span class="hljs-keyword">from</span> mininet.topolib <span class="hljs-keyword">import</span> TreeTopo<br>tree4 = TreeTopo(depth=<span class="hljs-number">2</span>,fanout=<span class="hljs-number">2</span>)<br>net = Mininet(topo=tree4)<br>net.start()<br>h1, h4  = net.hosts[<span class="hljs-number">0</span>], net.hosts[<span class="hljs-number">3</span>]<br><span class="hljs-built_in">print</span> h1.cmd(<span class="hljs-string">&#x27;ping -c1 %s&#x27;</span> % h4.IP())<br>net.stop()<br></code></pre></td></tr></table></figure>
+
 
                 
               </div>
