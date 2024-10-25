@@ -29,6 +29,7 @@
 <meta property="og:image" content="http://example.com/img/p4-how-to-programming-a-p4-target.png">
 <meta property="og:image" content="http://example.com/img/p4-language-components.png">
 <meta property="og:image" content="http://example.com/img/P4-parser-state-machine-work-flow.png">
+<meta property="og:image" content="http://example.com/img/p4-parser-input-and-output.png">
 <meta property="og:image" content="http://example.com/img/p4-env-virtualbox-version-wrong.png">
 <meta property="og:image" content="http://example.com/img/p4-env-virtualbox-kernel-version-wrong.png">
 <meta property="og:image" content="http://example.com/img/p4-env-downgrade-virtualbox.png">
@@ -38,7 +39,7 @@
 <meta property="og:image" content="http://example.com/img/vagrant-do-not-open-gui.png">
 <meta property="og:image" content="http://example.com/img/vagrant-login-withou-password.png">
 <meta property="article:published_time" content="2024-10-18T01:43:47.000Z">
-<meta property="article:modified_time" content="2024-10-25T03:40:38.548Z">
+<meta property="article:modified_time" content="2024-10-25T06:58:31.398Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/P4-design-idea.png">
@@ -250,7 +251,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          8.7k 字
+          11k 字
         
       </span>
     
@@ -261,7 +262,7 @@
         
         
         
-          73 分钟
+          89 分钟
         
       </span>
     
@@ -411,7 +412,7 @@
 </li>
 <li><code>forward.apply()</code>, 这里的 <code>apply()</code> 是流表的内置方法, 表示启用该流表的查找和动作处理</li>
 </ul>
-<h2 id="Parser"><a href="#Parser" class="headerlink" title="Parser"></a>Parser</h2><p>解析器的作用是: 把 packets 映射到 headers 和 metadata 中. 其基于状态机运行, 每个 parser 都有 3 个预定义的状态:</p>
+<h2 id="Parser"><a href="#Parser" class="headerlink" title="Parser"></a>Parser</h2><p>解析器的作用是: 把 packets 映射到 headers 和 metadata 中 (也就是主要负责提取信息). 其基于状态机运行, 每个 parser 都有 3 个预定义的状态:</p>
 <ul>
 <li><code>start</code></li>
 <li><code>accept</code></li>
@@ -421,8 +422,41 @@
 <p>(其他的状态也可以自定义)</p>
 <p>在 state 中, 可以执行 action, 或者过渡 (transition) 到下一个 state.</p>
 <p>比如:</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">parser <br></code></pre></td></tr></table></figure>
-
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs c">parser <span class="hljs-title function_">MyParser</span><span class="hljs-params">(packet_in packet,</span><br><span class="hljs-params">        out headers hdr,</span><br><span class="hljs-params">        inout metadata meta,</span><br><span class="hljs-params">        inout <span class="hljs-type">standard_metadata_t</span> standard_metadata)</span> &#123;<br><br>    state <span class="hljs-title function_">start</span><span class="hljs-params">(</span><br><span class="hljs-params">        packet.extract(hdr.ethernet);</span><br><span class="hljs-params">        transition accept;</span><br><span class="hljs-params">    )</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>packet.extract(hdr.ethernet)</code> 从 <code>packet</code> 中提取数据, 将其解析为 <code>ethernet</code> 头部, 并将其赋值给 <code>hdr.ethernet</code></li>
+</ul>
+<p><img src="/../img/p4-parser-input-and-output.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="Controls"><a href="#Controls" class="headerlink" title="Controls"></a>Controls</h2><p>Controls 就可以理解为执行一次的函数. 具体的行为在 <code>apply &#123; &#125;</code> 块中执行. 主要包括:</p>
+<ul>
+<li>Match-Action Pipelines</li>
+<li>Deparsers (也就是说没有专门的 <code>deparser</code> 关键字, 其也定义在 <code>control</code> 里)</li>
+<li>额外的处理, 如 checksums</li>
+</ul>
+<p>示例:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs c">control <span class="hljs-title function_">MyIngress</span><span class="hljs-params">(inout headers hdr,</span><br><span class="hljs-params">        inout metadata meta,</span><br><span class="hljs-params">        inout <span class="hljs-type">standard_metadata_t</span> std_meta)</span> &#123;<br>    <span class="hljs-comment">/* Declarations region */</span><br>    bit&lt;<span class="hljs-number">48</span>&gt; tmp;<br><br>    apply &#123;<br>        <span class="hljs-comment">/* Control Flow */</span><br>        tmp = hdr.ethernet.dstAddr;<br>        hdr.ethernet.dstAddr = hdr.ethernet.srcAddr;<br>        hdr.ethernet.srcAddr = tmp;<br>        std_meta.egress_spec = std_meta.ingress_port;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>这里吧 src 和 dst 的 MAC 地址交换, 然后从接收包的 port 再发送出去<br>(也就是哪里出来就哪里回去)</li>
+</ul>
+<h2 id="Action"><a href="#Action" class="headerlink" title="Action"></a>Action</h2><p>Action 和 C 的函数类似, 可以在一个 control 块中定义, 也可以全局定义. 传入 action 的参数也有方向和类型.</p>
+<p>一个示例:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs c">control <span class="hljs-title function_">MyIngress</span><span class="hljs-params">(inout headers hdr,</span><br><span class="hljs-params">        inout metadata meta,</span><br><span class="hljs-params">        inout <span class="hljs-type">standard_metadata_t</span> std_meta)</span> &#123;<br><br>    action <span class="hljs-title function_">swap_mac</span><span class="hljs-params">(inout bit&lt;<span class="hljs-number">48</span>&gt; src,</span><br><span class="hljs-params">                    inout bit&lt;<span class="hljs-number">48</span>&gt; dst)</span> &#123;<br>        bit&lt;<span class="hljs-number">48</span>&gt; tmp = src;<br>        src = dst;<br>        dst = tmp;<br>    &#125;<br><br>    apply &#123;<br>        swap_mac(hdr.ethernet.srcAddr,<br>                 hdr.ethernet.dstAddr);<br>        std_meta.egress_spec = std_meta.ingress_port;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>可以看出, action 会直接对传入的参数修改 (就像 C 中传入指针修改一样)</li>
+</ul>
+<h2 id="Tables"><a href="#Tables" class="headerlink" title="Tables"></a>Tables</h2><p>Tables 是 Match-Action pipeline 的基本单位 (都是操作 table 中的数据), 定义 table 时需要指定:</p>
+<ul>
+<li>要 match 什么</li>
+<li>怎么 match</li>
+<li>要执行什么 actions</li>
+<li>table 的基本属性, 如 <code>size</code>, <code>default action</code>, <code>static entries</code></li>
+</ul>
+<p>定义好 table 后, 其需要包含多条 entries (也就是 rules), 每一条 entry 需要包含:</p>
+<ul>
+<li>用于 match 的 key</li>
+<li>当 match 时的 action</li>
+<li>action data (不知道是啥)</li>
+</ul>
 <h1 id="语法"><a href="#语法" class="headerlink" title="语法"></a>语法</h1><h2 id="结构体声明"><a href="#结构体声明" class="headerlink" title="结构体声明"></a>结构体声明</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">struct_name</span> &#123;</span><br>    type name1;<br>    type name2;<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>和 C&#x2F;C++ 一样, 用 <code>struct</code> 关键字.</p>
 <h2 id="类型声明"><a href="#类型声明" class="headerlink" title="类型声明"></a>类型声明</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">standard_metadata_t</span> &#123;</span><br>    bit&lt;<span class="hljs-number">9</span>&gt; ingress_port;<br>    bit&lt;<span class="hljs-number">9</span>&gt; egress_spec;<br>    bit&lt;<span class="hljs-number">9</span>&gt; egress_port;<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
@@ -440,6 +474,19 @@
 
 
 <h2 id="返回值"><a href="#返回值" class="headerlink" title="返回值?"></a>返回值?</h2><p>P4 中没有传统意义的函数返回值, 解析器利用状态机来解析数据包, 并将解析结果存储在传入的参数中 (比如 <code>headers</code> 结构体), 而非通过返回值传递.</p>
+<h2 id="Select-语句"><a href="#Select-语句" class="headerlink" title="Select 语句"></a>Select 语句</h2><p><code>select</code> 类似 C 中的 <code>switch</code>, 但是不会自动 <code>fall-through</code> (也就是说不需要 break 也能跳出), 并且其内容是切换到另一个 state, 如:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c">state start &#123;<br>    transition parse_ethernet;<br>&#125;<br><br>state parse_ethernet &#123;<br>    packet.extract(hdr.ethernet);<br>    transition <span class="hljs-title function_">select</span><span class="hljs-params">(hdr.ethernet.etherType)</span> &#123;<br>        <span class="hljs-number">0x800</span>: parse_ipv4;<br>        <span class="hljs-keyword">default</span>; accept;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>hdr.ethernet.etherType</code> 的值是 <code>0x800</code> 则跳转到 <code>parse_ipv4</code>, 不然到 <code>accept</code>.</li>
+</ul>
+<h2 id="运算符"><a href="#运算符" class="headerlink" title="运算符"></a>运算符</h2><p>大多 C 中的运算符都能使用, 但没有 division 和 modulo, 如下:</p>
+<ul>
+<li><code>+</code>, <code>-</code>, <code>*</code></li>
+<li><code>~</code>, <code>&amp;</code>, <code>|</code>, <code>^</code>, <code>&gt;&gt;</code>, <code>&lt;&lt;</code></li>
+<li><code>==</code>, <code>!=</code>, <code>&gt;</code>, <code>&gt;=</code>, <code>&lt;</code>, <code>&lt;=</code></li>
+<li>bit-slicing: <code>[m:l]</code></li>
+<li>拼接: <code>++</code></li>
+</ul>
 <h1 id="Tutorial"><a href="#Tutorial" class="headerlink" title="Tutorial"></a>Tutorial</h1><h2 id="Tutorial-环境准备"><a href="#Tutorial-环境准备" class="headerlink" title="Tutorial 环境准备"></a>Tutorial 环境准备</h2><p>首先确保安装的 virtualbox 以及其内核版本正确, 不然会报错:<br><img src="/../img/p4-env-virtualbox-version-wrong.png" srcset="/img/loading.gif" lazyload></p>
 <p><img src="/../img/p4-env-virtualbox-kernel-version-wrong.png" srcset="/img/loading.gif" lazyload></p>
 <p>在 <code>Archlinux</code> 上, 可以用 <code>downgrade</code> 命令降低软件版本:</p>
