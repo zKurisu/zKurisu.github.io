@@ -37,7 +37,7 @@
 <meta property="og:image" content="http://example.com/img/vagrant-do-not-open-gui.png">
 <meta property="og:image" content="http://example.com/img/vagrant-login-withou-password.png">
 <meta property="article:published_time" content="2024-10-18T01:43:47.000Z">
-<meta property="article:modified_time" content="2024-10-25T01:46:09.657Z">
+<meta property="article:modified_time" content="2024-10-25T02:47:40.678Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/P4-design-idea.png">
@@ -249,7 +249,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3.8k 字
+          5.8k 字
         
       </span>
     
@@ -260,7 +260,7 @@
         
         
         
-          33 分钟
+          49 分钟
         
       </span>
     
@@ -347,13 +347,47 @@
 <li>运行阶段: 控制器通过 P4Runtime 读取 P4Info 文件, 了解设备支持的表项和元数据. 然后控制器可以动态与交换机交互, 如下发表项, 添加流规则, 或接收数据包事件</li>
 </ul>
 <h1 id="P4-程序基本结构"><a href="#P4-程序基本结构" class="headerlink" title="P4 程序基本结构"></a>P4 程序基本结构</h1><p>P4 的组成元素如下:<br><img src="/../img/p4-language-components.png" srcset="/img/loading.gif" lazyload></p>
-<h1 id="语法"><a href="#语法" class="headerlink" title="语法"></a>语法</h1><h2 id="类型声明"><a href="#类型声明" class="headerlink" title="类型声明"></a>类型声明</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">standard_metadata_t</span> &#123;</span><br>    bit&lt;<span class="hljs-number">9</span>&gt; ingress_port;<br>    bit&lt;<span class="hljs-number">9</span>&gt; egress_spec;<br>    bit&lt;<span class="hljs-number">9</span>&gt; egress_port;<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>对于不同的 Model, 似乎程序的结构也有所不同.</p>
+<h2 id="V1Model-示例"><a href="#V1Model-示例" class="headerlink" title="V1Model 示例"></a>V1Model 示例</h2><p>这里分开写, 完整的程序合在一起就好</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;core.p4&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;v1model.p4&gt;</span></span><br><br><span class="hljs-comment">/* HEADERS */</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">metadata</span> &#123;</span> ... &#125;<br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">headers</span> &#123;</span><br>    <span class="hljs-type">ethernet_t</span> ethernet;<br>    <span class="hljs-type">ipv4_t</span> ipv4;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>core.p4</code> 是 P4 语言的核心库, 通常包含基础的类型定义, 数据结构, 操作符和功能</li>
+<li><code>v1model.p4</code> 是 P4 语言的标准模型, 通常用于定义一个标准的 P4 数据平面模型, 包含了一些典型的网络设备行为和数据结构</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* PARSER */</span><br>parser <span class="hljs-title function_">Myparser</span><span class="hljs-params">(packet_in packet,</span><br><span class="hljs-params">        out headers hdr,</span><br><span class="hljs-params">        input metadata meta,</span><br><span class="hljs-params">        inout <span class="hljs-type">standard_metadata_t</span> smeta)</span> &#123;<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><code>metadata</code> (一般存储一些标志位或控制信息) 和 <code>headers</code> 两个结构体都是自定义名称的, 但一般还是遵循这两个命名规范</li>
+<li><code>parser</code> 关键字表明 “解析器定义”, 用于描述如何解析数据包中的各种协议头<ul>
+<li><code>packet_in packet</code>, 指代流入的数据包, <code>packet_in</code> 是 P4 中的特殊类型, 用于表示输入的数据包流, 不需要额外的方向修饰符 (毕竟语义已经很明确了)</li>
+<li><code>out headers hdr</code>, <code>out</code> 表明这时一个 <strong>输出参数</strong>, 在解析的过程中, <code>headers</code> 类型的结构体 <code>hdr</code> 会被填充数据</li>
+<li><code>input metadata meta</code>, <code>input</code> 表明其为一个 <strong>只读输入参数</strong>, 即该参数在解析器中不会被修改</li>
+<li><code>inout standard_metadata_t smeta</code>, <code>inout</code> 表示该参数既可以作为输入, 也可以作为输出, 即它的值可以在解析器中被修改; <code>standard_metadata_t</code>, 是一个标准元数据结构, 存储与交换机端口, 流量控制等相关的信息</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* CHECKSUM VERIFICATION */</span><br>control <span class="hljs-title function_">MyVerifyChecksum</span><span class="hljs-params">(in headers hdr,</span><br><span class="hljs-params">        inout metadata meta)</span> &#123;<br>    ...<br>&#125;<br><span class="hljs-comment">/* INGRESS PROCESSING */</span><br>control <span class="hljs-title function_">MyIngress</span><span class="hljs-params">(inout header hdr,</span><br><span class="hljs-params">        inout metadata meta,</span><br><span class="hljs-params">        inout <span class="hljs-type">standard_metadata_t</span> std_mate)</span> &#123;<br>    ...<br>&#125;<br><span class="hljs-comment">/* EGRESS PROCESSING */</span><br>control <span class="hljs-title function_">MyEgress</span><span class="hljs-params">(inout headers hdr,</span><br><span class="hljs-params">        inout metadata meta,</span><br><span class="hljs-params">        inout <span class="hljs-type">standard_metadata_t</span> std_meta)</span> &#123;<br>    ...<br>&#125;<br><span class="hljs-comment">/* CHECKSUM UPDATE */</span><br>control <span class="hljs-title function_">MyComputerChecksum</span><span class="hljs-params">(inout headers hdr,</span><br><span class="hljs-params">        inout metadata meta)</span> &#123;<br>    ...<br>&#125;<br><span class="hljs-comment">/* DEPARSER */</span><br>control <span class="hljs-title function_">MyDeparser</span><span class="hljs-params">(inout headers hdr,</span><br><span class="hljs-params">        inout metadata meta)</span> &#123;<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>control</code> 定义一个 <strong>控制块</strong>, 描述数据包处理的具体逻辑</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* SWITCH */</span><br>V1Switch(<br>    MyParser(),<br>    MyVerifyChecksum(),<br>    MyIngress(),<br>    MyEgress(),<br>    MyComputerChecksum(),<br>    MyDeparser()<br>) main;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>用 <code>V1Switch</code> 模型创建一个名为 <code>main</code> 的交换机实例</li>
+<li><code>V1Switch</code> 的参数是传递的各组件 (注意加上 <code>()</code> 并不是执行函数, 而是表明其为一个组件), 需要按顺序</li>
+</ul>
+<p>在 <code>v1switch.p4</code> 文件中, 可以看到 <code>V1Switch</code> 的定义为:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c">package V1Switch&lt;H, M&gt;(Parser&lt;H, M&gt; p,<br>                       VerifyChecksum&lt;H, M&gt; vr,<br>                       Ingress&lt;H, M&gt; ig,<br>                       Egress&lt;H, M&gt; eg,<br>                       ComputeChecksum&lt;H, M&gt; ck,<br>                       Deparser&lt;H&gt; dep<br>                       );<br></code></pre></td></tr></table></figure>
+<p>(暂不解释)</p>
+<h1 id="语法"><a href="#语法" class="headerlink" title="语法"></a>语法</h1><h2 id="结构体声明"><a href="#结构体声明" class="headerlink" title="结构体声明"></a>结构体声明</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">struct_name</span> &#123;</span><br>    type name1;<br>    type name2;<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>和 C&#x2F;C++ 一样, 用 <code>struct</code> 关键字.</p>
+<h2 id="类型声明"><a href="#类型声明" class="headerlink" title="类型声明"></a>类型声明</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">standard_metadata_t</span> &#123;</span><br>    bit&lt;<span class="hljs-number">9</span>&gt; ingress_port;<br>    bit&lt;<span class="hljs-number">9</span>&gt; egress_spec;<br>    bit&lt;<span class="hljs-number">9</span>&gt; egress_port;<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
 <ul>
 <li><code>bit&lt;9&gt;</code> 是一种 “位宽类型声明”, 用于精确控制字段的位宽, 这与 C&#x2F;C++ 中的 <code>int</code> 类型名指代长度不同. 这里是声明 9 位无符号整数字段 (P4 不允许符号位, 因此所有的 <code>bit&lt;N&gt;</code> 类型都是无符号的)</li>
 <li><code>ingress_port</code>, 指数据包进入的端口</li>
 <li><code>egress_spec</code>, 指预期数据包流出端口, 是由 Ingress Pipeline 决定和设置</li>
 <li><code>egress_port</code>, 指实际数据包流出的端口, 通常和 <code>egress_spec</code> 的值相同, 但可能由于重定向, 多播等原因不同</li>
 </ul>
+<h2 id="返回值"><a href="#返回值" class="headerlink" title="返回值?"></a>返回值?</h2><p>P4 中没有传统意义的函数返回值, 解析器利用状态机来解析数据包, 并将解析结果存储在传入的参数中 (比如 <code>headers</code> 结构体), 而非通过返回值传递.</p>
 <h1 id="Tutorial"><a href="#Tutorial" class="headerlink" title="Tutorial"></a>Tutorial</h1><h2 id="Tutorial-环境准备"><a href="#Tutorial-环境准备" class="headerlink" title="Tutorial 环境准备"></a>Tutorial 环境准备</h2><p>首先确保安装的 virtualbox 以及其内核版本正确, 不然会报错:<br><img src="/../img/p4-env-virtualbox-version-wrong.png" srcset="/img/loading.gif" lazyload></p>
 <p><img src="/../img/p4-env-virtualbox-kernel-version-wrong.png" srcset="/img/loading.gif" lazyload></p>
 <p>在 <code>Archlinux</code> 上, 可以用 <code>downgrade</code> 命令降低软件版本:</p>
