@@ -28,6 +28,7 @@
 <meta property="og:image" content="http://example.com/img/p4-architecture-and-target-example.png">
 <meta property="og:image" content="http://example.com/img/p4-how-to-programming-a-p4-target.png">
 <meta property="og:image" content="http://example.com/img/p4-language-components.png">
+<meta property="og:image" content="http://example.com/img/P4-parser-state-machine-work-flow.png">
 <meta property="og:image" content="http://example.com/img/p4-env-virtualbox-version-wrong.png">
 <meta property="og:image" content="http://example.com/img/p4-env-virtualbox-kernel-version-wrong.png">
 <meta property="og:image" content="http://example.com/img/p4-env-downgrade-virtualbox.png">
@@ -37,7 +38,7 @@
 <meta property="og:image" content="http://example.com/img/vagrant-do-not-open-gui.png">
 <meta property="og:image" content="http://example.com/img/vagrant-login-withou-password.png">
 <meta property="article:published_time" content="2024-10-18T01:43:47.000Z">
-<meta property="article:modified_time" content="2024-10-25T02:47:40.678Z">
+<meta property="article:modified_time" content="2024-10-25T03:40:38.548Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/P4-design-idea.png">
@@ -249,7 +250,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          5.8k 字
+          8.7k 字
         
       </span>
     
@@ -260,7 +261,7 @@
         
         
         
-          49 分钟
+          73 分钟
         
       </span>
     
@@ -378,6 +379,50 @@
 <p>在 <code>v1switch.p4</code> 文件中, 可以看到 <code>V1Switch</code> 的定义为:</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c">package V1Switch&lt;H, M&gt;(Parser&lt;H, M&gt; p,<br>                       VerifyChecksum&lt;H, M&gt; vr,<br>                       Ingress&lt;H, M&gt; ig,<br>                       Egress&lt;H, M&gt; eg,<br>                       ComputeChecksum&lt;H, M&gt; ck,<br>                       Deparser&lt;H&gt; dep<br>                       );<br></code></pre></td></tr></table></figure>
 <p>(暂不解释)</p>
+<h3 id="Hello-World"><a href="#Hello-World" class="headerlink" title="Hello World"></a>Hello World</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;core.p4&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;v1model.p4&gt;</span></span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">headers</span> &#123;</span>&#125;<br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">metadata</span> &#123;</span>&#125;<br><br>parser <span class="hljs-title function_">MyParser</span><span class="hljs-params">(packet_in packet,</span><br><span class="hljs-params">        out header hdr,</span><br><span class="hljs-params">        inout metadata meta,</span><br><span class="hljs-params">        inout <span class="hljs-type">standard_metadata_t</span> standard_metadata)</span> &#123;<br><br>    state start &#123; transition accept; &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>P4 的解析器是由多个状态组成的, <code>start</code> 通常是解析器的初始状态.</p>
+<ul>
+<li><code>state start</code>, 定义了 <code>start</code> 状态的行为</li>
+<li><code>transition accept</code>, 表示切换到 <code>accept</code> 状态, 而 <code>accept</code> 状态是一个内置的状态, 表示解析器完成了数据包的解析过程, 并且将数据包传递给后续处理</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">control <span class="hljs-title function_">MyVerifyChecksum</span><span class="hljs-params">(inout headers hdr, inout metadata meta)</span> &#123; apply &#123; &#125; &#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>apply &#123;&#125;</code> 块是控制块中需要执行的部分, 这里表示不执行任何操作</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c">control <span class="hljs-title function_">MyIngress</span><span class="hljs-params">(inout headers hdr,</span><br><span class="hljs-params">    inout metadata meta,</span><br><span class="hljs-params">    inout <span class="hljs-type">standard_metadata_t</span> standard_metadata)</span> &#123;<br>    apply &#123;<br>        <span class="hljs-keyword">if</span> (standard_metadata.ingress_port == <span class="hljs-number">1</span>) &#123;<br>            standard_metadata.egress_spec = <span class="hljs-number">2</span>;<br>        &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (standard_metadata.ingress_port == <span class="hljs-number">2</span>) &#123;<br>            standard_metadata.egress_spec = <span class="hljs-number">1</span>;<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>这里通过数据包进入的端口来设置流出的端口</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs c">control <span class="hljs-title function_">MyEgress</span><span class="hljs-params">(inout headers hdr,</span><br><span class="hljs-params">    inout metadata meta,</span><br><span class="hljs-params">    inout <span class="hljs-type">standard_metadata_t</span> standard_metadata)</span> &#123;<br>     apply &#123; &#125;<br>&#125;<br><br>control <span class="hljs-title function_">MyComputerChecksum</span><span class="hljs-params">(inout headers hdr, inout metadata meta)</span> &#123;<br>    apply &#123; &#125;<br>&#125;<br><br>control <span class="hljs-title function_">MyDeparser</span><span class="hljs-params">(packet_out packet, in headers hdr)</span> &#123;<br>    apply &#123; &#125;<br>&#125;<br><br>V1Switch(<br>    MyParser(),<br>    MyVerifyChecksum(),<br>    MyIngress(),<br>    MyEgress(),<br>    MyComputerChecksum(),<br>    MyDeparser()<br>) main;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>这里在 Parser 中没有对数据包做处理, 因此 Deparser 也为空</li>
+</ul>
+<h3 id="Basic-Forwarding"><a href="#Basic-Forwarding" class="headerlink" title="Basic Forwarding"></a>Basic Forwarding</h3><p>这里仅修改了 <code>MyIngress</code> control 块, 其他部分同上面 hello world:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs c">control <span class="hljs-title function_">MyIngress</span><span class="hljs-params">(inout headers hdr,</span><br><span class="hljs-params">        inout metadata meta,</span><br><span class="hljs-params">        inout <span class="hljs-type">standard_metadata_t</span> standard_metadata)</span> &#123;<br>    action <span class="hljs-title function_">set_egress_spec</span><span class="hljs-params">(bit&lt;<span class="hljs-number">9</span>&gt; port)</span> &#123;<br>        standard_metadata.egress_spec = port;<br>    &#125;<br><br>    table forward &#123;<br>        key = &#123; standard_metadata.ingress_port: exact; &#125;<br>        actions = &#123;<br>            set_egress_spec;<br>            NoAction;<br>        &#125;<br>        size = <span class="hljs-number">1024</span>;<br>        default_action = NoAction()<br>    &#125;<br><br>    apply &#123; forward.apply(); &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>action</code> 关键词用于定义一个动作, 感觉类似一个待调用的函数, 接受一个 <code>bit&lt;9&gt;</code> 的参数</li>
+<li><code>table</code> 关键词用于创建一个流表, 存储匹配条件以及相应动作, 而 <code>forward</code> 是该流表的名称 (就是变量名啦), <ul>
+<li><code>key</code> 定义流表的键, 查找哪个字段, 以及如何查找 <code>key = &#123; standard_metadata.ingress_port: exact; &#125;</code>, 表示查找 <code>standard_metadata.ingress_port</code> 字段, 采用 <code>exact</code> 的匹配原则 (可能就是完全一致的以配, 这里的意思就是只处理 <code>standard_metadata.ingress_port</code> 字段)</li>
+<li><code>action</code> 表示对匹配项执行的操作, 包含多条 action (前面用 <code>action</code> 关键字定义的)</li>
+<li><code>size</code> 指定流表的容量, 即可以存储的条目数量</li>
+<li><code>default_action</code> 定义当没有找到匹配条目时的默认行为</li>
+<li><code>NoAction</code> 是一个内置的特殊 action, 表示不对数据包做处理</li>
+</ul>
+</li>
+<li><code>forward.apply()</code>, 这里的 <code>apply()</code> 是流表的内置方法, 表示启用该流表的查找和动作处理</li>
+</ul>
+<h2 id="Parser"><a href="#Parser" class="headerlink" title="Parser"></a>Parser</h2><p>解析器的作用是: 把 packets 映射到 headers 和 metadata 中. 其基于状态机运行, 每个 parser 都有 3 个预定义的状态:</p>
+<ul>
+<li><code>start</code></li>
+<li><code>accept</code></li>
+<li><code>reject</code></li>
+</ul>
+<p><img src="/../img/P4-parser-state-machine-work-flow.png" srcset="/img/loading.gif" lazyload></p>
+<p>(其他的状态也可以自定义)</p>
+<p>在 state 中, 可以执行 action, 或者过渡 (transition) 到下一个 state.</p>
+<p>比如:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">parser <br></code></pre></td></tr></table></figure>
+
 <h1 id="语法"><a href="#语法" class="headerlink" title="语法"></a>语法</h1><h2 id="结构体声明"><a href="#结构体声明" class="headerlink" title="结构体声明"></a>结构体声明</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">struct_name</span> &#123;</span><br>    type name1;<br>    type name2;<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>和 C&#x2F;C++ 一样, 用 <code>struct</code> 关键字.</p>
 <h2 id="类型声明"><a href="#类型声明" class="headerlink" title="类型声明"></a>类型声明</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">standard_metadata_t</span> &#123;</span><br>    bit&lt;<span class="hljs-number">9</span>&gt; ingress_port;<br>    bit&lt;<span class="hljs-number">9</span>&gt; egress_spec;<br>    bit&lt;<span class="hljs-number">9</span>&gt; egress_port;<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
@@ -387,6 +432,13 @@
 <li><code>egress_spec</code>, 指预期数据包流出端口, 是由 Ingress Pipeline 决定和设置</li>
 <li><code>egress_port</code>, 指实际数据包流出的端口, 通常和 <code>egress_spec</code> 的值相同, 但可能由于重定向, 多播等原因不同</li>
 </ul>
+<p><code>header</code> 类型, 其成员是有序的 (在内存中顺序排列, 读取的时候有顺序, 这里也是字节对齐的), 可以包含 <code>bit&lt;n&gt;</code>, <code>int&lt;n&gt;</code>, <code>varbit&lt;n&gt;</code> 的成员, 如:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c">header <span class="hljs-type">ethernet_t</span> &#123;<br>    macAddr_t dstAddr;<br>    macAddr_t srcAddr;<br>    bit&lt;<span class="hljs-number">16</span>&gt;   etherType;<br>&#125;<br>header <span class="hljs-type">ipv4_t</span> &#123;<br>    bit&lt;<span class="hljs-number">4</span>&gt; version;<br>    bit&lt;<span class="hljs-number">4</span>&gt; ihl;<br>    bit&lt;<span class="hljs-number">8</span>&gt; diffserv;<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
+<p><code>header</code> 类型的一个好处在于, 其可以被标记为有效或无效 (用 <code>setValid()</code> 和 <code>setInvalid()</code> 函数), 可以用 <code>isValid()</code> 来检测, 从而方便处理 (有些 invalid 就跳过).</p>
+<h2 id="typedef"><a href="#typedef" class="headerlink" title="typedef"></a>typedef</h2><p>同 C&#x2F;C++:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> bit&lt;<span class="hljs-number">48</span>&gt; macAddr_t;<br><span class="hljs-keyword">typedef</span> bit&lt;<span class="hljs-number">32</span>&gt; ipAddr_t;<br></code></pre></td></tr></table></figure>
+
+
 <h2 id="返回值"><a href="#返回值" class="headerlink" title="返回值?"></a>返回值?</h2><p>P4 中没有传统意义的函数返回值, 解析器利用状态机来解析数据包, 并将解析结果存储在传入的参数中 (比如 <code>headers</code> 结构体), 而非通过返回值传递.</p>
 <h1 id="Tutorial"><a href="#Tutorial" class="headerlink" title="Tutorial"></a>Tutorial</h1><h2 id="Tutorial-环境准备"><a href="#Tutorial-环境准备" class="headerlink" title="Tutorial 环境准备"></a>Tutorial 环境准备</h2><p>首先确保安装的 virtualbox 以及其内核版本正确, 不然会报错:<br><img src="/../img/p4-env-virtualbox-version-wrong.png" srcset="/img/loading.gif" lazyload></p>
 <p><img src="/../img/p4-env-virtualbox-kernel-version-wrong.png" srcset="/img/loading.gif" lazyload></p>
@@ -430,7 +482,7 @@
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs sh">p4@p4:~/tutorials/exercises/basic$ tree -L 1<br>.<br>├── basic.p4<br>├── build<br>├── logs<br>├── Makefile<br>├── pcaps<br>├── pod-topo<br>├── README.md<br>├── receive.py<br>├── send.py<br>├── solution<br>└── triangle-topo<br></code></pre></td></tr></table></figure>
 
 <p>这里的 <code>solution</code> 目录下有示例答案.</p>
-<h2 id="Basic-Forwarding"><a href="#Basic-Forwarding" class="headerlink" title="Basic Forwarding"></a>Basic Forwarding</h2><p>要实现 IPv4 forwarding, 交换机需要对每个 packet 执行下面操作:</p>
+<h2 id="Basic-Forwarding-1"><a href="#Basic-Forwarding-1" class="headerlink" title="Basic Forwarding"></a>Basic Forwarding</h2><p>要实现 IPv4 forwarding, 交换机需要对每个 packet 执行下面操作:</p>
 <ol>
 <li>更新 source (当前 switch 吧) 和 destination (下一跳 switch 吧) MAC 地址</li>
 <li>IP 报头中的 TTL (Time-To-Live) 值减一 </li>
