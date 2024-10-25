@@ -30,6 +30,8 @@
 <meta property="og:image" content="http://example.com/img/p4-language-components.png">
 <meta property="og:image" content="http://example.com/img/P4-parser-state-machine-work-flow.png">
 <meta property="og:image" content="http://example.com/img/p4-parser-input-and-output.png">
+<meta property="og:image" content="http://example.com/img/p4-how-table-match-action-processing-works.png">
+<meta property="og:image" content="http://example.com/img/p4-table-example.png">
 <meta property="og:image" content="http://example.com/img/p4-env-virtualbox-version-wrong.png">
 <meta property="og:image" content="http://example.com/img/p4-env-virtualbox-kernel-version-wrong.png">
 <meta property="og:image" content="http://example.com/img/p4-env-downgrade-virtualbox.png">
@@ -39,7 +41,7 @@
 <meta property="og:image" content="http://example.com/img/vagrant-do-not-open-gui.png">
 <meta property="og:image" content="http://example.com/img/vagrant-login-withou-password.png">
 <meta property="article:published_time" content="2024-10-18T01:43:47.000Z">
-<meta property="article:modified_time" content="2024-10-25T06:58:31.398Z">
+<meta property="article:modified_time" content="2024-10-25T07:49:09.961Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/P4-design-idea.png">
@@ -251,7 +253,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          11k 字
+          12k 字
         
       </span>
     
@@ -262,7 +264,7 @@
         
         
         
-          89 分钟
+          103 分钟
         
       </span>
     
@@ -438,24 +440,61 @@
 <ul>
 <li>这里吧 src 和 dst 的 MAC 地址交换, 然后从接收包的 port 再发送出去<br>(也就是哪里出来就哪里回去)</li>
 </ul>
-<h2 id="Action"><a href="#Action" class="headerlink" title="Action"></a>Action</h2><p>Action 和 C 的函数类似, 可以在一个 control 块中定义, 也可以全局定义. 传入 action 的参数也有方向和类型.</p>
-<p>一个示例:</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs c">control <span class="hljs-title function_">MyIngress</span><span class="hljs-params">(inout headers hdr,</span><br><span class="hljs-params">        inout metadata meta,</span><br><span class="hljs-params">        inout <span class="hljs-type">standard_metadata_t</span> std_meta)</span> &#123;<br><br>    action <span class="hljs-title function_">swap_mac</span><span class="hljs-params">(inout bit&lt;<span class="hljs-number">48</span>&gt; src,</span><br><span class="hljs-params">                    inout bit&lt;<span class="hljs-number">48</span>&gt; dst)</span> &#123;<br>        bit&lt;<span class="hljs-number">48</span>&gt; tmp = src;<br>        src = dst;<br>        dst = tmp;<br>    &#125;<br><br>    apply &#123;<br>        swap_mac(hdr.ethernet.srcAddr,<br>                 hdr.ethernet.dstAddr);<br>        std_meta.egress_spec = std_meta.ingress_port;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
-<ul>
-<li>可以看出, action 会直接对传入的参数修改 (就像 C 中传入指针修改一样)</li>
-</ul>
 <h2 id="Tables"><a href="#Tables" class="headerlink" title="Tables"></a>Tables</h2><p>Tables 是 Match-Action pipeline 的基本单位 (都是操作 table 中的数据), 定义 table 时需要指定:</p>
 <ul>
 <li>要 match 什么</li>
 <li>怎么 match</li>
-<li>要执行什么 actions</li>
+<li>要执行的 actions 列表 (都列在 table 定义里)</li>
 <li>table 的基本属性, 如 <code>size</code>, <code>default action</code>, <code>static entries</code></li>
 </ul>
 <p>定义好 table 后, 其需要包含多条 entries (也就是 rules), 每一条 entry 需要包含:</p>
 <ul>
 <li>用于 match 的 key</li>
 <li>当 match 时的 action</li>
-<li>action data (不知道是啥)</li>
+<li>Action data (可以没有, 是与指定动作相关的参数, 通常用于执行该动作所需的额外信息)</li>
+</ul>
+<p>Match-Action 的过程可以描述如下:<br><img src="/../img/p4-how-table-match-action-processing-works.png" srcset="/img/loading.gif" lazyload></p>
+<ol>
+<li>packets 被 parser 处理后, 得到 headers and metadata</li>
+<li>Headers 和 metadata 经 control plane 处理时, 用 table 进行 match</li>
+<li>如果 match hit, 则执行对应的 action code, 不然执行 default action</li>
+<li>输出最终的 headers and metadata</li>
+</ol>
+<p>一个 P4 Table 的示例:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c">table ipv4_lpm &#123;<br>    key = &#123;<br>        hdr.ipv4.dstAddr: <span class="hljs-number">1</span>pm;<br>    &#125;<br>    actions = &#123;<br>        ipv4_forward;<br>        drop;<br>        NoAction;<br>    &#125;<br>    size = <span class="hljs-number">1024</span>;<br>    default_action = NoAction();<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>(都用 <code>=</code> 赋值, 用 <code>;</code> 结尾, 块后头不用加 <code>;</code>)</p>
+<ul>
+<li><code>1pm</code> 指 “最长前缀匹配” (Longest Prefix Match)</li>
+</ul>
+<p><img src="/../img/p4-table-example.png" srcset="/img/loading.gif" lazyload></p>
+<p><code>1pm</code>, <code>exact</code> 这些都称做 <code>match_kind</code>, 不同的 model (architecture) 都有定义不同的 <code>match_kind</code>, 可以在头文件中找到如下:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* core.p4 */</span><br>match_kind &#123;<br>    exact,<br>    ternary,<br>    <span class="hljs-number">1</span>pm<br>&#125;<br><br><span class="hljs-comment">/* v1model.p4 */</span><br>match_kind &#123;<br>    range,<br>    selector<br>&#125;<br><br><span class="hljs-comment">/* core.p4 */</span><br>match_kind &#123;<br>    regexp,<br>    fuzzy<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这里, 在 P4 程序中, 定义 table 的格式, 要执行的 match-action 操作, 处于 Data Plane, 而填充 table entries 属于 Control Plane 的工作.</p>
+<p>启用 table 需要调用 <code>apply()</code> 方法:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs c">control <span class="hljs-title function_">MyIngress</span><span class="hljs-params">(inout headers hdr,</span><br><span class="hljs-params">        inout metadata meta,</span><br><span class="hljs-params">        inout <span class="hljs-type">standard_metadata_t</span> std_meta)</span> &#123;<br>    table ipv4_lpm &#123;<br>        ...<br>    &#125;<br><br>    apply &#123;<br>        ...<br>        ipv4_lpm.apply();<br>        ...<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+<h2 id="Action"><a href="#Action" class="headerlink" title="Action"></a>Action</h2><p>Action 和 C 的函数类似, 可以在一个 control 块中定义, 也可以全局定义. 传入 action 的参数也有方向和类型.</p>
+<p>一个示例:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs c">control <span class="hljs-title function_">MyIngress</span><span class="hljs-params">(inout headers hdr,</span><br><span class="hljs-params">        inout metadata meta,</span><br><span class="hljs-params">        inout <span class="hljs-type">standard_metadata_t</span> std_meta)</span> &#123;<br><br>    action <span class="hljs-title function_">swap_mac</span><span class="hljs-params">(inout bit&lt;<span class="hljs-number">48</span>&gt; src,</span><br><span class="hljs-params">                    inout bit&lt;<span class="hljs-number">48</span>&gt; dst)</span> &#123;<br>        bit&lt;<span class="hljs-number">48</span>&gt; tmp = src;<br>        src = dst;<br>        dst = tmp;<br>    &#125;<br><br>    apply &#123;<br>        swap_mac(hdr.ethernet.srcAddr,<br>                 hdr.ethernet.dstAddr);<br>        std_meta.egress_spec = std_meta.ingress_port;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>可以看出, action 会直接对传入的参数修改 (就像 C 中传入指针修改一样)</li>
+</ul>
+<p><code>NoAction</code> 在 <code>core.p4</code> 文件中的定义如下:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c">action <span class="hljs-title function_">NoAction</span><span class="hljs-params">()</span> &#123;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>(可以看到确实是空)</p>
+<p>Action 接受两种类型的参数:</p>
+<ul>
+<li>直接调用 (在 Data Plane 直接传参)</li>
+<li>非直接调用 (在 Control Plane table match 时调用时自动传参)</li>
+</ul>
+<h2 id="Deparsing"><a href="#Deparsing" class="headerlink" title="Deparsing"></a>Deparsing</h2><p>Deparsing 负责把 headers 重新转换为 packet, 其具体逻辑编写在 <code>control</code> 块中.</p>
+<p>示例:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* From core.p4 */</span><br><span class="hljs-keyword">extern</span> packet_out &#123;<br>    <span class="hljs-type">void</span> emit&lt;T&gt;(in T hdr);<br>&#125;<br><br><span class="hljs-comment">/* User Program */</span><br>control <span class="hljs-title function_">DeparserImpl</span><span class="hljs-params">(packet_out packet,</span><br><span class="hljs-params">        in headers hdr)</span> &#123;<br>    apply &#123;<br>        ...<br>        packet.emit(hdr.ethernet)<br>        ...<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>core.p4</code> 中定义的 <code>packet_out</code> 类型, 有 <code>emit</code> 方法, 其能够将 valid header 序列化并保存到指定变量中</li>
+<li><code>extern</code> 表明导出该类型外部文件可用</li>
 </ul>
 <h1 id="语法"><a href="#语法" class="headerlink" title="语法"></a>语法</h1><h2 id="结构体声明"><a href="#结构体声明" class="headerlink" title="结构体声明"></a>结构体声明</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">struct_name</span> &#123;</span><br>    type name1;<br>    type name2;<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>和 C&#x2F;C++ 一样, 用 <code>struct</code> 关键字.</p>
@@ -535,6 +574,20 @@
 <li>IP 报头中的 TTL (Time-To-Live) 值减一 </li>
 <li>从合适的 port 将 packet 发出</li>
 </ol>
+<h2 id="Basic-Tunneling"><a href="#Basic-Tunneling" class="headerlink" title="Basic Tunneling"></a>Basic Tunneling</h2><h1 id="Debugging"><a href="#Debugging" class="headerlink" title="Debugging"></a>Debugging</h1><p>可以用 <code>debug</code> table 来输出调试信息到 log 文件:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c">control <span class="hljs-title function_">MyIngress</span><span class="hljs-params">(...)</span> &#123;<br>    table debug &#123;<br>        key = &#123;<br>            std_meta.egress_spec: exact;<br>        &#125;<br>        actions = &#123; &#125;<br>    &#125;<br>    apply &#123;<br>        ...<br>        debug.apply();<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+
+
+
 
                 
               </div>
