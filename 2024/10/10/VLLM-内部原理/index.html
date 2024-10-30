@@ -25,8 +25,11 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/vllm-internal-kv-cache-gs.png">
 <meta property="og:image" content="http://example.com/img/vllm-os-virtual-memory-and-page-management.png">
+<meta property="og:image" content="http://example.com/img/vllm-basic-page-attention-KV-Block.png">
+<meta property="og:image" content="http://example.com/img/vllm-basic-page-attention-kv-block-store-four-kv-vec.png">
+<meta property="og:image" content="http://example.com/img/vllm-basic-virtual-memory-map.png">
 <meta property="article:published_time" content="2024-10-10T03:17:53.000Z">
-<meta property="article:modified_time" content="2024-10-30T06:33:51.097Z">
+<meta property="article:modified_time" content="2024-10-30T06:48:06.182Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/vllm-internal-kv-cache-gs.png">
@@ -238,7 +241,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.4k 字
+          1.8k 字
         
       </span>
     
@@ -249,7 +252,7 @@
         
         
         
-          12 分钟
+          15 分钟
         
       </span>
     
@@ -318,10 +321,16 @@
 <p>解释示例<br>在侦探工作中，我们经常面临大量的线索，每个线索都由一个属性（key）和其价值（value）组成。这些线索可能包括目击者证词、凶器、不在场证明等，而它们的价值可能各不相同，有的线索价值可能是正的，有的可能是负的，因为某些线索可能会误导调查。<br>如果我们不采用注意力机制，我们可能需要对所有线索进行平等的调查，这可能导致我们在不重要的线索上花费过多的时间和精力。数学上，这种做法相当于将所有线索的价值简单相加，由于价值有正有负，最终的总价值可能并不高，无法有效指导我们的调查。<br>然而，通过使用注意力机制，我们可以更加智能地处理这些线索。首先，我们会计算每个线索的属性（key）与我们当前关注的问题（query）之间的相关性。例如，凶器和目击者证词很可能与破案有很高的相关性。然后，我们会将那些与问题高度相关的线索的价值（value）进行加权求和，这样不仅可以保证我们集中精力在最重要的线索上，而且可以提高我们得到有价值信息的可能性。</p>
 </blockquote>
 <h1 id="Paged-Attention"><a href="#Paged-Attention" class="headerlink" title="Paged Attention"></a>Paged Attention</h1><p>Paged Attention 借鉴了操作系统对内存的处理方式.</p>
-<p>操作系统中的虚拟内存和页管理技术, 用来解决给每个应用分配多少内存, 要预分配多少内存, 程序关闭后如何回收内存, 内存碎片如何处理, 怎么最大化地利用内存等问题.</p>
+<h2 id="KV-Block-和虚拟显存"><a href="#KV-Block-和虚拟显存" class="headerlink" title="KV Block 和虚拟显存"></a>KV Block 和虚拟显存</h2><p>操作系统中的虚拟内存和页管理技术, 用来解决给每个应用分配多少内存, 要预分配多少内存, 程序关闭后如何回收内存, 内存碎片如何处理, 怎么最大化地利用内存等问题.</p>
 <p>操作系统分配内存是按照最小单位页来分配, 每个页是 4k, 物理内存被划分为很多页, 每个进程要用到的内存被映射到不同的页上:<br><img src="/../img/vllm-os-virtual-memory-and-page-management.png" srcset="/img/loading.gif" lazyload></p>
-<p>Page Attention 把显存划分为多个 KV Block, 用其管理 KV Cache</p>
-
+<p>Page Attention 把显存划分为多个 KV Block, 用其管理 KV Cache, 每个请求所需的显存被划分到多个 KV Block 中, 这些 KV Block 可以是不连续的:<br><img src="/../img/vllm-basic-page-attention-KV-Block.png" srcset="/img/loading.gif" lazyload></p>
+<p>其按需分配, 比如每个 KV Block 能够缓存 4 个 token 的 KV 向量, 当需要存储 16 个 token 的 KV 向量时, 就分配 4 个 KV Block.<br><img src="/../img/vllm-basic-page-attention-kv-block-store-four-kv-vec.png" srcset="/img/loading.gif" lazyload></p>
+<p>虚拟内存指, 每个请求都有一个逻辑的 KV Cache, 在这里显存似乎是连续的, 这里是通过一个映射表, 再映射到物理的显存中:<br><img src="/../img/vllm-basic-virtual-memory-map.png" srcset="/img/loading.gif" lazyload></p>
+<p>连续的逻辑显存主要是方便程序操作.</p>
+<p>Page Attention 利用这种 KV Block 以及虚拟显存来分配, 从而让利用率从 20%~40% 提升到 96%.</p>
+<h2 id="Sharing-KV-Blocks"><a href="#Sharing-KV-Blocks" class="headerlink" title="Sharing KV Blocks"></a>Sharing KV Blocks</h2><p>有时想让大模型用一个 Prompt 生成多个 output, 在 VLLM 里可能是设置 <code>n_beams</code> 参数.</p>
+<p>一个 Prompt 生成 KV Cache vector 存储在 KV Cache 中, 当有请求时, 则产生一个引用, 当没有引用时才释放.</p>
+<h1 id="Beam-Search"><a href="#Beam-Search" class="headerlink" title="Beam Search"></a>Beam Search</h1>
                 
               </div>
             
