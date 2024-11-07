@@ -32,7 +32,7 @@
 <meta property="og:image" content="http://example.com/img/stm32cubeide-task-start-entry-function.png">
 <meta property="og:image" content="http://example.com/img/stm32cubeide-change-timebase-source-to-tim4.png">
 <meta property="article:published_time" content="2024-11-06T07:10:42.000Z">
-<meta property="article:modified_time" content="2024-11-07T02:48:24.808Z">
+<meta property="article:modified_time" content="2024-11-07T03:32:58.456Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/stm32-rtos-multiple-tasks-in-RTOS.png">
@@ -244,7 +244,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.5k 字
+          1.9k 字
         
       </span>
     
@@ -255,7 +255,7 @@
         
         
         
-          13 分钟
+          16 分钟
         
       </span>
     
@@ -320,7 +320,14 @@
 <li>用 <code>pvPortMalloc()</code> 分配内存, 而非 <code>malloc()</code></li>
 <li>用 <code>vPortFree()</code> 释放内存, 而非 <code>free()</code></li>
 </ul>
-<p>FreeRTOS 实现了 5 个 heap, 其源码位于 <code>Middlewares/Third_Party/FreeRTOS/portable/MemMang/</code> 目录下, 分别是 <code>heap_1.c</code>, <code>heap_2.c</code>, <code>heap_3.c</code>, <code>heap_4.c</code>, <code>heap_5.c</code>.</p>
+<p>FreeRTOS 实现了 5 个 heap (原话是 five sample memory allocation implementations, 就是 5 种不同的实现, 可能是不同的 API, 也可能是不同效果), 其源码位于 <code>Middlewares/Third_Party/FreeRTOS/portable/MemMang/</code> 目录下, 分别是 <code>heap_1.c</code>, <code>heap_2.c</code>, <code>heap_3.c</code>, <code>heap_4.c</code>, <code>heap_5.c</code>, 不同实现的区别如下:</p>
+<ul>
+<li><code>heap_1</code>, 最简单, 但不允许释放内存 (可能会导致内存泄漏)</li>
+<li><code>heap_2</code>, 允许释放内存, 但不会合并相临的空闲块, 意味着可能会导致内存碎片化</li>
+<li><code>heap_3</code>, 简单包装了标准的 <code>malloc()</code> 和 <code>free()</code> 函数, 且确保了线程安全, 即多个线程可以安全地同时分配和释放内存, 而不会相互干扰</li>
+<li><code>heap_4</code>, 会合并相临空闲块, 以避免内存碎片化, 还包括一个绝对地址放置选项, 意味着程序可以指定一个特定的内存地址来分配内存, 这对于某些需要特定内存位置的特殊用途 (如图形或硬件相关的操作) 可能是必要的</li>
+<li><code>heap_5</code>, 与 <code>heap_4</code> 类似, 但它能够跨越多个不连续的内存区域来扩展堆. 这在物理内存有限或需要将数据分布到不同内存区域以优化性能的情况下非常有用</li>
+</ul>
 <h1 id="启用-FreeRTOS"><a href="#启用-FreeRTOS" class="headerlink" title="启用 FreeRTOS"></a>启用 FreeRTOS</h1><p>先用 STM32CubeIDE 创建一个项目, 在 <code>.ioc</code> 界面, 选中 <code>Middleware and software packs</code>:<br><img src="/../img/stm32cubeide-select-middleware-and-software-packs.png" srcset="/img/loading.gif" lazyload></p>
 <p>之后选中 <code>FREERTOS</code> 以及 <code>CMSIS_V2</code>:<br><img src="/../img/stm32cubeide-select-freertos-and-cmsis-v2.png" srcset="/img/loading.gif" lazyload></p>
 <p>默认情况下, 会启用 <code>preemption</code> 选项, 让 scheduler 能够停止一个 task 并运行另一个优先级更高的 task:<br><img src="/../img/stm32cubeide-enable-preemption-of-freertos.png" srcset="/img/loading.gif" lazyload></p>
