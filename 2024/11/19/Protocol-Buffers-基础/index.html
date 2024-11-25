@@ -25,7 +25,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/protocol-buffer-workflow.png">
 <meta property="article:published_time" content="2024-11-19T13:44:38.000Z">
-<meta property="article:modified_time" content="2024-11-25T12:19:53.656Z">
+<meta property="article:modified_time" content="2024-11-25T13:07:49.145Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/protocol-buffer-workflow.png">
@@ -237,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.3k 字
+          4.4k 字
         
       </span>
     
@@ -248,7 +248,7 @@
         
         
         
-          20 分钟
+          37 分钟
         
       </span>
     
@@ -343,12 +343,56 @@
 <h2 id="导入定义"><a href="#导入定义" class="headerlink" title="导入定义"></a>导入定义</h2><p>用 <code>import</code> 关键字, 导入其他 <code>.proto</code> 文件, 如:</p>
 <figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs protobuf"><span class="hljs-keyword">import</span> <span class="hljs-string">&quot;myproject/other_proto.proto&quot;</span>;<br></code></pre></td></tr></table></figure>
 
+<h2 id="嵌套类型定义"><a href="#嵌套类型定义" class="headerlink" title="嵌套类型定义"></a>嵌套类型定义</h2><p>也就是在类型定义中定义其他类型:</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs protobuf"><span class="hljs-keyword">message </span><span class="hljs-title class_">SearchResponse</span> &#123;<br>  <span class="hljs-keyword">message </span><span class="hljs-title class_">Result</span> &#123;<br>    <span class="hljs-type">string</span> url = <span class="hljs-number">1</span>;<br>    <span class="hljs-type">string</span> title = <span class="hljs-number">2</span>;<br>    <span class="hljs-keyword">repeated</span> <span class="hljs-type">string</span> snippets = <span class="hljs-number">3</span>;<br>  &#125;<br>  <span class="hljs-keyword">repeated</span> Result results = <span class="hljs-number">1</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
 
-<h2 id="编译输出"><a href="#编译输出" class="headerlink" title="编译输出"></a>编译输出</h2><p>Protocol buffer 编译器的输出取决于要用哪个语言来处理, 比如:</p>
+<p>如果要使用一个嵌套类型, 可以用 <code>_Parent_._Type_</code> 的语法:</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs protobuf"><span class="hljs-keyword">message </span><span class="hljs-title class_">SomeOtherMessage</span> &#123;<br>    SearchResponse.Result result = <span class="hljs-number">1</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="Extensions"><a href="#Extensions" class="headerlink" title="Extensions"></a>Extensions</h2><p>Extensions 是指定义在 <code>message</code> 之外定义其 field, 如:</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs protobuf"><span class="hljs-comment">// file kittens/video_ext.proto</span><br><br><span class="hljs-keyword">import</span> <span class="hljs-string">&quot;kittens/video.proto&quot;</span>;<br><span class="hljs-keyword">import</span> <span class="hljs-string">&quot;media/user_content.proto&quot;</span>;<br><br><span class="hljs-keyword">package</span> kittens;<br><br><span class="hljs-comment">// This extension allows kitten videos in a media.UserContent message.</span><br>extend media.UserContent &#123;<br>  <span class="hljs-comment">// Video is a message imported from kittens/video.proto</span><br>  <span class="hljs-keyword">repeated</span> Video kitten_videos = <span class="hljs-number">126</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>这里给 <code>media.UserContent</code> 这一 <code>message</code> 定义了 <code>kitten_videos</code> field</li>
+<li><code>package</code> 关键字用于定义一个命名空间</li>
+</ul>
+<p>这里 container message (也就是 <code>media.UserContent</code>) 需要为 extensions 保留 field numbers:</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs protobuf"><span class="hljs-comment">// file media/user_content.proto</span><br><br><span class="hljs-keyword">package</span> media;<br><br><span class="hljs-comment">// A container message to hold stuff that a user has created.</span><br><span class="hljs-keyword">message </span><span class="hljs-title class_">UserContent</span> &#123;<br>  <span class="hljs-comment">// Set verification to `DECLARATION` to enforce extension declarations for all</span><br>  <span class="hljs-comment">// extensions in this range.</span><br>  extensions <span class="hljs-number">100</span> to <span class="hljs-number">199</span> [verification = DECLARATION];<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="Any-类型"><a href="#Any-类型" class="headerlink" title="Any 类型"></a>Any 类型</h2><p><code>Any</code> 类型允许你在 <code>message</code> 中嵌入任意类型的值, 而无需在当前的 <code>.proto</code> 文件中事先定义这些消息. 这种灵活性使得你可以在运行时传递不同类型的数据, 而不需要修改消息定义. </p>
+<p>使用 <code>Any</code> 类型需要导入 <code>google/protobuf/any.proto</code>, 如:</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs protobuf"><span class="hljs-keyword">import</span> <span class="hljs-string">&quot;google/protobuf/any.proto&quot;</span>;<br><br><span class="hljs-keyword">message </span><span class="hljs-title class_">ErrorStatus</span> &#123;<br>  <span class="hljs-type">string</span> message = <span class="hljs-number">1</span>;<br>  <span class="hljs-keyword">repeated</span> google.protobuf.Any details = <span class="hljs-number">2</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="Oneof-类型来管理互斥字段"><a href="#Oneof-类型来管理互斥字段" class="headerlink" title="Oneof 类型来管理互斥字段"></a>Oneof 类型来管理互斥字段</h2><p><code>oneof</code> 类型中的所有字段共享同一块内存. 这意味着在同一时间只能有一个字段被设置, 从而节省内存.</p>
+<p>在 <code>oneof</code> 中, 设置任意一个字段会自动清除其他所有字段. 这保证了在任何时候, 只有一个字段处于 “已设置” 状态.</p>
+<p>可以通过 <code>case()</code> 或 <code>WhichOneof()</code> 方法来检查当前哪个字段被设置.</p>
+<p>如果试图同时设置多个字段 (虽然实际上只能设置一个), 最后设置的字段将覆盖之前的设置. 这是基于字段在 <code>.proto</code> 文件中的定义顺序.</p>
+<p>可以用 <code>oneof</code> 关键字来设置, 如:</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs protobuf"><span class="hljs-keyword">message </span><span class="hljs-title class_">SampleMessage</span> &#123;<br>  <span class="hljs-keyword">oneof</span> test_oneof &#123;<br>    <span class="hljs-type">string</span> name = <span class="hljs-number">4</span>;<br>    SubMessage sub_message = <span class="hljs-number">9</span>;<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="Maps-类型"><a href="#Maps-类型" class="headerlink" title="Maps 类型"></a>Maps 类型</h2><p>定义键值对的语法为:</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs protobuf">map&lt;key_type, value_type&gt; map_field = N;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>key_type</code> 可以是 integral 或 string</li>
+<li><code>value_type</code> 可以是除 <code>map</code> 外的类型</li>
+</ul>
+<p>示例:</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs protobuf">map&lt;<span class="hljs-type">string</span>, Project&gt; projects = <span class="hljs-number">3</span>;<br></code></pre></td></tr></table></figure>
+
+<h2 id="Packages"><a href="#Packages" class="headerlink" title="Packages"></a>Packages</h2><p>用于创建命名空间, 比如:</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs protobuf"><span class="hljs-keyword">package</span> foo.bar;<br><span class="hljs-keyword">message </span><span class="hljs-title class_">Open</span> &#123; ... &#125;<br></code></pre></td></tr></table></figure>
+
+<p>此时引用上述 <code>Open</code> 类型该为:</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs protobuf"><span class="hljs-keyword">message </span><span class="hljs-title class_">Foo</span> &#123;<br>    ...<br>    foo.bar.Open = <span class="hljs-number">1</span>;<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="Services"><a href="#Services" class="headerlink" title="Services"></a>Services</h2><p>若想在 RPC (Remote Procedure Call) 中使用自己定义的 <code>message</code> 类型, 可以用 <code>service</code> 关键词定义一个接口, 如:</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs protobuf"><span class="hljs-keyword">service </span><span class="hljs-title class_">SearchService</span> &#123;<br>  <span class="hljs-function"><span class="hljs-keyword">rpc</span> Search(SearchRequest) <span class="hljs-keyword">returns</span> (SearchResponse)</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="Options"><a href="#Options" class="headerlink" title="Options"></a>Options</h2><h2 id="编译输出"><a href="#编译输出" class="headerlink" title="编译输出"></a>编译输出</h2><p>Protocol buffer 编译器的输出取决于要用哪个语言来处理, 比如:</p>
 <ul>
 <li>Python, 生成一个模块, 包含了每种消息类型的静态描述符 (descriptor)</li>
 <li>Go, 生成一个 <code>.pb.go</code> 文件, 其中定义了一个类型, 包含 <code>.proto</code> 中的 message</li>
 </ul>
+<h1 id="规范"><a href="#规范" class="headerlink" title="规范"></a>规范</h1><p>查阅 <a target="_blank" rel="noopener" href="https://protobuf.dev/programming-guides/dos-donts/">Proto Best Practices</a>.</p>
 
                 
               </div>
