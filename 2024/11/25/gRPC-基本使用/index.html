@@ -25,8 +25,9 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/grpc-how-it-help-call.png">
 <meta property="og:image" content="http://example.com/img/grpc-working-procedure.png">
+<meta property="og:image" content="http://example.com/img/grpc-hello-world-example.png">
 <meta property="article:published_time" content="2024-11-25T13:05:01.000Z">
-<meta property="article:modified_time" content="2024-11-26T12:47:04.817Z">
+<meta property="article:modified_time" content="2024-12-08T08:02:53.033Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/grpc-how-it-help-call.png">
@@ -238,7 +239,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          204 字
+          1.6k 字
         
       </span>
     
@@ -249,7 +250,7 @@
         
         
         
-          2 分钟
+          14 分钟
         
       </span>
     
@@ -299,6 +300,44 @@
 <p>而 gRPC 是 Google 开发的一个高性能 RPC 框架, 基于 HTTP&#x2F;2 协议, 且支持多种编程语言.</p>
 <p>下面以 Go 语言为示例来说明.</p>
 <h1 id="RPC-工作流程"><a href="#RPC-工作流程" class="headerlink" title="RPC 工作流程"></a>RPC 工作流程</h1><p><img src="/../img/grpc-working-procedure.png" srcset="/img/loading.gif" lazyload></p>
+<h1 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h1><h2 id="Go-环境安装"><a href="#Go-环境安装" class="headerlink" title="Go 环境安装"></a>Go 环境安装</h2><p>在 Archlinux 上:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo pacman -S go<br>go install google.golang.org/protobuf/cmd/protoc-gen-go@latest<br>go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest<br></code></pre></td></tr></table></figure>
+
+<p>确保一个 Go 发行版以及两个 Go plugins.</p>
+<h2 id="Protocol-Buffer-环境准备"><a href="#Protocol-Buffer-环境准备" class="headerlink" title="Protocol Buffer 环境准备"></a>Protocol Buffer 环境准备</h2><p>在 Archlinux 上:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo pacman -S protobuf<br><span class="hljs-built_in">export</span> PATH=<span class="hljs-string">&quot;<span class="hljs-variable">$PATH</span>:<span class="hljs-subst">$(go env GOPATH)</span>/bin&quot;</span><br></code></pre></td></tr></table></figure>
+
+<h1 id="官方示例"><a href="#官方示例" class="headerlink" title="官方示例"></a>官方示例</h1><p>获取代码:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">git <span class="hljs-built_in">clone</span> -b v1.68.0 --depth 1 https://github.com/grpc/grpc-go<br><span class="hljs-built_in">cd</span> grpc-go/examples/helloworld<br></code></pre></td></tr></table></figure>
+
+<p>编译运行 Server 代码:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">go run greeter_server/main.go<br></code></pre></td></tr></table></figure>
+
+<p>在另一个终端编译运行 Client 代码:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">go run greeter_client/main.go<br></code></pre></td></tr></table></figure>
+
+<p><img src="/../img/grpc-hello-world-example.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="proto-文件解释"><a href="#proto-文件解释" class="headerlink" title=".proto 文件解释"></a>.proto 文件解释</h2><p>这里, Server 和 Client 端都有一个叫 <code>SayHello()</code> 的 RPC method:</p>
+<ul>
+<li>客户端发送 <code>HelloRequest</code> 到服务端</li>
+<li>服务端返回 <code>HelloReply</code> 到客户端</li>
+</ul>
+<p>其在 <code>.proto</code> 文件中的定义为:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs proto">syntax = &quot;proto3&quot;;<br><br>option go_package = &quot;google.golang.org/grpc/examples/helloworld/helloworld&quot;;<br><br>package helloworld;<br><br>// The greeting service definition.<br>service Greeter &#123;<br>  // Sends a greeting<br>  rpc SayHello (HelloRequest) returns (HelloReply) &#123;&#125;<br>  rpc SayHelloAgain (HelloRequest) returns (HelloReply) &#123;&#125;<br>&#125;<br><br>// The request message containing the user&#x27;s name.<br>message HelloRequest &#123;<br>  string name = 1;<br>&#125;<br><br>// The response message containing the greetings<br>message HelloReply &#123;<br>  string message = 1;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>syntax</code> 指定用哪个版本的 proto 语法, 还可以是 <code>proto2</code>, <code>2023</code> 等</li>
+<li><code>go_package</code> 定义生成的 go 模块文件的包名</li>
+<li><code>package</code> 定义 protobuf 的命名空间, 用于组织 protobuf 的定义</li>
+<li><code>service</code> 用于组织一组定义</li>
+<li><code>rpc</code> 关键字表明定义的是 RPC 方法</li>
+</ul>
+<p>若要重新编译则运行:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">potocc --go_out=. --go_opt=paths=source_relative \<br>    --go-grpc_out=. --go-grpc_opt=paths=source_relative \<br>    helloworld/helloworld.proto<br></code></pre></td></tr></table></figure>
+
+
+
+
+
 
                 
               </div>
