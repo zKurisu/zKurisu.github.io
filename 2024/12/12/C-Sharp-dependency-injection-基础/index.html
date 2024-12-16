@@ -25,7 +25,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/c-sharp-how-DI-works.png">
 <meta property="article:published_time" content="2024-12-12T08:41:47.000Z">
-<meta property="article:modified_time" content="2024-12-16T06:31:00.749Z">
+<meta property="article:modified_time" content="2024-12-16T07:07:48.980Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/c-sharp-how-DI-works.png">
@@ -237,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3.6k 字
+          4.8k 字
         
       </span>
     
@@ -248,7 +248,7 @@
         
         
         
-          31 分钟
+          40 分钟
         
       </span>
     
@@ -329,12 +329,19 @@
 <p>比如:</p>
 <figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs c#"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">ExampleService</span><br>&#123;<br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">ExampleService</span>()</span><br>    &#123;<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">ExampleService</span>(<span class="hljs-params">ILogger&lt;ExampleService&gt; logger</span>)</span><br>    &#123;<br>        <span class="hljs-comment">// omitted for brevity</span><br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">ExampleService</span>(<span class="hljs-params">FooService fooService, BarService barService</span>)</span><br>    &#123;<br>        <span class="hljs-comment">// omitted for brevity</span><br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 <p>这里虽然有参数更多的构造函数, 但实际上 DI 会选择参数为 <code>ILgger&lt;ExampleService&gt;</code> 的调用.</p>
-<h1 id="Mircosoft-Extensions-DependencyInjection-库"><a href="#Mircosoft-Extensions-DependencyInjection-库" class="headerlink" title="Mircosoft.Extensions.DependencyInjection 库"></a>Mircosoft.Extensions.DependencyInjection 库</h1><p>几个重要的类和接口:</p>
+<h1 id="Mircosoft-Extensions-DependencyInjection-库"><a href="#Mircosoft-Extensions-DependencyInjection-库" class="headerlink" title="Mircosoft.Extensions.DependencyInjection 库"></a>Mircosoft.Extensions.DependencyInjection 库</h1><p><code>Microsoft.Extensions.DependencyInjection.Abstractions</code> 中定义了几个重要的类和接口:</p>
 <ul>
-<li><code>IServiceCollection</code> 接口, 添加 service 到这里</li>
-<li><code>IServiceProvider</code> 接口</li>
-<li><code>ServiceDescriptor</code> 类</li>
+<li><code>IServiceCollection</code> 接口, 表示一个 service descriptor 的集合, 用于注册服务, 如:<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c#">services.AddTransient&lt;IMyService, MyService&gt;(); <span class="hljs-comment">// 注册服务</span><br></code></pre></td></tr></table></figure></li>
+<li><code>IServiceProvider</code> 接口, 用于创建服务实例, 如:<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c#"><span class="hljs-keyword">var</span> serviceProvider = services.BuildServiceProvider();<br><span class="hljs-keyword">var</span> myService = serviceProvider.GetService&lt;IMyService&gt;(); <span class="hljs-comment">// 解析服务</span><br></code></pre></td></tr></table></figure></li>
+<li><code>ServiceDescriptor</code> 类, 存储服务信息, 如服务的类型, 实现和生命周期</li>
 </ul>
+<p>代码示例:</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs c#"><span class="hljs-keyword">using</span> Microsoft.Extensions.DependencyInjection;<br><br><span class="hljs-comment">// 1. Create the service collection.</span><br><span class="hljs-keyword">var</span> services = <span class="hljs-keyword">new</span> ServiceCollection();<br><br><span class="hljs-comment">// 2. Register (add and configure) the services.</span><br>services.AddSingleton&lt;IConsole&gt;(<br>    implementationFactory: <span class="hljs-keyword">static</span> _ =&gt; <span class="hljs-keyword">new</span> DefaultConsole<br>    &#123;<br>        IsEnabled = <span class="hljs-literal">true</span><br>    &#125;);<br>services.AddSingleton&lt;IGreetingService, DefaultGreetingService&gt;();<br>services.AddSingleton&lt;FarewellService&gt;();<br><br><span class="hljs-comment">// 3. Build the service provider from the service collection.</span><br><span class="hljs-keyword">var</span> serviceProvider = services.BuildServiceProvider();<br><br><span class="hljs-comment">// 4. Resolve the services that you need.</span><br><span class="hljs-keyword">var</span> greetingService = serviceProvider.GetRequiredService&lt;IGreetingService&gt;();<br><span class="hljs-keyword">var</span> farewellService = serviceProvider.GetRequiredService&lt;FarewellService&gt;();<br><br><span class="hljs-comment">// 5. Use the services</span><br><span class="hljs-keyword">var</span> greeting = greetingService.Greet(<span class="hljs-string">&quot;David&quot;</span>);<br><span class="hljs-keyword">var</span> farewell = farewellService.SayGoodbye(<span class="hljs-string">&quot;David&quot;</span>);<br></code></pre></td></tr></table></figure>
+
+
+
+
+
 
                 
               </div>
