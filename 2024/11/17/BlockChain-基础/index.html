@@ -27,8 +27,9 @@
 <meta property="og:image" content="http://example.com/img/what-is-block-in-block-chain-system.png">
 <meta property="og:image" content="http://example.com/img/blockchain-components-of-a-block.png">
 <meta property="og:image" content="http://example.com/img/blockchain-people-want-to-append-block.png">
+<meta property="og:image" content="http://example.com/img/block-chain-hash-pointer-example.png">
 <meta property="article:published_time" content="2024-11-17T12:37:00.000Z">
-<meta property="article:modified_time" content="2024-12-17T09:58:50.921Z">
+<meta property="article:modified_time" content="2024-12-17T11:51:57.222Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/how-block-chain-connect-together.png">
@@ -240,7 +241,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3.4k 字
+          4.2k 字
         
       </span>
     
@@ -251,7 +252,7 @@
         
         
         
-          29 分钟
+          35 分钟
         
       </span>
     
@@ -385,19 +386,58 @@
 <h2 id="02-BTC-密码学原理"><a href="#02-BTC-密码学原理" class="headerlink" title="02-BTC 密码学原理"></a>02-BTC 密码学原理</h2><p>虽说比特币是加密货币, 但实际上比特币网络中的所有信息都是公开的.</p>
 <p>主要用到两种密码学技术:</p>
 <ul>
-<li>哈希, 密码学中称: cryptographic hash function, 主要用到其三个性质<ul>
-<li>collision resistance, 指难以哈希碰撞<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs reasonml">x neq y<br>but <span class="hljs-constructor">H(<span class="hljs-params">x</span>)</span> = <span class="hljs-constructor">H(<span class="hljs-params">y</span>)</span><br></code></pre></td></tr></table></figure>
-两个不同的输入算出同样的哈希值, 就是哈希碰撞, 一般来说不可避免. 可以利用这个性质来得到 <code>digest</code> (只要一改变, <code>digest</code> 就会改变)</li>
-<li>hiding, 指 Hash 的计算是单向的, 难以逆向计算, 也就是说, Hash 值没有泄漏出这个输入的任何信息</li>
+<li>哈希</li>
+<li>签名</li>
 </ul>
+<h3 id="哈希"><a href="#哈希" class="headerlink" title="哈希"></a>哈希</h3><p>哈希, 密码学中称: cryptographic hash function, 主要用到其三个性质</p>
+<ul>
+<li><p>collision resistance, 指难以哈希碰撞</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs reasonml">x neq y<br>but <span class="hljs-constructor">H(<span class="hljs-params">x</span>)</span> = <span class="hljs-constructor">H(<span class="hljs-params">y</span>)</span><br></code></pre></td></tr></table></figure>
+<p>两个不同的输入算出同样的哈希值, 就是哈希碰撞, 一般来说不可避免. 可以利用这个性质来得到 <code>digest</code> (只要一改变, <code>digest</code> 就会改变)</p>
+</li>
+<li><p>hiding, 指 Hash 的计算是单向的, 难以逆向计算, 也就是说, Hash 值没有泄漏出这个输入的任何信息</p>
 </li>
 </ul>
 <p>两个性质结合起来, 可以用来实现 digital commitment (或称 digital equipment of a sealed envelope).</p>
-<p>如果输入空间不够大, 一般在输入之后添加几位随机数.<br>    * puzzle friendly, 指 Hash 值的计算一般不可预测, 只是看到输入, 很难猜到输出. 要想得到结果, 只能一个一个试, 所以才能用作工作量证明 (proof of work)</p>
+<p>如果输入空间不够大, 一般在输入之后添加几位随机数.</p>
 <ul>
-<li>签名,</li>
+<li>puzzle friendly, 指 Hash 值的计算一般不可预测, 只是看到输入, 很难猜到输出. 要想得到结果, 只能一个一个试, 所以才能用作工作量证明 (proof of work)</li>
 </ul>
+<p>比特币中用到的 Hash 算法为 <code>SHA-256</code> (Secure Hash Algorithm, 256 位输出)</p>
+<h3 id="签名"><a href="#签名" class="headerlink" title="签名"></a>签名</h3><p>比特币中的账户管理是去中心化的, 创建账户的过程就是创建一对公私钥:</p>
+<figure class="highlight processing"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs processing">(<span class="hljs-keyword">public</span> <span class="hljs-built_in">key</span>, <span class="hljs-keyword">private</span> <span class="hljs-built_in">key</span>)<br></code></pre></td></tr></table></figure>
 
+<p>其思想来自 asymmetric encryption algorithm. (加密和解密用的不是同一个密钥, 加密用公钥, 解密用私钥), 解决对称加密中密钥分发不方便的问题.</p>
+<p>比特币账户中:</p>
+<ul>
+<li>公钥相当于银行账户, 只要对方知道你的公钥, 就能向你转钱</li>
+<li>私钥相当于账户密码, 只要对方知道了你的私钥, 就能将钱转走</li>
+</ul>
+<p>在这里, 公私钥用于签名:</p>
+<ul>
+<li>自己交易之后, 用私钥签名并将交易信息散布到网络</li>
+<li>别人用你的公钥来验证</li>
+</ul>
+<p>产生公私钥对时, 需要确保用一个 good source of randomness, 不然可能与别人产生相同的公私钥对.</p>
+<h2 id="03-BTC-数据结构"><a href="#03-BTC-数据结构" class="headerlink" title="03-BTC 数据结构"></a>03-BTC 数据结构</h2><h3 id="Hash-pointers"><a href="#Hash-pointers" class="headerlink" title="Hash pointers"></a>Hash pointers</h3><p>Block chains 中的链表与普通链表的区别在于:</p>
+<ul>
+<li>用 hash pointer 替代了普通指针</li>
+</ul>
+<p>普通指针, 在计算机内存中直接指向一个内存地址, 通常用于引用变量或对象. 而 Hash Pointer: 不仅指向一个内存地址, 还包含该地址所指向的数据的哈希值, 用于确保数据的完整性和防篡改.</p>
+<p>假设一个区块链如下:<br><img src="/../img/block-chain-hash-pointer-example.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>第一个 block 称 genesis block (创世区块), 最近产生的是 most recent block</li>
+<li>一个 block 中的 hash pointer 是根据前一个 block 的所有内容计算出的</li>
+<li>如果一个 block 内容被篡改, 则会导致后一个 block 的 hash pointer 无法使用</li>
+<li>因此只需要在本地保存最后一个 hash pointer 就能知道区块链是否被篡改</li>
+</ul>
+<p>普通链表和区块链的区别:</p>
+<ul>
+<li>普通链表, 可以更改其中的元素, 而不影响剩下的元素</li>
+<li>区块链, 改动一个元素, 会导致后面所有区块不可用</li>
+</ul>
+<p>得益于 Hash pointer, 在本地可以只保存最近的一部分区块, 其他区块在需要时可以向网络中的其他节点询问.</p>
+<h3 id="Merkle-tree"><a href="#Merkle-tree" class="headerlink" title="Merkle tree"></a>Merkle tree</h3>
                 
               </div>
             
