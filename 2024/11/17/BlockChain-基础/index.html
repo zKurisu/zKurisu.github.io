@@ -34,8 +34,12 @@
 <meta property="og:image" content="http://example.com/img/block-chain-who-find-next-win.png">
 <meta property="og:image" content="http://example.com/img/block-chain-progress-free.png">
 <meta property="og:image" content="http://example.com/img/block-chain-conformation.png">
+<meta property="og:image" content="http://example.com/img/block-chain-the-bitcoin-network.png">
+<meta property="og:image" content="http://example.com/img/block-chain-fully-node.png">
+<meta property="og:image" content="http://example.com/img/block-chain-light-node.png">
+<meta property="og:image" content="http://example.com/img/block-chain-mining-pool.png">
 <meta property="article:published_time" content="2024-11-17T12:37:00.000Z">
-<meta property="article:modified_time" content="2024-12-18T08:01:57.919Z">
+<meta property="article:modified_time" content="2024-12-18T08:59:19.286Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/how-block-chain-connect-together.png">
@@ -247,7 +251,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          5.7k 字
+          6.7k 字
         
       </span>
     
@@ -258,7 +262,7 @@
         
         
         
-          48 分钟
+          56 分钟
         
       </span>
     
@@ -494,7 +498,46 @@
 <h3 id="挖矿的意义"><a href="#挖矿的意义" class="headerlink" title="挖矿的意义"></a>挖矿的意义</h3><p>虽然挖矿本身求解的数学问题没意义, 但其对维护比特币系统有重大意义. (只要大部分算力掌握在诚实的节点上)</p>
 <h3 id="Confirmation"><a href="#Confirmation" class="headerlink" title="Confirmation"></a>Confirmation</h3><p>BTC 协议中, 默认 6 个 confirmation 之后认为一个 block 是无法被篡改的.</p>
 <p><img src="/../img/block-chain-conformation.png" srcset="/img/loading.gif" lazyload></p>
-<h2 id="06-BTC-网络"><a href="#06-BTC-网络" class="headerlink" title="06-BTC 网络"></a>06-BTC 网络</h2>
+<h2 id="06-BTC-网络"><a href="#06-BTC-网络" class="headerlink" title="06-BTC 网络"></a>06-BTC 网络</h2><p>Bitcoin 协议运行在 application layer, 而底层位于 network layer, 运行 P2P Overlay Network, 在这个网络中, 所有节点都是平等的.</p>
+<p><img src="/../img/block-chain-the-bitcoin-network.png" srcset="/img/loading.gif" lazyload></p>
+<p>要想加入一个网络, 至少得知道一个 seed node, 然后 seed note 告知你网络中有哪些其他节点.</p>
+<p>Bitcoin 网络的设计原则是: 简单, 鲁棒, 而不是高效.</p>
+<p>每个节点维护一个邻居节点的集合, 消息以 flooding 的方式在集合间传播.</p>
+<p>节点在第一次接收到一个消息时, 会传播给其他邻居节点, 同时记录这个消息已经收到过了, 下次再收到则不用转发.</p>
+<p>邻居节点的选取不考虑底层的网络拓扑结构.</p>
+<p>每个节点都要维护一个等待转发的集合 (同一时间可能多条消息需要转发), 当消息写入区块链, 则从等待池中去除.</p>
+<h2 id="07-BTC-挖矿难度"><a href="#07-BTC-挖矿难度" class="headerlink" title="07-BTC 挖矿难度"></a>07-BTC 挖矿难度</h2><figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs reasonml"><span class="hljs-constructor">H(<span class="hljs-params">block</span> <span class="hljs-params">header</span>)</span> &lt;= target<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>target</code> 越小, 挖矿难度越大</li>
+<li>比特币所用的是 <code>SHA-256</code> 算法, 输出空间是 $2^{256}$ (256 位, 每一位 2 种可能)</li>
+<li>一般设置算出的 Hash 前有多少个连续的 0, 一般合法的区块是 70 个</li>
+</ul>
+<p>挖矿难度的计算为:</p>
+<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs abnf"><span class="hljs-attribute">difficulty</span> <span class="hljs-operator">=</span> \frac&#123;difficulty_1_target&#125;&#123;target&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>difficulty</code> 为 1 时的 target 除以当前的 <code>target</code></li>
+</ul>
+<p>BTC 协议中, 每隔 2016 个区块调整一次挖矿难度:</p>
+<figure class="highlight latex"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs latex"><span class="hljs-keyword">\frac</span>&#123;2016 <span class="hljs-keyword">\times</span> 10&#125;&#123;60 <span class="hljs-keyword">\times</span> 24&#125; = 14 天<br></code></pre></td></tr></table></figure>
+
+<p>调整的公式为:</p>
+<figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs applescript">target = target \<span class="hljs-keyword">times</span> \frac&#123;actual <span class="hljs-built_in">time</span>&#125;&#123;expected <span class="hljs-built_in">time</span>&#125;<br></code></pre></td></tr></table></figure>
+<p>(实际代码中改变至多为 4 (1&#x2F;4) 倍)</p>
+<h2 id="08-BTC-挖矿"><a href="#08-BTC-挖矿" class="headerlink" title="08-BTC 挖矿"></a>08-BTC 挖矿</h2><p>全节点及其职责:</p>
+<p><img src="/../img/block-chain-fully-node.png" srcset="/img/loading.gif" lazyload></p>
+<p>轻节点及其职责:</p>
+<p><img src="/../img/block-chain-light-node.png" srcset="/img/loading.gif" lazyload></p>
+<p>当前挖矿所用设备性价比最高的是 ASIC (Application Specific Integrated Circuit), 而不是一开始的 CPU, GPU. (从通用设备到专用设备)</p>
+<p>一般情况, 一款 ASIC 只能挖一种货币的矿.</p>
+<h3 id="矿池"><a href="#矿池" class="headerlink" title="矿池"></a>矿池</h3><p>一个矿池组织多个矿机.</p>
+<p><img src="/../img/block-chain-mining-pool.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>miner 只负责计算 Hash</li>
+<li>pool manager 负责全节点的其他功能</li>
+</ul>
+<p>通过 almost valid block (share) 来做工作量证明.</p>
+<p>弊病在于一个大型矿池能够更容易发起攻击.</p>
+
                 
               </div>
             
