@@ -51,8 +51,9 @@
 <meta property="og:image" content="http://example.com/img/block-chain-block-header-in-etherum.png">
 <meta property="og:image" content="http://example.com/img/block-chain-block-struct.png">
 <meta property="og:image" content="http://example.com/img/block-chain-external-block-struct.png">
+<meta property="og:image" content="http://example.com/img/block-chain-bloom-filter-example.png">
 <meta property="article:published_time" content="2024-11-17T12:37:00.000Z">
-<meta property="article:modified_time" content="2024-12-19T07:17:17.983Z">
+<meta property="article:modified_time" content="2024-12-19T08:51:23.380Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/how-block-chain-connect-together.png">
@@ -264,7 +265,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          10k 字
+          11k 字
         
       </span>
     
@@ -275,7 +276,7 @@
         
         
         
-          85 分钟
+          93 分钟
         
       </span>
     
@@ -694,6 +695,7 @@
 </ul>
 <p>外部账户知道合约账户的地址就能调用, 调用时状态会发生变化.</p>
 <p>这种新的账户系统, 好处在于让参与智能合约的人有较为稳定的身份.</p>
+<p>以太坊中创建账户同样是不需要他人知道的 (本地创建公私钥对), 只有发生交易时会被其他节点得知.</p>
 <h2 id="02-ETH-状态树"><a href="#02-ETH-状态树" class="headerlink" title="02-ETH 状态树"></a>02-ETH 状态树</h2><p>以太坊用 “状态树” 这一数据结构来实现基于用户的账本模型.</p>
 <p>需要完成:</p>
 <figure class="highlight pf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs pf">addr -&gt; <span class="hljs-keyword">state</span><br></code></pre></td></tr></table></figure>
@@ -727,17 +729,46 @@
 <h3 id="Modified-MPT"><a href="#Modified-MPT" class="headerlink" title="Modified MPT"></a>Modified MPT</h3><p>以太坊中使用的状态树是 Modified MPT (Merkle Patricia tree) 结构.</p>
 <p>一个示例:<br><img src="/../img/block-chain-Modified-MPT.png" srcset="/img/loading.gif" lazyload></p>
 <p>当一个节点改变时, 不是在当前节点上修改, 而是新建一个分支. (保留历史状态, 便于回滚)</p>
+<p>多个状态树中的大部分信息其实都是共享的.</p>
 <h3 id="以太坊中的区块块头"><a href="#以太坊中的区块块头" class="headerlink" title="以太坊中的区块块头"></a>以太坊中的区块块头</h3><p><img src="/../img/block-chain-block-header-in-etherum.png" srcset="/img/loading.gif" lazyload></p>
 <h3 id="以太坊中的区块"><a href="#以太坊中的区块" class="headerlink" title="以太坊中的区块"></a>以太坊中的区块</h3><p><img src="/../img/block-chain-block-struct.png" srcset="/img/loading.gif" lazyload></p>
 <h3 id="以太坊中发布的区块信息"><a href="#以太坊中发布的区块信息" class="headerlink" title="以太坊中发布的区块信息"></a>以太坊中发布的区块信息</h3><p><img src="/../img/block-chain-external-block-struct.png" srcset="/img/loading.gif" lazyload></p>
 <h3 id="序列化"><a href="#序列化" class="headerlink" title="序列化"></a>序列化</h3><p>用 RLP, Recursive Length Prefix, 只有一种类型:</p>
 <figure class="highlight smali"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs smali">nested<span class="hljs-built_in"> array </span>of bytes<br></code></pre></td></tr></table></figure>
 
-
-
-
-
-
+<h2 id="03-ETH-交易树和收据树"><a href="#03-ETH-交易树和收据树" class="headerlink" title="03-ETH 交易树和收据树"></a>03-ETH 交易树和收据树</h2><ul>
+<li>每次发布一次区块, 区块内的所有交易就会组织成一个交易树, 也是一棵 merkle tree, 同比特币中的情况</li>
+<li>每个交易执行完之后会形成一个收据, 记录这个交易的相关信息, 所有的收据得到一棵收据树</li>
+</ul>
+<p>交易树和收据树上的节点是一一对应的.</p>
+<p>增加收据树, 主要是考虑到智能合约执行的复杂. 通过增加这个结构, 能快速查询一些交易结果.</p>
+<p>交易树和收据树都使用 MPT (Merkle Patricia Tree) 这个数据结构.</p>
+<p>MPT 支持查询:</p>
+<ul>
+<li>状态树中通过地址查找账户</li>
+<li>交易树和收据树通过查找块中的编号来定位</li>
+</ul>
+<p>交易树和收据树可以:</p>
+<ul>
+<li>提供 merkle proof</li>
+<li>提供复杂查询</li>
+</ul>
+<h3 id="bloom-filter"><a href="#bloom-filter" class="headerlink" title="bloom filter"></a>bloom filter</h3><p>Bloom filter 这个数据结构能比较高效判断一个元素是否在一个大的集合中.</p>
+<p>Bloom filter 将大的集合计算出一个紧凑的摘要, 比如说一个 128 位的向量.</p>
+<ul>
+<li>向量每一位初始化为 0</li>
+<li>通过哈希函数将集合中的元素映射到向量中的一个位置 (此时把 0 置 1)</li>
+<li>映射完所有元素得到摘要</li>
+</ul>
+<p>若要判断一个元素是否在这个集合中, 可以先计算这个元素映射到摘要中的位置是否置 1.</p>
+<p><img src="/../img/block-chain-bloom-filter-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>有可能出现误报 (明明不在里面说在). 但不会出现漏报 (在里面的说不在).</p>
+<p>一个避免哈希碰撞的方法时用一组哈希函数而非一个.</p>
+<p>简单的 bloom filter 不支持删除操作. (删除后, 也不能将摘要中的 1 置 0, 因为可能有其他的元素映射到了这个位置)</p>
+<p>每个交易执行完之后会形成一个收据, 这个收据里就包含一个 bloom filter, 记录交易的类型, 地址等信息, 发布的区块在其块头里, 也有一个总的 bloom filter, 其为区块里所有交易的 bloom filter 的一个并集.</p>
+<p>比如想要查询过去 10 天与某个智能合约相关的交易, 则查找哪一个区块块头中包含想要查询的内容, 如果块头的 bloom filter 中没找到, 则说明该区块中不包含. 如果找到, 则查找其收据.</p>
+<h3 id="以太坊的运行过程"><a href="#以太坊的运行过程" class="headerlink" title="以太坊的运行过程"></a>以太坊的运行过程</h3><p>可以看作是一个 “交易驱动的状态机” (transaction-driven state machine).</p>
+<p>这里的状态指状态树中的所有内容. 交易则是指每次发布区块内的内容. 通过执行这些交易让系统从当前状态转移到下一个状态. 且状态转移必须是确定性的.</p>
 
                 
               </div>
