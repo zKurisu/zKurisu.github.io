@@ -55,8 +55,13 @@
 <meta property="og:image" content="http://example.com/img/block-chain-etherum-easy-fork.png">
 <meta property="og:image" content="http://example.com/img/block-chain-uncle-block-example.png">
 <meta property="og:image" content="http://example.com/img/block-chain-who-can-be-uncle-block.png">
+<meta property="og:image" content="http://example.com/img/block-chain-eth-change-diff.png">
+<meta property="og:image" content="http://example.com/img/block-chain-eth-change-diff2.png">
+<meta property="og:image" content="http://example.com/img/block-chain-eth-change-diff3.png">
+<meta property="og:image" content="http://example.com/img/block-chain-eth-change-diff4.png">
+<meta property="og:image" content="http://example.com/img/block-chain-eth-development.png">
 <meta property="article:published_time" content="2024-11-17T12:37:00.000Z">
-<meta property="article:modified_time" content="2024-12-19T12:07:38.099Z">
+<meta property="article:modified_time" content="2024-12-20T02:59:46.964Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/how-block-chain-connect-together.png">
@@ -268,7 +273,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          13k 字
+          14k 字
         
       </span>
     
@@ -279,7 +284,7 @@
         
         
         
-          108 分钟
+          117 分钟
         
       </span>
     
@@ -789,6 +794,7 @@
 <p>以太币也没有定期将 block reward 减半的设计.</p>
 <p>在以太坊中, uncle block 中的合约不会执行, 甚至不会检查其合法性. (只检查是否满足挖矿难度)</p>
 <h2 id="05-ETH-挖矿算法"><a href="#05-ETH-挖矿算法" class="headerlink" title="05-ETH 挖矿算法"></a>05-ETH 挖矿算法</h2><p>Block chain is secured by mining.</p>
+<p>以太坊的挖矿算法称 ethash.</p>
 <p>以太坊设计的一个目标就是要做到 ASIC resistance, 一个方法就是增加 mining puzzle 对内存的访问需求, 即 memory hard mining puzzle. 因为 ASIC 芯片虽然算力强, 但是对内存访问的优势不大.</p>
 <p>以太坊用两个数据集:</p>
 <ul>
@@ -821,7 +827,38 @@
 <li><code>header</code> 指块头信息</li>
 <li><code>nonce</code> 是当前尝试的随机值</li>
 <li><code>full_size</code> 是大数据集中元素的个数</li>
+<li><code>dataset</code> 是大数据集</li>
+<li>先通过 <code>header</code> 和 <code>nonce</code> 计算出一个初始的 mix 值</li>
+<li>根据 mix 值求出要从 dataset 中读取的元素的下标</li>
+<li>一次读取相邻两个元素 (这俩元素独立生成没什么联系)</li>
+<li>循环 64 次</li>
+<li>最后得到的 mix 值取 hash 后比对</li>
 </ul>
+<p>轻节点验证过程:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">hashimoto_light</span>(<span class="hljs-params">header, nonce, full_size, cache</span>):<br>    mix = <span class="hljs-built_in">hash</span>(header, nonce)<br>    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">64</span>):<br>        dataset_index = get_int_from_item(mix) % full_size<br>        mix = make_item(mix, calc_dataset_item(cache, dataset_index))<br>        mix = make_item(mix, calc_dataset_item(cache, dataset_index + <span class="hljs-number">1</span>))<br>    <span class="hljs-keyword">return</span> <span class="hljs-built_in">hash</span>(mix)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>header</code> 是块头</li>
+<li><code>nonce</code> 是包含在 <code>header</code> 中的 <code>nonce</code> (而非此时随机生成)</li>
+<li><code>full_size</code> 是大数据集中的元素个数</li>
+<li><code>cache</code> 是小数据集大小</li>
+</ul>
+<p>矿工挖矿的主循环:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">mine</span>(<span class="hljs-params">full_size, dataset, header, target</span>):<br>    nonce = random.randint(<span class="hljs-number">0</span>, <span class="hljs-number">2</span>**<span class="hljs-number">64</span>)<br>    <span class="hljs-keyword">while</span> hashimoto_full(header, nonce, full_size, dataset) &gt; target:<br>        nonce = (nonce + <span class="hljs-number">1</span>) % <span class="hljs-number">2</span>**<span class="hljs-number">64</span><br>    <span class="hljs-keyword">return</span> nonce<br></code></pre></td></tr></table></figure>
+
+<h2 id="06-ETH-难度调整"><a href="#06-ETH-难度调整" class="headerlink" title="06-ETH 难度调整"></a>06-ETH 难度调整</h2><p>以太坊是每一个区块都有可能调整挖矿的难度.</p>
+<p><img src="/../img/block-chain-eth-change-diff.png" srcset="/img/loading.gif" lazyload></p>
+<p><img src="/../img/block-chain-eth-change-diff2.png" srcset="/img/loading.gif" lazyload></p>
+<p><img src="/../img/block-chain-eth-change-diff3.png" srcset="/img/loading.gif" lazyload></p>
+<p><img src="/../img/block-chain-eth-change-diff4.png" srcset="/img/loading.gif" lazyload></p>
+<p>难度炸弹的设计是为了将来由工作量证明转向权益证明. 让后期挖矿难度变大, 进而让矿工们转变.</p>
+<p>这里减去 300 万, 是由于难度炸弹导致难度过大了而进行的回调.</p>
+<p><img src="/../img/block-chain-eth-development.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="07-ETH-权益证明"><a href="#07-ETH-权益证明" class="headerlink" title="07-ETH 权益证明"></a>07-ETH 权益证明</h2><p>权益证明, Proof of state.</p>
+<p>基于工作量的证明一个普遍的坏处就是浪费电, 其比拼的是算力, 但算力取决于你购买的机器, 机器取决于你投入的资金, 因此本质上比较的是资金.</p>
+<p>与其把钱投入到挖矿, 不如投入到区块链的开发, 按照投入的多少决定记账权, 这就是权益证明的基本思想, 有时可以称这种为 virtual mining.</p>
+<p>这种方式省去了挖矿的过程, 由此减小了挖矿所带来的能耗.</p>
+<p>工作量证明的区块链系统, 维护它安全的资源不是一个闭环: 如果一个人想发动恶意攻击, 那他只需要用外部世界的货币购买超过 51% 算力的机器来挖矿, 而这种干预是直接通过外部资源的.</p>
+<p>而权益证明的区块链系统, 维护它安全的资源是一个闭环: 如果一个人想发动恶意攻击, 那么他需要购买货币超 51% 的发行量, 而这种操作往往还会导致货币的升值.</p>
 
                 
               </div>
