@@ -63,8 +63,12 @@
 <meta property="og:image" content="http://example.com/img/block-chain-nothing-at-stake.png">
 <meta property="og:image" content="http://example.com/img/block-chain-original-epoch.png">
 <meta property="og:image" content="http://example.com/img/block-chain-optimised-epoch.png">
+<meta property="og:image" content="http://example.com/img/block-chain-how-to-call-smart-contract.png">
+<meta property="og:image" content="http://example.com/img/block-chain-how-smart-contract-created-and-run.png">
+<meta property="og:image" content="http://example.com/img/block-chain-eth-gas-fee.png">
+<meta property="og:image" content="http://example.com/img/block-chain-eth-error-handling.png">
 <meta property="article:published_time" content="2024-11-17T12:37:00.000Z">
-<meta property="article:modified_time" content="2024-12-20T05:37:31.950Z">
+<meta property="article:modified_time" content="2024-12-20T07:16:00.084Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/how-block-chain-connect-together.png">
@@ -276,7 +280,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          15k 字
+          17k 字
         
       </span>
     
@@ -287,7 +291,7 @@
         
         
         
-          126 分钟
+          144 分钟
         
       </span>
     
@@ -886,7 +890,58 @@
 <p>Validator 参与这个过程, 如果履行职责的话, 能够得到相应的奖励, 相反, 若 validator 做出不良的行为, 会受到相应的处罚: 如果不投票, 导致系统达不成共识, 会扣除一定的保证金, 如果乱投票 (两边都投), 会没收全部的保证金. 被没收&#x2F;扣除的部分会直接销毁.</p>
 <p>每一个 validator 有一定的任期, 任期满后要经过一定时间的等待期, 这个等待期用于其他 validator 检举揭发这个 validator 是否有不良行为, 如果等待期过了, validator 就能取回保证金以及相应的奖励.</p>
 <h2 id="08-ETH-智能合约"><a href="#08-ETH-智能合约" class="headerlink" title="08-ETH 智能合约"></a>08-ETH 智能合约</h2><p>智能合约的本质是运行在区块链上的一段代码, 代码逻辑定义了合约的内容.</p>
-<p>智能合约的账户保存了合约当前的运行状态.</p>
+<p>智能合约的账户保存了合约当前的运行状态, 包含:</p>
+<ul>
+<li><code>balance</code>, 当前余额</li>
+<li><code>nonce</code>, 交易次数</li>
+<li><code>code</code>, 合约代码</li>
+<li><code>storage</code>, 存储, 一棵 MPT 树</li>
+</ul>
+<p>Solidity 是智能合约最常用的语言, 语法上与 JavaScript 接近.</p>
+<p>示例:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><code class="hljs solidity">pragma solidity ^0.4.21;<br><br>contract SimpleAuction &#123;<br>    address public beneficiary; // 拍卖受益人<br>    uint public auctionEnd;  // 结束时间<br>    address public highestBidder; // 当前的最高出价人<br>    mapping(address =&gt; uint) bids; // 所有竞拍者<br><br>    // 需要记录的事件<br>    event HighestBidIncreased(address bidder, uint amount);<br>    event Pay2Beneficiary(address winner, uint amount);<br><br>    /// 以受益者地址 `_beneficiary` 的名义,<br>    /// 创建一个简单的拍卖, 拍卖时间为 `_biddingTime` 秒<br>    constructor(uint _biddingTime, address _beneficiary<br>        ) public &#123;<br>        beneficiary = _beneficiary;<br>        auctionEnd = now + biddingTime;<br>    &#125;<br><br>    /// 对拍卖进行出价, 随交易一起发送的 ether 与之前已经发送的<br>    /// ether 的和为本次出价<br>    function bid() public payable &#123;<br>        ...<br>    &#125;<br><br>    /// 使用 withdraw 模式<br>    /// 由投标者自己取回出价, 返回是否成功<br>    function bid() public payable &#123;<br>        ...<br>    &#125;<br><br>    /// 结束拍卖, 把最高的出价发送给受益人<br>    function bid() public payable &#123;<br>        ...<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>pragma</code> 用于声明 solidity 使用的版本号, 不同版本在语法上有一些差别</li>
+<li><code>contract</code> 关键字类似于 <code>class</code></li>
+<li><code>constructor</code> 用于定义构造函数</li>
+</ul>
+<h3 id="如何调用智能合约"><a href="#如何调用智能合约" class="headerlink" title="如何调用智能合约"></a>如何调用智能合约</h3><p>创建一个交易, 接收地址为要调用的智能合约的地址, <code>data</code> 域中填写要调用的函数以及参数的编码值, 如:</p>
+<p><img src="/../img/block-chain-how-to-call-smart-contract.png" srcset="/img/loading.gif" lazyload></p>
+<p>以太坊中规定, 只有一个外部账户才能调用合约账户.</p>
+<h3 id="一个合约调用另一个合约中的函数"><a href="#一个合约调用另一个合约中的函数" class="headerlink" title="一个合约调用另一个合约中的函数"></a>一个合约调用另一个合约中的函数</h3><p>有两种调用方式:</p>
+<ol>
+<li>直接调用<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs solidity">contract A &#123;<br>    event LogCallFoo(string str);<br>    function foo(string str) returns (uint)&#123;<br>        emit LogCallFoo(str);<br>        return 123;<br>    &#125;<br>&#125;<br><br>contract B &#123;<br>    uint ua;<br>    function callAFooDirectly(address addr)public&#123;<br>        A a = A(addr);<br>        ua = a.foo(&quot;call foo directly&quot;);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure></li>
+</ol>
+<ul>
+<li>此时, 若 <code>a.foo()</code> 执行失败, 会导致 B 的调用也回滚</li>
+</ul>
+<ol start="2">
+<li>用 <code>call</code> 函数调用<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs solidity">contract C &#123;<br>    function callAFooByCall(address addr) public returns (bool)&#123;<br>        bytes4 funcsig = bytes4(keccak256(&quot;foo(string)&quot;));<br>        if (addr.call(funcsig,&quot;call foo by func call&quot;))<br>            return true;<br>        return false;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure></li>
+</ol>
+<ul>
+<li>如果被调用合约返回异常, 只是 <code>call</code> 函数返回 false</li>
+</ul>
+<ol start="3">
+<li>用 <code>delegatecall()</code>, 基本与 <code>call()</code> 相同, 只不过其不需要切换到被调用合约的环境中执行, 而是在当前环境</li>
+</ol>
+<h3 id="payable-关键字"><a href="#payable-关键字" class="headerlink" title="payable 关键字"></a>payable 关键字</h3><p>以太坊中规定, 如果合约账户能接受外部转账的话, 需要标注成 <code>payable</code>.</p>
+<p>如:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs solidity">function bid() public payable &#123;<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>这里的 <code>bid()</code> 函数用于出价, 但你需要保证对方有足够的金额进行出价, 因此在调用后, 需要把出价用的以太币也发送出去, 锁定到合约中直到拍卖结束, 避免凭空出价. (这里的 <code>bid()</code> 函数需要有接受外部转账的能力, 因此需要标注为 <code>payable</code>)</p>
+<h3 id="fallback-函数"><a href="#fallback-函数" class="headerlink" title="fallback() 函数"></a>fallback() 函数</h3><p>在 <code>data</code> 域中不指定函数或者指定的函数不存在时, 确省调用.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs solidity">function() public [payable] &#123;<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>匿名函数, 没有参数和返回值</li>
+<li>标注为 <code>payable</code></li>
+</ul>
+<h3 id="智能合约的创建和运行"><a href="#智能合约的创建和运行" class="headerlink" title="智能合约的创建和运行"></a>智能合约的创建和运行</h3><p><img src="/../img/block-chain-how-smart-contract-created-and-run.png" srcset="/img/loading.gif" lazyload></p>
+<h3 id="汽油费"><a href="#汽油费" class="headerlink" title="汽油费"></a>汽油费</h3><p><img src="/../img/block-chain-eth-gas-fee.png" srcset="/img/loading.gif" lazyload></p>
+<p>出现死循环没有办法能提前检测出.</p>
+<p>汽油费其实是按照指令的执行来收取的, 一条指令收取多少汽油费, 而 <code>Gas Limit</code> 规定交易发起者所能接受支付的最大汽油费.</p>
+<h3 id="错误处理"><a href="#错误处理" class="headerlink" title="错误处理"></a>错误处理</h3><p>以太坊中的交易具有原子性, 要么全部执行, 要么全部不执行.</p>
+<p>要是智能合约的执行中出现错误, 则会导致该交易全部回滚. </p>
+<p>汽油费不够也会导致回滚, 且此时支付的汽油费是不退的.</p>
+<p><img src="/../img/block-chain-eth-error-handling.png" srcset="/img/loading.gif" lazyload></p>
 
                 
               </div>
