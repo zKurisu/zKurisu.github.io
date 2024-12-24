@@ -44,8 +44,10 @@
 <meta property="og:image" content="http://example.com/img/IS-block-cipher-n-bit-n-bit-table.png">
 <meta property="og:image" content="http://example.com/img/IS-feistel-cipher-structure.png">
 <meta property="og:image" content="http://example.com/img/IS-how-DES-works.png">
+<meta property="og:image" content="http://example.com/img/IS-AES-AddRoundKey.png">
+<meta property="og:image" content="http://example.com/img/IS-AES-S-box-example.png">
 <meta property="article:published_time" content="2024-12-23T02:47:44.000Z">
-<meta property="article:modified_time" content="2024-12-24T04:50:32.711Z">
+<meta property="article:modified_time" content="2024-12-24T05:53:23.277Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/IS-threat-vector-diagram.png">
@@ -257,7 +259,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          11k 字
+          12k 字
         
       </span>
     
@@ -268,7 +270,7 @@
         
         
         
-          93 分钟
+          100 分钟
         
       </span>
     
@@ -590,7 +592,7 @@
 <li>Key size 越大, 安全性也越高, 一般 64 位也比较合理</li>
 <li>Number of rounds 越大, 安全性越高, 典型的是 16 rounds</li>
 <li>Subkey generation algorithm 越复杂, 安全性越高</li>
-<li>Round function F 越复杂, 安全性越高</li>
+<li>Round function F 越复杂, 安全性越高, 提供 confusion</li>
 </ul>
 <p>这些组件的选择, 需要考虑:</p>
 <ul>
@@ -617,8 +619,31 @@
 </li>
 </ul>
 <p><img src="/../img/IS-how-DES-works.png" srcset="/img/loading.gif" lazyload><br>(似乎比较复杂…)</p>
+<p>对 DES 的 concerns 主要来自:</p>
+<ul>
+<li>key size, 128 位及以上能够有效限制 brute-force 破解</li>
+<li>nature of the algorithm, 利用 DES 加密过程中其他组件的漏洞, 比如 S-boxes</li>
+</ul>
 <h2 id="The-Avalanche-Effect"><a href="#The-Avalanche-Effect" class="headerlink" title="The Avalanche Effect"></a>The Avalanche Effect</h2><p>Avalanche Effect 指, 当输入数据 (明文或 Key) 发生微小变化时, 输出结果 (密文或散列值) 应发生显著变化. 理想情况下, 输入的任意一位的变化都应导致输出的许多位发生变化.</p>
-<h1 id="Lec8-Block-Cipher-and-AES"><a href="#Lec8-Block-Cipher-and-AES" class="headerlink" title="Lec8 Block Cipher and AES"></a>Lec8 Block Cipher and AES</h1><h1 id="考试知识点整理"><a href="#考试知识点整理" class="headerlink" title="考试知识点整理"></a>考试知识点整理</h1><h2 id="202212"><a href="#202212" class="headerlink" title="202212"></a>202212</h2><h3 id="Q1"><a href="#Q1" class="headerlink" title="Q1"></a>Q1</h3><ul>
+<h2 id="Timing-Attacks"><a href="#Timing-Attacks" class="headerlink" title="Timing Attacks"></a>Timing Attacks</h2><p>时间攻击 (Timing Attacks) 是一种侧信道攻击, 攻击者通过分析程序执行所需时间来推测加密算法中的秘密信息 (例如密钥)</p>
+<p>具体指通过测量程序执行时间的差异来推测密钥或其他敏感数据.</p>
+<p>许多加密算法在处理不同输入时, 其执行时间可能会有所不同. 例如, 根据输入数据的不同, 条件语句可能导致不同的代码路径, 从而影响执行时间.</p>
+<h2 id="Block-Cipher-Design-Principle"><a href="#Block-Cipher-Design-Principle" class="headerlink" title="Block Cipher Design Principle"></a>Block Cipher Design Principle</h2><p>Three critical aspects:</p>
+<ul>
+<li>the number of rounds, 数量越多</li>
+<li>design of the function <code>F</code>, 最好是 nonlinear, 有好的 avalanche effect</li>
+<li>key scheduling</li>
+</ul>
+<h1 id="Lec8-Block-Cipher-and-AES"><a href="#Lec8-Block-Cipher-and-AES" class="headerlink" title="Lec8 Block Cipher and AES"></a>Lec8 Block Cipher and AES</h1><p>AES, Advanced Encryption Standard, 同样是对称加密算法, 旨在替代 DES.</p>
+<p>AES 是一种块密码, 将数据分成固定大小的块 (每个块 128 位), 并对每个块进行加密.</p>
+<p>其支持多种密钥长度: AES 支持三种密钥长度: 128 位, 192 位和 256 位. 密钥长度越长, 安全性越高.</p>
+<h2 id="AddRoundKey"><a href="#AddRoundKey" class="headerlink" title="AddRoundKey"></a>AddRoundKey</h2><p>AddRoundKey 步骤用于增强加密过程的安全性, 通过将当前状态与轮密钥进行异或 (XOR) 操作, 将密钥混合到状态中.</p>
+<p><img src="/../img/IS-AES-AddRoundKey.png" srcset="/img/loading.gif" lazyload></p>
+<p>在 AES 中, 密钥的使用是分轮进行的. 每轮都有一个不同的轮密钥, 这些轮密钥是从原始密钥派生而来的.</p>
+<h2 id="SubBytes-Operation"><a href="#SubBytes-Operation" class="headerlink" title="SubBytes Operation"></a>SubBytes Operation</h2><p>SubBytes 的主要目的是对状态矩阵中的每个字节进行非线性替换, 以增加混淆性, 确保明文与密文之间的关系变得复杂. </p>
+<p>其依赖于一个 S-Box 查找表, S-Box 将每个 8 位输入字节映射为一个新的 8 位输出字节.</p>
+<p><img src="/../img/IS-AES-S-box-example.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="ShiftRows-Transformation"><a href="#ShiftRows-Transformation" class="headerlink" title="ShiftRows Transformation"></a>ShiftRows Transformation</h2><h2 id="MixColoumn-Transformation"><a href="#MixColoumn-Transformation" class="headerlink" title="MixColoumn Transformation"></a>MixColoumn Transformation</h2><h2 id="MixRow-Transformation"><a href="#MixRow-Transformation" class="headerlink" title="MixRow Transformation"></a>MixRow Transformation</h2><h2 id="Key-Expansion"><a href="#Key-Expansion" class="headerlink" title="Key Expansion"></a>Key Expansion</h2><h1 id="考试知识点整理"><a href="#考试知识点整理" class="headerlink" title="考试知识点整理"></a>考试知识点整理</h1><h2 id="202212"><a href="#202212" class="headerlink" title="202212"></a>202212</h2><h3 id="Q1"><a href="#Q1" class="headerlink" title="Q1"></a>Q1</h3><ul>
 <li>three D’s 包括哪些</li>
 <li>通过一个 keyword 构建 Playfair cipher matrix</li>
 <li>用 Playfair cipher matrix 加密一段文字</li>
@@ -711,6 +736,7 @@
 <li>将 blockchain technology 应用到 cognitive radio networks 中的 challenges</li>
 <li>列出潜在的 blockchain-enabled applications</li>
 </ul>
+<h1 id="预测"><a href="#预测" class="headerlink" title="预测"></a>预测</h1><p>DES 和 AES 相关 Operation 会考一道大题.</p>
 
                 
               </div>
@@ -791,6 +817,12 @@
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2024/12/24/AES-%E5%8A%A0%E5%AF%86%E8%BF%87%E7%A8%8B/" title="AES-加密过程">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">AES-加密过程</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">
