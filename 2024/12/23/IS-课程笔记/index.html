@@ -49,8 +49,9 @@
 <meta property="og:image" content="http://example.com/img/IS-how-TRNG-works.png">
 <meta property="og:image" content="http://example.com/img/IS-how-PRNG-produced.png">
 <meta property="og:image" content="http://example.com/img/IS-how-PRF-works.png">
+<meta property="og:image" content="http://example.com/img/IS-seed-requirements-example.png">
 <meta property="article:published_time" content="2024-12-23T02:47:44.000Z">
-<meta property="article:modified_time" content="2024-12-24T12:07:30.367Z">
+<meta property="article:modified_time" content="2024-12-24T13:04:31.009Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/IS-threat-vector-diagram.png">
@@ -262,7 +263,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          13k 字
+          15k 字
         
       </span>
     
@@ -273,7 +274,7 @@
         
         
         
-          112 分钟
+          122 分钟
         
       </span>
     
@@ -697,10 +698,39 @@
 <li>Maurer’s universal statistical test, 检测序列中匹配模式之间的比特数, 评估序列的压缩能力. 若序列可以显著压缩, 则表明其可能包含规律, 缺乏随机性</li>
 </ul>
 <h3 id="Unpredictability"><a href="#Unpredictability" class="headerlink" title="Unpredictability"></a>Unpredictability</h3><ul>
-<li>Forward unpredictability, </li>
-<li>Backward unpredictability</li>
+<li>Forward unpredictability, 指, 如果 seed 未知, 那么接下来生成的 sequence 需要 unpredictable</li>
+<li>Backward unpredictability, 指, 无法轻易从以产生的序列推测出 seed</li>
 </ul>
-<h1 id="考试知识点整理"><a href="#考试知识点整理" class="headerlink" title="考试知识点整理"></a>考试知识点整理</h1><h2 id="202212"><a href="#202212" class="headerlink" title="202212"></a>202212</h2><h3 id="Q1"><a href="#Q1" class="headerlink" title="Q1"></a>Q1</h3><ul>
+<h3 id="Seed-Requirements"><a href="#Seed-Requirements" class="headerlink" title="Seed Requirements"></a>Seed Requirements</h3><p>一般 Seed 由 TRNG 生成.</p>
+<p><img src="/../img/IS-seed-requirements-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>为什么当 TRNG available 的时候还要用 PRNG, 考虑一个场景, 当用于加密 keystream 与 plaintext 等长时, 若使用 PRNG, 则通信双方只需要传递 54 or 128 位的用 TRNG 生成的 key 就行. 如果只使用 TRNG, 则需要传递整个 keystream.</p>
+<h2 id="PRNG-Algorithms"><a href="#PRNG-Algorithms" class="headerlink" title="PRNG Algorithms"></a>PRNG Algorithms</h2><p>大致分两类:</p>
+<ul>
+<li>Purpose-built algorithm, 为要生成的 pseudorandom bit stream 专门设计的算法</li>
+<li>Algorithms based on existing cryptographic algorithms, 用现有算法来生成</li>
+</ul>
+<h3 id="Linear-Congruential-Generators"><a href="#Linear-Congruential-Generators" class="headerlink" title="Linear Congruential Generators"></a>Linear Congruential Generators</h3><p>Linear Congruential Generators, 线性同余生成器, LCG, 是一种常用的伪随机数生成算法, 它通过简单的数学公式生成一个序列的伪随机数:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>X_{n+1} &#x3D; (a X_n + c)\ mod\ m<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>$X_n$ 是当前生成的随机数</li>
+<li>$X_{n+1}$ 是下一个生成的随机数</li>
+<li>$a$ 是一个乘法常数, 影响周期性和分布</li>
+<li>$c$ 是一个加法常数, 影响起点</li>
+<li>$m$ 用于控制生成数的范围, 一般选较大素数 (比如计算机可以表示的最大整数)</li>
+<li>$X_0$ 是 seed</li>
+</ul>
+<p>LCG 的输出是周期性的, 周期的最大值为 $m$. 如果选择的参数不合适, 可能导致较短的周期, 影响随机性.</p>
+<p>如果已知是 LCG 算法, 且参数选取已知, 那么只要知道序列中的一个数, 后面所有的都能预测出.</p>
+<h3 id="Blum-Blum-Shub-Generator"><a href="#Blum-Blum-Shub-Generator" class="headerlink" title="Blum Blum Shub Generator"></a>Blum Blum Shub Generator</h3><p>Blum Blum Shub Generator, BBS 生成器, 是一种基于数论的伪随机数生成算法, 具有较高的安全性, 特别适用于需要较强随机性的加密应用. 其生成方式依赖于大素数的乘积和模运算.</p>
+<p>素数是指大于 1 的自然数, 它只具有两个正因数: 1 和它本身. 如 2, 3, 5, 7, 11, 13, 17, 19, 23, 29 等.</p>
+<p>生成步骤:</p>
+<ol>
+<li>选择素数, 选择两个大素数 $q$ 和 $q$, 两者模 4 的结果都为 3, 即 $p \equiv q \equiv 3 (mod\ 4)$ ($\equiv$ 这个符号表示两者取模后的结果相同)</li>
+<li>计算模数, $n &#x3D; p \times q$</li>
+<li>选择 seed, 选取一个随机 seed $X_0$, 使得 $X_0 &#x3D; s^2\ mod\ n$ (s 是一个随机数)</li>
+<li>生成伪随机数, 用下面公式:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>X_{n+1} &#x3D; X_n^2\ mod\ n \newline~ \newline<br>B_i &#x3D; X_i\ mod\ 2<br>\end{aligned}<br>}<br>$$</li>
+</ol>
+<p>$B_i$ 是对应二进制位上的值.</p>
+<h2 id="Public-Key-Cryptography-and-RSA"><a href="#Public-Key-Cryptography-and-RSA" class="headerlink" title="Public-Key Cryptography and RSA"></a>Public-Key Cryptography and RSA</h2><h1 id="考试知识点整理"><a href="#考试知识点整理" class="headerlink" title="考试知识点整理"></a>考试知识点整理</h1><h2 id="202212"><a href="#202212" class="headerlink" title="202212"></a>202212</h2><h3 id="Q1"><a href="#Q1" class="headerlink" title="Q1"></a>Q1</h3><ul>
 <li>three D’s 包括哪些</li>
 <li>通过一个 keyword 构建 Playfair cipher matrix</li>
 <li>用 Playfair cipher matrix 加密一段文字</li>
