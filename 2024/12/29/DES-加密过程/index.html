@@ -16,16 +16,20 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="参考 B 站视频 介绍DES, Data Encryption Standard, 是对称加密中的一种分组加密算法. DES 所用密钥长 64 位, 其中 56 位参与运算, 8 位位校验位 (8, 16, 24, 32, 40, 48, 56, 64). Block size 一般选 64 位, 每一个 block 都要经过多轮处理. 加密过程">
+    <meta name="description" content="参考 B 站视频 介绍DES, Data Encryption Standard, 是对称加密中的一种分组加密算法. DES 所用密钥长 64 位, 其中 56 位参与运算, 8 位位校验位 (8, 16, 24, 32, 40, 48, 56, 64). Block size 一般选 64 位, 每一个 block 都要经过多轮处理. 加密过程  输入的 64 bits 拆为 $L_0$ 和 $">
 <meta property="og:type" content="article">
 <meta property="og:title" content="DES-加密过程">
 <meta property="og:url" content="http://example.com/2024/12/29/DES-%E5%8A%A0%E5%AF%86%E8%BF%87%E7%A8%8B/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="参考 B 站视频 介绍DES, Data Encryption Standard, 是对称加密中的一种分组加密算法. DES 所用密钥长 64 位, 其中 56 位参与运算, 8 位位校验位 (8, 16, 24, 32, 40, 48, 56, 64). Block size 一般选 64 位, 每一个 block 都要经过多轮处理. 加密过程">
+<meta property="og:description" content="参考 B 站视频 介绍DES, Data Encryption Standard, 是对称加密中的一种分组加密算法. DES 所用密钥长 64 位, 其中 56 位参与运算, 8 位位校验位 (8, 16, 24, 32, 40, 48, 56, 64). Block size 一般选 64 位, 每一个 block 都要经过多轮处理. 加密过程  输入的 64 bits 拆为 $L_0$ 和 $">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/IS-DES-flow-chart.png">
+<meta property="og:image" content="http://example.com/img/IS-DES-initial-permutations.png">
+<meta property="og:image" content="http://example.com/img/IS-DES-round-function-extend.png">
+<meta property="og:image" content="http://example.com/img/IS-DES-round-function-s-box.png">
+<meta property="og:image" content="http://example.com/img/IS-DES-round-function-get-row-collum.png">
 <meta property="article:published_time" content="2024-12-29T02:53:16.000Z">
-<meta property="article:modified_time" content="2024-12-29T02:57:23.066Z">
+<meta property="article:modified_time" content="2024-12-29T03:19:17.230Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/IS-DES-flow-chart.png">
@@ -237,7 +241,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          141 字
+          668 字
         
       </span>
     
@@ -248,7 +252,7 @@
         
         
         
-          2 分钟
+          6 分钟
         
       </span>
     
@@ -296,6 +300,37 @@
 <p>DES 所用密钥长 64 位, 其中 56 位参与运算, 8 位位校验位 (8, 16, 24, 32, 40, 48, 56, 64).</p>
 <p>Block size 一般选 64 位, 每一个 block 都要经过多轮处理.</p>
 <h1 id="加密过程"><a href="#加密过程" class="headerlink" title="加密过程"></a>加密过程</h1><p><img src="/../img/IS-DES-flow-chart.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>输入的 64 bits 拆为 $L_0$ 和 $R_0$ 两部分 (各 32 bits)</li>
+<li>经过一轮迭代, 有: $L_1 &#x3D; R_0$, $R_1 &#x3D; L_0 \oplus f(R_0, K_1)$</li>
+<li>重复多轮</li>
+</ul>
+<p>需要提前生成 $K_1 ~ K_16$ 子密钥, 都是 48 bits.</p>
+<p>对于 round function:</p>
+<ul>
+<li>Extend, 指, 把 32 bits 输入转换为 48 bits, 以便与 round key 运算</li>
+<li>XOR, 输入和 round key 做 XOR 运算</li>
+<li>S-Box, 把 48 bits 映射回 32 bits</li>
+<li>P 置换, 换位操作</li>
+</ul>
+<h2 id="Initial-Permutation"><a href="#Initial-Permutation" class="headerlink" title="Initial Permutation"></a>Initial Permutation</h2><p>IP, Initial Permutation, 按照一定规则, 将原来的 64 bits 重新排序. (也有一个置换表)</p>
+<p><img src="/../img/IS-DES-initial-permutations.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>比如第一个是 <code>58</code>, 就是把原始数据的第 <code>58</code> 位替换到现在的第 <code>1</code> 位</li>
+<li>第二个是 <code>50</code>, 就是把原始数据的第 <code>50</code> 位替换到现在的第 <code>2</code> 位</li>
+</ul>
+<h2 id="Extend"><a href="#Extend" class="headerlink" title="Extend"></a>Extend</h2><p>将 32 位输入扩展到 48 位输出:</p>
+<p><img src="/../img/IS-DES-round-function-extend.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>见右图, 中间部分是原始 32 位数据, 两侧是扩展的数据</li>
+<li>第一位是 <code>32</code> 意思是把原来第 <code>32</code> 位数据扩展为现在的第一位</li>
+<li>相当于把每个 4 位扩展为 6 位</li>
+<li>第一个扩展位, 是前一个 4 bits 的最后一位</li>
+<li>第二个扩展位, 是后一个 4 bits 的第一位</li>
+</ul>
+<h2 id="S-Box"><a href="#S-Box" class="headerlink" title="S-Box"></a>S-Box</h2><p>每 6 位映射成 4 位输出:<br><img src="/../img/IS-DES-round-function-s-box.png" srcset="/img/loading.gif" lazyload></p>
+<p>先用 6 位数据得出行和列, 之后查表:<br><img src="/../img/IS-DES-round-function-get-row-collum.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="密钥生成"><a href="#密钥生成" class="headerlink" title="密钥生成"></a>密钥生成</h2><p>见视频吧.</p>
 
                 
               </div>
