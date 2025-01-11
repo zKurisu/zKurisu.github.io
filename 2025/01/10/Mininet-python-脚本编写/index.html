@@ -26,7 +26,7 @@
 <meta property="og:image" content="http://example.com/img/mininet-single-switch-topo.png">
 <meta property="og:image" content="http://example.com/img/mininet-minimaltopo.png">
 <meta property="article:published_time" content="2025-01-10T03:17:19.000Z">
-<meta property="article:modified_time" content="2025-01-11T03:58:01.204Z">
+<meta property="article:modified_time" content="2025-01-11T06:48:18.911Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/mininet-single-switch-topo.png">
@@ -238,7 +238,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.9k 字
+          4.9k 字
         
       </span>
     
@@ -249,7 +249,7 @@
         
         
         
-          25 分钟
+          41 分钟
         
       </span>
     
@@ -330,6 +330,25 @@
 <p>测试:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet&gt; nodes<br>available nodes are:<br>c0 h1 h2 s1<br>mininet&gt; h1 <span class="hljs-built_in">touch</span> /var/log/hello<br>mininet&gt; h1 <span class="hljs-built_in">ls</span> /tmp/h1/var/log<br></code></pre></td></tr></table></figure>
 
+<h2 id="Controller"><a href="#Controller" class="headerlink" title="Controller"></a>Controller</h2><p>指 OpenFlow 控制器, 与 OpenFlow Switch 相连, 可以下发流表等.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> mininet.node <span class="hljs-keyword">import</span> Controller<br><br>c0 = Controller(<span class="hljs-string">&quot;c0&quot;</span>, port=<span class="hljs-number">6633</span>)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>c0</code> 是 Controller 名</li>
+<li><code>port</code> 表明 Controller 运行在服务器的哪个端口</li>
+</ul>
+<h2 id="OVSSwitch"><a href="#OVSSwitch" class="headerlink" title="OVSSwitch"></a>OVSSwitch</h2><p>OVSSwitch 是 Open vSwitch 的实现.</p>
+<h3 id="start-方法"><a href="#start-方法" class="headerlink" title="start 方法"></a>start 方法</h3><p>用于启动交换机, 将交换机连接到控制器.</p>
+<p>默认情况下, OVSSwitch 会与传递给 net 的所有 controller 相连:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> mininet.net <span class="hljs-keyword">import</span> Mininet<br><span class="hljs-keyword">from</span> mininet.node <span class="hljs-keyword">import</span> OVSSwitch, Controller<br><span class="hljs-keyword">from</span> mininet.topo <span class="hljs-keyword">import</span> SingleSwitchTopo<br><span class="hljs-keyword">from</span> mininet.log <span class="hljs-keyword">import</span> setLogLevel<br><span class="hljs-keyword">from</span> mininet.cli <span class="hljs-keyword">import</span> CLI<br><br>setLogLevel(<span class="hljs-string">&#x27;info&#x27;</span>)<br><br><span class="hljs-comment"># 创建两个本地控制器</span><br>c0 = Controller(<span class="hljs-string">&#x27;c0&#x27;</span>, port=<span class="hljs-number">6633</span>)<br>c1 = Controller(<span class="hljs-string">&#x27;c1&#x27;</span>, port=<span class="hljs-number">6634</span>)<br><br><span class="hljs-comment"># 创建一个单交换机的拓扑</span><br>topo = SingleSwitchTopo(k=<span class="hljs-number">2</span>)  <span class="hljs-comment"># 2 台主机连接到 1 台交换机</span><br><br><span class="hljs-comment"># 创建 Mininet 网络</span><br>net = Mininet(topo=topo, switch=OVSSwitch, controller=[c0, c1], waitConnected=<span class="hljs-literal">True</span>)<br><br><span class="hljs-comment"># 启动网络</span><br>net.start()<br><br><span class="hljs-comment"># 进入 CLI</span><br>CLI(net)<br><br><span class="hljs-comment"># 停止网络</span><br>net.stop()<br></code></pre></td></tr></table></figure>
+
+<p>之后查看:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet&gt; sh ovs-vsctl show<br>b929a352-9d7b-4f71-959f-28f26bc488c3<br>    Bridge s1<br>        Controller <span class="hljs-string">&quot;tcp:127.0.0.1:6634&quot;</span><br>            is_connected: <span class="hljs-literal">true</span><br>        Controller <span class="hljs-string">&quot;tcp:127.0.0.1:6633&quot;</span><br>            is_connected: <span class="hljs-literal">true</span><br>        fail_mode: secure<br>        Port s1-eth1<br>            Interface s1-eth1<br>        Port s1<br>            Interface s1<br>                <span class="hljs-built_in">type</span>: internal<br>        Port s1-eth2<br>            Interface s1-eth2<br>    ovs_version: <span class="hljs-string">&quot;2.13.1&quot;</span><br></code></pre></td></tr></table></figure>
+
+<p>可以通过重写该方法, 来连接控制器, 如:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs python">...<br>c0 = Controller( <span class="hljs-string">&#x27;c0&#x27;</span>, port=<span class="hljs-number">6633</span> )<br>c1 = Controller( <span class="hljs-string">&#x27;c1&#x27;</span>, port=<span class="hljs-number">6634</span> )<br>c2 = RemoteController( <span class="hljs-string">&#x27;c2&#x27;</span>, ip=<span class="hljs-string">&#x27;127.0.0.1&#x27;</span>, port=<span class="hljs-number">6633</span> )<br><br>cmap = &#123; <span class="hljs-string">&#x27;s1&#x27;</span>: c0, <span class="hljs-string">&#x27;s2&#x27;</span>: c1, <span class="hljs-string">&#x27;s3&#x27;</span>: c2 &#125;<br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">MultiSwitch</span>( <span class="hljs-title class_ inherited__">OVSSwitch</span> ):<br>    <span class="hljs-string">&quot;Custom Switch() subclass that connects to different controllers&quot;</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">start</span>(<span class="hljs-params"> self, controllers </span>):<br>        <span class="hljs-keyword">return</span> OVSSwitch.start( self, [ cmap[ self.name ] ] )<br><br><br>topo = TreeTopo( depth=<span class="hljs-number">2</span>, fanout=<span class="hljs-number">2</span> )<br>net = Mininet( topo=topo, switch=MultiSwitch, build=<span class="hljs-literal">False</span>, waitConnected=<span class="hljs-literal">True</span> )<br><br><span class="hljs-keyword">for</span> c <span class="hljs-keyword">in</span> [ c0, c1 ]:<br>    net.addController(c)<br><br>...<br></code></pre></td></tr></table></figure>
+<ul>
+<li>在 <code>net.start()</code> 时其中的 switch 会自动调用 <code>start</code> 方法</li>
+</ul>
 <h1 id="miminet-util"><a href="#miminet-util" class="headerlink" title="miminet.util"></a>miminet.util</h1><p>该名称空间提供一些 utility function.</p>
 <h2 id="检查是否是-Root-运行"><a href="#检查是否是-Root-运行" class="headerlink" title="检查是否是 Root 运行"></a>检查是否是 Root 运行</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> mininet.util <span class="hljs-keyword">import</span> ensureRoot<br><br>ensureRoot()<br></code></pre></td></tr></table></figure>
 
@@ -347,7 +366,7 @@
 <p>输出与 LogLevel 有关.</p>
 <h2 id="设置-LogLevel"><a href="#设置-LogLevel" class="headerlink" title="设置 LogLevel"></a>设置 LogLevel</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> mininet.log <span class="hljs-keyword">import</span> setLogLevel<br><br><span class="hljs-comment"># 设置日志级别为 debug</span><br>setLogLevel(<span class="hljs-string">&#x27;debug&#x27;</span>)<br></code></pre></td></tr></table></figure>
 
-<h1 id="mininet-topo"><a href="#mininet-topo" class="headerlink" title="mininet.topo"></a>mininet.topo</h1><p>用于创建 topo.</p>
+<h1 id="mininet-topo"><a href="#mininet-topo" class="headerlink" title="mininet.topo"></a>mininet.topo</h1><p>用于创建 topo. 网络中有多少 switch, host, 都是由它决定.</p>
 <h2 id="SingleSwitchTopo"><a href="#SingleSwitchTopo" class="headerlink" title="SingleSwitchTopo"></a>SingleSwitchTopo</h2><p>只用一个路由器连接其他主机:</p>
 <p><img src="/../img/mininet-single-switch-topo.png" srcset="/img/loading.gif" lazyload></p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> mininet.topo <span class="hljs-keyword">import</span> SingleSwitchTopo<br><br>topoo = SingleSwitchTopo( <span class="hljs-number">10</span> )<br></code></pre></td></tr></table></figure>
@@ -369,7 +388,9 @@
 </ul>
 <h2 id="Mininet"><a href="#Mininet" class="headerlink" title="Mininet"></a>Mininet</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> mininet.node <span class="hljs-keyword">import</span> Host<br><span class="hljs-keyword">from</span> mininet.net <span class="hljs-keyword">import</span> Mininet<br><span class="hljs-keyword">from</span> mininet.topo <span class="hljs-keyword">import</span> SingleSwitchTopo<br><span class="hljs-keyword">from</span> mininet.log <span class="hljs-keyword">import</span> info, setLogLevel<br><span class="hljs-keyword">from</span> mininet.cli <span class="hljs-keyword">import</span> CLI<br><br>setLogLevel(<span class="hljs-string">&quot;info&quot;</span>)<br><br>info(<span class="hljs-string">&quot;****** Create SingleSwitchTopo topo&quot;</span>)<br>topo = SingleSwitchTopo( <span class="hljs-number">10</span> )<br><br>info(<span class="hljs-string">&quot;****** Create Mininet topo&quot;</span>)<br>net = Mininet( topo=topo, host=Host, waitConnected=<span class="hljs-literal">True</span> )<br><br>info(<span class="hljs-string">&quot;****** Start net&quot;</span>)<br>net.start()<br><br>info(<span class="hljs-string">&quot;****** Issue a CLI&quot;</span>)<br>CLI( net )<br>net.stop()<br></code></pre></td></tr></table></figure>
 
+<h2 id="addController-方法-往网络中添加-controller"><a href="#addController-方法-往网络中添加-controller" class="headerlink" title="addController 方法, 往网络中添加 controller"></a>addController 方法, 往网络中添加 controller</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs python">net = Mininet( topo=topo, switch=MultiSwitch, build=<span class="hljs-literal">False</span>, waitConnected=<span class="hljs-literal">True</span> )<br><span class="hljs-keyword">for</span> c <span class="hljs-keyword">in</span> [ c0, c1 ]:<br>    net.addController(c)<br></code></pre></td></tr></table></figure>
 
+<h2 id="addSwitch-方法-往网络中添加-switch"><a href="#addSwitch-方法-往网络中添加-switch" class="headerlink" title="addSwitch 方法, 往网络中添加 switch"></a>addSwitch 方法, 往网络中添加 switch</h2><h2 id="addHost-方法-往网络中添加-host"><a href="#addHost-方法-往网络中添加-host" class="headerlink" title="addHost 方法, 往网络中添加 host"></a>addHost 方法, 往网络中添加 host</h2><h2 id="addLink-方法-往网络中添加-host"><a href="#addLink-方法-往网络中添加-host" class="headerlink" title="addLink 方法, 往网络中添加 host"></a>addLink 方法, 往网络中添加 host</h2>
                 
               </div>
             
