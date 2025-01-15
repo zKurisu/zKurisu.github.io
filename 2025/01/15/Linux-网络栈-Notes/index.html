@@ -23,10 +23,12 @@
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="参考 Blog参考 linux kernel labs 几个数据结构Ring Buffers在系统启动时, 内核检测到 NIC (网卡) 设备, 会加载相应驱动模块 (操作系统与硬件设备沟通的桥梁). 在驱动程序初始化时, 会在内容中为 Rx (接收到的) 和 Tx (要发送的) 数据包分配队列或缓冲区, 这些队列通常被称为 “环形缓冲区” (Ring Buffers), 这片内存通常分配到 DM">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/linux-network-stack-socket-buffer.png">
 <meta property="article:published_time" content="2025-01-15T06:26:23.000Z">
-<meta property="article:modified_time" content="2025-01-15T06:48:08.492Z">
+<meta property="article:modified_time" content="2025-01-15T11:29:47.916Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/linux-network-stack-socket-buffer.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -235,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          706 字
+          1.4k 字
         
       </span>
     
@@ -246,7 +248,7 @@
         
         
         
-          6 分钟
+          12 分钟
         
       </span>
     
@@ -297,7 +299,34 @@
 <p>来查看, 输出如:</p>
 <figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs yaml"><span class="hljs-attr">Ring parameters for ens192:</span><br><span class="hljs-attr">Pre-set maximums:</span><br><span class="hljs-attr">RX:</span>             <span class="hljs-number">4096</span>    <span class="hljs-string">&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;,</span> <span class="hljs-string">Max</span> <span class="hljs-string">size</span> <span class="hljs-string">in</span> <span class="hljs-string">bytes</span><br><span class="hljs-attr">RX Mini:</span>        <span class="hljs-number">2048</span><br><span class="hljs-attr">RX Jumbo:</span>       <span class="hljs-number">4096</span><br><span class="hljs-attr">TX:</span>             <span class="hljs-number">4096</span>    <span class="hljs-string">&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;,</span> <span class="hljs-string">Max</span> <span class="hljs-string">size</span> <span class="hljs-string">in</span> <span class="hljs-string">bytes</span><br><span class="hljs-attr">Current hardware settings:</span><br><span class="hljs-attr">RX:</span>             <span class="hljs-number">1024</span>    <span class="hljs-string">&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;,</span> <span class="hljs-string">Configured</span> <span class="hljs-string">size</span> <span class="hljs-string">in</span> <span class="hljs-string">bytes</span><br><span class="hljs-attr">RX Mini:</span>        <span class="hljs-number">128</span><br><span class="hljs-attr">RX Jumbo:</span>       <span class="hljs-number">512</span><br><span class="hljs-attr">TX:</span>             <span class="hljs-number">512</span>     <span class="hljs-string">&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;,</span> <span class="hljs-string">Configured</span> <span class="hljs-string">size</span> <span class="hljs-string">in</span> <span class="hljs-string">bytes</span><br></code></pre></td></tr></table></figure>
 
-<h2 id="Socket-Buffers-sk-buff"><a href="#Socket-Buffers-sk-buff" class="headerlink" title="Socket Buffers (sk_buff)"></a>Socket Buffers (<code>sk_buff</code>)</h2>
+<h2 id="Socket-Buffers-sk-buff"><a href="#Socket-Buffers-sk-buff" class="headerlink" title="Socket Buffers (sk_buff)"></a>Socket Buffers (<code>sk_buff</code>)</h2><p><code>sk_buff</code> 是 Linux 内核中用于表示网络数据包的结构体.</p>
+<p>无论是接收到的数据包 (Rx) 还是要发送的数据包 (Tx), 内核都会使用 <code>sk_buff</code> 来管理它们.</p>
+<p><code>sk_buff</code> 不实际存储 package data, 而是通过指针指向 Packet Buffer.</p>
+<ul>
+<li><code>sk_buff struct</code>, 含 MetaData</li>
+<li><code>sk_buff Data</code>, 含<ul>
+<li>data, packet 的内容 (payload)</li>
+<li>metadata, 含协议头信息</li>
+</ul>
+</li>
+</ul>
+<p>这种分开存储的好处在于, 内核不需要在内存中移动整个数据包来处理协议头. 例如, 当数据包通过协议栈时, 内核只需要修改 <code>sk_buff</code> 中的元数据 (如更新协议头), 而不需要复制或移动数据包的内容.</p>
+<p>部分结构示意图如下:<br><img src="/../img/linux-network-stack-socket-buffer.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li><code>interface(input_dev)</code>, 指向 packet 到达的 interface name</li>
+<li><code>Protocol</code> 指 packet 所用的协议</li>
+<li><code>Head</code>, 指向 <code>sk_buff</code> data 的起始地址 (之后一段地址会预留为空白)</li>
+<li><code>Data</code>, 指向当前协议头的起始位置, 可以理解为指向 “栈顶”, 当内核需要移除一个协议头 (例如从以太网头移动到 IP 头), data 指针会向后移动, 跳过已处理的协议头</li>
+<li><code>Tail</code>, 指向 <code>sk_buff</code> data 的末尾地址, 其后也会预留一部分空白空间 (毕竟 packet 的大小不同, 可以通过 MTU 调节)</li>
+<li><code>End</code>, 指向 <code>sk_buff</code> 在内存中的末尾地址</li>
+<li><code>MAC &amp; IP &amp; TCP header</code>, 该指针指向 <code>sk_buff</code> data 中存储 metadata 的首地址</li>
+</ul>
+<p>当内核需要克隆或复制一个 packet 时:</p>
+<ul>
+<li>不会复制数据包的实际内容</li>
+<li>会创建一个新的 <code>sk_buff</code>, 指向同一个数据包缓冲区, 但可能包含不同的元数据</li>
+</ul>
+
                 
               </div>
             
