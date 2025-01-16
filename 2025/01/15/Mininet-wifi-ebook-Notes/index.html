@@ -28,8 +28,10 @@
 <meta property="og:image" content="http://example.com/img/Mininet-wifi-SDWN-model.png">
 <meta property="og:image" content="http://example.com/img/Mininet-wifi-main-components.png">
 <meta property="og:image" content="http://example.com/img/mininet-wifi-simple-topology.png">
+<meta property="og:image" content="http://example.com/img/mininet-wifi-single-topology.png">
+<meta property="og:image" content="http://example.com/img/mininet-wifi-topology-linear.png">
 <meta property="article:published_time" content="2025-01-15T00:00:08.000Z">
-<meta property="article:modified_time" content="2025-01-16T09:55:19.118Z">
+<meta property="article:modified_time" content="2025-01-16T13:07:01.061Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/Mininet-wifi-IEEE-80211-modes.png">
@@ -241,7 +243,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          4.5k 字
+          6.4k 字
         
       </span>
     
@@ -252,7 +254,7 @@
         
         
         
-          38 分钟
+          54 分钟
         
       </span>
     
@@ -440,7 +442,67 @@
 
 <h3 id="为-nodes-打开-terminal"><a href="#为-nodes-打开-terminal" class="headerlink" title="为 nodes 打开 terminal"></a>为 nodes 打开 terminal</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet-wifi&gt; xterm sta1 sta2<br></code></pre></td></tr></table></figure>
 
-<h2 id="自定义-topologies"><a href="#自定义-topologies" class="headerlink" title="自定义 topologies"></a>自定义 topologies</h2><h1 id="可参考文献"><a href="#可参考文献" class="headerlink" title="可参考文献"></a>可参考文献</h1><p>这本书每一节后面都列有.</p>
+<h2 id="自定义-topologies"><a href="#自定义-topologies" class="headerlink" title="自定义 topologies"></a>自定义 topologies</h2><p>如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo mn --wifi --topo single,4<br></code></pre></td></tr></table></figure>
+<ul>
+<li>指 1 个 AP 连接 4 个 stations</li>
+</ul>
+<p><img src="/../img/mininet-wifi-single-topology.png" srcset="/img/loading.gif" lazyload></p>
+<p>另一个例子:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo mn --wifi --topo linear,4<br></code></pre></td></tr></table></figure>
+<ul>
+<li>指一个 AP 连接一个 Station</li>
+</ul>
+<p><img src="/../img/mininet-wifi-topology-linear.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="获取-nodes-信息"><a href="#获取-nodes-信息" class="headerlink" title="获取 nodes 信息"></a>获取 nodes 信息</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo mn --wifi --<span class="hljs-built_in">link</span>=wmediumd --position<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>--link=wmediumd</code> 指定 <code>wmediumd</code> (一种用于模拟无线链路的特性的工具) 为无线链路的仿真工具</li>
+<li><code>--position</code>, 启用节点位置功能, 通过设置位置, 可以模拟节点之间的距离, 信号衰减和干扰</li>
+</ul>
+<p>之后:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet-wifi&gt; py sta1.position<br>[1.0, 0.0, 0.0]<br>mininet-wifi&gt; py sta2.position<br>[101.0, 0.0, 0.0]<br></code></pre></td></tr></table></figure>
+
+<p>可以设置位置信息:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet-wifi&gt; py sta1.setPosition(<span class="hljs-string">&#x27;10,0,0&#x27;</span>)<br></code></pre></td></tr></table></figure>
+
+<p>获取其他参数信息, 查看 <code>node.params</code> 或 <code>node.wintfs</code>:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet-wifi&gt; py sta1.params<br></code></pre></td></tr></table></figure>
+
+<h2 id="OVSAP-和-UserAP"><a href="#OVSAP-和-UserAP" class="headerlink" title="OVSAP 和 UserAP"></a>OVSAP 和 UserAP</h2><ul>
+<li><code>OVSAP</code> 和 <code>OVSKernelAP</code> 运行在 Kernel space</li>
+<li><code>UserAP</code> 运行在 User space</li>
+</ul>
+<p>Mininet-WiFi 默认使用 OVS switch or access point.</p>
+<p>使用 <code>UserAP</code> 如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo mn --wifi --ap user --innamespace<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>--innamespace</code> 让 node 运行在独立的 network namespace 下, 而非 root network namespace</li>
+</ul>
+<p>此时查看 AP 的网络接口:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet-wifi&gt; ap1 ip <span class="hljs-built_in">link</span><br>1: lo: &lt;LOOPBACK&gt; mtu 65536 qdisc noop state DOWN mode DEFAULT group default qlen 1000<br>    <span class="hljs-built_in">link</span>/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00<br>2: ap1-eth0@if46: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noqueue state UP mode DEFAULT group default qlen 1000<br>    <span class="hljs-built_in">link</span>/ether 8a:1f:d9:9a:aa:a0 brd ff:ff:ff:ff:ff:ff link-netnsid 0<br>3: tap0: &lt;BROADCAST,MULTICAST,PROMISC,UP,LOWER_UP&gt; mtu 1500 qdisc fq_codel state UNKNOWN mode DEFAULT group default qlen 1000<br>    <span class="hljs-built_in">link</span>/ether 10:00:00:00:00:01 brd ff:ff:ff:ff:ff:ff<br>45: ap1-wlan1: &lt;BROADCAST,MULTICAST,PROMISC,UP,LOWER_UP&gt; mtu 1500 qdisc netem state UP mode DEFAULT group default qlen 1000<br>    <span class="hljs-built_in">link</span>/ether 02:00:00:00:02:00 brd ff:ff:ff:ff:ff:ff<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>ap1-wlan1</code> 是无线接口</li>
+<li><code>ap1-eth0</code> 用于连接 SDN 控制器</li>
+</ul>
+<p>UserAP 的性能要比 OVSAP 差很多. 可以测试如下:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo mn --<span class="hljs-built_in">test</span> iperf<br>*** Iperf: testing TCP bandwidth between h1 and h2<br>.*** Results: [<span class="hljs-string">&#x27;52.0 Gbits/sec&#x27;</span>, <span class="hljs-string">&#x27;52.3 Gbits/sec&#x27;</span>]<br></code></pre></td></tr></table></figure>
+
+<p>对于 UserSwitch:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo mn --switch=user --<span class="hljs-built_in">test</span> iperf<br>*** Iperf: testing TCP bandwidth between h1 and h2<br>*** Results: [<span class="hljs-string">&#x27;919.3 Mbits/sec&#x27;</span>, <span class="hljs-string">&#x27;918.2 Mbits/sec&#x27;</span>]<br></code></pre></td></tr></table></figure>
+
+<h2 id="GUI-工具"><a href="#GUI-工具" class="headerlink" title="GUI 工具"></a>GUI 工具</h2><ul>
+<li>Visual Network Descriptor, 可在 <a target="_blank" rel="noopener" href="https://github.com/ramonfontes/vnd">Github 上下载</a>, 在 Web 构建之后导出脚本</li>
+<li>MiniEdit, 可以在 Mininet-WiFi 的源码目录中找到 (推荐使用)<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo python examples/miniedit.py<br></code></pre></td></tr></table></figure></li>
+</ul>
+<h3 id="查看-2D-和-3D-topo-图"><a href="#查看-2D-和-3D-topo-图" class="headerlink" title="查看 2D 和 3D topo 图"></a>查看 2D 和 3D topo 图</h3><p>生成 2D topology:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo mn --wifi --plot --position<br></code></pre></td></tr></table></figure>
+
+<p>生成 3D topology:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo mn --wifi --plot3d --position<br></code></pre></td></tr></table></figure>
+
+
+
+<h1 id="可参考文献"><a href="#可参考文献" class="headerlink" title="可参考文献"></a>可参考文献</h1><p>这本书每一节后面都列有.</p>
 
                 
               </div>
