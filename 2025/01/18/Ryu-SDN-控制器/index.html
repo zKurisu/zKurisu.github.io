@@ -25,7 +25,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/ryu-setuptools-error-when-pip.png">
 <meta property="article:published_time" content="2025-01-18T08:49:20.000Z">
-<meta property="article:modified_time" content="2025-01-20T07:27:46.199Z">
+<meta property="article:modified_time" content="2025-01-22T04:40:57.558Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/ryu-setuptools-error-when-pip.png">
@@ -237,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.7k 字
+          2.9k 字
         
       </span>
     
@@ -248,7 +248,7 @@
         
         
         
-          23 分钟
+          25 分钟
         
       </span>
     
@@ -335,6 +335,14 @@
 </ul>
 <h2 id="指定-OpenFlow-协议版本"><a href="#指定-OpenFlow-协议版本" class="headerlink" title="指定 OpenFlow 协议版本"></a>指定 OpenFlow 协议版本</h2><p>定义 <code>OPF_VERSIOINS</code> 成员变量:</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> ryu.ofproto <span class="hljs-keyword">import</span> ofproto_v1_0<br>...<br>OPF_VERSIOINS = [ofproto_v1_0.OPF_VERSIOINS]<br>...<br></code></pre></td></tr></table></figure>
+
+<h1 id="命令行使用"><a href="#命令行使用" class="headerlink" title="命令行使用"></a>命令行使用</h1><h2 id="启动-Ryu-控制器"><a href="#启动-Ryu-控制器" class="headerlink" title="启动 Ryu 控制器"></a>启动 Ryu 控制器</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ryu-manager &lt;scripts-name&gt;<br></code></pre></td></tr></table></figure>
+
+<p>之后可以用 Mininet 来连接, 如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo mn --controller=remote,ip=127.0.0.1,port=6653 --switch=ovsk,protocols=OpenFlow13<br></code></pre></td></tr></table></figure>
+
+<h2 id="调试和日志"><a href="#调试和日志" class="headerlink" title="调试和日志"></a>调试和日志</h2><p>启用 <code>--verbose</code> 选项:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ryu-manager --verbose simple_switch.py<br></code></pre></td></tr></table></figure>
 
 <h1 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h1><h2 id="将接收的包送往所有-ports"><a href="#将接收的包送往所有-ports" class="headerlink" title="将接收的包送往所有 ports"></a>将接收的包送往所有 ports</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> ryu.base <span class="hljs-keyword">import</span> app_manager<br><span class="hljs-keyword">from</span> ryu.controller <span class="hljs-keyword">import</span> ofp_event<br><span class="hljs-keyword">from</span> ryu.controller.handler <span class="hljs-keyword">import</span> MAIN_DISPATCHER<br><span class="hljs-keyword">from</span> ryu.controller.handler <span class="hljs-keyword">import</span> set_ev_cls<br><span class="hljs-keyword">from</span> ryu.ofproto <span class="hljs-keyword">import</span> ofproto_v1_0<br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">L2Switch</span>(app_manager.RyuApp):<br>    OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION]<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, *args, **kwargs</span>):<br>        <span class="hljs-built_in">super</span>(L2Switch, self).__init__(*args, **kwargs)<br><br><span class="hljs-meta">    @set_ev_cls(<span class="hljs-params">ofp_event.EventOFPPacketIn, MAIN_DISPATCHER</span>)</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">packet_in_handler</span>(<span class="hljs-params">self, ev</span>):<br>        msg = ev.msg<br>        dp = msg.datapath<br>        ofp = dp.ofproto<br>        ofp_parser = dp.ofproto_parser<br><br>        actions = [ofp_parser.OFPActionOutput(ofp.OFPP_FLOOD)]<br><br>        data = <span class="hljs-literal">None</span><br>        <span class="hljs-keyword">if</span> msg.buffer_id == ofp.OFP_NO_BUFFER:<br>             data = msg.data<br><br>        out = ofp_parser.OFPPacketOut(<br>            datapath=dp, buffer_id=msg.buffer_id, in_port=msg.in_port,<br>            actions=actions, data = data)<br>        dp.send_msg(out)<br></code></pre></td></tr></table></figure>
 <ul>
