@@ -29,7 +29,7 @@
 <meta property="og:image" content="http://example.com/img/sdn-network-whole-overview-side-view.png">
 <meta property="og:image" content="http://example.com/img/sdn-match-action-basic-model.png">
 <meta property="article:published_time" content="2025-01-19T03:07:56.000Z">
-<meta property="article:modified_time" content="2025-02-04T03:47:52.922Z">
+<meta property="article:modified_time" content="2025-02-04T04:30:02.523Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/sdn-how-it-shape-network-example.png">
@@ -241,7 +241,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.9k 字
+          2.6k 字
         
       </span>
     
@@ -252,7 +252,7 @@
         
         
         
-          17 分钟
+          22 分钟
         
       </span>
     
@@ -339,6 +339,34 @@
 <li><code>Topo.__init__(self, **opts)</code> 初始化 <code>self</code> 为一个 topo 并传入 <code>opts</code> 参数</li>
 <li><code>&#39;h%s&#39; % (h+1)</code> 等价于 <code>f&#39;h&#123;h+1&#125;&#39;</code></li>
 </ul>
+<h2 id="CLI-Tool"><a href="#CLI-Tool" class="headerlink" title="CLI Tool"></a>CLI Tool</h2><h3 id="dpctl-命令"><a href="#dpctl-命令" class="headerlink" title="dpctl 命令"></a><code>dpctl</code> 命令</h3><p><code>dpctl</code> 命令可用于查看和控制单个交换机的流表.</p>
+<p>大多数 OpenFlow 交换机启动时都有一个被动监听端口, 默认是 6634.</p>
+<p>在一个窗口中启用 <code>mn</code>:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo mn --topo single,3 --mac --switch ovsk --controller remote<br></code></pre></td></tr></table></figure>
+
+<p>另一个窗口:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">dpctl show tcp:127.0.0.1:6634<br></code></pre></td></tr></table></figure>
+
+<p>此时输出为空, 因为没有启用远程 controller 因此没有流表项下发, 此时可以手动添加:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">dpctl add-flow tcp:127.0.0.1:6634 in_port=2,actions=output:3<br>dpctl add-flow tcp:127.0.0.1:6634 in_port=3,actions=output:2<br></code></pre></td></tr></table></figure>
+<ul>
+<li>把来自端口 2 的数据包发送到端口 3</li>
+<li>把来自端口 3 的数据包发送到端口 2</li>
+</ul>
+<p>之后:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet&gt; h2 ping h3<br></code></pre></td></tr></table></figure>
+<p>能 ping 通.</p>
+<h3 id="更改链路参数"><a href="#更改链路参数" class="headerlink" title="更改链路参数"></a>更改链路参数</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo mn --topo single,3 --mac --controller remote --switch ovsk --<span class="hljs-built_in">link</span> tc,bw=10,delay=10ms<br>dpctl add-flow tcp:127.0.0.1:6634 in_port=2,actions=output:3<br>dpctl add-flow tcp:127.0.0.1:6634 in_port=3,actions=output:2<br></code></pre></td></tr></table></figure>
+
+<p>之后:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet&gt; h2 ping -c10 h3<br></code></pre></td></tr></table></figure>
+
+
+
+
+
+
+
 
                 
               </div>
