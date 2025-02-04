@@ -29,7 +29,7 @@
 <meta property="og:image" content="http://example.com/img/sdn-network-whole-overview-side-view.png">
 <meta property="og:image" content="http://example.com/img/sdn-match-action-basic-model.png">
 <meta property="article:published_time" content="2025-01-19T03:07:56.000Z">
-<meta property="article:modified_time" content="2025-02-04T03:03:35.795Z">
+<meta property="article:modified_time" content="2025-02-04T03:47:52.922Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/sdn-how-it-shape-network-example.png">
@@ -241,7 +241,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          415 字
+          1.9k 字
         
       </span>
     
@@ -252,7 +252,7 @@
         
         
         
-          4 分钟
+          17 分钟
         
       </span>
     
@@ -314,6 +314,30 @@
 <li>Match 为空间中的一个区域</li>
 <li>若 Match 包含 Header, 则执行 Action</li>
 <li>Action 可以 将 Header 映射到另外的 space</li>
+</ul>
+<h1 id="Week-2"><a href="#Week-2" class="headerlink" title="Week 2"></a>Week 2</h1><h2 id="Mininet-Topo"><a href="#Mininet-Topo" class="headerlink" title="Mininet Topo"></a>Mininet Topo</h2><h3 id="minimal-topo"><a href="#minimal-topo" class="headerlink" title="minimal topo"></a><code>minimal</code> topo</h3><p>最小的 mininet network, 含两个 hosts, 一个 switch, 一个 controler:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo mn --topo minimal<br></code></pre></td></tr></table></figure>
+
+<h3 id="linear-topo"><a href="#linear-topo" class="headerlink" title="linear topo"></a><code>linear</code> topo</h3><p>每个 host 连接一个 switch, 所有 switch 与一个 controller 相连:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo mn --topo linear,4<br></code></pre></td></tr></table></figure>
+
+<p>用代码实现相同功能:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># linear-four.py</span><br><span class="hljs-keyword">from</span> mininet.net <span class="hljs-keyword">import</span> Mininet<br><span class="hljs-keyword">from</span> mininet.topo <span class="hljs-keyword">import</span> LinearTopo<br><br>Linear = LinearTopo(k=<span class="hljs-number">4</span>)<br>net = Mininet(topo=Linear)<br><br>net.start()<br>net.pingAll()<br>net.stop()<br></code></pre></td></tr></table></figure>
+
+<p>运行:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo python linear-four.py<br></code></pre></td></tr></table></figure>
+
+<h3 id="single-topo"><a href="#single-topo" class="headerlink" title="single topo"></a><code>single</code> topo</h3><p>所有 hosts 连接到一个 switch, switch 连接一个 controller:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo mn --topo single,4<br></code></pre></td></tr></table></figure>
+
+<h3 id="tree-topo"><a href="#tree-topo" class="headerlink" title="tree topo"></a><code>tree</code> topo</h3><p>可指定 depth (switch 的层数) 和 fan-out (一个 switch 连接的 hosts 数):</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo mn --topo tree,depth=2,fanout=2<br></code></pre></td></tr></table></figure>
+
+<h3 id="Custom-topo"><a href="#Custom-topo" class="headerlink" title="Custom topo"></a>Custom topo</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> mininet.topo <span class="hljs-keyword">import</span> Topo<br><span class="hljs-keyword">from</span> mininet.net <span class="hljs-keyword">import</span> Mininet<br><span class="hljs-keyword">from</span> mininet.util <span class="hljs-keyword">import</span> dumpNodeConnections<br><span class="hljs-keyword">from</span> mininet.log <span class="hljs-keyword">import</span> setLogLevel<br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">SingleSwitchTopo</span>(<span class="hljs-title class_ inherited__">Topo</span>):<br>    <span class="hljs-string">&quot;Single switch connected to n hosts.&quot;</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, n=<span class="hljs-number">2</span>, **opts</span>):<br>        <span class="hljs-comment"># Initialize topology and default options</span><br>        Topo.__init__(self, **opts)<br>        switch = self.addSwitch(<span class="hljs-string">&#x27;s1&#x27;</span>)<br><br>        <span class="hljs-comment"># Python&#x27;s range(N) generates 0..N-1</span><br>        <span class="hljs-keyword">for</span> h <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(n):<br>            host = self.addHost(<span class="hljs-string">&#x27;h%s&#x27;</span> % (h+<span class="hljs-number">1</span>))<br>            self.addLink(host, switch)<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">simpleTest</span>():<br>    <span class="hljs-string">&quot;Creat and test a simple network&quot;</span><br>    topo = SingleSwitchTopo(n=<span class="hljs-number">4</span>)<br>    net = Mininet(topo)<br>    net.start()<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Dumping host connections&quot;</span>)<br>    dumpNodeConnections(net.hosts)<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Test network connectivity&quot;</span>)<br>    net.pingAll()<br>    net.stop()<br><br><span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">&#x27;__main__&#x27;</span>:<br>    <span class="hljs-comment"># Test mininet to print useful information</span><br>    setLogLevel(<span class="hljs-string">&#x27;info&#x27;</span>)<br>    simpleTest()<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>def __init__(self, n=2, **opts):</code>, 第一个参数是 <code>n</code>, 默认值是 2</li>
+<li><code>Topo.__init__(self, **opts)</code> 初始化 <code>self</code> 为一个 topo 并传入 <code>opts</code> 参数</li>
+<li><code>&#39;h%s&#39; % (h+1)</code> 等价于 <code>f&#39;h&#123;h+1&#125;&#39;</code></li>
 </ul>
 
                 
