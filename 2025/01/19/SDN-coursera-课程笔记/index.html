@@ -37,8 +37,14 @@
 <meta property="og:image" content="http://example.com/img/sdn-coursera-mininet-on-vm.png">
 <meta property="og:image" content="http://example.com/img/sdn-slicing-network-control-structure.png">
 <meta property="og:image" content="http://example.com/img/sdn-coursera-flow-space-example.png">
+<meta property="og:image" content="http://example.com/img/sdn-coursera-traditional-hardware-router.png">
+<meta property="og:image" content="http://example.com/img/sdn-coursera-routebrick-linecard-on-servers.png">
+<meta property="og:image" content="http://example.com/img/sdn-coursera-routebricks-server-structure.png">
+<meta property="og:image" content="http://example.com/img/sdn-coursera-openflow-1x.png">
+<meta property="og:image" content="http://example.com/img/sdn-coursera-openflow-2x-structure.png">
+<meta property="og:image" content="http://example.com/img/sdn-coursera-p4-example.png">
 <meta property="article:published_time" content="2025-01-19T03:07:56.000Z">
-<meta property="article:modified_time" content="2025-02-06T02:54:30.048Z">
+<meta property="article:modified_time" content="2025-02-06T03:53:37.161Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/sdn-how-it-shape-network-example.png">
@@ -250,7 +256,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          5.9k 字
+          7.1k 字
         
       </span>
     
@@ -261,7 +267,7 @@
         
         
         
-          49 分钟
+          60 分钟
         
       </span>
     
@@ -510,7 +516,68 @@
 <h2 id="RouteBricks"><a href="#RouteBricks" class="headerlink" title="RouteBricks"></a>RouteBricks</h2><p>硬件速度快但不灵活, 软件更加灵活但速度不佳, 因此要考虑</p>
 <ul>
 <li>如何让硬件 programmable</li>
+<li>如何让软件更快</li>
 </ul>
+<p>RouteBricks 是一种软件路由器架构, 它通过在多个服务器和单个服务器内的多个核心上并行化路由器功能来提高性能. 这种架构旨在解决软件路由器的扩展性问题, 通过利用服务器技术的最新进展, 特别是高速并行处理能力.</p>
+<p>Switching fabric 用于描述数据在网络设备之间传输方式, 它本质上是硬件和软件的组合, 共同工作以连接网络中的多个设备, 并允许它们相互通信.</p>
+<p>Line card 是网络系统中的一个关键组成部分, 它是一种模块化的电子组件, 对于电信接入网络至关重要. 它提供了用于发送和接收的端口, 连接局域网 (LAN) 和广域网 (WAN) 网络. 在 line card 中, 电路通常内置于每个端口中, 无论是小型还是中型路由器.</p>
+<p>传统的 Hardware Router 的处理速率为:<br><img src="/../img/sdn-coursera-traditional-hardware-router.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>每一个 linecard 处理速率为 $R$</li>
+<li>总的 switching 速率为 $N \times R$</li>
+</ul>
+<p>RouteBricks 架构如下:<br><img src="/../img/sdn-coursera-routebrick-linecard-on-servers.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>Commodity interconnect 指一种通用的互联系统, 用于 servers 间的数据交互</li>
+<li>数据由位于 server 上的 linecards 处理</li>
+<li>假如一个 server 的处理速率为 $R$</li>
+<li>需要满足几个条件 (challenges)<ul>
+<li>internal link rates $&lt; R$</li>
+<li>Per-server processing rate 为 $c \times R$, $c$ 是一个 small integer</li>
+<li>Per-server fanout (ports 数量) 为 constant</li>
+</ul>
+</li>
+</ul>
+<p>一个 server 可以视作下面结构:<br><img src="/../img/sdn-coursera-routebricks-server-structure.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>多核提供并行处理</li>
+<li>一些用于加快处理的方法有<ul>
+<li>Large packet buffers to hold multiple packets</li>
+<li>Batch processing</li>
+<li>Ethernet GRE</li>
+</ul>
+</li>
+</ul>
+<h2 id="RMT"><a href="#RMT" class="headerlink" title="RMT"></a>RMT</h2><p>我们想从 SDN 获得的功能有:</p>
+<ul>
+<li>Protocol-independent processing</li>
+<li>Control and repurpose in the field</li>
+<li>Implemented by fast, low-power chips</li>
+</ul>
+<p>但实际上, 这些功能受当前硬件限制:</p>
+<ul>
+<li>OpenFlow is protocol dependent</li>
+</ul>
+<p>两个 Programmable Hardware Data Planes 的示例:</p>
+<ul>
+<li>OpenFlow Chip, Generalizable, programmable match-action primitives</li>
+<li>SwitchBlade, Programmable modularizable FPGA-based data plane</li>
+</ul>
+<h2 id="P4"><a href="#P4" class="headerlink" title="P4"></a>P4</h2><p>P4 的 Three Goals:</p>
+<ul>
+<li>Protocol independence</li>
+<li>Target independence</li>
+<li>Reconfigurability</li>
+</ul>
+<p>OpenFlow (1.x) 的结构为:<br><img src="/../img/sdn-coursera-openflow-1x.png" srcset="/img/loading.gif" lazyload></p>
+<p>OpenFlow (2.x) 的结构为:<br><img src="/../img/sdn-coursera-openflow-2x-structure.png" srcset="/img/loading.gif" lazyload></p>
+<p>一个 P4 Program 包含以下 components:</p>
+<ul>
+<li>Parser, 处理 header fields</li>
+<li>Headers, 定义 header fields</li>
+<li>Behavioral Model, 定义 tables 和 control flow</li>
+</ul>
+<p><img src="/../img/sdn-coursera-p4-example.png" srcset="/img/loading.gif" lazyload></p>
 
                 
               </div>
