@@ -31,7 +31,7 @@
 <meta property="og:image" content="http://example.com/img/mininet-wifi-single-topology.png">
 <meta property="og:image" content="http://example.com/img/mininet-wifi-topology-linear.png">
 <meta property="article:published_time" content="2025-01-15T00:00:08.000Z">
-<meta property="article:modified_time" content="2025-02-07T08:15:48.028Z">
+<meta property="article:modified_time" content="2025-02-07T09:07:03.795Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/Mininet-wifi-IEEE-80211-modes.png">
@@ -243,7 +243,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          11k 字
+          12k 字
         
       </span>
     
@@ -254,7 +254,7 @@
         
         
         
-          89 分钟
+          104 分钟
         
       </span>
     
@@ -601,13 +601,36 @@
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet-wifi&gt; py vars(sta1)<br></code></pre></td></tr></table></figure>
 
 <h1 id="Intermediate"><a href="#Intermediate" class="headerlink" title="Intermediate"></a>Intermediate</h1><p>获取此部分代码:</p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">git <span class="hljs-built_in">clone</span> <br></code></pre></td></tr></table></figure>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">git <span class="hljs-built_in">clone</span> https://github.com/ramonfontes/mn-wifi-book-en<br></code></pre></td></tr></table></figure>
 
+<h2 id="相关概念-1"><a href="#相关概念-1" class="headerlink" title="相关概念"></a>相关概念</h2><h3 id="Managed-Mode-和-Ad-Hoc-Mode"><a href="#Managed-Mode-和-Ad-Hoc-Mode" class="headerlink" title="Managed Mode 和 Ad-Hoc Mode"></a>Managed Mode 和 Ad-Hoc Mode</h3><ul>
+<li>Managed Mode, 指无线网卡连接到一个无线接入点 (AP), 如无线路由器. AP负责管理网络, 包括通过 DHCP 分配 IP 地址, 处理客户端之间的通信等.</li>
+<li>Ad-Hoc Mode, 指创建了一个没有 AP 的对等 (peer-to-peer) 网络, 每个设备都直接与其他设备通信, 没有中心控制点</li>
+</ul>
 <h2 id="Network-Interface"><a href="#Network-Interface" class="headerlink" title="Network Interface"></a>Network Interface</h2><p>为 stations 创建多个 interfaces, 应用 binding 和 bonding interfaces. </p>
 <h3 id="创建多个-interfaces"><a href="#创建多个-interfaces" class="headerlink" title="创建多个 interfaces"></a>创建多个 interfaces</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">sta1 = net.addStation(<span class="hljs-string">&#x27;sta1&#x27;</span>, wlans=<span class="hljs-number">2</span>)<br></code></pre></td></tr></table></figure>
 <ul>
 <li><code>wlans=2</code> 即创建两个 wireless interfaces, <code>sta1-wlan0</code> 和 <code>sta1-wlan1</code></li>
 </ul>
+<p>一个连 AP, 一个组 Ad-Hoc 的示例:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs python">...<br>sta1 = net.addStation(<span class="hljs-string">&#x27;sta1&#x27;</span>, wlans=<span class="hljs-number">2</span>)<br>sta2 = net.addStation(<span class="hljs-string">&#x27;sta2&#x27;</span>)<br>ap1 = net.addAccessPoint(<span class="hljs-string">&#x27;ap1&#x27;</span>, ssid=<span class="hljs-string">&#x27;ssid_1&#x27;</span>, mode=<span class="hljs-string">&#x27;g&#x27;</span>, channel=<span class="hljs-string">&#x27;5&#x27;</span>,<br>                         failMode=<span class="hljs-string">&quot;standalone&quot;</span>)<br><br>info(<span class="hljs-string">&quot;*** Configuring wifi nodes\n&quot;</span>)<br>net.configureWifiNodes()<br><br>info(<span class="hljs-string">&quot;*** Associating...\n&quot;</span>)<br>net.addLink(ap1, sta1)<br>net.addLink(sta1, intf=<span class="hljs-string">&#x27;sta1-wlan0&#x27;</span>, cls=adhoc, ssid=<span class="hljs-string">&#x27;adhoc1&#x27;</span>)<br>net.addLink(sta2, intf=<span class="hljs-string">&#x27;sta2-wlan0&#x27;</span>, cls=adhoc, ssid=<span class="hljs-string">&#x27;adhoc1&#x27;</span>)<br>...<br></code></pre></td></tr></table></figure>
+
+<h3 id="Binding-interfaces"><a href="#Binding-interfaces" class="headerlink" title="Binding interfaces"></a>Binding interfaces</h3><p>Binding 指, 将多个 IP addresses 分配到同一 interface 上. 让其能响应多个 IP addresses</p>
+<p>一个手动创建的示例:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo mn --wifi<br>mininet-wifi&gt; sta1 ip addr add 192.168.1.1/24 dev sta1-wlan0 lable sta1-wlan0:0<br>mininet-wifi&gt; sta2 ip addr add 192.168.1.2/24 dev sta2-wlan0 lable sta2-wlan0:0<br>mininet-wifi&gt; sta1 ping -c 5 192.168.1.2<br>mininet-wifi&gt; sta1 ping -c 5 10.0.0.2<br></code></pre></td></tr></table></figure>
+
+<h3 id="Bonding-interfaces"><a href="#Bonding-interfaces" class="headerlink" title="Bonding interfaces"></a>Bonding interfaces</h3><p>Bonding interfaces, 指将多个 interfaces 视作一个逻辑 interface 以提升性能.</p>
+<p>Linux 系统的 bonding 模块就是干这事.</p>
+<p>Bonding interface 的行为也取决于其 mode, 如:</p>
+<ul>
+<li>link aggregation mode, 流量在 bonding 下的接口上分配, 提高吞吐量, 负载均衡</li>
+<li>broadcast mode, 所有数据包都会在所有从属接口上广播. 这种模式提供了故障转移, 但如果所有接口都处于活动状态, 可能会导致网络拥塞</li>
+</ul>
+<p>手动设置 bouding 的示例:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs python">...<br>    h1.cmd(<span class="hljs-string">&#x27;ip link add bond0 type bond&#x27;</span>)<br>    h1.cmd(<span class="hljs-string">&#x27;ip link set bond0 address 00:00:00:11:22:33&#x27;</span>)<br>    h1.cmd(<span class="hljs-string">&#x27;ip link set h1-eth0 down&#x27;</span>)<br>    h1.cmd(<span class="hljs-string">&#x27;ip link set h1-eth0 address 00:00:00:00:00:11&#x27;</span>)<br>    h1.cmd(<span class="hljs-string">&#x27;ip link set h1-eth0 master bond0&#x27;</span>)<br>    h1.cmd(<span class="hljs-string">&#x27;ip link set h1-eth1 down&#x27;</span>)<br>    h1.cmd(<span class="hljs-string">&#x27;ip link set h1-eth1 address 00:00:00:00:00:22&#x27;</span>)<br>    h1.cmd(<span class="hljs-string">&#x27;ip link set h1-eth1 master bond0&#x27;</span>)<br>    h1.cmd(<span class="hljs-string">&#x27;ip addr add 10.0.0.1/8 dev bond0&#x27;</span>)<br>    h1.cmd(<span class="hljs-string">&#x27;ip addr del 10.0.0.1/8 dev h1-eth0&#x27;</span>)<br>    h1.cmd(<span class="hljs-string">&#x27;ip link set bond0 up&#x27;</span>)<br>...<br></code></pre></td></tr></table></figure>
+
+
+
 <h1 id="官方示例解析"><a href="#官方示例解析" class="headerlink" title="官方示例解析"></a>官方示例解析</h1><h2 id="wmediumd-interference-py"><a href="#wmediumd-interference-py" class="headerlink" title="wmediumd_interference.py"></a><code>wmediumd_interference.py</code></h2><p>需要把 AP 改为 <code>mode=a, channel=&#39;1&#39;</code>, 不然无法运行.</p>
 <h1 id="可参考文献"><a href="#可参考文献" class="headerlink" title="可参考文献"></a>可参考文献</h1><p>这本书每一节后面都列有.</p>
 
