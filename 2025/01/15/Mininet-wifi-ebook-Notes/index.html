@@ -31,7 +31,7 @@
 <meta property="og:image" content="http://example.com/img/mininet-wifi-single-topology.png">
 <meta property="og:image" content="http://example.com/img/mininet-wifi-topology-linear.png">
 <meta property="article:published_time" content="2025-01-15T00:00:08.000Z">
-<meta property="article:modified_time" content="2025-02-07T03:14:54.487Z">
+<meta property="article:modified_time" content="2025-02-07T04:05:01.699Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/Mininet-wifi-IEEE-80211-modes.png">
@@ -243,7 +243,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          9.5k 字
+          10k 字
         
       </span>
     
@@ -254,7 +254,7 @@
         
         
         
-          80 分钟
+          87 分钟
         
       </span>
     
@@ -453,6 +453,16 @@
 <ul>
 <li><code>wintfs</code> 代表 “Wireless INTerFace”, 该数组只有一个元素</li>
 </ul>
+<h3 id="查看俩-nodes-间的距离"><a href="#查看俩-nodes-间的距离" class="headerlink" title="查看俩 nodes 间的距离"></a>查看俩 nodes 间的距离</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet-wifi&gt; distance sta1 ap1<br></code></pre></td></tr></table></figure>
+
+<h3 id="查看俩-nodes-间的-bit-rate"><a href="#查看俩-nodes-间的-bit-rate" class="headerlink" title="查看俩 nodes 间的 bit rate"></a>查看俩 nodes 间的 bit rate</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet-wifi&gt; iperf sta1 sta2<br></code></pre></td></tr></table></figure>
+
+<h3 id="设置俩-nodes-间的-bit-rate"><a href="#设置俩-nodes-间的-bit-rate" class="headerlink" title="设置俩 nodes 间的 bit rate"></a>设置俩 nodes 间的 bit rate</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet-wifi&gt; sta1 iw dev sta1-wlan0 <span class="hljs-built_in">set</span> bitrates legacy-5 6 9<br>mininet-wifi&gt; iperf sta1 sta2<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>legacy-5</code> 表示使用 802.11a&#x2F;g 的速率模式 (Legacy 模式), 工作在 5 GHz 频段</li>
+<li><code>6</code> 指基本速率为 6 Mbps</li>
+<li><code>9</code> 指其他速率为 9 Mbps</li>
+</ul>
 <h3 id="为-nodes-打开-terminal"><a href="#为-nodes-打开-terminal" class="headerlink" title="为 nodes 打开 terminal"></a>为 nodes 打开 terminal</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet-wifi&gt; xterm sta1 sta2<br></code></pre></td></tr></table></figure>
 
 <h2 id="自定义-topologies"><a href="#自定义-topologies" class="headerlink" title="自定义 topologies"></a>自定义 topologies</h2><p>如:</p>
@@ -555,6 +565,29 @@
 <li>Two-Ray Ground Propagation Loss Model, 考虑了地面反射对信号传播的影响, 适用于模拟地面对信号传播的反射效应. 它使用特定的公式来计算信号的传播损耗, 适用于模拟地面反射对信号传播的影响</li>
 </ul>
 <p>选用正确的 Propagation model 比较重要.</p>
+<p>有一些模型中, 信号不会随时间变化, 但现实中, 有各种因素会引起信号强度的变化. 可以通过设置 <code>fading_coefficient</code> 来模拟:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs python">...<br>net = Mininet_wifi(link=wmediumd, wmediumd_mode=interference, noise_th=-<span class="hljs-number">91</span>, fading_cof=<span class="hljs-number">3</span>)<br>...<br></code></pre></td></tr></table></figure>
+
+<p>可尝试 <code>propatationModel.py</code> 以及 <code>wmediumd_interference.py</code> 文件.</p>
+<h2 id="Mobility-models"><a href="#Mobility-models" class="headerlink" title="Mobility models"></a>Mobility models</h2><p>即模拟 station 的移动. Mininet-WiFi 支持的 Mobility models 有:</p>
+<ul>
+<li>Random Direction</li>
+<li>Random Walk</li>
+<li>Gauss Markov 等</li>
+</ul>
+<p>每个 mobility model 都需要设置:</p>
+<ul>
+<li>minimum speed limits</li>
+<li>maximum speed limits</li>
+<li>area limits</li>
+<li>seed, 添加随机初始位置<br>等参数.</li>
+</ul>
+<p>可测试 <code>mobilityModel.py</code> 文件, 其使用 Random Direction mobility model.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo python examples/mobilityModel.py<br>mininet-wifi&gt; stop<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>stop</code> 可以让 nodes 停止移动</li>
+<li><code>start</code> 可以让 nodes 重新移动</li>
+</ul>
 <h2 id="常见对象"><a href="#常见对象" class="headerlink" title="常见对象"></a>常见对象</h2><p>Mininet 中的节点都是对象, 都可以通过:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet-wifi&gt; py <span class="hljs-built_in">help</span>(node_name)<br></code></pre></td></tr></table></figure>
 <p>查看其方法.</p>
@@ -567,7 +600,7 @@
 <p>如:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet-wifi&gt; py vars(sta1)<br></code></pre></td></tr></table></figure>
 
-
+<h1 id="官方示例解析"><a href="#官方示例解析" class="headerlink" title="官方示例解析"></a>官方示例解析</h1><h2 id="wmediumd-interference-py"><a href="#wmediumd-interference-py" class="headerlink" title="wmediumd_interference.py"></a><code>wmediumd_interference.py</code></h2><p>需要把 AP 改为 <code>mode=a, channel=&#39;1&#39;</code>, 不然无法运行.</p>
 <h1 id="可参考文献"><a href="#可参考文献" class="headerlink" title="可参考文献"></a>可参考文献</h1><p>这本书每一节后面都列有.</p>
 
                 
