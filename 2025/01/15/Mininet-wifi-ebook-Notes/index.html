@@ -30,8 +30,9 @@
 <meta property="og:image" content="http://example.com/img/mininet-wifi-simple-topology.png">
 <meta property="og:image" content="http://example.com/img/mininet-wifi-single-topology.png">
 <meta property="og:image" content="http://example.com/img/mininet-wifi-topology-linear.png">
+<meta property="og:image" content="http://example.com/img/mininet-wifi-wireless-mesh-and-ad-hoc.png">
 <meta property="article:published_time" content="2025-01-15T00:00:08.000Z">
-<meta property="article:modified_time" content="2025-02-07T11:15:13.047Z">
+<meta property="article:modified_time" content="2025-02-07T12:53:31.785Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/Mininet-wifi-IEEE-80211-modes.png">
@@ -243,7 +244,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          14k 字
+          15k 字
         
       </span>
     
@@ -254,7 +255,7 @@
         
         
         
-          115 分钟
+          128 分钟
         
       </span>
     
@@ -614,7 +615,15 @@
 <li>在 Mesh 网络中, 节点可以转发其他节点的数据包, 这意味着即使两个节点不在彼此的直接通信范围内, 它们也可以通过中间节点进行通信</li>
 </ul>
 <h3 id="Beacons"><a href="#Beacons" class="headerlink" title="Beacons"></a>Beacons</h3><p>Beacons (信标) 是一种由无线接入点 (AP) 定期发送的管理帧, 用于宣布无线网络的存在. 它在无线通信中扮演着关键角色, 主要用于网络同步和有效管理无线通信. Beacon 帧包含多个组件, 如时间戳, 网络名称 (SSID), 支持的数据速率, 信标间隔, 能力信息, 流量指示图 (TIM) 以及信息元素 (IEs) 等. 这些信息对于设备发现可用网络, 同步时钟以及获取网络参数等都至关重要.</p>
-<h3 id="Channel"><a href="#Channel" class="headerlink" title="Channel"></a>Channel</h3><h2 id="Network-Interface"><a href="#Network-Interface" class="headerlink" title="Network Interface"></a>Network Interface</h2><p>为 stations 创建多个 interfaces, 应用 binding 和 bonding interfaces. </p>
+<h3 id="Channel"><a href="#Channel" class="headerlink" title="Channel"></a>Channel</h3><p>“channel” (信道) 是指无线信号用于传输数据的特定频率范围. 无线网络使用电磁频谱的特定部分来发送和接收数据. 由于频谱资源有限, 为了有效利用这些资源并减少干扰, 无线网络将频谱划分为多个离散的频率范围, 每个范围就是一个信道.</p>
+<p>比如:</p>
+<ul>
+<li>channel 1 工作在 2.412MHz</li>
+<li>chennel 6 工作在 2.437MHz</li>
+<li>chennel 11 工作在 2.452MHz</li>
+</ul>
+<p>每一个 channel 的宽度是 0.005MHz.</p>
+<h2 id="Network-Interface"><a href="#Network-Interface" class="headerlink" title="Network Interface"></a>Network Interface</h2><p>为 stations 创建多个 interfaces, 应用 binding 和 bonding interfaces. </p>
 <h3 id="创建多个-interfaces"><a href="#创建多个-interfaces" class="headerlink" title="创建多个 interfaces"></a>创建多个 interfaces</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">sta1 = net.addStation(<span class="hljs-string">&#x27;sta1&#x27;</span>, wlans=<span class="hljs-number">2</span>)<br></code></pre></td></tr></table></figure>
 <ul>
 <li><code>wlans=2</code> 即创建两个 wireless interfaces, <code>sta1-wlan0</code> 和 <code>sta1-wlan1</code></li>
@@ -656,6 +665,27 @@
 <p>简单示例:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo apt install linssid<br>sudo python mn-wifi-book-en/codes/cap3/wmediumd_2aps.py<br>mininet-wifi&gt; sta1 linssid &amp;<br></code></pre></td></tr></table></figure>
 
+<h3 id="Network-telemetry"><a href="#Network-telemetry" class="headerlink" title="Network telemetry"></a>Network telemetry</h3><p>Network telemetry 指自动化收集, 传输和分析来自网络设备的数据. (书上的示例脚本没找到)</p>
+<h2 id="Scanning-methods"><a href="#Scanning-methods" class="headerlink" title="Scanning methods"></a>Scanning methods</h2><p>有两种 scanning methods:</p>
+<ul>
+<li>Active, client 发送一个 probe request, 然后监听来自 AP 的 probe response, probe request 通常包含一个特定的服务集标识符 (SSID), 只有具有该特定 SSID 的 AP 才会响应这个请求 (就像手机输入 SSID 找 WiFi)</li>
+<li>Passive, client 监听每个信道, 等待 AP 定期发送的 beacons,. 与 Active scan 相比通常需要更长的时间来获取结果, 因为 client 必须等待 beacons 的出现, 然后手动找到接入点</li>
+</ul>
+<p>Client 在 channel scanning 时不能接收或发送包, 为了减缓这种情况, 通常使用 background scanning. (由 <code>wpa_supplicant</code> 实现)</p>
+<p>Background scanning 会在设备切换到新的 AP 之前进行, 减少客户端在扫描过程中无法传输或接收数据的停机时间，从而加快客户端在不同接入点之间的切换速度. (想象你在房间连一个 WiFi, 此时走到大厅, 要切换到另一个 WiFi, Background scanning 则在与房间 WiFi 断开前进行扫描, 加快连接大厅 WiFi 的速度)</p>
+<p>在配置好 bgscan 之后, 其会检测设备与当前 AP 的强度, 一旦低于某个设定值, 就会寻找新 AP.</p>
+<p>使用 bgscan 需要保证切换 AP 的 SSID 相同.</p>
+<h2 id="Wireless-mesh-and-ad-hoc"><a href="#Wireless-mesh-and-ad-hoc" class="headerlink" title="Wireless mesh and ad hoc"></a>Wireless mesh and ad hoc</h2><p>下面实验采用如图 topology:<br><img src="/../img/mininet-wifi-wireless-mesh-and-ad-hoc.png" srcset="/img/loading.gif" lazyload></p>
+<p>Mesh 和 Ad-Hoc 都是不依赖 AP, Stations 之间直接传输数据, 区别在于:</p>
+<ul>
+<li>Mesh 中 Station 可以转发, 在上面 topo 中, sta1, sta2, sta3 都相互能 ping 通</li>
+<li>Ad-Hoc 中不会主动转发, 因此只有直接相连才能通信 (可以手动添加转发规则), 在上面 topo 中, sta1 与 sta2 互联, sta2 与 sta3 互联, sta1 和 sta3 不通</li>
+</ul>
+<p>Mesh 简单示例:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo python mn-wifi-book-en/codes/cap3/mesh.py<br>mininet-wifi&gt; sta1 ping -c1 sta2<br>mininet-wifi&gt; sta1 ping -c1 sta3<br>mininet-wifi&gt; sta1 iw dev sta1-mp0 mpath dump<br></code></pre></td></tr></table></figure>
+
+<p>Adhoc 简单示例:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo python mn-wifi-book-en/codes/cap3/adhoc.py<br>mininet-wifi&gt; sta1 ping -c1 sta2<br>mininet-wifi&gt; sta1 ping -c1 sta3<br>mininet-wifi&gt; sta1 ip route add 10.0.0.3 via 10.0.0.2<br>mininet-wifi&gt; sta3 ip route add 10.0.0.1 via 10.0.0.2<br>mininet-wifi&gt; sta2 <span class="hljs-built_in">echo</span> 1 &gt; /proc/sys/net/ipv4/ip_forward<br>mininet-wifi&gt; sta1 route -n<br>mininet-wifi&gt; sta3 route -n<br>mininet-wifi&gt; sta1 ping -c1 sta3<br></code></pre></td></tr></table></figure>
 
 <h1 id="官方示例解析"><a href="#官方示例解析" class="headerlink" title="官方示例解析"></a>官方示例解析</h1><h2 id="wmediumd-interference-py"><a href="#wmediumd-interference-py" class="headerlink" title="wmediumd_interference.py"></a><code>wmediumd_interference.py</code></h2><p>需要把 AP 改为 <code>mode=a, channel=&#39;1&#39;</code>, 不然无法运行.</p>
 <h1 id="可参考文献"><a href="#可参考文献" class="headerlink" title="可参考文献"></a>可参考文献</h1><p>这本书每一节后面都列有.</p>
