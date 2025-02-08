@@ -31,8 +31,9 @@
 <meta property="og:image" content="http://example.com/img/mininet-wifi-single-topology.png">
 <meta property="og:image" content="http://example.com/img/mininet-wifi-topology-linear.png">
 <meta property="og:image" content="http://example.com/img/mininet-wifi-wireless-mesh-and-ad-hoc.png">
+<meta property="og:image" content="http://example.com/img/mininet-wifi-openflow-example.png">
 <meta property="article:published_time" content="2025-01-15T00:00:08.000Z">
-<meta property="article:modified_time" content="2025-02-07T12:53:31.785Z">
+<meta property="article:modified_time" content="2025-02-08T02:07:56.733Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/Mininet-wifi-IEEE-80211-modes.png">
@@ -244,7 +245,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          15k 字
+          16k 字
         
       </span>
     
@@ -255,7 +256,7 @@
         
         
         
-          128 分钟
+          134 分钟
         
       </span>
     
@@ -687,6 +688,24 @@
 <p>Adhoc 简单示例:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo python mn-wifi-book-en/codes/cap3/adhoc.py<br>mininet-wifi&gt; sta1 ping -c1 sta2<br>mininet-wifi&gt; sta1 ping -c1 sta3<br>mininet-wifi&gt; sta1 ip route add 10.0.0.3 via 10.0.0.2<br>mininet-wifi&gt; sta3 ip route add 10.0.0.1 via 10.0.0.2<br>mininet-wifi&gt; sta2 <span class="hljs-built_in">echo</span> 1 &gt; /proc/sys/net/ipv4/ip_forward<br>mininet-wifi&gt; sta1 route -n<br>mininet-wifi&gt; sta3 route -n<br>mininet-wifi&gt; sta1 ping -c1 sta3<br></code></pre></td></tr></table></figure>
 
+<p>上述 Ad-Hoc 为 static route, 即手动添加路由信息, 可以考虑 dynamic route 的协议, 如 AODV (Ad hoc On demand Distance Vector), OLSR (Optimized Link State Routing) 以及 BATMAN (Better Approach to Mobile Ad hoc Networking) 来自动填充 route table.</p>
+<h2 id="OpenFlow-Protocol"><a href="#OpenFlow-Protocol" class="headerlink" title="OpenFlow Protocol"></a>OpenFlow Protocol</h2><p>现用 wired topology 来研究:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo mn<br>mininet-wifi&gt; sh wireshark &amp;<br></code></pre></td></tr></table></figure>
+<p>选中 <code>any</code> 接口, 允许捕获任何流经主机的 packets.</p>
+<p>之后:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet-wifi&gt; h1 ping -c2 h2<br></code></pre></td></tr></table></figure>
+<p>过程如下:</p>
+<ol>
+<li>h1 为了和 h2 通信, 先发送 ARP&#x2F;IMCP 给 switch s1</li>
+<li>Switch s1 不知道 h2 的位置, 因此 s1 将 packet 转发给 controller (packet-in message, 由 switch 创建, 发送给 controller), controller 会建议 switch 该做什么.</li>
+<li>Controller 向 switch 响应 packet-out message, 让 switch 根据 h2 的 IP 地址询问其 MAC 地址</li>
+<li>Switch 向其所有 ports 进行 ARP&#x2F;ICMP 广播 (除 h1 所在的 port)</li>
+<li>h2 做 ARP&#x2F;ICMP 应答</li>
+<li>Switch 也不知道如何处理来自 h2 的包, 因此将 packet 转发给 controller, 由此学习到 h2 的位置</li>
+<li>Controller 给 switch 发送 flow mod message, 让 switch 把来自 h2 的 packet 转发到 h1</li>
+<li>最后 h1 受到 ICMP 的响应</li>
+</ol>
+<p><img src="/../img/mininet-wifi-openflow-example.png" srcset="/img/loading.gif" lazyload></p>
 <h1 id="官方示例解析"><a href="#官方示例解析" class="headerlink" title="官方示例解析"></a>官方示例解析</h1><h2 id="wmediumd-interference-py"><a href="#wmediumd-interference-py" class="headerlink" title="wmediumd_interference.py"></a><code>wmediumd_interference.py</code></h2><p>需要把 AP 改为 <code>mode=a, channel=&#39;1&#39;</code>, 不然无法运行.</p>
 <h1 id="可参考文献"><a href="#可参考文献" class="headerlink" title="可参考文献"></a>可参考文献</h1><p>这本书每一节后面都列有.</p>
 
