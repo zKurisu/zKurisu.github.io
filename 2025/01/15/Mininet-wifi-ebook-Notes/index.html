@@ -32,8 +32,11 @@
 <meta property="og:image" content="http://example.com/img/mininet-wifi-topology-linear.png">
 <meta property="og:image" content="http://example.com/img/mininet-wifi-wireless-mesh-and-ad-hoc.png">
 <meta property="og:image" content="http://example.com/img/mininet-wifi-openflow-example.png">
+<meta property="og:image" content="http://example.com/img/mininet-wifi-handover-topology-example.png">
+<meta property="og:image" content="http://example.com/img/mininet-wifi-en-ebook-dhcp-server-topo.png">
+<meta property="og:image" content="http://example.com/img/mininet-wifi-vlan-topology.png">
 <meta property="article:published_time" content="2025-01-15T00:00:08.000Z">
-<meta property="article:modified_time" content="2025-02-08T02:07:56.733Z">
+<meta property="article:modified_time" content="2025-02-08T06:17:09.008Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/Mininet-wifi-IEEE-80211-modes.png">
@@ -245,7 +248,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          16k 字
+          20k 字
         
       </span>
     
@@ -256,7 +259,7 @@
         
         
         
-          134 分钟
+          170 分钟
         
       </span>
     
@@ -466,6 +469,9 @@
 <li><code>9</code> 指其他速率为 9 Mbps</li>
 </ul>
 <h3 id="为-nodes-打开-terminal"><a href="#为-nodes-打开-terminal" class="headerlink" title="为 nodes 打开 terminal"></a>为 nodes 打开 terminal</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet-wifi&gt; xterm sta1 sta2<br></code></pre></td></tr></table></figure>
+
+<h3 id="查看-switch-各接口的连接信息"><a href="#查看-switch-各接口的连接信息" class="headerlink" title="查看 switch 各接口的连接信息"></a>查看 switch 各接口的连接信息</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet-wifi&gt; net<br></code></pre></td></tr></table></figure>
+
 
 <h2 id="自定义-topologies"><a href="#自定义-topologies" class="headerlink" title="自定义 topologies"></a>自定义 topologies</h2><p>如:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo mn --wifi --topo single,4<br></code></pre></td></tr></table></figure>
@@ -706,6 +712,106 @@
 <li>最后 h1 受到 ICMP 的响应</li>
 </ol>
 <p><img src="/../img/mininet-wifi-openflow-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>交换机通常有两种运行模式:</p>
+<ul>
+<li>Proactive Mode, 主动模式, 此时定义静态规则</li>
+<li>Reactive Mode, 反应模式, 此时通过学习来获取规则</li>
+</ul>
+<p>在 Wireless Network 中, AP 只有一个 interface 来与 stations 关联, 且即用作输入, 也用作输出. 因此在应用 OpenFlow 协议时, 需要进行特殊处理.</p>
+<h3 id="Creating-flows"><a href="#Creating-flows" class="headerlink" title="Creating flows"></a>Creating flows</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo mn --topo single,4<br>mininet-wifi&gt; sh ovs-ofctl dump-flows s1<br></code></pre></td></tr></table></figure>
+<p>此时没有任何输出, 因为还没有 packet 流经 switch s1.</p>
+<p>手动添加流表项:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet-wifi&gt; sh ovs-ofctl add-flow s1 in_port=1,actions=output:2<br>mininet-wifi&gt; sh ovs-ofctl add-flow s1 in_port=2,actions=output:1<br>mininet-wifi&gt; sh ovs-ofctl dump-flows s1<br></code></pre></td></tr></table></figure>
+
+<p>此时 h1 与 h3 和 h4 是不通的, 因为所有包都发往 h2 了. h3 和 h4 是互通的.</p>
+<p>若要阻断 h3 和 h4 的通信, 即让来自 port 3 的所有包都丢弃:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet-wifi&gt; sh ovs-ofctl add-flow s1 in_port=3,actions=drop<br>mininet-wifi&gt; h3 ping -c1 h4<br></code></pre></td></tr></table></figure>
+
+<p>除了以 <code>in_port</code> 来指定外, 还可用 <code>MAC address</code>, <code>IP address</code>, <code>protocol type</code> 等.</p>
+<h3 id="Openfloe-and-wireless-networks"><a href="#Openfloe-and-wireless-networks" class="headerlink" title="Openfloe and wireless networks"></a>Openfloe and wireless networks</h3><p>AP 能转发进出来自同一 port 的包, 不论 AP 上是否安装了 Flow rules. </p>
+<p>但 OpenFlow 协议的规定, 如果数据包从某个端口进入并尝试从同一端口离开, 那么这些数据包必须被丢弃 (drop).</p>
+<p>因此需要对这些包特别处理.</p>
+<p>启用 Mininet-WiFi 的 <code>--no-bridge</code> 选项, 禁用网桥模式意味着网络流量将通过 OpenFlow 控制器来控制, 而不是通过传统的网桥机制, 此时通信仅在特定的节点之间发生, 前提是接入点 (AP) 已经接收到授权这些节点之间通信的指令. (实测时这个选项好像没了)</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo mn --wifi --no-bridge<br>mininet-wifi&gt; sta1 ping -c5 sta2<br></code></pre></td></tr></table></figure>
+
+<p>此时无法 ping 通, 手动添加流表规则:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet-wifi&gt; sh ovs-ofctl dump-flows ap1<br>mininet-wifi&gt; sh ovs-ofctl add-flow ap1 <span class="hljs-string">&quot;priority=0,arp,in_port=1,actions=output:in_port&quot;</span><br>mininet-wifi&gt; sh ovs-ofctl add-flow ap1 <span class="hljs-string">&quot;priority=0,icmp,in_port=1,actions=output:in_port&quot;</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="Remote-controller"><a href="#Remote-controller" class="headerlink" title="Remote controller"></a>Remote controller</h3><p>这里使用 Ryu controller, 获取相关代码:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">git <span class="hljs-built_in">clone</span> https://github.com/ramonfontes/ryu -b book<br><span class="hljs-built_in">cd</span> ryu<br></code></pre></td></tr></table></figure>
+
+<p>确保安装后:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">ryu-manager ryu/app/simple_switch_13.py<br>sudo mn --controller=remote<br></code></pre></td></tr></table></figure>
+
+<h3 id="OpenFlow-and-handover"><a href="#OpenFlow-and-handover" class="headerlink" title="OpenFlow and handover"></a>OpenFlow and handover</h3><p>Handover&#x2F;Handoff 指在无线网络中, 如 Wi-Fi 网络, 将一个站点 (如智能手机, 笔记本电脑等) 从一个无线接入点 (AP) 或无线小区 (cell) 平滑地转移到另一个接入点或小区的过程, 且这一过程对用户是透明的, 即用户不会察觉到连接的变化.</p>
+<p>演示示例:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo python mn-wifi-ebook/codes/cap3/handover.py<br></code></pre></td></tr></table></figure>
+
+<p>topo 如下:<br><img src="/../img/mininet-wifi-handover-topology-example.png" srcset="/img/loading.gif" lazyload></p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet-wifi&gt; h1 ping -c5 sta1<br></code></pre></td></tr></table></figure>
+<p>能 ping 通. 此时 sta1 连接到 ap1.</p>
+<p>若改变 sta1 的位置, 让其位于 ap2 的 signal range 下:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet-wifi&gt; py sta1.setPosition(<span class="hljs-string">&#x27;60,10,0&#x27;</span>)<br></code></pre></td></tr></table></figure>
+
+<p>之后:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet-wifi&gt; h1 ping -c5 sta1<br></code></pre></td></tr></table></figure>
+<p>无法 ping 通.</p>
+<p>可以通过下面来分析:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet-wifi&gt; links<br>mininet-wifi&gt; sh ovs-ofctl dump-flows s3<br></code></pre></td></tr></table></figure>
+<p>可以发现流表项还是将来自 h1 的包转发到 ap1. 默认情况下, 会有一个 <code>idle_timeout</code>, 一旦超出这个时间, 该 flow entity 都没有数据包流经, 就会消除掉, 此时 h1 和 sta1 就又能连通了.</p>
+<p>另一个与 <code>idle_timeout</code> 类似的机制是 <code>hard_timeout</code>, 但其更严格, 无论是否有新的匹配数据包出现, 一旦超时时间到达, 相关的网络表项都会被删除.</p>
+<p>但大多数情况不太容忍这个较长的等待时间, 此时需要 controller 来动态管理由于 mobility 导致的变化.</p>
+<h2 id="Use-case-scenarios"><a href="#Use-case-scenarios" class="headerlink" title="Use case scenarios"></a>Use case scenarios</h2><h3 id="Web-Server"><a href="#Web-Server" class="headerlink" title="Web Server"></a>Web Server</h3><p>这里在一个 Mininet-WiFi node 上运行一个 web server, 并用其他 node 来获取内容.</p>
+<p>这里用 Python 的 SimpleHTTPServer 模块. (以迁移到 <code>http.server</code> 模块下)</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo mn --wifi<br>mininet-wifi&gt; sta1 python -m http.server 80 &amp;<br>mininet-wifi&gt; sta2 wget -0 - sta1<br></code></pre></td></tr></table></figure>
+
+<h3 id="DHCP-Server"><a href="#DHCP-Server" class="headerlink" title="DHCP Server"></a>DHCP Server</h3><p>以下面脚本构建的 topo 为例:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo python mn-wifi-book-en/codes/cap3/dhcp.py<br></code></pre></td></tr></table></figure>
+
+<p><img src="/../img/mininet-wifi-en-ebook-dhcp-server-topo.png" srcset="/img/loading.gif" lazyload></p>
+<p>脚本中有几点需要注意:</p>
+<ul>
+<li><code>failMode=&#39;standalone&#39;</code>, 让 AP 工作在传统模式</li>
+<li><code>innamespace=False</code> 让 h1 运行在 root network namespace, 而非独立的 network namespace</li>
+<li><code>echo 1 &gt; /proc/sys/net/ipv4/ip_forward</code> 启用 h1 数据包转发</li>
+</ul>
+<p>下载和配置 DHCP 服务器:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo apt install isc-dhcp-server<br><span class="hljs-built_in">cd</span> /etc/dhcp<br><span class="hljs-built_in">cp</span> dhcp.conf dhcp.conf.bak<br>vim dhcp.conf<br></code></pre></td></tr></table></figure>
+
+<p>内容如下:</p>
+<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs abnf">option domain-name-servers <span class="hljs-number">192.168</span>.<span class="hljs-number">11.1</span><span class="hljs-comment">;</span><br>subnet <span class="hljs-number">192.168</span>.<span class="hljs-number">11.0</span> netmask <span class="hljs-number">255.255</span>.<span class="hljs-number">255.0</span> &#123;<br>range <span class="hljs-number">192.168</span>.<span class="hljs-number">11.2</span> <span class="hljs-number">192.168</span>.<span class="hljs-number">11.254</span><span class="hljs-comment">;</span><br>option routers <span class="hljs-number">192.168</span>.<span class="hljs-number">11.1</span><span class="hljs-comment">;</span><br>default-lease-time <span class="hljs-number">6000</span><span class="hljs-comment">;</span><br>max-lease-time <span class="hljs-number">72000</span><span class="hljs-comment">;</span><br><span class="hljs-attribute">INTERFACES</span><span class="hljs-operator">=</span><span class="hljs-string">&quot;h1-eth0&quot;</span><span class="hljs-comment">;</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>之后:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet-wifi&gt; xterm sta1 h1<br>h1<span class="hljs-comment"># systemctl restart isc-dhcp-server</span><br>sta1<span class="hljs-comment"># wireshark &amp;</span><br></code></pre></td></tr></table></figure>
+
+<p>查看流经 <code>sta1-wlan0</code> 的数据包. 然后:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sta1<span class="hljs-comment"># dhclient</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="Dealing-with-loops"><a href="#Dealing-with-loops" class="headerlink" title="Dealing with loops"></a>Dealing with loops</h3><p>Switching loop 指发生在两个终端设备之间存在多于一条第二层 (Layer 2) 路径时. 这意味着数据包可以通过多条路径在网络中传输, 而不是单一的最优路径. 容易造成广播风暴和网络不稳定.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo python mn-wifi-book-en/codes/cap3/loop.py<br>mininet-wifi&gt; sta1 ping -c1 sta2<br></code></pre></td></tr></table></figure>
+<p>无法 ping 通.</p>
+<p>一个放置 layer 2 looping 的方法是用 Spanning-Tree Protocol (STP). STP 会 blocks 多余的 paths.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet-wifi&gt; <span class="hljs-built_in">exit</span><br>sudo python mn-wifi-book-en/codes/cap3/loop.py -s<br>mininet-wifi&gt; py net.waitConnected()<br></code></pre></td></tr></table></figure>
+<p>当返回 <code>True</code> 时, 说明 STP convergence.</p>
+<p>此时:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet-wifi&gt; sta1 ping -c1 sta2<br>mininet-wifi&gt; sh ovs-ofctl show ap1<br></code></pre></td></tr></table></figure>
+<p>能 ping 通.</p>
+<h3 id="VLAN"><a href="#VLAN" class="headerlink" title="VLAN"></a>VLAN</h3><p>Virtual LAN 可分割广播域, 把一个交换机拆为多个使用. 具体而言, 其允许在同一个物理网络上创建多个逻辑上的局域网. 每个 VLAN 都是一个独立的广播域, 这意味着 VLAN 内的设备可以相互通信, 而 VLAN 间的设备默认情况下不能直接通信.</p>
+<p>下面示例将与不同 AP 关联的 station (如计算机, 手机等) 分离到不同的 VLAN 中, 并通过配置让其能够通信. (不同 VLAN 间通信)</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo apt install bridge-utils vlan<br>sudo python mn-wifi-book-en/codes/cap3/vlan.py<br></code></pre></td></tr></table></figure>
+
+<p><img src="/../img/mininet-wifi-vlan-topology.png" srcset="/img/loading.gif" lazyload></p>
+<p>默认情况下 <code>sta1</code> 与 <code>sta2</code> 通, 与 <code>sta3</code> 和 <code>sta4</code> 不通:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet-wifi&gt; sta1 ping -c1 sta2<br>mininet-wifi&gt; sta1 ping -c1 sta3<br></code></pre></td></tr></table></figure>
+
+<p>配置 flow rules:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet-wifi&gt; sh ovs-ofctl add-flow ap1 priority=100,in_port=1,dl_vlan=10,actions=mod_vlan_vid:20,output:2<br>mininet-wifi&gt; sh ovs-ofctl add-flow ap1 priority=100,in_port=1,dl_vlan=20,actions=mod_vlan_vid:10,output:1<br>mininet-wifi&gt; sh ovs-ofctl add-flow ap2 priority=100,in_port=1,dl_vlan=20,actions=mod_vlan_vid:10,output:2<br>mininet-wifi&gt; sh ovs-ofctl add-flow ap2 priority=100,in_port=2,dl_vlan=20,actions=mod_vlan_vid:10,output:1<br></code></pre></td></tr></table></figure>
+<ul>
+<li>数据包从 VLAN 10 流入 VLAN 20 时, 需要更改 VLAN ID</li>
+</ul>
+<p>之后:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet-wifi&gt; sta1 ping -c1 sta3<br></code></pre></td></tr></table></figure>
+<p>能通.</p>
 <h1 id="官方示例解析"><a href="#官方示例解析" class="headerlink" title="官方示例解析"></a>官方示例解析</h1><h2 id="wmediumd-interference-py"><a href="#wmediumd-interference-py" class="headerlink" title="wmediumd_interference.py"></a><code>wmediumd_interference.py</code></h2><p>需要把 AP 改为 <code>mode=a, channel=&#39;1&#39;</code>, 不然无法运行.</p>
 <h1 id="可参考文献"><a href="#可参考文献" class="headerlink" title="可参考文献"></a>可参考文献</h1><p>这本书每一节后面都列有.</p>
 

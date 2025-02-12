@@ -26,7 +26,7 @@
 <meta property="og:image" content="http://example.com/img/ryu-setuptools-error-when-pip.png">
 <meta property="og:image" content="http://example.com/img/ryu-architecture.png">
 <meta property="article:published_time" content="2025-01-18T08:49:20.000Z">
-<meta property="article:modified_time" content="2025-02-07T01:21:19.602Z">
+<meta property="article:modified_time" content="2025-02-08T12:54:22.151Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/ryu-setuptools-error-when-pip.png">
@@ -238,7 +238,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3.2k 字
+          4.8k 字
         
       </span>
     
@@ -249,7 +249,7 @@
         
         
         
-          27 分钟
+          41 分钟
         
       </span>
     
@@ -310,6 +310,11 @@
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo apt update<br>sudo apt install software-properties-common<br>sudo add-apt-repository ppa:deadsnakes/ppa<br>sudo apt update<br>sudo apt install python3.8 python3.8-venv<br>python3.8 -m venv ryu<br><span class="hljs-built_in">source</span> ryu/bin/activate<br>pip install --upgrade pip<br>pip install ryu<br>pip uninstall eventlet<br>pip install eventlet==0.30.0<br>ryu-manager --version<br></code></pre></td></tr></table></figure>
 
 <h1 id="Architecture"><a href="#Architecture" class="headerlink" title="Architecture"></a>Architecture</h1><p><img src="/../img/ryu-architecture.png" srcset="/img/loading.gif" lazyload></p>
+<p>Ryu Controller 的编写逻辑为:</p>
+<ul>
+<li>定义继承自 <code>app_manager.RyuApp</code> 的类, 这是入口, 整个文件就是在完善这个类</li>
+<li>利用 <code>set_ev_cls</code> 修饰器添加事件处理函数</li>
+</ul>
 <h1 id="主要的包"><a href="#主要的包" class="headerlink" title="主要的包"></a>主要的包</h1><h2 id="ryu-base"><a href="#ryu-base" class="headerlink" title="ryu.base"></a>ryu.base</h2><p>一般导入 <code>app_manager</code>, 用作管理应用程序的生命周期, 所有的 Ryu 应用程序都需要继承 <code>app_manager.RyuApp</code>.</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> ryu.base <span class="hljs-keyword">import</span> app_manager<br></code></pre></td></tr></table></figure>
 
@@ -371,7 +376,50 @@
 </li>
 <li>所修饰函数的第二个参数是 <code>event</code> (类型就是修饰器中的 <code>event_class</code>), 包含与该事件的所有相关信息</li>
 </ul>
-<h1 id="官方-Example-解析"><a href="#官方-Example-解析" class="headerlink" title="官方 Example 解析"></a>官方 Example 解析</h1>
+<h1 id="Ryu-book-笔记"><a href="#Ryu-book-笔记" class="headerlink" title="Ryu-book 笔记"></a>Ryu-book 笔记</h1><h2 id="环境准备"><a href="#环境准备" class="headerlink" title="环境准备"></a>环境准备</h2><p>这里使用 Docker 环境:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">docker run -it --privileged -e DISPLAY=<span class="hljs-variable">$DISPLAY</span> \<br>-v /tmp/.X11-unix:/tmp/.X11-unix \<br>-v /lib/modules:/lib/modules \<br>osrg/ryu-book<br></code></pre></td></tr></table></figure>
+
+<h2 id="Switching-Hub"><a href="#Switching-Hub" class="headerlink" title="Switching Hub"></a>Switching Hub</h2><p>Switching Hub 所具有的功能有:</p>
+<ul>
+<li>学习连接到 port 的 host 的 MAC 地址, 并写入 MAC address table</li>
+<li>当接收到的数据包指向一个已知地址的 host 时, 从对应端口发出</li>
+<li>当接收到的数据包指向一个未知地址的 host 时, 执行 flooding</li>
+</ul>
+<p>OpenFlow 交换机从 Ryu Controller 接收指示后需要完成:</p>
+<ul>
+<li>对接收的 packet 进行修改或者将 packet 从指定 port 发出</li>
+<li>将 packet 发送到 controller (Packet-In)</li>
+<li>根据从 controller 接收到的指示将数据包从指定 port 发出 (Packet-Out)</li>
+</ul>
+<p>注意, Packet-In 和 Packet-Out 是 OpenFlow 交换机与控制器之间的两种主要通信类型:</p>
+<ul>
+<li>Packet-In 消息是由交换机发送给控制器的, 当交换机无法匹配流表规则时, 会将数据包发送给控制器处理</li>
+<li>Packet-Out 消息是从控制器向 OpenFlow 交换机发送的消息, 是包含数据包发送命令的消息. 控制器可以使用 Packet-Out 消息, 告诉交换机某一个数据包如何处理</li>
+</ul>
+<p>每当 Switch 产生 Packet-In packet  时也会学习 MAC 地址与 port 的对应.</p>
+<p>当 switch 转发包时:</p>
+<ul>
+<li>目的 Host 已知, 则转发到对应 port</li>
+<li>目的 Host 未知, 则 flooding</li>
+</ul>
+<p>代码实现如下.</p>
+<h3 id="Class-Definition-and-Initialization"><a href="#Class-Definition-and-Initialization" class="headerlink" title="Class Definition and Initialization"></a>Class Definition and Initialization</h3><p>构建 Ryu application 的第一步, 就是创建一个继承自 <code>ryu.bash.app_manager.RyuApp</code> 类的类. 且需要用 <code>OFP_VERSIONS = [ xxx ]</code> 来指定 OpenFlow 协议版本.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">ExampleSwitch13</span>(app_manager.RyuApp):<br>    OFP_VERSIONS = [ ofproto_v1_3.OFP_VERSION ]<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">*args, **kwargs</span>):<br>        <span class="hljs-built_in">super</span>(ExampleSwitch13, self).__init__(*args, **kwargs)<br>        self.mac_to_port = &#123;&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="Event-Handler"><a href="#Event-Handler" class="headerlink" title="Event Handler"></a>Event Handler</h3><p>对于 Ryu 而言, 每接收到一个 OpenFlow message, 就会产生一个对应的事件. 其针对每一个 message 都有对应的 event handler.</p>
+<p>这些 event handler 都以 event object 作为参数, 且用 <code>ryu.controller.handler.set_ev_cls</code> 修饰器来修饰.</p>
+<ul>
+<li><code>set_ev_cls</code> 指定对哪个 event class message 做处理, 以及此时 switch 需要满足的状态</li>
+</ul>
+<p>Event class 的命名规则为: <code>ryu.controller.ofp_event.EventOFP + &lt;OpenFlow message name&gt;</code>, 比如 <code>EventOFPPacketIn</code>.</p>
+<p>Switch state 有:</p>
+<ul>
+<li><code>ryu.controller.handler.HANDSHAKE_DISPATCHER</code>, 交换 HELLO message 时</li>
+<li><code>ryu.controller.handler.CONFIG_DISPATCHER</code>, 等待接收 SwitchFeatures message 时</li>
+<li><code>ryu.controller.handler.MAIN_DISPATCHER</code>, normal status</li>
+<li><code>ryu.controller.handler.DEAD_DISPATCHER</code>, 与控制器断开连接时</li>
+</ul>
+
                 
               </div>
             
