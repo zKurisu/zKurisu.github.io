@@ -26,7 +26,7 @@
 <meta property="og:image" content="http://example.com/img/ryu-setuptools-error-when-pip.png">
 <meta property="og:image" content="http://example.com/img/ryu-architecture.png">
 <meta property="article:published_time" content="2025-01-18T08:49:20.000Z">
-<meta property="article:modified_time" content="2025-02-08T12:54:22.151Z">
+<meta property="article:modified_time" content="2025-02-12T07:34:03.109Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/ryu-setuptools-error-when-pip.png">
@@ -238,7 +238,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          4.8k 字
+          6.8k 字
         
       </span>
     
@@ -249,7 +249,7 @@
         
         
         
-          41 分钟
+          57 分钟
         
       </span>
     
@@ -419,6 +419,43 @@
 <li><code>ryu.controller.handler.MAIN_DISPATCHER</code>, normal status</li>
 <li><code>ryu.controller.handler.DEAD_DISPATCHER</code>, 与控制器断开连接时</li>
 </ul>
+<h4 id="Table-miss-event"><a href="#Table-miss-event" class="headerlink" title="Table-miss event"></a>Table-miss event</h4><p>Table-miss flow entry 是 OpenFlow 交换机中的一种特殊流表项, 用于处理无法匹配任何现有流表项的数据包. 当交换机收到一个数据包时, 它会尝试在流表中查找匹配的流表项. 如果没有任何流表项与数据包匹配, 就会发生 Table-miss 事件.</p>
+<p>Table-miss flow entry 也可以视为对数据包的默认处理.</p>
+<p>Table-miss flow entry 用来初始化流表, 在 OpenFlow 交换机与控制器完成握手后, 控制器通常会向交换机下发一个 Table-miss flow entry, 以确保交换机能够正确处理未知流量的数据包.</p>
+<h4 id="Feature-Request"><a href="#Feature-Request" class="headerlink" title="Feature Request"></a>Feature Request</h4><p>当控制器与交换机完成 HandShake 后, 控制器会向交换机发送一个 Features Request 消息, 请求交换机的特性信息. 交换机收到该请求后, 会回复一个 Switch Features 消息 (即 Features Reply 消息):</p>
+<p>从 <code>msg</code> 中获取重要对象:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-meta">@set_ev_cls(<span class="hljs-params">ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER</span>)</span><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">switch_feature_handler</span>(<span class="hljs-params">self, ev</span>):<br>    datapath = ev.msg.datapath<br>    ofproto = datapath.ofproto<br>    parser = datapath.ofproto_parser<br><br><span class="hljs-comment"># ...</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>ev.msg</code> 表示与当前 event class 相关消息的 instance, 其类型取决于接收到的 OpenFlow 消息类型, 比如<ul>
+<li>收到 <code>Switch Features</code> 消息, 则 <code>ev.msg</code> 是 <code>ryu.ofproto.ofproto_v1_3_parser.EventOFPSwitchFeatures</code> 类的实例</li>
+</ul>
+</li>
+<li><code>msg.datapath</code>, 是 <code>ryu.controller.controller.Datapath</code> 类的实例, 表示与当前消息相关的交换机交互的接口 (Datapath), 能够:<ul>
+<li>获取交换机的 Datapath ID<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">datapath_id = msg.datapath.<span class="hljs-built_in">id</span><br></code></pre></td></tr></table></figure></li>
+<li>获取交换机 OpenFlow 协议版本<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">ofproto = msg.datapath.ofproto<br></code></pre></td></tr></table></figure></li>
+<li>获取 OpenFlow 消息解析器, 这个解析器能用于 “解析” 和 “构造” OpenFlow 消息<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># Get parser</span><br>parser = msg.datapath.ofproto_parser <br></code></pre></td></tr></table></figure></li>
+<li>向交换机发送消息<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">datapath.send_msg(ryu.ofproto.ofproto_parser.MsgBase)<br></code></pre></td></tr></table></figure></li>
+</ul>
+</li>
+</ul>
+<p>构建 Match-Action 流表项并下发到交换机:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">switch_feature_handler</span>(<span class="hljs-params">self, ev</span>):<br><span class="hljs-comment"># ...</span><br>    <span class="hljs-comment"># Create Match-Action pair</span><br>    <span class="hljs-keyword">match</span> = parser.OFPMatch()<br>    actions = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER,<br>                                      ofproto.OFPCML_NO_BUFFER)]<br>    <span class="hljs-comment"># Install the table-miss flow entry</span><br>    self.add_flow(datapath, <span class="hljs-number">0</span>, <span class="hljs-keyword">match</span>, actions)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>match = parser.OFPMatch()</code> 创建一个匹配所有数据包的 rule (即 table-miss)</li>
+<li><code>parser.OFPActionOutput(port, len)</code> 指 Action 是 Output, 其两个参数:<ul>
+<li><code>port</code> 指发送到哪个端口 <code>ofproto.OFPP_CONTROLLER</code> 指发送给控制器</li>
+<li><code>max_len</code> 指如果数据包需要被截断并发送的最大长度, <code>ofproto.OFPCML_NO_BUFFER</code> 表示不会被阶段<br>(可以看出 <code>parser</code> 用于构建 <code>match</code> 和 <code>action</code> 项)</li>
+</ul>
+</li>
+<li><code>self.add_flow(datapath, priority, match, actions)</code>, 将流表项下发给交换机, <code>priority=0</code> 表示最低优先级</li>
+</ul>
+<h4 id="Packet-in-Message"><a href="#Packet-in-Message" class="headerlink" title="Packet-in Message"></a>Packet-in Message</h4><p>当 switch 接收到 unknown destination 的 packets 时, 就会触发 Packet-in event, 给该事件创建 handler:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-meta">@set_ev_cls(<span class="hljs-params">ofp_event.EventOFPPacketIn, MAIN_DISPATCHER</span>)</span><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">_packet_in_handler</span>(<span class="hljs-params">self, ev</span>):<br>    msg = ev.msg<br>    datapath = msg.datapath<br>    ofproto = datapath.ofproto<br>    parser = datapath.ofproto_parser<br><span class="hljs-comment"># ...</span><br></code></pre></td></tr></table></figure>
+
+
+
+
+
 
                 
               </div>
