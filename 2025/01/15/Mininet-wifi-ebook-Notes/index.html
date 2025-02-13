@@ -36,7 +36,7 @@
 <meta property="og:image" content="http://example.com/img/mininet-wifi-en-ebook-dhcp-server-topo.png">
 <meta property="og:image" content="http://example.com/img/mininet-wifi-vlan-topology.png">
 <meta property="article:published_time" content="2025-01-15T00:00:08.000Z">
-<meta property="article:modified_time" content="2025-02-13T07:05:18.050Z">
+<meta property="article:modified_time" content="2025-02-13T12:32:01.204Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/Mininet-wifi-IEEE-80211-modes.png">
@@ -259,7 +259,7 @@
         
         
         
-          175 分钟
+          177 分钟
         
       </span>
     
@@ -815,13 +815,19 @@
 <p>能通.</p>
 <h1 id="官方示例解析"><a href="#官方示例解析" class="headerlink" title="官方示例解析"></a>官方示例解析</h1><h2 id="wmediumd-interference-py"><a href="#wmediumd-interference-py" class="headerlink" title="wmediumd_interference.py"></a><code>wmediumd_interference.py</code></h2><p>需要把 AP 改为 <code>mode=a, channel=&#39;1&#39;</code>, 不然无法运行.</p>
 <h1 id="可参考文献"><a href="#可参考文献" class="headerlink" title="可参考文献"></a>可参考文献</h1><p>这本书每一节后面都列有.</p>
-<h1 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h1><h2 id="AP-默认不具有路由功能"><a href="#AP-默认不具有路由功能" class="headerlink" title="AP 默认不具有路由功能"></a>AP 默认不具有路由功能</h2><p>AP 的主要功能是为无线设备提供接入服务, 即接收和转发无线设备的数据帧, 但它们通常不会对数据包进行路由决策, 如 IP 转发.</p>
+<h1 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h1><h2 id="AP-默认不具有路由功能"><a href="#AP-默认不具有路由功能" class="headerlink" title="AP 默认不具有路由功能"></a>AP 默认不具有路由功能</h2><p>在 Mininet-WiFi 中, AP 通常是作为 Open vSwitch (OVS) 网桥存在的.</p>
+<p>AP 的主要功能是为无线设备提供接入服务, 即接收和转发无线设备的数据帧, 但它们通常不会对数据包进行路由决策, 如 IP 转发.</p>
 <p>AP 本质上是一个无线接入点, 其核心功能是桥接无线设备到有线网络. 它类似于一个无线交换机, 主要处理 MAC 地址 (第二层) 的通信, 而不是 IP 地址 (第三层)的路由.</p>
 <p>若想让其具有转发功能, 需要手动开启转发并配置路由规则, 如:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet-wifi&gt; ap1 sysctl -w net.ipv4.ip_forward=1<br>mininet-wifi&gt; ap2 sysctl -w net.ipv4.ip_forward=1<br>mininet-wifi&gt; ap1 ip route add 192.168.2.0/24 via 192.168.1.1 dev ap1-wlan2<br>mininet-wifi&gt; ap2 ip route add 192.168.1.0/24 via 192.168.2.1 dev ap2-wlan2<br></code></pre></td></tr></table></figure>
 
 <p>或让控制器配置流表.</p>
 <h2 id="默认-controller-的功能"><a href="#默认-controller-的功能" class="headerlink" title="默认 controller 的功能"></a>默认 controller 的功能</h2><p>Mininet-WiFi 默认使用 <code>ovs-controller</code>, 一个轻量级的 OpenFlow 参考控制器, 仅提供基础的二层转发功能.</p>
+<h2 id="AP-的网络命名空间"><a href="#AP-的网络命名空间" class="headerlink" title="AP 的网络命名空间"></a>AP 的网络命名空间</h2><p>在 Mininet-wifi 中, 默认情况下, AP 运行在 Root Namespace (根命名空间), 而不是像 Station 那样运行在独立的命名空间中, 因此, 若网络中有 <code>ap1</code> 和 <code>ap2</code>, 其接口信息都暴露在同一个命名空间中. 此时:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet-wifi&gt; ap1 iwconfig<br></code></pre></td></tr></table></figure>
+
+<p>会查看到所有的虚拟网络接口.</p>
+<h2 id="使用-in-band-control"><a href="#使用-in-band-control" class="headerlink" title="使用 in-band control"></a>使用 in-band control</h2><p>给 switch 加上 <code>inband=True</code>.</p>
 
                 
               </div>
