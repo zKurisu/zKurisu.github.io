@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="Docker 迁移导出本地镜像1docker save -o &lt;outputfilename&gt;.tar &lt;image or container id&gt;  导入镜像1docker load -i &lt;inputfilename&gt;.tar   System Unit File 的注意事项ExecStart 指令中的命令不直接支持使用 shell 特性 (如重定向符号">
+    <meta name="description" content="route -n 输出解析示例: 123Destination     Gateway         Genmask         Flags Metric Ref    Use Iface0.0.0.0         192.168.1.1     0.0.0.0         UG    3005   0        0 wlan0192.168.1.0     0.0.0.0">
 <meta property="og:type" content="article">
 <meta property="og:title" content="ShellScript-技巧积累">
 <meta property="og:url" content="http://example.com/2023/01/28/ShellScript-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="Docker 迁移导出本地镜像1docker save -o &lt;outputfilename&gt;.tar &lt;image or container id&gt;  导入镜像1docker load -i &lt;inputfilename&gt;.tar   System Unit File 的注意事项ExecStart 指令中的命令不直接支持使用 shell 特性 (如重定向符号">
+<meta property="og:description" content="route -n 输出解析示例: 123Destination     Gateway         Genmask         Flags Metric Ref    Use Iface0.0.0.0         192.168.1.1     0.0.0.0         UG    3005   0        0 wlan0192.168.1.0     0.0.0.0">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-01-28T09:20:38.000Z">
-<meta property="article:modified_time" content="2024-11-28T03:43:56.743Z">
+<meta property="article:modified_time" content="2025-02-13T08:49:10.114Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          8.7k 字
+          9.2k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          73 分钟
+          77 分钟
         
       </span>
     
@@ -289,7 +289,22 @@
             
               <div class="markdown-body">
                 
-                <h1 id="Docker-迁移"><a href="#Docker-迁移" class="headerlink" title="Docker 迁移"></a>Docker 迁移</h1><h2 id="导出本地镜像"><a href="#导出本地镜像" class="headerlink" title="导出本地镜像"></a>导出本地镜像</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">docker save -o &lt;outputfilename&gt;.tar &lt;image or container <span class="hljs-built_in">id</span>&gt;<br></code></pre></td></tr></table></figure>
+                <h1 id="route-n-输出解析"><a href="#route-n-输出解析" class="headerlink" title="route -n 输出解析"></a>route -n 输出解析</h1><p>示例:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">Destination     Gateway         Genmask         Flags Metric Ref    Use Iface<br>0.0.0.0         192.168.1.1     0.0.0.0         UG    3005   0        0 wlan0<br>192.168.1.0     0.0.0.0         255.255.255.0   U     3005   0        0 wlan0<br></code></pre></td></tr></table></figure>
+
+<p>先分析:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">Destination     Gateway         Genmask         Flags Metric Ref    Use Iface<br>0.0.0.0         192.168.1.1     0.0.0.0         UG    3005   0        0 wlan0<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>0.0.0.0</code> 表示任何不清楚如何路由的数据包, 发送到 <code>192.168.1.1</code></li>
+<li>此时设备通过三层交换进行跨网络通信</li>
+</ul>
+<p>之后分析:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">Destination     Gateway         Genmask         Flags Metric Ref    Use Iface<br>192.168.1.0     0.0.0.0         255.255.255.0   U     3005   0        0 wlan0<br></code></pre></td></tr></table></figure>
+<ul>
+<li>Gateway 是 <code>0.0.0.0</code> 表示本地网络, 即统一 IP 子网内 (这个子网可能由多个物理交换机组成)</li>
+<li>此时设备通过二层交换 (如以太网交换机) 直接通信</li>
+</ul>
+<h1 id="Docker-迁移"><a href="#Docker-迁移" class="headerlink" title="Docker 迁移"></a>Docker 迁移</h1><h2 id="导出本地镜像"><a href="#导出本地镜像" class="headerlink" title="导出本地镜像"></a>导出本地镜像</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">docker save -o &lt;outputfilename&gt;.tar &lt;image or container <span class="hljs-built_in">id</span>&gt;<br></code></pre></td></tr></table></figure>
 
 <h2 id="导入镜像"><a href="#导入镜像" class="headerlink" title="导入镜像"></a>导入镜像</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">docker load -i &lt;inputfilename&gt;.tar<br></code></pre></td></tr></table></figure>
 
