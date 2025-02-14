@@ -28,7 +28,7 @@
 <meta property="og:image" content="http://example.com/img/openvswitch-structure.png">
 <meta property="og:image" content="http://example.com/img/openvswitch-example-structure.png">
 <meta property="article:published_time" content="2025-02-14T02:01:59.000Z">
-<meta property="article:modified_time" content="2025-02-14T07:22:00.438Z">
+<meta property="article:modified_time" content="2025-02-14T09:27:59.172Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/openvswitch-as-switch-for-VM.png">
@@ -240,7 +240,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          5k 字
+          8.4k 字
         
       </span>
     
@@ -251,7 +251,7 @@
         
         
         
-          42 分钟
+          70 分钟
         
       </span>
     
@@ -308,12 +308,27 @@
 <p>Bridge domains, 指 bridge 的工作范围, 即被整合的整个网络段. 这些网络段被视为一个单一的广播域.</p>
 <p>简单来说, bridge 把多个网络整合成一个.</p>
 <p><img src="/../img/how-bridge-works.png" srcset="/img/loading.gif" lazyload></p>
-<h2 id="Port"><a href="#Port" class="headerlink" title="Port"></a>Port</h2><p>Port 是 Bridge 上的接口, OVS 中, Port 有以下几种类型:</p>
+<h2 id="Port"><a href="#Port" class="headerlink" title="Port"></a>Port</h2><p>Port 是 Bridge 上的逻辑接口, 用于连接外部网络设备 (如物理网卡, 虚拟网卡, 其他交换机等).</p>
+<p>而 Interface 是 Port 的具体实现, 表示实际的网络接口 (如物理网卡, 虚拟网卡等).</p>
+<p>一个 Port 可以对应一个或多个 Interface.</p>
+<p>在 OVS 中, Port 有以下几种类型:</p>
 <ul>
-<li>Normal</li>
-<li>Internal</li>
-<li>Patch</li>
-<li>Tunnel</li>
+<li>Normal, 用于连接外部网络设备<ul>
+<li>会将接收到的数据包转发到 OVS 的 datapath 中, 由 OVS 进行处理</li>
+</ul>
+</li>
+<li>Internal, 用于连接 OVS 本身或其他 OVS 实例<ul>
+<li>同样将接收到的数据包直接转发到 OVS 的 datapath 中</li>
+</ul>
+</li>
+<li>Patch, 用于连接两个 OVS 实例, 通常用于实现 OVS 之间的通信<ul>
+<li>将接收到的数据包直接转发到另一个 OVS 实例的对应 Port 上</li>
+</ul>
+</li>
+<li>Tunnel, 用于创建虚拟网络隧道, 通常用于实现虚拟网络之间的通信<ul>
+<li>将接收到的数据包封装到隧道协议中 (如 VXLAN, GRE 等), 然后转发到另一个 OVS 实例的对应 Port 上</li>
+</ul>
+</li>
 </ul>
 <h2 id="Flow-Table-ID"><a href="#Flow-Table-ID" class="headerlink" title="Flow Table ID"></a>Flow Table ID</h2><p>在 OpenFlow 中, table id 用于区分不同的流表.</p>
 <p>数据包在交换机中处理时, 会按照流表的顺序进行匹配.</p>
@@ -346,13 +361,22 @@
 <p>如果想让 OpenFlow table 一开始为空:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ovs-vsctl add-br br0 -- <span class="hljs-built_in">set</span> Bridge br0 fail-mode=secure<br></code></pre></td></tr></table></figure>
 
-<h2 id="为-bridge-添加-port"><a href="#为-bridge-添加-port" class="headerlink" title="为 bridge 添加 port"></a>为 bridge 添加 port</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ovs-vsctl add-port br0 eth1 -- <span class="hljs-built_in">set</span> Interface eth1 <span class="hljs-built_in">type</span>=internal<br></code></pre></td></tr></table></figure>
+<h2 id="为-bridge-添加-port"><a href="#为-bridge-添加-port" class="headerlink" title="为 bridge 添加 port"></a>为 bridge 添加 port</h2><h3 id="创建-normal-port"><a href="#创建-normal-port" class="headerlink" title="创建 normal port"></a>创建 normal port</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ovs-vsctl add-port br0 eth0<br></code></pre></td></tr></table></figure>
+
+<h3 id="创建-internal-port"><a href="#创建-internal-port" class="headerlink" title="创建 internal port"></a>创建 internal port</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ovs-vsctl add-port br0 eth1 -- <span class="hljs-built_in">set</span> Interface eth1 <span class="hljs-built_in">type</span>=internal<br></code></pre></td></tr></table></figure>
 <ul>
 <li><code>ovs-vsctl add-port br0 eth1</code>, 用于在 <code>br0</code> 上添加名为 <code>eth1</code> 的 port</li>
 <li><code>-- set interface eth1 type=internal</code> 设置 <code>eth1</code> 为 <code>internal</code> 类型</li>
 </ul>
 <p>若要设置 OpenFlow 端口号, 如:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ovs-vsctl add-port br0 p1 -- <span class="hljs-built_in">set</span> Interface ofport_request=1<br></code></pre></td></tr></table></figure>
+
+<h3 id="创建-Patch-Port"><a href="#创建-Patch-Port" class="headerlink" title="创建 Patch Port"></a>创建 Patch Port</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sh">ovs-vsctl add-br br0<br>ovs-vsctl add-br br1<br>ovs-vsctl \<br>-- add-port br0 patch0 -- <span class="hljs-built_in">set</span> interface patch0 <span class="hljs-built_in">type</span>=patch options:peer=patch1 \<br>-- add-port br1 patch1 -- <span class="hljs-built_in">set</span> interface patch1 <span class="hljs-built_in">type</span>=patch options:peer=patch0<br></code></pre></td></tr></table></figure>
+
+<h3 id="创建-Tunnel-Port"><a href="#创建-Tunnel-Port" class="headerlink" title="创建 Tunnel Port"></a>创建 Tunnel Port</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-comment">#主机10.1.7.21上</span><br>ovs-vsctl add-br br-tun<br>ovs-vsctl add-port br-tun vxlan-vx01 -- <span class="hljs-built_in">set</span> Interface vxlan-vx01 <span class="hljs-built_in">type</span>=vxlan options:remote_ip=10.1.7.22 options:key=flow<br>ovs-vsctl add-port br-tun vxlan-vx02 -- <span class="hljs-built_in">set</span> Interface vxlan-vx02 <span class="hljs-built_in">type</span>=vxlan options:remote_ip=10.1.7.23 options:key=flow<br><br><span class="hljs-comment">#主机10.1.7.22上</span><br>ovs-vsctl add-br br-tun<br>ovs-vsctl add-port br-tun vxlan-vx01 -- <span class="hljs-built_in">set</span> Interface vxlan-vx01 <span class="hljs-built_in">type</span>=vxlan options:remote_ip=10.1.7.21 options:key=flow<br>ovs-vsctl add-port br-tun vxlan-vx02 -- <span class="hljs-built_in">set</span> Interface vxlan-vx02 <span class="hljs-built_in">type</span>=vxlan options:remote_ip=10.1.7.23 options:key=flow<br><br><span class="hljs-comment">#主机10.1.7.23上</span><br>ovs-vsctl add-br br-tun<br>ovs-vsctl add-port br-tun vxlan-vx01 -- <span class="hljs-built_in">set</span> Interface vxlan-vx01 <span class="hljs-built_in">type</span>=vxlan options:remote_ip=10.1.7.21 options:key=flow<br>ovs-vsctl add-port br-tun vxlan-vx02 -- <span class="hljs-built_in">set</span> Interface vxlan-vx02 <span class="hljs-built_in">type</span>=vxlan options:remote_ip=10.1.7.22 options:key=flow<br></code></pre></td></tr></table></figure>
+
+<h3 id="设置-Port"><a href="#设置-Port" class="headerlink" title="设置 Port"></a>设置 Port</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sh">ovs-vsctl <span class="hljs-built_in">set</span> Port vnet0 tag=100<br>ovs-vsctl remove Port vnet0 tag 100<br><span class="hljs-comment"># 设置vnet0允许通过的VLAN tag</span><br>ovs-vsctl <span class="hljs-built_in">set</span> Port vnet0 trunks=100,200<br>ovs-vsctl remove Port vnet0 trunks 100,200<br></code></pre></td></tr></table></figure>
+
 
 
 <h2 id="删除-bridge"><a href="#删除-bridge" class="headerlink" title="删除 bridge"></a>删除 bridge</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ovs-vsctl del-br br0<br></code></pre></td></tr></table></figure>
@@ -418,14 +442,14 @@
 <li>用 <code>ovs-ofctl</code> 为 bridge 添加 flow table</li>
 <li>用 <code>ovs-appctl</code> 创建流数据并观察 match-action 执行</li>
 </ol>
-<h1 id="小实验"><a href="#小实验" class="headerlink" title="小实验"></a>小实验</h1><p><a target="_blank" rel="noopener" href="https://medium.com/@ozcankasal/understanding-open-vswitch-part-1-fd75e32794e4">参考</a></p>
-<h2 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h2><p>在一个 Ubuntu 虚拟机上:</p>
+<h1 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h1><h2 id="小实验"><a href="#小实验" class="headerlink" title="小实验"></a>小实验</h2><p><a target="_blank" rel="noopener" href="https://medium.com/@ozcankasal/understanding-open-vswitch-part-1-fd75e32794e4">参考</a></p>
+<h3 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h3><p>在一个 Ubuntu 虚拟机上:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sh">vagrant init ubuntu/focal64<br>vagrant up<br>vagrant ssh<br><br>sudo apt-get update<br>sudo apt-get install openvswitch-switch<br></code></pre></td></tr></table></figure>
 
 <p>验证安装:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ ovs-vsctl show<br>100854be-ac79-480c-b593-81c9e35e2800<br>    ovs_version: <span class="hljs-string">&quot;2.13.8&quot;</span><br>$ sudo systemctl start openvswitch-switch<br></code></pre></td></tr></table></figure>
 
-<h2 id="构建"><a href="#构建" class="headerlink" title="构建"></a>构建</h2><p>要构建的示意图如下:<br><img src="/../img/openvswitch-example-structure.png" srcset="/img/loading.gif" lazyload></p>
+<h3 id="构建"><a href="#构建" class="headerlink" title="构建"></a>构建</h3><p>要构建的示意图如下:<br><img src="/../img/openvswitch-example-structure.png" srcset="/img/loading.gif" lazyload></p>
 <p>用 OVS 创建 bridge 连接两个 VM.</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ ovs-vsctl add-br br0<br>$ ovs-vsctl show<br>100854be-ac79-480c-b593-81c9e35e2800<br>    Bridge br0<br>        Port br0<br>            Interface br0<br>                <span class="hljs-built_in">type</span>: internal<br>    ovs_version: <span class="hljs-string">&quot;2.13.8&quot;</span><br></code></pre></td></tr></table></figure>
 
@@ -450,6 +474,47 @@
 
 <p>在 vm1 上运行:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">curl --interface enp0s3 -vkL http://192.168.1.20 8443<br></code></pre></td></tr></table></figure>
+
+<h2 id="单机无隔离网络"><a href="#单机无隔离网络" class="headerlink" title="单机无隔离网络"></a>单机无隔离网络</h2><p>即都在一个 bridge 上:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-comment"># 添加网桥</span><br>ovs-vsctl add-br br-int<br><span class="hljs-comment"># 添加三个内部端口</span><br>ovs-vsctl add-port br-int vnet0 -- <span class="hljs-built_in">set</span> Interface vnet0 <span class="hljs-built_in">type</span>=internal<br>ovs-vsctl add-port br-int vnet1 -- <span class="hljs-built_in">set</span> Interface vnet1 <span class="hljs-built_in">type</span>=internal<br>ovs-vsctl add-port br-int vnet2 -- <span class="hljs-built_in">set</span> Interface vnet2 <span class="hljs-built_in">type</span>=internal<br><span class="hljs-comment"># 添加三个netns</span><br>ip netns add ns0<br>ip netns add ns1<br>ip netns add ns2<br><span class="hljs-comment"># 将内部端口分别移动到netns中</span><br>ip <span class="hljs-built_in">link</span> <span class="hljs-built_in">set</span> vnet0 netns ns0<br>ip <span class="hljs-built_in">link</span> <span class="hljs-built_in">set</span> vnet1 netns ns1<br>ip <span class="hljs-built_in">link</span> <span class="hljs-built_in">set</span> vnet2 netns ns2<br><br><span class="hljs-comment"># 启动端口并配置IP</span><br>ip netns <span class="hljs-built_in">exec</span> ns0 ip <span class="hljs-built_in">link</span> <span class="hljs-built_in">set</span> lo up<br>ip netns <span class="hljs-built_in">exec</span> ns0 ip <span class="hljs-built_in">link</span> <span class="hljs-built_in">set</span> vnet0 up<br>ip netns <span class="hljs-built_in">exec</span> ns0 ip addr add 10.0.0.1/24 dev vnet0<br><br>ip netns <span class="hljs-built_in">exec</span> ns1 ip <span class="hljs-built_in">link</span> <span class="hljs-built_in">set</span> lo up<br>ip netns <span class="hljs-built_in">exec</span> ns1 ip <span class="hljs-built_in">link</span> <span class="hljs-built_in">set</span> vnet1 up<br>ip netns <span class="hljs-built_in">exec</span> ns1 ip addr add 10.0.0.2/24 dev vnet1<br><br>ip netns <span class="hljs-built_in">exec</span> ns2 ip <span class="hljs-built_in">link</span> <span class="hljs-built_in">set</span> lo up<br>ip netns <span class="hljs-built_in">exec</span> ns2 ip <span class="hljs-built_in">link</span> <span class="hljs-built_in">set</span> vnet2 up<br>ip netns <span class="hljs-built_in">exec</span> ns2 ip addr add 10.0.0.3/24 dev vnet2<br></code></pre></td></tr></table></figure>
+<ul>
+<li>启用 <code>lo</code> 接口是确保本地通信, 例如, Web 服务器绑定到 <code>127.0.0.1:80</code> 时, 若 <code>lo</code> 接口未启用, 服务将无法启动或接收请求</li>
+</ul>
+<h2 id="单机隔离网络"><a href="#单机隔离网络" class="headerlink" title="单机隔离网络"></a>单机隔离网络</h2><p>即给各端口打上 VLAN 标签:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-comment"># 设置vnet0的VLAN tag为100</span><br>ovs-vsctl <span class="hljs-built_in">set</span> Port vnet0 tag=100<br><span class="hljs-comment"># 设置vnet1和vnet2的VLAN tag为200</span><br>ovs-vsctl <span class="hljs-built_in">set</span> Port vnet1 tag=200<br>ovs-vsctl <span class="hljs-built_in">set</span> Port vnet2 tag=200<br></code></pre></td></tr></table></figure>
+
+<h2 id="端口镜像"><a href="#端口镜像" class="headerlink" title="端口镜像"></a>端口镜像</h2><p>端口镜像是指将经过指定端口 (镜像端口) 的报文复制一份到另一个指定端口 (观察端口), 通过观察端口接收到的数据报文, 就可以有效识别虚拟网络的运行情况.</p>
+<p>创建语法:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">ovs-vsctl -- <span class="hljs-built_in">set</span> Bridge &lt;bridge_name&gt; mirrors=@m \<br> -- --<span class="hljs-built_in">id</span>=@&lt;port0&gt; get Port &lt;port0&gt; \<br> -- --<span class="hljs-built_in">id</span>=@&lt;port1&gt; get Port &lt;port1&gt; \<br> -- --<span class="hljs-built_in">id</span>=@m create Mirror name=&lt;mirror_name&gt; select-dst-port=@&lt;port0&gt; select-src-port=@&lt;port0&gt; output-port=@&lt;port1&gt;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>set Bridge &lt;bridge_name&gt; mirrors=@m</code> 表示向 <code>&lt;bridge_name&gt;</code> 添加 mirrors, <code>@m</code> 引用后续创建的 mirror</li>
+<li><code>--id=@&lt;port0&gt; get Port &lt;port0&gt;</code><ul>
+<li><code>--id=@&lt;port0&gt;</code> 创建一个引用 <code>@&lt;port0&gt;</code></li>
+<li><code>get Port &lt;port0&gt;</code> 获取 <code>&lt;port0&gt;</code> 的信息存储到引用中</li>
+</ul>
+</li>
+<li><code>create Mirror name=&lt;mirror_name&gt;</code> 创建一个 mirror</li>
+</ul>
+<p>创建 mirror 时, 能用的参数有:</p>
+<ul>
+<li>与 mirror source 相关<ul>
+<li><code>select_all</code>, boolean, 设置为 <code>true</code> 表示网桥上所有流量</li>
+<li><code>select_dst_port</code>, string, 表示此端口接收的所有流量</li>
+<li><code>select_src_port</code>, string, 表示此端口发送的所有流量</li>
+<li><code>select_vlan</code>, int, 表示网桥上指定 VLAN 标签的流量</li>
+</ul>
+</li>
+<li>与 mirror destination 相关<ul>
+<li><code>output_port</code>, string, 指定观察端口接收流量保温</li>
+<li><code>output_vlan</code>, int, 修改报文 VLAN 标签</li>
+</ul>
+</li>
+</ul>
+<p>删除语法:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ovs-vsctl remove Bridge &lt;bridge-name&gt; mirrors &lt;mirror-id&gt;<br></code></pre></td></tr></table></figure>
+
+
+
 
 
 
