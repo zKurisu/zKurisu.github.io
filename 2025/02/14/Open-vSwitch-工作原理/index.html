@@ -28,7 +28,7 @@
 <meta property="og:image" content="http://example.com/img/openvswitch-structure.png">
 <meta property="og:image" content="http://example.com/img/openvswitch-example-structure.png">
 <meta property="article:published_time" content="2025-02-14T02:01:59.000Z">
-<meta property="article:modified_time" content="2025-02-14T12:49:44.107Z">
+<meta property="article:modified_time" content="2025-02-15T01:54:54.293Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/openvswitch-as-switch-for-VM.png">
@@ -240,7 +240,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          9.7k 字
+          11k 字
         
       </span>
     
@@ -251,7 +251,7 @@
         
         
         
-          82 分钟
+          91 分钟
         
       </span>
     
@@ -468,17 +468,69 @@
 <h3 id="dl-vlan-vlan"><a href="#dl-vlan-vlan" class="headerlink" title="dl_vlan=vlan"></a><code>dl_vlan=vlan</code></h3><p>指定数据包的 VLAN tag 值, 范围是 <code>0-4095</code>, <code>0xffff</code> 表示不包含 VLAN Tag 的数据包.</p>
 <h3 id="dl-vlan-pcp-priority"><a href="#dl-vlan-pcp-priority" class="headerlink" title="dl_vlan_pcp=priority"></a><code>dl_vlan_pcp=priority</code></h3><p>设置 VLAN 的优先级, 范围是 <code>0-7</code>, 数字越大优先级越高. 和某个 VLAN Tag 无关.</p>
 <h3 id="dl-src-xx-xx-xx-xx-xx-xx"><a href="#dl-src-xx-xx-xx-xx-xx-xx" class="headerlink" title="dl_src=xx:xx:xx:xx:xx:xx"></a><code>dl_src=xx:xx:xx:xx:xx:xx</code></h3><p>源 MAC 地址.</p>
-<ul>
-<li><code>01:00:00:00:00:00/01:00:00:00:00:00</code> 代表广播</li>
-<li><code>00:00:00:00:00:00/01:00:00:00:00:00</code> 代表单播</li>
-<li><code>fe:ff:ff:ff:ff:ff</code> 匹配除多播位以外的所有位, 基本上不会用到</li>
-<li><code>ff:ff:ff:ff:ff:ff</code> 完全匹配 (等同于省略子网掩码)</li>
-<li><code>00:00:00:00:00:00</code> 匹配全部位 (等同于 <code>dl_dst=*</code>)</li>
-</ul>
-<p>注意 MAC 地址中的广播和 IP 中的不同.</p>
 <h3 id="dl-dst-xx-xx-xx-xx-xx-xx"><a href="#dl-dst-xx-xx-xx-xx-xx-xx" class="headerlink" title="dl_dst=xx:xx:xx:xx:xx:xx"></a><code>dl_dst=xx:xx:xx:xx:xx:xx</code></h3><p>目的 MAC 地址.</p>
 <h2 id="OSL-Layer-3"><a href="#OSL-Layer-3" class="headerlink" title="OSL Layer 3"></a>OSL Layer 3</h2><p>都以 <code>nw_</code> (network) 开头.</p>
-<h2 id="OSL-Layer-4"><a href="#OSL-Layer-4" class="headerlink" title="OSL Layer 4"></a>OSL Layer 4</h2><h1 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h1><h2 id="小实验"><a href="#小实验" class="headerlink" title="小实验"></a>小实验</h2><p><a target="_blank" rel="noopener" href="https://medium.com/@ozcankasal/understanding-open-vswitch-part-1-fd75e32794e4">参考</a></p>
+<h3 id="nw-src-ip-netmask-和-nw-dst-ip-netmask"><a href="#nw-src-ip-netmask-和-nw-dst-ip-netmask" class="headerlink" title="nw_src=ip[/netmask] 和 nw_dst=ip[/netmask]"></a><code>nw_src=ip[/netmask]</code> 和 <code>nw_dst=ip[/netmask]</code></h3><ul>
+<li>当 <code>dl_type</code> 为 <code>0x0800</code> 或 <code>ip</code>, 这里的 <code>ip</code> 可以是 IPv4 地址或主机名如 <code>192.168.0.1/24</code> 或 <code>www.test.com</code></li>
+<li>当 <code>dl_type</code> 为 <code>0x0806</code> 或 <code>arp</code>, 这里的 <code>ip</code> 分别与IPv4和Ethernet的ARP数据包中的 <code>ar_spa</code> 或 <code>ar_tpa</code> 字段匹配</li>
+<li>当 <code>dl_type</code> 为 <code>0x8035</code> 或 <code>rarp</code>, 这里的 <code>ip</code> 分别与IPv4和Ethernet的RARP数据包中的 <code>ar_spa</code> 或 <code>ar_tpa</code> 字段匹配</li>
+<li>当 <code>dl_type</code> 为 <code>0x0800</code>, <code>0x0806</code> 或 <code>0x8035</code> 之外的其他值时, 将忽略 <code>nw_src</code> 和 <code>nw_dst</code> 的值</li>
+</ul>
+<h3 id="nw-proto-proto-和-ipproto-proto"><a href="#nw-proto-proto-和-ipproto-proto" class="headerlink" title="nw_proto=proto 和 ipproto=proto"></a><code>nw_proto=proto</code> 和 <code>ipproto=proto</code></h3><p>若 <code>proto</code> 为:</p>
+<ul>
+<li><code>1</code>, ICMP</li>
+<li><code>2</code>, IGMP</li>
+<li><code>6</code>, TCP</li>
+<li><code>17</code>, UDP</li>
+<li><code>41</code>, IPv6</li>
+</ul>
+<p>但通常:</p>
+<ul>
+<li><code>nw_proto</code>: 通常用于匹配网络层协议类型, 适用于 IPv4 和 IPv6</li>
+<li><code>ipproto</code>:通常用于匹配 IP 协议类型, 适用于 IPv4</li>
+</ul>
+<h3 id="nw-tos-tos"><a href="#nw-tos-tos" class="headerlink" title="nw_tos=tos"></a><code>nw_tos=tos</code></h3><p>TOS, 指 Type of Service, 用于匹配 IP 数据包头中的 ToS 字段. 其为一个 8 位字段:</p>
+<ul>
+<li>最高 6 位: 标识 DSCP (Differentiated Services Code Point), 区分不同的服务类型</li>
+<li>最低 2 位: 标识 ECN (Explicit Congestion Notification), 用于拥塞控制</li>
+</ul>
+<h3 id="ip-dscp-dscp"><a href="#ip-dscp-dscp" class="headerlink" title="ip_dscp=dscp"></a><code>ip_dscp=dscp</code></h3><p>匹配 IP 数据包头中的 dscp 字段. 取值为 <code>0~63</code>, 即 6 位二进制.</p>
+<h3 id="nw-ecn-ecn-或-ip-ecn-ecn"><a href="#nw-ecn-ecn-或-ip-ecn-ecn" class="headerlink" title="nw_ecn=ecn 或 ip_ecn=ecn"></a><code>nw_ecn=ecn</code> 或 <code>ip_ecn=ecn</code></h3><p>匹配 IP 数据包头中的 ecn 字段. 取值为 <code>0~3</code>, 即 2 位二进制.</p>
+<h3 id="nw-ttl-ttl"><a href="#nw-ttl-ttl" class="headerlink" title="nw_ttl=ttl"></a><code>nw_ttl=ttl</code></h3><p>匹配 IP 数据包头中的 ttl 字段, 取值 <code>0~255</code>, 即 8 位二进制.</p>
+<h2 id="OSL-Layer-4"><a href="#OSL-Layer-4" class="headerlink" title="OSL Layer 4"></a>OSL Layer 4</h2><p>都以 <code>xxx_</code> (xxx 指协议, 如 <code>tcp</code>, <code>udp</code>) 开头.</p>
+<h3 id="xxx-src-port-以及-xxx-dst-port"><a href="#xxx-src-port-以及-xxx-dst-port" class="headerlink" title="xxx_src=port 以及 xxx_dst=port"></a><code>xxx_src=port</code> 以及 <code>xxx_dst=port</code></h3><p>如:</p>
+<ul>
+<li><code>tcp_src=port</code></li>
+<li><code>tcp_dst=port</code></li>
+<li><code>udp_src=port</code></li>
+<li><code>udp_dst=port</code></li>
+<li><code>sctp_src=port</code></li>
+<li><code>sctp_dst=port</code></li>
+</ul>
+<p>匹配 TCP, UDP 或 SCTP 源端口或目标端口, 取值 <code>0~65535</code>.</p>
+<p>当通配符 <code>dl_type</code> 和 <code>nw_proto</code> 或将其设置为不表示适当协议的值时, 这些设置的值将被忽略.</p>
+<h3 id="xxx-src-port-mask-以及-xxx-dst-port-mask"><a href="#xxx-src-port-mask-以及-xxx-dst-port-mask" class="headerlink" title="xxx_src=port/mask 以及 xxx_dst=port/mask"></a><code>xxx_src=port/mask</code> 以及 <code>xxx_dst=port/mask</code></h3><p>给上述端口匹配加上 mask.</p>
+<h3 id="tcp-flags-flags-mask-或-tcp-flags-flag-flag"><a href="#tcp-flags-flags-mask-或-tcp-flags-flag-flag" class="headerlink" title="tcp_flags=flags/mask 或 tcp_flags=[+flag...][-flag...]"></a><code>tcp_flags=flags/mask</code> 或 <code>tcp_flags=[+flag...][-flag...]</code></h3><p>都用于匹配 TCP 数据包中的 TCP 标志位.</p>
+<p><code>tcp_flags=flags/mask</code> 中 <code>flags</code> 和 <code>mask</code> 都是 16 位二进制数, 每一位的含义为:</p>
+<ul>
+<li>0: <code>fin</code> 查找不再有来自发送方的数据</li>
+<li>1: <code>syn</code> 同步同步序列号</li>
+<li>2: <code>rst</code> 重置连接</li>
+<li>3: <code>psh</code> 推送功能</li>
+<li>4: <code>ack</code> 确认字段有效</li>
+<li>5: <code>urg</code> 紧急指针字段有效</li>
+<li>6: <code>ece</code> ECN回显</li>
+<li>7: <code>cer</code> 减少拥塞窗口</li>
+<li>8: <code>ns</code> 现时总和</li>
+<li>9-11: 保留</li>
+<li>12-15: 不处理, 必须为零</li>
+</ul>
+<p><code>tcp_flags=[+flag...][-flag...]</code> 中, 直接指定哪些标志位需要存在, 哪些需要不存在:</p>
+<ul>
+<li><code>+flag</code>: 表示必须存在的 TCP 标志位</li>
+<li><code>-flag</code>: 表示必须不存在的 TCP 标志位</li>
+</ul>
+<h1 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h1><h2 id="小实验"><a href="#小实验" class="headerlink" title="小实验"></a>小实验</h2><p><a target="_blank" rel="noopener" href="https://medium.com/@ozcankasal/understanding-open-vswitch-part-1-fd75e32794e4">参考</a></p>
 <h3 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h3><p>在一个 Ubuntu 虚拟机上:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sh">vagrant init ubuntu/focal64<br>vagrant up<br>vagrant ssh<br><br>sudo apt-get update<br>sudo apt-get install openvswitch-switch<br></code></pre></td></tr></table></figure>
 
