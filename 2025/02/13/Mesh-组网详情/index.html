@@ -25,7 +25,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/802_11s-frame-format.png">
 <meta property="article:published_time" content="2025-02-13T02:12:10.000Z">
-<meta property="article:modified_time" content="2025-02-16T03:31:48.911Z">
+<meta property="article:modified_time" content="2025-02-16T03:47:19.499Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/802_11s-frame-format.png">
@@ -237,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.2k 字
+          1.8k 字
         
       </span>
     
@@ -248,7 +248,7 @@
         
         
         
-          11 分钟
+          15 分钟
         
       </span>
     
@@ -301,7 +301,10 @@
 <p>若多个 BSS 通过 DS (Distribution System) 连接在一起, 形成一个逻辑上的单一网络, 则称 ESS (Extended Service Set). 其目的是扩展无线网络的覆盖范围, 支持 STA 在不同 BSS 之间无缝漫游.</p>
 <p>DSM (Distribution System Medium) 是 DS 的物理或逻辑传输介质 (有线或无线都有可能), 负责在不同 AP 之间传输数据帧.</p>
 <p>Portal 指 DS 与非 802.11 网络 (如以太网, 互联网) 之间的逻辑接口, 负责协议转换和网络集成. (也是将无线网络的 802.11 数据帧转换为有线网络的 802.3 帧, 实现无线网络与外部网络的互连)</p>
-<p>802.11s 同样引出了 mesh BSS (MBSS) 的概念, 指由多个支持 Mesh 功能的无线节点 (Mesh 节点) 组成的自组织网络单元. 节点通过 Mesh Peering Management (MPM) 协议自动发现邻居并建立对等连接.</p>
+<p>802.11s 同样引出了 mesh BSS (MBSS) 的概念, 指由多个支持 Mesh 功能的无线节点 (Mesh 节点) 组成的自组织网络单元. 节点通过 Mesh Peering Management (MPM) 协议自动发现邻居并建立对等连接. 整个 MBSS 内所有设备都共享同一广播域, 类似传统以太网的广播机制.</p>
+<p>802.11s 网络对外表现为一个单一的以太网段, 外部设备 (如路由器, 交换机) 无需感知内部 Mesh 拓扑, 直接将其视为传统以太网络.</p>
+<p>Mesh 网络对上层协议 (如 IP, ARP) 也是完全透明的, 无需修改配置就能处理帧的路由和转发.</p>
+<p>Mesh STA 之间直接交互, 但不直接与非 Mesh STA (传统 Wi-Fi 客户端) 通信. 通过让部分 Mesh STA 兼任网关, 与非 Mesh 网络跨网通信.</p>
 <h2 id="802-11-frame-format"><a href="#802-11-frame-format" class="headerlink" title="802.11 frame format"></a>802.11 frame format</h2><p><img src="/../img/802_11s-frame-format.png" srcset="/img/loading.gif" lazyload></p>
 <ul>
 <li><code>Frame Control</code>, 2 bits, 包含协议版本, 帧类型 (控制&#x2F;管理&#x2F;数据), 标志位 (To DS&#x2F;From DS, 重传等), 子类型 (如 ACK, Beacon 等)</li>
@@ -312,6 +315,14 @@
 <li><code>Body</code>, 0~7955 bits, 含 payload (如 IP 包) 或管理帧信息</li>
 <li><code>FCS</code>, 4 bits, 校验序列</li>
 </ul>
+<p>3 种帧类型有一定区别:</p>
+<ul>
+<li>Data frame, 包含 higher-layer data (封装到下层就成了 payload 吧)</li>
+<li>Control frame, 用于 acknowledgments 和 reservations</li>
+<li>Management frame, 用于 maintain a WLAN and the local link</li>
+</ul>
+<p>为了实现 multihop, 802.11s 用 additional mesh control field 来扩展 data and management frames, 其中 TTL 和 sequence number fields 用于防止 frame 的 looping forever.</p>
+<p>当 Mesh station 间通过 single hop 通信时, 其 frames 不会包含 mesh control field.</p>
 
                 
               </div>
