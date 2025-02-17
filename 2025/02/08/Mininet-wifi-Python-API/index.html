@@ -25,8 +25,9 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/mininet-wifi-experiment-is-ap-could-commu-out.png">
 <meta property="og:image" content="http://example.com/img/mininet-wifi-experiment-is-ap-could-commu-in.png">
+<meta property="og:image" content="http://example.com/img/mininet-wifi-experiment-two-ap-could-commu-under-propagationmode.png">
 <meta property="article:published_time" content="2025-02-08T06:46:03.000Z">
-<meta property="article:modified_time" content="2025-02-17T07:13:10.004Z">
+<meta property="article:modified_time" content="2025-02-17T08:27:43.615Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/mininet-wifi-experiment-is-ap-could-commu-out.png">
@@ -238,7 +239,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          236 字
+          731 字
         
       </span>
     
@@ -249,7 +250,7 @@
         
         
         
-          2 分钟
+          7 分钟
         
       </span>
     
@@ -295,9 +296,45 @@
                 <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>用一些示例说明 Python API 构建 Mininet-wifi 网络.</p>
 <h1 id="技巧积累"><a href="#技巧积累" class="headerlink" title="技巧积累"></a>技巧积累</h1><h2 id="添加-remote-controller"><a href="#添加-remote-controller" class="headerlink" title="添加 remote controller"></a>添加 remote controller</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> mininet.node <span class="hljs-keyword">import</span> RemoteController<br><br>c1 = net.addController(<span class="hljs-string">&#x27;c1&#x27;</span>, controller=RemoteController, ip=<span class="hljs-string">&#x27;127.0.0.1&#x27;</span>, port=<span class="hljs-number">6653</span>)<br></code></pre></td></tr></table></figure>
 
-<h1 id="实验测试"><a href="#实验测试" class="headerlink" title="实验测试"></a>实验测试</h1><h2 id="俩-AP-信号不覆盖是否能通信"><a href="#俩-AP-信号不覆盖是否能通信" class="headerlink" title="俩 AP 信号不覆盖是否能通信"></a>俩 AP 信号不覆盖是否能通信</h2><p>拓扑如下:<br><img src="/../img/mininet-wifi-experiment-is-ap-could-commu-out.png" srcset="/img/loading.gif" lazyload></p>
-<h2 id="俩-AP-信号覆盖是否能通信"><a href="#俩-AP-信号覆盖是否能通信" class="headerlink" title="俩 AP 信号覆盖是否能通信"></a>俩 AP 信号覆盖是否能通信</h2><p>拓扑如下:<br><img src="/../img/mininet-wifi-experiment-is-ap-could-commu-in.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="添加完节点后-configureNodes-的作用"><a href="#添加完节点后-configureNodes-的作用" class="headerlink" title="添加完节点后 configureNodes 的作用"></a>添加完节点后 configureNodes 的作用</h2><p><code>configureNodes</code> 方法会为每个节点分配 IP 地址, 设置路由表, 初始化网络接口, 便于后面添加 link.</p>
+<h2 id="在-CLI-修改-AP-的-range"><a href="#在-CLI-修改-AP-的-range" class="headerlink" title="在 CLI 修改 AP 的 range"></a>在 CLI 修改 AP 的 range</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet-wifi&gt; py ap1.setRange(50, intf=<span class="hljs-string">&#x27;ap1-wlan1&#x27;</span>)<br>mininet-wifi&gt; py ap1.wintfs[0].range<br></code></pre></td></tr></table></figure>
 
+<p>单纯设置这个似乎没啥用.</p>
+<h1 id="实验测试"><a href="#实验测试" class="headerlink" title="实验测试"></a>实验测试</h1><p>结论:</p>
+<ul>
+<li>如果不设置 propagationModel, AP 间以 mesh 构建, 始终能形成一个大的 WLAN</li>
+</ul>
+<h2 id="俩-AP-信号不覆盖是否能通信"><a href="#俩-AP-信号不覆盖是否能通信" class="headerlink" title="俩 AP 信号不覆盖是否能通信"></a>俩 AP 信号不覆盖是否能通信</h2><p>拓扑如下:<br><img src="/../img/mininet-wifi-experiment-is-ap-could-commu-out.png" srcset="/img/loading.gif" lazyload></p>
+<p>分情况讨论:</p>
+<ul>
+<li>AP 间不为 Mesh: 无法通信</li>
+<li>AP 间为 Mesh: <ul>
+<li>此时能通信</li>
+<li>若设置了 propagationModel, 则无法通信, 需要信号包含节点</li>
+</ul>
+</li>
+</ul>
+<h2 id="俩-AP-信号覆盖是否能通信"><a href="#俩-AP-信号覆盖是否能通信" class="headerlink" title="俩 AP 信号覆盖是否能通信"></a>俩 AP 信号覆盖是否能通信</h2><p>拓扑如下:<br><img src="/../img/mininet-wifi-experiment-is-ap-could-commu-in.png" srcset="/img/loading.gif" lazyload></p>
+<p>分情况讨论:</p>
+<ul>
+<li>AP 间不为 Mesh: 无法通信</li>
+<li>AP 间为 Mesh: <ul>
+<li>此时能通信</li>
+<li>若设置了 propagationModel, 则无法通信, 此时信号虽然重叠但没有包含节点</li>
+</ul>
+</li>
+</ul>
+<h2 id="俩-AP-信号覆盖-AP-节点"><a href="#俩-AP-信号覆盖-AP-节点" class="headerlink" title="俩 AP 信号覆盖 AP 节点"></a>俩 AP 信号覆盖 AP 节点</h2><p>拓扑如下:<br><img src="/../img/mininet-wifi-experiment-two-ap-could-commu-under-propagationmode.png" srcset="/img/loading.gif" lazyload></p>
+<p>分情况讨论:</p>
+<ul>
+<li>AP 间不为 Mesh: 无法通信</li>
+<li>AP 间为 Mesh: <ul>
+<li>此时能通信</li>
+<li>若设置了 propagationModel, 也能通信, 此时信号重叠且包含节点</li>
+</ul>
+</li>
+</ul>
+<h2 id="STA-与-AP-的连接方式"><a href="#STA-与-AP-的连接方式" class="headerlink" title="STA 与 AP 的连接方式"></a>STA 与 AP 的连接方式</h2>
                 
               </div>
             
