@@ -24,8 +24,9 @@
 <meta property="og:description" content="参考 B 站 介绍Mesh 是一种无线拓扑结构, 由多个节点 (如路由器或接入点) 组成, 这些节点相互连接, 形成一个覆盖范围广, 稳定性高的网络. 每个节点都可以与其他节点通信, 数据可以通过多条路径传输, 从而提高网络的可靠性和覆盖范围. Mesh 网络的帧格式, 路由协议 (HWMP) 和安全机制都定义在 IEEE 802.112 (数据链路层标准). MAC 层的作用Mesh 网络中的每">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/802_11s-frame-format.png">
+<meta property="og:image" content="http://example.com/img/mesh-multi-transceiver-devices-create-bigger-wmn.png">
 <meta property="article:published_time" content="2025-02-13T02:12:10.000Z">
-<meta property="article:modified_time" content="2025-02-16T05:12:15.490Z">
+<meta property="article:modified_time" content="2025-02-17T03:34:22.642Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/802_11s-frame-format.png">
@@ -237,7 +238,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.9k 字
+          2.8k 字
         
       </span>
     
@@ -248,7 +249,7 @@
         
         
         
-          17 分钟
+          24 分钟
         
       </span>
     
@@ -324,7 +325,22 @@
 <p>为了实现 multihop, 802.11s 用 additional mesh control field 来扩展 data and management frames, 其中 TTL 和 sequence number fields 用于防止 frame 的 looping forever.</p>
 <p>当 Mesh station 间通过 single hop (指不需要经过中间节点) 通信时, 其 frames 不会包含 mesh control field.</p>
 <p>Mesh flags 字段指示 Mesh control 字段中是否有 additional MAC address 的存在. 这个 address extension 中包含额外的 3 个地址字段 (此时 802.11 帧中共 6 个地址), 其可以是非 Mesh 网络的地址, 可以用于 Mesh 站点作为代理的情况.</p>
-
+<h1 id="Mesh-Formation-and-Management"><a href="#Mesh-Formation-and-Management" class="headerlink" title="Mesh Formation and Management"></a>Mesh Formation and Management</h1><p>Mesh station’s beacon 会携带 mesh 信息, 便于其他节点检测和加入 mesh.</p>
+<p>在 Mesh-specific 场景下, 不管是 passive scanning 中的 beacons, 还是 active scanning 中的 probe frame, 这两种载荷中, 都会包含</p>
+<ul>
+<li>Mesh ID (the name of a mesh)</li>
+<li>Configuration element (指示Mesh 网络能够提供的服务类型以及支持的参数)</li>
+<li>Parameters (Mesh station 支持的传输参数, 如频率, 速率等)</li>
+</ul>
+<p>当一个 mesh station 找到一个 peer, 则会用 Mesh Peer Link Management protocol 来建立 peer link. 当链路断开时, 也会维护该链路信息, 以便快速重连.</p>
+<p>若一个 mesh station 有多个 transceiver, 每一个工作在不同频段, 而其内部通过 802 bridge 连接在一起, 可以传递 frames, 此时可以将多个 mesh 视作一个大 mesh 网络:</p>
+<p><img src="/../img/mesh-multi-transceiver-devices-create-bigger-wmn.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>这里的 Mesh station C, D, E 就是一个设备上的多个 transceiver, 连接了三个工作在不同频段的 mesh 网络</li>
+</ul>
+<p>在某些情况下, 由于监管部门 (Regulatory bodies) 的要求, mesh network 需要变更所在的 channel (或频率), 为了不让 mesh network splitting (即不同的 station 选择变更到不同的 channel), 选用一种基于 31-bit random channel precedence value 的分布式算法来变更.</p>
+<p>比如一个 mesh station 检测到一个 radar station, 此时需要变更 frequency channel, 则会通知 mesh network 中的其他节点, 谁手中的 precedence value 更大, 则变更到谁广播出的新 frequency channel 上.</p>
+<h1 id="Synchronization-and-Power-management"><a href="#Synchronization-and-Power-management" class="headerlink" title="Synchronization and Power management"></a>Synchronization and Power management</h1>
                 
               </div>
             
