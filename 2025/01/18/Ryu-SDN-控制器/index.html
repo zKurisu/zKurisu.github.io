@@ -29,7 +29,7 @@
 <meta property="og:image" content="http://example.com/img/ryu-book-openflow-action-port.png">
 <meta property="og:image" content="http://example.com/img/ryu-book-application-architecture.png">
 <meta property="article:published_time" content="2025-01-18T08:49:20.000Z">
-<meta property="article:modified_time" content="2025-02-18T02:00:32.145Z">
+<meta property="article:modified_time" content="2025-02-18T03:03:36.576Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/ryu-setuptools-error-when-pip.png">
@@ -241,7 +241,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          12k 字
+          13k 字
         
       </span>
     
@@ -252,7 +252,7 @@
         
         
         
-          97 分钟
+          106 分钟
         
       </span>
     
@@ -384,6 +384,7 @@
 <li><code>switch feature</code><ul>
 <li>此时是获取 switch 信息的机会, 如 datapath. 从 <code>datapath</code> 中可以得到 <code>openflow version</code>, <code>openflow parser</code> 等. 如果一些参数需要用 <code>datapath</code> 来初始化, 也在这里完成</li>
 <li>下发默认流表, 即没匹配上时如何做</li>
+<li>将 switch 保存在数据结构中以后续使用<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">self.switches[datapath.<span class="hljs-built_in">id</span>] = datapath<br></code></pre></td></tr></table></figure></li>
 </ul>
 </li>
 </ul>
@@ -519,6 +520,27 @@
 <li><code>OFPPortStatsRequest()</code> 类请求 port-related 的统计信息, <code>OFPP_ANY</code> 表示所有端口</li>
 </ul>
 <h2 id="Chapter-4-REST-Linkage"><a href="#Chapter-4-REST-Linkage" class="headerlink" title="Chapter 4 REST Linkage"></a>Chapter 4 REST Linkage</h2><p>通过 Ryu 内置的 WSGI Web server 来实现 REST API 从而 link to 其他系统.</p>
+<h3 id="定义处理-Switch-的-Class"><a href="#定义处理-Switch-的-Class" class="headerlink" title="定义处理 Switch 的 Class"></a>定义处理 Switch 的 Class</h3><p>如:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">SimpleSwitchRest12</span>(simple_switch_13.SimpleSwitch13):<br>    _CONTEXTS = &#123;<span class="hljs-string">&#x27;wgsi&#x27;</span>: WSGIApplication&#125;<br><br><span class="hljs-comment"># ...</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>在这样定义 <code>_CONTEXTS</code> 变量之后, 就能用 <code>kwargs[&#39;wsgi]</code> 来获取 <code>WSGIApplication</code> 类 instance, 如</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, *args, **kwargs</span>):<br>    <span class="hljs-built_in">super</span>(SimpleSwitchRest13, self).__init__(*args,**kwargs)<br>    self.switches = &#123;&#125;<br>    wsgi = kwargs[<span class="hljs-string">&#x27;wsgi&#x27;</span>]<br>    wsgi.register(SimpleSwitchController,<br>        &#123;simple_switch_instance_name: self&#125;)<br></code></pre></td></tr></table></figure>
+
+<p><code>wsgi</code> 默认在 <code>8080</code> 端口启用.</p>
+<h3 id="定义处理请求的-Class"><a href="#定义处理请求的-Class" class="headerlink" title="定义处理请求的 Class"></a>定义处理请求的 Class</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">SimpleSwitchController</span>(<span class="hljs-title class_ inherited__">ControllerBase</span>):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, req, link, data, **config</span>):<br>        <span class="hljs-built_in">super</span>(SimpleSwitchController, self).__init__(req, link, data, **config)<br>        self.simple_switch_app = data[simple_switch_instance_name]<br><br>        <span class="hljs-comment"># ...</span><br></code></pre></td></tr></table></figure>
+
+<h4 id="处理请求的方法"><a href="#处理请求的方法" class="headerlink" title="处理请求的方法"></a>处理请求的方法</h4><p>主要借助 <code>route</code> 修饰器:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> ryu.app.wsgi <span class="hljs-keyword">import</span> route<br><br><span class="hljs-meta">@route(<span class="hljs-params"><span class="hljs-string">&#x27;simpleswitch&#x27;</span>, url, methods=[<span class="hljs-string">&#x27;GET&#x27;</span>], requirements=&#123;<span class="hljs-string">&#x27;dpid&#x27;</span>: dpid_lib.DPID_PATTERN&#125;</span>)</span><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">list_mac_table</span>(<span class="hljs-params">self, req, **kwargs</span>):<br><span class="hljs-comment"># ...</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>route</code> 修饰器接受四个参数:<ul>
+<li>第一个参数, 任意名称, 用于标识此 route</li>
+<li>第二个参数, 指定 url 格式, 如 <code>&#39;/simpleswitch/mactable/&#123;dpid&#125;&#39;</code>, 这里 <code>/simpleswitch/mactable/</code> 之后的字符串会保存在 <code>dpid</code> 变量中且可以在后续函数中使用</li>
+<li>第三个参数, 指定 HTTP method, </li>
+<li>第四个参数, 指定 url 中的参数需要匹配的格式, 比如这里 <code>dpid</code> 需要匹配 <code>dpid_lib.DPID_PATTERN</code></li>
+</ul>
+</li>
+</ul>
 <h2 id="Chapter-5-Link-Aggregation"><a href="#Chapter-5-Link-Aggregation" class="headerlink" title="Chapter 5 Link Aggregation"></a>Chapter 5 Link Aggregation</h2><p>Link Aggregation, 链路聚合, 是一种将多个物理链路捆绑为一个逻辑链路的技术. 通过链路聚合, 可以增加链路带宽, 提高网络的可靠性和冗余性, 同时在某个链路出现故障时, 其他链路仍能继续工作, 保证网络的稳定运行.</p>
 <h2 id="Chapter-7-OpenFlow-Protocol"><a href="#Chapter-7-OpenFlow-Protocol" class="headerlink" title="Chapter 7 OpenFlow Protocol"></a>Chapter 7 OpenFlow Protocol</h2><h3 id="Match"><a href="#Match" class="headerlink" title="Match"></a>Match</h3><p>OpenFlow 中的 Match Field 有:<br><img src="/../img/ryu-book-openflow-match-field.png" srcset="/img/loading.gif" lazyload></p>
 <h3 id="Instruction"><a href="#Instruction" class="headerlink" title="Instruction"></a>Instruction</h3><p>OpenFlow 中 Instruction, 用于指定交换机在匹配到数据包后应该执行的操作. (table-miss 也算一种匹配成功)</p>
