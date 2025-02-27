@@ -24,7 +24,7 @@
 <meta property="og:description" content="Typst 官网 ModesTypst 主要有三种 syntactical modes:  Code, 以 # 开头, lets you use Typst’s scripting features Math, 用 $$ 包裹 Markup, 用 [] 包裹, 其内的特殊符号被解析为样式, 在非 Code 和 Math 模式时, 默认为 Markup 模式 (此时没有用 [] 包裹)  注释单行用">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2024-04-12T03:29:19.000Z">
-<meta property="article:modified_time" content="2025-02-27T03:22:09.988Z">
+<meta property="article:modified_time" content="2025-02-27T05:16:31.209Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          6.8k 字
+          7.1k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          57 分钟
+          60 分钟
         
       </span>
     
@@ -443,17 +443,22 @@
 <p><code>zip(..array)</code> 函数, 用于整合数组.</p>
 <p><code>dedup()</code>, 函数, 可移除数组中的重复元素.</p>
 <h2 id="content"><a href="#content" class="headerlink" title="content"></a>content</h2><p>所有的 markup 都是 content 类型 (也就是 <code>[]</code> 包裹的部分).</p>
-<p><code>content</code> 类型表示 elements 的集合, 每一个 element 可以是不同类型的对象, 比如:</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs typst">#let test_content = [Hello World]<br><br>#test_content.text is ok<br></code></pre></td></tr></table></figure>
+<p><code>content</code> 类型表示 elements 的集合 (可以视作键值对, <code>key/field</code> 为对象类型), 每一个 element 可以是不同类型的对象.</p>
+<p>如果此时只有一个 <code>element</code> (即只有一种类型输入), 比如:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs typst">#let test_content = [Hello World]<br><br>#test_content.fields()<br></code></pre></td></tr></table></figure>
 
-<p>此时, 该 <code>test_content</code> 是 content 类型, 但 <code>[Hello World]</code> 等价于 <code>text()[Hello World]</code>, 因此该元素可以访问 <code>text</code> 类型所有的 <code>fields</code>, 如 <code>text</code>. 可以用 <code>repr</code> 函数查看此时 <code>content</code> 类型的结构:</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs typst">#repr(test_content)<br></code></pre></td></tr></table></figure>
+<p>此时 <code>test_content</code> 可以访问的 <code>fields</code> 有:</p>
+<figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs applescript">(<span class="hljs-built_in">text</span>: <span class="hljs-string">&quot;Hello World&quot;</span>)<br></code></pre></td></tr></table></figure>
 
-<p>输出:</p>
-<figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs angelscript"><span class="hljs-string">[Hello World]</span><br></code></pre></td></tr></table></figure>
+<p>即可以用 <code>#test_content.text</code> 来访问该字符串.</p>
+<p>若有多个 elements (即多种类型输入), 如:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs typst">#let test_content = [Hello World: $1+1$]<br><br>#test_content.fields()<br></code></pre></td></tr></table></figure>
 
+<p>此时 <code>test_content</code> 可以访问的 <code>fields</code> 有:</p>
+<figure class="highlight scheme"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs scheme">(<br>  children: (<br>    [<span class="hljs-name">Hello</span> World],<br>    [<span class="hljs-name">:</span>],<br>    [ ],<br>    equation(<span class="hljs-name">block:</span> false, body: sequence([<span class="hljs-name">1</span>], [<span class="hljs-name"><span class="hljs-built_in">+</span></span>], [<span class="hljs-name">1</span>])),<br>  ),<br>)<br></code></pre></td></tr></table></figure>
 
-
+<p>即可以通过访问 <code>#test_content.children</code> 这个数组, 来遍历所有元素.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs typst">#let test_content = [Hello World: $1+1$]<br><br>#for element in test_content.children &#123;<br>    element<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <h2 id="datetime"><a href="#datetime" class="headerlink" title="datetime"></a>datetime</h2><p>Datetime 类型用于表示时间.</p>
 <p><code>datetime()</code> 函数为 constructor.</p>
