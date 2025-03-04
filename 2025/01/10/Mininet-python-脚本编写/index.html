@@ -26,7 +26,7 @@
 <meta property="og:image" content="http://example.com/img/mininet-single-switch-topo.png">
 <meta property="og:image" content="http://example.com/img/mininet-minimaltopo.png">
 <meta property="article:published_time" content="2025-01-10T03:17:19.000Z">
-<meta property="article:modified_time" content="2025-03-04T04:44:56.230Z">
+<meta property="article:modified_time" content="2025-03-04T05:38:31.153Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/mininet-single-switch-topo.png">
@@ -238,7 +238,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          5.4k 字
+          6.2k 字
         
       </span>
     
@@ -249,7 +249,7 @@
         
         
         
-          46 分钟
+          52 分钟
         
       </span>
     
@@ -330,12 +330,16 @@
 <p>测试:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sh">mininet&gt; nodes<br>available nodes are:<br>c0 h1 h2 s1<br>mininet&gt; h1 <span class="hljs-built_in">touch</span> /var/log/hello<br>mininet&gt; h1 <span class="hljs-built_in">ls</span> /tmp/h1/var/log<br></code></pre></td></tr></table></figure>
 
-<h2 id="Controller"><a href="#Controller" class="headerlink" title="Controller"></a>Controller</h2><p>指 OpenFlow 控制器, 与 OpenFlow Switch 相连, 可以下发流表等.</p>
+<h2 id="Controller-和-RemoteController"><a href="#Controller-和-RemoteController" class="headerlink" title="Controller 和 RemoteController"></a>Controller 和 RemoteController</h2><p>指 OpenFlow 控制器, 与 OpenFlow Switch 相连, 可以下发流表等.</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> mininet.node <span class="hljs-keyword">import</span> Controller<br><br>c0 = Controller(<span class="hljs-string">&quot;c0&quot;</span>, port=<span class="hljs-number">6633</span>)<br></code></pre></td></tr></table></figure>
 <ul>
 <li><code>c0</code> 是 Controller 名</li>
 <li><code>port</code> 表明 Controller 运行在服务器的哪个端口</li>
 </ul>
+<p>定义 <code>RemoteController</code>, 并将其添加到 <code>net</code> 中:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs python">c0 = Controller(<span class="hljs-string">&quot;c0&quot;</span>, port=<span class="hljs-number">6634</span>)<br>c1 = RemoteController(<span class="hljs-string">&quot;c1&quot;</span>, ip=<span class="hljs-string">&#x27;127.0.0.1&#x27;</span>, port=<span class="hljs-number">6633</span>)<br><span class="hljs-keyword">for</span> c <span class="hljs-keyword">in</span> [ c0, c1 ]:<br>    net.addController(c)<br></code></pre></td></tr></table></figure>
+
+
 <h2 id="OVSSwitch"><a href="#OVSSwitch" class="headerlink" title="OVSSwitch"></a>OVSSwitch</h2><p>OVSSwitch 是 Open vSwitch 的实现. 都是继承自 <code>Switch</code> 类, 都需要 OpenFlow 控制器.</p>
 <h3 id="start-方法"><a href="#start-方法" class="headerlink" title="start 方法"></a>start 方法</h3><p>用于启动交换机, 将交换机连接到控制器.</p>
 <p>默认情况下, OVSSwitch 会与传递给 net 的所有 controller 相连:</p>
@@ -417,7 +421,23 @@
 
 <h2 id="绘制-2D-图"><a href="#绘制-2D-图" class="headerlink" title="绘制 2D 图"></a>绘制 2D 图</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">net.configureWifiNodes()<br>net.plogGraph(max_x=100, max_y=100)<br></code></pre></td></tr></table></figure>
 
-<h1 id="mininet-topolib"><a href="#mininet-topolib" class="headerlink" title="mininet.topolib"></a>mininet.topolib</h1>
+<h1 id="mininet-topolib"><a href="#mininet-topolib" class="headerlink" title="mininet.topolib"></a>mininet.topolib</h1><p>该库中提供一些基础的 Topo 结构, 如 <code>TreeTopo</code>.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> mininet.topolib <span class="hljs-keyword">import</span> TreeTopo<br><br>topo = TreeTopo(depth=<span class="hljs-number">2</span>, fanout=<span class="hljs-number">2</span>)<br>net = Mininet( topo=topo, build=<span class="hljs-literal">False</span>, waitConnected=<span class="hljs-literal">True</span> )<br></code></pre></td></tr></table></figure>
+
+
+<h1 id="技巧积累"><a href="#技巧积累" class="headerlink" title="技巧积累"></a>技巧积累</h1><h2 id="Switch-连接-controller-的方式"><a href="#Switch-连接-controller-的方式" class="headerlink" title="Switch 连接 controller 的方式"></a>Switch 连接 controller 的方式</h2><p>一种是手动连接, 手动调用 <code>start</code> 方法:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">s1.start([c0])<br></code></pre></td></tr></table></figure>
+
+<p>另一种是重新定义 switch 类, 直接修改其 <code>start</code> 方法连接的默认 controller:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> mininet.node <span class="hljs-keyword">import</span> OVSSwitch<br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">NewSwitch</span>(<span class="hljs-title class_ inherited__">OVSSwitch</span>):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">start</span>(<span class="hljs-params">self, controllers</span>):<br>        <span class="hljs-keyword">return</span> OVSSwitch.start( self, [ cmap[ self.name ] ] )<br></code></pre></td></tr></table></figure>
+<ul>
+<li>注意 <code>OVSSwitch.start( self, [ cmap[ self.name ] ] )</code> 可以不放在 <code>return</code> 语句</li>
+</ul>
+<h2 id="让-Host-通过-NAT-联网"><a href="#让-Host-通过-NAT-联网" class="headerlink" title="让 Host 通过 NAT 联网"></a>让 Host 通过 NAT 联网</h2><p>默认情况下, Host 与 internet 不联通, 可以通过启用 NAT 并配置 DNS 让其可以联网, 让 <code>net</code> 启用 NAT 如下:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">net.addNAT().configDefault()<br></code></pre></td></tr></table></figure>
+
+<p>之后配置 host 的 DNS 即可.</p>
+
                 
               </div>
             
