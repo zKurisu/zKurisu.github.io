@@ -29,7 +29,7 @@
 <meta property="og:image" content="http://example.com/img/ryu-book-openflow-action-port.png">
 <meta property="og:image" content="http://example.com/img/ryu-book-application-architecture.png">
 <meta property="article:published_time" content="2025-01-18T08:49:20.000Z">
-<meta property="article:modified_time" content="2025-03-12T11:06:33.353Z">
+<meta property="article:modified_time" content="2025-03-12T12:08:51.235Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/ryu-setuptools-error-when-pip.png">
@@ -241,7 +241,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          17k 字
+          18k 字
         
       </span>
     
@@ -252,7 +252,7 @@
         
         
         
-          144 分钟
+          153 分钟
         
       </span>
     
@@ -461,7 +461,47 @@
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># compose</span><br><span class="hljs-keyword">match</span> = parser.OFPMatch(<br>    in_port=<span class="hljs-number">1</span>,<br>    eth_type=<span class="hljs-number">0x86dd</span>,<br>    ipv6_src=(<span class="hljs-string">&#x27;2001:db8:bd05:1d2:288a:1fc0:1:10ee&#x27;</span>,<br>              <span class="hljs-string">&#x27;ffff:ffff:ffff:ffff::&#x27;</span>),<br>    ipv6_dst=<span class="hljs-string">&#x27;2001:db8:bd05:1d2:288a:1fc0:1:10ee&#x27;</span>)<br><span class="hljs-comment"># query</span><br><span class="hljs-keyword">if</span> <span class="hljs-string">&#x27;ipv6_src&#x27;</span> <span class="hljs-keyword">in</span> <span class="hljs-keyword">match</span>:<br>    <span class="hljs-built_in">print</span> <span class="hljs-keyword">match</span>[<span class="hljs-string">&#x27;ipv6_src&#x27;</span>]<br></code></pre></td></tr></table></figure>
 
 <p>也可以看出, 该类实现了 <code>__contains__</code> 方法来定义 <code>in</code> 关键字的行为.</p>
-<h2 id="OFPInstructionActions"><a href="#OFPInstructionActions" class="headerlink" title="OFPInstructionActions"></a>OFPInstructionActions</h2><h1 id="命令行使用"><a href="#命令行使用" class="headerlink" title="命令行使用"></a>命令行使用</h1><h2 id="启动-Ryu-控制器"><a href="#启动-Ryu-控制器" class="headerlink" title="启动 Ryu 控制器"></a>启动 Ryu 控制器</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ryu-manager &lt;scripts-name&gt;<br></code></pre></td></tr></table></figure>
+<h2 id="OFPInstructionActions"><a href="#OFPInstructionActions" class="headerlink" title="OFPInstructionActions"></a>OFPInstructionActions</h2><p><code>OFPInstructionActions</code> 继承自 <code>OFPInstruction</code> (一个 Instruction 的基础类, 但没有注释和成员, 提供有方法).</p>
+<p><code>OFPInstructionActions</code> 类用于定义 OpenFlow Instruction 所指示 switch 要执行的 actions. 其成员有:</p>
+<ul>
+<li><code>type</code>, Instruction 的类型, 即要用 actions 干什么, 其值可以是:<ul>
+<li><code>OFPIT_WRITE_ACTIONS</code>, 将 <code>actions</code> 放入 action set, 不立即执行</li>
+<li><code>OFPIT_APPLY_ACTIONS</code>, 立即执行 <code>actions</code></li>
+<li><code>OFPIT_CLEAR_ACTIONS</code>, 清除 actions</li>
+</ul>
+</li>
+<li><code>actions</code>, action 列表</li>
+</ul>
+<p>如:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python">inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,<br>                actions)]<br></code></pre></td></tr></table></figure>
+
+
+<h2 id="OFPActionOutput"><a href="#OFPActionOutput" class="headerlink" title="OFPActionOutput"></a>OFPActionOutput</h2><p><code>OFPActionOutput</code> 继承自 <code>OFPAction</code> (一个 Action 的基础类, 但没有注释和成员, 提供有方法).</p>
+<p><code>OFPActionOutput</code> 定义了一个 action, 让 switch 将数据包发往一个 port, 其成员有:</p>
+<ul>
+<li><code>port</code>, 即要输出到哪个 port</li>
+<li><code>len</code>, 向 controller 发送数据包时的最大长度</li>
+</ul>
+<p>如:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python">actions = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER,<br>                ofproto.OFPCML_NO_BUFFER)]<br></code></pre></td></tr></table></figure>
+
+<h1 id="controller-controller-py"><a href="#controller-controller-py" class="headerlink" title="controller/controller.py"></a><code>controller/controller.py</code></h1><h2 id="Datapath"><a href="#Datapath" class="headerlink" title="Datapath"></a>Datapath</h2><p><code>Datapath</code> 表示 OpenFlow switch 与 controller 的连接信息, 其成员有:</p>
+<ul>
+<li><code>id</code>, <code>64</code> 位 10 进制数表示的 Datapath ID</li>
+<li><code>ofproto</code>, 导入的 <code>ryu.ofproto.ofproto_v1_x</code> 模块</li>
+<li><code>ofproto_parser</code>, 导入的 <code>ryu.ofproto.ofproto_parser</code> 模块</li>
+</ul>
+<p>常见的方法有:</p>
+<ul>
+<li><code>send_msg(self, msg)</code>, 向对端 switch 发送一条 OpenFlow message</li>
+</ul>
+<h1 id="controller-ofp-event-py"><a href="#controller-ofp-event-py" class="headerlink" title="controller/ofp_event.py"></a><code>controller/ofp_event.py</code></h1><h2 id="EventOFPMsgBase"><a href="#EventOFPMsgBase" class="headerlink" title="EventOFPMsgBase"></a>EventOFPMsgBase</h2><p><code>EventOFPMsgBase</code> 类是 OpenFlow 事件类的基类, 所有 OpenFlow event classed 都会包含下面几个成员:</p>
+<ul>
+<li><code>msg</code>, 一个 OpenFlow message 实例</li>
+<li><code>msg.datapath</code>, 一个 <code>ryu.controller.controller.Datapath</code> 实例</li>
+<li><code>timestamp</code>, Datapath 实例创建的时间戳</li>
+</ul>
+<h1 id="命令行使用"><a href="#命令行使用" class="headerlink" title="命令行使用"></a>命令行使用</h1><h2 id="启动-Ryu-控制器"><a href="#启动-Ryu-控制器" class="headerlink" title="启动 Ryu 控制器"></a>启动 Ryu 控制器</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ryu-manager &lt;scripts-name&gt;<br></code></pre></td></tr></table></figure>
 
 <p>可以用:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ryu-manager --ofp-tcp-listen-port 6633 &lt;scripts-name&gt;<br></code></pre></td></tr></table></figure>
