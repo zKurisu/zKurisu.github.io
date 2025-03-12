@@ -26,8 +26,12 @@
 <meta property="og:image" content="http://example.com/img/ipv6-ICMPv6-NS-example.png">
 <meta property="og:image" content="http://example.com/img/ipv6-ICMPv6-NA-example.png">
 <meta property="og:image" content="http://example.com/img/ipv6-neighbor-state-var.png">
+<meta property="og:image" content="http://example.com/img/lldp-basic-example.png">
+<meta property="og:image" content="http://example.com/img/lldp-show-neighbor-briefly.png">
+<meta property="og:image" content="http://example.com/img/lldp-basic-src-dst-info.png">
+<meta property="og:image" content="http://example.com/img/lldp-tlv-basic-example.png">
 <meta property="article:published_time" content="2023-10-06T23:39:12.000Z">
-<meta property="article:modified_time" content="2025-03-11T14:45:01.128Z">
+<meta property="article:modified_time" content="2025-03-12T06:47:54.501Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/ipv6-ICMPv6-NS-example.png">
@@ -239,7 +243,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.7k 字
+          4.1k 字
         
       </span>
     
@@ -250,7 +254,7 @@
         
         
         
-          23 分钟
+          34 分钟
         
       </span>
     
@@ -413,12 +417,75 @@
 <h3 id="冲突地址检测"><a href="#冲突地址检测" class="headerlink" title="冲突地址检测"></a>冲突地址检测</h3><p>Duplicate Address Detection, DAD, 冲突地址检测, 同样利用 NS 和 NA 报文.</p>
 <p>此时, NS 部分报文内容为:</p>
 <ul>
+<li>若检测 <code>2000::1</code></li>
 <li><code>source</code> 为 <code>::</code>, 即未知地址</li>
 <li><code>destination</code> 为 <code>ff02::1:ff00:1</code> (一个示例)</li>
 </ul>
 <p>如果没有回复, 则说明没有冲突.</p>
-<h1 id="LLDP-协议"><a href="#LLDP-协议" class="headerlink" title="LLDP 协议"></a>LLDP 协议</h1><p>LLDP, Link Layer Discovery Protocol</p>
-<h1 id="IPv6-中的特殊地址"><a href="#IPv6-中的特殊地址" class="headerlink" title="IPv6 中的特殊地址"></a>IPv6 中的特殊地址</h1>
+<h3 id="路由器发现"><a href="#路由器发现" class="headerlink" title="路由器发现"></a>路由器发现</h3><p>其主要依靠两种报文:</p>
+<ul>
+<li>Router Solicitation, RS, 路由器请求, 由主机发送</li>
+</ul>
+<p>其报文格式为:</p>
+<ul>
+<li><code>Type: 133</code>, RS 的 ICMPv6 类型值</li>
+<li><code>Code: 0</code></li>
+<li><code>Checksum</code>: ICMPv6 报文的校验和</li>
+<li><code>Reserved</code>: 保留字段, 必须设置为 <code>0</code></li>
+<li><code>Options</code>: 可选字段, 通常包含源链路层地址 (Source Link-Layer Address)</li>
+</ul>
+<p>另一个报文是:</p>
+<ul>
+<li>Router Advertisement, RA, 路由器通告. 路由器发送 RA 报文，通告自己的存在和网络配置信息</li>
+</ul>
+<p>其报文格式为:</p>
+<ul>
+<li><code>Type: 134</code>, RA 的 ICMPv6 类型值</li>
+<li><code>Code: 0</code></li>
+<li><code>Checksum:</code> ICMPv6 报文的校验和</li>
+<li><code>Cur Hop Limit:</code> 当前跳数限制 (默认值为 64)</li>
+<li><code>Flags:</code> 标志字段, 包含以下标志位<ul>
+<li>M (Managed Address Configuration Flag): 表示主机应使用 DHCPv6 获取地址</li>
+<li>O (Other Configuration Flag): 表示主机应使用 DHCPv6 获取其他配置信息（如 DNS 服务器）</li>
+<li>Router Lifetime: 路由器的有效时间（以秒为单位）</li>
+</ul>
+</li>
+<li><code>Reachable Time:</code> 邻居可达性检测的时间</li>
+<li><code>Retrans Timer:</code> 重传定时器</li>
+<li><code>Options:</code> 可选字段，通常包含以下信息：</li>
+<li><code>Prefix Information:</code> 网络前缀信息（如前缀长度、有效时间等）</li>
+<li><code>Source Link-Layer Address:</code> 路由器的链路层地址</li>
+</ul>
+<p>流程为:</p>
+<ol>
+<li>主机启动. 发送 RS 报文到所有路由器组播地址 (FF02::2), 请求路由器发送 RA 报文</li>
+<li>路由器响应. 路由器收到 RS 报文后, 发送 RA 报文到所有节点组播地址 (FF02::1) 或请求主机的单播地址</li>
+<li>主机处理 RA 报文. 主机收到 RA 报文后, 提取其中的网络配置信息 (如默认网关, 网络前缀等). 如果 RA 报文中包含 <code>M</code> 或 <code>O</code> 标志, 主机会使用 DHCPv6 获取地址或其他配置信息</li>
+<li>路由器定期通告. 路由器定期发送 RA 报文, 确保主机能够持续获取最新的网络配置信息</li>
+</ol>
+<h1 id="LLDP-协议"><a href="#LLDP-协议" class="headerlink" title="LLDP 协议"></a>LLDP 协议</h1><p>LLDP, Link Layer Discovery Protocol, 链路层发现协议, 是一个数据链路层协议.</p>
+<p>LLDP 用来发现网络设备的直连邻居 (不能是多跳), 构建邻居关系表, 进而绘制整个网络的拓扑结构.</p>
+<p>LLDP 报文默认情况下的发送周期是 30s, expire time (在这个时间内若收到 LLDP 回复报文, 则认为对端是活跃的) 通常是发送周期的 4 倍, 即 120s.</p>
+<p>要使其工作, 需要两端都要开启 LLDP:<br><img src="/../img/lldp-basic-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>这里的基本信息主要包括: 系统名, 软件版本, 接口信息等.</p>
+<p>只查看简要的接口信息如下:<br><img src="/../img/lldp-show-neighbor-briefly.png" srcset="/img/loading.gif" lazyload></p>
+<p>抓包信息如下:<br><img src="/../img/lldp-basic-src-dst-info.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li><code>dst MAC</code>, 固定为 <code>01:80:C2:00:00:0E</code>, 这是一个组播地址, 专门用于 LLDP 报文</li>
+<li><code>src MAC</code>, 发送设备的 MAC 地址</li>
+<li><code>etherType</code>, 固定为 <code>0x88CC</code>, 表示为 LLDP 报文</li>
+<li><code>LLDPDU</code> (LLDP Data Unit), 包含设备信息, 为 TLV (Type-Length-Value) 结构</li>
+</ul>
+<p><img src="/../img/lldp-tlv-basic-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>具体的工作流程为:</p>
+<ol>
+<li>初始化. 设备启动后, LLDP 模块会初始化, 并开始监听和发送 LLDP 报文</li>
+<li>发送 LLDP 报文. 设备定期从每个启用了 LLDP 的端口发送 LLDP 报文, 报文中包含自己的信息</li>
+<li>接收 LLDP 报文. 设备接收到邻居的 LLDP 报文后, 解析其中的 TLV 信息, 并存储到本地邻居表中</li>
+<li>更新邻居信息. 如果收到新的 LLDP 报文, 设备会更新邻居表中的信息. 如果 TTL 超时, 设备会删除对应的邻居信息</li>
+<li>拓扑发现. 网络管理系统 (如 SNMP 或 CLI) 可以从设备中获取邻居信息, 并构建网络拓扑</li>
+</ol>
+
                 
               </div>
             

@@ -26,7 +26,7 @@
 <meta property="og:image" content="http://example.com/img/SQLite-structure.png">
 <meta property="og:image" content="http://example.com/img/function-of-back-polulates.png">
 <meta property="article:published_time" content="2024-08-20T09:29:19.000Z">
-<meta property="article:modified_time" content="2024-09-02T05:37:31.797Z">
+<meta property="article:modified_time" content="2025-03-12T07:53:06.685Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/SQLite-structure.png">
@@ -238,7 +238,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          15k 字
+          16k 字
         
       </span>
     
@@ -249,7 +249,7 @@
         
         
         
-          128 分钟
+          130 分钟
         
       </span>
     
@@ -457,7 +457,12 @@
 <p>如:</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> sqlmodel <span class="hljs-keyword">import</span> select, func<br><br>statement = select(func.<span class="hljs-built_in">sum</span>(Tasks.task_score)).join(SubLog).where(SubLog.sub_user_id == <span class="hljs-number">2</span>)<br>result = <span class="hljs-keyword">await</span> session.<span class="hljs-built_in">exec</span>(statement)<br>total_score = result.scalar()<br></code></pre></td></tr></table></figure>
 
+<h1 id="常用函数"><a href="#常用函数" class="headerlink" title="常用函数"></a>常用函数</h1><h2 id="Field-函数"><a href="#Field-函数" class="headerlink" title="Field 函数"></a>Field 函数</h2><p><code>Field</code> 函数接收一些字段参数, 返回一个 <code>FieldInfo</code> 类的实例. FastAPI 在构建 table 时, 会根据这个类来为 field 设置参数, 如:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Manga</span>(SQLModel, table=true):<br>    <span class="hljs-built_in">id</span>: <span class="hljs-built_in">int</span> | <span class="hljs-literal">None</span> = Field(default=<span class="hljs-literal">None</span>, primary_key=<span class="hljs-literal">True</span>)<br></code></pre></td></tr></table></figure>
 
+<ul>
+<li>如果没有手动给 <code>id</code>, 则 <code>id</code> 为 <code>FieldInfo</code> 类实例, 并为 <code>primary_key</code></li>
+</ul>
 <h1 id="Relationship-Attributes"><a href="#Relationship-Attributes" class="headerlink" title="Relationship Attributes"></a>Relationship Attributes</h1><p>Relationship Attributes 是一种特殊的成员, 用于定义两个模型之间的关系. 可以由此建立一对一, 一对多或多对多的关系.</p>
 <h2 id="创建-Relationship"><a href="#创建-Relationship" class="headerlink" title="创建 Relationship"></a>创建 Relationship</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> sqlmodel <span class="hljs-keyword">import</span> Field, Relationship, Session, SQLModel, create_engine<br><br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">Team</span>(SQLModel, table=<span class="hljs-literal">True</span>):<br>    <span class="hljs-built_in">id</span>: <span class="hljs-built_in">int</span> | <span class="hljs-literal">None</span> = Field(default=<span class="hljs-literal">None</span>, primary_key=<span class="hljs-literal">True</span>)<br>    name: <span class="hljs-built_in">str</span> = Field(index=<span class="hljs-literal">True</span>)<br>    headquarters: <span class="hljs-built_in">str</span><br><br>    heroes: <span class="hljs-built_in">list</span>[<span class="hljs-string">&quot;Hero&quot;</span>] = Relationship(back_populates=<span class="hljs-string">&quot;team&quot;</span>)<br><br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">Hero</span>(SQLModel, table=<span class="hljs-literal">True</span>):<br>    <span class="hljs-built_in">id</span>: <span class="hljs-built_in">int</span> | <span class="hljs-literal">None</span> = Field(default=<span class="hljs-literal">None</span>, primary_key=<span class="hljs-literal">True</span>)<br>    name: <span class="hljs-built_in">str</span> = Field(index=<span class="hljs-literal">True</span>)<br>    secret_name: <span class="hljs-built_in">str</span><br>    age: <span class="hljs-built_in">int</span> | <span class="hljs-literal">None</span> = Field(default=<span class="hljs-literal">None</span>, index=<span class="hljs-literal">True</span>)<br><br>    team_id: <span class="hljs-built_in">int</span> | <span class="hljs-literal">None</span> = Field(default=<span class="hljs-literal">None</span>, foreign_key=<span class="hljs-string">&quot;team.id&quot;</span>)<br>    team: Team | <span class="hljs-literal">None</span> = Relationship(back_populates=<span class="hljs-string">&quot;heroes&quot;</span>)<br><br><span class="hljs-comment"># Code below omitted 👇</span><br></code></pre></td></tr></table></figure>
 <p><code>back_populates</code> 参数的作用为:</p>
