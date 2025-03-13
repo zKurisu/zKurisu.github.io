@@ -26,7 +26,7 @@
 <meta property="og:image" content="http://example.com/img/run-uvicorn.png">
 <meta property="og:image" content="http://example.com/img/test-fastapi.png">
 <meta property="article:published_time" content="2024-08-19T12:23:43.000Z">
-<meta property="article:modified_time" content="2025-03-12T07:52:54.968Z">
+<meta property="article:modified_time" content="2025-03-13T02:06:47.390Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/run-uvicorn.png">
@@ -238,7 +238,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          25k 字
+          26k 字
         
       </span>
     
@@ -249,7 +249,7 @@
         
         
         
-          208 分钟
+          215 分钟
         
       </span>
     
@@ -537,6 +537,12 @@
 <ul>
 <li><code>Body(...)</code> 会自动解析请求体中的 JSON 数据, 并将其转换为相应的 Python 数据类型</li>
 </ul>
+<h2 id="存储持久变量"><a href="#存储持久变量" class="headerlink" title="存储持久变量"></a>存储持久变量</h2><p>将要保存的数据加入 <code>app.state</code> 字典, 如:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-meta">@app.post(<span class="hljs-params"><span class="hljs-string">&quot;/process_mac_to_port&quot;</span></span>)</span><br><span class="hljs-keyword">async</span> <span class="hljs-keyword">def</span> <span class="hljs-title function_">process_mac_to_port</span>(<span class="hljs-params">mac_to_port: OuterDict = Body(<span class="hljs-params">...</span>)</span>):<br>    app.state.global_mac_to_port = mac_to_port<br>    <span class="hljs-keyword">return</span> &#123;<span class="hljs-string">&quot;message&quot;</span>: <span class="hljs-string">&quot;mac to port table received and processed.&quot;</span>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="json-序列化-Pydantic-类型"><a href="#json-序列化-Pydantic-类型" class="headerlink" title="json 序列化 Pydantic 类型"></a>json 序列化 Pydantic 类型</h2><p>需要先将其转换为字典才行:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">IntfsDict</span>(<span class="hljs-title class_ inherited__">BaseModel</span>):<br>    name: <span class="hljs-built_in">str</span><br>    port: <span class="hljs-built_in">int</span><br>    mac: <span class="hljs-built_in">str</span><br>APInfo = <span class="hljs-type">Dict</span>[<span class="hljs-built_in">str</span>, <span class="hljs-type">List</span>[IntfsDict]]<br><br><span class="hljs-meta">@app.get(<span class="hljs-params"><span class="hljs-string">&quot;/apInfo-table&quot;</span>, response_class=HTMLResponse</span>)</span><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">show_apInfo</span>(<span class="hljs-params">request: Request</span>):<br>    <span class="hljs-comment"># 将 Pydantic 模型对象转换为字典</span><br>    apInfo_dict = &#123;k: [v.<span class="hljs-built_in">dict</span>() <span class="hljs-keyword">for</span> v <span class="hljs-keyword">in</span> lst] <span class="hljs-keyword">for</span> k, lst <span class="hljs-keyword">in</span> app.state.apInfo.items()&#125;<br>    apInfo_json = json.dumps(apInfo_dict)<br>    <span class="hljs-keyword">return</span> templates.TemplateResponse(<br>        <span class="hljs-string">&quot;apInfo_table.html&quot;</span>,<br>        &#123;<span class="hljs-string">&quot;request&quot;</span>: request, <span class="hljs-string">&quot;apInfo_json&quot;</span>: apInfo_json&#125;<br>    )<br></code></pre></td></tr></table></figure>
+
 
                 
               </div>
