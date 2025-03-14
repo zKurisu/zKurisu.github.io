@@ -24,7 +24,7 @@
 <meta property="og:description" content="GRPC Python Quick Start 介绍这里使用 grpc 做示例. 安装123python -m venv testRPCsource testRPC&#x2F;bin&#x2F;activatepip install grpcio grpcio-tools  grpcio-tools 主要包含了 protoc  官方示例获取官方示例1234# Clone the repository to get t">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-03-13T06:25:38.000Z">
-<meta property="article:modified_time" content="2025-03-14T04:38:39.003Z">
+<meta property="article:modified_time" content="2025-03-14T05:38:44.450Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          5.4k 字
+          10k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          46 分钟
+          87 分钟
         
       </span>
     
@@ -321,6 +321,13 @@
 <li>运行 server 端:<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">python greeter_server.py<br></code></pre></td></tr></table></figure></li>
 <li>运行 client 端:<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">python greeter_client.py<br></code></pre></td></tr></table></figure></li>
 </ol>
+<h1 id="相关概念"><a href="#相关概念" class="headerlink" title="相关概念"></a>相关概念</h1><h2 id="Stub"><a href="#Stub" class="headerlink" title="Stub"></a>Stub</h2><p>Stub, 存根, 在中文语境下, 有含义为:</p>
+<ul>
+<li>票据, 记录交易信息</li>
+<li>凭证, 验证身份</li>
+</ul>
+<p>在计算机科学中指一个简化的占位代码或对象.</p>
+<h2 id="Client-Stub"><a href="#Client-Stub" class="headerlink" title="Client Stub"></a>Client Stub</h2><p>Client Stub, 客户端存根, 就是指远程服务的一个代理对象.</p>
 <h1 id="最简化测试"><a href="#最简化测试" class="headerlink" title="最简化测试"></a>最简化测试</h1><p>这里用一个极小的 protobuf 定义生成的代码来解释这个库.</p>
 <p>写入 <code>mytest/protos/hello.proto</code>:</p>
 <figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs protobuf">edition = <span class="hljs-string">&quot;2023&quot;</span>;<br><br><span class="hljs-keyword">service </span><span class="hljs-title class_">Greeter</span> &#123;<br>    <span class="hljs-function"><span class="hljs-keyword">rpc</span> SayHello (HelloRequest) <span class="hljs-keyword">returns</span> (HelloReply) </span>&#123;&#125;<br>&#125;<br><br><span class="hljs-keyword">message </span><span class="hljs-title class_">HelloRequest</span> &#123;<br>    <span class="hljs-type">string</span> name = <span class="hljs-number">1</span>;<br>&#125;<br><br><span class="hljs-keyword">message </span><span class="hljs-title class_">HelloReply</span> &#123;<br>    <span class="hljs-type">string</span> msg = <span class="hljs-number">2</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
@@ -417,22 +424,101 @@
 <li>声明别手动改这文件, 以及其内容是包括 client 和 server 相关类的</li>
 </ul>
 <ol start="2">
-<li><p>导入依赖</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> grpc<br><span class="hljs-keyword">import</span> warnings<br><span class="hljs-keyword">import</span> hello_pb2 <span class="hljs-keyword">as</span> hello__pb2<br></code></pre></td></tr></table></figure>
-
-</li>
-<li></li>
-<li></li>
-<li></li>
-<li></li>
-<li></li>
-<li></li>
-<li></li>
-<li></li>
-<li></li>
-<li></li>
-<li></li>
+<li>导入依赖<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> grpc<br><span class="hljs-keyword">import</span> warnings<br><span class="hljs-keyword">import</span> hello_pb2 <span class="hljs-keyword">as</span> hello__pb2<br></code></pre></td></tr></table></figure></li>
 </ol>
+<ul>
+<li><code>grpc</code> 提供客户端和服务端的通信功能</li>
+<li><code>hello_pb2</code> 提供 <code>.proto</code> 中定义的消息类型以及序列化功能</li>
+</ul>
+<ol start="3">
+<li>检查 gRPC 版本兼容性<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs python">GRPC_GENERATED_VERSION = <span class="hljs-string">&#x27;1.71.0&#x27;</span><br>GRPC_VERSION = grpc.__version__<br>_version_not_supported = <span class="hljs-literal">False</span><br><br><span class="hljs-keyword">try</span>:<br>    <span class="hljs-keyword">from</span> grpc._utilities <span class="hljs-keyword">import</span> first_version_is_lower<br>    _version_not_supported = first_version_is_lower(GRPC_VERSION, GRPC_GENERATED_VERSION)<br><span class="hljs-keyword">except</span> ImportError:<br>    _version_not_supported = <span class="hljs-literal">True</span><br><br><span class="hljs-keyword">if</span> _version_not_supported:<br>    <span class="hljs-keyword">raise</span> RuntimeError(<br>        <span class="hljs-string">f&#x27;The grpc package installed is at version <span class="hljs-subst">&#123;GRPC_VERSION&#125;</span>,&#x27;</span><br>        + <span class="hljs-string">f&#x27; but the generated code in hello_pb2_grpc.py depends on&#x27;</span><br>        + <span class="hljs-string">f&#x27; grpcio&gt;=<span class="hljs-subst">&#123;GRPC_GENERATED_VERSION&#125;</span>.&#x27;</span><br>        + <span class="hljs-string">f&#x27; Please upgrade your grpc module to grpcio&gt;=<span class="hljs-subst">&#123;GRPC_GENERATED_VERSION&#125;</span>&#x27;</span><br>        + <span class="hljs-string">f&#x27; or downgrade your generated code using grpcio-tools&lt;=<span class="hljs-subst">&#123;GRPC_VERSION&#125;</span>.&#x27;</span><br>    )<br></code></pre></td></tr></table></figure></li>
+</ol>
+<ul>
+<li><code>GRPC_GENERATED_VERSION</code>: 生成代码时使用的 gRPC 版本</li>
+<li><code>GRPC_VERSION</code>: 当前安装的 gRPC 版本</li>
+<li><code>first_version_is_lower</code>: 检查当前 gRPC 版本是否低于生成代码所需的版本</li>
+<li>如果版本不兼容, 抛出 RuntimeError, 提示用户升级或降级 gRPC 模块</li>
+</ul>
+<ol start="4">
+<li>客户端存根 (Stub)<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">GreeterStub</span>(<span class="hljs-title class_ inherited__">object</span>):<br>    <span class="hljs-string">&quot;&quot;&quot;Missing associated documentation comment in .proto file.&quot;&quot;&quot;</span><br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, channel</span>):<br>        <span class="hljs-string">&quot;&quot;&quot;Constructor.</span><br><span class="hljs-string"></span><br><span class="hljs-string">        Args:</span><br><span class="hljs-string">            channel: A grpc.Channel.</span><br><span class="hljs-string">        &quot;&quot;&quot;</span><br>        self.SayHello = channel.unary_unary(<br>                <span class="hljs-string">&#x27;/Greeter/SayHello&#x27;</span>,<br>                request_serializer=hello__pb2.HelloRequest.SerializeToString,<br>                response_deserializer=hello__pb2.HelloReply.FromString,<br>                _registered_method=<span class="hljs-literal">True</span>)<br></code></pre></td></tr></table></figure></li>
+</ol>
+<ul>
+<li><code>GreeterStub</code>: 客户端存根类, 用于调用服务端的方法</li>
+<li><code>channel</code>: gRPC 通信的通道, 用于发送和接收消息</li>
+<li><code>SayHello</code>: 定义了一个 RPC 方法, 对应 <code>.proto</code> 文件中的 <code>SayHello</code> 方法<br>  S*S <code>unary_unary</code>: 表示这是一个一元 RPC 调用 (客户端发送一个请求, 服务端返回一个响应)<ul>
+<li><code>request_serializer</code>: 将请求消息序列化为字节流</li>
+<li><code>response_deserializer</code>: 将响应字节流反序列化为消息对象</li>
+<li><code>_registered_method=True</code>: 表示这是一个已注册的 RPC 方法</li>
+</ul>
+</li>
+</ul>
+<ol start="5">
+<li>服务端实现<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">GreeterServicer</span>(<span class="hljs-title class_ inherited__">object</span>):<br>    <span class="hljs-string">&quot;&quot;&quot;Missing associated documentation comment in .proto file.&quot;&quot;&quot;</span><br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">SayHello</span>(<span class="hljs-params">self, request, context</span>):<br>        <span class="hljs-string">&quot;&quot;&quot;Missing associated documentation comment in .proto file.&quot;&quot;&quot;</span><br>        context.set_code(grpc.StatusCode.UNIMPLEMENTED)<br>        context.set_details(<span class="hljs-string">&#x27;Method not implemented!&#x27;</span>)<br>        <span class="hljs-keyword">raise</span> NotImplementedError(<span class="hljs-string">&#x27;Method not implemented!&#x27;</span>)<br></code></pre></td></tr></table></figure></li>
+</ol>
+<ul>
+<li><code>GreeterServicer</code>: 服务端实现类, 用于处理客户端请求</li>
+<li><code>SayHello</code>: 实现 <code>.proto</code> 文件中定义的 <code>SayHello</code> 方法<ul>
+<li><code>request</code>: 客户端发送的请求消息</li>
+<li><code>context</code>: gRPC 的上下文对象, 用于设置状态码和详细信息</li>
+<li>默认实现抛出了 <code>NotImplementedError</code>, 提示方法未实现. 实际开发中需要重写此方法</li>
+</ul>
+</li>
+</ul>
+<ol start="6">
+<li>将服务端实现注册到服务器<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">add_GreeterServicer_to_server</span>(<span class="hljs-params">servicer, server</span>):<br>    rpc_method_handlers = &#123;<br>            <span class="hljs-string">&#x27;SayHello&#x27;</span>: grpc.unary_unary_rpc_method_handler(<br>                    servicer.SayHello,<br>                    request_deserializer=hello__pb2.HelloRequest.FromString,<br>                    response_serializer=hello__pb2.HelloReply.SerializeToString,<br>            ),<br>    &#125;<br>    generic_handler = grpc.method_handlers_generic_handler(<br>            <span class="hljs-string">&#x27;Greeter&#x27;</span>, rpc_method_handlers)<br>    server.add_generic_rpc_handlers((generic_handler,))<br>    server.add_registered_method_handlers(<span class="hljs-string">&#x27;Greeter&#x27;</span>, rpc_method_handlers)<br></code></pre></td></tr></table></figure></li>
+</ol>
+<ul>
+<li><code>add_GreeterServicer_to_server</code>: 将 <code>GreeterServicer</code> 实现注册到 gRPC 服务器</li>
+<li><code>rpc_method_handlers</code>: 定义了 RPC 方法的处理逻辑</li>
+<li><code>unary_unary_rpc_method_handler</code>: 处理一元 RPC 调用</li>
+<li><code>request_deserializer</code>: 将请求字节流反序列化为消息对象</li>
+<li><code>response_serializer</code>: 将响应消息序列化为字节流</li>
+<li><code>generic_handler</code>: 将 RPC 方法处理逻辑与服务名称绑定</li>
+<li><code>add_generic_rpc_handlers</code>: 将处理逻辑添加到服务器</li>
+</ul>
+<ol start="7">
+<li>实验性 API<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><code class="hljs python"> <span class="hljs-comment"># This class is part of an EXPERIMENTAL API.</span><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">Greeter</span>(<span class="hljs-title class_ inherited__">object</span>):<br>    <span class="hljs-string">&quot;&quot;&quot;Missing associated documentation comment in .proto file.&quot;&quot;&quot;</span><br><br><span class="hljs-meta">    @staticmethod</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">SayHello</span>(<span class="hljs-params">request,</span><br><span class="hljs-params">            target,</span><br><span class="hljs-params">            options=(<span class="hljs-params"></span>),</span><br><span class="hljs-params">            channel_credentials=<span class="hljs-literal">None</span>,</span><br><span class="hljs-params">            call_credentials=<span class="hljs-literal">None</span>,</span><br><span class="hljs-params">            insecure=<span class="hljs-literal">False</span>,</span><br><span class="hljs-params">            compression=<span class="hljs-literal">None</span>,</span><br><span class="hljs-params">            wait_for_ready=<span class="hljs-literal">None</span>,</span><br><span class="hljs-params">            timeout=<span class="hljs-literal">None</span>,</span><br><span class="hljs-params">            metadata=<span class="hljs-literal">None</span></span>):<br>        <span class="hljs-keyword">return</span> grpc.experimental.unary_unary(<br>            request,<br>            target,<br>            <span class="hljs-string">&#x27;/Greeter/SayHello&#x27;</span>,<br>            hello__pb2.HelloRequest.SerializeToString,<br>            hello__pb2.HelloReply.FromString,<br>            options,<br>            channel_credentials,<br>            insecure,<br>            call_credentials,<br>            compression,<br>            wait_for_ready,<br>            timeout,<br>            metadata,<br>            _registered_method=<span class="hljs-literal">True</span>)<br></code></pre></td></tr></table></figure></li>
+</ol>
+<ul>
+<li><code>Greeter</code>: 实验性 API 类, 提供了一种更简洁的方式调用 RPC 方法</li>
+<li><code>SayHello</code>: 静态方法, 用于调用服务端的 <code>SayHello</code> 方法<ul>
+<li><code>grpc.experimental.unary_unary</code>: 实验性的一元 RPC 调用方法</li>
+<li><code>target</code>: 服务端地址</li>
+<li><code>options</code>: gRPC 调用选项</li>
+<li><code>channel_credentials</code>: 通道凭证 (如 TLS 证书)</li>
+<li><code>call_credentials</code>: 调用凭证 (如 OAuth2 令牌)</li>
+<li><code>metadata</code>: 元数据, 用于传递额外的信息 (如身份验证令牌)</li>
+</ul>
+</li>
+</ul>
+<h2 id="基本使用-1"><a href="#基本使用-1" class="headerlink" title="基本使用"></a>基本使用</h2><p>基本流程是:</p>
+<ul>
+<li>客户端: 通过 <code>GreeterStub</code> 调用服务端的方法</li>
+<li>服务端: 通过 <code>GreeterServicer</code> 实现服务端逻辑, 并通过 <code>add_GreeterServicer_to_server</code> 注册到 gRPC 服务器</li>
+<li>实验性 API: 提供了一种更简洁的方式调用 RPC 方法</li>
+</ul>
+<h1 id="grpc-库"><a href="#grpc-库" class="headerlink" title="grpc 库"></a>grpc 库</h1><p>由于我是本地安装, 因此可以查看 <code>$HOME/.local/lib/python3.13/site-packages/grpc</code> 目录下定义的文件.</p>
+<h2 id="grpc-Channel-类"><a href="#grpc-Channel-类" class="headerlink" title="grpc.Channel 类"></a>grpc.Channel 类</h2><p><code>Channel</code> 类定义在 <code>grpc/__init__.py</code>. 用于管理客户端和服务端之间的通信连接. 负责:</p>
+<ul>
+<li><p><code>建立连接</code>, 与服务端建立网络连接</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> grpc<br><br><span class="hljs-comment"># NO cryption</span><br>channel = grpc.insecure_channel(<span class="hljs-string">&#x27;localhost:50051&#x27;</span>)<br><br><span class="hljs-comment"># Encrypted by TLS/SSL</span><br>channel = grpc.secure_channel(<span class="hljs-string">&#x27;localhost:50051&#x27;</span>, grpc.ssl_channel_credentials())<br></code></pre></td></tr></table></figure>
+</li>
+<li><p><code>发送请求</code>, 将客户端的 RPC 请求发送到服务端</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># 创建客户端存根</span><br>stub = hello_pb2_grpc.GreeterStub(channel)<br><br><span class="hljs-comment"># 调用远程方法</span><br>response = stub.SayHello(hello_pb2.HelloRequest(name=<span class="hljs-string">&#x27;World&#x27;</span>))<br></code></pre></td></tr></table></figure>
+</li>
+<li><p><code>接收响应</code>, 接收服务端返回的 RPC 响应</p>
+</li>
+<li><p><code>管理连接状态</code>, 处理连接的生命周期</p>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs python">channel.close() <span class="hljs-comment"># 关闭通道, 释放资源</span><br>channel.get_state() <span class="hljs-comment"># 获取通道当前状态</span><br>channel.subscribe() <span class="hljs-comment"># 订阅通道状态变化</span><br></code></pre></td></tr></table></figure>
+
+<p>创建 <code>ClientStub</code> 类实例时, 都需要提供 <code>channel</code> 成员值 (<code>grpc.Chennel</code> 类实例).</p>
+<h2 id="grpc-Server-类"><a href="#grpc-Server-类" class="headerlink" title="grpc.Server 类"></a>grpc.Server 类</h2><h1 id="代码编写逻辑"><a href="#代码编写逻辑" class="headerlink" title="代码编写逻辑"></a>代码编写逻辑</h1><ul>
+<li>利用 <code>.proto</code> 文件编译生成的 <code>*_pb2.py</code> 和 <code>*_grpc_pb2.py</code> 文件定义核心类以及方法</li>
+<li>利用 <code>grpc.server()</code> 创建 Server, 监听端口, 并由此编写逻辑</li>
+<li>利用 <code>grpc.Channel()</code> 创建 chennel, 并用 <code>ClientStub</code> 创建代理类实例, 由此编写具体客户端逻辑</li>
+</ul>
 
                 
               </div>
