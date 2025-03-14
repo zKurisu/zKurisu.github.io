@@ -24,7 +24,7 @@
 <meta property="og:description" content="GRPC Python Quick Start 介绍这里使用 grpc 做示例. 安装123python -m venv testRPCsource testRPC&#x2F;bin&#x2F;activatepip install grpcio grpcio-tools  grpcio-tools 主要包含了 protoc  官方示例获取官方示例1234# Clone the repository to get t">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-03-13T06:25:38.000Z">
-<meta property="article:modified_time" content="2025-03-14T06:04:06.968Z">
+<meta property="article:modified_time" content="2025-03-14T06:40:56.845Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -246,7 +246,7 @@
         
         
         
-          92 分钟
+          94 分钟
         
       </span>
     
@@ -333,9 +333,10 @@
 <figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs protobuf">edition = <span class="hljs-string">&quot;2023&quot;</span>;<br><br><span class="hljs-keyword">service </span><span class="hljs-title class_">Greeter</span> &#123;<br>    <span class="hljs-function"><span class="hljs-keyword">rpc</span> SayHello (HelloRequest) <span class="hljs-keyword">returns</span> (HelloReply) </span>&#123;&#125;<br>&#125;<br><br><span class="hljs-keyword">message </span><span class="hljs-title class_">HelloRequest</span> &#123;<br>    <span class="hljs-type">string</span> name = <span class="hljs-number">1</span>;<br>&#125;<br><br><span class="hljs-keyword">message </span><span class="hljs-title class_">HelloReply</span> &#123;<br>    <span class="hljs-type">string</span> msg = <span class="hljs-number">2</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <p>在 <code>mytest</code> 下运行:</p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">mkdir</span> -P python/hello<br>python -m grpc_tools.protoc \<br>    -Iprotos \<br>    --python_out=python/hello \<br>    --grpc_python_out=python<br>    protos/hello.proto<br></code></pre></td></tr></table></figure>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">mkdir</span> -P python/hello<br>python -m grpc_tools.protoc \<br>    -Iprotos \<br>    --python_out=python/hello \<br>    --pyi_out=python/hello<br>    --grpc_python_out=python/hello<br>    protos/hello.proto<br></code></pre></td></tr></table></figure>
 <ul>
 <li><code>--python_out</code> 指定 <code>hello_pb2.py</code> 文件的生成目录 (<code>hello</code> 是 <code>proto</code> 文件名)</li>
+<li><code>--pyi_out</code> 指定 <code>hello_pb2.pyi</code> 文件的生成目录</li>
 <li><code>--grpc_python_out</code> 指定 <code>hello_pb2_grpc.py</code> 文件的生成目录</li>
 </ul>
 <p>这些生成的文件都不要手动更改, 要做变更的话直接修改 <code>proto</code> 文件然后重新生成.</p>
@@ -497,6 +498,7 @@
 <li>服务端: 通过 <code>GreeterServicer</code> 实现服务端逻辑, 并通过 <code>add_GreeterServicer_to_server</code> 注册到 gRPC 服务器</li>
 <li>实验性 API: 提供了一种更简洁的方式调用 RPC 方法</li>
 </ul>
+<h2 id="hello-pb2-pyi"><a href="#hello-pb2-pyi" class="headerlink" title="hello_pb2.pyi"></a><code>hello_pb2.pyi</code></h2><p><code>.pyi</code> 是 Python 的类型存根文件 (Stub Files), 它们用于为 Python 模块提供类型提示信息, 但不包含实际的实现代码. 这类文件通常用于静态类型检查工具 (如 mypy) 或 IDE (如 PyCharm, VSCode) 中. (并不是用来调用的模块, 仅方便编辑器自动提示)</p>
 <h1 id="grpc-库"><a href="#grpc-库" class="headerlink" title="grpc 库"></a>grpc 库</h1><p>由于我是本地安装, 因此可以查看 <code>$HOME/.local/lib/python3.13/site-packages/grpc</code> 目录下定义的文件.</p>
 <h2 id="grpc-Channel-类"><a href="#grpc-Channel-类" class="headerlink" title="grpc.Channel 类"></a>grpc.Channel 类</h2><p><code>Channel</code> 类定义在 <code>grpc/__init__.py</code>. 用于管理客户端和服务端之间的通信连接. 负责:</p>
 <ul>
@@ -522,7 +524,7 @@
 <h3 id="创建"><a href="#创建" class="headerlink" title="创建"></a>创建</h3><p>其通过 <code>grpc.server()</code> 函数创建:</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">server = grpc.server(futures.ThreadPoolExecutor(max_workers=<span class="hljs-number">10</span>))<br></code></pre></td></tr></table></figure>
 <ul>
-<li><code>futures.ThreadPoolExecutor(max_workers=10)</code>: 指定服务器的线程池, 用于处理客户端的并发请求</li>
+<li><code>futures.ThreadPoolExecutor(max_workers=10)</code>: 指定服务器的线程池, 用于处理客户端的并发请求<br>(需要注意这里用的是 <code>ThreadPoolExecutor</code> 线程池, 若用成了 <code>ProcessPoolExecutor</code> 进程池之类的, 则会阻塞)</li>
 </ul>
 <h3 id="注册服务"><a href="#注册服务" class="headerlink" title="注册服务"></a>注册服务</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">helloworld_pb2_grpc.add_GreeterServicer_to_server(Greeter(), server)<br></code></pre></td></tr></table></figure>
 
