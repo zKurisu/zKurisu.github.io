@@ -32,7 +32,7 @@
 <meta property="og:image" content="http://example.com/img/prometheus-node-exporter-run-example.png">
 <meta property="og:image" content="http://example.com/img/prometheus-python-api-example-metrics.png">
 <meta property="article:published_time" content="2025-03-15T06:49:17.000Z">
-<meta property="article:modified_time" content="2025-03-17T02:56:54.379Z">
+<meta property="article:modified_time" content="2025-03-17T03:50:53.616Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/prometheus-architecture.png">
@@ -244,7 +244,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          13k 字
+          17k 字
         
       </span>
     
@@ -255,7 +255,7 @@
         
         
         
-          112 分钟
+          142 分钟
         
       </span>
     
@@ -344,6 +344,18 @@
 </ul>
 </li>
 </ul>
+<h2 id="分位数和滑动窗口"><a href="#分位数和滑动窗口" class="headerlink" title="分位数和滑动窗口"></a>分位数和滑动窗口</h2><p>Quantile (分位数) 是统计学中的概念, 用于描述数据分布的 “位置” (一个百分数). 例如:</p>
+<ul>
+<li><code>P50</code>, 表示 <code>50%</code> 的数据小于等于该值</li>
+<li><code>P90</code>, 表示 <code>90%</code> 的数据小于等于该值</li>
+<li><code>P99</code>, 表示 <code>99%</code> 的数据小于等于该值</li>
+</ul>
+<p>而 Sliding window (滑动窗口), 指一种时间窗口, 其随着时间推移而滑动, 只保留一段时间内的数据, 比如:</p>
+<ul>
+<li>如果滑动窗口的大小为 5 分钟, 那么它始终只保留过去 5 分钟内的数据</li>
+<li>当新的数据进入窗口时, 旧的数据会被移除</li>
+</ul>
+<p>因此 “滑动窗口内的分位数” 就是描述一个值在窗口内的位置信息.</p>
 <h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><h2 id="拉取最新二进制"><a href="#拉取最新二进制" class="headerlink" title="拉取最新二进制"></a>拉取最新二进制</h2><p>确认自己的系统以及支持的最新版本后拉取:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">wget https://github.com/prometheus/prometheus/releases/download/v3.2.1/prometheus-3.2.1.linux-386.tar.gz<br>tar xzfz prometheus-3.2.1.linux-386.tar.gz<br><span class="hljs-built_in">cd</span> prometheus-3.2.1.linux-386<br></code></pre></td></tr></table></figure>
 
@@ -646,7 +658,16 @@
 <p><img src="/../img/prometheus-python-api-example-metrics.png" srcset="/img/loading.gif" lazyload></p>
 <h2 id="语法"><a href="#语法" class="headerlink" title="语法"></a>语法</h2><h3 id="导入"><a href="#导入" class="headerlink" title="导入"></a>导入</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> prometheus_client<br></code></pre></td></tr></table></figure>
 
-<h3 id="常见类"><a href="#常见类" class="headerlink" title="常见类"></a>常见类</h3><h4 id="Gauge"><a href="#Gauge" class="headerlink" title="Gauge"></a>Gauge</h4><p>就是指 Prometheus 中的 Gauge Metric Type. 用于存储测量数据.</p>
+<h3 id="常见类"><a href="#常见类" class="headerlink" title="常见类"></a>常见类</h3><h4 id="Summary"><a href="#Summary" class="headerlink" title="Summary"></a>Summary</h4><p><code>Summary</code> 是一种记录事件大小和数量的类型.</p>
+<p>示例:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> prometheus_client <span class="hljs-keyword">import</span> start_http_server, Summary<br><span class="hljs-keyword">import</span> time<br><span class="hljs-keyword">import</span> random<br><br><span class="hljs-comment"># 创建一个 Summary 指标</span><br>REQUEST_LATENCY = Summary(<br>    <span class="hljs-string">&#x27;request_latency_seconds&#x27;</span>,  <span class="hljs-comment"># 指标名称</span><br>    <span class="hljs-string">&#x27;Description of summary&#x27;</span>  <span class="hljs-comment"># 指标描述</span><br>)<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">simulate_request</span>():<br>    <span class="hljs-string">&quot;&quot;&quot;模拟请求处理逻辑&quot;&quot;&quot;</span><br>    <span class="hljs-comment"># 随机生成一个延迟值（模拟实际场景）</span><br>    latency = random.uniform(<span class="hljs-number">0</span>, <span class="hljs-number">5</span>)<br>    time.sleep(latency)<br>    <span class="hljs-keyword">return</span> latency<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">process_request</span>():<br>    <span class="hljs-string">&quot;&quot;&quot;处理请求并记录延迟&quot;&quot;&quot;</span><br>    <span class="hljs-comment"># 使用 Summary 的 observe() 方法记录延迟</span><br>    latency = simulate_request()<br>    REQUEST_LATENCY.observe(latency)<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;Request processed with latency: <span class="hljs-subst">&#123;latency:<span class="hljs-number">.2</span>f&#125;</span> seconds&quot;</span>)<br><br><span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">&#x27;__main__&#x27;</span>:<br>    <span class="hljs-comment"># 启动 Prometheus HTTP 服务器，暴露指标</span><br>    start_http_server(<span class="hljs-number">8000</span>)<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Prometheus metrics server started on port 8000&quot;</span>)<br><br>    <span class="hljs-comment"># 模拟处理请求</span><br>    <span class="hljs-keyword">while</span> <span class="hljs-literal">True</span>:<br>        process_request()<br>        time.sleep(<span class="hljs-number">1</span>)  <span class="hljs-comment"># 每隔 1 秒处理一个请求</span><br></code></pre></td></tr></table></figure>
+
+<p>其暴露的指标有:</p>
+<ul>
+<li><code>&lt;metric_name&gt;_count</code>, 表示总的请求数量</li>
+<li><code>&lt;metric_name&gt;_sum</code>, 表示所有请求值的总和</li>
+</ul>
+<h4 id="Gauge"><a href="#Gauge" class="headerlink" title="Gauge"></a>Gauge</h4><p>就是指 Prometheus 中的 Gauge Metric Type. 用于存储测量数据.</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> prometheus_client <span class="hljs-keyword">import</span> Gauge<br>g = Gauge(<span class="hljs-string">&#x27;my_inprogress_requests&#x27;</span>, <span class="hljs-string">&#x27;Description of gauge&#x27;</span>)<br>g.inc()      <span class="hljs-comment"># Increment by 1</span><br>g.dec(<span class="hljs-number">10</span>)    <span class="hljs-comment"># Decrement by given value</span><br>g.<span class="hljs-built_in">set</span>(<span class="hljs-number">4.2</span>)   <span class="hljs-comment"># Set to a given value</span><br></code></pre></td></tr></table></figure>
 <ul>
 <li><code>my_inprogress_requests</code> 是 metric name</li>
@@ -657,13 +678,56 @@
 <p>一个核心概念是 <code>Bucket</code> (桶), 其用于将连续的数值范围划分为多个区间, 统计每个区间内的样本数量.</p>
 <p>比如定义一组 <code>buckets</code> 为 <code>[0.1, 0.5, 10., 2.0, 5.0]</code>, 其分别统计的范围为:</p>
 <ul>
-<li><code>0, 0.1</code></li>
-<li><code>0.1, 0.5</code></li>
-<li><code>0.5, 1.0</code></li>
-<li><code>1.0, 2.0</code></li>
-<li><code>2.0, 5.0</code></li>
-<li><code>5.0, +inf</code></li>
+<li><code>(0, 0.1]</code></li>
+<li><code>(0.1, 0.5]</code></li>
+<li><code>(0.5, 1.0]</code></li>
+<li><code>(1.0, 2.0]</code></li>
+<li><code>(2.0, 5.0]</code></li>
+<li><code>(5.0, +inf)</code>, 自动统计超过的值</li>
 </ul>
+<p>在创建一个 <code>Histogram</code> 后, Prometheus 会暴露以下指标:</p>
+<ul>
+<li><code>&lt;metric_name&gt;_bucket&#123;le=&quot;&lt;upper_bound&gt;&quot;&#125;</code>, 每个桶的样本数量</li>
+<li><code>&lt;metric_name&gt;_count</code>, 总的样本数量</li>
+<li><code>&lt;metric_name&gt;_sum</code>, 所有样本值的总和</li>
+</ul>
+<p>示例:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> prometheus_client <span class="hljs-keyword">import</span> start_http_server, Histogram<br><span class="hljs-keyword">import</span> time<br><span class="hljs-keyword">import</span> random<br><br><span class="hljs-comment"># 创建一个 Histogram 指标</span><br>REQUEST_LATENCY = Histogram(<br>    <span class="hljs-string">&#x27;request_latency_seconds&#x27;</span>,  <span class="hljs-comment"># 指标名称</span><br>    <span class="hljs-string">&#x27;Description of histogram&#x27;</span>,  <span class="hljs-comment"># 指标描述</span><br>    buckets=[<span class="hljs-number">0.1</span>, <span class="hljs-number">0.5</span>, <span class="hljs-number">1.0</span>, <span class="hljs-number">2.0</span>, <span class="hljs-number">5.0</span>]  <span class="hljs-comment"># 自定义桶</span><br>)<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">simulate_request</span>():<br>    <span class="hljs-string">&quot;&quot;&quot;模拟请求处理逻辑&quot;&quot;&quot;</span><br>    <span class="hljs-comment"># 随机生成一个延迟值（模拟实际场景）</span><br>    latency = random.uniform(<span class="hljs-number">0</span>, <span class="hljs-number">5</span>)<br>    time.sleep(latency)<br>    <span class="hljs-keyword">return</span> latency<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">process_request</span>():<br>    <span class="hljs-string">&quot;&quot;&quot;处理请求并记录延迟&quot;&quot;&quot;</span><br>    <span class="hljs-comment"># 使用 Histogram 的 time() 方法记录延迟</span><br>    <span class="hljs-keyword">with</span> REQUEST_LATENCY.time():<br>        latency = simulate_request()<br>        <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;Request processed with latency: <span class="hljs-subst">&#123;latency:<span class="hljs-number">.2</span>f&#125;</span> seconds&quot;</span>)<br><br><span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">&#x27;__main__&#x27;</span>:<br>    <span class="hljs-comment"># 启动 Prometheus HTTP 服务器，暴露指标</span><br>    start_http_server(<span class="hljs-number">8000</span>)<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Prometheus metrics server started on port 8000&quot;</span>)<br><br>    <span class="hljs-comment"># 模拟处理请求</span><br>    <span class="hljs-keyword">while</span> <span class="hljs-literal">True</span>:<br>        process_request()<br>        time.sleep(<span class="hljs-number">1</span>)  <span class="hljs-comment"># 每隔 1 秒处理一个请求</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>with REQUEST_LATENCY.time():</code>, 可以测量代码块的执行时间, 并将结果记录到 <code>Histogram</code> 中</li>
+</ul>
+<p>比如:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">with</span> REQUEST_LATENCY.time():<br>    <span class="hljs-comment"># 模拟请求处理</span><br>    time.sleep(random.uniform(<span class="hljs-number">0</span>, <span class="hljs-number">5</span>))<br></code></pre></td></tr></table></figure>
+<ul>
+<li>当进入 <code>with</code> 代码块时, 会记录当前时间</li>
+<li>当退出 <code>with</code> 代码块时, 会再次记录当前时间, 并计算两者的差值</li>
+<li>最后, 将计算结果记录到 <code>Histogram</code> 中</li>
+</ul>
+<p>也可以直接用做修饰器, 记录函数执行的时间:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-meta">@h.time()</span><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">f</span>():<br>  <span class="hljs-keyword">pass</span><br></code></pre></td></tr></table></figure>
+
+<p>若要手动添加值到 Histogram 中, 可以用 <code>observe()</code> 方法, 如:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs python">start_time = time.time()<br><span class="hljs-comment"># 模拟请求处理</span><br>time.sleep(random.uniform(<span class="hljs-number">0</span>, <span class="hljs-number">5</span>))<br>elapsed_time = time.time() - start_time<br>REQUEST_LATENCY.observe(elapsed_time)<br></code></pre></td></tr></table></figure>
+
+<h4 id="Info"><a href="#Info" class="headerlink" title="Info"></a>Info</h4><p><code>Info</code> 不用于记录数值信息, 而是记录一些不更新的静态描述信息, 都是键值对数据, 比如:</p>
+<ul>
+<li>版本号</li>
+<li>构建主机</li>
+<li>配置信息</li>
+<li>环境变量</li>
+<li>其他描述信息</li>
+</ul>
+<p>示例:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> prometheus_client <span class="hljs-keyword">import</span> start_http_server, Info<br><span class="hljs-keyword">import</span> time<br><br><span class="hljs-comment"># 创建一个 Info 指标</span><br>BUILD_INFO = Info(<br>    <span class="hljs-string">&#x27;my_build_version&#x27;</span>,  <span class="hljs-comment"># 指标名称</span><br>    <span class="hljs-string">&#x27;Description of info&#x27;</span>  <span class="hljs-comment"># 指标描述</span><br>)<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">set_build_info</span>():<br>    <span class="hljs-string">&quot;&quot;&quot;设置构建信息&quot;&quot;&quot;</span><br>    BUILD_INFO.info(&#123;<br>        <span class="hljs-string">&#x27;version&#x27;</span>: <span class="hljs-string">&#x27;1.2.3&#x27;</span>,  <span class="hljs-comment"># 版本号</span><br>        <span class="hljs-string">&#x27;buildhost&#x27;</span>: <span class="hljs-string">&#x27;foo@bar&#x27;</span>  <span class="hljs-comment"># 构建主机</span><br>    &#125;)<br><br><span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">&#x27;__main__&#x27;</span>:<br>    <span class="hljs-comment"># 启动 Prometheus HTTP 服务器，暴露指标</span><br>    start_http_server(<span class="hljs-number">8000</span>)<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Prometheus metrics server started on port 8000&quot;</span>)<br><br>    <span class="hljs-comment"># 设置构建信息</span><br>    set_build_info()<br><br>    <span class="hljs-comment"># 保持程序运行</span><br>    <span class="hljs-keyword">while</span> <span class="hljs-literal">True</span>:<br>        time.sleep(<span class="hljs-number">1</span>)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>用 <code>info()</code> 方法设置数据</li>
+</ul>
+<h4 id="Label"><a href="#Label" class="headerlink" title="Label"></a>Label</h4><p>每一个 Prometheus Metric 类都可以通过定义 label 来细分查询的内容, 比如:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> prometheus_client <span class="hljs-keyword">import</span> Counter<br><br><span class="hljs-comment"># 创建一个 Counter 指标，并定义标签</span><br>c = Counter(<span class="hljs-string">&#x27;my_requests_total&#x27;</span>, <span class="hljs-string">&#x27;HTTP Failures&#x27;</span>, [<span class="hljs-string">&#x27;method&#x27;</span>, <span class="hljs-string">&#x27;endpoint&#x27;</span>])<br></code></pre></td></tr></table></figure>
+<ul>
+<li>这里的 <code>[&#39;method&#39;, &#39;endpoint&#39;]</code> 就是标签名称列表</li>
+</ul>
+<p>Prometheus Metric 类可以用 <code>labels()</code> 方法来使用标签.</p>
 <h3 id="用-HTTP-server-暴露-metrics"><a href="#用-HTTP-server-暴露-metrics" class="headerlink" title="用 HTTP server 暴露 metrics"></a>用 HTTP server 暴露 metrics</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> prometheus_client <span class="hljs-keyword">import</span> start_http_server<br><br>server, t = start_http_server(<span class="hljs-number">8000</span>)<br>server.shutdown()<br>t.join()<br></code></pre></td></tr></table></figure>
 <ul>
 <li><code>server.shutdown()</code> 能 gracefully 关闭 web server</li>
