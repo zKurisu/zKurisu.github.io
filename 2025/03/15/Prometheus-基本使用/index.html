@@ -25,12 +25,14 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/prometheus-architecture.png">
 <meta property="og:image" content="http://example.com/img/prometheus-default-page.png">
+<meta property="og:image" content="http://example.com/img/prometheus-kill-HUP-reload-configuration-file.png">
 <meta property="og:image" content="http://example.com/img/prometheus-default-graph-page.png">
 <meta property="og:image" content="http://example.com/img/prometheus-graph-page-promhttp_metric_handler_requests_total.png">
 <meta property="og:image" content="http://example.com/img/prometheus-node-exporter-download-page.png">
 <meta property="og:image" content="http://example.com/img/prometheus-node-exporter-run-example.png">
+<meta property="og:image" content="http://example.com/img/prometheus-python-api-example-metrics.png">
 <meta property="article:published_time" content="2025-03-15T06:49:17.000Z">
-<meta property="article:modified_time" content="2025-03-16T02:22:26.259Z">
+<meta property="article:modified_time" content="2025-03-17T01:42:53.762Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/prometheus-architecture.png">
@@ -242,7 +244,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3.8k 字
+          13k 字
         
       </span>
     
@@ -253,7 +255,7 @@
         
         
         
-          32 分钟
+          105 分钟
         
       </span>
     
@@ -342,7 +344,7 @@
 </ul>
 </li>
 </ul>
-<h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><h2 id="拉取最新发行版"><a href="#拉取最新发行版" class="headerlink" title="拉取最新发行版"></a>拉取最新发行版</h2><p>确认自己的系统以及支持的最新版本后拉取:</p>
+<h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><h2 id="拉取最新二进制"><a href="#拉取最新二进制" class="headerlink" title="拉取最新二进制"></a>拉取最新二进制</h2><p>确认自己的系统以及支持的最新版本后拉取:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">wget https://github.com/prometheus/prometheus/releases/download/v3.2.1/prometheus-3.2.1.linux-386.tar.gz<br>tar xzfz prometheus-3.2.1.linux-386.tar.gz<br><span class="hljs-built_in">cd</span> prometheus-3.2.1.linux-386<br></code></pre></td></tr></table></figure>
 
 <p>该目录内容如下:</p>
@@ -359,9 +361,22 @@
 <p>之后可以在 <code>localhost:9090</code> 查看状态页面.</p>
 <p>内容如下:<br><img src="/../img/prometheus-default-page.png" srcset="/img/loading.gif" lazyload></p>
 <p>可以试着访问 <code>http://localhost:9090/metrics</code> 查看 prometheus 对自己的监控数据.</p>
+<h2 id="Docker"><a href="#Docker" class="headerlink" title="Docker"></a>Docker</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-comment"># Create persistent volume for your data</span><br>docker volume create prometheus-data<br><span class="hljs-comment"># Start Prometheus container</span><br>docker run \<br>    -p 9090:9090 \<br>    -v /path/to/prometheus.yml:/etc/prometheus/prometheus.yml \<br>    -v prometheus-data:/prometheus \<br>    prom/prometheus<br></code></pre></td></tr></table></figure>
+
+
 <h1 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h1><p><a target="_blank" rel="noopener" href="https://prometheus.io/docs/prometheus/latest/configuration/configuration">官方详细的配置文档</a></p>
-<p>Prometheus 用 YAML 来配置.</p>
-<p>精简后的内容如下:</p>
+<p>Prometheus 既可以用 command-line flags 配置, 也可以通过 YAML 配置文件. 一般来说:</p>
+<ul>
+<li>command-line flags, 用来配置不怎么更改的系统参数, 比如 storage locations</li>
+<li>configuration file, 用来定义 jobs 和 instances 的细节, 以及 rules file 的加载</li>
+</ul>
+<p>Prometheus 可以在运行时热加载配置 (如果配置语法不对则不会应用), 需要:</p>
+<ul>
+<li>给 prometheus process 发送 <code>SIGHUP</code> 信号, 如:<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sh">ps aux | grep prome<br>jie        47763  1.8  0.4 633692 69616 pts/4    Sl+  10:42   0:00 ./prometheus<br>--config.file=prometheus.yml<br>jie        47906  0.0  0.0   9508  5752 pts/1    S+   10:42   0:00 grep --color=auto --exclude-dir=.bzr --exclude-dir=CVS --exclude-dir=.git --exclude-dir=.hg --exclude-dir=.svn --exclude-dir=.idea --exclude-dir=.tox prome<br><span class="hljs-built_in">kill</span> -HUP 47763 <span class="hljs-comment"># PID</span><br></code></pre></td></tr></table></figure>
+<img src="/../img/prometheus-kill-HUP-reload-configuration-file.png" srcset="/img/loading.gif" lazyload></li>
+<li>或者在开启了 <code>web.enable-lifecycle</code> 时发送 HTTP POST 请求到 <code>/-/reload</code>, 如:<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">curl -X POST http://localhost:9090/-/reload<br></code></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="默认配置"><a href="#默认配置" class="headerlink" title="默认配置"></a>默认配置</h2><p>默认配置精简后的内容如下:</p>
 <figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs yaml"><span class="hljs-attr">global:</span><br>  <span class="hljs-attr">scrape_interval:</span>     <span class="hljs-string">15s</span><br>  <span class="hljs-attr">evaluation_interval:</span> <span class="hljs-string">15s</span><br><br><span class="hljs-attr">rule_files:</span><br>  <span class="hljs-comment"># - &quot;first.rules&quot;</span><br>  <span class="hljs-comment"># - &quot;second.rules&quot;</span><br><br><span class="hljs-attr">scrape_configs:</span><br>  <span class="hljs-bullet">-</span> <span class="hljs-attr">job_name:</span> <span class="hljs-string">prometheus</span><br>    <span class="hljs-attr">static_configs:</span><br>      <span class="hljs-bullet">-</span> <span class="hljs-attr">targets:</span> [<span class="hljs-string">&#x27;localhost:9090&#x27;</span>]<br></code></pre></td></tr></table></figure>
 
 <p>主要包含 3 个 blocks:</p>
@@ -406,6 +421,237 @@
 <p>可以获取 <code>metrics</code> 数据如:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">curl http://localhost:9100/metrics<br>curl http://localhost:9100/metrics | grep <span class="hljs-string">&quot;node_&quot;</span><br></code></pre></td></tr></table></figure>
 
+<h1 id="Rules-1"><a href="#Rules-1" class="headerlink" title="Rules"></a>Rules</h1><p>Prometheus 支持两种 rules 的定义:</p>
+<ul>
+<li>Recording rules, 预先计算复杂的 PromQL 查询结果并存储为新的 time series</li>
+<li>Alerting rules, 用于定义触发告警的条件, 当 Prometheus 检测到某个 PromQL 表达式的值满足特定条件时, 会触发告警并将其发送到 Alertmanager, 由 Alertmanager 负责处理和分发告警</li>
+</ul>
+<h2 id="Syntax-checking"><a href="#Syntax-checking" class="headerlink" title="Syntax-checking"></a>Syntax-checking</h2><p>可以用 <code>promtool</code> 对 rules 文件进行语法检查:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">promtool check rules /path/to/example.rules.yml<br></code></pre></td></tr></table></figure>
+
+<h2 id="Recording-rules"><a href="#Recording-rules" class="headerlink" title="Recording rules"></a>Recording rules</h2><p>Rules 都以 <code>groups</code> 的形式来组织, 如:</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs yaml"><span class="hljs-attr">groups:</span><br>  [ <span class="hljs-bullet">-</span> <span class="hljs-string">&lt;rule_group&gt;</span> ]<br></code></pre></td></tr></table></figure>
+
+<p>示例:</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs yaml"><span class="hljs-attr">groups:</span><br>  <span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">example</span><br>    <span class="hljs-attr">rules:</span><br>    <span class="hljs-bullet">-</span> <span class="hljs-attr">record:</span> <span class="hljs-string">code:prometheus_http_requests_total:sum</span><br>      <span class="hljs-attr">expr:</span> <span class="hljs-string">sum</span> <span class="hljs-string">by</span> <span class="hljs-string">(code)</span> <span class="hljs-string">(prometheus_http_requests_total)</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>name: &lt;string&gt;</code>, 指定该 group 的名称 (需要在该文件定义内唯一)</li>
+<li><code>interval: &lt;duration&gt;</code>, 指定执行间隔, 默认值为 <code>global.evaluation_interval</code></li>
+<li><code>limit: &lt;int&gt;</code>, 指定一个 recording rule 可以产生的 time series 数量, 默认为 <code>0</code> 即没有限制</li>
+<li><code>labels</code>, 定义查询的 label 键值对</li>
+<li><code>rules</code>, 定义规则</li>
+</ul>
+<h3 id="Rules-具体设置"><a href="#Rules-具体设置" class="headerlink" title="Rules 具体设置"></a>Rules 具体设置</h3><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs yaml"><span class="hljs-comment"># The name of the time series to output to. Must be a valid metric name.</span><br><span class="hljs-attr">record:</span> <span class="hljs-string">&lt;string&gt;</span><br><br><span class="hljs-comment"># The PromQL expression to evaluate. Every evaluation cycle this is</span><br><span class="hljs-comment"># evaluated at the current time, and the result recorded as a new set of</span><br><span class="hljs-comment"># time series with the metric name as given by &#x27;record&#x27;.</span><br><span class="hljs-attr">expr:</span> <span class="hljs-string">&lt;string&gt;</span><br><br><span class="hljs-comment"># Labels to add or overwrite before storing the result.</span><br><span class="hljs-attr">labels:</span><br>  [ <span class="hljs-string">&lt;labelname&gt;:</span> <span class="hljs-string">&lt;labelvalue&gt;</span> ]<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>record</code>, 指定新生成的 time series 名</li>
+<li><code>expr</code>, 指定 PrommQL 查询表达式</li>
+<li><code>labels</code>, 同样定义 label 键值对</li>
+</ul>
+<h2 id="Alerting-rules"><a href="#Alerting-rules" class="headerlink" title="Alerting rules"></a>Alerting rules</h2><p>其语法与 Recording rules 唯一区别在于定义 <code>rules</code>:</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs yaml"><span class="hljs-comment"># The name of the alert. Must be a valid label value.</span><br><span class="hljs-attr">alert:</span> <span class="hljs-string">&lt;string&gt;</span><br><br><span class="hljs-comment"># The PromQL expression to evaluate. Every evaluation cycle this is</span><br><span class="hljs-comment"># evaluated at the current time, and all resultant time series become</span><br><span class="hljs-comment"># pending/firing alerts.</span><br><span class="hljs-attr">expr:</span> <span class="hljs-string">&lt;string&gt;</span><br><br><span class="hljs-comment"># Alerts are considered firing once they have been returned for this long.</span><br><span class="hljs-comment"># Alerts which have not yet fired for long enough are considered pending.</span><br>[ <span class="hljs-attr">for:</span> <span class="hljs-string">&lt;duration&gt;</span> <span class="hljs-string">|</span> <span class="hljs-string">default</span> <span class="hljs-string">=</span> <span class="hljs-string">0s</span> ]<br><br><span class="hljs-comment"># How long an alert will continue firing after the condition that triggered it</span><br><span class="hljs-comment"># has cleared.</span><br>[ <span class="hljs-attr">keep_firing_for:</span> <span class="hljs-string">&lt;duration&gt;</span> <span class="hljs-string">|</span> <span class="hljs-string">default</span> <span class="hljs-string">=</span> <span class="hljs-string">0s</span> ]<br><br><span class="hljs-comment"># Labels to add or overwrite for each alert.</span><br><span class="hljs-attr">labels:</span><br>  [ <span class="hljs-string">&lt;labelname&gt;:</span> <span class="hljs-string">&lt;tmpl_string&gt;</span> ]<br><br><span class="hljs-comment"># Annotations to add to each alert.</span><br><span class="hljs-attr">annotations:</span><br>  [ <span class="hljs-string">&lt;labelname&gt;:</span> <span class="hljs-string">&lt;tmpl_string&gt;</span> ]<br></code></pre></td></tr></table></figure>
+
+<p>示例:</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs yaml"><span class="hljs-attr">groups:</span><br><span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">example</span><br>  <span class="hljs-attr">labels:</span><br>    <span class="hljs-attr">team:</span> <span class="hljs-string">myteam</span><br>  <span class="hljs-attr">rules:</span><br>  <span class="hljs-bullet">-</span> <span class="hljs-attr">alert:</span> <span class="hljs-string">HighRequestLatency</span><br>    <span class="hljs-attr">expr:</span> <span class="hljs-string">job:request_latency_seconds:mean5m&#123;job=&quot;myjob&quot;&#125;</span> <span class="hljs-string">&gt;</span> <span class="hljs-number">0.5</span><br>    <span class="hljs-attr">for:</span> <span class="hljs-string">10m</span><br>    <span class="hljs-attr">keep_firing_for:</span> <span class="hljs-string">5m</span><br>    <span class="hljs-attr">labels:</span><br>      <span class="hljs-attr">severity:</span> <span class="hljs-string">page</span><br>    <span class="hljs-attr">annotations:</span><br>      <span class="hljs-attr">summary:</span> <span class="hljs-string">High</span> <span class="hljs-string">request</span> <span class="hljs-string">latency</span><br></code></pre></td></tr></table></figure>
+
+<h1 id="PromQL"><a href="#PromQL" class="headerlink" title="PromQL"></a>PromQL</h1><p>PromQL, Prometheus Query Language, 用于从 TSDB 中筛选 time series 数据.</p>
+<ul>
+<li>instance query, 指查询某个时间点的数据</li>
+<li>range query, 指以一个 time step 来查询一个时间段内的数据 (等价于多次执行 instance query)</li>
+</ul>
+<p>在 Prometheus UI 中:</p>
+<ul>
+<li><code>Table</code> tab 用于 instance queries</li>
+<li><code>Graph</code> tab 用于 range queries</li>
+</ul>
+<p>对于其他程序而言, 可以用 HTTP API 传递 PromQL 来查询.</p>
+<h2 id="Expression-evaluation-types"><a href="#Expression-evaluation-types" class="headerlink" title="Expression evaluation types"></a>Expression evaluation types</h2><p>PromQL 的 expression 返回的内容可以分为 4 类:</p>
+<ul>
+<li>Instance vector, 一组共享相同时间戳 (瞬时数据) time series, 每一个 time series 包含一个样本, 比如用 <code>http_requests_total</code> 来查询</li>
+<li>Range vector, 一组 time series, 每个 time series 包含一段时间范围内的多个样本, 比如用 <code>http_requests_total[5m]</code> 来查询</li>
+<li>Scalar, 一个浮点数值, 没有时间序列或时间戳</li>
+<li>String, 一个字符串值, 但目前还没在 PromQL 中使用</li>
+</ul>
+<h2 id="Unit"><a href="#Unit" class="headerlink" title="Unit"></a>Unit</h2><p>时间单位:</p>
+<ul>
+<li><code>ms</code>, <code>s</code>, <code>m</code>, <code>h</code>, <code>d</code>, <code>w</code>, <code>y</code></li>
+</ul>
+<p>本质上都会换算为 <code>s</code> 为单位的数, 如:</p>
+<figure class="highlight ldif"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs ldif">1s <span class="hljs-comment"># Equivalent to 1.</span><br>2m <span class="hljs-comment"># Equivalent to 120.</span><br>1ms <span class="hljs-comment"># Equivalent to 0.001.</span><br><span class="hljs-literal">-</span>2h <span class="hljs-comment"># Equivalent to -7200.</span><br></code></pre></td></tr></table></figure>
+
+<p>需要注意这些时间单位不能放在浮点数后如 <code>1.5h</code>. 最好用组合的方式:</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">1h30m</span> # Equivalent to <span class="hljs-number">5400</span>s and thus <span class="hljs-number">5400</span>.<br><span class="hljs-attribute">12h34m56s</span> # Equivalent to <span class="hljs-number">45296</span>s and thus <span class="hljs-number">45296</span>.<br><span class="hljs-attribute">54s321ms</span> # Equivalent to <span class="hljs-number">54</span>.<span class="hljs-number">321</span>.<br></code></pre></td></tr></table></figure>
+
+<h2 id="Selectors"><a href="#Selectors" class="headerlink" title="Selectors"></a>Selectors</h2><h3 id="Instance-vector-selectors"><a href="#Instance-vector-selectors" class="headerlink" title="Instance vector selectors"></a>Instance vector selectors</h3><p>最简单的是用 metric name, 如 <code>http_requests_total</code>:</p>
+<ul>
+<li>其会返回所有 <code>metric name</code> 匹配 (包含所有 label) 的 timestamp 最近的一组 time series.</li>
+</ul>
+<p>可以通过 <code>&#123;&#125;</code> 添加 <code>label</code> 来筛选, 多个 <code>label</code> 用 <code>,</code> 分割, 如:</p>
+<figure class="highlight axapta"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs axapta">http_requests_total&#123;job=<span class="hljs-string">&quot;prometheus&quot;</span>,<span class="hljs-keyword">group</span>=<span class="hljs-string">&quot;canary&quot;</span>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>除了用 <code>=</code> 进行精确匹配外, 还可以:</p>
+<ul>
+<li><code>!=</code>, 非</li>
+<li><code>=~</code>, 正则</li>
+<li><code>!=</code>, 正则非</li>
+</ul>
+<p>如:</p>
+<figure class="highlight ocaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ocaml">http_requests_total&#123;environment=~<span class="hljs-string">&quot;staging|testing|development&quot;</span>,<span class="hljs-keyword">method!</span>=<span class="hljs-string">&quot;GET&quot;</span>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>需要说明的是:</p>
+<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs abnf">http_requests_total&#123;environment<span class="hljs-operator">=</span><span class="hljs-string">&quot;development&quot;</span>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>并不是返回 “只包含 environment” 这个 label 的 time series, 而是 “只要包含有 environment” 这个 label 的都会返回</li>
+</ul>
+<p>也可以对一个 <code>label</code> 做多次匹配, 如:</p>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs pgsql">http_requests_total&#123;<span class="hljs-keyword">replica</span>!=&quot;rep-a&quot;,<span class="hljs-keyword">replica</span>=~&quot;rep.*&quot;&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>此时需要两个条件都满足</li>
+</ul>
+<p>在添加的 <code>label</code> 中, 需要保证至少不会匹配空字符串, 比如:</p>
+<figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs applescript">&#123;job=~<span class="hljs-string">&quot;.*&quot;</span>&#125; <span class="hljs-comment"># Bad!</span><br></code></pre></td></tr></table></figure>
+
+<p>好的例子是:</p>
+<figure class="highlight nim"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs nim">&#123;job=~<span class="hljs-string">&quot;.+&quot;</span>&#125;              <span class="hljs-comment"># Good!</span><br>&#123;job=~<span class="hljs-string">&quot;.*&quot;</span>,<span class="hljs-keyword">method</span>=<span class="hljs-string">&quot;get&quot;</span>&#125; <span class="hljs-comment"># Good!</span><br></code></pre></td></tr></table></figure>
+
+<p>在 <code>&#123;&#125;</code> 中也能匹配 metric name, 需要借助内部 label <code>__name__</code>:</p>
+<figure class="highlight sqf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sqf">&#123;<span class="hljs-variable">__name__</span>=<span class="hljs-string">&quot;http_requests_total&quot;</span>&#125; <span class="hljs-meta"># Equal</span><br>http_requests_total <span class="hljs-meta"># Equal</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="Range-Vector-Selectors"><a href="#Range-Vector-Selectors" class="headerlink" title="Range Vector Selectors"></a>Range Vector Selectors</h3><p>Range Vector Selectors 的语法与 Instance Vector Selectors 几乎一致, 但添加了 <code>[]</code> 以提供一个时间, 如:</p>
+<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs abnf">http_requests_total&#123;job<span class="hljs-operator">=</span><span class="hljs-string">&quot;prometheus&quot;</span>&#125;[<span class="hljs-number">5</span>m]<br></code></pre></td></tr></table></figure>
+<ul>
+<li>指 “当前 evaluation time 之前 5m” 到 “当前 evaluation time”</li>
+</ul>
+<h3 id="Offset"><a href="#Offset" class="headerlink" title="Offset"></a>Offset</h3><p>对 Instance&#x2F;Range Vector Selectors 都适用, 用来查询相对于当前 evaluation time 的过去或未来指定时间的数据.</p>
+<p>语法为:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">expression</span>&gt;</span> offset <span class="hljs-tag">&lt;<span class="hljs-name">duration</span>&gt;</span><br></code></pre></td></tr></table></figure>
+
+<p>如:</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">http_requests_total</span> offset <span class="hljs-number">5</span>m<br></code></pre></td></tr></table></figure>
+<ul>
+<li>这里返回 evaluation time 前 5 分钟的值</li>
+<li>未来数据则用 <code>-5m</code></li>
+</ul>
+<p>需要注意的示例:</p>
+<figure class="highlight accesslog"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs accesslog">sum(http_requests_total&#123;method=<span class="hljs-string">&quot;<span class="hljs-keyword">GET</span>&quot;</span>&#125; offset 5m) // GOOD.<br>sum(http_requests_total&#123;method=<span class="hljs-string">&quot;<span class="hljs-keyword">GET</span>&quot;</span>&#125;) offset 5m // INVALID.<br></code></pre></td></tr></table></figure>
+
+<h3 id="modifier"><a href="#modifier" class="headerlink" title="@ modifier"></a>@ modifier</h3><p><code>@</code> 修饰符可用来指定查询的 evaluation time, 即强制在某个特定时间查询. 其基于绝对时间.</p>
+<p>语法为:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">expression</span>&gt;</span> @ <span class="hljs-tag">&lt;<span class="hljs-name">timestamp</span>&gt;</span><br></code></pre></td></tr></table></figure>
+
+<p>如:</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">http_requests_total</span> @ <span class="hljs-number">1609746000</span><br></code></pre></td></tr></table></figure>
+
+<p>可以配合几个 PromQL 函数使用:</p>
+<ul>
+<li><code>start()</code>, 返回当前查询开始的时间</li>
+<li><code>end()</code>, 返回当前查询结束的时间</li>
+</ul>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs stylus">http_requests_total @ <span class="hljs-built_in">start</span>()<br><span class="hljs-function"><span class="hljs-title">rate</span><span class="hljs-params">(http_requests_total[<span class="hljs-number">5</span>m] @ end()</span></span>)<br></code></pre></td></tr></table></figure>
+
+<h2 id="Operators"><a href="#Operators" class="headerlink" title="Operators"></a>Operators</h2><p>PromQL 支持基本的运算操作符:</p>
+<ul>
+<li><code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>%</code>, <code>^</code></li>
+</ul>
+<p>需要考虑不同类型操作数之间二元运算的结果:</p>
+<ul>
+<li>Between two scalars, 结果仍然是 scalar<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs basic"><span class="hljs-symbol">1 </span>+ <span class="hljs-number">2</span><br></code></pre></td></tr></table></figure></li>
+<li>Between an instant vector and a scalar, 输出一个 vector, 但 metric name is dropped<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">http_requests_total</span> + <span class="hljs-number">10</span><br></code></pre></td></tr></table></figure></li>
+<li>Between two instance vectors, 输出一个 vector, 但只有标签匹配的会出现在结果中, 同样 drop the metric name<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs nginx"><span class="hljs-attribute">http_requests_total</span> + cpu_usage<br></code></pre></td></tr></table></figure></li>
+</ul>
+<p>其支持的比较运算符有:</p>
+<ul>
+<li><code>==</code>, <code>!=</code>, <code>&gt;</code>, <code>&lt;</code>, <code>&gt;=</code>, <code>&lt;=</code></li>
+</ul>
+<p>同样考虑不同类型操作数之间二元运算的结果:</p>
+<ul>
+<li><p>Between two scalars, 需要提供 <code>bool</code> 修饰符, 结果为另一个 Scalar, 值为 <code>0</code> 或 <code>1</code></p>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs basic"><span class="hljs-symbol">1 </span>&gt; <span class="hljs-number">2</span> bool<br></code></pre></td></tr></table></figure></li>
+<li><p>Between an instant vector and a scalar, instant vector 中的每个样本数据都会应用比较:</p>
+<ul>
+<li>默认情况下, 如果结果为 <code>true</code>, 则保留该时间序列, 如果结果为 <code>false</code>, 则丢弃该时间序列</li>
+<li>如果提供 <code>bool</code> 修饰符, 结果为 <code>true</code> 时时间序列值为 <code>1</code>, 结果为 <code>false</code> 则时间序列值为 <code>0</code>, 此时会丢弃 metric name<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">http_requests_total</span> &gt; <span class="hljs-number">100</span><br><span class="hljs-attribute">http_requests_total</span> &gt; <span class="hljs-number">100</span> bool<br></code></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p>Between two instance vectors</p>
+<ul>
+<li>默认情况下, 比较运算符会应用于匹配的时间序列, 如果比较结果为 <code>true</code>, 则保留该时间序列, 反之</li>
+<li>如果提供 <code>bool</code> 修饰符, 如果比较结果为 <code>true</code>, 则时间序列值为 <code>1</code>, 如果比较结果为 <code>false</code> 或没有匹配项, 则值为 <code>0</code>, 此时也会丢弃 metric name<figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs angelscript">http_requests_total &gt; cpu_usage<br>http_requests_total &gt; cpu_usage <span class="hljs-built_in">bool</span><br></code></pre></td></tr></table></figure></li>
+</ul>
+</li>
+</ul>
+<h3 id="逻辑运算符"><a href="#逻辑运算符" class="headerlink" title="逻辑运算符"></a>逻辑运算符</h3><p>支持:</p>
+<ul>
+<li><code>and</code> (intersection)</li>
+<li><code>or</code> (union)</li>
+<li><code>unless</code> (complement)</li>
+</ul>
+<p>示例:</p>
+<ul>
+<li><code>vector1 and vector2</code>, 结果 vector 的 metric name 和 values 都来自左边的 vector (即 <code>vector1</code>). <code>vector1</code> 中与 <code>vector2</code> 中 element 标签匹配的返回在结果中</li>
+<li><code>vector1 or vector2</code>, 返回全部 <code>vector1</code> 的元素以及 <code>vector2</code> 中不与 <code>vector1</code> 中元素匹配标签的元素</li>
+<li><code>vector1 unless vector2</code>, 返回 <code>vector1</code> 中, 不与 <code>vector2</code> 匹配标签的元素</li>
+</ul>
+<h3 id="聚合操作"><a href="#聚合操作" class="headerlink" title="聚合操作"></a>聚合操作</h3><p>有:</p>
+<ul>
+<li><code>sum</code>, (calculate sum over dimensions)</li>
+<li><code>min</code>, (select minimum over dimensions)</li>
+<li><code>max</code>, (select maximum over dimensions)</li>
+<li><code>avg</code>, (calculate the average over dimensions)</li>
+<li><code>group</code>, (all values in the resulting vector are 1)</li>
+<li><code>stddev</code>, (calculate population standard deviation over dimensions)</li>
+<li><code>stdvar</code>, (calculate population standard variance over dimensions)</li>
+<li><code>count</code>, (count number of elements in the vector)</li>
+<li><code>count_values</code>, (count number of elements with the same value)</li>
+<li><code>bottomk</code>, (smallest k elements by sample value)</li>
+<li><code>topk</code>, (largest k elements by sample value)</li>
+<li><code>quantile</code>, (calculate $\phi$-quantile ($0 \le \phi \le 1$) over dimensions)</li>
+<li><code>limitk</code>, (sample n elements)</li>
+<li><code>limit_ratio</code>, (sample elements with approximately 𝑟 ratio if 𝑟 &gt; 0, and the complement of such samples $r &#x3D; -(1.0 - r)$)</li>
+</ul>
+<p>语法为:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">aggr-op</span>&gt;</span> [without|by (<span class="hljs-tag">&lt;<span class="hljs-name">label</span> <span class="hljs-attr">list</span>&gt;</span>)] ([parameter,] <span class="hljs-tag">&lt;<span class="hljs-name">vector</span> <span class="hljs-attr">expression</span>&gt;</span>)<br></code></pre></td></tr></table></figure>
+
+<p>或:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">aggr-op</span>&gt;</span>([parameter,] <span class="hljs-tag">&lt;<span class="hljs-name">vector</span> <span class="hljs-attr">expression</span>&gt;</span>) [without|by (<span class="hljs-tag">&lt;<span class="hljs-name">label</span> <span class="hljs-attr">list</span>&gt;</span>)]<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><code>without</code> 表明移除指定 <code>labels</code></li>
+<li><code>by</code> 表明移除指定 <code>labels</code> 以外的 <code>labels</code></li>
+<li>只有 <code>count_values</code>, <code>quantile</code>, <code>topk</code>, <code>bottomk</code>, <code>limitk</code>, <code>limit_ratio</code> 需要参数</li>
+</ul>
+<p>如:</p>
+<figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs scss">sum without (instance) (http_requests_total)<br>sum by (application, group) (http_requests_total)<br><span class="hljs-built_in">sum</span>(http_requests_total)<br></code></pre></td></tr></table></figure>
+
+<h3 id="运算优先级"><a href="#运算优先级" class="headerlink" title="运算优先级"></a>运算优先级</h3><p>顺序如下:</p>
+<ol>
+<li><code>^</code></li>
+<li><code>*</code>, <code>/</code>, <code>%</code>, <code>atan2</code></li>
+<li><code>+</code>, <code>-</code></li>
+<li><code>==</code>, <code>!=</code>, <code>&lt;=</code>, <code>&lt;</code>, <code>&gt;=</code>, <code>&gt;</code></li>
+<li><code>and</code>, <code>unless</code></li>
+<li><code>or</code></li>
+</ol>
+<h1 id="Python-接口"><a href="#Python-接口" class="headerlink" title="Python 接口"></a>Python 接口</h1><p>用 <code>prometheus_client</code> 库.</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/prometheus/client_python">Github 仓库地址为 https://github.com/prometheus/client_python</a>.</li>
+<li><a target="_blank" rel="noopener" href="https://prometheus.github.io/client_python/">官方文档为 https://prometheus.github.io/client_python&#x2F;</a></li>
+</ul>
+<h2 id="安装-1"><a href="#安装-1" class="headerlink" title="安装"></a>安装</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">pip install prometheus-client<br></code></pre></td></tr></table></figure>
+
+<p>示例:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> prometheus_client <span class="hljs-keyword">import</span> start_http_server, Summary<br><span class="hljs-keyword">import</span> random<br><span class="hljs-keyword">import</span> time<br><br><span class="hljs-comment"># Create a metric to track time spent and requests made.</span><br>REQUEST_TIME = Summary(<span class="hljs-string">&#x27;request_processing_seconds&#x27;</span>, <span class="hljs-string">&#x27;Time spent processing request&#x27;</span>)<br><br><span class="hljs-comment"># Decorate function with metric.</span><br><span class="hljs-meta">@REQUEST_TIME.time()</span><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">process_request</span>(<span class="hljs-params">t</span>):<br>    <span class="hljs-string">&quot;&quot;&quot;A dummy function that takes some time.&quot;&quot;&quot;</span><br>    time.sleep(t)<br><br><span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">&#x27;__main__&#x27;</span>:<br>    <span class="hljs-comment"># Start up the server to expose the metrics.</span><br>    start_http_server(<span class="hljs-number">8000</span>)<br>    <span class="hljs-comment"># Generate some requests.</span><br>    <span class="hljs-keyword">while</span> <span class="hljs-literal">True</span>:<br>        process_request(random.random())<br></code></pre></td></tr></table></figure>
+<ul>
+<li>然后访问 <code>http://localhost:8000/</code> 查看 metrics</li>
+</ul>
+<p><img src="/../img/prometheus-python-api-example-metrics.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="语法"><a href="#语法" class="headerlink" title="语法"></a>语法</h2><h3 id="导入"><a href="#导入" class="headerlink" title="导入"></a>导入</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> prometheus_client<br></code></pre></td></tr></table></figure>
+
+<h3 id="常见类"><a href="#常见类" class="headerlink" title="常见类"></a>常见类</h3><h4 id="Gauge"><a href="#Gauge" class="headerlink" title="Gauge"></a>Gauge</h4><p>就是指 Prometheus 中的 Gauge Metric Type. 用于存储测量数据.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> prometheus_client <span class="hljs-keyword">import</span> Gauge<br>g = Gauge(<span class="hljs-string">&#x27;my_inprogress_requests&#x27;</span>, <span class="hljs-string">&#x27;Description of gauge&#x27;</span>)<br>g.inc()      <span class="hljs-comment"># Increment by 1</span><br>g.dec(<span class="hljs-number">10</span>)    <span class="hljs-comment"># Decrement by given value</span><br>g.<span class="hljs-built_in">set</span>(<span class="hljs-number">4.2</span>)   <span class="hljs-comment"># Set to a given value</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>my_inprogress_requests</code> 是 metric name</li>
+<li><code>Description of gauge</code> 是描述信息</li>
+</ul>
 
                 
               </div>
@@ -486,6 +732,12 @@
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2025/03/16/Grafana-%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8/" title="Grafana-基本使用">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Grafana-基本使用</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">
