@@ -31,7 +31,7 @@
 <meta property="og:image" content="http://example.com/img/lldp-basic-src-dst-info.png">
 <meta property="og:image" content="http://example.com/img/lldp-tlv-basic-example.png">
 <meta property="article:published_time" content="2023-10-06T23:39:12.000Z">
-<meta property="article:modified_time" content="2025-03-12T06:47:54.501Z">
+<meta property="article:modified_time" content="2025-03-19T03:19:41.984Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/ipv6-ICMPv6-NS-example.png">
@@ -243,7 +243,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          4.1k 字
+          5.3k 字
         
       </span>
     
@@ -254,7 +254,7 @@
         
         
         
-          34 分钟
+          45 分钟
         
       </span>
     
@@ -323,6 +323,13 @@
 <figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">2004</span>:<span class="hljs-number">0000</span>:<span class="hljs-number">0000</span>:<span class="hljs-number">04</span>ef:<span class="hljs-number">203</span>d:<span class="hljs-number">0000</span>:<span class="hljs-number">0000</span>:<span class="hljs-number">00</span>e1/<span class="hljs-number">56</span><br></code></pre></td></tr></table></figure>
 <p>其 <code>2004:0000:0000:04</code> 为前缀, <code>ef</code> 为子网 ID, <code>203d:0000:0000:00e1</code> 为接口ID.</p>
 <p>保证前缀不变, 可以给网卡添加多个 IP 地址, 接口 ID 可以随意修改.</p>
+<h1 id="EUI-64-格式"><a href="#EUI-64-格式" class="headerlink" title="EUI-64 格式"></a>EUI-64 格式</h1><p>EUI-64 格式, 是一种将 48 位的 MAC 地址扩展为 64 位接口标识符 (Interface Identifier) 的方法, 常用于 IPv6 地址的自动生成.</p>
+<h1 id="Link-Local-Address"><a href="#Link-Local-Address" class="headerlink" title="Link-Local Address"></a>Link-Local Address</h1><p>Link-Local Address 是 IPv6 中一种特殊类型的地址, 用于在单个网络链路 (如一个以太网段或 Wi-Fi 网络) 上进行通信, 仅在本地链路范围内有效, 不能跨路由器转发. (相当于是一个本地地址, 非公网 IPv6)</p>
+<p>其格式:</p>
+<ul>
+<li>前缀: <code>fe80::/10</code>, 前 10 位固定为 <code>1111111010</code> (其实就是 <code>fe80</code> 固定)</li>
+<li>接口标识符: 后 54 位基于接口的 MAC 地址生成</li>
+</ul>
 <h1 id="ICMPv6-协议"><a href="#ICMPv6-协议" class="headerlink" title="ICMPv6 协议"></a>ICMPv6 协议</h1><p>ICMPv6, Internet Control Message Protocol version 6, 是 ICMP 协议在 IPv6 环境中的扩展. 其功能有:</p>
 <ul>
 <li>错误报告, 如数据包无法到达目标地址时, 发送错误信息 (中间路由器或目标主机发回给源主机)</li>
@@ -484,6 +491,41 @@
 <li>接收 LLDP 报文. 设备接收到邻居的 LLDP 报文后, 解析其中的 TLV 信息, 并存储到本地邻居表中</li>
 <li>更新邻居信息. 如果收到新的 LLDP 报文, 设备会更新邻居表中的信息. 如果 TTL 超时, 设备会删除对应的邻居信息</li>
 <li>拓扑发现. 网络管理系统 (如 SNMP 或 CLI) 可以从设备中获取邻居信息, 并构建网络拓扑</li>
+</ol>
+<h1 id="MLDv2-协议"><a href="#MLDv2-协议" class="headerlink" title="MLDv2 协议"></a>MLDv2 协议</h1><p>Multicast Listener Discovery version 2, MLDv2, 用于 IPv6 网络中的组播成员管理. 其允许主机明确指定它们希望接收或排除来自特定源地址的组播流量.</p>
+<p>主要功能可以概括为:</p>
+<ul>
+<li><code>组播组成员管理</code>, 主机可以向路由器报告其希望加入或离开某个组播组</li>
+<li><code>源过滤模式</code>, 主机可以指定只接收来自特定源地址的组播流量 (<code>INCLUDE</code> 模式), 或者接收除特定源地址之外的所有组播流量 (<code>EXCLUDE</code> 模式)</li>
+<li><code>动态更新</code>, 主机可以动态更新其对组播组的兴趣 (例如, 添加或删除源地址)</li>
+<li><code>路由器查询</code>, 路由器可以发送查询消息, 以了解其直连网络中的组播成员信息</li>
+</ul>
+<p>在路由器启动时或需要管理组播成员时, 它会发送 Multicast Listener Query 消息. 因为路由器需要知道其直连网络中是否有主机对特定组播组感兴趣, 以便决定是否转发组播流量.</p>
+<p>其定义了 2 种消息类型:</p>
+<ol>
+<li>Multicast Listener Query (Type 130), 由路由器发送, 用于查询网络中的组播组成员信息, 源地址为 Link-Local Address, 如 <code>fe80::1</code>, 目的地址为所有 MLDv2 监听者地址, <code>ff02::16</code> (一个专用地址)</li>
+<li>Multicast Listener Report (Type 143), 由主机发送, 用于报告其对组播组的兴趣 (加入, 离开或更新)</li>
+</ol>
+<p>MLDv2 的工作流程为:</p>
+<ol>
+<li><code>路由器发送查询消息</code><ul>
+<li>路由器定期发送 <code>General Query</code> 消息, 以了解网络中的组播组成员</li>
+<li>当路由器需要了解特定组播组的成员信息时, 会发送 <code>Group-Specific Query</code> 消息</li>
+</ul>
+</li>
+<li><code>主机发送报告消息</code><ul>
+<li>主机收到查询消息后, 会发送 Multicast Listener Report 消息, 报告其对组播组的兴趣</li>
+<li>如果主机对某个组播组的兴趣发生变化 (例如, 加入, 离开或更新源地址), 它会主动发送 Multicast Listener Report 消息</li>
+</ul>
+</li>
+<li><code>路由器更新组播路由表</code><ul>
+<li>路由器根据收到的报告消息更新其组播路由表, 并开始或停止转发相应的组播流量</li>
+</ul>
+</li>
+<li><code>主机离开组播组</code><ul>
+<li>当主机不再希望接收某个组播组的流量时, 它会发送 Multicast Listener Report 消息, 记录类型为 <code>CHANGE_TO_INCLUDE_MODE</code> 或 <code>CHANGE_TO_EXCLUDE_MODE</code>, 并指定组播地址和源地址</li>
+</ul>
+</li>
 </ol>
 
                 
