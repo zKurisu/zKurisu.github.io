@@ -29,7 +29,7 @@
 <meta property="og:image" content="http://example.com/img/ryu-book-openflow-action-port.png">
 <meta property="og:image" content="http://example.com/img/ryu-book-application-architecture.png">
 <meta property="article:published_time" content="2025-01-18T08:49:20.000Z">
-<meta property="article:modified_time" content="2025-03-28T07:31:29.375Z">
+<meta property="article:modified_time" content="2025-03-28T09:01:28.645Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/ryu-setuptools-error-when-pip.png">
@@ -241,7 +241,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          21k 字
+          22k 字
         
       </span>
     
@@ -252,7 +252,7 @@
         
         
         
-          172 分钟
+          182 分钟
         
       </span>
     
@@ -532,6 +532,28 @@
 <li><code>MAIN_DISPATCHER</code></li>
 <li><code>DEAD_DISPATCHER</code></li>
 </ul>
+<h1 id="app-wsgi-py"><a href="#app-wsgi-py" class="headerlink" title="app/wsgi.py"></a><code>app/wsgi.py</code></h1><p><code>wsgi.py</code> 实现了 Ryu 框架下的 WSGI 类:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> ryu.app.wsgi <span class="hljs-keyword">import</span> WSGIApplication, ControllerBase, route <br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>WSGIApplication</code> 是一个符合 WSGI 的应用实例, 需要在 <code>RyuApp</code> 中通过 <code>_CONTEXTS</code> 注入</li>
+<li><code>ControllerBase</code>, 所有 REST API 控制器必须继承此类, 提供与 HTTP 请求交互的基础能力, 该类的 <code>__init__</code> 函数签名需要为:<ul>
+<li><code>def __init__(self, req, link, data, **config):</code></li>
+<li><code>req</code> 是一个 <code>webob.Request</code> 实例, 包含 <code>method</code>, <code>path</code>, <code>headers</code>, <code>body</code>, <code>json</code>, <code>cookies</code> 等成员</li>
+<li><code>link</code> 是控制器与 WSGI 之间的链接对象, 一般内部管理, 不常使用</li>
+<li><code>data</code> 是 <code>wsgi.register</code> 时传入的第二个参数</li>
+<li><code>**config</code>, 其他配置, 通常为空</li>
+</ul>
+</li>
+<li><code>route</code> 是用于注册 API 的修饰器</li>
+</ul>
+<h2 id="简单示例"><a href="#简单示例" class="headerlink" title="简单示例"></a>简单示例</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> ryu.base <span class="hljs-keyword">import</span> app_manager<br><span class="hljs-keyword">from</span> ryu.app.wsgi <span class="hljs-keyword">import</span> WSGIApplication, route, ControllerBase<br><span class="hljs-keyword">from</span> webob <span class="hljs-keyword">import</span> Response<br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">TestRest</span>(app_manager.RyuApp, ControllerBase):<br>    _CONTEXTS = &#123; <span class="hljs-string">&#x27;wsgi&#x27;</span>: WSGIApplication &#125;<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, *args, **kwargs</span>):<br>        <span class="hljs-built_in">super</span>(TestRest, self).__init__(*args, **kwargs)<br>        wsgi = kwargs[<span class="hljs-string">&#x27;wsgi&#x27;</span>]<br>        wsgi.register(RestController, &#123;&#125;)<br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">RestController</span>(<span class="hljs-title class_ inherited__">ControllerBase</span>):<br><span class="hljs-meta">    @route(<span class="hljs-params"><span class="hljs-string">&quot;Test&quot;</span>, <span class="hljs-string">&quot;/hello/&#123;name&#125;&quot;</span>, methods=[<span class="hljs-string">&#x27;GET&#x27;</span>]</span>)</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">_hello_wsgi</span>(<span class="hljs-params">self, req, **kwargs</span>):<br>        name = kwargs[<span class="hljs-string">&#x27;name&#x27;</span>]<br>        <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;................&quot;</span>)<br>        <span class="hljs-built_in">print</span>(req)<br>        <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;................&quot;</span>)<br>        <span class="hljs-keyword">return</span> Response(status=<span class="hljs-number">200</span>, text=<span class="hljs-string">f&quot;Hello <span class="hljs-subst">&#123;name&#125;</span>&quot;</span>)<br></code></pre></td></tr></table></figure>
+
+<p>然后:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">curl -X GET <span class="hljs-string">&quot;http://192.168.1.105:8080/hello/Jie&quot;</span><br></code></pre></td></tr></table></figure>
+
+
+
+
 <h1 id="Ryu-控制器主动发起事件"><a href="#Ryu-控制器主动发起事件" class="headerlink" title="Ryu 控制器主动发起事件"></a>Ryu 控制器主动发起事件</h1><p>常见的 <code>Request</code> 有:</p>
 <ul>
 <li><code>OFPFeaturesRequest</code>          </li>
