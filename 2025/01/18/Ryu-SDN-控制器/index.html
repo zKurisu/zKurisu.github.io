@@ -29,7 +29,7 @@
 <meta property="og:image" content="http://example.com/img/ryu-book-openflow-action-port.png">
 <meta property="og:image" content="http://example.com/img/ryu-book-application-architecture.png">
 <meta property="article:published_time" content="2025-01-18T08:49:20.000Z">
-<meta property="article:modified_time" content="2025-03-13T05:50:44.780Z">
+<meta property="article:modified_time" content="2025-03-28T04:03:13.314Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/ryu-setuptools-error-when-pip.png">
@@ -241,7 +241,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          19k 字
+          20k 字
         
       </span>
     
@@ -252,7 +252,7 @@
         
         
         
-          162 分钟
+          170 分钟
         
       </span>
     
@@ -501,6 +501,21 @@
 <li><code>msg.datapath</code>, 一个 <code>ryu.controller.controller.Datapath</code> 实例</li>
 <li><code>timestamp</code>, Datapath 实例创建的时间戳</li>
 </ul>
+<h2 id="EventOFStateChange"><a href="#EventOFStateChange" class="headerlink" title="EventOFStateChange"></a>EventOFStateChange</h2><p><code>EventOFStateChange</code> 类, 用来反应 switch phase 变化, 比如</p>
+<ul>
+<li>从 <code>CONFIG_DISPATCHER</code> 变为 <code>MAIN_DISPATCHER</code> 状态</li>
+<li>从 <code>MAIN_DISPATCHER</code> 变为 <code>DEAD_DISPATCHER</code> 状态</li>
+<li>等等</li>
+</ul>
+<p>其成员主要有:</p>
+<ul>
+<li><code>datapath</code>, <code>ryu.controller.controller.Datapath</code> 对象</li>
+<li><code>state</code>, 包含 switch 变化后的 state (如 <code>MAIN_DISPATCHER</code> 变为 <code>DEAD_DISPATCHER</code>, 此时 <code>ev.state</code> 的值就是 <code>DEAD_DISPATCHER</code>)</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-meta">@set_ev_cls(<span class="hljs-params">ofp_event.EventOFPStateChange,[MAIN_DISPATCHER, DEAD_DISPATCHER]</span>)</span><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">_state_change_handler</span>(<span class="hljs-params">self, ev</span>):<br>	datapath = ev.datapath<br>	<span class="hljs-keyword">if</span> ev.state == MAIN_DISPATCHER:<br>           ...<br>       <span class="hljs-keyword">elif</span> ev.state == DEAD_DISPATCHER:<br>           ...<br></code></pre></td></tr></table></figure>
+<ul>
+<li>这个事件用 <code>EventSwitchEnter</code> 和 <code>EventSwitchLeave</code> 似乎也能处理</li>
+</ul>
 <h1 id="Ryu-控制器主动发起事件"><a href="#Ryu-控制器主动发起事件" class="headerlink" title="Ryu 控制器主动发起事件"></a>Ryu 控制器主动发起事件</h1><p>常见的 <code>Request</code> 有:</p>
 <ul>
 <li><code>OFPFeaturesRequest</code>          </li>
@@ -518,6 +533,14 @@
 <li><code>OFPBarrierRequest</code><br>等等.</li>
 </ul>
 <p>可以在 <code>ofproto/ofproto_v1_0_parser.py</code> 以及其他版本的文件中找到.</p>
+<p>这些事件都可以通过 <code>datapath.ofproto_parser</code> (本质就是 <code>ryu.ofproto.ofproto_parser</code> 库) 来构建, 如:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs python">parser = datapath.ofproto_parser<br>req = parser.OFPFlowStatsRequest(datapath)<br>datapath.send_msg(req)<br></code></pre></td></tr></table></figure>
+
+<p>发起一个 <code>request</code>, 需要处理对应的 <code>reply</code>, 如:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-meta">@set_ev_cls(<span class="hljs-params">ofp_event.EventOFPFlowStatsReply, MAIN_DISPATCHER</span>)</span><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">_flow_stats_reply_handler</span>(<span class="hljs-params">self, ev</span>):<br>	body = ev.msg.body<br>	self.logger.info(<span class="hljs-string">&#x27;%s&#x27;</span>,json.dumps(ev.msg.to_jsondict(), ensure_ascii=<span class="hljs-literal">True</span>, indent=<span class="hljs-number">3</span>, sort_keys=<span class="hljs-literal">True</span>))	<br></code></pre></td></tr></table></figure>
+
+
+
 <h2 id="获取端口信息"><a href="#获取端口信息" class="headerlink" title="获取端口信息"></a>获取端口信息</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python">req = parser.OFPPortDescStatsRequest(datapath, <span class="hljs-number">0</span>)<br>datapath.send_msg(req)<br></code></pre></td></tr></table></figure>
 <p>这会让 switch 发回自己所有端口的信息.</p>
 <p>可以通过为 <code>EventOFPPortDescStatsReply</code> 添加事件处理程序来获取信息:</p>
