@@ -25,7 +25,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/big-O-complexity-chart.png">
 <meta property="article:published_time" content="2024-07-16T05:58:15.000Z">
-<meta property="article:modified_time" content="2025-03-06T06:22:06.831Z">
+<meta property="article:modified_time" content="2025-03-30T04:35:36.498Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/big-O-complexity-chart.png">
@@ -237,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3.5k 字
+          5.1k 字
         
       </span>
     
@@ -248,7 +248,7 @@
         
         
         
-          30 分钟
+          43 分钟
         
       </span>
     
@@ -378,6 +378,21 @@
 <li>向 Deque (双端队列) 两端插入&#x2F;删除元素 –&gt; O(1)</li>
 <li>向 Deque (双端队列) 中间插入&#x2F;删除元素 –&gt; O(n)</li>
 </ul>
+<h1 id="基础数据结构"><a href="#基础数据结构" class="headerlink" title="基础数据结构"></a>基础数据结构</h1><h2 id="前缀和"><a href="#前缀和" class="headerlink" title="前缀和"></a>前缀和</h2><p>前缀和, Prefix Sum, 是一种预处理技术, 用于快速计算数组或序列中某个区间的和.</p>
+<p>给定一个数组 <code>nums</code>, 其前缀和数组 <code>prefix</code> 定义为:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs cpp">prefix[<span class="hljs-number">0</span>] = nums[<span class="hljs-number">0</span>];<br>prefix[i] = prefix[i<span class="hljs-number">-1</span>] + nums[i], i &gt; <span class="hljs-number">0</span>;<br></code></pre></td></tr></table></figure>
+
+<p>当算出前缀和数组后, 可以在 <code>O(1)</code> 时间内计算出任意区间 <code>[l, r]</code> 的和, 其数学表达式为:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>sum(l, r) &#x3D; \begin{cases}<br>prefix[r], if\ l&#x3D;0, \newline~ \newline<br>prefix[r] - prefix[l-1], otherwise<br>\end{cases}<br>\end{aligned}<br>}<br>$$<br>(<code>l-1</code> 原因, 如果为 <code>prefix[l]</code>, 则把第 <code>l</code> 个元素也减去了)</p>
+<p>预处理, 即构建 prefix sum array 需要 <code>O(n)</code> 的时间和空间.</p>
+<p>示例代码:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;iostream&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;vector&gt;</span></span><br><br><span class="hljs-keyword">using</span> <span class="hljs-keyword">namespace</span> std;<br><br><span class="hljs-function">vector&lt;<span class="hljs-type">int</span>&gt; <span class="hljs-title">buildPrefixSum</span><span class="hljs-params">(<span class="hljs-type">const</span> vector&lt;<span class="hljs-type">int</span>&gt;&amp; nums)</span> </span>&#123;<br>    <span class="hljs-type">int</span> n = nums.<span class="hljs-built_in">size</span>();<br>    <span class="hljs-function">vector&lt;<span class="hljs-type">int</span>&gt; <span class="hljs-title">prefix</span><span class="hljs-params">(n)</span></span>;<br>    prefix[<span class="hljs-number">0</span>] = nums[<span class="hljs-number">0</span>];<br>    <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = <span class="hljs-number">1</span>; i &lt; n; ++i) &#123;<br>        prefix[i] = prefix[i<span class="hljs-number">-1</span>] + nums[i];<br>    &#125;<br>    <span class="hljs-keyword">return</span> prefix;<br>&#125;<br><br><span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">rangeSum</span><span class="hljs-params">(<span class="hljs-type">const</span> vector&lt;<span class="hljs-type">int</span>&gt;&amp; prefix, <span class="hljs-type">int</span> l, <span class="hljs-type">int</span> r)</span> </span>&#123;<br>    <span class="hljs-keyword">if</span> (l == <span class="hljs-number">0</span>) <span class="hljs-keyword">return</span> prefix[r];<br>    <span class="hljs-keyword">return</span> prefix[r] - prefix[l<span class="hljs-number">-1</span>];<br>&#125;<br><br><span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">main</span><span class="hljs-params">()</span> </span>&#123;<br>    vector&lt;<span class="hljs-type">int</span>&gt; nums = &#123;<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">5</span>&#125;;<br>    vector&lt;<span class="hljs-type">int</span>&gt; prefix = <span class="hljs-built_in">buildPrefixSum</span>(nums);<br><br>    <span class="hljs-comment">// 输出前缀和数组</span><br>    cout &lt;&lt; <span class="hljs-string">&quot;Prefix Sum Array: &quot;</span>;<br>    <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> num : prefix) cout &lt;&lt; num &lt;&lt; <span class="hljs-string">&quot; &quot;</span>;<br>    cout &lt;&lt; endl;<br><br>    <span class="hljs-comment">// 计算区间和示例</span><br>    cout &lt;&lt; <span class="hljs-string">&quot;Sum [1, 3]: &quot;</span> &lt;&lt; <span class="hljs-built_in">rangeSum</span>(prefix, <span class="hljs-number">1</span>, <span class="hljs-number">3</span>) &lt;&lt; endl; <span class="hljs-comment">// 2+3+4=9</span><br>    cout &lt;&lt; <span class="hljs-string">&quot;Sum [0, 4]: &quot;</span> &lt;&lt; <span class="hljs-built_in">rangeSum</span>(prefix, <span class="hljs-number">0</span>, <span class="hljs-number">4</span>) &lt;&lt; endl; <span class="hljs-comment">// 1+2+3+4+5=15</span><br><br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+<h3 id="异或前缀和"><a href="#异或前缀和" class="headerlink" title="异或前缀和"></a>异或前缀和</h3><p>异或前缀和, XOR Prefix Sum, 使用 XOR 运算替代加法运算. </p>
+<p>给定一个数组 <code>nums</code>, 其异或前缀和数组 <code>xor_prefix</code> 定义为:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs cpp">xor_prefix[<span class="hljs-number">0</span>] = nums[<span class="hljs-number">0</span>];<br>xor_prefix[i] = xor_prefix[i<span class="hljs-number">-1</span>]^nums[i], i &gt; <span class="hljs-number">0</span>;<br></code></pre></td></tr></table></figure>
+
+<p>数学表达为:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>xor_sum(l,r) &#x3D; \begin{cases}<br>xor_prefix[r], if\ l&#x3D;0, \newline~ \newline<br>xor_prefix[r]\ \oplus\ xor_prefix[l-1], otherwise<br>\end{cases}<br>\end{aligned}<br>}<br>$$</p>
 
                 
               </div>
