@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="Binutils 官网 介绍GNU Binutils 工具用于分析二进制文件. 链接器 ldld 用于将目标文件 (.o) 和库文件链接为可执行文件或共享库. 常用选项为:  -o &lt;file&gt;, 指定 output 文件名 -l&lt;lib&gt;, 链接动态库, 如 -lpthread -L&lt;path&gt;, 添加库搜索路径  1ld -o program main.o">
+    <meta name="description" content="Binutils 官网 介绍GNU Binutils 工具用于分析二进制文件. 链接器 ldld 用于将目标文件 (.o) 和库文件链接为可执行文件或共享库. 链接主要解决符号依赖问题, 假设库 A 调用了库 B 中的函数 func(), 编译时编译器只知道 func() 的存在 (通过头文件声明), 但不知道其具体实现地址, 链接时, 链接器会:  在库 B 中查找 func() 的二进制代码">
 <meta property="og:type" content="article">
 <meta property="og:title" content="GNU-Binutils-工具链">
 <meta property="og:url" content="http://example.com/2025/04/12/GNU-Binutils-%E5%B7%A5%E5%85%B7%E9%93%BE/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="Binutils 官网 介绍GNU Binutils 工具用于分析二进制文件. 链接器 ldld 用于将目标文件 (.o) 和库文件链接为可执行文件或共享库. 常用选项为:  -o &lt;file&gt;, 指定 output 文件名 -l&lt;lib&gt;, 链接动态库, 如 -lpthread -L&lt;path&gt;, 添加库搜索路径  1ld -o program main.o">
+<meta property="og:description" content="Binutils 官网 介绍GNU Binutils 工具用于分析二进制文件. 链接器 ldld 用于将目标文件 (.o) 和库文件链接为可执行文件或共享库. 链接主要解决符号依赖问题, 假设库 A 调用了库 B 中的函数 func(), 编译时编译器只知道 func() 的存在 (通过头文件声明), 但不知道其具体实现地址, 链接时, 链接器会:  在库 B 中查找 func() 的二进制代码">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-04-12T11:28:43.000Z">
-<meta property="article:modified_time" content="2025-04-12T12:17:44.156Z">
+<meta property="article:modified_time" content="2025-04-12T12:40:43.966Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.9k 字
+          3.3k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          25 分钟
+          28 分钟
         
       </span>
     
@@ -292,6 +292,12 @@
                 <p><a target="_blank" rel="noopener" href="https://www.gnu.org/software/binutils/">Binutils 官网</a></p>
 <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>GNU Binutils 工具用于分析二进制文件.</p>
 <h1 id="链接器-ld"><a href="#链接器-ld" class="headerlink" title="链接器 ld"></a>链接器 ld</h1><p><code>ld</code> 用于将目标文件 (<code>.o</code>) 和库文件链接为可执行文件或共享库.</p>
+<p>链接主要解决符号依赖问题, 假设库 A 调用了库 B 中的函数 <code>func()</code>, 编译时编译器只知道 <code>func()</code> 的存在 (通过头文件声明), 但不知道其具体实现地址, 链接时, 链接器会:</p>
+<ol>
+<li>在库 B 中查找 <code>func()</code> 的二进制代码</li>
+<li>将 <code>func()</code> 的地址绑定到库 A 的调用位置<br>(去重优化, 地址重定向, 符号解析等)</li>
+</ol>
+<p>还会合并代码段和数据段, 将不同库中的代码 (<code>.text</code>), 数据 (<code>.data/.bss</code>) 等段按规则整合, 生成最终可执行文件或新库.</p>
 <p>常用选项为:</p>
 <ul>
 <li><code>-o &lt;file&gt;</code>, 指定 <code>output</code> 文件名</li>
@@ -299,6 +305,12 @@
 <li><code>-L&lt;path&gt;</code>, 添加库搜索路径</li>
 </ul>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ld -o program main.o utils.o -L./libs -lmylib<br></code></pre></td></tr></table></figure>
+
+<h2 id="静态库和动态库的链接"><a href="#静态库和动态库的链接" class="headerlink" title="静态库和动态库的链接"></a>静态库和动态库的链接</h2><p>静态库链接时, 代码直接复制到最终可执行文件中, 生成的可执行文件较大, 如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">gcc main.c -lstaticlib -L/path<br></code></pre></td></tr></table></figure>
+
+<p>而动态库链接时, 仅记录依赖信息, 在运行时才会动态加载:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">gcc main.c -ldynamiclib -L/path<br></code></pre></td></tr></table></figure>
 
 <h1 id="汇编器-as"><a href="#汇编器-as" class="headerlink" title="汇编器 as"></a>汇编器 as</h1><p><code>as</code> 将汇编代码 (<code>.s</code>) 编译为目标文件 <code>.o</code>.</p>
 <p>常用选项有:</p>
@@ -384,7 +396,6 @@
 <li><code>x</code>, 提取文件</li>
 </ul>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">ar rcs libmath.a add.o sub.o  <span class="hljs-comment"># 创建静态库</span><br>ar t libmath.a                <span class="hljs-comment"># 查看库内容</span><br></code></pre></td></tr></table></figure>
-
 
                 
               </div>
