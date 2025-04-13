@@ -25,7 +25,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/openflow-switch-main-components.png">
 <meta property="article:published_time" content="2025-04-13T01:50:03.000Z">
-<meta property="article:modified_time" content="2025-04-13T02:24:33.905Z">
+<meta property="article:modified_time" content="2025-04-13T03:17:09.495Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/openflow-switch-main-components.png">
@@ -237,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          863 字
+          1.7k 字
         
       </span>
     
@@ -248,7 +248,7 @@
         
         
         
-          8 分钟
+          15 分钟
         
       </span>
     
@@ -301,10 +301,40 @@
 
 <h1 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h1><p>OpenFlow switch 的主要组件有:<br><img src="/../img/openflow-switch-main-components.png" srcset="/img/loading.gif" lazyload></p>
 <p>包含多个 flow tables 和一个 group table.</p>
-<p>一个 flow table 中包含一组 flow entries, 每个 flow entry 由 match fields, counters, 和一组 instructions 组成.</p>
+<ul>
+<li>一个 flow table 中包含一组 flow entries, 每个 flow entry 由 match fields, counters, 和一组 instructions 组成.</li>
+</ul>
 <p>可以通过 OpenFlow 协议来对 flow table 中的 flow entry 做 <code>add</code>, <code>update</code> 以及 <code>delete</code> 操作.</p>
 <p>匹配流程为: 从 flow table 0 开始, 其内的 flow entries 按优先级排列进行匹配, 第一个匹配的 entry 用于处理数据包. 即执行其 instructions. 如果没有匹配的 entry, 则由 table-miss 项进行处理 (如果配置了的话), 一般的操作是: 将数据包通过 openflow channel 发往 controller, 或丢弃, 或发送给另一个 flow table.</p>
 <p>Instructions 包含 actions 或者 modify pipline process. Actions 描述对数据包进行 forwarding, midification 以及 group table processing. 而 Pipline processing instruction 指示将该数据包发送给另一个 flow table 处理, flow table 之间可以通过 metadata 交换信息.</p>
+<ul>
+<li>一个 group table 中包含一组 group entries, 每个 group entry 包含 Group ID (唯一标识), Group type (类型, 定义后不能动态修改), 多个 actions buckets, 以及其他属性. 要执行哪些 buckets 由 该 entry 的 group type 决定</li>
+</ul>
+<p>有 4 种 group type:</p>
+<ul>
+<li><code>all</code> (<code>OFPGT_ALL</code>), 执行所有 buckets</li>
+<li><code>select</code> (<code>OFPGT_SELECT</code>), 根据算法选择一个 bucket 执行</li>
+<li><code>indirect</code> (<code>OFPGT_INDIRECT</code>), 执行单个 bucket (??)</li>
+<li><code>fast failover</code> (<code>OFPGT_FF</code>), 按 buckets 的优先级顺序执行, 自动切换到下一个可用的 bucket</li>
+</ul>
+<h1 id="OpenFlow-ports"><a href="#OpenFlow-ports" class="headerlink" title="OpenFlow ports"></a>OpenFlow ports</h1><p>OpenFlow ports 指 OpenFlow switch 上能够被 SDN Controller 管理的逻辑接口, 可以用于:</p>
+<ul>
+<li>接收&#x2F;发送数据包, 来连接物理网络或其他设备</li>
+<li>参与流表处理, 能作为匹配字段 (如 <code>in_port</code>)或 action target (如 <code>output:port</code>)</li>
+</ul>
+<p>OpenFlow ports 分 3 类, 包括 Physical ports, logical ports, reserved ports.</p>
+<ul>
+<li>Physical ports, 对应物理设备接口, 如交换机的 <code>1G/10G</code> 以太网口, 用于连接主机, 路由器或其他交换机</li>
+<li>Logical ports, 无直接的物理映射, 如隧道端口, 链路聚合组等, 但本质上还是和 OpenFlow Physical ports 通信, 数据包的区别在于, metadata 中会有额外的字段, 如 Tunnel-ID 来指定</li>
+<li>Reserved ports, 预定义的逻辑端口, 有特殊语义, 如:<ul>
+<li><code>OFPP_LOCAL</code>, 交换机的本地控制平面</li>
+<li><code>OFPP_CONTROLLER</code>, 对应与 SDN 控制器的 control channel</li>
+<li><code>OFPP_ALL</code>, 广播到所有物理端口</li>
+<li><code>OFPP_FLOOD</code>, 洪泛到除入端口外的所有端口</li>
+<li><code>OFPP_IN_PORT</code>, 将数据包送回入端口</li>
+</ul>
+</li>
+</ul>
 
                 
               </div>
