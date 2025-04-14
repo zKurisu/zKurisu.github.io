@@ -25,7 +25,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/small-linux-distro-build-ok.png">
 <meta property="article:published_time" content="2025-04-14T06:02:23.000Z">
-<meta property="article:modified_time" content="2025-04-14T10:44:59.382Z">
+<meta property="article:modified_time" content="2025-04-14T11:36:38.954Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/small-linux-distro-build-ok.png">
@@ -237,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3.9k 字
+          4.7k 字
         
       </span>
     
@@ -248,7 +248,7 @@
         
         
         
-          33 分钟
+          40 分钟
         
       </span>
     
@@ -317,7 +317,23 @@
 <li><code>sendfile</code> 将一个文件发送到另一个文件 (这里把文件内容发送到 <code>STD_OUT</code>)<figure class="highlight as"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs as">section .data<br>    SYS_OPEN equ <span class="hljs-number">2</span><br>    READ_ONLY equ <span class="hljs-number">0</span><br>    STD_OUT equ <span class="hljs-number">1</span><br><br>section .text<br>global _start<br>_start:<br>    ; Open File<br>    mov rax, SYS_OPEN<br>    mov rdi, [rsp+<span class="hljs-number">16</span>]<br>    mov rsi, READ_ONLY<br>    mov rdx, <span class="hljs-number">0</span><br>    syscall<br><br>    ; send file<br>    mov rdi, <span class="hljs-number">1</span><br>    mov rsi, rax<br>    mov rax, <span class="hljs-number">40</span><br>    mov rdx, <span class="hljs-number">0</span><br>    mov r10, <span class="hljs-number">256</span><br>    syscall<br>    jmp $<br></code></pre></td></tr></table></figure></li>
 </ul>
 <h1 id="汇编调用-getcwd"><a href="#汇编调用-getcwd" class="headerlink" title="汇编调用 getcwd"></a>汇编调用 getcwd</h1><ul>
-<li><code>getcwd</code> 系统调用, 用于获取当前目录</li>
+<li><code>getcwd</code> 系统调用, 用于获取当前目录<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">char</span> *<span class="hljs-title function_">getcwd</span><span class="hljs-params">(<span class="hljs-type">char</span> *buf, <span class="hljs-type">size_t</span> size)</span>;<br></code></pre></td></tr></table></figure></li>
+</ul>
+<p>实现:</p>
+<figure class="highlight as"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><code class="hljs as">section .data<br><br>buffer:<br>    times <span class="hljs-number">256</span> db <span class="hljs-number">0</span><br><br>buffer_len equ $ - buffer<br><br>section .text<br>global _start<br><br>_start:<br>    ; Get pwd<br>    mov rax, <span class="hljs-number">79</span><br>    mov rdi, buffer<br>    mov rsi, buffer_len<br>    syscall<br><br>    ; Print pwd<br>    mov rax, <span class="hljs-number">1</span><br>    mov rdi, <span class="hljs-number">1</span><br>    mov rsi, buffer<br>    mov rdx, buffer_len<br>    syscall<br><br>    jmp $<br></code></pre></td></tr></table></figure>
+
+<h1 id="execve"><a href="#execve" class="headerlink" title="execve"></a>execve</h1><p><code>execve</code> 系统调用用于运行一个程序, 它会用新程序替换当前进程的地址空间, 其函数签名为:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">execve</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *pathname, <span class="hljs-type">char</span> *<span class="hljs-type">const</span> _Nullable argv[],</span><br><span class="hljs-params">            <span class="hljs-type">char</span> *<span class="hljs-type">const</span> _Nullable envp[])</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>argv[]</code> 是参数数组</li>
+<li><code>envp[]</code> 是环境变量数组</li>
+</ul>
+<p>用 <code>strace</code> 测试:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">strace -e execve <span class="hljs-built_in">whoami</span><br></code></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-type">char</span> *argv[] = &#123;<span class="hljs-string">&quot;/bin/ls&quot;</span>, <span class="hljs-string">&quot;-l&quot;</span>, <span class="hljs-literal">NULL</span>&#125;;  <span class="hljs-comment">// 参数数组</span><br>    <span class="hljs-type">char</span> *envp[] = &#123;<span class="hljs-string">&quot;PATH=/bin&quot;</span>, <span class="hljs-literal">NULL</span>&#125;;      <span class="hljs-comment">// 自定义环境变量</span><br><br>    <span class="hljs-keyword">if</span> (execve(<span class="hljs-string">&quot;/bin/ls&quot;</span>, argv, envp) == <span class="hljs-number">-1</span>) &#123;<br>        perror(<span class="hljs-string">&quot;execve failed&quot;</span>);<br>        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;<br>    &#125;<br>    <span class="hljs-comment">// 此处代码不会执行（除非execve失败）</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>注意 <code>argv[0]</code> 要与程序名一致 (就像平时传递给 main 函数一样, 第一个参数为程序名)</li>
 </ul>
 <h1 id="Simple-Kernel"><a href="#Simple-Kernel" class="headerlink" title="Simple Kernel"></a>Simple Kernel</h1><p><a target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=SOo1rbnryeo">学习自 Youtube</a></p>
 <p><code>hello.c</code> 文件内容如下:</p>
