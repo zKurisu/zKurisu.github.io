@@ -24,7 +24,7 @@
 <meta property="og:description" content="介绍Linux system call 的定义一般包含在 &lt;unistd.h&gt; (UNIX Standard) 头文件中. 学习时常用  man 2 xxx 查看手册 strace 追踪调用情况  Hello World123456#include &lt;unistd.h&gt;int main(void) &amp;#123;    write(1, &quot;Hello, World!">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-04-14T06:02:23.000Z">
-<meta property="article:modified_time" content="2025-04-14T07:14:18.134Z">
+<meta property="article:modified_time" content="2025-04-14T08:23:41.681Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.1k 字
+          2.8k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          18 分钟
+          23 分钟
         
       </span>
     
@@ -362,7 +362,31 @@
 <h2 id="编译-busybox"><a href="#编译-busybox" class="headerlink" title="编译 busybox"></a>编译 busybox</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-comment"># git clone https://git.busybox.net/busybox</span><br><span class="hljs-comment"># cd busybox</span><br><span class="hljs-comment"># make menuconfig</span><br></code></pre></td></tr></table></figure>
 <p>启用 <code>Build static binary</code> 后退出.</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-comment"># make -j`nproc`</span><br><span class="hljs-comment"># mkdir /boot-files/initramfs</span><br><span class="hljs-comment"># make CONFIG_PREFIX=/boot-files/initramfs install</span><br></code></pre></td></tr></table></figure>
+<p>自己测试时这里报错 <code>&#39;TCA_CBQ_MAX&#39; undeclared</code>, 需要修改 <code>.config</code> 文件, 将 <code>CONFIG_TC=y</code> 改为:</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ini"><span class="hljs-attr">CONFIG_TC</span>=n<br></code></pre></td></tr></table></figure>
 
+<p>然后重新编译.</p>
+<h2 id="构建-initramfs"><a href="#构建-initramfs" class="headerlink" title="构建 initramfs"></a>构建 initramfs</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">cd</span> /boot-files/initramfs<br>vim init<br></code></pre></td></tr></table></figure>
+
+<p>内容为:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-meta">#!/bin/sh</span><br><br>/bin/sh<br></code></pre></td></tr></table></figure>
+
+<p>之后:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">rm</span> linuxrc<br><span class="hljs-built_in">chmod</span> +x init<br>find . | cpio -o -H newc &gt; ../init.cpio<br><span class="hljs-built_in">cd</span> ..<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>find .</code> 递归列出当前目录下的所有文件和目录路径</li>
+<li><code>cpio -o -H newc</code><ul>
+<li><code>-o</code> 表明创建归档</li>
+<li><code>-H newc</code>, 指定使用 <code>newc</code> 格式</li>
+<li><code>&gt; ../init.cpio</code> 将归档信息保存到指定文件</li>
+</ul>
+</li>
+</ul>
+<h2 id="安装-bootloader"><a href="#安装-bootloader" class="headerlink" title="安装 bootloader"></a>安装 bootloader</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs sh">apt install syslinux<br><span class="hljs-built_in">cd</span> /boot-files<br><span class="hljs-built_in">dd</span> <span class="hljs-keyword">if</span>=/dev/zero of=boot bs=1M count=50<br>apt install dosfstools<br>mkfs -t fat boot<br>syslinux boot<br><span class="hljs-built_in">mkdir</span> mnt<br>mount boot mnt<br><span class="hljs-built_in">cp</span> bzImage init.cpio mnt<br>umount mnt<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>syslinux boot</code> 将该文件转换为可启动介质, 具体操作为, 向引导扇区写入 <code>ldlinux.sys</code> 程序</li>
+</ul>
+<h2 id="导出-distro"><a href="#导出-distro" class="headerlink" title="导出 distro"></a>导出 distro</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">docker <span class="hljs-built_in">cp</span> dca728a8a03a:/boot-files/boot .<br>qemu-system-x86_64 boot<br></code></pre></td></tr></table></figure>
 
 
                 
