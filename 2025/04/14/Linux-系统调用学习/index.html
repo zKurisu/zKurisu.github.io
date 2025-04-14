@@ -23,10 +23,12 @@
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="介绍Linux system call 的定义一般包含在 &lt;unistd.h&gt; (UNIX Standard) 头文件中. 学习时常用  man 2 xxx 查看手册 strace 追踪调用情况  Hello World123456#include &lt;unistd.h&gt;int main(void) &amp;#123;    write(1, &quot;Hello, World!">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/small-linux-distro-build-ok.png">
 <meta property="article:published_time" content="2025-04-14T06:02:23.000Z">
-<meta property="article:modified_time" content="2025-04-14T08:23:41.681Z">
+<meta property="article:modified_time" content="2025-04-14T09:15:04.998Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/small-linux-distro-build-ok.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -235,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.8k 字
+          3.5k 字
         
       </span>
     
@@ -246,7 +248,7 @@
         
         
         
-          23 分钟
+          30 分钟
         
       </span>
     
@@ -301,6 +303,15 @@
 <p>追踪调用:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ gcc hello.c -o hello<br>$ strace hello<br></code></pre></td></tr></table></figure>
 
+<h1 id="Pipe"><a href="#Pipe" class="headerlink" title="Pipe"></a>Pipe</h1><p>对于 pipe 而言, 而要两个 “管道文件描述符”, 一个用于 child 读取, 一个用于 parent 写入.</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;sys/types.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><br><span class="hljs-type">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-type">int</span> pipefds[<span class="hljs-number">2</span>]; <span class="hljs-comment">// 管道文件描述符数组 [读端, 写端]</span><br>    <span class="hljs-type">char</span> buffer[<span class="hljs-number">256</span>] = &#123; <span class="hljs-number">0</span> &#125;;<br>    <br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;parent pid: %d\n&quot;</span>, getpid());<br>    pipe(pipefds);<br>    write(pipefds[<span class="hljs-number">1</span>], <span class="hljs-string">&quot;msg&quot;</span>, <span class="hljs-number">3</span>);<br>    <span class="hljs-keyword">if</span> (fork() &gt; <span class="hljs-number">0</span>) &#123;<br>        <span class="hljs-keyword">return</span><br>    &#125;<br><br>    read(pipefds[<span class="hljs-number">0</span>], buffer, <span class="hljs-number">3</span>);<br><br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;got from pipe: %s\n&quot;</span>, buffer);<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;child pid: %d\n&quot;</span>, getpid())<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>&lt;sys/types.h&gt;</code> 提供基本的系统类型, 如 <code>pid_t</code></li>
+<li><code>&lt;unistd.h&gt;</code> 提供 POSIX 系统调用, 如 <code>pipe</code>, <code>fork</code>, <code>getpid</code> 等</li>
+<li><code>&lt;stdio.h&gt;</code> 提供标准 I&#x2F;O 函数, 如 <code>printf</code></li>
+<li>UNIX 文件描述符是一个 integer</li>
+<li><code>pipe(pipefds)</code> 用指定数组创建管道</li>
+</ul>
 <h1 id="Simple-Kernel"><a href="#Simple-Kernel" class="headerlink" title="Simple Kernel"></a>Simple Kernel</h1><p><a target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=SOo1rbnryeo">学习自 Youtube</a></p>
 <p><code>hello.c</code> 文件内容如下:</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;linux/module.h&gt;</span> <span class="hljs-comment">// 内核模块开发必需的头文件</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;linux/kernel.h&gt;</span> <span class="hljs-comment">// 提供printk等内核打印函数</span></span><br><br><span class="hljs-comment">// 这些宏定义了模块的元信息, 会被编译进模块文件中</span><br><span class="hljs-comment">// MODULE_LICENSE() 是强制要求的, 否则模块无法加载</span><br>MODULE_LICENSE(<span class="hljs-string">&quot;GPL&quot;</span>);  <span class="hljs-comment">// 声明模块使用GPL许可证</span><br>MODULE_AUTHOR(<span class="hljs-string">&quot;Jie&quot;</span>);    <span class="hljs-comment">// 声明模块作者</span><br>MODULE_DESCRIPTION(<span class="hljs-string">&quot;A simple kernel module&quot;</span>); <span class="hljs-comment">// 模块描述</span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">init_module</span><span class="hljs-params">()</span> &#123;<br>    printk(KERN_INFO <span class="hljs-string">&quot;Cats module loaded!\n&quot;</span>);<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br><br><span class="hljs-type">void</span> <span class="hljs-title function_">cleanup_module</span><span class="hljs-params">()</span> &#123;<br>    printk(KERN_INFO <span class="hljs-string">&quot;Cats module unloaded!\n&quot;</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
@@ -381,13 +392,20 @@
 <li><code>&gt; ../init.cpio</code> 将归档信息保存到指定文件</li>
 </ul>
 </li>
+<li>内核会加载 initrd 到内存, 将其解压为临时根文件系统</li>
 </ul>
 <h2 id="安装-bootloader"><a href="#安装-bootloader" class="headerlink" title="安装 bootloader"></a>安装 bootloader</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs sh">apt install syslinux<br><span class="hljs-built_in">cd</span> /boot-files<br><span class="hljs-built_in">dd</span> <span class="hljs-keyword">if</span>=/dev/zero of=boot bs=1M count=50<br>apt install dosfstools<br>mkfs -t fat boot<br>syslinux boot<br><span class="hljs-built_in">mkdir</span> mnt<br>mount boot mnt<br><span class="hljs-built_in">cp</span> bzImage init.cpio mnt<br>umount mnt<br></code></pre></td></tr></table></figure>
 <ul>
 <li><code>syslinux boot</code> 将该文件转换为可启动介质, 具体操作为, 向引导扇区写入 <code>ldlinux.sys</code> 程序</li>
 </ul>
-<h2 id="导出-distro"><a href="#导出-distro" class="headerlink" title="导出 distro"></a>导出 distro</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">docker <span class="hljs-built_in">cp</span> dca728a8a03a:/boot-files/boot .<br>qemu-system-x86_64 boot<br></code></pre></td></tr></table></figure>
+<h2 id="导出-distro"><a href="#导出-distro" class="headerlink" title="导出 distro"></a>导出 distro</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">docker <span class="hljs-built_in">cp</span> dca728a8a03a:/boot-files/boot .<br>qemu-system-x86_64 boot<br>vncviewer localhost:5900<br></code></pre></td></tr></table></figure>
 
+<p>输入:</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs awk"><span class="hljs-regexp">/bzImage -initrd=/i</span>nit.cpio<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>initrd</code> 指 initramdisk, 在内核完成硬件初始化后, 挂载真实根文件系统前, 提供一个临时的用户态环境</li>
+</ul>
+<p><img src="/../img/small-linux-distro-build-ok.png" srcset="/img/loading.gif" lazyload></p>
 
                 
               </div>
@@ -468,6 +486,12 @@
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2025/04/14/ED-%E7%BC%96%E8%BE%91%E5%99%A8%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8/" title="ED-编辑器基本使用">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">ED-编辑器基本使用</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">
