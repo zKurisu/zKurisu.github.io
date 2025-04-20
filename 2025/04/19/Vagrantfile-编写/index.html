@@ -1,0 +1,797 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/wallhaven-j5kjgy_1920x1080.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Jie">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="Vagrantfile 文档Vagrant libvert 文档 搜索路径vagrant 搜索 Vagrantfile 的顺序为: 假如当前位于 &#x2F;home&#x2F;mitchellh&#x2F;projects&#x2F;foo 目录: 12345&#x2F;home&#x2F;mitchellh&#x2F;projects&#x2F;foo&#x2F;Vagrantfile&#x2F;home&#x2F;mitchellh&#x2F;projects&#x2F;Vagrantfile&#x2F;home&#x2F;mitchel">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Vagrantfile-编写">
+<meta property="og:url" content="http://example.com/2025/04/19/Vagrantfile-%E7%BC%96%E5%86%99/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="Vagrantfile 文档Vagrant libvert 文档 搜索路径vagrant 搜索 Vagrantfile 的顺序为: 假如当前位于 &#x2F;home&#x2F;mitchellh&#x2F;projects&#x2F;foo 目录: 12345&#x2F;home&#x2F;mitchellh&#x2F;projects&#x2F;foo&#x2F;Vagrantfile&#x2F;home&#x2F;mitchellh&#x2F;projects&#x2F;Vagrantfile&#x2F;home&#x2F;mitchel">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-04-19T03:31:42.000Z">
+<meta property="article:modified_time" content="2025-04-19T15:00:02.861Z">
+<meta property="article:author" content="Jie">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>Vagrantfile-编写 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Jie</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/SteinsGate_all.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Vagrantfile-编写"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-04-19 11:31" pubdate>
+          2025年4月19日 中午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          3.8k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          32 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">Vagrantfile-编写</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p><a target="_blank" rel="noopener" href="https://developer.hashicorp.com/vagrant/docs/vagrantfile">Vagrantfile 文档</a><br><a target="_blank" rel="noopener" href="https://www.runoob.com/ruby/ruby-tutorial.html">Vagrant libvert 文档</a></p>
+<h1 id="搜索路径"><a href="#搜索路径" class="headerlink" title="搜索路径"></a>搜索路径</h1><p><code>vagrant</code> 搜索 <code>Vagrantfile</code> 的顺序为: 假如当前位于 <code>/home/mitchellh/projects/foo</code> 目录:</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs awk"><span class="hljs-regexp">/home/mi</span>tchellh<span class="hljs-regexp">/projects/</span>foo/Vagrantfile<br><span class="hljs-regexp">/home/mi</span>tchellh<span class="hljs-regexp">/projects/</span>Vagrantfile<br><span class="hljs-regexp">/home/mi</span>tchellh/Vagrantfile<br><span class="hljs-regexp">/home/</span>Vagrantfile<br>/Vagrantfile<br></code></pre></td></tr></table></figure>
+<ul>
+<li>也就是说, 从当前目录往上找</li>
+</ul>
+<p>可以修改 <code>VAGRANT_CWD</code> 环境变量来设置第一个查询的目录.</p>
+<h1 id="加载顺序"><a href="#加载顺序" class="headerlink" title="加载顺序"></a>加载顺序</h1><p><code>vagrant</code> 不会只加载一个 <code>Vagrantfile</code>, 而是按照下面顺序将一系列 <code>Vagrantfile</code> 的配置合并.</p>
+<ol>
+<li>打包在 Box 中的 <code>Vagrantfile</code>. 包含作者预设的基础配置, 通常是该 Box 运行所需的最小配置</li>
+<li><code>~/.vagrant.d/Vagrantfile</code>, 作为用户级全局默认配置</li>
+<li><code>Project_Dir/Vagrantfile</code>, 项目特定配置<br>(剩下的可以看文档)</li>
+</ol>
+<h1 id="Configuration-Version"><a href="#Configuration-Version" class="headerlink" title="Configuration Version"></a>Configuration Version</h1><p>运行 <code>vagrant init</code> 时, 生成的 <code>Vagrantfile</code> 结构为:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs ruby">Vagrant.configure(<span class="hljs-string">&quot;2&quot;</span>) <span class="hljs-keyword">do</span> |<span class="hljs-params">config</span>|<br>  <span class="hljs-comment"># ...</span><br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>这里的 <code>2</code> 指定 <code>config</code> 对象的版本, 其与 <code>do...end</code> 块中的语法相关联</li>
+<li>在一个配置块内, 只能声明一个版本, 若要使用两个:<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs ruby">Vagrant.configure(<span class="hljs-string">&quot;1&quot;</span>) <span class="hljs-keyword">do</span> |<span class="hljs-params">config</span>|<br>  <span class="hljs-comment"># v1 configs...</span><br><span class="hljs-keyword">end</span><br><br>Vagrant.configure(<span class="hljs-string">&quot;2&quot;</span>) <span class="hljs-keyword">do</span> |<span class="hljs-params">config</span>|<br>  <span class="hljs-comment"># v2 configs...</span><br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure></li>
+</ul>
+<h1 id="config-vm"><a href="#config-vm" class="headerlink" title="config.vm"></a>config.vm</h1><p><code>config</code> 的 <code>vm</code> 方法返回一个 <code>Vagrant::Config::V2::VMConfig</code> 类型对象. 设置虚拟机配置.</p>
+<h2 id="基本属性"><a href="#基本属性" class="headerlink" title="基本属性"></a>基本属性</h2><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs ruby">config.vm.box = <span class="hljs-string">&quot;ubuntu/focal64&quot;</span>  <span class="hljs-comment"># 设置基础镜像</span><br>config.vm.hostname = <span class="hljs-string">&quot;my-vm&quot;</span>      <span class="hljs-comment"># 设置主机名</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="网络配置"><a href="#网络配置" class="headerlink" title="网络配置"></a>网络配置</h2><p>用 <code>network</code> 方法:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ruby">config.vm.network(type, options)<br></code></pre></td></tr></table></figure>
+
+<h3 id="private-network"><a href="#private-network" class="headerlink" title="private_network"></a><code>private_network</code></h3><p><code>private_network</code> 指不与主机桥接的私有网络:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ruby">config.vm.network <span class="hljs-string">&quot;private_network&quot;</span>, <span class="hljs-symbol">ip:</span> <span class="hljs-string">&quot;192.168.33.10&quot;</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>libvirt__network_name</code>, 指定虚拟网络名称</li>
+</ul>
+<h3 id="forwarded-port"><a href="#forwarded-port" class="headerlink" title="forwarded_port"></a><code>forwarded_port</code></h3><p><code>forwarded_port</code> 配置端口转发:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs ruby">config.vm.network <span class="hljs-string">&quot;forwarded_port&quot;</span>, <br>  <span class="hljs-symbol">guest:</span> <span class="hljs-number">80</span>, <br>  <span class="hljs-symbol">host:</span> <span class="hljs-number">8080</span>,<br>  <span class="hljs-symbol">host_ip:</span> <span class="hljs-string">&quot;127.0.0.1&quot;</span>,<br>  <span class="hljs-symbol">protocol:</span> <span class="hljs-string">&quot;tcp&quot;</span>,<br>  <span class="hljs-symbol">auto_correct:</span> <span class="hljs-literal">true</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="public-network"><a href="#public-network" class="headerlink" title="public_network"></a><code>public_network</code></h3><p><code>public_network</code> 指桥接到 Host 网络:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs ruby">config.vm.network <span class="hljs-string">&quot;public_network&quot;</span>,<br>  <span class="hljs-symbol">:dev</span> =&gt; <span class="hljs-string">&quot;eth1&quot;</span>,  <br>  <span class="hljs-symbol">:mode</span> =&gt; <span class="hljs-string">&quot;bridge&quot;</span>, <br>  <span class="hljs-symbol">:virtualport_type</span> =&gt; <span class="hljs-string">&quot;openvswitch&quot;</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="配置同步文件夹"><a href="#配置同步文件夹" class="headerlink" title="配置同步文件夹"></a>配置同步文件夹</h2><p>用 <code>synced_folder</code> 方法:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ruby">config.vm.synced_folder <span class="hljs-string">&quot;./code&quot;</span>, <span class="hljs-string">&quot;/home/vagrant/code&quot;</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>第一个参数是 host 端的目录</li>
+<li>第二个参数是 VM 端的目录</li>
+</ul>
+<h2 id="初始化脚本"><a href="#初始化脚本" class="headerlink" title="初始化脚本"></a>初始化脚本</h2><p><code>provision</code> (“配置”) 方法用于在虚拟机创建完成后指定脚本或命令执行</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ruby">config.vm.provision(type, **options)<br></code></pre></td></tr></table></figure>
+
+<h3 id="shell-执行-shell-命令-x2F-脚本"><a href="#shell-执行-shell-命令-x2F-脚本" class="headerlink" title="shell, 执行 shell 命令&#x2F;脚本"></a>shell, 执行 shell 命令&#x2F;脚本</h3><p>运行 <code>inline</code> 命令:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ruby">config.vm.provision <span class="hljs-string">&quot;shell&quot;</span>, <span class="hljs-symbol">inline:</span> <span class="hljs-string">&quot;apt-get update&quot;</span><br></code></pre></td></tr></table></figure>
+
+<p>指定外部脚本:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs ruby">config.vm.provision <span class="hljs-string">&quot;shell&quot;</span>, <span class="hljs-symbol">path:</span> <span class="hljs-string">&quot;scripts/setup.sh&quot;</span><br>config.vm.provision <span class="hljs-string">&quot;shell&quot;</span>, <span class="hljs-symbol">path:</span> <span class="hljs-string">&quot;setup.sh&quot;</span>, <span class="hljs-symbol">args:</span> [<span class="hljs-string">&quot;arg1&quot;</span>, <span class="hljs-string">&quot;arg2&quot;</span>]<br></code></pre></td></tr></table></figure>
+
+<h3 id="file-上传文件"><a href="#file-上传文件" class="headerlink" title="file, 上传文件"></a>file, 上传文件</h3><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ruby">config.vm.provision <span class="hljs-string">&quot;file&quot;</span>, <span class="hljs-symbol">source:</span> <span class="hljs-string">&quot;local/path&quot;</span>, <span class="hljs-symbol">destination:</span> <span class="hljs-string">&quot;/remote/path&quot;</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="ansible-执行-playbook"><a href="#ansible-执行-playbook" class="headerlink" title="ansible, 执行 playbook"></a>ansible, 执行 playbook</h3><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs ruby">config.vm.provision <span class="hljs-string">&quot;ansible&quot;</span> <span class="hljs-keyword">do</span> |<span class="hljs-params">ansible</span>|<br>  ansible.playbook = <span class="hljs-string">&quot;playbook.yml&quot;</span><br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="Provider-专属设置"><a href="#Provider-专属设置" class="headerlink" title="Provider 专属设置"></a>Provider 专属设置</h2><p>用 <code>config.vm.provider</code> 方法:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs ruby">config.vm.provider <span class="hljs-string">&quot;provider_name&quot;</span> <span class="hljs-keyword">do</span> |<span class="hljs-params">provider</span>|<br>  <span class="hljs-comment"># 提供者特定的配置</span><br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="libvert-配置"><a href="#libvert-配置" class="headerlink" title="libvert 配置"></a>libvert 配置</h3><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs ruby">config.vm.provider <span class="hljs-symbol">:libvirt</span> <span class="hljs-keyword">do</span> |<span class="hljs-params">libvirt</span>|<br>  libvirt.driver = <span class="hljs-string">&quot;kvm&quot;</span>           <span class="hljs-comment"># 使用KVM加速</span><br>  libvirt.memory = <span class="hljs-number">4096</span>            <span class="hljs-comment"># 内存大小(MB)</span><br>  libvirt.cpus = <span class="hljs-number">4</span>                 <span class="hljs-comment"># CPU核心数</span><br>  libvirt.disk_bus = <span class="hljs-string">&quot;virtio&quot;</span>      <span class="hljs-comment"># 磁盘总线类型</span><br>  libvirt.nic_model_type = <span class="hljs-string">&quot;virtio&quot;</span> <span class="hljs-comment"># 网卡模型</span><br>  libvirt.management_network_name = <span class="hljs-string">&quot;default&quot;</span>  <span class="hljs-comment"># 使用默认 NAT 网络</span><br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="多机配置"><a href="#多机配置" class="headerlink" title="多机配置"></a>多机配置</h2><p>用 <code>config.vm.define</code> 方法:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs ruby">config.vm.define <span class="hljs-string">&quot;vm1&quot;</span> <span class="hljs-keyword">do</span> |<span class="hljs-params">vm1</span>|<br>  <span class="hljs-comment"># vm1 虚拟机的配置</span><br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+<p>如定义两个虚拟机:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs ruby">Vagrant.configure(<span class="hljs-string">&quot;2&quot;</span>) <span class="hljs-keyword">do</span> |<span class="hljs-params">config</span>|<br>  <span class="hljs-comment"># 共享的基础配置</span><br>  config.vm.box = <span class="hljs-string">&quot;ubuntu/focal64&quot;</span><br>  <br>  <span class="hljs-comment"># 定义 web 服务器</span><br>  config.vm.define <span class="hljs-string">&quot;web&quot;</span> <span class="hljs-keyword">do</span> |<span class="hljs-params">web</span>|<br>    web.vm.hostname = <span class="hljs-string">&quot;web-server&quot;</span><br>    web.vm.network <span class="hljs-string">&quot;private_network&quot;</span>, <span class="hljs-symbol">ip:</span> <span class="hljs-string">&quot;192.168.33.10&quot;</span><br>  <span class="hljs-keyword">end</span><br>  <br>  <span class="hljs-comment"># 定义数据库服务器</span><br>  config.vm.define <span class="hljs-string">&quot;db&quot;</span> <span class="hljs-keyword">do</span> |<span class="hljs-params">db</span>|<br>    db.vm.hostname = <span class="hljs-string">&quot;db-server&quot;</span><br>    db.vm.network <span class="hljs-string">&quot;private_network&quot;</span>, <span class="hljs-symbol">ip:</span> <span class="hljs-string">&quot;192.168.33.11&quot;</span><br>    db.vm.provider <span class="hljs-string">&quot;virtualbox&quot;</span> <span class="hljs-keyword">do</span> |<span class="hljs-params">vb</span>|<br>      vb.memory = <span class="hljs-number">2048</span><br>    <span class="hljs-keyword">end</span><br>  <span class="hljs-keyword">end</span><br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>在 <code>define</code> 块之外的为共享配置</li>
+</ul>
+<h1 id="config-ssh"><a href="#config-ssh" class="headerlink" title="config.ssh"></a>config.ssh</h1><p><code>config.ssh</code> 对象用于配置 SSH 连接.</p>
+<h2 id="基础设置"><a href="#基础设置" class="headerlink" title="基础设置"></a>基础设置</h2><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs ruby">config.ssh.username = <span class="hljs-string">&quot;vagrant&quot;</span>     <span class="hljs-comment"># 默认登录用户名</span><br>config.ssh.password = <span class="hljs-string">&quot;vagrant&quot;</span>    <span class="hljs-comment"># 登录密码（不推荐）</span><br>config.ssh.port = <span class="hljs-number">22</span>               <span class="hljs-comment"># SSH端口</span><br>config.ssh.host = <span class="hljs-string">&quot;192.168.33.10&quot;</span>  <span class="hljs-comment"># 手动指定主机地址</span><br></code></pre></td></tr></table></figure>
+
+<p>密钥认证配置:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs ruby">config.ssh.private_key_path = <span class="hljs-string">&quot;~/.ssh/id_rsa&quot;</span>  <span class="hljs-comment"># 指定私钥路径</span><br>config.ssh.keys_only = <span class="hljs-literal">true</span>                     <span class="hljs-comment"># 只使用密钥认证</span><br>config.ssh.verify_host_key = <span class="hljs-symbol">:never</span>            <span class="hljs-comment"># 跳过主机密钥验证</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="超时和重连"><a href="#超时和重连" class="headerlink" title="超时和重连"></a>超时和重连</h2><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs ruby">config.ssh.timeout = <span class="hljs-number">300</span>           <span class="hljs-comment"># 连接超时时间（秒）</span><br>config.ssh.keep_alive = <span class="hljs-literal">true</span>       <span class="hljs-comment"># 保持连接</span><br>config.ssh.retry_count = <span class="hljs-number">30</span>        <span class="hljs-comment"># 重试次数</span><br>config.ssh.retry_delay = <span class="hljs-number">5</span>        <span class="hljs-comment"># 重试间隔（秒）</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="代理和转发"><a href="#代理和转发" class="headerlink" title="代理和转发"></a>代理和转发</h2><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs ruby">config.ssh.proxy_command = <span class="hljs-string">&quot;ssh gateway_user@gateway_host -W %h:%p&quot;</span>  <span class="hljs-comment"># 跳板机配置</span><br>config.ssh.forward_agent = <span class="hljs-literal">true</span>    <span class="hljs-comment"># 启用SSH agent转发</span><br>config.ssh.forward_x11 = <span class="hljs-literal">false</span>     <span class="hljs-comment"># 禁用X11转发</span><br></code></pre></td></tr></table></figure>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Vagrant/" class="category-chain-item">Vagrant</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Vagrantfile-编写</div>
+      <div>http://example.com/2025/04/19/Vagrantfile-编写/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Jie</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年4月19日</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>许可协议</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2025/04/20/u-boot-%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8/" title="u-boot-基本使用">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">u-boot-基本使用</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/04/16/Ruby-%E5%9F%BA%E7%A1%80%E8%AF%AD%E6%B3%95/" title="Ruby-基础语法">
+                        <span class="hidden-mobile">Ruby-基础语法</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zKurisu/comments-utterances');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Jie</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Orkarin</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.1/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
