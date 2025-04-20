@@ -23,10 +23,12 @@
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="u-boot 源码u-boot 官方文档 介绍U-Boot, Universal Bootloader, 是一个开源的跨平台 Bootloader, 主要用于嵌入式系统. 其主要任务是在操作系统启动前, 完成硬件初始化, 加载内核和根文件系统. 编译拉取源码1git clone https:&#x2F;&#x2F;github.com&#x2F;u-boot&#x2F;u-boot  Build依赖的安装和具体板子的配置 见官网. 12">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/u-boot-raw-rom-file-with-qemu.png">
 <meta property="article:published_time" content="2025-04-20T03:55:12.000Z">
-<meta property="article:modified_time" content="2025-04-20T07:13:01.240Z">
+<meta property="article:modified_time" content="2025-04-20T08:04:18.580Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/u-boot-raw-rom-file-with-qemu.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -235,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          583 字
+          1.2k 字
         
       </span>
     
@@ -246,7 +248,7 @@
         
         
         
-          5 分钟
+          11 分钟
         
       </span>
     
@@ -311,7 +313,30 @@
 
 <p>启动:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">qemu-system-x86_64 -bios u-boot.rom -nographic -serial mon:stdio<br></code></pre></td></tr></table></figure>
+<p><img src="/../img/u-boot-raw-rom-file-with-qemu.png" srcset="/img/loading.gif" lazyload></p>
+<h3 id="BIOS-引导扇区与引导程序的关系"><a href="#BIOS-引导扇区与引导程序的关系" class="headerlink" title="BIOS, 引导扇区与引导程序的关系"></a>BIOS, 引导扇区与引导程序的关系</h3><ul>
+<li>BIOS, 是固件程序, 负责开机自检(POST), 硬件初始化, 并加载引导程序</li>
+<li>引导扇区, 是磁盘的第一个扇区 (512 bytes), 存储引导程序和分区表</li>
+<li>引导程序, 一个程序, 负责加载操作系统的核心文件</li>
+</ul>
+<p>由于 <code>u-boot</code> 程序通常大于 512 bytes, 因此, 在引导扇区中先存储微型程序, 称 SPL. Secondary Program Loader, 其负责加载 U-Boot 主程序到内存. <code>u-boot</code> 主程序存储在后续扇区或特定分区.</p>
+<h2 id=""><a href="#" class="headerlink" title=""></a></h2><p>编译调整:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">make vexpress_ca9x4_defconfig<br><span class="hljs-built_in">export</span> CROSS_COMPILE=arm-none-eabi-<br>make -j$(<span class="hljs-built_in">nproc</span>)<br></code></pre></td></tr></table></figure>
 
+<p>然后运行:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">qemu-system-arm -M vexpress-a9 -serial stdio -device loader,file=u-boot.bin,addr=0x60800000,cpu-num=0,force-raw=on<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>-M</code>, machine, 指定开发板</li>
+<li><code>-serial stdio</code> 指定输出到当前终端</li>
+<li><code>-device loader,file=u-boot.bin,addr=0x60800000,cpu-num=0,force-raw=on</code> 指定设备加载参数<ul>
+<li><code>loader</code> 是 QEMU 的通用设备加载器</li>
+<li><code>file=u-boot.bin</code> 指定要加载的二进制文件</li>
+<li><code>addr=0x60800000</code> 指定要将文件加载到的地址</li>
+<li><code>cpu-num=0</code> 指定 CPU 核心</li>
+<li><code>force-raw=on</code>, 强制以原始二进制格式加载 (不解析 ELF 头)</li>
+</ul>
+</li>
+</ul>
 
                 
               </div>

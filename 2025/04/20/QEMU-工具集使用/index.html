@@ -24,7 +24,7 @@
 <meta property="og:description" content="介绍QEMU, Quick Emulator, 是一个开源的硬件虚拟化平台, 支持跨架构的全系统模拟和用户空间程序模拟. qemu-imgqemu-img 用于创建虚拟硬盘: 1qemu-img create -f qcow2 ubuntu.qcow2 20G  -f, 指定 format ubuntu.qcow2 为文件名 20G 为容量  qemu-system-x86_64qemu-syst">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-04-20T06:21:05.000Z">
-<meta property="article:modified_time" content="2025-04-20T07:00:34.975Z">
+<meta property="article:modified_time" content="2025-04-20T07:32:04.844Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          867 字
+          1.2k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          8 分钟
+          10 分钟
         
       </span>
     
@@ -298,6 +298,19 @@
 <li><code>20G</code> 为容量</li>
 </ul>
 <h1 id="qemu-system-x86-64"><a href="#qemu-system-x86-64" class="headerlink" title="qemu-system-x86_64"></a><code>qemu-system-x86_64</code></h1><p><code>qemu-system-x86_64</code> 是 QEMU 项目提供的针对 <code>x86_64</code> 架构系统的模拟器, 其能够模拟完整的计算机系统, 包括 CPU, 内存, 存储设备, 外设等.</p>
+<h2 id="不加参数的默认行为"><a href="#不加参数的默认行为" class="headerlink" title="不加参数的默认行为"></a>不加参数的默认行为</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">qemu-system-x86_64 disk.qcow2<br></code></pre></td></tr></table></figure>
+<ul>
+<li>QEMU 调用内置的 <code>SeaBIOS</code> 尝试从 <code>disk.qcow2</code> 启动</li>
+<li>如果 <code>disk.qcow2</code> 中包含有效的引导扇区, 则继续启动, 否则报错 <code>No bootable device</code></li>
+<li>默认配置为:<ul>
+<li>1 个 CPU 核心</li>
+<li>128MB 内存</li>
+<li><code>-vga std</code> 显卡</li>
+<li><code>disk.qcow2</code> 为存储设备</li>
+<li>无网络</li>
+</ul>
+</li>
+</ul>
 <h2 id="安装-linux-到硬盘"><a href="#安装-linux-到硬盘" class="headerlink" title="安装 linux 到硬盘"></a>安装 linux 到硬盘</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs sh">qemu-system-x86_64 \<br>    -m 4G \                          <span class="hljs-comment"># 分配 4GB 内存</span><br>    -smp 4 \                         <span class="hljs-comment"># 分配 4 个 CPU 核心</span><br>    -hda ubuntu.qcow2 \              <span class="hljs-comment"># 主硬盘镜像</span><br>    -cdrom ubuntu-22.04.4-desktop-amd64.iso \  <span class="hljs-comment"># 安装 ISO</span><br>    -boot d \                        <span class="hljs-comment"># 从光盘启动</span><br>    -enable-kvm \                    <span class="hljs-comment"># 启用 KVM 加速</span><br>    -vga virtio \                    <span class="hljs-comment"># 使用高性能 VirtIO 显卡</span><br>    -display gtk                     <span class="hljs-comment"># 图形界面（GTK 窗口）</span><br></code></pre></td></tr></table></figure>
 <ul>
 <li><code>-m</code> 指定 memory 大小</li>
@@ -310,6 +323,12 @@
 <li><code>-display</code> 指定虚拟机显示方式, <code>gtk</code> 会打开一个 GTK 图形窗口, <code>vnc=:0</code> 能远程访问 (<code>vncviewer localhost:5900</code>), <code>none</code> 则为字符输出</li>
 </ul>
 <h2 id="从-qcow-硬盘启动虚拟机"><a href="#从-qcow-硬盘启动虚拟机" class="headerlink" title="从 qcow 硬盘启动虚拟机"></a>从 qcow 硬盘启动虚拟机</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">qemu-system-x86_64 -m 4G -hda ubuntu.qcow2 -enable-kvm<br></code></pre></td></tr></table></figure>
+
+<h2 id="指定-BIOS-固件"><a href="#指定-BIOS-固件" class="headerlink" title="指定 BIOS 固件"></a>指定 BIOS 固件</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">qemu-system-x86_64 -bios u-boot.rom -nographic -serial mon:stdio<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>-bios</code>, 指定 BIOS 固件程序, 其会在虚拟机启动时最先执行, 负责硬件初始化和引导操作系统</li>
+<li><code>-serial</code> 指定串口输出方式, <code>stdio</code> 为当前终端, <code>mon:stdio</code> 结合 QEMU monitor 和串口</li>
+</ul>
 
                 
               </div>
