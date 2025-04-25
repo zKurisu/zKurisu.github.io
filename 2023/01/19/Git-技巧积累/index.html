@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="将提交转换为多个 patch 文件1git format-patch -1 --pretty&#x3D;fuller 3a38e874d70b  format-patch, 将指定 commit 转换为一个或多个 .patch 文件 -1, 表示只处理最近一个提交 (从 3a38e874d70b 开始) --pretty&#x3D;fuller, 在补丁头部信息中显示更详细的作者&#x2F;提交者信息 (包括时间戳)">
+    <meta name="description" content="git send-emailgit send-email 用于将补丁 .patch 文件通过 email 发送给维护者或者邮件列表. 需要在 ~&#x2F;.gitconfig 中配置 SMTP 服务器, 如: 123456[sendemail]    smtpServer &#x3D; smtp.gmail.com    smtpServerPort &#x3D; 587    smtpEncryption &#x3D; tls">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Git-技巧积累">
 <meta property="og:url" content="http://example.com/2023/01/19/Git-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="将提交转换为多个 patch 文件1git format-patch -1 --pretty&#x3D;fuller 3a38e874d70b  format-patch, 将指定 commit 转换为一个或多个 .patch 文件 -1, 表示只处理最近一个提交 (从 3a38e874d70b 开始) --pretty&#x3D;fuller, 在补丁头部信息中显示更详细的作者&#x2F;提交者信息 (包括时间戳)">
+<meta property="og:description" content="git send-emailgit send-email 用于将补丁 .patch 文件通过 email 发送给维护者或者邮件列表. 需要在 ~&#x2F;.gitconfig 中配置 SMTP 服务器, 如: 123456[sendemail]    smtpServer &#x3D; smtp.gmail.com    smtpServerPort &#x3D; 587    smtpEncryption &#x3D; tls">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-01-19T08:54:40.000Z">
-<meta property="article:modified_time" content="2025-04-25T12:24:40.306Z">
+<meta property="article:modified_time" content="2025-04-25T13:54:34.077Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3.5k 字
+          4.2k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          29 分钟
+          35 分钟
         
       </span>
     
@@ -289,7 +289,28 @@
             
               <div class="markdown-body">
                 
-                <h1 id="将提交转换为多个-patch-文件"><a href="#将提交转换为多个-patch-文件" class="headerlink" title="将提交转换为多个 patch 文件"></a>将提交转换为多个 patch 文件</h1><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">git format-patch -1 --pretty=fuller 3a38e874d70b<br></code></pre></td></tr></table></figure>
+                <h1 id="git-send-email"><a href="#git-send-email" class="headerlink" title="git send-email"></a>git send-email</h1><p><code>git send-email</code> 用于将补丁 <code>.patch</code> 文件通过 email 发送给维护者或者邮件列表.</p>
+<p>需要在 <code>~/.gitconfig</code> 中配置 SMTP 服务器, 如:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs gitconfig">[sendemail]<br>    smtpServer = smtp.gmail.com<br>    smtpServerPort = 587<br>    smtpEncryption = tls<br>    smtpUser = your.email@gmail.com<br>    smtpPass = your-app-password  # 建议使用应用专用密码（非登录密码）<br></code></pre></td></tr></table></figure>
+
+<p>发送单个补丁:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">git send-email \<br>    --to=maintainer@kernel.org \<br>    --cc=linux-kernel@vger.kernel.org \<br>    0001-Fix-memory-leak.patch<br></code></pre></td></tr></table></figure>
+
+<p>发送多个补丁:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sh">git send-email \<br>    --to=maintainer@kernel.org \<br>    --cc=linux-kernel@vger.kernel.org \<br>    --cover-letter \<br>    000*.patch<br></code></pre></td></tr></table></figure>
+
+<p>测试发送:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">git send-email \<br>    --dry-run \<br>    --to=your-email@example.com \<br>    0001-Fix-memory-leak.patch<br></code></pre></td></tr></table></figure>
+
+<p>回复邮件:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">git send-email \<br>    --in-reply-to=<span class="hljs-string">&quot;&lt;message-id@example.com&gt;&quot;</span> \<br>    0001-Fix-memory-leak.patch<br></code></pre></td></tr></table></figure>
+
+<p>发送前编辑邮件内容:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">git send-email --annotate 0001-Fix-memory-leak.patch<br></code></pre></td></tr></table></figure>
+
+
+
+<h1 id="将提交转换为多个-patch-文件"><a href="#将提交转换为多个-patch-文件" class="headerlink" title="将提交转换为多个 patch 文件"></a>将提交转换为多个 patch 文件</h1><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">git format-patch -1 --pretty=fuller 3a38e874d70b<br></code></pre></td></tr></table></figure>
 <ul>
 <li><code>format-patch</code>, 将指定 commit 转换为一个或多个 <code>.patch</code> 文件</li>
 <li><code>-1</code>, 表示只处理最近一个提交 (从 <code>3a38e874d70b</code> 开始)</li>
