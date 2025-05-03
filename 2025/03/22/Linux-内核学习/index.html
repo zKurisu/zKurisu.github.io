@@ -24,7 +24,7 @@
 <meta property="og:description" content="Linux 官方页面Linux Kernel Lab 页面Linux foundation 页面Linuxfromscatch.orgLinux Kernel Contributor Covenant Code of Conduct InterpretationContributor Covenant Code of ConductLinux Kernel Enforcement Statemen">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-03-22T01:03:45.000Z">
-<meta property="article:modified_time" content="2025-05-03T08:18:08.384Z">
+<meta property="article:modified_time" content="2025-05-03T13:06:03.180Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3.6k 字
+          4.8k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          31 分钟
+          40 分钟
         
       </span>
     
@@ -349,6 +349,42 @@
 <li><code>scripts/get_maintainer.pl</code></li>
 <li><code>scripts/checkpatch.pl</code><br>文件.</li>
 </ul>
+<h2 id="linux-kselftest-仓库"><a href="#linux-kselftest-仓库" class="headerlink" title="linux-kselftest 仓库"></a>linux-kselftest 仓库</h2><p>linux-kselftest, 指 Linux Kernel Self-Test, 是 Linux 内核源码树中的一个测试框架, 位于 <code>tools/testing/selftests/</code> 目录下.</p>
+<p>也可以单独拉取来查看:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sh">git <span class="hljs-built_in">clone</span> git://git.kernel.org/pub/scm/linux/kernel/git/shuah/linux-kselftest.git linux_kselftest<br><br><span class="hljs-built_in">cd</span> linux_kselftest<br>git branch -a<br>git checkout next<br></code></pre></td></tr></table></figure>
+
+<h1 id="Chapter-7-Introduction-to-Building-and-Installing-Your-First-Kernel"><a href="#Chapter-7-Introduction-to-Building-and-Installing-Your-First-Kernel" class="headerlink" title="Chapter 7 Introduction to Building and Installing Your First Kernel"></a>Chapter 7 Introduction to Building and Installing Your First Kernel</h1><p>获取最新的稳定版本 Linux Kernel:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">git <span class="hljs-built_in">clone</span> git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git linux_stable<br><span class="hljs-built_in">cd</span> linux_stable<br></code></pre></td></tr></table></figure>
+
+<p>将当前系统的 kernel 配置复制到这个仓库中:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">cp</span> /proc/config.gz .<br>gunzip config.gz -c &gt; .config<br></code></pre></td></tr></table></figure>
+
+<h2 id="编译内核"><a href="#编译内核" class="headerlink" title="编译内核"></a>编译内核</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">make oldconfig<br></code></pre></td></tr></table></figure>
+<ul>
+<li>基于 <code>.config</code> 文件生成新的配置</li>
+</ul>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">lsmod &gt; /tmp/my-lsmod<br></code></pre></td></tr></table></figure>
+<ul>
+<li>获取当前加载模块的列表</li>
+</ul>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">make LSMOD=/tmp/my-lsmod localmodconfig<br>make -j3 all<br></code></pre></td></tr></table></figure>
+<ul>
+<li>根据实际使用的模块精简内核配置</li>
+</ul>
+<h2 id="安装新内核"><a href="#安装新内核" class="headerlink" title="安装新内核"></a>安装新内核</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">su -c <span class="hljs-string">&quot;make modules_install install&quot;</span><br></code></pre></td></tr></table></figure>
+
+<p>保存当前内核的 log:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs sh">dmesg -t &gt; dmesg_current<br>dmesg -t -k &gt; dmesg_kernel<br>dmesg -t -l emerg &gt; dmesg_current_emerg<br>dmesg -t -l alert &gt; dmesg_current_alert<br>dmesg -t -l crit &gt; dmesg_current_crit<br>dmesg -t -l err &gt; dmesg_current_err<br>dmesg -t -l warn &gt; dmesg_current_warn<br>dmesg -t -l info &gt; dmesg_current_info<br></code></pre></td></tr></table></figure>
+
+<p>重启前, 检查是否启用了 security boot:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">mokutil --sb-state<br>SecureBoot disabled<br>Platform is <span class="hljs-keyword">in</span> Setup Mode<br></code></pre></td></tr></table></figure>
+
+<p>如果输出为:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">SecureBoot enabled<br>SecureBoot validation is disabled <span class="hljs-keyword">in</span> shim<br></code></pre></td></tr></table></figure>
+
+<p>则用:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo mokutil --disable-validation<br></code></pre></td></tr></table></figure>
+<p>来关闭.</p>
 
                 
               </div>
