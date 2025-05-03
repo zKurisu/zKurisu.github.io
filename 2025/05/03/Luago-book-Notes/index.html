@@ -23,10 +23,12 @@
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="Lua chunkLua 并不直接被解释器 (lua) 解释执行, 而是先编译 (luac) 为字节码, 然后交给 Lua 虚拟机 (lua) 执行. (lua 命令包含了隐式编译和执行字节码) Lua 中一段可以被解释器执行的代码称作 chunk. 编译为字节码后的结构称 precompiled chunk (binary chunk). Lua 编译器以函数为单位进行编译: 1print(&amp;q">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/luago-book-luastate.png">
 <meta property="article:published_time" content="2025-05-03T02:30:20.000Z">
-<meta property="article:modified_time" content="2025-05-03T03:05:41.232Z">
+<meta property="article:modified_time" content="2025-05-03T05:29:40.089Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/luago-book-luastate.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -235,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.1k 字
+          3.3k 字
         
       </span>
     
@@ -246,7 +248,7 @@
         
         
         
-          18 分钟
+          28 分钟
         
       </span>
     
@@ -347,8 +349,48 @@
 </ul>
 <p>虚拟机就像物理机一样, 实现了一套指令集.</p>
 <ul>
-<li>Stack Based 虚拟机需要用 Push, Pop 等指令操作栈, 指令集相对较大, 但指令的平均长度比较短</li>
+<li>Stack Based 虚拟机需要用 Push, Pop 等指令操作栈, 指令集相对较大, 但指令的平均长度比较短<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs asm">PUSH 1     ; 栈: [1]<br>PUSH 2     ; 栈: [1, 2]<br>ADD        ; 弹出 2 个值，相加后压栈 → 栈: [3]<br></code></pre></td></tr></table></figure></li>
+<li>Register Based 虚拟机直接用寄存器寻址, 不需要 Push 或 Pop 等指令, 指令集相对较小, 但由于需要把寄存器地址编码到指令内, 指令的平均长度较长<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs asm">LOAD R1, 1  ; R1 = 1<br>LOAD R2, 2  ; R2 = 2<br>ADD R3, R1, R2  ; R3 = R1 + R2<br></code></pre></td></tr></table></figure></li>
 </ul>
+<p>Lua 5.0 之前是 Stack-Based, <code>5.0</code> 后改为 Register-Based, 性能提升约 <code>30%</code>.</p>
+<p>按照指令长度, 指令集可分为:</p>
+<ul>
+<li>Fixed-width 指令集</li>
+<li>Variable-width 指令集</li>
+</ul>
+<p>Lua 虚拟机采用 Fixed-width 指令集, 每条指令占 4 字节 (32 bits), 6 bits 用于 Opcode, 26 bits 用于 Operand.</p>
+<h1 id="Lua-API"><a href="#Lua-API" class="headerlink" title="Lua API"></a>Lua API</h1><p>官方 Lua 使用 Clean C (语法是 <code>C</code> 和 <code>C++</code> 的子集) 编写.</p>
+<p>Lua API 指一系列以 <code>lua_</code> 开头的 C 语言函数 (或宏定义).</p>
+<p>一个核心数据结构是 <code>lua_State</code>, 其代表一个独立的 Lua 执行环境 (所有 API 函数都围绕这个数据结构操作), 是 Lua 虚拟机的一个实例, 其包含:</p>
+<ul>
+<li>Lua 虚拟机的运行时状态, 如栈, 全局变量, GC 信息</li>
+<li>当前执行的上下文, 如函数调用栈, 协程状态</li>
+<li>内存管理信息, 如对象分配, 垃圾回收</li>
+</ul>
+<p>各 <code>lua_State</code> 都是隔离, 互不影响的.</p>
+<p><img src="/../img/luago-book-luastate.png" srcset="/img/loading.gif" lazyload></p>
+<p><code>lua_State</code> 内封装的 Lua stack 用于与宿主语言进行交互, 很大一部分 Lua API 函数是用来操作 Lua stack 的.</p>
+<h1 id="编译器"><a href="#编译器" class="headerlink" title="编译器"></a>编译器</h1><p>任何一种能够将编程语言 (源语言) 转换为另一种编程语言 (目标语言) 的程序都可以称为编译器. 如 <code>gcc</code> 将 <code>C</code> 转换为机器语言.</p>
+<p>编译的过程分多个阶段, 主要包括:</p>
+<ul>
+<li>预处理, Preprocessing, 处理源代码中的宏, 头文件包含, 条件编译等<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// preprocessing.c</span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> PI 3.14</span><br></code></pre></td></tr></table></figure>
+之后:<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">gcc -E preprocessing.c -o preprocessing.i<br><span class="hljs-built_in">cat</span> preprocessing.i<br></code></pre></td></tr></table></figure></li>
+<li>词法分析, Lexical Analysis, 将源代码拆分为词法单元 (Token), 如关键字, 标识符, 运算符等, 常见工具如 <code>lex</code>, <code>flex</code><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> x = <span class="hljs-number">42</span>;<br></code></pre></td></tr></table></figure>
+拆分为:<figure class="highlight excel"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs excel"><span class="hljs-built_in">int</span> (关键字)<br>x (标识符)<br>= (运算符)<br><span class="hljs-number">42</span> (常量)<br></code></pre></td></tr></table></figure></li>
+<li>语法分析, Syntax Analysis, 根据语法规则将 Token 组合成抽象语法树 (AST)</li>
+<li>语义分析</li>
+<li>中间代码生成</li>
+<li>中间代码优化</li>
+<li>目标代码生成<br>等.</li>
+</ul>
+<p>为便于代码重复利用, 编译过程可以分为三个大的阶段:</p>
+<ul>
+<li>前端, Front End, 含预处理, 词法分析, 语法分析, 语义分析, 中间代码生成</li>
+<li>中端, Middle End, 含中间代码优化</li>
+<li>后端, Back End, 含目标代码生成</li>
+</ul>
+<p>这样就能为不同语言编写 Front End, 而共用 Back End, 以节约工作量.</p>
+<p>也可以通过编写不同的 Back End 实现跨平台.</p>
 
                 
               </div>
