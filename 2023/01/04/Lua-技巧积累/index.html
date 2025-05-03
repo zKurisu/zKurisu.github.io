@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="Lua chunkLua 并不直接被解释器解释执行, 而是先编译为字节码, 然后交给 Lua 虚拟机执行. 简单来说,  ipairs 和 pairs ipairs 只能遍历索引为数字的表 1234local t &#x3D; &amp;#123; &quot;a&quot;, &quot;b&quot;, &quot;c&quot;, key &#x3D; &quot;value&quot; &amp;#125;for i, v">
+    <meta name="description" content="Lua chunkLua 并不直接被解释器 (lua) 解释执行, 而是先编译 (luac) 为字节码, 然后交给 Lua 虚拟机 (lua) 执行. (lua 命令包含了隐式编译和执行字节码) Lua 中一段可以被解释器执行的代码称作 chunk. 编译为字节码后的结构称 precompiled chunk (binary chunk). Lua 编译器以函数为单位进行编译: 1print(&amp;q">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Lua-技巧积累">
 <meta property="og:url" content="http://example.com/2023/01/04/Lua-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="Lua chunkLua 并不直接被解释器解释执行, 而是先编译为字节码, 然后交给 Lua 虚拟机执行. 简单来说,  ipairs 和 pairs ipairs 只能遍历索引为数字的表 1234local t &#x3D; &amp;#123; &quot;a&quot;, &quot;b&quot;, &quot;c&quot;, key &#x3D; &quot;value&quot; &amp;#125;for i, v">
+<meta property="og:description" content="Lua chunkLua 并不直接被解释器 (lua) 解释执行, 而是先编译 (luac) 为字节码, 然后交给 Lua 虚拟机 (lua) 执行. (lua 命令包含了隐式编译和执行字节码) Lua 中一段可以被解释器执行的代码称作 chunk. 编译为字节码后的结构称 precompiled chunk (binary chunk). Lua 编译器以函数为单位进行编译: 1print(&amp;q">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-01-04T04:03:30.000Z">
-<meta property="article:modified_time" content="2025-05-03T01:05:59.831Z">
+<meta property="article:modified_time" content="2025-05-03T01:51:08.520Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3k 字
+          4.2k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          26 分钟
+          35 分钟
         
       </span>
     
@@ -289,8 +289,54 @@
             
               <div class="markdown-body">
                 
-                <h1 id="Lua-chunk"><a href="#Lua-chunk" class="headerlink" title="Lua chunk"></a>Lua chunk</h1><p>Lua 并不直接被解释器解释执行, 而是先编译为字节码, 然后交给 Lua 虚拟机执行.</p>
-<p>简单来说, </p>
+                <h1 id="Lua-chunk"><a href="#Lua-chunk" class="headerlink" title="Lua chunk"></a>Lua chunk</h1><p>Lua 并不直接被解释器 (<code>lua</code>) 解释执行, 而是先编译 (<code>luac</code>) 为字节码, 然后交给 Lua 虚拟机 (<code>lua</code>) 执行. (<code>lua</code> 命令包含了隐式编译和执行字节码)</p>
+<p>Lua 中一段可以被解释器执行的代码称作 chunk. 编译为字节码后的结构称 precompiled chunk (binary chunk).</p>
+<p>Lua 编译器以函数为单位进行编译:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Hello Lua!&quot;</span>)<br></code></pre></td></tr></table></figure>
+
+<p>这里也能用 <code>luac</code> 编译, 因为其自动添加了一个 <code>main</code> 函数, 把整个程序放进这个函数中并调用:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">main</span><span class="hljs-params">(...)</span></span><br>  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Hello, Lua!&quot;</span>)<br>  <span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span><br><span class="hljs-keyword">end</span><br>main()  <span class="hljs-comment">-- 虚拟机自动调用</span><br></code></pre></td></tr></table></figure>
+
+<p>查看如下:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs lua">luac -o hello hello.lua<br>luac -l hello<br>main &lt;hello.lua:<span class="hljs-number">0</span>,<span class="hljs-number">0</span>&gt; (<span class="hljs-number">5</span> instructions at <span class="hljs-number">0x5e5d1d4dfc80</span>)<br><span class="hljs-number">0</span>+ params, <span class="hljs-number">2</span> slots, <span class="hljs-number">1</span> upvalue, <span class="hljs-number">0</span> locals, <span class="hljs-number">2</span> constants, <span class="hljs-number">0</span> functions<br>	<span class="hljs-number">1</span>	[<span class="hljs-number">1</span>]	VARARGPREP	<span class="hljs-number">0</span><br>	<span class="hljs-number">2</span>	[<span class="hljs-number">1</span>]	GETTABUP 	<span class="hljs-number">0</span> <span class="hljs-number">0</span> <span class="hljs-number">0</span>	; <span class="hljs-built_in">_ENV</span> <span class="hljs-string">&quot;print&quot;</span><br>	<span class="hljs-number">3</span>	[<span class="hljs-number">1</span>]	LOADK    	<span class="hljs-number">1</span> <span class="hljs-number">1</span>	; <span class="hljs-string">&quot;Hello World&quot;</span><br>	<span class="hljs-number">4</span>	[<span class="hljs-number">1</span>]	CALL     	<span class="hljs-number">0</span> <span class="hljs-number">2</span> <span class="hljs-number">1</span>	; <span class="hljs-number">1</span> <span class="hljs-keyword">in</span> <span class="hljs-number">0</span> out<br>	<span class="hljs-number">5</span>	[<span class="hljs-number">1</span>]	RETURN   	<span class="hljs-number">0</span> <span class="hljs-number">1</span> <span class="hljs-number">1</span>	; <span class="hljs-number">0</span> out<br></code></pre></td></tr></table></figure>
+<ul>
+<li>这里包含了 <code>main</code> 函数的原型</li>
+<li><code>0+ params</code> 表示主块不接受显式参数, 即可变参数未使用</li>
+<li><code>2 slots</code> 表示虚拟机栈需要两个槽位, 用于临时变量和计算</li>
+<li><code>1 upvalue</code> 表示引用了一个外部变量, 这里是 <code>_ENV</code></li>
+<li><code>0 locals</code> 表示 chunk 中没有局部变量</li>
+<li><code>2 constants</code> 表示常量池中有两个值, 这里是 <code>print</code> 和 <code>Hello Lua!</code></li>
+<li><code>0 function</code> 表示没有子函数定义</li>
+<li><code>VARARGPREP</code> 指令指定可变参数的栈帧起始位置</li>
+<li><code>GETTABUP</code> 指令从 <code>upvalue</code> 中获取 <code>print</code> 函数, 操作数 <code>0 0 0</code> 表示:<ul>
+<li>将结果存入栈槽 0</li>
+<li>从 <code>upvalue[0]</code> 中读取, 这里是 <code>_ENV</code></li>
+<li>读取 <code>_ENV</code> 的键 <code>print</code> (constants 中索引 0)</li>
+</ul>
+</li>
+<li><code>LOADK</code> 指令将常量池中的值加载到栈中, 操作数 <code>1 1</code> 表示:<ul>
+<li>存入栈槽 1</li>
+<li>加载 constants 中索引 1, 即 <code>Hello Lua!</code></li>
+</ul>
+</li>
+<li><code>CALL</code> 指令调用函数, 操作数 <code>0 2 1</code> 表示:<ul>
+<li>调用栈槽 0 的函数, 这里是 <code>print</code></li>
+<li>函数参数数量是 2, <code>Hello Lua!</code> 和函数本身</li>
+<li>期望的返回值数量为 1</li>
+</ul>
+</li>
+<li><code>RETURN</code> 指令结束 chunk 的执行, 操作数 <code>0 1 1</code> 表示:<ul>
+<li>从栈槽 0 开始返回</li>
+<li>返回值数量为 1</li>
+<li>Lua 5.4+ 的附加标志, 可忽略</li>
+</ul>
+</li>
+</ul>
+<p>也可等价代码为:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-comment">-- 隐式主块</span><br><span class="hljs-keyword">local</span> <span class="hljs-built_in">print</span> = <span class="hljs-built_in">_ENV</span>.<span class="hljs-built_in">print</span>          <span class="hljs-comment">-- GETTABUP</span><br><span class="hljs-keyword">local</span> <span class="hljs-built_in">arg</span> = <span class="hljs-string">&quot;Hello World&quot;</span>         <span class="hljs-comment">-- LOADK</span><br><span class="hljs-built_in">print</span>(<span class="hljs-built_in">arg</span>)                        <span class="hljs-comment">-- CALL</span><br><span class="hljs-comment">-- 无返回值                        -- RETURN</span><br></code></pre></td></tr></table></figure>
+
+
+
 <h1 id="ipairs-和-pairs"><a href="#ipairs-和-pairs" class="headerlink" title="ipairs 和 pairs"></a>ipairs 和 pairs</h1><ul>
 <li><p><code>ipairs</code> 只能遍历索引为数字的表</p>
 <figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-keyword">local</span> t = &#123; <span class="hljs-string">&quot;a&quot;</span>, <span class="hljs-string">&quot;b&quot;</span>, <span class="hljs-string">&quot;c&quot;</span>, key = <span class="hljs-string">&quot;value&quot;</span> &#125;<br><span class="hljs-keyword">for</span> i, v <span class="hljs-keyword">in</span> <span class="hljs-built_in">ipairs</span>(t) <span class="hljs-keyword">do</span><br>    <span class="hljs-built_in">print</span>(i, v)<br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
