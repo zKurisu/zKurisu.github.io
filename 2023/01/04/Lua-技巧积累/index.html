@@ -24,7 +24,7 @@
 <meta property="og:description" content="Lua chunkLua 并不直接被解释器 (lua) 解释执行, 而是先编译 (luac) 为字节码, 然后交给 Lua 虚拟机 (lua) 执行. (lua 命令包含了隐式编译和执行字节码) Lua 中一段可以被解释器执行的代码称作 chunk. 编译为字节码后的结构称 precompiled chunk (binary chunk). Lua 编译器以函数为单位进行编译: 1print(&amp;q">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-01-04T04:03:30.000Z">
-<meta property="article:modified_time" content="2025-05-03T01:51:08.520Z">
+<meta property="article:modified_time" content="2025-05-03T02:28:54.186Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          4.2k 字
+          4.5k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          35 分钟
+          38 分钟
         
       </span>
     
@@ -335,8 +335,11 @@
 <p>也可等价代码为:</p>
 <figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-comment">-- 隐式主块</span><br><span class="hljs-keyword">local</span> <span class="hljs-built_in">print</span> = <span class="hljs-built_in">_ENV</span>.<span class="hljs-built_in">print</span>          <span class="hljs-comment">-- GETTABUP</span><br><span class="hljs-keyword">local</span> <span class="hljs-built_in">arg</span> = <span class="hljs-string">&quot;Hello World&quot;</span>         <span class="hljs-comment">-- LOADK</span><br><span class="hljs-built_in">print</span>(<span class="hljs-built_in">arg</span>)                        <span class="hljs-comment">-- CALL</span><br><span class="hljs-comment">-- 无返回值                        -- RETURN</span><br></code></pre></td></tr></table></figure>
 
-
-
+<h2 id="版本问题"><a href="#版本问题" class="headerlink" title="版本问题"></a>版本问题</h2><p>生成 binary chunk 时, 会嵌入当前 Lua 版本, 当加载 binary chunk 时, 会与使用的 Lua 版本进行对比, 若不匹配, 则拒绝加载.</p>
+<h2 id="binary-chunk-header"><a href="#binary-chunk-header" class="headerlink" title="binary chunk header"></a>binary chunk header</h2><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">type</span> header <span class="hljs-keyword">struct</span> &#123;<br>	signature       [<span class="hljs-number">4</span>]<span class="hljs-type">byte</span><br>	version         <span class="hljs-type">byte</span><br>	format          <span class="hljs-type">byte</span><br>	luacData        [<span class="hljs-number">6</span>]<span class="hljs-type">byte</span><br>	cintSize        <span class="hljs-type">byte</span><br>	sizetSize       <span class="hljs-type">byte</span><br>	instructionSize <span class="hljs-type">byte</span><br>	luaIntegerSize  <span class="hljs-type">byte</span><br>	luaNumberSize   <span class="hljs-type">byte</span><br>	luacInt         <span class="hljs-type">int64</span><br>	luacNum         <span class="hljs-type">float64</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>signature</code> 是一段特殊字节, 用于快速识别文件格式, 十六进制表示为 <code>0x1B4C7561</code>, Go 语言字符串字面量是 <code>\x1bLua</code></li>
+</ul>
 <h1 id="ipairs-和-pairs"><a href="#ipairs-和-pairs" class="headerlink" title="ipairs 和 pairs"></a>ipairs 和 pairs</h1><ul>
 <li><p><code>ipairs</code> 只能遍历索引为数字的表</p>
 <figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-keyword">local</span> t = &#123; <span class="hljs-string">&quot;a&quot;</span>, <span class="hljs-string">&quot;b&quot;</span>, <span class="hljs-string">&quot;c&quot;</span>, key = <span class="hljs-string">&quot;value&quot;</span> &#125;<br><span class="hljs-keyword">for</span> i, v <span class="hljs-keyword">in</span> <span class="hljs-built_in">ipairs</span>(t) <span class="hljs-keyword">do</span><br>    <span class="hljs-built_in">print</span>(i, v)<br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
