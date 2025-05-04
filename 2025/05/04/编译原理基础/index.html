@@ -16,17 +16,19 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="参考 B 站视频the super tiny compilerStanford cs143">
+    <meta name="description" content="参考 B 站视频the super tiny compilerStanford cs143 该文档可能会集合多个教程的内容. 概述Compiler (编译器) 是一个程序, 将源代码翻译成目标代码. 如 GCC, Clang. Interpreter (解释器) 是一个程序, 逐行或逐语句解释源代码, 不生成独立的目标代码. 如 Python, Perl 解释器. 编译器结构编译器的结构非常模块化">
 <meta property="og:type" content="article">
 <meta property="og:title" content="编译原理基础">
 <meta property="og:url" content="http://example.com/2025/05/04/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86%E5%9F%BA%E7%A1%80/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="参考 B 站视频the super tiny compilerStanford cs143">
+<meta property="og:description" content="参考 B 站视频the super tiny compilerStanford cs143 该文档可能会集合多个教程的内容. 概述Compiler (编译器) 是一个程序, 将源代码翻译成目标代码. 如 GCC, Clang. Interpreter (解释器) 是一个程序, 逐行或逐语句解释源代码, 不生成独立的目标代码. 如 Python, Perl 解释器. 编译器结构编译器的结构非常模块化">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/compiler-no-optimise-structure.png">
 <meta property="article:published_time" content="2025-05-04T09:25:11.000Z">
-<meta property="article:modified_time" content="2025-05-04T09:32:07.762Z">
+<meta property="article:modified_time" content="2025-05-04T10:35:48.974Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/compiler-no-optimise-structure.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -235,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          39 字
+          1.1k 字
         
       </span>
     
@@ -246,7 +248,7 @@
         
         
         
-          1 分钟
+          10 分钟
         
       </span>
     
@@ -290,6 +292,33 @@
               <div class="markdown-body">
                 
                 <p><a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV17W41187gL/?spm_id_from=333.337.search-card.all.click&vd_source=bc8ddbb1a08707dc809c3fd9bb85290d">参考 B 站视频</a><br><a target="_blank" rel="noopener" href="https://github.com/jamiebuilds/the-super-tiny-compiler">the super tiny compiler</a><br><a target="_blank" rel="noopener" href="https://web.stanford.edu/class/cs143/">Stanford cs143</a></p>
+<p>该文档可能会集合多个教程的内容.</p>
+<h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>Compiler (编译器) 是一个程序, 将源代码翻译成目标代码. 如 GCC, Clang.</p>
+<p>Interpreter (解释器) 是一个程序, 逐行或逐语句解释源代码, 不生成独立的目标代码. 如 Python, Perl 解释器.</p>
+<h1 id="编译器结构"><a href="#编译器结构" class="headerlink" title="编译器结构"></a>编译器结构</h1><p>编译器的结构非常模块化, 一般分为:</p>
+<ul>
+<li>前端, Front End, 含预处理, 词法分析, 语法分析, 语义分析, 中间代码生成, 如 <code>Clang</code></li>
+<li>中端, Middle End, 含中间代码优化</li>
+<li>后端, Back End, 含目标代码生成, 如 <code>llvm</code></li>
+</ul>
+<p>这样就能为不同语言编写 Front End, 而共用 Back End, 以节约工作量.</p>
+<p>也可以通过编写不同的 Back End 实现跨平台.</p>
+<p>编译的主要步骤包括:</p>
+<ul>
+<li>预处理, Preprocessing, 处理源代码中的宏, 头文件包含, 条件编译等<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// preprocessing.c</span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> PI 3.14</span><br></code></pre></td></tr></table></figure>
+之后:<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">gcc -E preprocessing.c -o preprocessing.i<br><span class="hljs-built_in">cat</span> preprocessing.i<br></code></pre></td></tr></table></figure></li>
+<li>词法分析, Lexical Analysis, 将源代码拆分为词法单元 (Token), 如关键字, 标识符, 运算符等, 常见工具如 <code>lex</code>, <code>flex</code><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> x = <span class="hljs-number">42</span>;<br></code></pre></td></tr></table></figure>
+拆分为:<figure class="highlight excel"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs excel"><span class="hljs-built_in">int</span> (关键字)<br>x (标识符)<br>= (运算符)<br><span class="hljs-number">42</span> (常量)<br></code></pre></td></tr></table></figure></li>
+<li>语法分析, Syntax Analysis, 根据语法规则将 Token 组合成抽象语法树 (AST), 工具有 <code>yacc</code> 和 <code>bison</code> 等<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">x = <span class="hljs-number">1</span> + <span class="hljs-number">2</span> * <span class="hljs-number">3</span>;<br></code></pre></td></tr></table></figure>
+生成:<figure class="highlight livescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs livescript">  =<br>/   <span class="hljs-string">\</span><br>x    +<br>   /   <span class="hljs-string">\</span><br>  <span class="hljs-number">1</span>     *<br>       /  <span class="hljs-string">\</span><br>      <span class="hljs-number">2</span>    <span class="hljs-number">3</span><br></code></pre></td></tr></table></figure></li>
+<li>语义分析, Semantic Analysis, 检查类型, 作用域等语义规则 (如变量是否声明, 类型是否匹配, 查看语法树是否合规)<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> x = <span class="hljs-string">&quot;hello&quot;</span>;  <span class="hljs-comment">// 语义错误：类型不匹配</span><br></code></pre></td></tr></table></figure></li>
+<li>中间代码生成, Intermediate Code Generation, 将 AST 转换为平台无关的中间表示 (如 LLVM IR, 三地址码)<figure class="highlight llvm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs llvm"><span class="hljs-variable">%result</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">add</span> <span class="hljs-type">i32</span> <span class="hljs-number">1</span><span class="hljs-punctuation">,</span> <span class="hljs-number">2</span><br></code></pre></td></tr></table></figure></li>
+<li>中间代码优化, Optimization, 对 IR 进行优化 (如常量折叠, 死代码消除)<figure class="highlight llvm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs llvm"><span class="hljs-comment">; 优化前</span><br><span class="hljs-variable">%x</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">add</span> <span class="hljs-type">i32</span> <span class="hljs-number">1</span><span class="hljs-punctuation">,</span> <span class="hljs-number">2</span><br><span class="hljs-variable">%y</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">mul</span> <span class="hljs-type">i32</span> <span class="hljs-variable">%x</span><span class="hljs-punctuation">,</span> <span class="hljs-number">3</span><br><br><span class="hljs-comment">; 优化后（常量折叠）</span><br><span class="hljs-variable">%y</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">mul</span> <span class="hljs-type">i32</span> <span class="hljs-number">3</span><span class="hljs-punctuation">,</span> <span class="hljs-number">3</span><br></code></pre></td></tr></table></figure></li>
+<li>目标代码生成, Code Generation, 将 IR 转换为目标机器码 (如 x86, ARM)<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs asm">mov eax, 1<br>add eax, 2<br></code></pre></td></tr></table></figure>
+等.</li>
+</ul>
+<p>可以看作是 “流水线” 结构. 阶段的划分能让工程上的实现更容易.</p>
+<p>一种没有优化的典型的编译器结构如下:<br><img src="/../img/compiler-no-optimise-structure.png" srcset="/img/loading.gif" lazyload></p>
 
                 
               </div>
