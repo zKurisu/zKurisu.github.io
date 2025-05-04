@@ -24,7 +24,7 @@
 <meta property="og:description" content="Linux 官方页面Linux Kernel Lab 页面Linux foundation 页面Linuxfromscatch.orgLinux Kernel Contributor Covenant Code of Conduct InterpretationContributor Covenant Code of ConductLinux Kernel Enforcement Statemen">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-03-22T01:03:45.000Z">
-<meta property="article:modified_time" content="2025-05-04T02:08:08.082Z">
+<meta property="article:modified_time" content="2025-05-04T03:05:21.565Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          6.3k 字
+          7.6k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          53 分钟
+          64 分钟
         
       </span>
     
@@ -426,8 +426,27 @@
 <li>旧内核头文件的 C 库构建的程序, 可以在新内核上运行</li>
 <li>新内核头文件的 C 库构建的程序, 可能无法在旧内核上运行</li>
 </ul>
+<p><code>make headers_install</code> 可以在内核源代码的顶层目录中运行, 其接受两个可选参数:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">make headers_install ARCH=i386 INSTALL_HDR_PATH=/usr<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>ARCH</code> 指定头文件的架构, 默认为当前架构, 可以用以下命令查看支持的架构列表:<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">ls</span> -d include/asm-* | sed <span class="hljs-string">&#x27;s/.*-//&#x27;</span><br></code></pre></td></tr></table></figure></li>
+<li><code>INSTALL_HDR_PATH</code> 指定头文件的安装文职, 默认为 <code>./usr</code>. 其会在 <code>INSTALL_HDR_PATH</code> 中自动创建一个 <code>include</code> 目录, 然后将头文件安装到 <code>INSTALL_HDR_PATH/include</code> 中</li>
+</ul>
 <h2 id="创建分支"><a href="#创建分支" class="headerlink" title="创建分支"></a>创建分支</h2><p>在创建更改时, 先创建一个新分支:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">git remote add linux git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git<br>git fetch linux<br>git checkout -b work<br></code></pre></td></tr></table></figure>
+
+<h2 id="Making-Changes-to-a-Driver"><a href="#Making-Changes-to-a-Driver" class="headerlink" title="Making Changes to a Driver"></a>Making Changes to a Driver</h2><p>可以先用 <code>lsmod</code> 查看当前加载了哪些模块, 然后选择一个做更改. 这里以 <code>uvcvideo</code> 为例.</p>
+<p>当选定 module 之后, 可以在内核源码目录中查找对应的 <code>.c</code> 和 <code>.h</code> 文件:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">git grep uvcvideo -- <span class="hljs-string">&#x27;*Makefile&#x27;</span><br><span class="hljs-built_in">ls</span> drivers/media/usb/uvc/<br>vim drivers/media/usb/uvc/uvc_driver.c<br></code></pre></td></tr></table></figure>
+
+<p>修改 <code>uvc_probe</code> 函数, 用 <code>pr_info</code> 添加输出:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">int</span> <span class="hljs-title function_">uvc_probe</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> usb_interface *intf,</span><br><span class="hljs-params">                     <span class="hljs-type">const</span> <span class="hljs-keyword">struct</span> usb_device_id *id)</span><br>&#123;<br>        <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">usb_device</span> *<span class="hljs-title">udev</span> =</span> interface_to_usbdev(intf);<br>        <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">uvc_device</span> *<span class="hljs-title">dev</span>;</span><br>        <span class="hljs-type">const</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">uvc_device_info</span> *<span class="hljs-title">info</span> =</span><br>                (<span class="hljs-type">const</span> <span class="hljs-keyword">struct</span> uvc_device_info *)id-&gt;driver_info;<br>        <span class="hljs-type">int</span> function;<br>        <span class="hljs-type">int</span> ret;<br><br>        pr_info(<span class="hljs-string">&quot;I changed uvcvideo driver in the Linux Kernel\n&quot;</span>);<br><br>        <span class="hljs-keyword">if</span> (id-&gt;idVendor &amp;&amp; id-&gt;idProduct)<br>                uvc_trace(UVC_TRACE_PROBE, <span class="hljs-string">&quot;Probing known UVC device %s &quot;</span><br>                                <span class="hljs-string">&quot;(%04x:%04x)\n&quot;</span>, udev-&gt;devpath, id-&gt;idVendor,<br>                                id-&gt;idProduct);<br>        <span class="hljs-keyword">else</span><br>                uvc_trace(UVC_TRACE_PROBE, <span class="hljs-string">&quot;Probing generic UVC device %s\n&quot;</span>,<br>                                udev-&gt;devpath);<br></code></pre></td></tr></table></figure>
+
+<p>之后修改 <code>.config</code> 文件, 添加:</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ini"><span class="hljs-attr">CONFIG_USB_VIDEO_CLASS</span>=m<br></code></pre></td></tr></table></figure>
+
+<p>然后重新编译安装内核, 并加载模块:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sh">make -j`<span class="hljs-built_in">nproc</span>` all<br>make modules_install install<br>modprobe uvcvideo<br>dmesg | less <span class="hljs-comment"># Search for &quot;I changed&quot;</span><br>dmesg | grep uvcvideo<br></code></pre></td></tr></table></figure>
 
 
                 
