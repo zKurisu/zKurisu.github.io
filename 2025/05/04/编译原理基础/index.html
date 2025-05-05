@@ -43,8 +43,12 @@
 <meta property="og:image" content="http://example.com/img/compiler-or-NFA-example.png">
 <meta property="og:image" content="http://example.com/img/compiler-closure-NFA-example.png">
 <meta property="og:image" content="http://example.com/img/compiler-complex-NFA-example.png">
+<meta property="og:image" content="http://example.com/img/compiler-NFA-to-DFA-example.png">
+<meta property="og:image" content="http://example.com/img/compiler-sub-set-example-handle-epsilon.png">
+<meta property="og:image" content="http://example.com/img/compiler-subset-construct-algo-example.png">
+<meta property="og:image" content="http://example.com/img/compiler-Hopcroft-algo-example.png">
 <meta property="article:published_time" content="2025-05-04T09:25:11.000Z">
-<meta property="article:modified_time" content="2025-05-05T04:18:23.178Z">
+<meta property="article:modified_time" content="2025-05-05T06:31:19.981Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/compiler-frontend-phases.png">
@@ -256,7 +260,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3.9k 字
+          4.3k 字
         
       </span>
     
@@ -267,7 +271,7 @@
         
         
         
-          33 分钟
+          36 分钟
         
       </span>
     
@@ -557,6 +561,24 @@
 <li>$e1*$, 闭包, 递归处理<br><img src="/../img/compiler-closure-NFA-example.png" srcset="/img/loading.gif" lazyload></li>
 </ul>
 <p>示例: <code>a(b|c)*</code><br><img src="/../img/compiler-complex-NFA-example.png" srcset="/img/loading.gif" lazyload></p>
+<h3 id="子集构造算法"><a href="#子集构造算法" class="headerlink" title="子集构造算法"></a>子集构造算法</h3><figure class="highlight clean"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs clean">NFA -&gt; DFA<br></code></pre></td></tr></table></figure>
+
+<p>把所有的可能构造成一个子集:<br><img src="/../img/compiler-NFA-to-DFA-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>伪代码为:</p>
+<figure class="highlight r"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs r">q0 <span class="hljs-operator">&lt;-</span> eps_closure<span class="hljs-punctuation">(</span>n0<span class="hljs-punctuation">)</span><br>Q <span class="hljs-operator">&lt;-</span> <span class="hljs-punctuation">&#123;</span>q0<span class="hljs-punctuation">&#125;</span><br>workList <span class="hljs-operator">&lt;-</span> q0<br><span class="hljs-keyword">while</span> <span class="hljs-punctuation">(</span>workList <span class="hljs-operator">!=</span> <span class="hljs-punctuation">[</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">)</span><br>    remove q from workList<br>    foreach <span class="hljs-punctuation">(</span>character <span class="hljs-built_in">c</span><span class="hljs-punctuation">)</span><br>        t <span class="hljs-operator">&lt;-</span> e<span class="hljs-operator">-</span>closure <span class="hljs-punctuation">(</span>delta <span class="hljs-punctuation">(</span>q<span class="hljs-punctuation">,</span> <span class="hljs-built_in">c</span><span class="hljs-punctuation">)</span><span class="hljs-punctuation">)</span><br>        D<span class="hljs-punctuation">[</span>q<span class="hljs-punctuation">,</span> <span class="hljs-built_in">c</span><span class="hljs-punctuation">]</span> <span class="hljs-operator">&lt;-</span> t<br>        <span class="hljs-keyword">if</span> <span class="hljs-punctuation">(</span>t <span class="hljs-punctuation">\</span>not<span class="hljs-punctuation">\</span><span class="hljs-keyword">in</span> Q<span class="hljs-punctuation">)</span><br>            add t to Q and workList<br></code></pre></td></tr></table></figure>
+<ul>
+<li>$\epsilon$-闭包 (<code>eps_closure</code>), 计算从某状态集通过 $\epsilon$-转移 (空集) 能够到达的所有状态<br><img src="/../img/compiler-sub-set-example-handle-epsilon.png" srcset="/img/loading.gif" lazyload></li>
+<li><code>Q</code> 中的元素都是集合</li>
+<li><code>workList</code> 通常用队列实现</li>
+<li><code>delta</code> 表示状态转移, 需要当前状态和一个输入</li>
+<li><code>D[q, c]</code> 表示 DFA 中的一个边 (<code>q</code> 是起始状态, <code>c</code> 是边的属性)</li>
+</ul>
+<p><img src="/../img/compiler-subset-construct-algo-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>该算法的最坏情况为 $O(2^N)$ (幂集的数量上限).</p>
+<h3 id="Hopcroft-最小化算法"><a href="#Hopcroft-最小化算法" class="headerlink" title="Hopcroft 最小化算法"></a>Hopcroft 最小化算法</h3><figure class="highlight clean"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs clean">DFA -&gt; 词法分析器代码<br></code></pre></td></tr></table></figure>
+
+<p>Hopcroft 最小化算法, 将 DFA 中的一些状态合并.</p>
+<p><img src="/../img/compiler-Hopcroft-algo-example.png" srcset="/img/loading.gif" lazyload></p>
 
                 
               </div>
