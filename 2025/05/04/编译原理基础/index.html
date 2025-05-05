@@ -29,8 +29,10 @@
 <meta property="og:image" content="http://example.com/img/compiler-more-complicated-structure-example.png">
 <meta property="og:image" content="http://example.com/img/compiler-flex-function-flow.png">
 <meta property="og:image" content="http://example.com/img/compiler-transfer-graph-example.png">
+<meta property="og:image" content="http://example.com/img/compiler-identifier-transfer-graph-example.png">
+<meta property="og:image" content="http://example.com/img/compiler-transfer-graph-with-key-words.png">
 <meta property="article:published_time" content="2025-05-04T09:25:11.000Z">
-<meta property="article:modified_time" content="2025-05-05T02:15:55.328Z">
+<meta property="article:modified_time" content="2025-05-05T03:09:52.357Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/compiler-frontend-phases.png">
@@ -242,7 +244,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.5k 字
+          3.2k 字
         
       </span>
     
@@ -253,7 +255,7 @@
         
         
         
-          22 分钟
+          27 分钟
         
       </span>
     
@@ -489,11 +491,21 @@
 </ul>
 </li>
 </ul>
-<h2 id="手动生成"><a href="#手动生成" class="headerlink" title="手动生成"></a>手动生成</h2><h3 id="转移图"><a href="#转移图" class="headerlink" title="转移图"></a>转移图</h3><p><img src="/../img/compiler-transfer-graph-example.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="手动生成"><a href="#手动生成" class="headerlink" title="手动生成"></a>手动生成</h2><h3 id="转移图"><a href="#转移图" class="headerlink" title="转移图"></a>转移图</h3><p>一个条件判断的转移图:<br><img src="/../img/compiler-transfer-graph-example.png" srcset="/img/loading.gif" lazyload></p>
 <ul>
 <li>这里的数字, 如 <code>0</code>, <code>1</code> 是状态, <code>&lt;</code>, <code>=</code> 等是读入的字符, <code>LE</code>, <code>NE</code> 等是定义的记号</li>
+<li><code>*</code> 表示通配, 默认情况, 且引入了容错性, 即使输入了非法字符（如 <code>&lt;x</code>), 词法分析器仍能给出合理的默认结果 (如将 <code>&lt;x</code> 视为 <code>&lt;</code>), 而非直接报错</li>
 </ul>
-<h2 id="自动生成器"><a href="#自动生成器" class="headerlink" title="自动生成器"></a>自动生成器</h2>
+<p>上述转移图对应的伪代码如下:</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs csharp"><span class="hljs-function">token <span class="hljs-title">nextToken</span>()</span><br><span class="hljs-function">    c</span> = getChar();<br>    <span class="hljs-keyword">switch</span> (c)<br>        <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;&lt;&#x27;</span>: c = getChar();<br>            <span class="hljs-keyword">switch</span> (c)<br>                <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;=&#x27;</span>: <span class="hljs-keyword">return</span> LE;<br>                <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;&gt;&#x27;</span>: <span class="hljs-keyword">return</span> NE;<br>                <span class="hljs-literal">default</span>: rollback(); <span class="hljs-keyword">return</span> LT;<br>        <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;=&#x27;</span>: <span class="hljs-keyword">return</span> EQ;<br>        <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;&gt;&#x27;</span>: c = nextChar();<br>            <span class="hljs-keyword">switch</span> (c): <span class="hljs-comment">// ...</span><br></code></pre></td></tr></table></figure>
+
+<p>一个标识符的转移图示例:<br><img src="/../img/compiler-identifier-transfer-graph-example.png" srcset="/img/loading.gif" lazyload></p>
+<figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs lasso">token nextToken()<br>    c = getChar();<br>    switch (c)<br>        <span class="hljs-keyword">case</span> <span class="hljs-string">&#x27;a&#x27;</span>, <span class="hljs-params">...</span>, <span class="hljs-string">&#x27;z&#x27;</span>, <span class="hljs-string">&#x27;A&#x27;</span>, <span class="hljs-params">...</span>, <span class="hljs-string">&#x27;Z&#x27;</span>, <span class="hljs-string">&#x27;_&#x27;</span>:<br>            c = getChar();<br>            <span class="hljs-keyword">while</span> (c==<span class="hljs-string">&#x27;a&#x27;</span> || c==<span class="hljs-string">&#x27;b&#x27;</span> || <span class="hljs-params">...</span> || c==<span class="hljs-string">&#x27;_&#x27;</span>) c=getChar();<br>            <span class="hljs-params">...</span><br></code></pre></td></tr></table></figure>
+
+<p>但要注意标识符和关键字之间有交集. 若要识别关键字:<br><img src="/../img/compiler-transfer-graph-with-key-words.png" srcset="/img/loading.gif" lazyload></p>
+<p>也可以用关键字哈希表来判断.</p>
+<h2 id="自动生成器"><a href="#自动生成器" class="headerlink" title="自动生成器"></a>自动生成器</h2><p>通过声明式的规范, 生成一个词法分析器, 主要依靠正则表达式.</p>
+
                 
               </div>
             
