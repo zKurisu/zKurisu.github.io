@@ -23,13 +23,17 @@
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="参考 B 站视频the super tiny compilerStanford cs143 该文档可能会集合多个教程的内容. 概述Compiler (编译器) 是一个程序, 将源代码翻译成目标代码. 如 GCC, Clang. Interpreter (解释器) 是一个程序, 逐行或逐语句解释源代码, 不生成独立的目标代码. 如 Python, Perl 解释器. 编译器结构编译器的结构非常模块化">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/compiler-frontend-phases.png">
+<meta property="og:image" content="http://example.com/img/compiler-multiple-phases-frontend-backend.png">
 <meta property="og:image" content="http://example.com/img/compiler-no-optimise-structure.png">
 <meta property="og:image" content="http://example.com/img/compiler-more-complicated-structure-example.png">
+<meta property="og:image" content="http://example.com/img/compiler-flex-function-flow.png">
+<meta property="og:image" content="http://example.com/img/compiler-transfer-graph-example.png">
 <meta property="article:published_time" content="2025-05-04T09:25:11.000Z">
-<meta property="article:modified_time" content="2025-05-04T12:38:37.498Z">
+<meta property="article:modified_time" content="2025-05-05T02:15:55.328Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="http://example.com/img/compiler-no-optimise-structure.png">
+<meta name="twitter:image" content="http://example.com/img/compiler-frontend-phases.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -238,7 +242,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.1k 字
+          2.5k 字
         
       </span>
     
@@ -249,7 +253,7 @@
         
         
         
-          10 分钟
+          22 分钟
         
       </span>
     
@@ -298,12 +302,13 @@
 <p>Interpreter (解释器) 是一个程序, 逐行或逐语句解释源代码, 不生成独立的目标代码. 如 Python, Perl 解释器.</p>
 <h1 id="编译器结构"><a href="#编译器结构" class="headerlink" title="编译器结构"></a>编译器结构</h1><p>编译器的结构非常模块化, 一般分为:</p>
 <ul>
-<li>前端, Front End, 含预处理, 词法分析, 语法分析, 语义分析, 中间代码生成, 如 <code>Clang</code></li>
+<li>前端, Front End, 含预处理, 词法分析, 语法分析, 语义分析, 中间代码生成, 如 <code>Clang</code><br><img src="/../img/compiler-frontend-phases.png" srcset="/img/loading.gif" lazyload></li>
 <li>中端, Middle End, 含中间代码优化</li>
 <li>后端, Back End, 含目标代码生成, 如 <code>llvm</code></li>
 </ul>
 <p>这样就能为不同语言编写 Front End, 而共用 Back End, 以节约工作量.</p>
 <p>也可以通过编写不同的 Back End 实现跨平台.</p>
+<p><img src="/../img/compiler-multiple-phases-frontend-backend.png" srcset="/img/loading.gif" lazyload></p>
 <p>编译的主要步骤包括:</p>
 <ul>
 <li>预处理, Preprocessing, 处理源代码中的宏, 头文件包含, 条件编译等<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// preprocessing.c</span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> PI 3.14</span><br></code></pre></td></tr></table></figure>
@@ -321,7 +326,174 @@
 <p>可以看作是 “流水线” 结构. 阶段的划分能让工程上的实现更容易.</p>
 <p>一种没有优化的典型的编译器结构如下:<br><img src="/../img/compiler-no-optimise-structure.png" srcset="/img/loading.gif" lazyload></p>
 <p>一种更复杂的编译器结构:<br><img src="/../img/compiler-more-complicated-structure-example.png" srcset="/img/loading.gif" lazyload></p>
-<h2 id="Sum-语言和栈式计算机示例"><a href="#Sum-语言和栈式计算机示例" class="headerlink" title="Sum 语言和栈式计算机示例"></a>Sum 语言和栈式计算机示例</h2>
+<h2 id="Sum-语言和栈式计算机示例"><a href="#Sum-语言和栈式计算机示例" class="headerlink" title="Sum 语言和栈式计算机示例"></a>Sum 语言和栈式计算机示例</h2><p>Sum 语言, 是这里的源语言, 有两种语法形式:</p>
+<ul>
+<li>整型数字: n</li>
+<li>加法: <code>e1 + e2</code></li>
+</ul>
+<p>如: <code>7 + 8 + 9</code>.</p>
+<p>Stack 语言, 是目标语言, 包含:</p>
+<ul>
+<li>一个操作数栈</li>
+<li>两条指令:<ul>
+<li>压栈指令: <code>push n</code></li>
+<li>加法指令: <code>add</code></li>
+</ul>
+</li>
+</ul>
+<p>如:</p>
+<figure class="highlight avrasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs avrasm"><span class="hljs-keyword">push</span> <span class="hljs-number">3</span><br><span class="hljs-keyword">push</span> <span class="hljs-number">4</span><br><span class="hljs-keyword">add</span><br><span class="hljs-keyword">push</span> <span class="hljs-number">5</span><br><span class="hljs-keyword">add</span><br></code></pre></td></tr></table></figure>
+
+<blockquote>
+<p>要求: 编译程序 <code>1+2+3</code> 到 Stack 语言</p>
+</blockquote>
+<ul>
+<li><p>Step1: 词法分析阶段, 得到 5 个 tokens</p>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs gradle"><span class="hljs-number">1</span> <span class="hljs-keyword">INT</span><br>+ <span class="hljs-keyword">PLUS</span><br><span class="hljs-number">2</span> <span class="hljs-keyword">INT</span><br>+ <span class="hljs-keyword">PLUS</span><br><span class="hljs-number">3</span> <span class="hljs-keyword">INT</span><br></code></pre></td></tr></table></figure>
+</li>
+<li><p>Step2: 语法分析阶段, 构建 AST 如下:</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs markdown"><span class="hljs-bullet">    +</span><br>   / \<br><span class="hljs-bullet">  +</span>   3<br> / \<br>1   2<br></code></pre></td></tr></table></figure>
+</li>
+<li><p>Step3: 语义分析阶段</p>
+</li>
+<li><p>…</p>
+</li>
+<li><p>Stepn: 代码生成, 利用后序遍历, 遇到 <code>n</code>, 输出 <code>push n</code>; 遇到 <code>+</code>, 输出 <code>add</code></p>
+<figure class="highlight armasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs armasm"><span class="hljs-comment">// 1 -&gt; 2 -&gt; + -&gt; 3 -&gt; +</span><br><span class="hljs-keyword">push</span> <span class="hljs-number">1</span><br><span class="hljs-keyword">push</span> <span class="hljs-number">2</span><br><span class="hljs-keyword">add</span><br><span class="hljs-keyword">push</span> <span class="hljs-number">3</span><br><span class="hljs-symbol">add</span><br></code></pre></td></tr></table></figure></li>
+</ul>
+<h1 id="词法分析"><a href="#词法分析" class="headerlink" title="词法分析"></a>词法分析</h1><p>词法分析器, 将字符流转换为记号流.</p>
+<p><img src="/../img/compiler-flex-function-flow.png" srcset="/img/loading.gif" lazyload></p>
+<p>输入字符流:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">if</span> (x &gt; <span class="hljs-number">5</span>)<br>    y = <span class="hljs-string">&#x27;hello&#x27;</span>;<br><span class="hljs-keyword">else</span><br>    z = <span class="hljs-number">1</span>;<br></code></pre></td></tr></table></figure>
+<p>(空白字符会被忽略)</p>
+<p>输出 tokens:</p>
+<table>
+<thead>
+<tr>
+<th>Token</th>
+<th>类型</th>
+<th>值&#x2F;字面量</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>if</code></td>
+<td><code>KEYWORD</code></td>
+<td><code>&quot;if&quot;</code></td>
+<td>关键字</td>
+</tr>
+<tr>
+<td><code>(</code></td>
+<td><code>LPAREN</code></td>
+<td><code>&quot;(&quot;</code></td>
+<td>左括号</td>
+</tr>
+<tr>
+<td><code>x</code></td>
+<td><code>IDENTIFIER</code></td>
+<td><code>&quot;x&quot;</code></td>
+<td>变量名</td>
+</tr>
+<tr>
+<td><code>&gt;</code></td>
+<td><code>OPERATOR</code></td>
+<td><code>&quot;&gt;&quot;</code></td>
+<td>比较运算符</td>
+</tr>
+<tr>
+<td><code>5</code></td>
+<td><code>INTEGER</code></td>
+<td><code>5</code></td>
+<td>整数字面量</td>
+</tr>
+<tr>
+<td><code>)</code></td>
+<td><code>RPAREN</code></td>
+<td><code>&quot;)&quot;</code></td>
+<td>右括号</td>
+</tr>
+<tr>
+<td><code>y</code></td>
+<td><code>IDENTIFIER</code></td>
+<td><code>&quot;y&quot;</code></td>
+<td>变量名</td>
+</tr>
+<tr>
+<td><code>=</code></td>
+<td><code>ASSIGN</code></td>
+<td><code>&quot;=&quot;</code></td>
+<td>赋值运算符</td>
+</tr>
+<tr>
+<td><code>&#39;hello&#39;</code></td>
+<td><code>STRING</code></td>
+<td><code>&quot;hello&quot;</code></td>
+<td>字符串字面量（单引号）</td>
+</tr>
+<tr>
+<td><code>;</code></td>
+<td><code>SEMICOLON</code></td>
+<td><code>&quot;;&quot;</code></td>
+<td>分号</td>
+</tr>
+<tr>
+<td><code>else</code></td>
+<td><code>KEYWORD</code></td>
+<td><code>&quot;else&quot;</code></td>
+<td>关键字</td>
+</tr>
+<tr>
+<td><code>z</code></td>
+<td><code>IDENTIFIER</code></td>
+<td><code>&quot;z&quot;</code></td>
+<td>变量名</td>
+</tr>
+<tr>
+<td><code>=</code></td>
+<td><code>ASSIGN</code></td>
+<td><code>&quot;=&quot;</code></td>
+<td>赋值运算符</td>
+</tr>
+<tr>
+<td><code>1</code></td>
+<td><code>INTEGER</code></td>
+<td><code>1</code></td>
+<td>整数字面量</td>
+</tr>
+<tr>
+<td><code>;</code></td>
+<td><code>SEMICOLON</code></td>
+<td><code>&quot;;&quot;</code></td>
+<td>分号</td>
+</tr>
+</tbody></table>
+<p>可以写为:</p>
+<figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs scss">IF LPAREN <span class="hljs-built_in">IDENT</span>(x) GT <span class="hljs-built_in">INT</span>(<span class="hljs-number">5</span>) RPAREN<br>    <span class="hljs-built_in">IDENT</span>(y) ASSIGN <span class="hljs-built_in">STRING</span>(&quot;hello&quot;) SEMICOLON<br>ELSE<br>    <span class="hljs-built_in">IDENT</span>(z) ASSIGN <span class="hljs-built_in">INT</span>(<span class="hljs-number">1</span>) SEMICOLON EOF<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>IF</code>, <code>LPAREN</code> 等就是记号</li>
+</ul>
+<p>若用 <code>C</code> 实现这个词法分析器, 可以这样定义:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">enum</span> <span class="hljs-title">kind</span> &#123;</span>IF, LPAREN, ID, INTLIT, ...&#125;;<br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">token</span> &#123;</span><br>    <span class="hljs-class"><span class="hljs-keyword">enum</span> <span class="hljs-title">kind</span> <span class="hljs-title">k</span>;</span><br>    <span class="hljs-type">char</span> *lexeme;<br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<p>则对于 <code>if (x &gt; 5)</code>, 生成的记号流为:</p>
+<figure class="highlight avrasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs avrasm"><span class="hljs-symbol">kind:</span> IF         Lexeme: <span class="hljs-number">0</span><br><span class="hljs-symbol">kind:</span> LPAREN     Lexeme: <span class="hljs-number">0</span><br><span class="hljs-symbol">kind:</span> ID         Lexeme: <span class="hljs-built_in">x</span><br><span class="hljs-symbol">kind:</span> GT         Lexeme: <span class="hljs-number">0</span><br><span class="hljs-symbol">kind:</span> INTLIT     Lexeme: <span class="hljs-number">5</span><br><span class="hljs-symbol">kind:</span> RPAREN     Lexeme: <span class="hljs-number">0</span><br></code></pre></td></tr></table></figure>
+
+<p>词法分析器主要有两种实现方案:</p>
+<ul>
+<li>手工编码实现, 即开发者编写代码 (如 <code>C</code>) 来识别 Token, 通过状态机或正则匹配实现:<ul>
+<li>相对复杂, 但灵活性高, 当前非常流行, 如 <code>GCC</code>, <code>LLVM</code></li>
+</ul>
+</li>
+<li>词法分析器生成器, 通过声明式规则 (如正则表达式) 定义 Token, 由工具 (如 <code>Lex/Flex</code>) 自动生成词法分析器代码:<ul>
+<li>开发效率高, 可维护性高, 但性能稍低</li>
+</ul>
+</li>
+</ul>
+<h2 id="手动生成"><a href="#手动生成" class="headerlink" title="手动生成"></a>手动生成</h2><h3 id="转移图"><a href="#转移图" class="headerlink" title="转移图"></a>转移图</h3><p><img src="/../img/compiler-transfer-graph-example.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>这里的数字, 如 <code>0</code>, <code>1</code> 是状态, <code>&lt;</code>, <code>=</code> 等是读入的字符, <code>LE</code>, <code>NE</code> 等是定义的记号</li>
+</ul>
+<h2 id="自动生成器"><a href="#自动生成器" class="headerlink" title="自动生成器"></a>自动生成器</h2>
                 
               </div>
             
