@@ -75,7 +75,7 @@
 <meta property="og:image" content="http://example.com/img/compiler-syntax-follow-set-construct-algorithm.png">
 <meta property="og:image" content="http://example.com/img/compiler-syntax-auto-generation.png">
 <meta property="article:published_time" content="2025-05-04T09:25:11.000Z">
-<meta property="article:modified_time" content="2025-05-16T12:06:11.068Z">
+<meta property="article:modified_time" content="2025-05-16T12:56:55.548Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/compiler-frontend-phases.png">
@@ -287,7 +287,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          9.3k 字
+          11k 字
         
       </span>
     
@@ -298,7 +298,7 @@
         
         
         
-          78 分钟
+          91 分钟
         
       </span>
     
@@ -736,8 +736,83 @@
 <p>因为此时, 读入的第一个字符是 <code>a</code>, 为当前处理字符, 因此 <code>lookahead=1</code> 是下一个字符, 即 <code>b</code>.</p>
 <p>避免回溯是指:</p>
 <ul>
-<li>选择了一个错误的规则, 但还有其他的规则可以尝试, 因此需要回溯</li>
+<li>选择了一个错误的规则, 但还有其他的规则可以尝试, 因此需要回溯, 而 <code>lookahead</code> 相当于提前做了比较, 选择了相对正确的规则, 此时如果错误, 则说明不匹配, 直接返回, 而非回溯</li>
 </ul>
+<p>消除歧义是指:</p>
+<ul>
+<li>多个文法规则有相同的前缀, 如 <code>if E then S else S</code> 和 <code>if E then S</code>, 用 <code>lookahead</code> 可以确定使用哪一条</li>
+</ul>
+<h3 id="FIRST-集"><a href="#FIRST-集" class="headerlink" title="FIRST 集"></a>FIRST 集</h3><p><code>FIRST(a)</code>, 指从符号串 <code>a</code> 能推导出的首个终结符集合. 规则为:</p>
+<ul>
+<li>如果 <code>a</code> 以终结符开头, <code>FIRST(a) = &#123;a&#125;</code></li>
+<li>如果 $a \rightarrow \epsilon$, 则 $\epsilon \in FIRST(a)$</li>
+<li>如果 $a \rightarrow Y1Y2…Yn$, 则 <code>FIRST(a)</code>, 包含 <code>FIRST(Y1)</code>, 若 <code>Y1</code> 可推导出 $\epsilon$, 则继续加入 <code>FIRST(Y2)</code></li>
+</ul>
+<p>示例, 如果文法为:</p>
+<figure class="highlight coq"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs coq">S -&gt; aB | <span class="hljs-type">bC</span><br>B = c | <span class="hljs-type">epsilon</span><br>C -&gt; d<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>FIRST(S) = &#123;a, b&#125;</code></li>
+<li><code>FIRST(B) = &#123;c, epsilon&#125;</code></li>
+<li><code>FIRST(C) = &#123;d&#125;</code></li>
+</ul>
+<h3 id="LL-k-文法"><a href="#LL-k-文法" class="headerlink" title="LL(k) 文法"></a>LL(k) 文法</h3><p><code>LL(k)</code> 是一种自顶向下分析方法, 使用 <code>k</code> 个 <code>lookahead</code> 符号来预测产生式.</p>
+<p>一般使用 <code>LL(1)</code>, 即只前看一个符号.</p>
+<p>如下面文法规则, 描述算术表达式, 支持加法, 乘法:</p>
+<figure class="highlight xl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs xl">E<span class="hljs-function"><span class="hljs-title">xpr</span> -&gt;</span> Term (+ Term)*<br>T<span class="hljs-function"><span class="hljs-title">erm</span> -&gt;</span> Factor (* Factor)*<br>F<span class="hljs-function"><span class="hljs-title">actor</span> -&gt;</span> (Expr) | number<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>(+ Term)*</code> 表示 <code>+ Term</code> 可以重复出现, 类似正则表达式中 <code>*</code> 的功能, <code>()</code> 表示 <code>+</code> 和 <code>Term</code> 需要一起出现<br>(注意, 只有出现终结符时, 才读入一个字符并匹配和弹出规则)</li>
+</ul>
+<p>若解析 <code>1 + 2 * 3</code>, 且 <code>k=1</code> (<code>lookahead</code> 的长度):</p>
+<ol>
+<li>初始化:<ul>
+<li>输入流 <code>[&#39;1&#39;, &#39;+&#39;, &#39;2&#39;, &#39;*&#39;, &#39;3&#39;, &#39;$&#39;]</code> (<code>$</code> 是结束符)</li>
+<li>解析栈 <code>[Expr, $]</code> (<code>$</code> 是栈底)</li>
+<li><code>Lookahead(1)</code>, 当前符号为 <code>1</code></li>
+</ul>
+</li>
+<li>栈顶为 <code>Expr</code><ul>
+<li>栈顶选择规则 <code>Expr -&gt; Term (+ Term)*</code> (因为 <code>lookahead=1</code> 是数字, 属于 <code>Term</code> 的 FIRST 集)</li>
+<li>替换栈顶, 此时栈为 <code>[Term, (+ Term)*, $]</code> (<code>Term (+ Term)*</code> 是两部分)</li>
+</ul>
+</li>
+<li>栈顶为 <code>Term</code><ul>
+<li>选择规则 <code>Term -&gt; Factor (*Factor)*</code> (因为 <code>lookahead=1</code> 是数字, 属于 <code>Factor</code> 的 FIRST 集)</li>
+<li>替换栈顶后, 栈为 <code>[Factor, (*Factor)*, (+Term)*, $]</code></li>
+</ul>
+</li>
+<li>栈顶为 <code>Factor</code><ul>
+<li>选择规则 <code>Factor -&gt; number</code> (因为 <code>lookahead=1</code> 是数字)</li>
+<li>匹配数字的流程为:<ul>
+<li>弹出 <code>Factor</code>, 压入 <code>number</code></li>
+<li>栈变为 <code>[number, (*Factor)*, (+Term)*, $]</code></li>
+<li>输入 <code>1</code> 与栈顶 <code>number</code> 匹配, 消耗 <code>1</code></li>
+<li>更新输入流: <code>[&#39;+&#39;, &#39;2&#39;, &#39;*&#39;, &#39;3&#39;, &#39;$&#39;]</code></li>
+<li>弹出 <code>number</code>, 栈变为 <code>[(*Factor)*, (+Term)*, $]</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>栈顶 <code>(*Factor)*</code><ul>
+<li><code>lookahead=&#39;+&#39;</code>, 不属于 <code>*</code> 的 FIRST 集, 选择 $\epsilon$ (<code>*</code> 可以匹配 0 个重复项, 即空串)</li>
+<li>弹出 <code>(*Factor)*</code>, 栈: <code>[(+Term)*, $]</code></li>
+</ul>
+</li>
+<li>栈顶 <code>(+Term)*</code><ul>
+<li><code>lookahead=&#39;+&#39;</code>, 属于 <code>+</code> 的 FIRST 集, 选择 <code>+ Term</code></li>
+<li>替换栈顶, 栈: <code>[&#39;+&#39;, &#39;Term&#39;, (+Term)*, $]</code></li>
+</ul>
+</li>
+<li>栈顶 <code>+</code><ul>
+<li>与输入 <code>+</code> 匹配, 消耗 <code>+</code></li>
+<li>更新输入流 <code>[&#39;2&#39;, &#39;*&#39;, &#39;3&#39;, &#39;$&#39;]</code></li>
+<li>弹出 <code>+</code>, 栈: <code>[Term, (+Term)*, $]</code></li>
+</ul>
+</li>
+<li>栈顶 <code>Term</code><ul>
+<li><code>lookahead=2</code>,</li>
+</ul>
+</li>
+</ol>
 <h3 id="LL-1-分析算法"><a href="#LL-1-分析算法" class="headerlink" title="LL(1) 分析算法"></a>LL(1) 分析算法</h3><p><code>LL(1)</code> 指从左 (Left) 向右读入程序, 最左 (Left) 推导, 采用一个 <code>(1)</code> 前看符号 (指未处理的一个符号).</p>
 <p>该算法基于 “表驱动”.<br><img src="/../img/compiler-syntax-automation-LL-algorithm-structure.png" srcset="/img/loading.gif" lazyload><br>(重点在这个分析表)</p>
 <p><img src="/../img/compiler-ll-algorithm-analyse-table-example.png" srcset="/img/loading.gif" lazyload></p>
