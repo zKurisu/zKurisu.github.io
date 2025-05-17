@@ -75,7 +75,7 @@
 <meta property="og:image" content="http://example.com/img/compiler-syntax-follow-set-construct-algorithm.png">
 <meta property="og:image" content="http://example.com/img/compiler-syntax-auto-generation.png">
 <meta property="article:published_time" content="2025-05-04T09:25:11.000Z">
-<meta property="article:modified_time" content="2025-05-17T01:43:59.207Z">
+<meta property="article:modified_time" content="2025-05-17T02:35:14.759Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/compiler-frontend-phases.png">
@@ -287,7 +287,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          13k 字
+          16k 字
         
       </span>
     
@@ -298,7 +298,7 @@
         
         
         
-          110 分钟
+          132 分钟
         
       </span>
     
@@ -771,15 +771,140 @@
 <ul>
 <li>如果 <code>A -&gt;</code>$\epsilon$, 则需要检查 <code>FOLLOW(A)</code></li>
 </ul>
-<h3 id="FOLLOW-集"><a href="#FOLLOW-集" class="headerlink" title="FOLLOW 集"></a>FOLLOW 集</h3><p><code>FOLLOW(A)</code> 指可能出现在非终结符 <code>A</code> 之后的终结符集合.</p>
-<p>用于处理 $\epsilon$ 产生式, 如 $B \rightarrow \epsilon$, 需要看 <code>FOLLOW(B)</code>.</p>
-<p>如文法:</p>
-<figure class="highlight coq"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs coq">S -&gt; aB<br>B -&gt; c | <span class="hljs-type">epsilon</span><br></code></pre></td></tr></table></figure>
-<ul>
-<li><code>FOLLOW(B) = &#123;$&#125;</code></li>
-</ul>
 <h3 id="Nullable-集"><a href="#Nullable-集" class="headerlink" title="Nullable 集"></a>Nullable 集</h3><p>Nullable 集合也用于自顶向下语法分析, 其标识了哪些非终结符可以推导出空串 ($\epsilon$).</p>
 <p>定义 <code>Nullable(A)</code>: 如果非终结符 <code>A</code> 能够通过一系列产生式规则推导出空串 $\epsilon$, 则 <code>A</code> 是 Nullable 的.</p>
+<p>Nullable 集合的作用:</p>
+<ol>
+<li>如果 <code>A</code> 是 Nullable, 则计算 <code>FIRST(a)</code> 时需要检查 <code>a</code> 中 <code>A</code> 之后的符号</li>
+<li>计算 FOLLOW 集</li>
+</ol>
+<p>构建 Nullable 的规则:</p>
+<ol>
+<li>直接 $\epsilon$ 产生式, 如果存在 $A \rightarrow \epsilon$, 则 <code>Nullable(A) = true</code>, 如:<figure class="highlight coq"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs coq">A -&gt; a | <span class="hljs-type">epsilon</span><br></code></pre></td></tr></table></figure></li>
+<li>间接推导出 $\epsilon$. 只有 A 的所有产生式右侧都能推导出 $\epsilon$, 则 <code>Nullable(A) = true</code>如:<figure class="highlight clean"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs clean">A -&gt; B C<br>B -&gt; epsilon<br>C -&gt; epsilon<br></code></pre></td></tr></table></figure></li>
+</ol>
+<ul>
+<li><code>Nullable(B) = true, Nullable(C) = true -&gt; Nullable(A) = true</code></li>
+</ul>
+<p>另一个例子:</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs less"><span class="hljs-selector-tag">A</span> <span class="hljs-selector-tag">-</span>&gt; <span class="hljs-selector-tag">a</span> | <span class="hljs-selector-tag">B</span><br><span class="hljs-selector-tag">B</span> <span class="hljs-selector-tag">-</span>&gt; <span class="hljs-selector-tag">epsilon</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>此时, 由于 <code>A</code> 需要间接推导得到 $\epsilon$, 但 <code>a</code> 为终结符, 不满足 “所有产生式右侧都能推导出 $\epsilon$”, 因此 <code>Nullable(A) = false</code></li>
+</ul>
+<p>示例 (不动点算法):</p>
+<p>考虑以下文法，其中非终结符 <code>A</code>、<code>B</code>、<code>S</code> 通过间接规则推导出 <code>ε</code>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">S → A B C<br>A → a | ε<br>B → b | D<br>C → c | ε<br>D → ε<br></code></pre></td></tr></table></figure>
+
+<p><strong>目标</strong><br>计算所有非终结符的 <code>Nullable</code> 属性。</p>
+<hr>
+<p><strong>分步推导过程</strong><br><strong>步骤 1：初始化</strong><br>所有非终结符初始为 <code>Nullable = false</code>：</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs stylus"><span class="hljs-function"><span class="hljs-title">Nullable</span><span class="hljs-params">(S)</span></span> = false<br><span class="hljs-function"><span class="hljs-title">Nullable</span><span class="hljs-params">(A)</span></span> = false<br><span class="hljs-function"><span class="hljs-title">Nullable</span><span class="hljs-params">(B)</span></span> = false<br><span class="hljs-function"><span class="hljs-title">Nullable</span><span class="hljs-params">(C)</span></span> = false<br><span class="hljs-function"><span class="hljs-title">Nullable</span><span class="hljs-params">(D)</span></span> = false<br></code></pre></td></tr></table></figure>
+
+<p><strong>步骤 2：扫描直接 <code>ε</code> 产生式</strong><br>• <code>A → ε</code> ⇒ <code>Nullable(A) = true</code>  </p>
+<p>• <code>C → ε</code> ⇒ <code>Nullable(C) = true</code>  </p>
+<p>• <code>D → ε</code> ⇒ <code>Nullable(D) = true</code>  </p>
+<p>更新后：</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs stylus"><span class="hljs-function"><span class="hljs-title">Nullable</span><span class="hljs-params">(A)</span></span> = true<br><span class="hljs-function"><span class="hljs-title">Nullable</span><span class="hljs-params">(C)</span></span> = true<br><span class="hljs-function"><span class="hljs-title">Nullable</span><span class="hljs-params">(D)</span></span> = true<br></code></pre></td></tr></table></figure>
+
+<p><strong>步骤 3：递归推导间接 <code>Nullable</code></strong><br>第一轮扫描：</p>
+<ol>
+<li><p>规则 <code>B → b | D</code>：<br>• <code>D</code> 是 <code>Nullable</code> 的（因为 <code>D → ε</code>），但 <code>B</code> 本身没有直接或间接产生 <code>ε</code> 的规则（<code>b</code> 是终结符），因此 <code>Nullable(B)</code> 仍为 <code>false</code>。  </p>
+<p>• <em>（注意：<code>B</code> 的规则中虽然有 <code>D</code>，但 <code>D → ε</code> 只是 <code>B</code> 的一个可选分支，<code>B</code> 本身不能保证一定推导出 <code>ε</code>）</em></p>
+</li>
+<li><p>规则 <code>S → A B C</code>：<br>• 需要 <code>A</code>、<code>B</code>、<code>C</code> 全部为 <code>Nullable</code> 时，<code>S</code> 才是 <code>Nullable</code>。  </p>
+<p>• 当前状态：</p>
+<p>  ◦ <code>Nullable(A) = true</code>  </p>
+<p>  ◦ <code>Nullable(B) = false</code>  </p>
+<p>  ◦ <code>Nullable(C) = true</code>  </p>
+<p>• 因为 <code>B</code> 不是 <code>Nullable</code> 的，所以 <code>Nullable(S)</code> 保持 <code>false</code>。</p>
+</li>
+</ol>
+<p>第二轮扫描（更新 <code>Nullable(D)</code> 后重新检查 <code>B</code>）：<br>• 发现 <code>B</code> 仍然无法仅通过 <code>D → ε</code> 保证自身能推导出 <code>ε</code>（因为 <code>B → b</code> 是另一条路径），因此 <code>Nullable(B)</code> 仍为 <code>false</code>。  </p>
+<p>• <code>S</code> 的 <code>Nullable</code> 状态不变。</p>
+<p><strong>步骤 4：最终结果</strong></p>
+<figure class="highlight oxygene"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs oxygene"><span class="hljs-keyword">Nullable</span>(A) = <span class="hljs-keyword">true</span>   (因为 A → ε)<br><span class="hljs-keyword">Nullable</span>(B) = <span class="hljs-keyword">false</span>  (因为 B → b | D，且 D → ε 不保证 B 一定能推导出 ε)<br><span class="hljs-keyword">Nullable</span>(C) = <span class="hljs-keyword">true</span>   (因为 C → ε)<br><span class="hljs-keyword">Nullable</span>(D) = <span class="hljs-keyword">true</span>   (因为 D → ε)<br><span class="hljs-keyword">Nullable</span>(S) = <span class="hljs-keyword">false</span>  (因为 S → A B C 中 B 不是 <span class="hljs-keyword">Nullable</span>)<br></code></pre></td></tr></table></figure>
+
+<h3 id="FOLLOW-集"><a href="#FOLLOW-集" class="headerlink" title="FOLLOW 集"></a>FOLLOW 集</h3><p><code>FOLLOW(A)</code> 用于自顶向下分析, 指可能出现在非终结符 <code>A</code> 之后的终结符集合. 如果 <code>A</code> 是规则的最右符号, 则 <code>$</code> 也属于 <code>FOLLOW(A)</code>.</p>
+<p>主要解决以下两个问题：</p>
+<ol>
+<li>何时使用 <code>ε</code> 产生式(如 <code>A → ε</code>). 决策依据: 当 <code>lookahead</code> 符号属于 <code>FOLLOW(A)</code> 时, 选择 <code>A → ε</code>, 如:<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">S → A b<br>A → a | ε<br></code></pre></td></tr></table></figure>
+• <code>FOLLOW(A) = &#123; b &#125;</code>（因为 <code>A</code> 后面必须是 <code>b</code>）。</li>
+</ol>
+<p>• 当 <code>lookahead = b</code> 时，选择 <code>A → ε</code>（因为 <code>b ∈ FOLLOW(A)</code>, 如果不选择空, 而是 <code>A -&gt; a</code>, 则必然会回溯, 因为 <code>a</code> 与 <code>b</code> 不匹配）<br>2. 如何避免语法分析中的冲突（如 <code>A → α</code> 和 <code>A → β</code> 的 <code>FIRST</code> 集合有重叠时)</p>
+<p>构架规则:</p>
+<ol>
+<li><p>开始符号：<br>• 如果 <code>S</code> 是开始符号，则 <code>$ ∈ FOLLOW(S)</code>。  </p>
+</li>
+<li><p>产生式中的后继符号：<br>• 如果存在产生式 <code>B → α A β</code>，则 <code>FIRST(β)</code> 的所有终结符属于 <code>FOLLOW(A)</code>。  </p>
+<p>• 如果 <code>β</code> 是 <code>Nullable</code> 的（即 <code>β →* ε</code>），则 <code>FOLLOW(B)</code> 也属于 <code>FOLLOW(A)</code>。  </p>
+</li>
+<li><p>递归传递：<br>• <code>FOLLOW</code> 关系需要递归计算，直到不再变化。</p>
+</li>
+</ol>
+<p>** 计算 <code>FOLLOW</code> 的算法示例**<br><strong>输入</strong>：文法规则、<code>FIRST</code> 集合、<code>Nullable</code> 信息。<br><strong>输出</strong>：所有非终结符的 <code>FOLLOW</code> 集合。<br><strong>步骤</strong>：</p>
+<ol>
+<li><p>初始化所有 <code>FOLLOW(A) = ∅</code>，且 <code>FOLLOW(S) = &#123; $ &#125;</code>（<code>S</code> 是开始符号）。  </p>
+</li>
+<li><p>对每条产生式 <code>B → α A β</code>：<br>• 将 <code>FIRST(β)</code> 的非 <code>ε</code> 终结符加入 <code>FOLLOW(A)</code>。  </p>
+<p>• 如果 <code>β</code> 是 <code>Nullable</code> 的（或 <code>β</code> 为空），则将 <code>FOLLOW(B)</code> 加入 <code>FOLLOW(A)</code>。  </p>
+</li>
+<li><p>重复步骤2，直到所有 <code>FOLLOW</code> 集合不再变化。</p>
+</li>
+</ol>
+<hr>
+<p><strong>示例文法</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">S → A B C<br>A → a | ε<br>B → b | ε<br>C → c | ε<br></code></pre></td></tr></table></figure>
+
+<p><strong>步骤1：计算 <code>FIRST</code> 和 <code>Nullable</code></strong><br>• <code>FIRST(A) = &#123; a, ε &#125;</code>, <code>Nullable(A) = true</code>  </p>
+<p>• <code>FIRST(B) = &#123; b, ε &#125;</code>, <code>Nullable(B) = true</code>  </p>
+<p>• <code>FIRST(C) = &#123; c, ε &#125;</code>, <code>Nullable(C) = true</code>  </p>
+<p>• <code>FIRST(S) = &#123; a, b, c, ε &#125;</code>  </p>
+<p><strong>步骤2：初始化 <code>FOLLOW</code></strong><br>• <code>FOLLOW(S) = &#123; $ &#125;</code>  </p>
+<p>• <code>FOLLOW(A) = FOLLOW(B) = FOLLOW(C) = ∅</code>  </p>
+<p><strong>步骤3：逐条处理产生式</strong><br><strong>(1) 产生式 <code>S → A B C</code></strong><br>• <code>A</code> 的后继符号是 <code>B C</code>：  </p>
+<p>  • <code>FIRST(B C) = FIRST(B) = &#123; b, ε &#125;</code>  </p>
+<p>  • 加入 <code>b</code> 到 <code>FOLLOW(A)</code>。  </p>
+<p>  • 因为 <code>B</code> 是 <code>Nullable</code> 的，继续检查 <code>C</code>：  </p>
+<pre><code class="hljs">◦ `FIRST(C) = &#123; c, ε &#125;`  
+
+◦ 加入 `c` 到 `FOLLOW(A)`。  
+</code></pre>
+<p>  • 因为 <code>C</code> 也是 <code>Nullable</code> 的，将 <code>FOLLOW(S)</code>（即 <code>$</code>）加入 <code>FOLLOW(A)</code>。  </p>
+<p>  • 结果：<code>FOLLOW(A) = &#123; b, c, $ &#125;</code>  </p>
+<p>• <code>B</code> 的后继符号是 <code>C</code>：  </p>
+<p>  • <code>FIRST(C) = &#123; c, ε &#125;</code>  </p>
+<p>  • 加入 <code>c</code> 到 <code>FOLLOW(B)</code>。  </p>
+<p>  • 因为 <code>C</code> 是 <code>Nullable</code> 的，将 <code>FOLLOW(S)</code>（即 <code>$</code>）加入 <code>FOLLOW(B)</code>。  </p>
+<p>  • 结果：<code>FOLLOW(B) = &#123; c, $ &#125;</code>  </p>
+<p>• <code>C</code> 是最后一个符号：  </p>
+<p>  • 直接继承 <code>FOLLOW(S)</code>（即 <code>$</code>）。  </p>
+<p>  • 结果：<code>FOLLOW(C) = &#123; $ &#125;</code>  </p>
+<p><strong>(2) 其他产生式</strong><br>• <code>A → a | ε</code>、<code>B → b | ε</code>、<code>C → c | ε</code> 不改变 <code>FOLLOW</code> 集合。  </p>
+<p><strong>最终 <code>FOLLOW</code> 集合</strong></p>
+<table>
+<thead>
+<tr>
+<th>非终结符</th>
+<th><code>FOLLOW</code></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>S</code></td>
+<td><code>&#123; $ &#125;</code></td>
+</tr>
+<tr>
+<td><code>A</code></td>
+<td><code>&#123; b, c, $ &#125;</code></td>
+</tr>
+<tr>
+<td><code>B</code></td>
+<td><code>&#123; c, $ &#125;</code></td>
+</tr>
+<tr>
+<td><code>C</code></td>
+<td><code>&#123; $ &#125;</code></td>
+</tr>
+</tbody></table>
 <h3 id="LL-k-文法"><a href="#LL-k-文法" class="headerlink" title="LL(k) 文法"></a>LL(k) 文法</h3><p><code>LL(k)</code> 是一种自顶向下分析方法, 使用 <code>k</code> 个 <code>lookahead</code> 符号来预测产生式.</p>
 <p>一般使用 <code>LL(1)</code>, 即只前看一个符号.</p>
 <p>如下面文法规则, 描述算术表达式, 支持加法, 乘法:</p>
