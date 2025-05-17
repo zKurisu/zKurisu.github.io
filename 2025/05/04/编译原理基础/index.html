@@ -74,11 +74,15 @@
 <meta property="og:image" content="http://example.com/img/compiler-syntax-follow-set-construct-algorithm.png">
 <meta property="og:image" content="http://example.com/img/compiler-syntax-automation-LL-algorithm-structure.png">
 <meta property="og:image" content="http://example.com/img/compiler-ll-algorithm-analyse-table-example.png">
+<meta property="og:image" content="http://example.com/img/compiler-how-from-botton-to-top-work.png">
 <meta property="og:image" content="http://example.com/img/compiler-from-botton-to-top-point-note.png">
 <meta property="og:image" content="http://example.com/img/compiler-point-node-example1.png">
-<meta property="og:image" content="http://example.com/img/compiler-how-from-botton-to-top-work.png">
+<meta property="og:image" content="http://example.com/img/compiler-LR0-analyse-table-example.png">
+<meta property="og:image" content="http://example.com/img/compiler-LR0-analyse-algorithm.png">
+<meta property="og:image" content="http://example.com/img/compiler-LR0-analyse-table-construct-algorithm.png">
+<meta property="og:image" content="http://example.com/img/compiler-LR0-analyse-goto-and-closure.png">
 <meta property="article:published_time" content="2025-05-04T09:25:11.000Z">
-<meta property="article:modified_time" content="2025-05-17T03:48:33.035Z">
+<meta property="article:modified_time" content="2025-05-17T05:42:14.871Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/compiler-frontend-phases.png">
@@ -290,7 +294,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          17k 字
+          18k 字
         
       </span>
     
@@ -301,7 +305,7 @@
         
         
         
-          141 分钟
+          150 分钟
         
       </span>
     
@@ -1144,8 +1148,6 @@
 <li>像是预处理一样, 比如这里, 当栈顶为 <code>N</code> 且输入 token 为 <code>s</code> 时, 对应 <code>1</code>, 即压入编号为 <code>1</code> 的右侧字符</li>
 <li>这里的编号只是简化处理, 实际上就是填入整个规则</li>
 </ul>
-<h3 id="点记号"><a href="#点记号" class="headerlink" title="点记号"></a>点记号</h3><p><img src="/../img/compiler-from-botton-to-top-point-note.png" srcset="/img/loading.gif" lazyload></p>
-<p>示例:<br><img src="/../img/compiler-point-node-example1.png" srcset="/img/loading.gif" lazyload></p>
 <h2 id="自底向上分析"><a href="#自底向上分析" class="headerlink" title="自底向上分析"></a>自底向上分析</h2><p>自底向上分析的核心, 思想是: 从输入符号串出发, 通过一系列 Reduce 到文法的开始符号, 最终构建出语法树. 如:</p>
 <p><strong>文法规则</strong></p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">Expr → Expr + Term | Term<br>Term → Term * Factor | Factor<br>Factor → ( Expr ) | number<br></code></pre></td></tr></table></figure>
@@ -1259,6 +1261,8 @@
 <ul>
 <li>如果能将一个串最终规约到开始符号, 那么就说明能推导出, 否则中间有错误语法.</li>
 </ul>
+<h3 id="点记号"><a href="#点记号" class="headerlink" title="点记号"></a>点记号</h3><p><img src="/../img/compiler-from-botton-to-top-point-note.png" srcset="/img/loading.gif" lazyload></p>
+<p>示例:<br><img src="/../img/compiler-point-node-example1.png" srcset="/img/loading.gif" lazyload></p>
 <h3 id="LR-分析算法"><a href="#LR-分析算法" class="headerlink" title="LR 分析算法"></a>LR 分析算法</h3><p>LR 分析算法的设计初衷是为了解决自顶向下分析的局限性, 尤其是在处理复杂文法和左递归时的不足. (LR 是 Left-to-right input, Rightmost derivative in reverse 的缩写)</p>
 <p>LL 分析, 要求文法不能左递归, 如 <code>A -&gt; Aa</code>, 否则会导致无限循环. 如 <code>Expr -&gt; Expr + Term</code> 这样的左递归规则在 LL 分析中无法直接使用.</p>
 <p>LL 文法还需要保证 <code>FIRST</code> 和 <code>FOLLOW</code> 无冲突, 但许多实际语言的文法无法满足这一条件.</p>
@@ -1268,6 +1272,112 @@
 <figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs scss"><span class="hljs-built_in">LR</span>(<span class="hljs-number">1</span>) &gt; <span class="hljs-built_in">LALR</span>(<span class="hljs-number">1</span>) &gt; <span class="hljs-built_in">SLR</span>(<span class="hljs-number">1</span>) &gt; <span class="hljs-built_in">LL</span>(<span class="hljs-number">1</span>)<br></code></pre></td></tr></table></figure>
 
 <p>目前应用最广泛的一类语法分析器生成器, 如 <code>YACC</code>, <code>bison</code>, 等都使用 LR 分析算法.</p>
+<h4 id="LR-0-分析算法"><a href="#LR-0-分析算法" class="headerlink" title="LR(0) 分析算法"></a>LR(0) 分析算法</h4><p><code>LR(0)</code> 是自底向上语法分析的基础算法, 其核心思想是通过有限状态自动机 (DFA) 和栈的组合, 实现对输入符号串的移进 (Shift) 和规约 (Reduce) 操作.</p>
+<p>对于这里的 DFA, 有几个关键概念:</p>
+<ul>
+<li>State, 状态, 表示当前分析的位置</li>
+<li>State Transfer, 状态转移, 根据下一个输入符号或栈顶符号跳转到新状态</li>
+<li>Item, 项目, 如 <code>A -&gt; </code>$a \cdot b$, 也就是添加了点符号, 这里 <code>a</code> 表示已读部分, <code>b</code> 表示待读部分</li>
+</ul>
+<p>应用 <code>LR(0)</code> 算法的步骤:</p>
+<p><strong>1: 构造 LR(0) 项目集（状态）</strong><br>对文法的每个产生式，生成带“点符号”的项目，例如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">文法规则：<br>S → E<br>E → E + T | T<br>T → id<br></code></pre></td></tr></table></figure>
+<p>生成的项目集：<br>• <code>S → ·E</code></p>
+<p>• <code>E → ·E + T</code></p>
+<p>• <code>E → ·T</code></p>
+<p>• <code>T → ·id</code></p>
+<p><strong>2：构建 DFA 状态转移</strong><br>通过闭包（Closure）和转移（Goto）生成所有可能的状态：</p>
+<ol>
+<li><p>初始状态（State 0）：<br>• 包含 <code>S → ·E</code> 及其闭包（所有 <code>E</code> 的展开项）。  </p>
+</li>
+<li><p>状态转移：<br>• 如果当前状态有 <code>A → α·Xβ</code>（<code>X</code> 是终结符或非终结符），则读入 <code>X</code> 后跳转到新状态 <code>A → αX·β</code>。</p>
+</li>
+</ol>
+<p>示例：<br>• 从 <code>State 0</code> 读 <code>E</code> 跳转到 <code>State 1</code>（<code>S → E·</code>）。  </p>
+<p>• 从 <code>State 0</code> 读 <code>T</code> 跳转到 <code>State 2</code>（<code>E → T·</code>）。  </p>
+<p><strong>3：分析表（Action &amp; Goto）</strong><br>根据 DFA 状态生成分析表：<br>• Action 表：指导移进或规约。  </p>
+<p>  • 如果状态中有 <code>A → α·aβ</code>（<code>a</code> 是终结符），则 <code>Action[s, a] = Shift</code>。  </p>
+<p>  • 如果状态中有 <code>A → α·</code>，则 <code>Action[s, *] = Reduce A → α</code>。  </p>
+<p>• Goto 表：指导非终结符的跳转。  </p>
+<hr>
+<p><strong>示例解析</strong><br><strong>文法规则</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">0: S → E<br>1: E → E + T<br>2: E → T<br>3: T → id<br></code></pre></td></tr></table></figure>
+<p><strong>输入串</strong><br><code>id + id</code></p>
+<p><strong>分析过程</strong></p>
+<table>
+<thead>
+<tr>
+<th>栈</th>
+<th>剩余输入</th>
+<th>Action</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>[State 0]</td>
+<td>id + id $</td>
+<td>Shift (State 3)</td>
+<td>移进 <code>id</code></td>
+</tr>
+<tr>
+<td>[0, id(3)]</td>
+<td>+ id $</td>
+<td>Reduce T → id</td>
+<td>规约 <code>id</code> 为 <code>T</code></td>
+</tr>
+<tr>
+<td>[0, T(2)]</td>
+<td>+ id $</td>
+<td>Goto State 2</td>
+<td>根据 <code>E → T</code> 跳转</td>
+</tr>
+<tr>
+<td>[0, E(1)]</td>
+<td>+ id $</td>
+<td>Shift (State 4)</td>
+<td>移进 <code>+</code></td>
+</tr>
+<tr>
+<td>[0, E(1), +(4)]</td>
+<td>id $</td>
+<td>Shift (State 3)</td>
+<td>移进 <code>id</code></td>
+</tr>
+<tr>
+<td>[0, E(1), +(4), id(3)]</td>
+<td>$</td>
+<td>Reduce T → id</td>
+<td>规约 <code>id</code> 为 <code>T</code></td>
+</tr>
+<tr>
+<td>[0, E(1), +(4), T(5)]</td>
+<td>$</td>
+<td>Goto State 5</td>
+<td>根据 <code>E → E + T</code> 跳转</td>
+</tr>
+<tr>
+<td>[0, E(1)]</td>
+<td>$</td>
+<td>Accept</td>
+<td>完成规约（<code>S → E</code>）</td>
+</tr>
+</tbody></table>
+<hr>
+<p><strong>LR(0) 的局限性</strong></p>
+<ol>
+<li><p>无前瞻（Lookahead）：<br>• LR(0) 不预读输入符号，可能导致规约冲突（如 <code>Reduce/Reduce</code> 冲突）。  </p>
+<p>• 示例：  </p>
+  <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">S → A | B<br>A → id<br>B → id<br></code></pre></td></tr></table></figure>
+<p>  在状态 <code>[A → id·, B → id·]</code> 时，无法决定规约为 <code>A</code> 还是 <code>B</code>。  </p>
+</li>
+<li><p>需改进为 SLR&#x2F;LR(1)：<br>• SLR(1) 通过 <code>FOLLOW</code> 集解决部分冲突。  </p>
+<p>• LR(1) 通过动态前瞻符号彻底解决冲突。</p>
+</li>
+</ol>
+<p><img src="/../img/compiler-LR0-analyse-table-example.png" srcset="/img/loading.gif" lazyload></p>
+<p><img src="/../img/compiler-LR0-analyse-algorithm.png" srcset="/img/loading.gif" lazyload></p>
+<p><img src="/../img/compiler-LR0-analyse-table-construct-algorithm.png" srcset="/img/loading.gif" lazyload></p>
+<p><img src="/../img/compiler-LR0-analyse-goto-and-closure.png" srcset="/img/loading.gif" lazyload></p>
 
                 
               </div>
