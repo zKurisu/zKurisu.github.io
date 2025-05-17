@@ -75,7 +75,7 @@
 <meta property="og:image" content="http://example.com/img/compiler-syntax-follow-set-construct-algorithm.png">
 <meta property="og:image" content="http://example.com/img/compiler-syntax-auto-generation.png">
 <meta property="article:published_time" content="2025-05-04T09:25:11.000Z">
-<meta property="article:modified_time" content="2025-05-16T12:56:55.548Z">
+<meta property="article:modified_time" content="2025-05-17T01:43:59.207Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/compiler-frontend-phases.png">
@@ -287,7 +287,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          11k 字
+          13k 字
         
       </span>
     
@@ -298,7 +298,7 @@
         
         
         
-          91 分钟
+          110 分钟
         
       </span>
     
@@ -742,11 +742,12 @@
 <ul>
 <li>多个文法规则有相同的前缀, 如 <code>if E then S else S</code> 和 <code>if E then S</code>, 用 <code>lookahead</code> 可以确定使用哪一条</li>
 </ul>
-<h3 id="FIRST-集"><a href="#FIRST-集" class="headerlink" title="FIRST 集"></a>FIRST 集</h3><p><code>FIRST(a)</code>, 指从符号串 <code>a</code> 能推导出的首个终结符集合. 规则为:</p>
+<h3 id="FIRST-集"><a href="#FIRST-集" class="headerlink" title="FIRST 集"></a>FIRST 集</h3><p>FIRST 集主要用于 <code>LL(1)</code> 分析, 即通过 <code>lookahead_k=1</code>, 从多个产生式中选择一条, 以避免回溯.</p>
+<p><code>FIRST(a)</code>, 指从符号串 <code>a</code> 能推导出的首个终结符集合. 规则为:</p>
 <ul>
 <li>如果 <code>a</code> 以终结符开头, <code>FIRST(a) = &#123;a&#125;</code></li>
 <li>如果 $a \rightarrow \epsilon$, 则 $\epsilon \in FIRST(a)$</li>
-<li>如果 $a \rightarrow Y1Y2…Yn$, 则 <code>FIRST(a)</code>, 包含 <code>FIRST(Y1)</code>, 若 <code>Y1</code> 可推导出 $\epsilon$, 则继续加入 <code>FIRST(Y2)</code></li>
+<li>如果 $a \rightarrow Y1Y2…Yn$, 则 <code>FIRST(a)</code>, 包含 <code>FIRST(Y1)</code>, 若 <code>Y1</code> 可推导出 $\epsilon$, 则继续加入 <code>FIRST(Y2)</code><br>(也就是说, 对于每个非终结符, 都要利用其对应的文法规则来计算出 <code>FIRST</code> 集)</li>
 </ul>
 <p>示例, 如果文法为:</p>
 <figure class="highlight coq"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs coq">S -&gt; aB | <span class="hljs-type">bC</span><br>B = c | <span class="hljs-type">epsilon</span><br>C -&gt; d<br></code></pre></td></tr></table></figure>
@@ -755,6 +756,30 @@
 <li><code>FIRST(B) = &#123;c, epsilon&#125;</code></li>
 <li><code>FIRST(C) = &#123;d&#125;</code></li>
 </ul>
+<p>又比如:</p>
+<figure class="highlight coq"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs coq">A -&gt; B C<br>B -&gt; b | <span class="hljs-type">epsilon</span><br>C -&gt; c | <span class="hljs-type">epsilon</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>则有: $FIRST(A) &#x3D; FIRST(B) \cup FIRST(C)$<code> = &#123;b, c, \epsilon&#125;</code></li>
+</ul>
+<p>FIRST 集避免回溯: 如果两条规则的 <code>FIRST</code> 集合不相交, 解析器可以无歧义地选择规则, 如:</p>
+<figure class="highlight livescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs livescript">A -&gt; aB | bC<br>FIRST<span class="hljs-function"><span class="hljs-params">(aB)</span> -&gt;</span> &#123; <span class="hljs-string">&#x27;a&#x27;</span> &#125;<br>FIRST<span class="hljs-function"><span class="hljs-params">(bC)</span> -&gt;</span> &#123; <span class="hljs-string">&#x27;b&#x27;</span> &#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>如果 <code>lookahead=&#39;a&#39;</code>, 则选择 <code>A -&gt; aB</code></li>
+<li>如果 <code>lookahead=&#39;b&#39;</code>, 则选择 <code>A -&gt; bC</code></li>
+</ul>
+<p>处理 $\epsilon$ 产生式:</p>
+<ul>
+<li>如果 <code>A -&gt;</code>$\epsilon$, 则需要检查 <code>FOLLOW(A)</code></li>
+</ul>
+<h3 id="FOLLOW-集"><a href="#FOLLOW-集" class="headerlink" title="FOLLOW 集"></a>FOLLOW 集</h3><p><code>FOLLOW(A)</code> 指可能出现在非终结符 <code>A</code> 之后的终结符集合.</p>
+<p>用于处理 $\epsilon$ 产生式, 如 $B \rightarrow \epsilon$, 需要看 <code>FOLLOW(B)</code>.</p>
+<p>如文法:</p>
+<figure class="highlight coq"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs coq">S -&gt; aB<br>B -&gt; c | <span class="hljs-type">epsilon</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>FOLLOW(B) = &#123;$&#125;</code></li>
+</ul>
+<h3 id="Nullable-集"><a href="#Nullable-集" class="headerlink" title="Nullable 集"></a>Nullable 集</h3><p>Nullable 集合也用于自顶向下语法分析, 其标识了哪些非终结符可以推导出空串 ($\epsilon$).</p>
+<p>定义 <code>Nullable(A)</code>: 如果非终结符 <code>A</code> 能够通过一系列产生式规则推导出空串 $\epsilon$, 则 <code>A</code> 是 Nullable 的.</p>
 <h3 id="LL-k-文法"><a href="#LL-k-文法" class="headerlink" title="LL(k) 文法"></a>LL(k) 文法</h3><p><code>LL(k)</code> 是一种自顶向下分析方法, 使用 <code>k</code> 个 <code>lookahead</code> 符号来预测产生式.</p>
 <p>一般使用 <code>LL(1)</code>, 即只前看一个符号.</p>
 <p>如下面文法规则, 描述算术表达式, 支持加法, 乘法:</p>
@@ -814,10 +839,172 @@
 </li>
 </ol>
 <h3 id="LL-1-分析算法"><a href="#LL-1-分析算法" class="headerlink" title="LL(1) 分析算法"></a>LL(1) 分析算法</h3><p><code>LL(1)</code> 指从左 (Left) 向右读入程序, 最左 (Left) 推导, 采用一个 <code>(1)</code> 前看符号 (指未处理的一个符号).</p>
+<p>对于规则 <code>A -&gt; a</code>, 能够用 <code>FIRST(a)</code> 计算出终结符集合, 在 LL(1) 分析表中, 终结符对应列, 此时就将 <code>A -&gt; a</code> 填入各对应列, 如:</p>
+<p><strong>1. 示例文法</strong><br>以下是简单的算术表达式文法：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">Expr → Term Expr&#x27;<br>Expr&#x27; → + Term Expr&#x27; | ε<br>Term → Factor Term&#x27;<br>Term&#x27; → * Factor Term&#x27; | ε<br>Factor → ( Expr ) | number<br></code></pre></td></tr></table></figure>
+<p>• 终结符（Terminals）：<code>+, *, (, ), number, $</code>（<code>$</code> 是输入结束符）</p>
+<p>• 非终结符（Non-terminals）：<code>Expr, Expr&#39;, Term, Term&#39;, Factor</code></p>
+<hr>
+<p><strong>2. 计算 <code>FIRST</code> 和 <code>FOLLOW</code> 集合</strong><br><strong>(1) <code>FIRST</code> 集合</strong></p>
+<table>
+<thead>
+<tr>
+<th>非终结符</th>
+<th>FIRST 集合</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Expr</code></td>
+<td><code>&#123; (, number &#125;</code></td>
+</tr>
+<tr>
+<td><code>Expr&#39;</code></td>
+<td><code>&#123; +, ε &#125;</code></td>
+</tr>
+<tr>
+<td><code>Term</code></td>
+<td><code>&#123; (, number &#125;</code></td>
+</tr>
+<tr>
+<td><code>Term&#39;</code></td>
+<td><code>&#123; *, ε &#125;</code></td>
+</tr>
+<tr>
+<td><code>Factor</code></td>
+<td><code>&#123; (, number &#125;</code></td>
+</tr>
+</tbody></table>
+<p><strong>(2) <code>FOLLOW</code> 集合</strong></p>
+<table>
+<thead>
+<tr>
+<th>非终结符</th>
+<th>FOLLOW 集合</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Expr</code></td>
+<td><code>&#123; ), $ &#125;</code></td>
+</tr>
+<tr>
+<td><code>Expr&#39;</code></td>
+<td><code>&#123; ), $ &#125;</code></td>
+</tr>
+<tr>
+<td><code>Term</code></td>
+<td><code>&#123; +, ), $ &#125;</code></td>
+</tr>
+<tr>
+<td><code>Term&#39;</code></td>
+<td><code>&#123; +, ), $ &#125;</code></td>
+</tr>
+<tr>
+<td><code>Factor</code></td>
+<td><code>&#123; *, +, ), $ &#125;</code></td>
+</tr>
+</tbody></table>
+<hr>
+<p><strong>3. 构建 LL(1) 预测分析表</strong><br>• 行：非终结符  </p>
+<p>• 列：终结符（包括 <code>$</code>）  </p>
+<p>• 单元格：填入对应的产生式规则（或报错 <code>error</code>）。</p>
+<table>
+<thead>
+<tr>
+<th>非终结符</th>
+<th><code>+</code></th>
+<th><code>*</code></th>
+<th><code>(</code></th>
+<th><code>)</code></th>
+<th><code>number</code></th>
+<th><code>$</code></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Expr</code></td>
+<td></td>
+<td></td>
+<td><code>Expr → Term Expr&#39;</code></td>
+<td></td>
+<td><code>Expr → Term Expr&#39;</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Expr&#39;</code></td>
+<td><code>Expr&#39; → + Term Expr&#39;</code></td>
+<td></td>
+<td></td>
+<td><code>Expr&#39; → ε</code></td>
+<td></td>
+<td><code>Expr&#39; → ε</code></td>
+</tr>
+<tr>
+<td><code>Term</code></td>
+<td></td>
+<td></td>
+<td><code>Term → Factor Term&#39;</code></td>
+<td></td>
+<td><code>Term → Factor Term&#39;</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>Term&#39;</code></td>
+<td><code>Term&#39; → ε</code></td>
+<td><code>Term&#39; → * Factor Term&#39;</code></td>
+<td></td>
+<td><code>Term&#39; → ε</code></td>
+<td></td>
+<td><code>Term&#39; → ε</code></td>
+</tr>
+<tr>
+<td><code>Factor</code></td>
+<td></td>
+<td></td>
+<td><code>Factor → ( Expr )</code></td>
+<td></td>
+<td><code>Factor → number</code></td>
+<td></td>
+</tr>
+</tbody></table>
+<p>空白单元格表示 <code>error</code>（无可用产生式）。</p>
+<hr>
+<p><strong>4. 如何使用预测分析表？</strong><br>输入流：<code>number + number * number $</code><br>解析栈：<code>[ Expr, $ ]</code>  </p>
+<p><strong>步骤解析：</strong></p>
+<ol>
+<li><p>初始状态：<br>• 栈顶：<code>Expr</code>  </p>
+<p>• <code>lookahead</code>：<code>number</code>  </p>
+<p>• 查表：<code>Expr</code> 行 + <code>number</code> 列 → 选择 <code>Expr → Term Expr&#39;</code>  </p>
+<p>• 更新栈：<code>[ Term, Expr&#39;, $ ]</code>  </p>
+</li>
+<li><p>处理 <code>Term</code>：<br>• 栈顶：<code>Term</code>  </p>
+<p>• <code>lookahead</code>：<code>number</code>  </p>
+<p>• 查表：<code>Term → Factor Term&#39;</code>  </p>
+<p>• 更新栈：<code>[ Factor, Term&#39;, Expr&#39;, $ ]</code>  </p>
+</li>
+<li><p>处理 <code>Factor</code>：<br>• 栈顶：<code>Factor</code>  </p>
+<p>• <code>lookahead</code>：<code>number</code>  </p>
+<p>• 查表：<code>Factor → number</code>  </p>
+<p>• 匹配 <code>number</code>，消耗输入符号，弹出 <code>Factor</code>。  </p>
+<p>• 更新栈：<code>[ Term&#39;, Expr&#39;, $ ]</code>  </p>
+</li>
+<li><p>处理 <code>Term&#39;</code>：<br>• 栈顶：<code>Term&#39;</code>  </p>
+<p>• <code>lookahead</code>：<code>+</code>  </p>
+<p>• 查表：<code>Term&#39; → ε</code>（因为 <code>+ ∈ FOLLOW(Term&#39;)</code>）  </p>
+<p>• 弹出 <code>Term&#39;</code>，栈：<code>[ Expr&#39;, $ ]</code>  </p>
+</li>
+<li><p>处理 <code>Expr&#39;</code>：<br>• 栈顶：<code>Expr&#39;</code>  </p>
+<p>• <code>lookahead</code>：<code>+</code>  </p>
+<p>• 查表：<code>Expr&#39; → + Term Expr&#39;</code>  </p>
+<p>• 匹配 <code>+</code>，消耗输入符号，弹出 <code>Expr&#39;</code>。  </p>
+<p>• 更新栈：<code>[ Term, Expr&#39;, $ ]</code>  </p>
+</li>
+<li><p>继续处理（略）…<br>• 最终栈和输入流均变为 <code>$</code>，解析成功。</p>
+</li>
+</ol>
 <p>该算法基于 “表驱动”.<br><img src="/../img/compiler-syntax-automation-LL-algorithm-structure.png" srcset="/img/loading.gif" lazyload><br>(重点在这个分析表)</p>
 <p><img src="/../img/compiler-ll-algorithm-analyse-table-example.png" srcset="/img/loading.gif" lazyload></p>
 <ul>
 <li>像是预处理一样, 比如这里, 当栈顶为 <code>N</code> 且输入 token 为 <code>s</code> 时, 对应 <code>1</code>, 即压入编号为 <code>1</code> 的右侧字符</li>
+<li>这里的编号只是简化处理, 实际上就是填入整个规则</li>
 </ul>
 <h4 id="不动点算法"><a href="#不动点算法" class="headerlink" title="不动点算法"></a>不动点算法</h4><p>不动点算法的核心在于, 迭代更新集合, 直到集合的内容不发生变化为止.</p>
 <h4 id="First-集"><a href="#First-集" class="headerlink" title="First 集"></a>First 集</h4><p><code>First(N)</code> 指, 从非终结符 <code>N</code> 开始推导得出的句子开头的所有可能终结符集合. 其核心是帮助自顶向下分析中非终结符的选择, 避免回溯.</p>
@@ -832,7 +1019,7 @@
 <p>利用 First 集构造 LL(1) 分析表:<br><img src="/../img/compiler-using-first-set-to-construct-ll1-table.png" srcset="/img/loading.gif" lazyload></p>
 <p>LL(1) 分析表中的冲突:<br><img src="/../img/compiler-conflict-in-ll1-analyse-table.png" srcset="/img/loading.gif" lazyload><br>(若冲突, 则说明其不符合 LL(1) 文法, 不能用 LL(1) 进行分析)</p>
 <p>First 集的完成计算算法:<br><img src="/../img/compiler-syntax-first-set-full-algorithm.png" srcset="/img/loading.gif" lazyload></p>
-<h4 id="Nullable-集"><a href="#Nullable-集" class="headerlink" title="Nullable 集"></a>Nullable 集</h4><p>非终结符 <code>X</code> 属于 <code>Nullable</code> 集合, 当且仅当:</p>
+<h4 id="Nullable-集-1"><a href="#Nullable-集-1" class="headerlink" title="Nullable 集"></a>Nullable 集</h4><p>非终结符 <code>X</code> 属于 <code>Nullable</code> 集合, 当且仅当:</p>
 <ul>
 <li><code>X -&gt;</code>, 即空串</li>
 <li><code>X -&gt; Y1 ... Yn</code>, <code>Y1, ..., Yn</code> 是 <code>n</code> 个非终结符, 且都属于 Nullable 集</li>
