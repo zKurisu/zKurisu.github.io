@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="LXC DocumentationLXD Documentation 介绍LXC, LinuX Container, 是一种轻量级的操作系统级虚拟化技术. LXC 与 Docker 有一些区别:    特性 LXC Docker    虚拟化级别 操作系统级虚拟化（共享内核） 应用级虚拟化（镜像封装）   用途 运行完整 Linux 系统 运行单个应用或微服务   镜像管理 基于模板（如 ubun">
+    <meta name="description" content="LXC DocumentationLXD DocumentationArchlinux LXC 部分 介绍LXC, LinuX Container, 是一种轻量级的操作系统级虚拟化技术. LXC 与 Docker 有一些区别:    特性 LXC Docker    虚拟化级别 操作系统级虚拟化（共享内核） 应用级虚拟化（镜像封装）   用途 运行完整 Linux 系统 运行单个应用或微服务">
 <meta property="og:type" content="article">
 <meta property="og:title" content="LXC-基本使用">
 <meta property="og:url" content="http://example.com/2025/05/18/LXC-%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="LXC DocumentationLXD Documentation 介绍LXC, LinuX Container, 是一种轻量级的操作系统级虚拟化技术. LXC 与 Docker 有一些区别:    特性 LXC Docker    虚拟化级别 操作系统级虚拟化（共享内核） 应用级虚拟化（镜像封装）   用途 运行完整 Linux 系统 运行单个应用或微服务   镜像管理 基于模板（如 ubun">
+<meta property="og:description" content="LXC DocumentationLXD DocumentationArchlinux LXC 部分 介绍LXC, LinuX Container, 是一种轻量级的操作系统级虚拟化技术. LXC 与 Docker 有一些区别:    特性 LXC Docker    虚拟化级别 操作系统级虚拟化（共享内核） 应用级虚拟化（镜像封装）   用途 运行完整 Linux 系统 运行单个应用或微服务">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-05-18T08:32:06.000Z">
-<meta property="article:modified_time" content="2025-05-18T10:12:41.459Z">
+<meta property="article:modified_time" content="2025-05-18T14:26:26.608Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.3k 字
+          3k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          11 分钟
+          26 分钟
         
       </span>
     
@@ -289,7 +289,7 @@
             
               <div class="markdown-body">
                 
-                <p><a target="_blank" rel="noopener" href="https://linuxcontainers.org/">LXC Documentation</a><br><a target="_blank" rel="noopener" href="https://linuxcontainers.org/lxd/docs/master/">LXD Documentation</a></p>
+                <p><a target="_blank" rel="noopener" href="https://linuxcontainers.org/">LXC Documentation</a><br><a target="_blank" rel="noopener" href="https://linuxcontainers.org/lxd/docs/master/">LXD Documentation</a><br><a target="_blank" rel="noopener" href="https://wiki.archlinux.org/title/Linux_Containers">Archlinux LXC 部分</a></p>
 <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>LXC, LinuX Container, 是一种轻量级的操作系统级虚拟化技术.</p>
 <p>LXC 与 Docker 有一些区别:</p>
 <table>
@@ -327,6 +327,36 @@
 <p>需要创建该 bridge:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo ip <span class="hljs-built_in">link</span> add name lxcbr0 <span class="hljs-built_in">type</span> bridge<br>sudo ip addr add 10.0.3.1/24 dev lxcbr0  <span class="hljs-comment"># 分配 IP 段</span><br>sudo ip <span class="hljs-built_in">link</span> <span class="hljs-built_in">set</span> lxcbr0 up<br></code></pre></td></tr></table></figure>
 
+<h1 id="相关概念"><a href="#相关概念" class="headerlink" title="相关概念"></a>相关概念</h1><h2 id="特权容器和非特权容器"><a href="#特权容器和非特权容器" class="headerlink" title="特权容器和非特权容器"></a>特权容器和非特权容器</h2><p>特权容器, privileged container, 指:</p>
+<ul>
+<li>容器内的 root 用户与宿主机的 root 是同一个用户, 拥有几乎相同的权限</li>
+<li>没有 UID&#x2F;GID 映射, 容器进程在宿主机上以相同的 UID 运行 (容器内以 UID 0 运行的进程, 在宿主机上查看也是 UID 0 运行的)</li>
+<li>拥有全部内核能力, 如挂载文件系统, 修改网络配置等</li>
+<li>隔离性低, 安全性弱</li>
+</ul>
+<p>非特权容器, unprivileged container, 指:</p>
+<ul>
+<li>容器内的 root (UID 0) 被映射到宿主机的一个非特权用户 (如 UID 10000+), 使其权限受限</li>
+<li>无法直接操作宿主机资源</li>
+<li>依靠 <code>subuid/subgid</code> 来配置用户名称空间映射</li>
+</ul>
+<h2 id="x2F-etc-x2F-subuid-和-x2F-etc-x2F-subgid-配置"><a href="#x2F-etc-x2F-subuid-和-x2F-etc-x2F-subgid-配置" class="headerlink" title="&#x2F;etc&#x2F;subuid 和 &#x2F;etc&#x2F;subgid 配置"></a>&#x2F;etc&#x2F;subuid 和 &#x2F;etc&#x2F;subgid 配置</h2><p><code>/etc/subuid</code> (Subordinate User ID, 从属用户 ID) 和 <code>/etc/subgid</code> (Subordinate Group ID, 从属组 ID) 是用户命名空间的核心配置文件. 可以用来实现非特权容器的 UID&#x2F;GID 映射.</p>
+<p><code>/etc/subuid</code> 文件的定义格式为:</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs elixir">&lt;user_name <span class="hljs-keyword">or</span> uid&gt;<span class="hljs-symbol">:&lt;start</span> subordinate uid&gt;<span class="hljs-symbol">:&lt;number</span> of subuid&gt;<br></code></pre></td></tr></table></figure>
+
+<p>如:</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">root</span>:<span class="hljs-number">100000</span>:<span class="hljs-number">65536</span><br><span class="hljs-attribute">lxcuser</span>:<span class="hljs-number">200000</span>:<span class="hljs-number">10000</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>将 <code>root</code> 用户映射到 UID <code>100000</code> 到 <code>165535</code> 之间 (共 <code>65536</code> 个 UID)</li>
+<li>将 <code>lxcuser</code> 用户映射到 UID <code>200000</code> 到 <code>209999</code> 之间 (共 <code>10000</code> 个 UID)</li>
+</ul>
+<p><code>/etc/subgid</code> 文件的定义格式为:</p>
+<figure class="highlight elixir"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs elixir">&lt;group_name <span class="hljs-keyword">or</span> gid&gt;<span class="hljs-symbol">:&lt;start</span> subordinate gid&gt;<span class="hljs-symbol">:&lt;number</span> of subgid&gt;<br></code></pre></td></tr></table></figure>
+
+<p>如:</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">root</span>:<span class="hljs-number">100000</span>:<span class="hljs-number">65536</span><br><span class="hljs-attribute">lxcuser</span>:<span class="hljs-number">200000</span>:<span class="hljs-number">10000</span><br></code></pre></td></tr></table></figure>
+
+<p>可以用 <code>#</code> 做注释.</p>
 <h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><p>在 Archlinux 上:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo pacman -S lxc<br></code></pre></td></tr></table></figure>
 
@@ -335,11 +365,27 @@
 <ul>
 <li>确保所有必要功能都启用, 如 <code>Namespaces</code> 和 <code>Cgroups</code></li>
 </ul>
+<h1 id="配置-1"><a href="#配置-1" class="headerlink" title="配置"></a>配置</h1><h2 id="启用非特权容器"><a href="#启用非特权容器" class="headerlink" title="启用非特权容器"></a>启用非特权容器</h2><p>修改 <code>/etc/lxc/default.conf</code> 文件:</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">lxc</span>.idmap = u <span class="hljs-number">0</span> <span class="hljs-number">100000</span> <span class="hljs-number">65536</span><br><span class="hljs-attribute">lxc</span>.idmap = g <span class="hljs-number">0</span> <span class="hljs-number">100000</span> <span class="hljs-number">65536</span><br></code></pre></td></tr></table></figure>
+
+<p>之后更改 <code>/etc/subuid</code> 和 <code>/etc/subgid</code> 以配置映射:</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-comment"># /etc/subuid</span><br><span class="hljs-attribute">root</span>:<span class="hljs-number">100000</span>:<span class="hljs-number">65536</span><br><br><span class="hljs-comment"># /etc/subgid</span><br><span class="hljs-attribute">root</span>:<span class="hljs-number">100000</span>:<span class="hljs-number">65536</span><br></code></pre></td></tr></table></figure>
+
+<p>剩余操作看 Archwiki 的那个文档, 这里先跳过.</p>
+<h2 id="容器配置"><a href="#容器配置" class="headerlink" title="容器配置"></a>容器配置</h2><p>在创建一个容器后, 其对应配置文件为 <code>/var/lib/lxc/container_name/config</code>.</p>
+<p>配置网络的示例:</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs ini"><span class="hljs-comment"># Template used to create this container: /usr/share/lxc/templates/lxc-archlinux</span><br><span class="hljs-comment"># Parameters passed to the template:</span><br><span class="hljs-comment"># For additional config options, please look at lxc.container.conf(5)</span><br><br><span class="hljs-comment"># Distribution configuration</span><br><span class="hljs-attr">lxc.include</span> = /usr/share/lxc/config/common.conf<br><span class="hljs-attr">lxc.arch</span> = x<span class="hljs-number">86_64</span><br><br><span class="hljs-comment"># Container specific configuration</span><br><span class="hljs-attr">lxc.rootfs.path</span> = dir:/var/lib/lxc/playtime/rootfs<br><span class="hljs-attr">lxc.uts.name</span> = playtime<br><br><span class="hljs-comment"># Network configuration</span><br><span class="hljs-attr">lxc.net.0.type</span> = veth<br><span class="hljs-attr">lxc.net.0.link</span> = lxcbr0<br><span class="hljs-attr">lxc.net.0.flags</span> = up<br><span class="hljs-attr">lxc.net.0.hwaddr</span> = ee:ec:fa:e9:<span class="hljs-number">56</span>:<span class="hljs-number">7</span>d<br></code></pre></td></tr></table></figure>
+
+
+
 <h1 id="基本使用"><a href="#基本使用" class="headerlink" title="基本使用"></a>基本使用</h1><h2 id="创建-LXC-容器"><a href="#创建-LXC-容器" class="headerlink" title="创建 LXC 容器"></a>创建 LXC 容器</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">sudo lxc-create -t download -n mycontainer<br></code></pre></td></tr></table></figure>
 <ul>
 <li><code>-t download</code> 用 <code>download</code> 脚本下载 template</li>
 <li><code>-n mycontainer</code>: 容器名称<br>(可能要先下载模板)</li>
 </ul>
+<p>也可以直接指定发行版等信息:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo lxc-create --name playtime --template download -- --dist archlinux --release current --<span class="hljs-built_in">arch</span> amd64<br></code></pre></td></tr></table></figure>
+
 <h2 id="启动容器"><a href="#启动容器" class="headerlink" title="启动容器"></a>启动容器</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">sudo lxc-start -n mycontainer<br></code></pre></td></tr></table></figure>
 
 <h2 id="进入容器"><a href="#进入容器" class="headerlink" title="进入容器"></a>进入容器</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">sudo lxc-attach -n mycontainer<br></code></pre></td></tr></table></figure>
@@ -373,7 +419,7 @@
 </tr>
 </tbody></table>
 <h2 id="自定义网络-桥接模式"><a href="#自定义网络-桥接模式" class="headerlink" title="自定义网络 (桥接模式)"></a>自定义网络 (桥接模式)</h2><ol>
-<li>创建桥接网络：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs bash">sudo brctl addbr br0<br>sudo ip addr add 192.168.1.1/24 dev br0<br>sudo ip <span class="hljs-built_in">link</span> <span class="hljs-built_in">set</span> br0 up<br></code></pre></td></tr></table></figure></li>
+<li>创建桥接网络：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs bash">sudo ip <span class="hljs-built_in">link</span> add name br0 <span class="hljs-built_in">type</span> bridge<br>sudo ip <span class="hljs-built_in">link</span> <span class="hljs-built_in">set</span> dev eth0 promisc on<br>sudo ip <span class="hljs-built_in">link</span> <span class="hljs-built_in">set</span> dev eth0 master br0<br>sudo ip addr add 192.168.1.1/24 dev br0<br>sudo ip <span class="hljs-built_in">link</span> <span class="hljs-built_in">set</span> br0 up<br></code></pre></td></tr></table></figure></li>
 <li>修改容器配置：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">sudo vim /var/lib/lxc/mycontainer/config<br></code></pre></td></tr></table></figure>
 添加：<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs ini"><span class="hljs-attr">lxc.net.0.type</span> = veth<br><span class="hljs-attr">lxc.net.0.link</span> = br0<br><span class="hljs-attr">lxc.net.0.flags</span> = up<br></code></pre></td></tr></table></figure></li>
 </ol>
