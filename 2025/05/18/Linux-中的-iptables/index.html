@@ -25,7 +25,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/basic-iptables.png">
 <meta property="article:published_time" content="2025-05-18T14:04:27.000Z">
-<meta property="article:modified_time" content="2025-05-18T15:00:29.853Z">
+<meta property="article:modified_time" content="2025-05-19T01:05:42.317Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/basic-iptables.png">
@@ -237,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.1k 字
+          1.8k 字
         
       </span>
     
@@ -248,7 +248,7 @@
         
         
         
-          10 分钟
+          16 分钟
         
       </span>
     
@@ -308,14 +308,41 @@
 <p>一个基本的原理图为:</p>
 <p><img src="/../img/basic-iptables.png" srcset="/img/loading.gif" lazyload></p>
 <p>(这里没有包含 <code>raw</code>, <code>mangle</code>, <code>security</code> 这些 tables 的处理过程)</p>
-<h2 id="Tables"><a href="#Tables" class="headerlink" title="Tables"></a>Tables</h2><p>iptables 一共有 5 个 tables:</p>
-<ul>
-<li><code>raw</code></li>
-<li><code>filter</code></li>
-<li><code>nat</code></li>
-<li><code>mangle</code></li>
-<li><code>security</code></li>
-</ul>
+<h2 id="Tables"><a href="#Tables" class="headerlink" title="Tables"></a>Tables</h2><p>iptables 一共有 5 个 tables, 每个 table 的相互独立, 且拥有自己的链:</p>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>内置链（Chains）</th>
+<th>主要作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>raw</td>
+<td><code>PREROUTING</code>、<code>OUTPUT</code></td>
+<td>用于配置数据包的连接跟踪（<code>NOTRACK</code>），绕过 Netfilter 的连接跟踪机制。</td>
+</tr>
+<tr>
+<td>mangle</td>
+<td><code>PREROUTING</code>、<code>INPUT</code>、<code>FORWARD</code>、<code>OUTPUT</code>、<code>POSTROUTING</code></td>
+<td>修改数据包（如 TTL、TOS 等）或打标记（<code>MARK</code>），但不用于 NAT 或过滤。</td>
+</tr>
+<tr>
+<td>nat</td>
+<td><code>PREROUTING</code>、<code>OUTPUT</code>（仅用于本地出站）、<code>POSTROUTING</code></td>
+<td>网络地址转换（NAT），如 SNAT（源地址转换）、DNAT（目标地址转换）。</td>
+</tr>
+<tr>
+<td>filter</td>
+<td><code>INPUT</code>、<code>FORWARD</code>、<code>OUTPUT</code></td>
+<td>过滤数据包（允许&#x2F;拒绝&#x2F;丢弃），是默认的防火墙规则表。</td>
+</tr>
+<tr>
+<td>security</td>
+<td><code>INPUT</code>、<code>OUTPUT</code>、<code>FORWARD</code></td>
+<td>基于安全上下文（如 SELinux）的强制访问控制（MAC）规则。</td>
+</tr>
+</tbody></table>
 <p>大多数情况下只用得到 <code>nat</code> 和 <code>filter</code>.</p>
 <h2 id="Chains"><a href="#Chains" class="headerlink" title="Chains"></a>Chains</h2><p><code>filter</code> 表有 3 种内置的 <code>chians</code>:</p>
 <ul>
@@ -344,6 +371,10 @@
 <li><code>RETURN</code></li>
 </ul>
 <p><code>target</code> 也可以是用户自定义的 <code>chains</code>.</p>
+<h2 id="处理顺序"><a href="#处理顺序" class="headerlink" title="处理顺序"></a>处理顺序</h2><p>数据包的处理顺序取决于方向（入站&#x2F;出站&#x2F;转发）.</p>
+<h2 id="入站数据包-到本机"><a href="#入站数据包-到本机" class="headerlink" title="入站数据包 (到本机)"></a>入站数据包 (到本机)</h2><p><code>PREROUTING</code> → <code>INPUT</code> → 本地进程<br>• 表顺序：<code>raw</code> → <code>mangle</code> → <code>nat</code>（DNAT） → <code>mangle</code> → <code>filter</code> → <code>security</code></p>
+<h2 id="转发数据包-经过本机"><a href="#转发数据包-经过本机" class="headerlink" title="转发数据包 (经过本机)"></a>转发数据包 (经过本机)</h2><p><code>PREROUTING</code> → <code>FORWARD</code> → <code>POSTROUTING</code><br>• 表顺序：<code>raw</code> → <code>mangle</code> → <code>nat</code>（DNAT） → <code>mangle</code> → <code>filter</code> → <code>security</code> → <code>mangle</code> → <code>nat</code>（SNAT）</p>
+<h2 id="出站数据包-从本机发出"><a href="#出站数据包-从本机发出" class="headerlink" title="出站数据包 (从本机发出)"></a>出站数据包 (从本机发出)</h2><p><code>OUTPUT</code> → <code>POSTROUTING</code><br>• 表顺序：<code>raw</code> → <code>mangle</code> → <code>nat</code> → <code>filter</code> → <code>security</code> → <code>mangle</code> → <code>nat</code>（SNAT）</p>
 <h1 id="配置和使用"><a href="#配置和使用" class="headerlink" title="配置和使用"></a>配置和使用</h1><p>iptables 的规则保存在:</p>
 <ul>
 <li><code>/etc/iptables/iptables.rules</code></li>
