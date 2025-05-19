@@ -24,7 +24,7 @@
 <meta property="og:description" content="LXC DocumentationLXD DocumentationArchlinux LXC 部分 介绍LXC, LinuX Container, 是一种轻量级的操作系统级虚拟化技术. LXC 与 Docker 有一些区别:    特性 LXC Docker    虚拟化级别 操作系统级虚拟化（共享内核） 应用级虚拟化（镜像封装）   用途 运行完整 Linux 系统 运行单个应用或微服务">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-05-18T08:32:06.000Z">
-<meta property="article:modified_time" content="2025-05-18T14:57:09.438Z">
+<meta property="article:modified_time" content="2025-05-19T06:50:11.623Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3.2k 字
+          3.9k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          28 分钟
+          33 分钟
         
       </span>
     
@@ -365,19 +365,34 @@
 <ul>
 <li>确保所有必要功能都启用, 如 <code>Namespaces</code> 和 <code>Cgroups</code></li>
 </ul>
-<h1 id="配置-1"><a href="#配置-1" class="headerlink" title="配置"></a>配置</h1><h2 id="启用非特权容器"><a href="#启用非特权容器" class="headerlink" title="启用非特权容器"></a>启用非特权容器</h2><p>修改 <code>/etc/lxc/default.conf</code> 文件:</p>
+<h1 id="配置-1"><a href="#配置-1" class="headerlink" title="配置"></a>配置</h1><h2 id="用-root-启用非特权容器"><a href="#用-root-启用非特权容器" class="headerlink" title="用 root 启用非特权容器"></a>用 root 启用非特权容器</h2><p>修改 <code>/etc/lxc/default.conf</code> 文件:</p>
 <figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">lxc</span>.idmap = u <span class="hljs-number">0</span> <span class="hljs-number">100000</span> <span class="hljs-number">65536</span><br><span class="hljs-attribute">lxc</span>.idmap = g <span class="hljs-number">0</span> <span class="hljs-number">100000</span> <span class="hljs-number">65536</span><br></code></pre></td></tr></table></figure>
 
 <p>之后更改 <code>/etc/subuid</code> 和 <code>/etc/subgid</code> 以配置映射:</p>
 <figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-comment"># /etc/subuid</span><br><span class="hljs-attribute">root</span>:<span class="hljs-number">100000</span>:<span class="hljs-number">65536</span><br><br><span class="hljs-comment"># /etc/subgid</span><br><span class="hljs-attribute">root</span>:<span class="hljs-number">100000</span>:<span class="hljs-number">65536</span><br></code></pre></td></tr></table></figure>
 
-<p>剩余操作看 Archwiki 的那个文档, 这里先跳过.</p>
+<h2 id="普通用户启用非特权容器"><a href="#普通用户启用非特权容器" class="headerlink" title="普通用户启用非特权容器"></a>普通用户启用非特权容器</h2><p>配置 <code>/etc/lxc/lxc-usernet</code>, 让非特权用户也能创建 network device:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;<span class="hljs-subst">$(id -un)</span> veth lxcbr0 10&quot;</span> | sudo <span class="hljs-built_in">tee</span> -a /etc/lxc/lxc-usernet<br></code></pre></td></tr></table></figure>
+<ul>
+<li>其允许 <code>$(id -un)</code> 用户创建最多 10 个 veth 设备来连接 <code>lxcbr0</code> 网桥</li>
+</ul>
+<p>创建 <code>~/.config/lxc</code> 目录, 以及默认配置文件:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">mkdir</span> ~/.config/lxc<br><span class="hljs-built_in">cp</span> /etc/lxc/default.conf ~/.config/lxc/<br><span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;lxc.idmap = u 0 100000 65536&quot;</span> &gt;&gt; ~/.config/lxc/default.conf<br><span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;lxc.idmap = g 0 100000 65536&quot;</span> &gt;&gt; ~/.config/lxc/default.conf<br></code></pre></td></tr></table></figure>
+
+
+
 <h2 id="容器配置"><a href="#容器配置" class="headerlink" title="容器配置"></a>容器配置</h2><p>在创建一个容器后, 其对应配置文件为 <code>/var/lib/lxc/container_name/config</code>.</p>
 <p>配置网络的示例:</p>
 <figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs ini"><span class="hljs-comment"># Template used to create this container: /usr/share/lxc/templates/lxc-archlinux</span><br><span class="hljs-comment"># Parameters passed to the template:</span><br><span class="hljs-comment"># For additional config options, please look at lxc.container.conf(5)</span><br><br><span class="hljs-comment"># Distribution configuration</span><br><span class="hljs-attr">lxc.include</span> = /usr/share/lxc/config/common.conf<br><span class="hljs-attr">lxc.arch</span> = x<span class="hljs-number">86_64</span><br><br><span class="hljs-comment"># Container specific configuration</span><br><span class="hljs-attr">lxc.rootfs.path</span> = dir:/var/lib/lxc/playtime/rootfs<br><span class="hljs-attr">lxc.uts.name</span> = playtime<br><br><span class="hljs-comment"># Network configuration</span><br><span class="hljs-attr">lxc.net.0.type</span> = veth<br><span class="hljs-attr">lxc.net.0.link</span> = lxcbr0<br><span class="hljs-attr">lxc.net.0.flags</span> = up<br><span class="hljs-attr">lxc.net.0.hwaddr</span> = ee:ec:fa:e9:<span class="hljs-number">56</span>:<span class="hljs-number">7</span>d<br></code></pre></td></tr></table></figure>
 
+<h2 id="自动启动"><a href="#自动启动" class="headerlink" title="自动启动"></a>自动启动</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;lxc.start.auto = 1&quot;</span> &gt;&gt;/var/lib/lxc/mycontainer/config<br></code></pre></td></tr></table></figure>
 
+<h2 id="指定配置"><a href="#指定配置" class="headerlink" title="指定配置"></a>指定配置</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">lxc-create --name containera --config /etc/lxc/autostart.conf --template download -- --dist alpine --release 3.19 --<span class="hljs-built_in">arch</span> amd64<br></code></pre></td></tr></table></figure>
 
+<h2 id="挂载点配置"><a href="#挂载点配置" class="headerlink" title="挂载点配置"></a>挂载点配置</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;lxc.mount.entry = /host/path/to/volume container/mount/point none bind 0 0&quot;</span> &gt;&gt;/var/lib/lxc/mycontainer/config<br></code></pre></td></tr></table></figure>
+<ul>
+<li>需要确保两个目录都存在</li>
+</ul>
 <h1 id="基本使用"><a href="#基本使用" class="headerlink" title="基本使用"></a>基本使用</h1><h2 id="创建-LXC-容器"><a href="#创建-LXC-容器" class="headerlink" title="创建 LXC 容器"></a>创建 LXC 容器</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">sudo lxc-create -t download -n mycontainer<br></code></pre></td></tr></table></figure>
 <ul>
 <li><code>-t download</code> 用 <code>download</code> 脚本下载 template</li>
@@ -394,30 +409,12 @@
 
 <h2 id="删除容器"><a href="#删除容器" class="headerlink" title="删除容器"></a>删除容器</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">sudo lxc-destroy -n mycontainer<br></code></pre></td></tr></table></figure>
 
-<h2 id="管理-LXC-容器"><a href="#管理-LXC-容器" class="headerlink" title="管理 LXC 容器"></a>管理 LXC 容器</h2><table>
-<thead>
-<tr>
-<th>命令</th>
-<th>作用</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>lxc-ls</code></td>
-<td>列出所有容器</td>
-</tr>
-<tr>
-<td><code>lxc-info -n mycontainer</code></td>
-<td>查看容器状态</td>
-</tr>
-<tr>
-<td><code>lxc-console -n mycontainer</code></td>
-<td>进入容器控制台</td>
-</tr>
-<tr>
-<td><code>lxc-copy -n mycontainer -N newcontainer</code></td>
-<td>复制容器</td>
-</tr>
-</tbody></table>
+<h2 id="列出所有容器"><a href="#列出所有容器" class="headerlink" title="列出所有容器"></a>列出所有容器</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo lxc-ls<br>sudo lxc-ls --fancy<br></code></pre></td></tr></table></figure>
+
+<h2 id="查看容器状态"><a href="#查看容器状态" class="headerlink" title="查看容器状态"></a>查看容器状态</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">lxc-info -n container_name<br></code></pre></td></tr></table></figure>
+
+<h2 id="复制容器"><a href="#复制容器" class="headerlink" title="复制容器"></a>复制容器</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">lxc-copy -n container_name -N newcontainer<br></code></pre></td></tr></table></figure>
+
 <h2 id="自定义网络-桥接模式"><a href="#自定义网络-桥接模式" class="headerlink" title="自定义网络 (桥接模式)"></a>自定义网络 (桥接模式)</h2><ol>
 <li>创建桥接网络：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs bash">sudo ip <span class="hljs-built_in">link</span> add name br0 <span class="hljs-built_in">type</span> bridge<br>sudo ip <span class="hljs-built_in">link</span> <span class="hljs-built_in">set</span> dev eth0 promisc on<br>sudo ip <span class="hljs-built_in">link</span> <span class="hljs-built_in">set</span> dev eth0 master br0<br>sudo ip addr add 192.168.1.1/24 dev br0<br>sudo ip <span class="hljs-built_in">link</span> <span class="hljs-built_in">set</span> br0 up<br></code></pre></td></tr></table></figure></li>
 <li>修改容器配置：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">sudo vim /var/lib/lxc/mycontainer/config<br></code></pre></td></tr></table></figure>
