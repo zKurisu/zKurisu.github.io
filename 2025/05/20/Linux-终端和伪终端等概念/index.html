@@ -16,17 +16,19 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="介绍Linux 中, 我们常见有 &#x2F;dev&#x2F;console, &#x2F;dev&#x2F;tty0, &#x2F;dev&#x2F;pts&#x2F;0 等设备. &#x2F;dev&#x2F;ttyX">
+    <meta name="description" content="介绍Linux 中, 我们常见有 &#x2F;dev&#x2F;console, &#x2F;dev&#x2F;tty1, &#x2F;dev&#x2F;pts&#x2F;0 等设备. 其都包含 “终端” 的概念, 有点迷糊, 这里做一些调查. &#x2F;dev&#x2F;ttyXtty 是 “TeleTYpewriter” 的缩写, 含义源自早期的电传打字机 (Teletype, 一种用于输入&#x2F;输出的物理设备). 在现代 Linux 中, 其代表两类终端:  &#x2F;dev&#x2F;t">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Linux-终端和伪终端等概念">
 <meta property="og:url" content="http://example.com/2025/05/20/Linux-%E7%BB%88%E7%AB%AF%E5%92%8C%E4%BC%AA%E7%BB%88%E7%AB%AF%E7%AD%89%E6%A6%82%E5%BF%B5/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="介绍Linux 中, 我们常见有 &#x2F;dev&#x2F;console, &#x2F;dev&#x2F;tty0, &#x2F;dev&#x2F;pts&#x2F;0 等设备. &#x2F;dev&#x2F;ttyX">
+<meta property="og:description" content="介绍Linux 中, 我们常见有 &#x2F;dev&#x2F;console, &#x2F;dev&#x2F;tty1, &#x2F;dev&#x2F;pts&#x2F;0 等设备. 其都包含 “终端” 的概念, 有点迷糊, 这里做一些调查. &#x2F;dev&#x2F;ttyXtty 是 “TeleTYpewriter” 的缩写, 含义源自早期的电传打字机 (Teletype, 一种用于输入&#x2F;输出的物理设备). 在现代 Linux 中, 其代表两类终端:  &#x2F;dev&#x2F;t">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/linux-terminal-tty-example.png">
 <meta property="article:published_time" content="2025-05-20T08:20:47.000Z">
-<meta property="article:modified_time" content="2025-05-20T08:23:02.083Z">
+<meta property="article:modified_time" content="2025-05-20T08:41:19.030Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/linux-terminal-tty-example.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -235,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          60 字
+          817 字
         
       </span>
     
@@ -246,7 +248,7 @@
         
         
         
-          1 分钟
+          7 分钟
         
       </span>
     
@@ -289,8 +291,30 @@
             
               <div class="markdown-body">
                 
-                <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>Linux 中, 我们常见有 <code>/dev/console</code>, <code>/dev/tty0</code>, <code>/dev/pts/0</code> 等设备.</p>
-<h1 id="dev-ttyX"><a href="#dev-ttyX" class="headerlink" title="/dev/ttyX"></a><code>/dev/ttyX</code></h1>
+                <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>Linux 中, 我们常见有 <code>/dev/console</code>, <code>/dev/tty1</code>, <code>/dev/pts/0</code> 等设备. 其都包含 “终端” 的概念, 有点迷糊, 这里做一些调查.</p>
+<h1 id="dev-ttyX"><a href="#dev-ttyX" class="headerlink" title="/dev/ttyX"></a><code>/dev/ttyX</code></h1><p><code>tty</code> 是 “TeleTYpewriter” 的缩写, 含义源自早期的电传打字机 (Teletype, 一种用于输入&#x2F;输出的物理设备). 在现代 Linux 中, 其代表两类终端:</p>
+<ul>
+<li><code>/dev/ttySX</code> 等, 如 <code>/dev/ttyS1</code>, <code>/dev/ttyAMA0</code> 本质上是将连接的物理设备映射为的物理终端</li>
+<li><code>/dev/ttyX</code> 等, 如 <code>/dev/tty1</code>, <code>/dev/tty2</code> 用于与内核交互的虚拟终端 (毕竟没有物理实体, 可以用 <code>Ctrl+Alt+F1~F6</code> 来切换)</li>
+</ul>
+<p><code>/dev/tty1</code>, <code>/dev/tty2</code> 等都是独立的会话, 直接与内核交互.</p>
+<p><img src="/../img/linux-terminal-tty-example.png" srcset="/img/loading.gif" lazyload></p>
+<h1 id="dev-console"><a href="#dev-console" class="headerlink" title="/dev/console"></a><code>/dev/console</code></h1><p><code>/dev/console</code> 是逻辑上的主控制终端, 可以用内核参数 <code>console=</code> 来指定. 默认等于 <code>/dev/tty1</code>, 用于接收内核消息.</p>
+<p>如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">/boot/vmlinuz console=ttyS0,115200 console=tty1<br></code></pre></td></tr></table></figure>
+<ul>
+<li>如果配置了多个 <code>console=</code>, 内核会向所有设备发送消息, 但只有最后一个生效作为交互式控制台</li>
+</ul>
+<p>查看内核启动参数:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ <span class="hljs-built_in">cat</span> /proc/cmdline<br>BOOT_IMAGE=/vmlinuz-linux root=/dev/mapper/vg1-lv1_root rw loglevel=3 intel_iommu=on iommu=pt<br></code></pre></td></tr></table></figure>
+
+<p>查看当前 <code>/dev/console</code> 与哪个 tty 连接:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ <span class="hljs-built_in">cat</span> /proc/consoles<br>tty0                 -WU (EC  p  )    4:1<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>-WU</code> 表示该设备可写</li>
+</ul>
+<h1 id="dev-pts"><a href="#dev-pts" class="headerlink" title="/dev/pts/"></a><code>/dev/pts/</code></h1><p><code>pts</code> 是 <code>Pseudo Terminal</code> (伪终端) 的缩写, <code>/dev/pts/</code> 目录下的设备文件, 都用于模拟 TTY 的行为, 由终端模拟器 (Terminal Emulator, 如 <code>st</code>, <code>alacritty</code>, <code>xterm</code> 等) 或服务进程 (如 <code>ssh</code>) 创建</p>
+
                 
               </div>
             
