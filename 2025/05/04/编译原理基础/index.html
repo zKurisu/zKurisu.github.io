@@ -82,8 +82,9 @@
 <meta property="og:image" content="http://example.com/img/compiler-LR0-analyse-table-construct-algorithm.png">
 <meta property="og:image" content="http://example.com/img/compiler-LR0-analyse-goto-and-closure.png">
 <meta property="og:image" content="http://example.com/img/compiler-lr0-example.png">
+<meta property="og:image" content="http://example.com/img/compiler-table-drive-lr-structure.png">
 <meta property="article:published_time" content="2025-05-04T09:25:11.000Z">
-<meta property="article:modified_time" content="2025-05-21T05:04:48.304Z">
+<meta property="article:modified_time" content="2025-05-21T06:04:09.578Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/compiler-frontend-phases.png">
@@ -306,7 +307,7 @@
         
         
         
-          167 分钟
+          169 分钟
         
       </span>
     
@@ -1427,6 +1428,9 @@
 <p><img src="/../img/compiler-LR0-analyse-algorithm.png" srcset="/img/loading.gif" lazyload></p>
 <p><img src="/../img/compiler-LR0-analyse-table-construct-algorithm.png" srcset="/img/loading.gif" lazyload></p>
 <p><img src="/../img/compiler-LR0-analyse-goto-and-closure.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li><code>N</code> 指非终结符, <code>T</code> 指终结符, <code>D</code> 指新的状态</li>
+</ul>
 <h4 id="LR-0-示例"><a href="#LR-0-示例" class="headerlink" title="LR(0) 示例"></a>LR(0) 示例</h4><p><img src="/../img/compiler-lr0-example.png" srcset="/img/loading.gif" lazyload></p>
 <p>这里通过 <code>stack</code> 的状态来演示:</p>
 <ul>
@@ -1434,9 +1438,20 @@
 <li>读入 <code>x</code>: <code>ACTION[1, x]</code> 为 <code>2</code>, 因此 <code>stack=[$, 1, x, 2]</code></li>
 <li>读入 <code>x</code>: <code>ACTION[2, x]</code> 为 <code>3</code>, 因此 <code>stack=[$, 1, x, 2, x, 3]</code></li>
 <li>读入 <code>y</code>: <code>ACTION[3, y]</code> 为 <code>4</code>, 因此 <code>stack=[$, 1, x, 2, x, 3, y, 4]</code></li>
-<li>读入 <code>$</code>: <code>ACTION[4, $]</code> 为规约, 因此 <code>stack=[$, 1, x, 2, x, 3, T, 3]</code></li>
-<li>读入 <code>$</code>: <code>ACTION[3, $]</code> 为规约, 因此 <code>stack=[$, 1, x, 2, x, S, 5]</code></li>
+<li>读入 <code>$</code>: <code>ACTION[4, $]</code> 为规约, 因此 <code>stack=[$, 1, x, 2, x, 3, T, 5]</code></li>
+<li>读入 <code>$</code>: <code>ACTION[5, $]</code> 为规约, 因此 <code>stack=[$, 1, S, 6]</code></li>
+<li>读入 <code>$</code>: <code>ACTION[6, $]</code> 为规约, 因此 <code>stack=[$, 1, S&#39;, end]</code></li>
 </ul>
+<p>最重要的就是查表, 通过项目集构建 <code>ACTION</code> 和 <code>GOTO</code> 两张表.</p>
+<h3 id="SLR-分析算法"><a href="#SLR-分析算法" class="headerlink" title="SLR 分析算法"></a>SLR 分析算法</h3><p>SLR 分析算法是对 LR 的改进.</p>
+<p><code>LR(0)</code> 容易实现, 但能分析的文法有限.</p>
+<p><img src="/../img/compiler-table-drive-lr-structure.png" srcset="/img/loading.gif" lazyload></p>
+<p><code>SLR</code> 分析算法与 <code>LR(0)</code> 基本步骤相同, 仅区别于对归约的处理:</p>
+<ul>
+<li>对于状态 $i$ 上的项目 $X \rightarrow \alpha \cdot$</li>
+<li>仅对 $y \in FOLLOW(X)$ 添加 $ACTION[i,y]$</li>
+</ul>
+<h3 id="LR-1-分析算法"><a href="#LR-1-分析算法" class="headerlink" title="LR(1) 分析算法"></a>LR(1) 分析算法</h3><p>SLR 分析算法有可能减少需要规约的情况, 以及有可能去除移进-规约冲突, 但仍有冲突出现的可能.</p>
 
                 
               </div>
