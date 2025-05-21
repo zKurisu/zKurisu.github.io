@@ -81,8 +81,9 @@
 <meta property="og:image" content="http://example.com/img/compiler-LR0-analyse-algorithm.png">
 <meta property="og:image" content="http://example.com/img/compiler-LR0-analyse-table-construct-algorithm.png">
 <meta property="og:image" content="http://example.com/img/compiler-LR0-analyse-goto-and-closure.png">
+<meta property="og:image" content="http://example.com/img/compiler-lr0-example.png">
 <meta property="article:published_time" content="2025-05-04T09:25:11.000Z">
-<meta property="article:modified_time" content="2025-05-21T04:06:20.283Z">
+<meta property="article:modified_time" content="2025-05-21T05:04:48.304Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/compiler-frontend-phases.png">
@@ -294,7 +295,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          22k 字
+          20k 字
         
       </span>
     
@@ -305,7 +306,7 @@
         
         
         
-          181 分钟
+          167 分钟
         
       </span>
     
@@ -1283,191 +1284,13 @@
 <ul>
 <li>规约 $B \rightarrow b$, 弹出 $b$, 压入 $B$, 转移到 <code>GOTO(I_1, B)</code> 状态并压栈</li>
 </ul>
-<h3 id="增广文法"><a href="#增广文法" class="headerlink" title="增广文法"></a>增广文法</h3><p>先来看这样一个例子:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>S \rightarrow A \newline~ \newline<br>A \rightarrow a \newline~ \newline<br>A \rightarrow \epsilon<br>\end{aligned}<br>}<br>$$</p>
-<ol>
-<li><p>文法定义对比</p>
-<table>
-<thead>
-<tr>
-<th>类型</th>
-<th>文法规则</th>
-<th>开始符号</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>不含增广文法</td>
-<td>S → A<br>A → a<br>A → ε</td>
-<td>S</td>
-</tr>
-<tr>
-<td>含增广文法</td>
-<td>S’ → S<br>S → A<br>A → a<br>A → ε</td>
-<td>S’</td>
-</tr>
-</tbody></table>
-</li>
-<li><p>初始项目集对比</p>
-<table>
-<thead>
-<tr>
-<th>类型</th>
-<th>初始项目集 I₀</th>
-<th>冲突情况</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>不含增广文法</td>
-<td>{S→•A, A→•a, A→•ε}</td>
-<td>存在冲突</td>
-</tr>
-<tr>
-<td>含增广文法</td>
-<td>{S’→•S, S→•A, A→•a, A→•ε}</td>
-<td>无冲突</td>
-</tr>
-</tbody></table>
-</li>
-<li><p>分析表对比（对输入”a”的分析）</p>
-</li>
-</ol>
-<p>不含增广文法的分析过程：</p>
-<table>
-<thead>
-<tr>
-<th>步骤</th>
-<th>栈状态</th>
-<th>输入</th>
-<th>动作</th>
-<th>问题描述</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>1</td>
-<td>[I₀]</td>
-<td>a$</td>
-<td>移进a或规约A→ε?</td>
-<td>移进-规约冲突</td>
-</tr>
-<tr>
-<td>2</td>
-<td>无法继续</td>
-<td>-</td>
-<td>分析失败</td>
-<td>因冲突无法确定正确动作</td>
-</tr>
-</tbody></table>
-<p>含增广文法的分析过程：</p>
-<table>
-<thead>
-<tr>
-<th>步骤</th>
-<th>栈状态</th>
-<th>输入</th>
-<th>动作</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>1</td>
-<td>[I₀]</td>
-<td>a$</td>
-<td>移进a</td>
-<td>优先处理S’→•S的推导</td>
-</tr>
-<tr>
-<td>2</td>
-<td>[I₀,a,I₁]</td>
-<td>$</td>
-<td>规约A→a</td>
-<td>I₁&#x3D;{A→a•}是明确规约状态</td>
-</tr>
-<tr>
-<td>3</td>
-<td>[I₀,A]</td>
-<td>$</td>
-<td>转移至I₂</td>
-<td>GOTO(I₀,A)&#x3D;I₂</td>
-</tr>
-<tr>
-<td>4</td>
-<td>[I₀,A,I₂]</td>
-<td>$</td>
-<td>规约S→A</td>
-<td>I₂&#x3D;{S→A•}是明确规约状态</td>
-</tr>
-<tr>
-<td>5</td>
-<td>[I₀,S]</td>
-<td>$</td>
-<td>转移至I₃</td>
-<td>GOTO(I₀,S)&#x3D;I₃</td>
-</tr>
-<tr>
-<td>6</td>
-<td>[I₀,S,I₃]</td>
-<td>$</td>
-<td>接受</td>
-<td>I₃&#x3D;{S’→S•}是唯一接受状态</td>
-</tr>
-</tbody></table>
-<ol start="4">
-<li>关键区别图示</li>
-</ol>
-<figure class="highlight dns"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs dns">不含增广文法：<br>I₀ &#123;<br>    S→•<span class="hljs-keyword">A</span>    ← 需要先处理这个<br>    <span class="hljs-keyword">A</span>→•a    ← 和这个可以同时移进<br>    <span class="hljs-keyword">A</span>→ε•    ← 但也可以立即规约这个<br>&#125; → 冲突！<br><br>含增广文法：<br>I₀ &#123;<br>    S&#x27;→•S   ← 必须先完成这个目标<br>    S→•<span class="hljs-keyword">A</span>    ← 所以要先处理这个<br>    <span class="hljs-keyword">A</span>→•a    ← 然后处理这个(移进)<br>    <span class="hljs-keyword">A</span>→•ε    ← 这个规约要等到后面<br>&#125; → 无冲突<br></code></pre></td></tr></table></figure>
-
-<ol start="5">
-<li>为什么需要增广文法？</li>
-</ol>
-<table>
-<thead>
-<tr>
-<th>问题</th>
-<th>不含增广文法</th>
-<th>含增广文法</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>接受状态不明确</td>
-<td>多个可能接受状态</td>
-<td>唯一明确的S’→S•接受状态</td>
-</tr>
-<tr>
-<td>初始决策冲突</td>
-<td>可能同时需要移进和规约</td>
-<td>强制先完成S’推导，避免冲突</td>
-</tr>
-<tr>
-<td>空产生式处理时机</td>
-<td>可能在不合适的时机规约</td>
-<td>在正确的上下文中规约</td>
-</tr>
-<tr>
-<td>分析表构造</td>
-<td>容易产生冲突项</td>
-<td>减少冲突可能性</td>
-</tr>
-<tr>
-<td>错误恢复</td>
-<td>难以确定错误位置</td>
-<td>有清晰的完成状态作为参照</td>
-</tr>
-</tbody></table>
-<ol start="6">
-<li>实际案例分析</li>
-</ol>
-<p>对于输入字符串”a”：</p>
-<p>不含增广文法时：<br>• 在第一步就面临选择困难：是移进a还是规约A→ε？</p>
-<p>• 无论选择哪个都可能导致错误分析：</p>
-<p>  • 如果选择规约A→ε，会丢失a的输入</p>
-<p>  • 如果选择移进a，可能错过合法的空产生式规约</p>
-<p>含增广文法时：<br>• 分析器有明确的处理顺序：</p>
-<ol>
-<li>必须先完成S’→S的目标</li>
-<li>因此必须先处理S→A</li>
-<li>在处理A时，遇到a选择移进</li>
-<li>最后在正确的状态规约<br>• 每个步骤都有明确的上下文指引</li>
-</ol>
-<p>这个对比清晰地展示了增广文法如何通过引入额外的开始产生式，为分析器提供明确的处理路径和决策依据，从而避免各种冲突情况。</p>
+<h3 id="增广文法"><a href="#增广文法" class="headerlink" title="增广文法"></a>增广文法</h3><p>增广文法添加一个新的开始符号 <code>S&#39;</code> 和产生式 <code>S&#39; -&gt; S</code>, 从而让文法开始符号仅有一个出现在产生式的左侧.</p>
+<p>如:</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs less"><span class="hljs-selector-tag">S</span> <span class="hljs-selector-tag">-</span>&gt; <span class="hljs-selector-tag">A</span> | <span class="hljs-selector-tag">B</span><br><span class="hljs-selector-tag">A</span> <span class="hljs-selector-tag">-</span>&gt; <span class="hljs-selector-tag">a</span><br><span class="hljs-selector-tag">B</span> <span class="hljs-selector-tag">-</span>&gt; <span class="hljs-selector-tag">b</span><br></code></pre></td></tr></table></figure>
+<p>此时开始符号 <code>S</code> 有两个产生式: <code>S -&gt; A</code> 和 <code>S -&gt; B</code>.</p>
+<p>用增广文法调整后为:</p>
+<figure class="highlight coq"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs coq">S&#x27; -&gt; S<br>S -&gt; A | <span class="hljs-type">B</span><br>A -&gt; a<br>B -&gt; b<br></code></pre></td></tr></table></figure>
+<p>此时新的开始符号 <code>S&#39;</code> 只有一个产生式.</p>
 <h3 id="LR-分析算法"><a href="#LR-分析算法" class="headerlink" title="LR 分析算法"></a>LR 分析算法</h3><p>LR 分析算法的设计初衷是为了解决自顶向下分析的局限性, 尤其是在处理复杂文法和左递归时的不足. (LR 是 Left-to-right input, Rightmost derivative in reverse 的缩写)</p>
 <p>LL 分析, 要求文法不能左递归, 如 <code>A -&gt; Aa</code>, 否则会导致无限循环. 如 <code>Expr -&gt; Expr + Term</code> 这样的左递归规则在 LL 分析中无法直接使用.</p>
 <p>LL 文法还需要保证 <code>FIRST</code> 和 <code>FOLLOW</code> 无冲突, 但许多实际语言的文法无法满足这一条件.</p>
@@ -1477,7 +1300,7 @@
 <figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs scss"><span class="hljs-built_in">LR</span>(<span class="hljs-number">1</span>) &gt; <span class="hljs-built_in">LALR</span>(<span class="hljs-number">1</span>) &gt; <span class="hljs-built_in">SLR</span>(<span class="hljs-number">1</span>) &gt; <span class="hljs-built_in">LL</span>(<span class="hljs-number">1</span>)<br></code></pre></td></tr></table></figure>
 
 <p>目前应用最广泛的一类语法分析器生成器, 如 <code>YACC</code>, <code>bison</code>, 等都使用 LR 分析算法.</p>
-<h4 id="LR-0-分析算法"><a href="#LR-0-分析算法" class="headerlink" title="LR(0) 分析算法"></a>LR(0) 分析算法</h4><p><code>LR(0)</code> 是自底向上语法分析的基础算法, 其核心思想是通过有限状态自动机 (DFA) 和栈的组合, 实现对输入符号串的移进 (Shift) 和规约 (Reduce) 操作.</p>
+<h4 id="LR-0-分析算法"><a href="#LR-0-分析算法" class="headerlink" title="LR(0) 分析算法"></a>LR(0) 分析算法</h4><p><code>LR(0)</code> 是自底向上语法分析的基础算法, 其核心思想是通过有限状态自动机 (DFA) 和栈的组合, 实现对输入符号串的移进 (Shift) 和规约 (Reduce) 操作. (主要是通过项目集来构建 <code>ACTION</code> 和 <code>GOTO</code> 表)</p>
 <p>对于这里的 DFA, 有几个关键概念:</p>
 <ul>
 <li>State, 状态, 表示当前分析的位置</li>
@@ -1600,106 +1423,20 @@
 <ul>
 <li>这是一个 接受项目（如果是增广文法 $( S’ \to S \cdot )$），表示分析完成。</li>
 </ul>
-<p>初始项目集 $I_0$ 为:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>I_0 &#x3D; {S \rightarrow \cdot AB }<br>\end{aligned}<br>}<br>$$</p>
-<p>应用 <code>LR(0)</code> 算法的步骤:</p>
-<p><strong>1: 构造 LR(0) 项目集（状态）</strong><br>对文法的每个产生式，生成带“点符号”的项目，例如：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">文法规则：<br>S → E<br>E → E + T | T<br>T → id<br></code></pre></td></tr></table></figure>
-<p>生成的项目集：<br>• <code>S → ·E</code></p>
-<p>• <code>E → ·E + T</code></p>
-<p>• <code>E → ·T</code></p>
-<p>• <code>T → ·id</code></p>
-<p><strong>2：构建 DFA 状态转移</strong><br>通过闭包（Closure）和转移（Goto）生成所有可能的状态：</p>
-<ol>
-<li><p>初始状态（State 0）：<br>• 包含 <code>S → ·E</code> 及其闭包（所有 <code>E</code> 的展开项）。  </p>
-</li>
-<li><p>状态转移：<br>• 如果当前状态有 <code>A → α·Xβ</code>（<code>X</code> 是终结符或非终结符），则读入 <code>X</code> 后跳转到新状态 <code>A → αX·β</code>。</p>
-</li>
-</ol>
-<p>示例：<br>• 从 <code>State 0</code> 读 <code>E</code> 跳转到 <code>State 1</code>（<code>S → E·</code>）。  </p>
-<p>• 从 <code>State 0</code> 读 <code>T</code> 跳转到 <code>State 2</code>（<code>E → T·</code>）。  </p>
-<p><strong>3：分析表（Action &amp; Goto）</strong><br>根据 DFA 状态生成分析表：<br>• Action 表：指导移进或规约。  </p>
-<p>  • 如果状态中有 <code>A → α·aβ</code>（<code>a</code> 是终结符），则 <code>Action[s, a] = Shift</code>。  </p>
-<p>  • 如果状态中有 <code>A → α·</code>，则 <code>Action[s, *] = Reduce A → α</code>。  </p>
-<p>• Goto 表：指导非终结符的跳转。  </p>
-<hr>
-<p><strong>示例解析</strong><br><strong>文法规则</strong></p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">0: S → E<br>1: E → E + T<br>2: E → T<br>3: T → id<br></code></pre></td></tr></table></figure>
-<p><strong>输入串</strong><br><code>id + id</code></p>
-<p><strong>分析过程</strong></p>
-<table>
-<thead>
-<tr>
-<th>栈</th>
-<th>剩余输入</th>
-<th>Action</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>[State 0]</td>
-<td>id + id $</td>
-<td>Shift (State 3)</td>
-<td>移进 <code>id</code></td>
-</tr>
-<tr>
-<td>[0, id(3)]</td>
-<td>+ id $</td>
-<td>Reduce T → id</td>
-<td>规约 <code>id</code> 为 <code>T</code></td>
-</tr>
-<tr>
-<td>[0, T(2)]</td>
-<td>+ id $</td>
-<td>Goto State 2</td>
-<td>根据 <code>E → T</code> 跳转</td>
-</tr>
-<tr>
-<td>[0, E(1)]</td>
-<td>+ id $</td>
-<td>Shift (State 4)</td>
-<td>移进 <code>+</code></td>
-</tr>
-<tr>
-<td>[0, E(1), +(4)]</td>
-<td>id $</td>
-<td>Shift (State 3)</td>
-<td>移进 <code>id</code></td>
-</tr>
-<tr>
-<td>[0, E(1), +(4), id(3)]</td>
-<td>$</td>
-<td>Reduce T → id</td>
-<td>规约 <code>id</code> 为 <code>T</code></td>
-</tr>
-<tr>
-<td>[0, E(1), +(4), T(5)]</td>
-<td>$</td>
-<td>Goto State 5</td>
-<td>根据 <code>E → E + T</code> 跳转</td>
-</tr>
-<tr>
-<td>[0, E(1)]</td>
-<td>$</td>
-<td>Accept</td>
-<td>完成规约（<code>S → E</code>）</td>
-</tr>
-</tbody></table>
-<hr>
-<p><strong>LR(0) 的局限性</strong></p>
-<ol>
-<li><p>无前瞻（Lookahead）：<br>• LR(0) 不预读输入符号，可能导致规约冲突（如 <code>Reduce/Reduce</code> 冲突）。  </p>
-<p>• 示例：  </p>
-  <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">S → A | B<br>A → id<br>B → id<br></code></pre></td></tr></table></figure>
-<p>  在状态 <code>[A → id·, B → id·]</code> 时，无法决定规约为 <code>A</code> 还是 <code>B</code>。  </p>
-</li>
-<li><p>需改进为 SLR&#x2F;LR(1)：<br>• SLR(1) 通过 <code>FOLLOW</code> 集解决部分冲突。  </p>
-<p>• LR(1) 通过动态前瞻符号彻底解决冲突。</p>
-</li>
-</ol>
 <p><img src="/../img/compiler-LR0-analyse-table-example.png" srcset="/img/loading.gif" lazyload></p>
 <p><img src="/../img/compiler-LR0-analyse-algorithm.png" srcset="/img/loading.gif" lazyload></p>
 <p><img src="/../img/compiler-LR0-analyse-table-construct-algorithm.png" srcset="/img/loading.gif" lazyload></p>
 <p><img src="/../img/compiler-LR0-analyse-goto-and-closure.png" srcset="/img/loading.gif" lazyload></p>
+<h4 id="LR-0-示例"><a href="#LR-0-示例" class="headerlink" title="LR(0) 示例"></a>LR(0) 示例</h4><p><img src="/../img/compiler-lr0-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>这里通过 <code>stack</code> 的状态来演示:</p>
+<ul>
+<li>初始: <code>stack=[$, 1]</code>, 栈顶为 <code>1</code></li>
+<li>读入 <code>x</code>: <code>ACTION[1, x]</code> 为 <code>2</code>, 因此 <code>stack=[$, 1, x, 2]</code></li>
+<li>读入 <code>x</code>: <code>ACTION[2, x]</code> 为 <code>3</code>, 因此 <code>stack=[$, 1, x, 2, x, 3]</code></li>
+<li>读入 <code>y</code>: <code>ACTION[3, y]</code> 为 <code>4</code>, 因此 <code>stack=[$, 1, x, 2, x, 3, y, 4]</code></li>
+<li>读入 <code>$</code>: <code>ACTION[4, $]</code> 为规约, 因此 <code>stack=[$, 1, x, 2, x, 3, T, 3]</code></li>
+<li>读入 <code>$</code>: <code>ACTION[3, $]</code> 为规约, 因此 <code>stack=[$, 1, x, 2, x, S, 5]</code></li>
+</ul>
 
                 
               </div>
