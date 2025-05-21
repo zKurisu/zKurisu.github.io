@@ -96,8 +96,13 @@
 <meta property="og:image" content="http://example.com/img/compiler-abstract-tree-design-example.png">
 <meta property="og:image" content="http://example.com/img/compiler-abstract-tree-position-example.png">
 <meta property="og:image" content="http://example.com/img/compiler-semantic-analysis-structure.png">
+<meta property="og:image" content="http://example.com/img/compiler-sematic-how-it-defined.png">
+<meta property="og:image" content="http://example.com/img/compiler-sematic-type-check-algorithm.png">
+<meta property="og:image" content="http://example.com/img/compiler-sematic-type-check-algorithm-example2.png">
+<meta property="og:image" content="http://example.com/img/compiler-sematic-type-check-algorithm-example3.png">
+<meta property="og:image" content="http://example.com/img/compiler-sematic-type-check-algorithm-example4.png">
 <meta property="article:published_time" content="2025-05-04T09:25:11.000Z">
-<meta property="article:modified_time" content="2025-05-21T11:01:27.319Z">
+<meta property="article:modified_time" content="2025-05-21T12:01:45.772Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/compiler-frontend-phases.png">
@@ -309,7 +314,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          21k 字
+          22k 字
         
       </span>
     
@@ -320,7 +325,7 @@
         
         
         
-          177 分钟
+          182 分钟
         
       </span>
     
@@ -1503,10 +1508,53 @@
 <li>每个表达式都有合适的类型</li>
 <li>函数调用和函数的定义一致</li>
 </ul>
-<p>比如, 分析下面 C 代码的语义错误 (这里语法正确):</p>
+<p>该阶段的输出为一个中间代码.</p>
+<p>比如, 分析下面 C 代码的语义错误 (这里语法还是有点问题):</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">f</span> <span class="hljs-params">(<span class="hljs-type">int</span> *p)</span><br>&#123;<br>    x += <span class="hljs-number">4</span>;<br>    p(<span class="hljs-number">23</span>);<br>    <span class="hljs-string">&quot;hello&quot;</span> + <span class="hljs-string">&quot;world&quot;</span>;<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span><br>&#123;<br>    f() + <span class="hljs-number">5</span>;<br>    <span class="hljs-keyword">break</span>;<br>    <span class="hljs-keyword">return</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>没有 <code>x</code>, <code>p</code> 的声明</li>
+<li>C 语言的 <code>+</code> 不能用于字符串</li>
+<li><code>f()</code> 没有返回值, 不能用于 <code>+</code> 运算符</li>
+<li><code>break</code> 需要在循环内</li>
+<li><code>main()</code> 函数要求 <code>int</code> 返回值</li>
+</ul>
+<h2 id="程序语言的语义"><a href="#程序语言的语义" class="headerlink" title="程序语言的语义"></a>程序语言的语义</h2><p><img src="/../img/compiler-sematic-how-it-defined.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="语义检查"><a href="#语义检查" class="headerlink" title="语义检查"></a>语义检查</h2><p>以 <code>C--</code> 语言为例子, 其 CFG 为:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs cfg">E -&gt; n<br>   | true<br>   | false<br>   | E + E<br>   | E &amp;&amp; E<br></code></pre></td></tr></table></figure>
 
+<p>类型合法的程序示意:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c--">3 + 4<br>false &amp;&amp; true<br></code></pre></td></tr></table></figure>
 
+<p>类型不合法的程序示意:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c--">3 + true<br>true + false<br></code></pre></td></tr></table></figure>
+<ul>
+<li>整型数不能与布尔值相加</li>
+<li>布尔值不能应用加法表达式</li>
+</ul>
+<p>这里, 对语义检查的任务是:</p>
+<figure class="highlight elm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs elm"><span class="hljs-keyword">type</span> check(e)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>对给定一个表达式 <code>e</code>, 写一个函数, 其返回表达式 <code>e</code> 的类型, 若类型不合法, 则报错.</li>
+</ul>
+<p>类型检查算法:<br><img src="/../img/compiler-sematic-type-check-algorithm.png" srcset="/img/loading.gif" lazyload></p>
+<p>增加变量声明的处理:</p>
+<figure class="highlight coq"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs coq">P -&gt; D E<br>D -&gt; T id; D<br>   |<br><span class="hljs-type">T</span> -&gt; int<br>   | <span class="hljs-type">bool</span><br>E -&gt; n<br>   | <span class="hljs-type">id</span><br>   | <span class="hljs-type">true</span><br>   | <span class="hljs-type">false</span><br>   | <span class="hljs-type">E</span> + E<br>   | <span class="hljs-type">E</span> &amp;&amp; E<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>D</code>, Declaration</li>
+<li><code>T</code>, Type</li>
+<li><code>E</code>, Expression</li>
+<li><code>id</code>, Identifier, 标识符, 指变量名</li>
+</ul>
+<p>合法的程序如:</p>
+<figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs angelscript"><span class="hljs-built_in">int</span> x;<br>x + <span class="hljs-number">4</span><br><br><span class="hljs-built_in">bool</span> y;<br><span class="hljs-literal">false</span> &amp;&amp; y<br></code></pre></td></tr></table></figure>
+
+<p>类型不合法的程序:</p>
+<figure class="highlight llvm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs llvm"><span class="hljs-keyword">x</span> + <span class="hljs-number">3</span><br><br>int <span class="hljs-keyword">x</span><span class="hljs-comment">;</span><br><span class="hljs-keyword">x</span> + <span class="hljs-keyword">false</span><br></code></pre></td></tr></table></figure>
+
+<p>类型检查算法:<br><img src="/../img/compiler-sematic-type-check-algorithm-example2.png" srcset="/img/loading.gif" lazyload></p>
+<p><img src="/../img/compiler-sematic-type-check-algorithm-example3.png" srcset="/img/loading.gif" lazyload></p>
+<p><img src="/../img/compiler-sematic-type-check-algorithm-example4.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="符号表"><a href="#符号表" class="headerlink" title="符号表"></a>符号表</h2>
                 
               </div>
             
