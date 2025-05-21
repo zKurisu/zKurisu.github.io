@@ -82,7 +82,7 @@
 <meta property="og:image" content="http://example.com/img/compiler-LR0-analyse-table-construct-algorithm.png">
 <meta property="og:image" content="http://example.com/img/compiler-LR0-analyse-goto-and-closure.png">
 <meta property="article:published_time" content="2025-05-04T09:25:11.000Z">
-<meta property="article:modified_time" content="2025-05-21T02:05:52.190Z">
+<meta property="article:modified_time" content="2025-05-21T02:34:57.404Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/compiler-frontend-phases.png">
@@ -294,7 +294,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          18k 字
+          20k 字
         
       </span>
     
@@ -305,7 +305,7 @@
         
         
         
-          152 分钟
+          167 分钟
         
       </span>
     
@@ -1263,7 +1263,7 @@
 </ul>
 <h3 id="点记号"><a href="#点记号" class="headerlink" title="点记号"></a>点记号</h3><p><img src="/../img/compiler-from-botton-to-top-point-note.png" srcset="/img/loading.gif" lazyload></p>
 <p>示例:<br><img src="/../img/compiler-point-node-example1.png" srcset="/img/loading.gif" lazyload></p>
-<h3 id="LR-分析算法"><a href="#LR-分析算法" class="headerlink" title="LR 分析算法"></a>LR 分析算法</h3><p>LR 分析算法的设计初衷是为了解决自顶向下分析的局限性, 尤其是在处理复杂文法和左递归时的不足. (LR 是 Left-to-right input, Rightmost derivative in reverse 的缩写)</p>
+<h3 id="增广文法"><a href="#增广文法" class="headerlink" title="增广文法"></a>增广文法</h3><h3 id="LR-分析算法"><a href="#LR-分析算法" class="headerlink" title="LR 分析算法"></a>LR 分析算法</h3><p>LR 分析算法的设计初衷是为了解决自顶向下分析的局限性, 尤其是在处理复杂文法和左递归时的不足. (LR 是 Left-to-right input, Rightmost derivative in reverse 的缩写)</p>
 <p>LL 分析, 要求文法不能左递归, 如 <code>A -&gt; Aa</code>, 否则会导致无限循环. 如 <code>Expr -&gt; Expr + Term</code> 这样的左递归规则在 LL 分析中无法直接使用.</p>
 <p>LL 文法还需要保证 <code>FIRST</code> 和 <code>FOLLOW</code> 无冲突, 但许多实际语言的文法无法满足这一条件.</p>
 <p>在不满足条件时, 需要修改文法, 将左递归改为有递归, 如 <code>Expr -&gt; Term Expr&#39;</code>, 这样会降低代码的可读性和直观性.</p>
@@ -1285,12 +1285,117 @@
 <li>$A \rightarrow \alpha \cdot \beta$, 已解析 $\alpha$, 待解析 $\beta$</li>
 <li>$A \rightarrow \alpha \beta \cdot$, 已解析整个产生式</li>
 </ul>
-<p>Item set 用来表示状态机中的某个状态, 得用一个例子来说明.</p>
-<p>假如有文法:</p>
+<p>Item set 通过闭包扩展操作来获得, 用来表示状态机中的某个状态, 得用一个例子来说明.</p>
+<p>给定文法：</p>
 <figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs css">S -&gt; AB<br><span class="hljs-selector-tag">A</span> -&gt; <span class="hljs-selector-tag">a</span><br><span class="hljs-selector-tag">B</span> -&gt; <span class="hljs-selector-tag">b</span><br></code></pre></td></tr></table></figure>
 
-
-
+<p><strong>初始项目集 ( I_0 )</strong><br>初始时，项目集仅包含增广文法的初始项目：<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>I_0 &#x3D; { S \to \cdot AB }<br>\end{aligned}<br>}<br>$$</p>
+<p><strong>执行闭包操作</strong></p>
+<ol>
+<li>检查 $( S \to \cdot AB )$：<ul>
+<li><p>点（$\cdot$）后面是 非终结符 $( A )$, 因此需要将 $( A )$ 的所有产生式的初始项目加入 $( I_0 )$.</p>
+</li>
+<li><p>$( A )$ 的产生式是 $( A \to a )$, 所以加入:</p>
+</li>
+</ul>
+</li>
+</ol>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>     A \to \cdot a<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>现在项目集变为:</li>
+</ul>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>     I_0 &#x3D; { S \to \cdot AB, A \to \cdot a }<br>\end{aligned}<br>}<br>$$</p>
+<ol start="2">
+<li><p>检查 $( A \to \cdot a )$:</p>
+<ul>
+<li>点后面是 终结符 $( a )$, 没有非终结符需要扩展, 因此无需添加新项目.</li>
+</ul>
+</li>
+<li><p>检查 $( S \to \cdot AB )$ 的 $( B )$:</p>
+<ul>
+<li>虽然 $( B )$ 也是一个非终结符, 但点尚未移动到 $( B )$ 前面 (当前是 $( \cdot AB )$), 所以暂时不需要处理 $( B )$ 的产生式.</li>
+</ul>
+</li>
+</ol>
+<p><strong>最终闭包 $( \text{Closure}(I_0) )$</strong><br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\text{Closure}(I_0) &#x3D; { S \to \cdot AB, A \to \cdot a }<br>\end{aligned}<br>}<br>$$</p>
+<hr>
+<p><strong>项目集的变化过程（读入字符时）</strong><br><strong>1. 从 $( I_0 )$ 读入 $( a )$</strong></p>
+<ul>
+<li><p>当前项目集 $( I_0 )$:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>{ S \to \cdot AB, A \to \cdot a }<br>\end{aligned}<br>}<br>$$</p>
+</li>
+<li><p>匹配的项目:</p>
+<ul>
+<li>$( A \to \cdot a )$（可以移进 $( a )$）</li>
+</ul>
+</li>
+<li><p>移进操作:</p>
+<ul>
+<li>读入 $( a )$，点向右移动:</li>
+</ul>
+</li>
+</ul>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>    A \to a \cdot<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li><p>这是一个 规约项目（点在末尾），表示可以用 $( A \to a )$ 规约。</p>
+</li>
+<li><p>规约时不读入新字符，因此项目集 不会立即改变，而是弹出栈顶状态并应用规约。</p>
+</li>
+</ul>
+<p><strong>2. 规约后转移到新状态</strong></p>
+<ul>
+<li><p>规约 $( A \to a )$ 后，相当于已经解析出 $( A )$，接下来需要处理 $( S \to A \cdot B )$。</p>
+</li>
+<li><p>计算新状态 $( I_1 )$:</p>
+<ul>
+<li>从 $( I_0 )$ 的 $( S \to \cdot AB )$ 出发，读入 $( A )$ 后，点移动到 $( A )$ 后面:</li>
+</ul>
+</li>
+</ul>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>    S \to A \cdot B<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>检查点后面的 $( B )$（非终结符），加入 $( B )$ 的产生式:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>B \to \cdot b<br>\end{aligned}<br>}<br>$$</li>
+<li>因此，新状态 $( I_1 )$ 为:</li>
+</ul>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>    I_1 &#x3D; { S \to A \cdot B, B \to \cdot b }<br>\end{aligned}<br>}<br>$$</p>
+<p><strong>3. 从 $( I_1 )$ 读入 $( b )$</strong></p>
+<ul>
+<li>当前项目集 $( I_1 )$:</li>
+</ul>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>  { S \to A \cdot B, B \to \cdot b }<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li><p>匹配的项目:</p>
+<ul>
+<li>$( B \to \cdot b )$（可以移进 $( b )$）</li>
+</ul>
+</li>
+<li><p>移进操作:</p>
+<ul>
+<li>读入 $( b )$，点向右移动:</li>
+</ul>
+</li>
+</ul>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>    B \to b \cdot<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li><p>这是一个 规约项目，表示可以用 $( B \to b )$ 规约。</p>
+</li>
+<li><p>规约后，弹出栈顶状态，并回到 $( I_1 )$。</p>
+</li>
+</ul>
+<p><strong>4. 规约后转移到 $( I_2 )$</strong></p>
+<ul>
+<li><p>规约 $( B \to b )$ 后，相当于已经解析出 $( B )$，接下来处理 $( S \to AB \cdot )$。</p>
+</li>
+<li><p>新状态 $( I_2 )$:</p>
+<ul>
+<li>从 $( I_1 )$ 的 $( S \to A \cdot B )$ 出发，读入 $( B )$ 后:</li>
+</ul>
+</li>
+</ul>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>    S \to AB \cdot<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>这是一个 接受项目（如果是增广文法 $( S’ \to S \cdot )$），表示分析完成。</li>
+</ul>
+<p>初始项目集 $I_0$ 为:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>I_0 &#x3D; {S \rightarrow \cdot AB }<br>\end{aligned}<br>}<br>$$</p>
 <p>应用 <code>LR(0)</code> 算法的步骤:</p>
 <p><strong>1: 构造 LR(0) 项目集（状态）</strong><br>对文法的每个产生式，生成带“点符号”的项目，例如：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">文法规则：<br>S → E<br>E → E + T | T<br>T → id<br></code></pre></td></tr></table></figure>
