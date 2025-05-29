@@ -1,0 +1,770 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/wallhaven-j5kjgy_1920x1080.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Jie">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="断言检查, assertassert 是断言函数, 即检查某个条件是否为真, 如果为 false 或 nil, 则抛出提供的错误信息, 并终止当前代码块的进行. 语法如: 1assert(condition, message)  condition 为要检查的条件 message 为错误信息  如: 12345function loadImage(path)    local img &#x3D; love">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Lua-错误处理">
+<meta property="og:url" content="http://example.com/2025/05/28/Lua-%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="断言检查, assertassert 是断言函数, 即检查某个条件是否为真, 如果为 false 或 nil, 则抛出提供的错误信息, 并终止当前代码块的进行. 语法如: 1assert(condition, message)  condition 为要检查的条件 message 为错误信息  如: 12345function loadImage(path)    local img &#x3D; love">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-05-28T15:33:18.000Z">
+<meta property="article:modified_time" content="2025-05-28T15:48:00.742Z">
+<meta property="article:author" content="Jie">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>Lua-错误处理 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Jie</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/SteinsGate_all.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Lua-错误处理"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-05-28 23:33" pubdate>
+          2025年5月28日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          2.4k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          20 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">Lua-错误处理</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="断言检查-assert"><a href="#断言检查-assert" class="headerlink" title="断言检查, assert"></a>断言检查, assert</h1><p><code>assert</code> 是断言函数, 即检查某个条件是否为真, 如果为 <code>false</code> 或 <code>nil</code>, 则抛出提供的错误信息, 并终止当前代码块的进行. 语法如:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-built_in">assert</span>(condition, message)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>condition</code> 为要检查的条件</li>
+<li><code>message</code> 为错误信息</li>
+</ul>
+<p>如:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">loadImage</span><span class="hljs-params">(path)</span></span><br>    <span class="hljs-keyword">local</span> img = love.graphics.newImage(<span class="hljs-built_in">path</span>)<br>    <span class="hljs-built_in">assert</span>(img, <span class="hljs-string">&quot;Failed to load image: &quot;</span> .. <span class="hljs-built_in">path</span>)<br>    <span class="hljs-keyword">return</span> img<br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+<p>其本质是 <code>error</code> 的语法糖:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-built_in">assert</span>(condition, message)<br><br><span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> condition <span class="hljs-keyword">then</span><br>    <span class="hljs-built_in">error</span>(message <span class="hljs-keyword">or</span> <span class="hljs-string">&quot;assertion failed!&quot;</span>)<br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+
+<h1 id="错误处理-pcall-x2F-xpcall"><a href="#错误处理-pcall-x2F-xpcall" class="headerlink" title="错误处理, pcall&#x2F;xpcall"></a>错误处理, pcall&#x2F;xpcall</h1><p>在 Lua 中, 可以用 <code>error()</code> 来报错, 输出错误信息:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-keyword">local</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">loadConfig</span><span class="hljs-params">(path)</span></span><br>    <span class="hljs-keyword">local</span> file = <span class="hljs-built_in">io</span>.<span class="hljs-built_in">open</span>(<span class="hljs-built_in">path</span>, <span class="hljs-string">&quot;r&quot;</span>)<br>    <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> file <span class="hljs-keyword">then</span><br>        <span class="hljs-built_in">error</span>(<span class="hljs-string">&quot;Failed to open file: &quot;</span> .. <span class="hljs-built_in">path</span>)<br>    <span class="hljs-keyword">end</span><br>    <span class="hljs-keyword">return</span> file:<span class="hljs-built_in">read</span>(<span class="hljs-string">&quot;*a&quot;</span>)<br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="pcall"><a href="#pcall" class="headerlink" title="pcall"></a>pcall</h2><p><code>pcall</code> 以保护模式调用函数, 捕获函数执行中的错误, 语法为:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-keyword">local</span> success, result_or_error = <span class="hljs-built_in">pcall</span>(function_name, arg1, arg2, ...)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>success</code> 是布尔值, 表明函数是否执行成功</li>
+<li><code>result_or_error</code> 在成功时返回函数结果, 失败时返回错误信息</li>
+</ul>
+<p>示例:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-keyword">local</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">divide</span><span class="hljs-params">(a, b)</span></span><br>    <span class="hljs-keyword">if</span> b == <span class="hljs-number">0</span> <span class="hljs-keyword">then</span><br>        <span class="hljs-built_in">error</span>(<span class="hljs-string">&quot;Division by zero!&quot;</span>)<br>    <span class="hljs-keyword">end</span><br>    <span class="hljs-keyword">return</span> a / b<br><span class="hljs-keyword">end</span><br><br><span class="hljs-comment">-- 使用 pcall 捕获错误</span><br><span class="hljs-keyword">local</span> success, result = <span class="hljs-built_in">pcall</span>(divide, <span class="hljs-number">10</span>, <span class="hljs-number">0</span>)<br><span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> success <span class="hljs-keyword">then</span><br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Error:&quot;</span>, result)  <span class="hljs-comment">-- 输出: Error: Division by zero!</span><br><span class="hljs-keyword">else</span><br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Result:&quot;</span>, result)<br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="xpcall"><a href="#xpcall" class="headerlink" title="xpcall"></a>xpcall</h2><p><code>xpcall</code> 在 <code>pcall</code> 的基础上, 允许指定一个错误处理函数, 一般调用堆栈信息来获取详细错误信息, 语法为:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-keyword">local</span> success, result_or_error = <span class="hljs-built_in">xpcall</span>(function_name, error_handler, arg1, arg2, ...)<br></code></pre></td></tr></table></figure>
+
+<p>示例:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-keyword">local</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">divide</span><span class="hljs-params">(a, b)</span></span><br>    <span class="hljs-keyword">if</span> b == <span class="hljs-number">0</span> <span class="hljs-keyword">then</span><br>        <span class="hljs-built_in">error</span>(<span class="hljs-string">&quot;Division by zero!&quot;</span>)<br>    <span class="hljs-keyword">end</span><br>    <span class="hljs-keyword">return</span> a / b<br><span class="hljs-keyword">end</span><br><br><span class="hljs-comment">-- 自定义错误处理函数</span><br><span class="hljs-keyword">local</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">errorHandler</span><span class="hljs-params">(err)</span></span><br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Custom Error Handler:&quot;</span>)<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Error:&quot;</span>, err)<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Stack Trace:&quot;</span>, <span class="hljs-built_in">debug</span>.<span class="hljs-built_in">traceback</span>())<br><span class="hljs-keyword">end</span><br><br><span class="hljs-comment">-- 使用 xpcall</span><br><span class="hljs-keyword">local</span> success, result = <span class="hljs-built_in">xpcall</span>(divide, errorHandler, <span class="hljs-number">10</span>, <span class="hljs-number">0</span>)<br><span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> success <span class="hljs-keyword">then</span><br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Execution failed!&quot;</span>)<br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+
+<h1 id="debug-库"><a href="#debug-库" class="headerlink" title="debug 库"></a>debug 库</h1><p><code>debug</code> 库是 Lua 内置的调试库, 用于获取运行时信息和操作环境的函数.</p>
+<p>(这里只列出一部分)</p>
+<h2 id="获取堆栈调用信息"><a href="#获取堆栈调用信息" class="headerlink" title="获取堆栈调用信息"></a>获取堆栈调用信息</h2><figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-built_in">debug</span>.<span class="hljs-built_in">traceback</span>([thread,] [message [, level]])<br></code></pre></td></tr></table></figure>
+<p>生成当前调用堆栈的字符串, 用于错误调试.</p>
+<p>如:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">foo</span><span class="hljs-params">()</span></span><br>    <span class="hljs-built_in">print</span>(<span class="hljs-built_in">debug</span>.<span class="hljs-built_in">traceback</span>(<span class="hljs-string">&quot;Stack trace:&quot;</span>))<br><span class="hljs-keyword">end</span><br><br><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">bar</span><span class="hljs-params">()</span></span><br>    foo()<br><span class="hljs-keyword">end</span><br><br>bar()<br></code></pre></td></tr></table></figure>
+
+<p>其输出:</p>
+<figure class="highlight xquery"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs xquery">Stack<span class="hljs-built_in"> trace</span>:<br>stack traceback:<br>    <span class="hljs-built_in">[string</span> <span class="hljs-string">&quot;temp&quot;</span>]:<span class="hljs-number">2</span>: <span class="hljs-keyword">in</span> <span class="hljs-keyword">function</span> <span class="hljs-string">&#x27;foo&#x27;</span><br>    <span class="hljs-built_in">[string</span> <span class="hljs-string">&quot;temp&quot;</span>]:<span class="hljs-number">6</span>: <span class="hljs-keyword">in</span> <span class="hljs-keyword">function</span> <span class="hljs-string">&#x27;bar&#x27;</span><br>    <span class="hljs-built_in">[string</span> <span class="hljs-string">&quot;temp&quot;</span>]:<span class="hljs-number">9</span>: <span class="hljs-keyword">in</span> main chunk<br></code></pre></td></tr></table></figure>
+
+<h2 id="获取堆栈帧的详细信息"><a href="#获取堆栈帧的详细信息" class="headerlink" title="获取堆栈帧的详细信息"></a>获取堆栈帧的详细信息</h2><p>包括文件名, 行号, 参数名等:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-built_in">debug</span>.<span class="hljs-built_in">getinfo</span>([thread,] <span class="hljs-function"><span class="hljs-keyword">function</span> [, <span class="hljs-title">what</span>])</span><br></code></pre></td></tr></table></figure>
+
+<p>如:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">test</span><span class="hljs-params">(a, b)</span></span><br>    <span class="hljs-keyword">local</span> info = <span class="hljs-built_in">debug</span>.<span class="hljs-built_in">getinfo</span>(<span class="hljs-number">1</span>, <span class="hljs-string">&quot;nSlLuf&quot;</span>)<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Function name:&quot;</span>, info.name)<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Line defined:&quot;</span>, info.linedefined)<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Source:&quot;</span>, info.source)<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Parameters:&quot;</span>, <span class="hljs-built_in">table</span>.<span class="hljs-built_in">concat</span>(info.params, <span class="hljs-string">&quot;, &quot;</span>))<br><span class="hljs-keyword">end</span><br><br>test(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>)<br></code></pre></td></tr></table></figure>
+
+<p>输出:</p>
+<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs cmake"><span class="hljs-keyword">Function</span> name: <span class="hljs-keyword">test</span><br>Line <span class="hljs-keyword">defined</span>: <span class="hljs-number">2</span><br>Source: [<span class="hljs-keyword">string</span> <span class="hljs-string">&quot;temp&quot;</span>]<br>Parameters: a, b<br></code></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Lua/" class="category-chain-item">Lua</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Lua-错误处理</div>
+      <div>http://example.com/2025/05/28/Lua-错误处理/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Jie</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年5月28日</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>许可协议</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/05/28/Tiled-%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8/" title="Tiled-基本使用">
+                        <span class="hidden-mobile">Tiled-基本使用</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zKurisu/comments-utterances');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Jie</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Orkarin</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.1/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
