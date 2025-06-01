@@ -26,7 +26,7 @@
 <meta property="og:image" content="http://example.com/img/cs50-pong-cover.jpg">
 <meta property="og:image" content="http://example.com/img/cs50-flappy-bird-cover.webp">
 <meta property="article:published_time" content="2025-06-01T07:06:31.000Z">
-<meta property="article:modified_time" content="2025-06-01T07:55:38.734Z">
+<meta property="article:modified_time" content="2025-06-01T09:40:46.880Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/cs50-pong-cover.jpg">
@@ -238,7 +238,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          756 字
+          2.2k 字
         
       </span>
     
@@ -249,7 +249,7 @@
         
         
         
-          7 分钟
+          19 分钟
         
       </span>
     
@@ -340,6 +340,18 @@
 <p>源码:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">wget https://cdn.cs50.net/games/2018/x/projects/1/flappy.zip<br></code></pre></td></tr></table></figure>
 
+<h2 id="Infinite-Scrolling"><a href="#Infinite-Scrolling" class="headerlink" title="Infinite Scrolling"></a>Infinite Scrolling</h2><p>绘制两层背景, 且滚动速度不一致, 这种称 “滚动视察 (Parallax Scrolling)”. 其核心原理是模拟人眼观察远近物体时的视觉差异. 是一种让不同图层以不同速度移动来营造深度感的2D游戏技术.</p>
+<p>比如:</p>
+<ul>
+<li>离玩家 “近” 的物体 (如前景草木) 移动速度快</li>
+<li>离玩家 “远” 的物体 (如远山, 云朵) 移动速度慢</li>
+<li>静止的背景 (如星空) 完全不移动</li>
+</ul>
+<p>滚动视察的实现示例:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><code class="hljs lua">push = <span class="hljs-built_in">require</span>(<span class="hljs-string">&quot;push&quot;</span>)<br><br>WINDOW_WIDTH = <span class="hljs-number">1280</span><br>WINDOW_HEIGHT = <span class="hljs-number">720</span><br><br>VIRTUAL_WIDTH = <span class="hljs-number">512</span><br>VIRTUAL_HEIGHT = <span class="hljs-number">288</span><br><br><span class="hljs-keyword">local</span> background = love.graphics.newImage(<span class="hljs-string">&quot;background.png&quot;</span>)<br><span class="hljs-keyword">local</span> backgroundScroll = <span class="hljs-number">0</span><br><br><span class="hljs-keyword">local</span> ground = love.graphics.newImage(<span class="hljs-string">&quot;ground.png&quot;</span>)<br><span class="hljs-keyword">local</span> groundScroll = <span class="hljs-number">0</span><br><br><span class="hljs-keyword">local</span> BACKGROUND_SCROLL_SPEED = <span class="hljs-number">30</span><br><span class="hljs-keyword">local</span> GROUND_SCROLL_SPEED = <span class="hljs-number">60</span><br><br><span class="hljs-keyword">local</span> BACKGROUND_LOOPING_POINT = <span class="hljs-number">413</span><br><br><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">love.load</span><span class="hljs-params">()</span></span><br>    love.graphics.setDefaultFilter(<span class="hljs-string">&#x27;nearest&#x27;</span>, <span class="hljs-string">&#x27;nearest&#x27;</span>)<br><br>    love.window.setTitle(<span class="hljs-string">&#x27;Fifty Bird&#x27;</span>)<br><br>    push:setupScreen(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT, &#123;<br>        vsync = <span class="hljs-literal">true</span>,<br>        fullscreen = <span class="hljs-literal">false</span>,<br>        resizable = <span class="hljs-literal">false</span><br>    &#125;)<br><span class="hljs-keyword">end</span><br><br><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">love.resize</span><span class="hljs-params">(w, h)</span></span><br>    push:resize(w, h)<br><span class="hljs-keyword">end</span><br><br><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">love.keypressed</span><span class="hljs-params">(key)</span></span><br>    <span class="hljs-keyword">if</span> key == <span class="hljs-string">&quot;escape&quot;</span> <span class="hljs-keyword">then</span><br>        love.event.quit()<br>    <span class="hljs-keyword">end</span><br><span class="hljs-keyword">end</span><br><br><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">love.update</span><span class="hljs-params">(dt)</span></span><br>    backgroundScroll = (backgroundScroll + BACKGROUND_SCROLL_SPEED * dt) % BACKGROUND_LOOPING_POINT<br>    groundScroll = (groundScroll + GROUND_SCROLL_SPEED * dt) % BACKGROUND_LOOPING_POINT<br><span class="hljs-keyword">end</span><br><br><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">love.draw</span><span class="hljs-params">()</span></span><br>    push:apply(<span class="hljs-string">&quot;start&quot;</span>)<br>        love.graphics.draw(background, -backgroundScroll, <span class="hljs-number">0</span>)<br>        love.graphics.draw(ground, -groundScroll, VIRTUAL_HEIGHT - <span class="hljs-number">16</span>)<br>    push:apply(<span class="hljs-string">&quot;end&quot;</span>)<br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>注意 looping point 的设置, 以实现连贯的效果, 最简单的方式, 需要对称图片宽度至少是屏幕的两倍, 当到达对称点时, 又将 <code>x=0</code></li>
+</ul>
 
                 
               </div>
