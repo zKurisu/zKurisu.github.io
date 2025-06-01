@@ -26,8 +26,9 @@
 <meta property="og:image" content="http://example.com/img/cs50-pong-cover.jpg">
 <meta property="og:image" content="http://example.com/img/cs50-flappy-bird-cover.webp">
 <meta property="og:image" content="http://example.com/img/cs50-games-are-illusions-example.png">
+<meta property="og:image" content="http://example.com/img/cs50-gravity-example-figure.png">
 <meta property="article:published_time" content="2025-06-01T07:06:31.000Z">
-<meta property="article:modified_time" content="2025-06-01T12:57:20.101Z">
+<meta property="article:modified_time" content="2025-06-01T13:49:16.929Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/cs50-pong-cover.jpg">
@@ -239,7 +240,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.3k 字
+          3.4k 字
         
       </span>
     
@@ -250,7 +251,7 @@
         
         
         
-          20 分钟
+          29 分钟
         
       </span>
     
@@ -357,7 +358,25 @@
 <ul>
 <li>玩家看到的真实世界, 实际上只有表面的贴图</li>
 </ul>
+<h2 id="重力和反重力"><a href="#重力和反重力" class="headerlink" title="重力和反重力"></a>重力和反重力</h2><p><img src="/../img/cs50-gravity-example-figure.png" srcset="/img/loading.gif" lazyload></p>
+<p>重力的设置如:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">Bird:update</span><span class="hljs-params">(dt)</span></span><br>    <span class="hljs-built_in">self</span>.dy = <span class="hljs-built_in">self</span>.dy + GRAVITY * dt<br><br>    <span class="hljs-built_in">self</span>.y = <span class="hljs-built_in">self</span>.y + <span class="hljs-built_in">self</span>.dy<br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
 
+<p>反重力, 其实只用给一个反方向的速度值就行, 如:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">Bird:update</span><span class="hljs-params">(dt)</span></span><br>    <span class="hljs-built_in">self</span>.dy = <span class="hljs-built_in">self</span>.dy + GRAVITY * dt<br><br>    <span class="hljs-keyword">if</span> love.keyboard.wasPressed(<span class="hljs-string">&#x27;space&#x27;</span>) <span class="hljs-keyword">then</span><br>        <span class="hljs-built_in">self</span>.dy = <span class="hljs-number">-5</span><br>    <span class="hljs-keyword">end</span><br><br>    <span class="hljs-built_in">self</span>.y = <span class="hljs-built_in">self</span>.y + <span class="hljs-built_in">self</span>.dy<br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="处理单键输入"><a href="#处理单键输入" class="headerlink" title="处理单键输入"></a>处理单键输入</h2><p>如果用 love2D 自己的检测按键的接口:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lua">love.keyboard.isDown(key)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>当你按下一个键时, 容易触发多次, 毕竟你按下然后松开按键时, 已经过了好几帧了, 比如:<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-keyword">local</span> count = <span class="hljs-number">0</span><br><span class="hljs-keyword">if</span> love.keyboard.isDown(<span class="hljs-string">&#x27;space&#x27;</span>) <span class="hljs-keyword">then</span><br>    count = count + <span class="hljs-number">1</span><br><span class="hljs-keyword">end</span><br><span class="hljs-built_in">print</span>(count)<br></code></pre></td></tr></table></figure></li>
+<li><code>count</code> 不是输出 1, 而是大于 1 的数 (执行了多次)</li>
+</ul>
+<p>自定义一个单键输入处理:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">love.load</span><span class="hljs-params">()</span></span><br>    ...<br>    love.keyboard.keysPressed = &#123;&#125;<br><span class="hljs-keyword">end</span><br><br><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">love.keypressed</span><span class="hljs-params">(key)</span></span><br>    love.keyboard.keysPressed[key] = <span class="hljs-literal">true</span><br>    ...<br><span class="hljs-keyword">end</span><br><br><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">love.keyboard.wasPressed</span><span class="hljs-params">(key)</span></span><br>    <span class="hljs-keyword">if</span> love.keyboard.keysPressed[key] <span class="hljs-keyword">then</span><br>        <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span><br>    <span class="hljs-keyword">else</span><br>        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span><br>    <span class="hljs-keyword">end</span><br><span class="hljs-keyword">end</span><br><br><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">love.update</span><span class="hljs-params">(dt)</span></span><br>    <span class="hljs-keyword">local</span> count = <span class="hljs-number">0</span><br>    <span class="hljs-keyword">if</span> love.keyboard.wasPressed(<span class="hljs-string">&#x27;space&#x27;</span>) <span class="hljs-keyword">then</span><br>        count = count + <span class="hljs-number">1</span><br>    <span class="hljs-keyword">end</span><br>    <span class="hljs-built_in">print</span>(count)<br><br>    love.keyboard.keysPressed = &#123;&#125;<br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>因为你按下一个键时, 不管你按多长时间, <code>love.keypressed(key)</code> 都只会触发一次, 也就是说, 只有按下的那一帧, 对应的键设置为 <code>true</code>, 而在没一帧的末尾, 都会清空 <code>love.keyboard.keysPressed</code> 表, 因此下一帧就是 <code>false</code>, 因此只会触发一次</li>
+</ul>
+<h2 id="Procedural-Generation"><a href="#Procedural-Generation" class="headerlink" title="Procedural Generation"></a>Procedural Generation</h2>
                 
               </div>
             
