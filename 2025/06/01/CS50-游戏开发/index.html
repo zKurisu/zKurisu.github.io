@@ -38,7 +38,7 @@
 <meta property="og:image" content="http://example.com/img/cs50-quads-example.png">
 <meta property="og:image" content="http://example.com/img/cs50-match-3-game-example.png">
 <meta property="article:published_time" content="2025-06-01T07:06:31.000Z">
-<meta property="article:modified_time" content="2025-06-02T12:44:57.599Z">
+<meta property="article:modified_time" content="2025-06-02T13:43:14.880Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/cs50-pong-cover.jpg">
@@ -250,7 +250,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          13k 字
+          15k 字
         
       </span>
     
@@ -261,7 +261,7 @@
         
         
         
-          112 分钟
+          124 分钟
         
       </span>
     
@@ -511,8 +511,37 @@
 </ul>
 <p>另一个核心函数是 <code>Timer.after(interval, callback)</code>, 在等待一段时间后运行一次函数.</p>
 <h2 id="Tweening"><a href="#Tweening" class="headerlink" title="Tweening"></a>Tweening</h2><p><code>Tween</code> (从…之间), 补间动画, 是一种平滑过渡的技术, 通过在起始值和目标值之间自动插入中间帧, 让属性 (如位置, 透明度, 缩放等) 随时间变化.</p>
+<p>如:</p>
 <figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">love.update</span><span class="hljs-params">(dt)</span></span><br>    <span class="hljs-keyword">if</span> timer &lt; MOVE_DURATION <span class="hljs-keyword">then</span><br>        timer = timer + dt<br>        flappyX = <span class="hljs-built_in">math</span>.<span class="hljs-built_in">min</span>(endX, endX * (timer / MOVE_DURATION))<br>    <span class="hljs-keyword">end</span><br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>endX</code> 相当于目标位置</li>
+<li><code>timer / MOVE_DURATION</code> 计算动画的进度 <code>t</code>, 范围 <code>[0, 1]</code></li>
+<li><code>endX * t</code> 实现从 0 到 <code>endX</code> 的线性插帧 (Lerp)</li>
+<li><code>math.min</code> 防止浮点数误差导致的越界</li>
+</ul>
+<p>也可以使用 <code>knife.timer</code> 库 (或者 <code>flux</code> 库):</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lua">Timer.tween(duration, definition)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>duration</code> 是动画的持续时间</li>
+<li><code>definition</code> 中定义插值属性的目标值</li>
+</ul>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs lua">Timer.tween(<span class="hljs-number">2</span>, &#123;<br>    [bird] = &#123; x = endX, opacity = <span class="hljs-number">255</span> &#125;<br>&#125;)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>bird</code> 是一个对象</li>
+<li><code>x</code> 和 <code>opacity</code> 都是 <code>bird</code> 对象的属性</li>
+</ul>
+<p>比如一个转场, 用白色的矩形覆盖整个画面, 然后用 <code>tween</code> 让其 opacity 从 <code>255</code> 变到 <code>0</code>.</p>
+<p>也可以在 Tween 结束时执行一个动作:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs lua">Timer.tween(<span class="hljs-number">2</span>, &#123;<br>    [bird] = &#123; x = endX, opacity = <span class="hljs-number">255</span> &#125;<br>&#125;):finish(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span><br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Finish&quot;</span>)<br><span class="hljs-keyword">end</span>)<br></code></pre></td></tr></table></figure>
 
+<h2 id="Chainning"><a href="#Chainning" class="headerlink" title="Chainning"></a>Chainning</h2><p>Chainning (链式编程), 是一种通过连续调用方法构建复杂逻辑的编码风格, 在游戏开发的 Tween 动画和场景管理中广泛应用. 其核心思想是让每个方法返回对象自身, 从而实现流畅的链式调用.</p>
+<p>如:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs lua">obj:move(<span class="hljs-number">100</span>,<span class="hljs-number">100</span>):rotate(<span class="hljs-number">45</span>):scale(<span class="hljs-number">2</span>)<br>tween:to(x,y,<span class="hljs-number">1</span>):wait(<span class="hljs-number">0.5</span>):<span class="hljs-keyword">then</span>(playSound)<br></code></pre></td></tr></table></figure>
+
+<p>若用 <code>knife.timer</code> 库, 可以利用 <code>finish</code> 来实现:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><code class="hljs lua">Timer.tween(<span class="hljs-number">1</span>, &#123;<br>    [<span class="hljs-built_in">self</span>] = &#123;transitionAlpha = <span class="hljs-number">0</span>&#125;<br>&#125;)<br><br><span class="hljs-comment">-- once that&#x27;s finished, start a transition of our text label to</span><br><span class="hljs-comment">-- the center of the screen over 0.25 seconds</span><br>:finish(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span><br>    Timer.tween(<span class="hljs-number">0.25</span>, &#123;<br>        [<span class="hljs-built_in">self</span>] = &#123;levelLabelY = VIRTUAL_HEIGHT / <span class="hljs-number">2</span> - <span class="hljs-number">8</span>&#125;<br>    &#125;)<br>    <br>    <span class="hljs-comment">-- after that, pause for one second with Timer.after</span><br>    :finish(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span><br>        Timer.after(<span class="hljs-number">1</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span><br>            <br>            <span class="hljs-comment">-- then, animate the label going down past the bottom edge</span><br>            Timer.tween(<span class="hljs-number">0.25</span>, &#123;<br>                [<span class="hljs-built_in">self</span>] = &#123;levelLabelY = VIRTUAL_HEIGHT + <span class="hljs-number">30</span>&#125;<br>            &#125;)<br>            <br>            <span class="hljs-comment">-- once that&#x27;s complete, we&#x27;re ready to play!</span><br>            :finish(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span><br>                gStateMachine:change(<span class="hljs-string">&#x27;play&#x27;</span>, &#123;<br>                    level = <span class="hljs-built_in">self</span>.level,<br>                    board = <span class="hljs-built_in">self</span>.board<br>                &#125;)<br>            <span class="hljs-keyword">end</span>)<br>        <span class="hljs-keyword">end</span>)<br>    <span class="hljs-keyword">end</span>)<br><span class="hljs-keyword">end</span>)<br></code></pre></td></tr></table></figure>
+
+<p>用 <code>knife.chain</code> 库会让其更简洁.</p>
 
                 
               </div>
