@@ -44,8 +44,9 @@
 <meta property="og:image" content="http://example.com/img/cs50-stenciling-example.png">
 <meta property="og:image" content="http://example.com/img/cs50-angry-bird-cover-example.png">
 <meta property="og:image" content="http://example.com/img/cs50-pokemon-cover-example.png">
+<meta property="og:image" content="http://example.com/img/cs50-statestack_flow.png">
 <meta property="article:published_time" content="2025-06-01T07:06:31.000Z">
-<meta property="article:modified_time" content="2025-06-03T09:24:48.750Z">
+<meta property="article:modified_time" content="2025-06-03T12:29:47.582Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/cs50-pong-cover.jpg">
@@ -257,7 +258,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          19k 字
+          20k 字
         
       </span>
     
@@ -268,7 +269,7 @@
         
         
         
-          159 分钟
+          166 分钟
         
       </span>
     
@@ -675,15 +676,24 @@
 
 <h2 id="StateStacks"><a href="#StateStacks" class="headerlink" title="StateStacks"></a>StateStacks</h2><p>State Stack 是一种管理游戏运行时状态的设计模式, 通过栈结构 (先进后出) 组织多个游戏状态, 其核心在于:</p>
 <ul>
-<li>能够允许同一时间下激活多个 state </li>
-<li>能够通过出栈快速返回上一状态 (如关闭菜单后继续游戏).</li>
-<li>每次只处理顶层 state 的 input, 比如按键, 鼠标等.</li>
+<li>能够允许同一时间下激活多个 state (同时渲染)</li>
+<li>能够通过出栈快速返回上一状态 (如关闭菜单后继续游戏)</li>
+<li>但每次只处理顶层 state 的 input, 比如按键, 鼠标等, 即每次只更新顶层 state 的内容</li>
 </ul>
+<p><img src="/../img/cs50-statestack_flow.png" srcset="/img/loading.gif" lazyload></p>
 <p>State Stack 和 State Machine 之间的区别在于:</p>
 <ul>
 <li>State Stack 能够层级管理, 适合处理全局状态的叠加</li>
 <li>State machine 适合局部行为的流转</li>
 </ul>
+<p>一个简单的 State Stack 实现:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><code class="hljs lua">StateStack = Class&#123;&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">StateStack:init</span><span class="hljs-params">()</span></span><br>    <span class="hljs-built_in">self</span>.states = &#123;&#125;<br><span class="hljs-keyword">end</span><br><br><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">StateStack:update</span><span class="hljs-params">(dt)</span></span><br>    <span class="hljs-built_in">self</span>.states[#<span class="hljs-built_in">self</span>.states]:update(dt)<br><span class="hljs-keyword">end</span><br><br><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">StateStack:processAI</span><span class="hljs-params">(params, dt)</span></span><br>    <span class="hljs-built_in">self</span>.states[#<span class="hljs-built_in">self</span>.states]:processAI(params, dt)<br><span class="hljs-keyword">end</span><br><br><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">StateStack:render</span><span class="hljs-params">()</span></span><br>    <span class="hljs-keyword">for</span> i, state <span class="hljs-keyword">in</span> <span class="hljs-built_in">ipairs</span>(<span class="hljs-built_in">self</span>.states) <span class="hljs-keyword">do</span><br>        state:render()<br>    <span class="hljs-keyword">end</span><br><span class="hljs-keyword">end</span><br><br><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">StateStack:clear</span><span class="hljs-params">()</span></span><br>    <span class="hljs-built_in">self</span>.states = &#123;&#125;<br><span class="hljs-keyword">end</span><br><br><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">StateStack:push</span><span class="hljs-params">(state)</span></span><br>    <span class="hljs-built_in">table</span>.<span class="hljs-built_in">insert</span>(<span class="hljs-built_in">self</span>.states, state)<br>    state:enter()<br><span class="hljs-keyword">end</span><br><br><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">StateStack:pop</span><span class="hljs-params">()</span></span><br>    <span class="hljs-built_in">self</span>.states[#<span class="hljs-built_in">self</span>.states]:<span class="hljs-built_in">exit</span>()<br>    <span class="hljs-built_in">table</span>.<span class="hljs-built_in">remove</span>(<span class="hljs-built_in">self</span>.states)<br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+<p>在应用 StateStack 机制下, 可以定义更多小的组件 state 来实现更灵活的渲染. 比如一个 <code>tween</code> 转场.</p>
+<p>当进入一个 state 时, 就 <code>push</code>, 离开就 <code>pop</code>.</p>
+<p>可以在 <code>StartState</code> 中, 放置一些整个游戏都需要的环境信息.</p>
+<h2 id="Coroutine"><a href="#Coroutine" class="headerlink" title="Coroutine"></a>Coroutine</h2><p>Coroutine, 协程, 可以让程序运行时暂停, 然后后续恢复执行. 比如对话框系统中, 你不知道用户什么时候按下 <code>enter</code> 键继续, 此时需要暂停程序. </p>
+<p>这里实现对话框等系统都使用 <code>knife.timer</code>.</p>
 <h2 id="Turn-Based-Systems"><a href="#Turn-Based-Systems" class="headerlink" title="Turn-Based Systems"></a>Turn-Based Systems</h2><p>Turn-Based Systems, 指回合制系统.</p>
 
                 
