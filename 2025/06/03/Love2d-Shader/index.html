@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="Love2d shader docShader toy 介绍Shade (阴影), 源自古英语 sceadu, 与光线的遮挡, 明暗变化相关.  -er 后缀, 表示执行动作的工具或程序. Shader 因此可直接理解为生成阴影&#x2F;明暗的工具, 或处理光照的程序. Love2d 提供 love.graphics.newShader 来创建一个 Shader. 12345678love.gr">
+    <meta name="description" content="Love2d shader docShader toyLove shader variable 介绍Shade (阴影), 源自古英语 sceadu, 与光线的遮挡, 明暗变化相关.  -er 后缀, 表示执行动作的工具或程序. Shader 因此可直接理解为生成阴影&#x2F;明暗的工具, 或处理光照的程序, 添加这些效果后, 还需计算出最终颜色, 因此称 “着色器”. Shader 能够用于硬">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Love2d-Shader">
 <meta property="og:url" content="http://example.com/2025/06/03/Love2d-Shader/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="Love2d shader docShader toy 介绍Shade (阴影), 源自古英语 sceadu, 与光线的遮挡, 明暗变化相关.  -er 后缀, 表示执行动作的工具或程序. Shader 因此可直接理解为生成阴影&#x2F;明暗的工具, 或处理光照的程序. Love2d 提供 love.graphics.newShader 来创建一个 Shader. 12345678love.gr">
+<meta property="og:description" content="Love2d shader docShader toyLove shader variable 介绍Shade (阴影), 源自古英语 sceadu, 与光线的遮挡, 明暗变化相关.  -er 后缀, 表示执行动作的工具或程序. Shader 因此可直接理解为生成阴影&#x2F;明暗的工具, 或处理光照的程序, 添加这些效果后, 还需计算出最终颜色, 因此称 “着色器”. Shader 能够用于硬">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-06-03T14:31:41.000Z">
-<meta property="article:modified_time" content="2025-06-04T03:52:38.646Z">
+<meta property="article:modified_time" content="2025-06-04T04:47:54.544Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          374 字
+          3.7k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          4 分钟
+          31 分钟
         
       </span>
     
@@ -289,12 +289,150 @@
             
               <div class="markdown-body">
                 
-                <p><a target="_blank" rel="noopener" href="https://love2d.org/wiki/love.graphics.newShader">Love2d shader doc</a><br><a target="_blank" rel="noopener" href="https://www.shadertoy.com/">Shader toy</a></p>
+                <p><a target="_blank" rel="noopener" href="https://love2d.org/wiki/love.graphics.newShader">Love2d shader doc</a><br><a target="_blank" rel="noopener" href="https://www.shadertoy.com/">Shader toy</a><br><a target="_blank" rel="noopener" href="https://love2d.org/wiki/Shader_Variables">Love shader variable</a></p>
 <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p><code>Shade</code> (阴影), 源自古英语 <code>sceadu</code>, 与光线的遮挡, 明暗变化相关. </p>
 <p><code>-er</code> 后缀, 表示执行动作的工具或程序.</p>
-<p><code>Shader</code> 因此可直接理解为生成阴影&#x2F;明暗的工具, 或处理光照的程序.</p>
-<p>Love2d 提供 <code>love.graphics.newShader</code> 来创建一个 Shader.</p>
-<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs lua">love.graphics.setShader(<span class="hljs-built_in">self</span>.whiteShader)<br><span class="hljs-built_in">self</span>.whiteShader:send(<span class="hljs-string">&#x27;WhiteFactor&#x27;</span>, <span class="hljs-built_in">self</span>.blinking <span class="hljs-keyword">and</span> <span class="hljs-number">1</span> <span class="hljs-keyword">or</span> <span class="hljs-number">0</span>)<br><br>love.graphics.draw(gTextures[<span class="hljs-built_in">self</span>.texture], <span class="hljs-built_in">self</span>.x, <span class="hljs-built_in">self</span>.y)<br><br><span class="hljs-comment">-- reset shader</span><br>love.graphics.setShader()<br><br></code></pre></td></tr></table></figure>
+<p><code>Shader</code> 因此可直接理解为生成阴影&#x2F;明暗的工具, 或处理光照的程序, 添加这些效果后, 还需计算出最终颜色, 因此称 “着色器”.</p>
+<p>Shader 能够用于硬件加速 Vertex 和 Poxel 的特效:</p>
+<ul>
+<li>Vertex shader 会对每个 vertex 执行一次, 例如一个四边形有 4 个 vertexes, 一个复杂的 3D 模型可能有数千个. 负责 vertex 的位置变换, 法线计算等</li>
+<li>Pixel shader 对物体覆盖的每个屏幕 pixel 执行一次, 决定该像素的最终颜色, 如光照, 特效处理</li>
+</ul>
+<p>Vertex shader 先运行, 处理完所有 vertexes 之后, 光栅化生成像素, 再由 pixel shader 处理.</p>
+<p>Shader 是运行在 GPU 上的程序, 因为其并行架构 (数千个核心) 使其能高效处理顶点和像素的批量计算.</p>
+<h1 id="Shader-Language-介绍"><a href="#Shader-Language-介绍" class="headerlink" title="Shader Language 介绍"></a>Shader Language 介绍</h1><p>Shader 并不以 Lua 编写, 而是一个特殊的语言 GLSL (OpenGL Shading Language), 其语法与 C 类似.</p>
+<p>Love 对 GLSL 做了一些调整和别名以简化使用, 如:</p>
+<table>
+<thead>
+<tr>
+<th>GLSL 术语</th>
+<th>LÖVE Shader Language 对应术语</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>sampler2D</td>
+<td>Image</td>
+<td>表示 2D 纹理</td>
+</tr>
+<tr>
+<td>sampler2DArray</td>
+<td>ArrayImage</td>
+<td>表示 2D 纹理数组</td>
+</tr>
+<tr>
+<td>samplerCube</td>
+<td>CubeImage</td>
+<td>表示立方体贴图（Cubemap）</td>
+</tr>
+<tr>
+<td>sampler3D</td>
+<td>VolumeImage</td>
+<td>表示 3D 纹理</td>
+</tr>
+<tr>
+<td>texture2D(tex, uv) (GLSL 1)</td>
+<td>Texel(tex, uv)</td>
+<td>兼容所有 GLSL 版本的纹理采样函数</td>
+</tr>
+<tr>
+<td>texture(tex, uv) (GLSL 3)</td>
+<td>Texel(tex, uv)</td>
+<td>同上，LÖVE 统一使用 Texel 简化调用</td>
+</tr>
+<tr>
+<td>float</td>
+<td>number (已弃用)</td>
+<td>早期版本别名，建议直接使用 float</td>
+</tr>
+<tr>
+<td>uniform</td>
+<td>extern (已弃用)</td>
+<td>早期版本别名，建议直接使用 uniform</td>
+</tr>
+</tbody></table>
+<p>可以在 shader 文件顶添加下面语句指定 GLSL 版本:</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs arduino"><span class="hljs-meta">#<span class="hljs-keyword">pragma</span> language glsl3</span><br></code></pre></td></tr></table></figure>
+
+<p>对应关系如下:</p>
+<table>
+<thead>
+<tr>
+<th>LÖVE shader language</th>
+<th>desktop GLSL version</th>
+<th>mobile GLSL version</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>glsl1 (default)</td>
+<td>GLSL 1.20</td>
+<td>GLSL ES 1.00</td>
+</tr>
+<tr>
+<td>glsl3</td>
+<td>GLSL 3.30</td>
+<td>GLSL ES 3.00</td>
+</tr>
+</tbody></table>
+<p>需要注意:</p>
+<ol>
+<li>Vertex shader code 至少要包含一个函数 <code>position</code> 用于处理顶点坐标变换<figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs glsl"><span class="hljs-type">vec4</span> position( <span class="hljs-type">mat4</span> transform_projection, <span class="hljs-type">vec4</span> vertex_position )<br></code></pre></td></tr></table></figure></li>
+</ol>
+<ul>
+<li><code>mat4 transform_projection</code> 受 <code>love.graphics.translate</code> 影响, 是当前的变换矩阵 (transformation matrix)</li>
+<li><code>vec4 vertex_position</code> 是变换前的顶点坐标</li>
+<li>返回值为 <code>vec4 output_pos</code>, 指 vertex 的最终坐标</li>
+</ul>
+<ol start="2">
+<li>Pixel shader code 至少要包含一个函数 <code>effect</code> 计算每个像素的颜色<figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs glsl"><span class="hljs-type">vec4</span> effect( <span class="hljs-type">vec4</span> color, Image tex, <span class="hljs-type">vec2</span> texture_coords, <span class="hljs-type">vec2</span> screen_coords )<br></code></pre></td></tr></table></figure></li>
+</ol>
+<ul>
+<li><code>vec4 color</code> 受 <code>love.graphics.setColor</code>, 是原本要绘制的颜色</li>
+<li><code>Image tex</code> 指当前要绘制的 texture 或 canvas</li>
+<li><code>vec2 texture_coords</code> 是 textrue 的局部坐标系, 用于标记内部像素点的位置, 范围一般为 normalized 为 <code>(0,0)</code> 到 <code>(1,1)</code>, 左上角为 <code>(0,0)</code></li>
+<li><code>vec2 screen_coords</code> 是正常的屏幕坐标系</li>
+<li>返回值为 <code>vec4 output_color</code>, 表示最终要绘制的像素颜色</li>
+<li><code>vec4</code> 是 4 元数组, <code>vec2</code> 是 2 元数组</li>
+</ul>
+<h2 id="Vertex-Shader"><a href="#Vertex-Shader" class="headerlink" title="Vertex Shader"></a>Vertex Shader</h2><p>Love 默认的 vertex shader 为:</p>
+<figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs glsl"><span class="hljs-type">vec4</span> position(<span class="hljs-type">mat4</span> transform_projection, <span class="hljs-type">vec4</span> vertex_position)<br>&#123;<br>    <span class="hljs-comment">// The order of operations matters when doing matrix multiplication.</span><br>    <span class="hljs-keyword">return</span> transform_projection * vertex_position;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+<h2 id="Pixel-Shader"><a href="#Pixel-Shader" class="headerlink" title="Pixel Shader"></a>Pixel Shader</h2><p>Love 默认的 pixel shader 为:</p>
+<figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs glsl"><span class="hljs-type">vec4</span> effect(<span class="hljs-type">vec4</span> color, Image tex, <span class="hljs-type">vec2</span> texture_coords, <span class="hljs-type">vec2</span> screen_coords)<br>&#123;<br>    <span class="hljs-type">vec4</span> texturecolor = Texel(tex, texture_coords);<br>    <span class="hljs-keyword">return</span> texturecolor * color;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>或者:</p>
+<figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs glsl"><span class="hljs-type">vec4</span> effect(<span class="hljs-type">vec4</span> color, Image tex, <span class="hljs-type">vec2</span> texture_coords, <span class="hljs-type">vec2</span> screen_coords)<br>&#123;<br>    <span class="hljs-type">vec4</span> texturecolor = VideoTexel(texture_coords);<br>    <span class="hljs-keyword">return</span> texturecolor * color;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>如果要同时渲染多个 canvases, 则需要用 <code>void effect(no arguments)</code> 的定义:</p>
+<figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs glsl"><span class="hljs-type">void</span> effect()<br>&#123;<br>    <span class="hljs-comment">// love_Canvases is a writable array of vec4 colors. Each index corresponds to a Canvas.</span><br>    <span class="hljs-comment">// IMPORTANT: If you don&#x27;t assign a value to all active canvases, bad things will happen.</span><br>    love_Canvases[<span class="hljs-number">0</span>] = color;<br>    love_Canvases[<span class="hljs-number">1</span>] = color + <span class="hljs-type">vec4</span>(<span class="hljs-number">0.5</span>);<br>    <span class="hljs-comment">// etc.</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+
+<h1 id="创建-shader"><a href="#创建-shader" class="headerlink" title="创建 shader"></a>创建 shader</h1><p>Love2d 提供的创建 Shader 的接口为:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lua">shader = love.graphics.newShader( code )<br></code></pre></td></tr></table></figure>
+<ul>
+<li>code 是 pixel shader 或 vertex shader 代码, 或者一个文件名指向 shader 代码</li>
+<li>shader 是 <code>Shader</code> 类的对象</li>
+</ul>
+<p>另一个语法是:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lua">shader = love.graphics.newShader( pixelcode, vertexcode )<br></code></pre></td></tr></table></figure>
+<ul>
+<li>分别指定 pixel shader 和 vertex shader</li>
+</ul>
+<p>如果要在一个文件中包含 vertex shader 和 pixel shader, 则需要用:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">ifdef</span> VERTEX ... #<span class="hljs-keyword">endif</span></span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>来包裹 vertex shader code 部分</li>
+</ul>
+<p>用:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">ifdef</span> PIXEL ... #<span class="hljs-keyword">endif</span></span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>来包裹 pixel shader code 部分</li>
+</ul>
+<h1 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h1><h2 id="默认-shader"><a href="#默认-shader" class="headerlink" title="默认 shader"></a>默认 shader</h2><figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-keyword">local</span> pixelcode = <span class="hljs-string">[[</span><br><span class="hljs-string">    vec4 effect( vec4 color, Image tex, vec2 texture_coords, vec2 screen_coords )</span><br><span class="hljs-string">    &#123;</span><br><span class="hljs-string">        vec4 texcolor = Texel(tex, texture_coords);</span><br><span class="hljs-string">        return texcolor * color;</span><br><span class="hljs-string">    &#125;</span><br><span class="hljs-string">]]</span><br><br><span class="hljs-keyword">local</span> vertexcode = <span class="hljs-string">[[</span><br><span class="hljs-string">    vec4 position( mat4 transform_projection, vec4 vertex_position )</span><br><span class="hljs-string">    &#123;</span><br><span class="hljs-string">        return transform_projection * vertex_position;</span><br><span class="hljs-string">    &#125;</span><br><span class="hljs-string">]]</span><br><br>shader = love.graphics.newShader(pixelcode, vertexcode)<br><br><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">love.draw</span><span class="hljs-params">()</span></span><br>    love.graphics.setShader(shader)<br>    <span class="hljs-comment">-- draw things</span><br>    love.graphics.setShader()<br>    <span class="hljs-comment">-- draw more things</span><br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="用-varying-关键字存储变换前的顶点坐标"><a href="#用-varying-关键字存储变换前的顶点坐标" class="headerlink" title="用 varying 关键字存储变换前的顶点坐标"></a>用 varying 关键字存储变换前的顶点坐标</h2><figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs glsl"><span class="hljs-keyword">varying</span> <span class="hljs-type">vec4</span> vpos;<br><br><span class="hljs-meta">#ifdef VERTEX</span><br><span class="hljs-type">vec4</span> position( <span class="hljs-type">mat4</span> transform_projection, <span class="hljs-type">vec4</span> vertex_position )<br>&#123;<br>    vpos = vertex_position;<br>    <span class="hljs-keyword">return</span> transform_projection * vertex_position;<br>&#125;<br><span class="hljs-meta">#endif</span><br><br><span class="hljs-meta">#ifdef PIXEL</span><br><span class="hljs-type">vec4</span> effect( <span class="hljs-type">vec4</span> color, Image tex, <span class="hljs-type">vec2</span> texture_coords, <span class="hljs-type">vec2</span> screen_coords )<br>&#123;<br>    texture_coords += <span class="hljs-type">vec2</span>(<span class="hljs-built_in">cos</span>(vpos.x), <span class="hljs-built_in">sin</span>(vpos.y));<br>    <span class="hljs-type">vec4</span> texcolor = Texel(tex, texture_coords);<br>    <span class="hljs-keyword">return</span> texcolor * color;<br>&#125;<br><span class="hljs-meta">#endif</span><br></code></pre></td></tr></table></figure>
 
 
                 
