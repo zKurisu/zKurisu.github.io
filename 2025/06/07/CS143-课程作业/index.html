@@ -23,10 +23,12 @@
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="CS143 网站edx 注册页面edx CS143 课程页面 获取虚拟机镜像需要开梯子, 浏览器访问: https:&#x2F;&#x2F;drive.usercontent.google.com&#x2F;download?id&#x3D;193-Tmx-DSR3dPhTstEWwWGdhji_HGqE6&amp;export&#x3D;download. 123456$ unzip compilers-vm.zip$ cd Comp">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/cs143-assignment-check-battery-state-error.jpeg">
 <meta property="article:published_time" content="2025-06-07T06:57:49.000Z">
-<meta property="article:modified_time" content="2025-06-07T14:02:33.011Z">
+<meta property="article:modified_time" content="2025-06-08T13:57:52.639Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/cs143-assignment-check-battery-state-error.jpeg">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -235,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.2k 字
+          7.9k 字
         
       </span>
     
@@ -246,7 +248,7 @@
         
         
         
-          10 分钟
+          67 分钟
         
       </span>
     
@@ -293,12 +295,27 @@
 <h1 id="获取虚拟机镜像"><a href="#获取虚拟机镜像" class="headerlink" title="获取虚拟机镜像"></a>获取虚拟机镜像</h1><p>需要开梯子, 浏览器访问: <a target="_blank" rel="noopener" href="https://drive.usercontent.google.com/download?id=193-Tmx-DSR3dPhTstEWwWGdhji_HGqE6&export=download">https://drive.usercontent.google.com/download?id=193-Tmx-DSR3dPhTstEWwWGdhji_HGqE6&amp;export&#x3D;download</a>.</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ unzip compilers-vm.zip<br>$ <span class="hljs-built_in">cd</span> Compiler<br>$ tree<br>.<br>├── Compilers.vbox<br>└── Compilers.vdi<br></code></pre></td></tr></table></figure>
 
-<p>由于我这里用 libvirt KVM, 因此需要转换 <code>.vbox</code> 配置文件到 libvirt XML 配置:</p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sh">yay -S virt-v2v<br>virt-v2v -i vbox Compilers.vbox -o <span class="hljs-built_in">local</span> -os /var/lib/libvirt/images<br><br>sudo virsh define /var/lib/libvirt/images/vm-name.xml<br>sudo virsh start vm-name<br>sudo virsh list<br></code></pre></td></tr></table></figure>
+<p>由于我这里用 libvirt KVM, 因此需要转换 <code>.vdi</code> 格式硬盘到 <code>qcow2</code>:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">qemu-img convert -f vdi -O qcow2 /path/to/your/Compilers.vdi /var/lib/libvirt/images/Compilers.qcow2<br></code></pre></td></tr></table></figure>
 
-<h1 id="Assignment1"><a href="#Assignment1" class="headerlink" title="Assignment1"></a>Assignment1</h1><p>获取 Assignment1 PDF 文档:</p>
+<p>然后新建虚拟机, 倒入这个磁盘即可:</p>
+<ul>
+<li>用户: <code>compilers</code></li>
+<li>密码: <code>cool</code></li>
+</ul>
+<p>注意可能会遇到:<br><img src="/../img/cs143-assignment-check-battery-state-error.jpeg" srcset="/img/loading.gif" lazyload></p>
+<p>其原因在于 <code>/opt/VBoxGuestAdditions-4.1.12/</code> 目录下运行的 <code>routines.sh</code> 脚本, 需要将这整个工具卸载:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo -i<br>/opt/VBoxGuestAdditions-4.1.12/uninstall.sh<br></code></pre></td></tr></table></figure>
+
+<p>之后就能正常进入图形界面.</p>
+<p>注意该虚拟机没有网络模块. 也检测不到添加的网卡.</p>
+<h2 id="测试-coolc"><a href="#测试-coolc" class="headerlink" title="测试 coolc"></a>测试 coolc</h2><p>在 <code>/usr/class/cs143/examples/</code> 目录下有很多 cool 示例程序:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">mkdir</span> examples<br><span class="hljs-built_in">cd</span> examples<br><span class="hljs-built_in">cp</span> /usr/class/cs143/examples/hello_world.cl .<br>coolc hello_world.cl<br>spim hello_world.s<br></code></pre></td></tr></table></figure>
+
+<h1 id="Assignment-1-Lexical-analyzer"><a href="#Assignment-1-Lexical-analyzer" class="headerlink" title="Assignment 1 Lexical analyzer"></a>Assignment 1 Lexical analyzer</h1><p>获取 Assignment1 PDF 文档:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">wget https://courses.edx.org/asset-v1:StanfordOnline+SOE.YCSCS1+3T2020+<span class="hljs-built_in">type</span>@asset+block/PA1.pdf<br></code></pre></td></tr></table></figure>
 
+<p>该 assignment 的任务是利用 flex 编写一个叫 <code>scanner</code> 的 lexical analyzer.</p>
 <h1 id="A-Tour-of-the-Cool-Support-Code"><a href="#A-Tour-of-the-Cool-Support-Code" class="headerlink" title="A Tour of the Cool Support Code"></a>A Tour of the Cool Support Code</h1><p>获取该文档:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">wget https://web.stanford.edu/class/cs143/materials/cool-tour.pdf<br></code></pre></td></tr></table></figure>
 
@@ -314,10 +331,233 @@
 <li>the runtime system</li>
 </ul>
 <p>Cool system 用 C++ 编写, 主要用到了 classes, single inheritance, virtual functions, overloading, and templates 这些主题.</p>
+<h3 id="String-table"><a href="#String-table" class="headerlink" title="String table"></a>String table</h3><p>所有编译器都需要管理大量 strings, 包括 program identifiers, numerical constants, string constants 等. 但很大部分这些字符串都是重复的 (比如一个 identifier 在多处调用), 没有必要为所有这些字符串都创建一个副本. 此时就出现了一个新的数据结构 string table.</p>
+<p>String table 是一个查找表, 维护字符串的单个副本.</p>
+<p>在 Cool compiler 项目提供的工具代码 <code>stringtab.h</code> 中, 提供了 Cool string table class, 能够向 string table 插入和查询内容.</p>
+<p>很多 production compilers 用 hashed data structures 来实现 string tables, 但这里用 lists 来实现 (见 <code>stringtab_functions.h</code>).</p>
+<p>Cool string tables 由 <code>Entry</code> 组成, 每个 Entry 保存:</p>
+<ul>
+<li>a string</li>
+<li>the length of the string</li>
+<li>an integer index unique to the string</li>
+</ul>
+<p>在 Cool compiler 中, 有三个独立的 string tables:</p>
+<ul>
+<li>stringtable, 保存 string constants</li>
+<li>inttable, 保存 integer constants</li>
+<li>idtable, 保存 identifiers</li>
+</ul>
+<p>Code generator 可以根据这几个 table 对这些常量做区分, 让 string constant 和 integer constant 生成不同的代码.</p>
+<p>注意这三个 table 中的 <code>Entry</code> 类型不同:</p>
+<ul>
+<li><code>StrEntry</code></li>
+<li><code>IntEntry</code></li>
+<li><code>IdEntry</code></li>
+</ul>
+<p>但都继承自 <code>Entry</code>.</p>
+<p>有三个方法可用于向 table 中添加元素, 返回值都为 <code>Entry</code>:</p>
+<ul>
+<li><code>add_string(char *s, int m)</code>, 添加字符串 <code>s</code>, 长度最大为 <code>m</code></li>
+<li><code>add_string(char *s)</code>, 直接添加字符串 <code>s</code></li>
+<li><code>add_int(int i)</code>, 将 integer <code>i</code> 转为 string 然后添加在 table 中</li>
+</ul>
+<p><code>get_string</code> 方法用于从 <code>entry</code> 中提取出 <code>string</code>. 在使用这些方法前, 先阅读 <code>stringtab.cc</code> 文件.</p>
+<h3 id="Symbol-Tables"><a href="#Symbol-Tables" class="headerlink" title="Symbol Tables"></a>Symbol Tables</h3><p>Symbol table (符号表) 是一个用于管理 scope 的数据结构. 本质上也是一个 lookup table, 关键点在于其 <code>key</code> 存储 symbol name, 而 <code>value</code> 存储与该符号相关的信息.</p>
+<p>如果同一名称在不同作用域中定义 (如全局变量 x 和局部变量 x), 符号表可以正确关联当前作用域的名称.</p>
+<p>如:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c">symbol_table = &#123;<br>    <span class="hljs-string">&quot;global_scope&quot;</span>: &#123;<br>        <span class="hljs-string">&quot;x&quot;</span>: &#123;<span class="hljs-string">&quot;type&quot;</span>: <span class="hljs-string">&quot;int&quot;</span>, <span class="hljs-string">&quot;value&quot;</span>: <span class="hljs-number">10</span>&#125;,<br>        <span class="hljs-string">&quot;func1&quot;</span>: &#123;<span class="hljs-string">&quot;type&quot;</span>: <span class="hljs-string">&quot;function&quot;</span>, <span class="hljs-string">&quot;return_type&quot;</span>: <span class="hljs-string">&quot;void&quot;</span>&#125;,<br>    &#125;,<br>    <span class="hljs-string">&quot;func1_scope&quot;</span>: &#123;<br>        <span class="hljs-string">&quot;y&quot;</span>: &#123;<span class="hljs-string">&quot;type&quot;</span>: <span class="hljs-string">&quot;float&quot;</span>, <span class="hljs-string">&quot;value&quot;</span>: <span class="hljs-number">3.14</span>&#125;,<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>为了添加和移除 symbols, 符号表需要支持: 进入和退出 scopes, 检查一个 identifier 是否在当前 scope 下定义, 等功能. 可以查看 <code>symtab.h</code> 和 <code>symtab_example.cc</code> 文件</p>
+<h3 id="Utilities"><a href="#Utilities" class="headerlink" title="Utilities"></a>Utilities</h3><p><code>utilities.h</code> 和 <code>utilities.cc</code> 文件中定义了一些便于 writing and debugging Cool parser 和 lexical analyzer 的工具.</p>
 <h1 id="Cool-manual"><a href="#Cool-manual" class="headerlink" title="Cool manual"></a>Cool manual</h1><p>获取该文档:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">wget https://web.stanford.edu/class/cs143/materials/cool-manual.pdf<br></code></pre></td></tr></table></figure>
 
 <p>下面是该文档的阅读笔记.</p>
+<h2 id="Introduction-1"><a href="#Introduction-1" class="headerlink" title="Introduction"></a>Introduction</h2><p>Cool, the Classroom Object-Oriented Language. 是一门教学用的小型语言, 但具有现代语言的一些特性如 objects, static typing, automatic memory management.</p>
+<p>Cool 程序由一组类 (classes) 组成, 类是程序的基本模块化单元, 类似 Java&#x2F;C++, 所有代码必须封装在类中.</p>
+<p>类将变量 (成员属性) 和过程 (成员方法) 捆绑在一起, 形成一个数据类型.</p>
+<p>类的实例称对象, 在 Cool 中, 类名直接作为类型名使用. 也可以让子类集成父类的属性和方法.</p>
+<p>Cool 也是 expression language, 即几乎所有代码都是表达式, 每一个表达式有一个 value and type.</p>
+<p>Cool 是 type safety 语言, 编译器会严格检查类型以确保函数正确调用, 比如不能对 <code>Int</code> 类型调用 <code>String</code> 的方法.</p>
+<h2 id="Getting-Started"><a href="#Getting-Started" class="headerlink" title="Getting Started"></a>Getting Started</h2><p><code>coolc</code> 使用:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">coolc [-o fileout] file1.cl file2.cl ... filen.cl<br></code></pre></td></tr></table></figure>
+<ul>
+<li>其生成 MIPS assembly code</li>
+</ul>
+<p><code>spim</code> 是一个 MIPS simulator, 用于运行 <code>coolc</code> 生成的汇编.</p>
+<h2 id="Classes"><a href="#Classes" class="headerlink" title="Classes"></a>Classes</h2><p>所有 Cool 代码都必须组织在 class 之下, 定义语法为:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs cool">class &lt;type&gt; [ inherits &lt;type&gt; ] &#123;<br>    &lt;feature_list&gt;<br>&#125;;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>类名需要以大写字母开头</li>
+<li><code>feature</code> 指 attribute 或 method, 必须以小写字母开头, 且不能重复定义, 但 <code>attribute</code> 名可以和 <code>method</code> 一致</li>
+</ul>
+<p>Cool 中:</p>
+<ul>
+<li>所有 attribute 都是 local scope to the class</li>
+<li>所有 methods 都是 global scope</li>
+</ul>
+<p>Cool 中有自动的内存管理, 不需要用户手动释放.</p>
+<h2 id="Inheritance"><a href="#Inheritance" class="headerlink" title="Inheritance"></a>Inheritance</h2><p>语法:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cool">class C inherit P &#123; ... &#125;;<br></code></pre></td></tr></table></figure>
+
+<p>子类可以覆盖父类的方法, 但不能重复定义 attribute.</p>
+<p>在 Cool 中, 如果一个类定义没有指定父类, 则默认继承自 <code>Object</code> 类.</p>
+<p>除了 <code>Object</code> 类外, Cool 还定义了 4 个基础类:</p>
+<ul>
+<li><code>Int</code></li>
+<li><code>String</code></li>
+<li><code>Bool</code></li>
+<li><code>IO</code></li>
+</ul>
+<h2 id="Types"><a href="#Types" class="headerlink" title="Types"></a>Types</h2><p>Cool 中的 class name 也都是一个 type.</p>
+<p>类型声明的语法为:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cool">v: T<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>x</code> 是变量名</li>
+<li><code>T</code> 是类型名</li>
+</ul>
+<p>Cool 中的类型具有兼容性, 如果某个方法或变量需要类型 P 的值, 那么任何 P 的子类 C 的值都可以替换它, 这种关系称 <code>C conforms to P</code>, 或 $C \le P$</p>
+<h3 id="SELF-TYPE"><a href="#SELF-TYPE" class="headerlink" title="SELF_TYPE"></a><code>SELF_TYPE</code></h3><p><code>SELF_TYPE</code> 是 <code>self</code> 变量所在类的类型 (或者 conforms to that type), 其会动态变化为对应类别, 比如:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs cool">class Silly &#123;<br>    copy() : SELF_TYPE &#123; self &#125;;<br>&#125;<br><br>class Sally inherits Silly &#123; &#125;;<br><br>class Main &#123;<br>    x : Sally &lt;- (new Sally).copy();<br><br>    main() : Sally &#123; x &#125;;<br>&#125;;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>定义 <code>copy()</code> 时, 其返回 <code>SELF_TYPE</code></li>
+<li>但在 <code>(new Sally).copy()</code> 这里返回的是 <code>Sally</code> 类型</li>
+</ul>
+<h3 id="Type-checking"><a href="#Type-checking" class="headerlink" title="Type checking"></a>Type checking</h3><p>Cool 利用对每个标识符进行类型声明, 便于 type checker 推测类型.</p>
+<p>表达式的类型最终由 type checker 分配的称 “static type”, 而如果在运行时分辨, 则称 “dynamic type”.</p>
+<p>静态类型检查能够给出更加详细的信息.</p>
+<h2 id="Attributes"><a href="#Attributes" class="headerlink" title="Attributes"></a>Attributes</h2><p>Attributes 定义的语法为:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cool">&lt;id&gt; : &lt;type&gt; [ &lt;- &lt;expr&gt; ]<br></code></pre></td></tr></table></figure>
+<ul>
+<li>不显式初始化时, 默认为 <code>void</code> (没有显式的 Void 类型), <code>Int</code>, <code>Bool</code>, <code>String</code> 有其他默认值</li>
+</ul>
+<p>可以用 <code>isvoid expr</code> 来判断一个表达式是否为 <code>void</code>.</p>
+<h2 id="Method"><a href="#Method" class="headerlink" title="Method"></a>Method</h2><p>Method 的定义语法为:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cool">&lt;id&gt;(&lt;id&gt; : &lt;type&gt;, ..., &lt;id&gt; : &lt;type&gt;): &lt;type&gt; &#123; &lt;expr&gt; &#125;;<br></code></pre></td></tr></table></figure>
+
+<p>在 Cool 中, 子类对 method 进行重写需要满足:</p>
+<ul>
+<li>参数数量和类型一致</li>
+<li>返回类型一致</li>
+</ul>
+<p>如:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs lua">class P &#123;<br>    f(x: Int, y: String): Bool &#123; ... &#125;<br>&#125;;<br>class C inherits P &#123;<br>    f(x: Int, y: String): Bool &#123; ... &#125;<br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<h2 id="Expressions"><a href="#Expressions" class="headerlink" title="Expressions"></a>Expressions</h2><h3 id="Constants"><a href="#Constants" class="headerlink" title="Constants"></a>Constants</h3><p>Boolean constants: <code>true</code> 和 <code>false</code>. 属于 <code>Bool</code> 类.</p>
+<p>Integer constants 指非字符串的数字, 如 <code>0</code>, <code>123</code>, <code>007</code>. 属于 <code>Int</code> 类.</p>
+<p>String constants 指由 <code>&quot;</code> 包裹的字符序列, 如 <code>&quot;This is a string&quot;</code>, 最长为 <code>1024</code> 字符. 属于 <code>String</code> 类.</p>
+<h3 id="Identifiers"><a href="#Identifiers" class="headerlink" title="Identifiers"></a>Identifiers</h3><p>Identifiers 指:</p>
+<ul>
+<li>局部变量名</li>
+<li>method 的形式参数</li>
+<li><code>self</code></li>
+<li>class attributes 等</li>
+</ul>
+<h3 id="Assignment"><a href="#Assignment" class="headerlink" title="Assignment"></a>Assignment</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cool">&lt;id&gt; &lt;- &lt;expr&gt;<br></code></pre></td></tr></table></figure>
+
+<h3 id="Dispatch"><a href="#Dispatch" class="headerlink" title="Dispatch"></a>Dispatch</h3><p>就是指调用方式. 有 3 种.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cool">&lt;expr&gt;.&lt;id&gt;(&lt;expr&gt;, ..., &lt;expr&gt;)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>如果返回值没有显式类别则为 <code>SELF_TYPE</code></li>
+</ul>
+<p>另外两种调用语法:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cool">&lt;id&gt;(&lt;expr&gt;, ..., &lt;expr&gt;)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>等价于 <code>self.&lt;id&gt;(&lt;expr&gt;, ..., &lt;expr&gt;)</code></li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cool">&lt;expr&gt;@&lt;type&gt;.id(&lt;expr&gt;,...,&lt;expr&gt;)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>访问父方法, 如 <code>e@B.f()</code>, <code>B</code> 为父类</li>
+</ul>
+<h3 id="Conditionals"><a href="#Conditionals" class="headerlink" title="Conditionals"></a>Conditionals</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cool">if &lt;expr&gt; then &lt;expr&gt; else &lt;expr&gt; fi<br></code></pre></td></tr></table></figure>
+<ul>
+<li>其返回值为运行的分支的结果</li>
+<li>这里的 predicate 必须为 <code>Bool</code> 类型</li>
+</ul>
+<h3 id="Loops"><a href="#Loops" class="headerlink" title="Loops"></a>Loops</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cool">while &lt;expr&gt; loop &lt;expr&gt; pool<br></code></pre></td></tr></table></figure>
+<ul>
+<li>predicate 必须为 <code>Bool</code> 类型</li>
+<li>当 predicate 为 <code>false</code> 时, 终止循环并返回 <code>void</code></li>
+</ul>
+<h3 id="Blocks"><a href="#Blocks" class="headerlink" title="Blocks"></a>Blocks</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cool">&#123; &lt;expr&gt;; ... &lt;expr&gt;; &#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>返回值为最后一个 <code>expr</code> 的值</li>
+</ul>
+<h3 id="Let"><a href="#Let" class="headerlink" title="Let"></a>Let</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cool">let &lt;id1&gt; : &lt;type1&gt; [ &lt;- &lt;expr1&gt; ], ... &lt;idn&gt; : &lt;typen&gt; [ &lt;- &lt;exprn&gt; ] in &lt;expr&gt;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>重复用 <code>let</code> 定义时, 后面的覆盖前面的</li>
+<li><code>in &lt;expr&gt;</code> 指定其生效的表达式</li>
+<li>整个 <code>let</code> 的返回值为 <code>&lt;expr&gt;</code> 的结果</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cool">let x : Int &lt;- 10, y : Int &lt;- 20 in x * y<br></code></pre></td></tr></table></figure>
+<ul>
+<li>初始化 <code>x</code> 为 <code>10</code></li>
+<li>初始化 <code>y</code> 为 <code>20</code></li>
+<li>计算 <code>x * y</code></li>
+<li>返回 <code>200</code></li>
+</ul>
+<p>可以嵌套:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs cool">let x: Int &lt;- 1 in <br>  let y: Int &lt;- x + 1 in <br>    x + y<br></code></pre></td></tr></table></figure>
+
+<h3 id="Case"><a href="#Case" class="headerlink" title="Case"></a>Case</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs cool">case &lt;expr0&gt; of<br>    &lt;id1&gt; : &lt;type1&gt; =&gt; &lt;expr1&gt;;<br>    ...<br>    &lt;idn&gt; : &lt;typen&gt; =&gt; &lt;exprn&gt;;<br>esac<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>case</code> 会在运行时检查 <code>expr0</code> 的值</li>
+<li>这里没有 <code>default</code> 或 <code>otherwise</code> 分支, 但可以用 <code>x : Object =&gt; ...</code> 来实现</li>
+</ul>
+<h3 id="New"><a href="#New" class="headerlink" title="New"></a>New</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cool">new &lt;type&gt;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>创建一个对应类型的实例</li>
+</ul>
+<h3 id="Isvoid"><a href="#Isvoid" class="headerlink" title="Isvoid"></a>Isvoid</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cool">isvoid expr<br></code></pre></td></tr></table></figure>
+<ul>
+<li>如果 <code>expr</code> 为 <code>void</code> 则返回 <code>true</code>, 反之 <code>false</code></li>
+</ul>
+<h3 id="算术运算"><a href="#算术运算" class="headerlink" title="算术运算"></a>算术运算</h3><p>二元运算支持 <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, 语法为:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cool">&lt;expr1&gt; &lt;op&gt; &lt;expr2&gt;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>两个子表达式的 static type 必须为 <code>Int</code></li>
+<li>只有整数除法</li>
+</ul>
+<p>三种比较运算符: <code>&lt;</code>, <code>&lt;=</code>, <code>=</code>. 结果为 <code>Bool</code> 类型.</p>
+<ul>
+<li>不同类型比较不会报错, 但会返回 <code>false</code></li>
+</ul>
+<p><code>not &lt;expr&gt;</code> 取 boolean 值的非.</p>
+<p><code>~&lt;expr&gt;</code> 取 integer 的补码.</p>
+<h2 id="Basic-Classes"><a href="#Basic-Classes" class="headerlink" title="Basic Classes"></a>Basic Classes</h2><h3 id="Object"><a href="#Object" class="headerlink" title="Object"></a>Object</h3><p><code>Object</code> 类是 inheritance graph 的根节点, 有下面几个方法:</p>
+<ul>
+<li><code>abort() : Object</code>, 暂停程序运行并报错</li>
+<li><code>type_name() : String</code>, 返回类名</li>
+<li><code>copy() : SELF_TYPE</code>, 返回对象的复制</li>
+</ul>
+<h3 id="IO"><a href="#IO" class="headerlink" title="IO"></a>IO</h3><p><code>IO</code> 类提供下面方法来进行简单的输入输出操作:</p>
+<ul>
+<li><code>out_string(x : String) : SELF_TYPE</code>, 输出 string 并返回 <code>self</code></li>
+<li><code>out_int(x : Int) : SELF_TYPE</code>, 输出 int 并返回 <code>self</code></li>
+<li><code>in_string() : String</code>, 从标准输入读取字符串, 直到一个换行符</li>
+<li><code>in_int() : Int</code>, 读取读取单个数字, 数字之后直到换行符的部分都会丢弃</li>
+</ul>
+<h3 id="Int"><a href="#Int" class="headerlink" title="Int"></a>Int</h3><p><code>Int</code> 类没有特殊的方法, 初始化默认值为 <code>0</code>.</p>
+<h3 id="String"><a href="#String" class="headerlink" title="String"></a>String</h3><p><code>String</code> 类方法为:</p>
+<ul>
+<li><code>length() : Int</code>, 返回字符串长度</li>
+<li><code>concat(s : String) : String</code> 返回与自己连接后的字符串</li>
+<li><code>substr(i : Int, l : int) : String</code>, 指定初始索引和截取长度, 返回截取后的子串</li>
+</ul>
+<p>初始化的默认值为 <code>&quot;&quot;</code>, 空字符串.</p>
+<h3 id="Bool"><a href="#Bool" class="headerlink" title="Bool"></a>Bool</h3><p><code>Bool</code> 类只有两个值: <code>true</code> 和 <code>false</code>, 默认初始值为 <code>false</code>.</p>
+<h2 id="Main-Class"><a href="#Main-Class" class="headerlink" title="Main Class"></a>Main Class</h2><p>每一个程序都需要包含 <code>Main</code> 类, 且包含 <code>main</code> 方法, 不接受任何参数, 作为程序的入口.</p>
+<p>每次程序运行相当于运行 <code>(new Main).main()</code>.</p>
+<h2 id="Lexical-Structure"><a href="#Lexical-Structure" class="headerlink" title="Lexical Structure"></a>Lexical Structure</h2><h1 id="辅助文件"><a href="#辅助文件" class="headerlink" title="辅助文件"></a>辅助文件</h1><h2 id="cool-h"><a href="#cool-h" class="headerlink" title="cool.h"></a>cool.h</h2><p>该文件内容很短, 只有:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;copyright.h&quot;</span></span><br><br><span class="hljs-meta">#<span class="hljs-keyword">ifndef</span> _COOL_H_</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> _COOL_H_</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;cool-io.h&quot;</span></span><br><br><span class="hljs-keyword">typedef</span> <span class="hljs-type">int</span> Boolean;<br><span class="hljs-keyword">class</span> <span class="hljs-title class_">Entry</span>;<br><span class="hljs-keyword">typedef</span> Entry *Symbol;<br><br><span class="hljs-function">Boolean <span class="hljs-title">copy_Boolean</span><span class="hljs-params">(Boolean)</span></span>;<br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">assert_Boolean</span><span class="hljs-params">(Boolean)</span></span>;<br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">dump_Boolean</span><span class="hljs-params">(ostream &amp;, <span class="hljs-type">int</span>, Boolean)</span></span>;<br><br><span class="hljs-function">Symbol <span class="hljs-title">copy_Symbol</span><span class="hljs-params">(Symbol)</span></span>;<br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">assert_Symbol</span><span class="hljs-params">(Symbol)</span></span>;<br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">dump_Symbol</span><span class="hljs-params">(ostream &amp;, <span class="hljs-type">int</span>, Symbol)</span></span>;<br><br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br></code></pre></td></tr></table></figure>
+
+
+<h2 id="cool-io-h"><a href="#cool-io-h" class="headerlink" title="cool-io.h"></a>cool-io.h</h2><p>该文件主要导入一些 Cpp 的输入输出库以及对应名称空间, 部分内容如下:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs cpp">...<br><span class="hljs-meta">#<span class="hljs-keyword">ifndef</span> COOL_USE_OLD_HEADERS</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;iostream&gt;</span></span><br><br><span class="hljs-keyword">using</span> std::ostream;<br><span class="hljs-keyword">using</span> std::cout;<br><span class="hljs-keyword">using</span> std::cerr;<br><span class="hljs-keyword">using</span> std::endl;<br>...<br></code></pre></td></tr></table></figure>
+
+<h2 id="cool-parse-h"><a href="#cool-parse-h" class="headerlink" title="cool-parse.h"></a>cool-parse.h</h2><p>定义了一些 Cool 中的类型, 类, 函数声明, 部分内容如下:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">typedef</span> <span class="hljs-type">int</span> Boolean;<br><span class="hljs-keyword">class</span> <span class="hljs-title class_">Entry</span>;<br><span class="hljs-keyword">typedef</span> Entry *Symbol;<br><br><span class="hljs-function">Boolean <span class="hljs-title">copy_Boolean</span><span class="hljs-params">(Boolean)</span></span>;<br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">assert_Boolean</span><span class="hljs-params">(Boolean)</span></span>;<br>...<br></code></pre></td></tr></table></figure>
+
 
                 
               </div>
@@ -398,6 +638,12 @@
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2025/06/08/Expression-%E5%92%8C-Statement/" title="Expression-和-Statement">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Expression-和-Statement</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">
