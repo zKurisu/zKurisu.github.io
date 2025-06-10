@@ -29,7 +29,7 @@
 <meta property="og:image" content="http://example.com/img/cs143-scanner-convert-escaped-char.png">
 <meta property="og:image" content="http://example.com/img/cs143-cool-syntax-in-xx-form.png">
 <meta property="article:published_time" content="2025-06-07T06:57:49.000Z">
-<meta property="article:modified_time" content="2025-06-09T13:04:08.639Z">
+<meta property="article:modified_time" content="2025-06-10T09:36:59.092Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/cs143-assignment-check-battery-state-error.jpeg">
@@ -241,7 +241,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          12k 字
+          15k 字
         
       </span>
     
@@ -252,7 +252,7 @@
         
         
         
-          99 分钟
+          122 分钟
         
       </span>
     
@@ -370,6 +370,44 @@
 <li><code>class identifiers</code>, <code>object identifiers</code>, <code>integers</code>, <code>strings</code> 的 lexeme 应该存储在 <code>cool_yylval.symbol</code> 中</li>
 <li><code>boolean</code> constants 的 lexeme 应该存储在 <code>cool_yylval.boolean</code> 中</li>
 <li>当遇到 lexical error 时, <code>cool_yylex</code> 应该返回 token <code>ERROR</code>, <code>lexeme</code> 为错误信息, 并存储到 <code>cool_yylval.error_msg</code></li>
+</ul>
+<h2 id="完成思路"><a href="#完成思路" class="headerlink" title="完成思路"></a>完成思路</h2><p>处理顺序:</p>
+<ul>
+<li><code>COMMENTS</code></li>
+<li><code>INLINE_COMMENTS</code></li>
+<li><code>STRING</code></li>
+<li>Other</li>
+</ul>
+<p>因为 <code>COMMENTS</code> 和 <code>STRING</code> 中会包含后续要标上 <code>token class</code> 的特殊字符, 比如:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cool">(* if (x &gt; 0) then 1 else 2 *)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>这里的 <code>if</code>, <code>then</code>, <code>else</code> 是关键字, <code>x</code> 是 identifier 等等</li>
+</ul>
+<h3 id="COMMENTS"><a href="#COMMENTS" class="headerlink" title="COMMENTS"></a>COMMENTS</h3><p>有四个部分:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs flex">&lt;INITIAL,COMMENTS,INLINE_COMMENTS&gt;&quot;(*&quot; &#123;<br>    comment_layers++;<br>    BEGIN COMMENTS;<br>&#125;<br><br>&lt;COMMENTS&gt;[^\n()*]* &#123; &#125;<br><br>&lt;COMMENTS&gt;[()*] &#123; &#125;<br><br>&lt;COMMENTS&gt;&quot;*)&quot; &#123;<br>    comment_layers--;<br>    if (comment_layers == 0)<br>        BEGIN 0;<br>&#125;<br><br>[\n] &#123;<br>    line_nu++;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>我用来测试的注释片段为:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs cool">(*<br>    Multiline comments example<br>    (test parenthesis)<br>    test Star *** and  right parenthesis) <br>    Test quote &quot; ksks &quot; &#x27; ksks&#x27;<br>*)<br></code></pre></td></tr></table></figure>
+
+<p>思路如下:</p>
+<ul>
+<li>遇到 <code>(*</code> 进入 <code>COMMENTS</code>, 表示开始匹配注释了</li>
+<li>注释的中间部分, 只有 <code>(</code>, <code>)</code> 和 <code>*</code> 是特殊字符, 因此先排除这些字符以及换行符进行匹配</li>
+<li>再匹配单个的 <code>(</code>, <code>)</code>, <code>*</code> 特殊字符, 这样也不会因为最长匹配原则而错过 <code>*)</code></li>
+<li>再处理 <code>\n</code> 换行符</li>
+<li>遇到符合配对数量的 <code>*)</code> 时退出 <code>COMMENTS</code> 状态</li>
+</ul>
+<p>从这里的处理也能看出来, 注释在词法分析阶段就已经舍弃了, 不会进入后续的处理.</p>
+<h3 id="INLINE-COMMENTS"><a href="#INLINE-COMMENTS" class="headerlink" title="INLINE_COMMENTS"></a><code>INLINE_COMMENTS</code></h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs lex">&lt;INITIAL&gt;-- &#123; /* Inline comments */<br>    BEGIN INLINE_COMMENTS;<br>&#125;<br><br>&lt;INLINE_COMMENTS&gt;[^\n]* &#123; &#125;<br><br>&lt;INLINE_COMMENTS&gt;[\n] &#123;<br>    line_nu++;<br>    BEGIN 0;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>遇到 <code>--</code> 进入 <code>INLINE_COMMENTS</code> 状态, 表示开始处理行内注释</li>
+<li>直到遇到 <code>\n</code> 之前的所有内容都不作处理</li>
+<li>遇到 <code>\n</code> 时增加行号并回到 <code>INITIAL</code> 状态</li>
+</ul>
+<h3 id="STRING"><a href="#STRING" class="headerlink" title="STRING"></a>STRING</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br></pre></td><td class="code"><pre><code class="hljs lex">&lt;INITIAL&gt;\&quot; &#123;<br>    yymore();<br>    BEGIN STRING;<br>&#125;<br><br>&lt;STRING&gt;[^\\\n\&quot;]* &#123; yymore(); &#125;<br><br>&lt;STRING&gt;\\[^\n] &#123; yymore(); &#125;<br><br>&lt;STRING&gt;\\\n &#123;<br>    line_nu++;<br>    yymore();<br>&#125;<br><br>&lt;STRING&gt;&lt;&lt;EOF&gt;&gt; &#123;<br>    error_msg = &quot;EOF in string constant&quot;;<br>    BEGIN 0;<br>    yyrestart(yyin);<br>    return 999; // 999 means ERROR<br>&#125;<br><br>&lt;STRING&gt;\n &#123;<br>    error_msg = &quot;Unterminated string constant&quot;;<br>    BEGIN 0;<br>    line_nu++;<br>    return 999; // 999 means ERROR<br>&#125;<br><br>&lt;STRING&gt;\\0 &#123;<br>    error_msg = &quot;Unterminated string constant&quot;;<br>    BEGIN 0;<br>    return 999; // 999 means ERROR<br>&#125;<br><br>&lt;STRING&gt;\&quot; &#123;<br>    char *input = yytext;<br>    char *output, *pos;<br>    output = malloc(sizeof(char)*1024);<br>    input = strndup(input + 1, strlen(input) - 2);<br><br>    if (memchr(input, &#x27;\0&#x27;, strlen(input))) &#123;<br>        free(input);<br>        error_msg = &quot;String contains null character&quot;;<br>        BEGIN 0;<br>        return 999;<br>    &#125;<br>    // printf(&quot;%s&quot;, input);<br>    while ((pos = strchr(input, &#x27;\\&#x27;)) != NULL) &#123;<br>        output = strcat(output, strndup(input, pos-input));<br><br>        switch (pos[1]) &#123;<br>        case &#x27;b&#x27;:<br>            output = strcat(output, &quot;\b&quot;);<br>            break;<br>        case &#x27;t&#x27;:<br>            output = strcat(output, &quot;\t&quot;);<br>            break;<br>        case &#x27;n&#x27;:<br>            output = strcat(output, &quot;\n&quot;);<br>            break;<br>        case &#x27;f&#x27;:<br>            output = strcat(output, &quot;\f&quot;);<br>            break;<br>        default:<br>            output = strcat(output, strndup(pos, 1));<br>            break;<br>        &#125;<br><br>        input = pos+2;<br>    &#125;<br><br>    output = strcat(output, input);<br><br>    if (strlen(output) &gt; 1024) &#123;<br>        error_msg = &quot;String constant too long&quot;;<br>        BEGIN 0;<br>        return 999;<br>    &#125;<br><br>    printf(&quot;%s&quot;, output);<br>    free(output);<br>    BEGIN 0;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>这里需要注意, 在 Cool 中 <code>&quot;\n&quot;</code> 等价于 C 中的 <code>&quot;n&quot;</code>, 如果要用控制序列, 需要写为 <code>&quot;\\n&quot;</code>, 但存储时, 需要将 <code>\\n</code> 转换为 <code>\n</code></li>
+<li>注意这里没有用 CS143 中要求的变量, 因为这里暂时是本地编写测试的, 没有包含 Cool 相关头文件</li>
 </ul>
 <h1 id="A-Tour-of-the-Cool-Support-Code"><a href="#A-Tour-of-the-Cool-Support-Code" class="headerlink" title="A Tour of the Cool Support Code"></a>A Tour of the Cool Support Code</h1><p>获取该文档:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">wget https://web.stanford.edu/class/cs143/materials/cool-tour.pdf<br></code></pre></td></tr></table></figure>

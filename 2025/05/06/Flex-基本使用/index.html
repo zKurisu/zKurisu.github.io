@@ -24,7 +24,7 @@
 <meta property="og:description" content="CS143 Assignment1 PDFFlex 2.6.2 官方文档edx 注册页面 介绍Flex, Fast Lexical Analyzer Generator, 是 Lex 的增强版本, 用于生成词法分析器 (Lexer). 可以通过定义正则表达式和动作 (匹配时执行一定操作), 然后编译 flex 程序以生成一个 C 程序, 其可以识别输入流中的 Tokens. Lex 文件定义结构L">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-05-06T04:03:37.000Z">
-<meta property="article:modified_time" content="2025-06-07T06:57:42.309Z">
+<meta property="article:modified_time" content="2025-06-10T10:30:04.752Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          5.4k 字
+          7k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          45 分钟
+          58 分钟
         
       </span>
     
@@ -297,7 +297,7 @@
 <li>其中 <code>Declarations</code> 和 <code>User subroutines</code> 部分都是可选的, 便于用户用 C 语言编写 help function</li>
 <li><code>Definitions</code> 部分也是可选的, 用于给 regex 一个标识符, 比如:<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs abnf"><span class="hljs-keyword">DIGIT</span>   [<span class="hljs-number">0</span>-<span class="hljs-number">9</span>]<br></code></pre></td></tr></table></figure></li>
 </ul>
-<p>在 Flex 文件中, 可用的正则表达式有:</p>
+<h2 id="正则"><a href="#正则" class="headerlink" title="正则"></a>正则</h2><p>在 Flex 文件中, 可用的正则表达式有:</p>
 <ul>
 <li><code>x</code>, 单个字符 “x”</li>
 <li><code>&quot;x&quot;</code> an “x”, even if x is an operator.</li>
@@ -320,63 +320,25 @@
 </ul>
 <p>需要注意的只有几个:</p>
 <ul>
+<li><code>&quot;x&quot;</code>, 相当于 <code>\Q...\E</code>, 可以将元字符当作匹配字符</li>
 <li><code>&lt;y&gt;x</code>, 相当于 <code>(?&lt;=...)</code>, 只不过前面只能是 start state</li>
 <li><code>x/y</code>, 相当于 <code>(?=...)</code>, 向后看</li>
-<li><code>&#123;xx&#125;</code> 相当于变量差值</li>
+<li><code>&#123;xx&#125;</code> 相当于变量插值</li>
+<li><code>\\</code> 表示一个反斜线字符, <code>\\.</code> 表示任意转义字符</li>
 <li>没有捕获</li>
 </ul>
 <p><code>rule</code> section 是最重要的, 可以用 C 语言编写 action 来处理匹配到 regex 或者 definition 的 input. 比如 (CS143 中的例子):</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs lex">DIGIT   [0-9]<br><br>%%<br>&#123;DIGIT&#125; &#123;<br>    cool_yylval.symbol = inttable.add_string(yytext);<br>    return DIGIT_TOKEN;<br>&#125;<br>%%<br></code></pre></td></tr></table></figure>
 
-<ul>
-<li><code>cool_yylval</code> 是一个全局变量 (section 5)</li>
-<li><code>inttable</code> 是 (section 4.2)</li>
-<li><code>yytext</code> 是 flex 内置变量, 表示当前匹配的字符串</li>
-</ul>
-<p>需要注意的是, 当输入 (即 <code>yylex()</code> 的返回值) 匹配多个 rules 时, flex 会选择匹配最多字符的一条, 如:</p>
+<p>需要注意的是, 当输入匹配多个 rules 时, flex 会选择匹配最多字符的一条, 如:</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs lex">[0-9]+ &#123;// action1&#125;<br>[0-9a-z]+ &#123;// action2&#125;<br></code></pre></td></tr></table></figure>
 <p>如果输入为 <code>2a</code>, 此时会执行 <code>action2</code>, 因为匹配了两个字符.</p>
 <p>如果匹配长度相同, 则应用第一个匹配.</p>
-<p>有些时候, 匹配的 <code>action</code> 想要根据以往的匹配情况来决定如何执行, 此时需要借助在 definition section 中定义 global variable 来收集信息. 比如 state declaration, 一种 flex 的状态切换机制, 允许根据不同上下文状态来匹配不同的词法规则.</p>
-<p>每个状态代表一种词法分析上下文, 可以让规则在指定状态下生效.</p>
-<p>状态声明语法:</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs lex">%s STATE1 STATE2 /* 声明排他性状态（独占，一次只能激活一个） */<br>%x STATE3 STATE4...   /* 声明包含性状态（可与其他状态共存） */<br></code></pre></td></tr></table></figure>
-<ul>
-<li><code>%s</code>, 排他状态, 同一时间只能激活一个状态, 比如 <code>INITIAL</code></li>
-<li><code>%x</code>, 包含状态, 可与其他状态叠加, 比如同时处于 <code>STRING</code> 和 <code>ESCAPE</code> 状态</li>
-</ul>
-<p>可以在 <code>rules</code> 中通过 <code>BEGIN(STATE)</code> 来切换状态. 如:</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><code class="hljs lex">%&#123;<br>#include &lt;stdio.h&gt;<br>%&#125;<br><br>%s COMMENT<br>%x STRING<br><br>%%<br>&lt;INITIAL&gt;&#123;<br>    &quot;/*&quot;    &#123; BEGIN(COMMENT); &#125;<br>    &quot;\&quot;&quot;    &#123; BEGIN(STRING); printf(&quot;Start string\n&quot;); &#125;<br>    [a-z]+  &#123; printf(&quot;Ident: %s\n&quot;, yytext); &#125;<br>&#125;<br>&lt;COMMENT&gt;&#123;<br>    &quot;*/&quot;    &#123; BEGIN(INITIAL); &#125;<br>    .|\n    &#123; /* Ignore */ &#125;<br>&#125;<br>&lt;STRING&gt;&#123;<br>    &quot;\&quot;&quot;    &#123; BEGIN(INITIAL); printf(&quot;End string\n&quot;); &#125;<br>    \\n     &#123; printf(&quot;Newline\n&quot;); &#125;<br>    .       &#123; printf(&quot;Char: %s\n&quot;, yytext); &#125;<br>&#125;<br>%%<br><br>int main() &#123; yylex(); return 0; &#125;<br></code></pre></td></tr></table></figure>
-
-<ul>
-<li>默认的 state 为 <code>INITIAL</code>, 所有未标记的 rules 默认在其下生效.</li>
-<li><code>BEGIN</code> 本质上是一个宏, 展开为 <code>yy_start = 1 + STATE_OFFSET</code></li>
-<li>可以用 <code>yy_top_state()</code> 查看当前状态</li>
-</ul>
-<p>string table, 一些字符在程序中会多次引用, 如果每次使用字符都开辟新的空间, 会有极大浪费, 因此 compiler 会在 string table 中存储所有 lexemes 的引用.</p>
-<p>每次调用 <code>scanner</code> 都要返回 token 和 lexeme, <code>cool_yylex</code> 函数返回一个 integer code 用于表示 syntactic category (比如 integer literal, semicolon, if keyword 等). 这部分代码定义在 <code>cool-parse.h</code> 中</p>
-<p>lexeme 存储在一个 global union <code>cool_yylval</code> 中, 其为 <code>YYSTYPE</code> 类型 (也定义在 <code>cool-parse.h</code> 中).</p>
-<p>像 <code>;</code>, <code>,</code> 等单个字符符号, 都用 integer (ASCII) 值来表示.</p>
-<p>class identifier, object identifier, integers, strings 的 semantic value (lexeme) 应该保存在 <code>cool_yylval.symbol</code> 中.</p>
-<p><code>boolean</code> constants 应该保存在 <code>cool_yylval.boolean</code> 中</p>
-<p>当出现 lexical error 时, <code>cool_yylex</code> 应该返回 token <code>ERROR</code>, semantic value 为 error 的具体信息, 保存到 <code>cool_yylval.error_msg</code> 里.</p>
-<p><code>cool.flex</code> 主文件, <code>test.cl</code> 测试输入, <code>README</code> 说明和建议.</p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">/afs/ir/class/cs143/bin/pa_fetch PA1 &lt;project_directory&gt;<br>make lexer<br></code></pre></td></tr></table></figure>
-
-
-<h2 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs lex">%&#123;<br>    /* C 代码部分：头文件、全局变量、函数声明等 */<br>    #include &lt;stdio.h&gt;<br>    // 其他头文件...<br>%&#125;<br><br>/* 正则定义部分 */<br>digit       [0-9]<br>letter      [a-zA-Z]<br>identifier  &#123;letter&#125;(&#123;letter&#125;|&#123;digit&#125;)*<br><br>/* 规则部分 */<br>%%<br>    /* 正则规则 + 动作（C 代码） */<br>&#123;identifier&#125;    &#123; printf(&quot;IDENTIFIER: %s\n&quot;, yytext); &#125;<br>&#123;digit&#125;+       &#123; printf(&quot;NUMBER: %s\n&quot;, yytext); &#125;<br>&quot;+&quot;|&quot;-&quot;|&quot;*&quot;|&quot;/&quot; &#123; printf(&quot;OPERATOR: %s\n&quot;, yytext); &#125;<br>[ \t\n]        ; /* 忽略空白字符 */<br>.              &#123; printf(&quot;UNKNOWN: %s\n&quot;, yytext); &#125; /* 其他字符 */<br>%%<br><br>/* 主函数（可选） */<br>int main() &#123;<br>    yylex(); // 启动词法分析<br>    return 0;<br>&#125;<br></code></pre></td></tr></table></figure>
-<ul>
-<li><code>%&#123; ... %&#125;</code> 部分可以包含 C 代码</li>
-<li><code>//</code> 和 <code>/**/</code> 是注释</li>
-<li><code>digit    [0-9]</code> 正则定义, <code>digit</code> 是标识符, 可以用 <code>&#123;digit&#125;</code> 调用</li>
-<li><code>%% ... %%</code> 部分定义规则, 格式为 <code>regex &#123; action &#125;</code></li>
-<li><code>int main() &#123;&#125;</code> 中可以定义额外的用户代码</li>
-</ul>
 <h2 id="Flex-变量"><a href="#Flex-变量" class="headerlink" title="Flex 变量"></a>Flex 变量</h2><p>常用的 Flex 变量有:</p>
 <table>
 <thead>
 <tr>
-<th>变量&#x2F;函数</th>
+<th>变量</th>
 <th>说明</th>
 </tr>
 </thead>
@@ -387,10 +349,6 @@
 <tr>
 <td><code>yyleng</code></td>
 <td>匹配字符串的长度</td>
-</tr>
-<tr>
-<td><code>yylex()</code></td>
-<td>启动词法分析</td>
 </tr>
 <tr>
 <td><code>yyin</code></td>
@@ -405,143 +363,121 @@
 <td>当前行号（需启用 <code>%option yylineno</code>）</td>
 </tr>
 </tbody></table>
-<h2 id="Flex-中的正则"><a href="#Flex-中的正则" class="headerlink" title="Flex 中的正则"></a>Flex 中的正则</h2><h3 id="基本元字符"><a href="#基本元字符" class="headerlink" title="基本元字符"></a>基本元字符</h3><table>
-<thead>
-<tr>
-<th>符号</th>
-<th>Flex&#x2F;Perl 含义</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>.</code></td>
-<td>匹配任意字符（除换行符）</td>
-</tr>
-<tr>
-<td><code>*</code></td>
-<td>匹配前一个字符 0 次或多次</td>
-</tr>
-<tr>
-<td><code>+</code></td>
-<td>匹配前一个字符 1 次或多次</td>
-</tr>
-<tr>
-<td><code>?</code></td>
-<td>匹配前一个字符 0 次或 1 次</td>
-</tr>
-<tr>
-<td><code>[...]</code></td>
-<td>字符类（匹配其中任意一个）</td>
-</tr>
-<tr>
-<td><code>[^...]</code></td>
-<td>否定字符类（不匹配其中字符）</td>
-</tr>
-<tr>
-<td><code>^</code></td>
-<td>匹配行首（在 Flex 中需 <code>%option ^</code> 启用）</td>
-</tr>
-<tr>
-<td><code>$</code></td>
-<td>匹配行尾（在 Flex 中需 <code>%option $</code> 启用）</td>
-</tr>
-<tr>
-<td><code>\</code></td>
-<td>转义特殊字符（如 <code>\.</code> 匹配字面量 <code>.</code>）</td>
-</tr>
-</tbody></table>
-<h3 id="分组和捕获"><a href="#分组和捕获" class="headerlink" title="分组和捕获"></a>分组和捕获</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lex">(ab)+    # 匹配 &quot;ab&quot;, &quot;abab&quot;, ...<br></code></pre></td></tr></table></figure>
-<p>不同于 Perl 可以直接引用分组 (如 <code>$1</code>), Flex 默认不捕获分组 (需手动处理 <code>yytext</code>).</p>
-<h3 id="预定义字符类"><a href="#预定义字符类" class="headerlink" title="预定义字符类"></a>预定义字符类</h3><table>
-<thead>
-<tr>
-<th>符号</th>
-<th>Flex&#x2F;Perl 含义</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>\d</code></td>
-<td>数字 <code>[0-9]</code></td>
-</tr>
-<tr>
-<td><code>\w</code></td>
-<td>单词字符 <code>[a-zA-Z0-9_]</code></td>
-</tr>
-<tr>
-<td><code>\s</code></td>
-<td>空白字符 <code>[ \t\n\r]</code></td>
-</tr>
-</tbody></table>
-<hr>
-<h3 id="与-Perl-regex-的主要差异"><a href="#与-Perl-regex-的主要差异" class="headerlink" title="与 Perl regex 的主要差异"></a>与 Perl regex 的主要差异</h3><table>
-<thead>
-<tr>
-<th>特性</th>
-<th>Flex (Lex)</th>
-<th>Perl Regex</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>设计目的</td>
-<td>词法分析（生成 DFA）</td>
-<td>通用文本匹配（回溯引擎）</td>
-</tr>
-<tr>
-<td>匹配模式</td>
-<td>最长匹配（贪婪）</td>
-<td>默认贪婪，支持懒惰匹配 <code>*?</code></td>
-</tr>
-<tr>
-<td>捕获分组</td>
-<td>无内置捕获，需手动处理</td>
-<td>支持 <code>$1</code>, <code>$2</code> 等</td>
-</tr>
-<tr>
-<td>回溯</td>
-<td>无（DFA 无回溯）</td>
-<td>支持（可能性能问题）</td>
-</tr>
-<tr>
-<td>锚点（^&#x2F;$）</td>
-<td>默认禁用（需 <code>%option</code>）</td>
-<td>默认启用</td>
-</tr>
-<tr>
-<td>条件匹配</td>
-<td>不支持</td>
-<td>支持 <code>(?if...else...)</code></td>
-</tr>
-<tr>
-<td>后向断言</td>
-<td>不支持</td>
-<td>支持 <code>(?&lt;=...)</code>, <code>(?&lt;!...)</code></td>
-</tr>
-</tbody></table>
-<p>语法上:</p>
+<h2 id="Flex-内置函数"><a href="#Flex-内置函数" class="headerlink" title="Flex 内置函数"></a>Flex 内置函数</h2><p>常用的 Flex 内置函数有:</p>
 <table>
 <thead>
 <tr>
-<th>场景</th>
-<th>Flex (Lex)</th>
-<th>Perl Regex</th>
+<th>函数</th>
+<th>说明</th>
 </tr>
 </thead>
 <tbody><tr>
-<td>匹配重复次数</td>
-<td><code>&#123;n,m&#125;</code>（需转义 <code>\&#123;</code>）</td>
-<td><code>&#123;n,m&#125;</code>（无需转义）</td>
+<td><code>yylex()</code></td>
+<td>启动词法分析器</td>
 </tr>
 <tr>
-<td>非贪婪匹配</td>
-<td>不支持</td>
-<td><code>.*?</code>, <code>.+?</code></td>
+<td><code>yymore()</code></td>
+<td>保留当前匹配的文本, 下次匹配追加到 <code>yytext</code></td>
 </tr>
 <tr>
-<td>注释</td>
-<td>不支持正则内注释</td>
-<td>支持 <code>(?#注释)</code></td>
+<td><code>yyless(n)</code></td>
+<td>回退部分匹配的字符, 保留前 <code>n</code> 个字符</td>
+</tr>
+<tr>
+<td><code>unput(c)</code></td>
+<td>将字符 <code>c</code> 放回输入流</td>
+</tr>
+<tr>
+<td><code>input()</code></td>
+<td>读取下一个字符</td>
+</tr>
+<tr>
+<td><code>yyrestart(FILE*)</code></td>
+<td>重置输入源</td>
 </tr>
 </tbody></table>
+<h3 id="yylex"><a href="#yylex" class="headerlink" title="yylex()"></a><code>yylex()</code></h3><p><code>yylex()</code> 函数会读取输入流, 并逐个扫描字符, 尝试匹配用户定义的词法规则, 匹配成功后会执行 <code>action</code> 操作, <code>action</code> 的返回值就是 <code>yylex()</code> 的返回值.</p>
+<p>比如:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs flex">%&#123;<br>#include &lt;stdio.h&gt;<br>%&#125;<br><br>%%<br><br>\&quot;([^\\\&quot;]|\\.?)*\&quot; &#123;<br>    return 0;<br>&#125;<br><br>%%<br><br>int main(void) &#123;<br>    if (yylex() == 0)<br>        printf(&quot;Match! lines&quot;);<br>    return 0;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>可以利用这个特点来打印一些信息:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> token;<br><span class="hljs-keyword">while</span> ((token = yylex()) != <span class="hljs-number">0</span>) &#123;<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;Token: %d\n&quot;</span>, token);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="正则修饰符"><a href="#正则修饰符" class="headerlink" title="正则修饰符"></a>正则修饰符</h2><p>如不区分大小写:</p>
+<figure class="highlight wren"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs wren"><span class="hljs-title function_">f</span>(?<span class="hljs-params">i</span>:<span class="hljs-params">alse</span>) &#123;<br>    <span class="hljs-keyword">return</span> <span class="hljs-variable">BOOL_CONST</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+<h2 id="状态声明"><a href="#状态声明" class="headerlink" title="状态声明"></a>状态声明</h2><p>默认情况下, flex 会让输入字符尝试所有正则, 但有时候, 只想让一些正则在指定情况下再进行匹配, 此时可以通过定义一系列 State 来实现.</p>
+<p>每个状态代表一种词法分析上下文, 可以让规则在指定状态下生效.</p>
+<p>状态声明语法:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs lex">%s STATE1 STATE2 /* 声明排他性状态（独占，一次只能激活一个） */<br>%x STATE3 STATE4...   /* 声明包含性状态（可与其他状态共存） */<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>%s</code>, 排他状态, 同一时间只能激活一个状态, 比如 <code>INITIAL</code></li>
+<li><code>%x</code>, 包含状态, 可与其他状态叠加, 比如同时处于 <code>STRING</code> 和 <code>ESCAPE</code> 状态</li>
+</ul>
+<p>可以在 <code>rules</code> 中通过 <code>BEGIN(STATE)</code> 来切换状态. 如:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><code class="hljs lex">%&#123;<br>#include &lt;stdio.h&gt;<br>%&#125;<br><br>%s COMMENT<br>%x STRING<br><br>%%<br>&lt;INITIAL&gt;&#123;<br>    &quot;/*&quot;    &#123; BEGIN(COMMENT); &#125;<br>    &quot;\&quot;&quot;    &#123; BEGIN(STRING); printf(&quot;Start string\n&quot;); &#125;<br>    [a-z]+  &#123; printf(&quot;Ident: %s\n&quot;, yytext); &#125;<br>&#125;<br>&lt;COMMENT&gt;&#123;<br>    &quot;*/&quot;    &#123; BEGIN(INITIAL); &#125;<br>    .|\n    &#123; /* Ignore */ &#125;<br>&#125;<br>&lt;STRING&gt;&#123;<br>    &quot;\&quot;&quot;    &#123; BEGIN(INITIAL); printf(&quot;End string\n&quot;); &#125;<br>    \\n     &#123; printf(&quot;Newline\n&quot;); &#125;<br>    .       &#123; printf(&quot;Char: %s\n&quot;, yytext); &#125;<br>&#125;<br>%%<br><br>int main() &#123; yylex(); return 0; &#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>默认的 state 为 <code>INITIAL</code>, 所有未标记的 rules 默认在其下生效.</li>
+<li><code>BEGIN</code> 本质上是一个宏, 展开为 <code>yy_start = 1 + STATE_OFFSET</code></li>
+<li>可以用 <code>yy_top_state()</code> 查看当前状态</li>
+</ul>
+<p>可以用:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs flex">&lt;INITIAL,COMMENTS,INLINE_COMMENTS&gt;&quot;(*&quot; &#123;<br>    comment_layer++;<br>    BEGIN COMMENTS;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>来表明其中一个状态 active 时都会执行 <code>action</code></li>
+</ul>
+<h3 id="注意"><a href="#注意" class="headerlink" title="注意"></a>注意</h3><p>对于某些词法结构, 如注释和字符串, 需要跨多行或包含嵌套结构, 虽然能够处理, 但是对于其中的 keywords, identifier 之类的, 都需要特殊处理 (有特殊的语境), 比如当作普通字符, 此时用 state 会更加清晰, 比如:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs cool">&quot;if (x &gt; 0) then \<br>    x = 10 \<br>end&quot;<br></code></pre></td></tr></table></figure>
+
+<p>可以用下面正则匹配多行:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs flex">\&quot;([^\\\&quot;]|\\.?)*\&quot; &#123;<br>    printf(&quot;Match! Multiline String&quot;);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>且如果应用了单个关键字的匹配, 也能正常运行, 因为由于最常匹配原则, 字符串那个一般都够长:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs flex">if &#123;<br>    printf(&quot;Keyword: IF&quot;);<br>&#125;<br><br>\&quot;([^\\\&quot;]|\\.?)*\&quot; &#123;<br>    printf(&quot;Match! Multiline String&quot;);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>但是对于一些错误处理, 就有些捉襟见肘了, 比如:</p>
+<ul>
+<li>多行字符串里, 如果直接出现 <code>\n</code> 但前面没有 <code>\</code>, 则需要报错, 此时不是跨行语法. 单用正则如何匹配? <code>\\\\n</code>  能匹配有 <code>\</code> 的情况, 难道用 <code>\n</code> 来直接匹配? 这当然不行, 因为每一行都必然会有 <code>\n</code>, 但只有 <code>String</code> 模式下的比较特殊罢了</li>
+<li>如果在多行字符串情况下遇到 <code>EOF</code>, 也需要报错</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs flex"> /* seen a &#x27;\\&#x27; at the end of a line, the string continues */<br>&lt;STRING&gt;\\\n &#123;<br>    curr_lineno++;<br>    yymore();<br>&#125;<br><br> /* meet EOF in the middle of a string, error */<br>&lt;STRING&gt;&lt;&lt;EOF&gt;&gt; &#123;<br>    yylval.error_msg = &quot;EOF in string constant&quot;;<br>    BEGIN 0;<br>    yyrestart(yyin);<br>    return ERROR;<br>&#125;<br><br> /* meet a &#x27;\n&#x27; in the middle of a string without a &#x27;\\&#x27;, error */<br>&lt;STRING&gt;\n &#123;<br>    yylval.error_msg = &quot;Unterminated string constant&quot;;<br>    BEGIN 0;<br>    curr_lineno++;<br>    return ERROR;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="常见状态"><a href="#常见状态" class="headerlink" title="常见状态"></a>常见状态</h3><p>在大多数编程语言中, 都需要处理这几个状态:</p>
+<ul>
+<li><code>INITIAL</code>, 默认的状态, 不需要手动定义</li>
+<li><code>COMMENTS</code>, 多行注释</li>
+<li><code>INLINE_COMMENTS</code>, 行内注释</li>
+<li><code>STRING</code>, 字符串</li>
+</ul>
+<p>一般的处理顺序也是先注释和字符串, 然后是其他关键字和字符.</p>
+<h3 id="回到初始状态"><a href="#回到初始状态" class="headerlink" title="回到初始状态"></a>回到初始状态</h3><p>可以用: <code>BEGIN 0;</code> 回到 <code>INITIAL</code> 状态.</p>
+<h2 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs lex">%&#123;<br>    /* C 代码部分：头文件、全局变量、函数声明等 */<br>    #include &lt;stdio.h&gt;<br>    // 其他头文件...<br>%&#125;<br><br>/* 正则定义部分 */<br>digit       [0-9]<br>letter      [a-zA-Z]<br>identifier  &#123;letter&#125;(&#123;letter&#125;|&#123;digit&#125;)*<br><br>/* 规则部分 */<br>%%<br>    /* 正则规则 + 动作（C 代码） */<br>&#123;identifier&#125;    &#123; printf(&quot;IDENTIFIER: %s\n&quot;, yytext); &#125;<br>&#123;digit&#125;+       &#123; printf(&quot;NUMBER: %s\n&quot;, yytext); &#125;<br>&quot;+&quot;|&quot;-&quot;|&quot;*&quot;|&quot;/&quot; &#123; printf(&quot;OPERATOR: %s\n&quot;, yytext); &#125;<br>[ \t\n]        ; /* 忽略空白字符 */<br>.              &#123; printf(&quot;UNKNOWN: %s\n&quot;, yytext); &#125; /* 其他字符 */<br>%%<br><br>/* 主函数（可选） */<br>int main() &#123;<br>    yylex(); // 启动词法分析<br>    return 0;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>%&#123; ... %&#125;</code> 部分可以包含 C 代码</li>
+<li><code>//</code> 和 <code>/**/</code> 是注释</li>
+<li><code>digit    [0-9]</code> 正则定义, <code>digit</code> 是标识符, 可以用 <code>&#123;digit&#125;</code> 调用</li>
+<li><code>%% ... %%</code> 部分定义规则, 格式为 <code>regex &#123; action &#125;</code></li>
+<li><code>int main() &#123;&#125;</code> 中可以定义额外的用户代码</li>
+</ul>
 <h1 id="编译-lex-文件"><a href="#编译-lex-文件" class="headerlink" title="编译 lex 文件"></a>编译 lex 文件</h1><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">flex lexer.l      <span class="hljs-comment"># 生成 lex.yy.c</span><br>gcc lex.yy.c -o lexer -lfl  <span class="hljs-comment"># 编译（-lfl 链接 Flex 库）</span><br>./lexer           <span class="hljs-comment"># 运行</span><br></code></pre></td></tr></table></figure>
+
+<h1 id="结合-String-Table"><a href="#结合-String-Table" class="headerlink" title="结合 String Table"></a>结合 String Table</h1><p>比如 CS143 中的例子, <code>cool-parse.h</code> 文件中的定义:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> CLASS       258</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> ELSE        259</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> FI          260</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> IF          261</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> IN          262</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> INHERITS    263</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> LET         264</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> LOOP        265</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> POOL        266</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> THEN        267</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> WHILE       268</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> CASE        269</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> ESAC        270</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> OF          271</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> DARROW      272</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> NEW         273</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> ISVOID      274</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> STR_CONST   275</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> INT_CONST   276</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> BOOL_CONST  277</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> TYPEID      278</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> OBJECTID    279</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> ASSIGN      280</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> NOT         281</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> LE          282</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> ERROR       283</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> LET_STMT    284</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>从 258 开始定义, 防止与 ASCII 冲突</li>
+</ul>
+<blockquote>
+<p>为什么不统一定义 KEYWORD</p>
+</blockquote>
+<p>因为每一个关键字的语义不同, 用更细的 token class, 可以便于后续的语义分析.</p>
+<p>在实际语言的设计中, 如 C 语言, <code>if</code>, <code>while</code> 等等关键字都有独立 token 类型.</p>
+<h1 id="技巧"><a href="#技巧" class="headerlink" title="技巧"></a>技巧</h1><h2 id="newline-的处理"><a href="#newline-的处理" class="headerlink" title="newline 的处理"></a>newline 的处理</h2><p>在对 comments, string 做处理时, 都要避免吃下 <code>\n</code>, 而是在最后单独匹配 <code>\n</code> 来处理, 示例:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs flex">&lt;COMMENTS&gt;[^\n(*]* &#123; &#125;<br><br> /* Cannot read &#x27;\\&#x27; &#x27;\&quot;&#x27; &#x27;\n&#x27; */<br>&lt;STRING&gt;[^\\\&quot;\n]* &#123; yymore(); &#125;<br><br> /* normal escape characters, not \n */<br>&lt;STRING&gt;\\[^\n] &#123; yymore(); &#125;<br><br>&quot;\n&quot; &#123;<br>    curr_lineno++;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="匹配文件末尾"><a href="#匹配文件末尾" class="headerlink" title="匹配文件末尾"></a>匹配文件末尾</h2><p>正则规则里, 可以用 <code>&lt;&lt;EOF&gt;&gt;</code> 来表示文件末尾:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs flex">%%<br>&lt;&lt;EOF&gt;&gt; &#123; printf(&quot;Explicitly matched EOF.\n&quot;); return 0; &#125;<br>%%<br></code></pre></td></tr></table></figure>
+
 
 <h1 id="示例-1"><a href="#示例-1" class="headerlink" title="示例"></a>示例</h1><h2 id="计算器词法分析器"><a href="#计算器词法分析器" class="headerlink" title="计算器词法分析器"></a>计算器词法分析器</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs lex">%&#123;<br>    #include &lt;stdio.h&gt;<br>    #include &lt;stdlib.h&gt;<br>%&#125;<br><br>digit   [0-9]<br>number  &#123;digit&#125;+<br><br>%%<br>&#123;number&#125;    &#123; printf(&quot;NUMBER: %s\n&quot;, yytext); &#125;<br>&quot;+&quot;         &#123; printf(&quot;PLUS\n&quot;); &#125;<br>&quot;-&quot;         &#123; printf(&quot;MINUS\n&quot;); &#125;<br>&quot;*&quot;         &#123; printf(&quot;MUL\n&quot;); &#125;<br>&quot;/&quot;         &#123; printf(&quot;DIV\n&quot;); &#125;<br>[ \t\n]     ; /* 忽略空白 */<br>.           &#123; printf(&quot;ERROR: %s\n&quot;, yytext); &#125;<br>%%<br><br>int main() &#123;<br>    yylex();<br>    return 0;<br>&#125;<br></code></pre></td></tr></table></figure>
 
