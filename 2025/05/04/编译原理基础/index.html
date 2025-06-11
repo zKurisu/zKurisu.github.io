@@ -106,6 +106,7 @@
 <meta property="og:image" content="http://example.com/img/cs143-rd-algorithm-example1.png">
 <meta property="og:image" content="http://example.com/img/cs143-rd-algorithm-example2.png">
 <meta property="og:image" content="http://example.com/img/cs143-rd-algorithm-example3.png">
+<meta property="og:image" content="http://example.com/img/cs143-parser-left-factor-example.png">
 <meta property="og:image" content="http://example.com/img/compiler-calculate-the-first-set.png">
 <meta property="og:image" content="http://example.com/img/compiler-calculate-the-first-set-general-sentence.png">
 <meta property="og:image" content="http://example.com/img/compiler-using-first-set-to-construct-ll1-table.png">
@@ -146,7 +147,7 @@
 <meta property="og:image" content="http://example.com/img/compiler-symbol-table-scope-example.png">
 <meta property="og:image" content="http://example.com/img/compiler-symbol-table-scope-example2.png">
 <meta property="article:published_time" content="2025-05-04T09:25:11.000Z">
-<meta property="article:modified_time" content="2025-06-11T08:46:40.456Z">
+<meta property="article:modified_time" content="2025-06-11T09:37:49.511Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/compiler-intro-to-compiler.png">
@@ -369,7 +370,7 @@
         
         
         
-          265 分钟
+          271 分钟
         
       </span>
     
@@ -1281,7 +1282,33 @@
 <p><img src="/../img/cs143-rd-algorithm-example1.png" srcset="/img/loading.gif" lazyload></p>
 <p><img src="/../img/cs143-rd-algorithm-example2.png" srcset="/img/loading.gif" lazyload></p>
 <p><img src="/../img/cs143-rd-algorithm-example3.png" srcset="/img/loading.gif" lazyload></p>
-<p>上述例子的缺点在于, 只要遇到部分解析正确, 就会退出, 比如 <code>int * int</code></p>
+<p>上述例子的缺点在于, 只要遇到部分解析正确, 就会退出, 比如 <code>int * int</code>.</p>
+<h4 id="Left-Recursion"><a href="#Left-Recursion" class="headerlink" title="Left Recursion"></a>Left Recursion</h4><p>Recursive decent algorithm 遇到的最大困难是 Left Recursion (左递归).</p>
+<p>比如:</p>
+<figure class="highlight clean"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs clean">S -&gt; Sa<br></code></pre></td></tr></table></figure>
+
+<p>对应的处理函数有:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">bool</span> <span class="hljs-title function_">S_1</span><span class="hljs-params">()</span> &#123; <span class="hljs-keyword">return</span> S() &amp;&amp; term(a); &#125;<br><span class="hljs-type">bool</span> <span class="hljs-title function_">S</span><span class="hljs-params">()</span> &#123; <span class="hljs-keyword">return</span> S_1(); &#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>会进入无限循环</li>
+</ul>
+<p>因为 Recursive decent algorithm 是从左向右生成, 看是否能推导出原式.</p>
+<p>但 Left recursion 是从右向左生成内容, 只有结束时才能搞清楚最左侧的 terminal 是什么. 如:</p>
+<figure class="highlight coq"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs coq">S -&gt; Sa | <span class="hljs-type">b</span><br></code></pre></td></tr></table></figure>
+
+<p>因此把 left recursion 语法改写为 right recursion 就可以让 recursive decent algorithm 来处理了.</p>
+<p>如上述可以重写为:</p>
+<figure class="highlight sml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sml"><span class="hljs-type">S</span> -&gt; bS&#x27;<br><span class="hljs-type">S&#x27;</span> -&gt; aS&#x27; | epsilon<br></code></pre></td></tr></table></figure>
+
+<h3 id="Predictive-parsers"><a href="#Predictive-parsers" class="headerlink" title="Predictive parsers"></a>Predictive parsers</h3><p>Predictive parsers 通过提前查看后续字符 (lookahead) 来选择 production, 不会出现 backtracking.</p>
+<p>Predictive parsers 接受 <code>LL(k)</code> grammer. (LL(k) 指 left-to-right left-most, k tokens lookahead)</p>
+<p>对于 grammar 如下:</p>
+<figure class="highlight excel"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs excel">E -&gt; <span class="hljs-built_in">T</span> + E | <span class="hljs-built_in">T</span><br><span class="hljs-built_in">T</span> -&gt; <span class="hljs-built_in">int</span> | <span class="hljs-built_in">int</span> * <span class="hljs-built_in">T</span> | (E)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>使用 <code>lookahead(1)</code> 是不行的, 毕竟一开始, 选择 <code>T + E</code> 还是 <code>T</code> 就选不出</li>
+</ul>
+<p>此时需要应用 <code>left-factor</code> 的技巧: 把相同的 <code>factor</code> 提取出来, 添加新的 non-terminal 来表示剩下部分, 如:</p>
+<p><img src="/../img/cs143-parser-left-factor-example.png" srcset="/img/loading.gif" lazyload></p>
 <h3 id="Lookahead"><a href="#Lookahead" class="headerlink" title="Lookahead"></a>Lookahead</h3><p>Lookahead, 前看符号, 指解析器在决定使用哪条产生式规则时, 预先查看输入流中接下来的一个或多个符号, 以消除歧义或避免回溯. 帮助解析器在多个可能的产生式规则之间做出正确选择.</p>
 <p>示例, 假如有文法规则:</p>
 <figure class="highlight coq"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs coq">S -&gt; aB | <span class="hljs-type">aC</span><br>B -&gt; b<br>C -&gt; c<br></code></pre></td></tr></table></figure>
