@@ -24,6 +24,7 @@
 <meta property="og:description" content="参考 B 站视频the super tiny compilerStanford cs143B 站 cs143 搬运 该文档可能会集合多个教程的内容. 概述Compiler (编译器) 是一个程序, 将源代码翻译成目标代码. 如 GCC, Clang. Interpreter (解释器) 是一个程序, 逐行或逐语句解释源代码, 不生成独立的目标代码. 如 Python, Perl 解释器.   可以">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/compiler-intro-to-compiler.png">
+<meta property="og:image" content="http://example.com/img/cs143-compiler-error-handler-kinds.png">
 <meta property="og:image" content="http://example.com/img/compiler-frontend-phases.png">
 <meta property="og:image" content="http://example.com/img/compiler-multiple-phases-frontend-backend.png">
 <meta property="og:image" content="http://example.com/img/compiler-no-optimise-structure.png">
@@ -95,6 +96,7 @@
 <meta property="og:image" content="http://example.com/img/cs143-parse-example-parse-tree.png">
 <meta property="og:image" content="http://example.com/img/cs143-ambiguity-example-for-if-else.png">
 <meta property="og:image" content="http://example.com/img/cs143-delimite-ambiguous-by-associ.png">
+<meta property="og:image" content="http://example.com/img/cs143-ast-parse-tree-example.png">
 <meta property="og:image" content="http://example.com/img/compiler-syntax-from-top-to-button-definitioni.png">
 <meta property="og:image" content="http://example.com/img/compiler-syntax-from-top-to-botton-algorithm.png">
 <meta property="og:image" content="http://example.com/img/compiler-syntax-from-top-to-botton-algorithm-example.png">
@@ -140,7 +142,7 @@
 <meta property="og:image" content="http://example.com/img/compiler-symbol-table-scope-example.png">
 <meta property="og:image" content="http://example.com/img/compiler-symbol-table-scope-example2.png">
 <meta property="article:published_time" content="2025-05-04T09:25:11.000Z">
-<meta property="article:modified_time" content="2025-06-11T04:21:56.561Z">
+<meta property="article:modified_time" content="2025-06-11T07:47:30.363Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/compiler-intro-to-compiler.png">
@@ -352,7 +354,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          30k 字
+          31k 字
         
       </span>
     
@@ -363,7 +365,7 @@
         
         
         
-          251 分钟
+          261 分钟
         
       </span>
     
@@ -414,6 +416,8 @@
 <ul>
 <li>可以看出, compiler 相当于对程序做了预处理</li>
 </ul>
+<p>当然, compiler 的另一个作用就是检测 non-valid programs 并做出反馈. 常见的有:</p>
+<p><img src="/../img/cs143-compiler-error-handler-kinds.png" srcset="/img/loading.gif" lazyload></p>
 <h1 id="编译器结构"><a href="#编译器结构" class="headerlink" title="编译器结构"></a>编译器结构</h1><p>编译器的结构非常模块化, 一般分为:</p>
 <ul>
 <li>前端, Front End, 含预处理, 词法分析, 语法分析, 语义分析, 中间代码生成, 如 <code>Clang</code><br><img src="/../img/compiler-frontend-phases.png" srcset="/img/loading.gif" lazyload></li>
@@ -1170,6 +1174,56 @@
 <ul>
 <li>后声明 <code>*</code> 表明其优先级更高</li>
 </ul>
+<h2 id="Error-handling"><a href="#Error-handling" class="headerlink" title="Error handling"></a>Error handling</h2><p>Error handling 是 Parsing 部分的重要功能, 有两种常见的处理策略:</p>
+<ul>
+<li>Panic mode</li>
+<li>Error productions</li>
+</ul>
+<p>这些机制都尽可能在一次编译过程中发现所有错误.</p>
+<h3 id="Panic-mode"><a href="#Panic-mode" class="headerlink" title="Panic mode"></a>Panic mode</h3><p>Panic mode 的核心思想是, 当 parser 遇到错误时, 跳过当前错误的符号或语句, 直到找到一个 synchronization point, 然后恢复分析.</p>
+<p>适用于错误较多或难以预测的情况.</p>
+<p>工作步骤:</p>
+<ol>
+<li>parser 发现当前输入符号不符合任何语法规则, 如 <code>if</code> 后缺少 <code>()</code></li>
+<li>丢弃当前符号 (或语句), 直到遇到 synchronization token, 比如 <code>;</code>, <code>&#125;</code>, 或关键字等</li>
+<li>恢复分析, 从 synchronization point 继续分析</li>
+</ol>
+<p>示例:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">if</span> (x &gt; <span class="hljs-number">0</span> &#123;  <span class="hljs-comment">// 错误：缺少 `)`</span><br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;x is positive&quot;</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+<ol>
+<li>检测到 <code>&#123;</code> 之前缺少 <code>(</code>, 报告错误</li>
+<li>跳过 <code>&#123;</code> 和 <code>printf(&quot;x is positive&quot;);</code>, 直到遇到 <code>&#125;</code></li>
+<li>从 <code>&#125;</code> 后恢复分析</li>
+</ol>
+<h3 id="Error-productions"><a href="#Error-productions" class="headerlink" title="Error productions"></a>Error productions</h3><p>Errpr productions 的核心思想是, 在文法中显示定义一些 “错误产生式”, 用于匹配常见的语法错误, 并生成有意义的错误信息.</p>
+<p>适用于已知的, 常见的语法错误.</p>
+<p>通常在原始文法中添加一些规则来匹配可能的错误情况, 并输出特定的错误提示.</p>
+<p>假设有原始文法:</p>
+<figure class="highlight nim"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs nim"><span class="hljs-type">stmt</span> → <span class="hljs-keyword">if</span> ( <span class="hljs-type">expr</span> ) <span class="hljs-type">stmt</span><br>     | <span class="hljs-keyword">while</span> ( <span class="hljs-type">expr</span> ) <span class="hljs-type">stmt</span><br>     | &#123; stmt_list &#125;<br></code></pre></td></tr></table></figure>
+
+<p>添加错误产生式:</p>
+<figure class="highlight nim"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs nim"><span class="hljs-type">stmt</span> → <span class="hljs-keyword">if</span> <span class="hljs-type">expr</span> ) <span class="hljs-type">stmt</span>    // 缺少 `(`<br>     | <span class="hljs-keyword">if</span> ( <span class="hljs-type">expr</span> <span class="hljs-type">stmt</span>    // 缺少 `)`<br>     | <span class="hljs-keyword">while</span> <span class="hljs-type">expr</span> ) <span class="hljs-type">stmt</span> // 缺少 `(`<br></code></pre></td></tr></table></figure>
+<ul>
+<li>遇到错误产生式时报告 <code>Error: Missing &#39;(&#39; in if-statement.</code></li>
+</ul>
+<h2 id="Error-correction"><a href="#Error-correction" class="headerlink" title="Error correction"></a>Error correction</h2><p>Error correction 的核心思想是, 遇到错误时, 找到一个正确的 “nearby program” 来修复错误, 比如插入或删除某个 token.</p>
+<p>一个比较出名的 error correction compiler 是 <code>PL/C</code>.</p>
+<h2 id="AST"><a href="#AST" class="headerlink" title="AST"></a>AST</h2><p>AST, Abstract Syntax Trees, 用于结构化表示整个程序, 其与 parse tree 类似, 但是省略了很多细节.</p>
+<p>比如:</p>
+<ul>
+<li><p>有一个语法:</p>
+<figure class="highlight mathematica"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs mathematica"><span class="hljs-built_in">E</span> <span class="hljs-operator">-&gt;</span> <span class="hljs-variable">int</span> <span class="hljs-operator">|</span> <span class="hljs-punctuation">(</span><span class="hljs-built_in">E</span><span class="hljs-punctuation">)</span> <span class="hljs-operator">|</span> <span class="hljs-built_in">E</span> <span class="hljs-operator">+</span> <span class="hljs-built_in">E</span><br></code></pre></td></tr></table></figure>
+</li>
+<li><p>输入一个字符串:</p>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs basic"><span class="hljs-symbol">5 </span>+ (<span class="hljs-number">2</span> + <span class="hljs-number">3</span>)<br></code></pre></td></tr></table></figure>
+</li>
+<li><p>经过 lexical analysis 后输出 tokens:</p>
+<figure class="highlight gcode"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs gcode">i<span class="hljs-symbol">nt_5</span> <span class="hljs-string">&#x27;+&#x27;</span> <span class="hljs-string">&#x27;(&#x27;</span> i<span class="hljs-symbol">nt_2</span> <span class="hljs-string">&#x27;+&#x27;</span> i<span class="hljs-symbol">nt_3</span> <span class="hljs-string">&#x27;)&#x27;</span><br></code></pre></td></tr></table></figure>
+</li>
+<li><p>利用 tokens 构建一个 parse tree:</p>
+</li>
+</ul>
+<p><img src="/../img/cs143-ast-parse-tree-example.png" srcset="/img/loading.gif" lazyload></p>
 <h2 id="自顶向下分析"><a href="#自顶向下分析" class="headerlink" title="自顶向下分析"></a>自顶向下分析</h2><p>自顶向下分析是一种语法分析 (Parsing) 方式, 从文法的开始符号出发, 逐步推导出与输入字符串匹配的语法树. 即分析方向是从根节点 (顶层) 向叶子节点 (底层) 展开, 尝试用产生式规则匹配输入符号.</p>
 <p>如, 给定文法: $S\ \rightarrow\ aSb\ |\ \epsilon$.</p>
 <ul>
