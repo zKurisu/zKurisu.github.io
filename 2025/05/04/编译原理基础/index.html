@@ -93,6 +93,8 @@
 <meta property="og:image" content="http://example.com/img/compiler-the-task-for-syntax-analyse.png">
 <meta property="og:image" content="http://example.com/img/compiler-analyse-by-path-tree.png">
 <meta property="og:image" content="http://example.com/img/cs143-parse-example-parse-tree.png">
+<meta property="og:image" content="http://example.com/img/cs143-ambiguity-example-for-if-else.png">
+<meta property="og:image" content="http://example.com/img/cs143-delimite-ambiguous-by-associ.png">
 <meta property="og:image" content="http://example.com/img/compiler-syntax-from-top-to-button-definitioni.png">
 <meta property="og:image" content="http://example.com/img/compiler-syntax-from-top-to-botton-algorithm.png">
 <meta property="og:image" content="http://example.com/img/compiler-syntax-from-top-to-botton-algorithm-example.png">
@@ -138,7 +140,7 @@
 <meta property="og:image" content="http://example.com/img/compiler-symbol-table-scope-example.png">
 <meta property="og:image" content="http://example.com/img/compiler-symbol-table-scope-example2.png">
 <meta property="article:published_time" content="2025-05-04T09:25:11.000Z">
-<meta property="article:modified_time" content="2025-06-11T03:46:48.273Z">
+<meta property="article:modified_time" content="2025-06-11T04:21:56.561Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/compiler-intro-to-compiler.png">
@@ -361,7 +363,7 @@
         
         
         
-          247 分钟
+          251 分钟
         
       </span>
     
@@ -1130,7 +1132,7 @@
 <li>对叶子节点进行 in-order traversal 可以得到表达式</li>
 </ul>
 <p>上述为 left-most derivation. 另还有 right-most derivation.</p>
-<p>需要注意, 两者生成的 parse tree 是相同的.</p>
+<p>每一个 parse tree 都可以用多种 derivation 推导出.</p>
 <h4 id="Left-most-derivation"><a href="#Left-most-derivation" class="headerlink" title="Left-most derivation"></a>Left-most derivation</h4><p>Left-most derivation 指: 在每一步推导中, 总是优先替换当前句型中最左边的非终结符 (non-terminal). 比如:</p>
 <figure class="highlight coq"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs coq">S -&gt; E + E<br>   | <span class="hljs-type">id</span><br></code></pre></td></tr></table></figure>
 
@@ -1143,6 +1145,31 @@
 <p>先替换最右边的 <code>E</code>:</p>
 <figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs applescript">E + <span class="hljs-built_in">id</span><br></code></pre></td></tr></table></figure>
 
+<h3 id="Ambiguity"><a href="#Ambiguity" class="headerlink" title="Ambiguity"></a>Ambiguity</h3><p>如果在一个 grammar 下, 一个字符串推导出了多个 parse tree, 则说明该 grammar 是 ambiguous.</p>
+<p>比如有两种 right-most 推导方式. 比如下面的例子:</p>
+<p><img src="/../img/cs143-ambiguity-example-for-if-else.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li><code>else</code> 可以归属于第一个 <code>if</code>, 也可以是第二个 <code>if</code></li>
+</ul>
+<p>一个消除 ambiguous 的方法是:</p>
+<ul>
+<li>重写 grammar, 每一次推导只有一个 production 满足</li>
+</ul>
+<p>比如上述例子, 可以添加一个规则:</p>
+<ul>
+<li><code>else</code> 需要和最近的 <code>then</code> 配对, 这也是一般编程语言的规定</li>
+</ul>
+<p>Ambiguous grammar 更清晰且好理解, 但会导致解析错误. 而 Unambiguous grammar 编写起来更复杂.</p>
+<p>另一个方法是: 利用 precedence 和 associativity declarations 来消除歧义.</p>
+<p>比如下面例子:<br><img src="/../img/cs143-delimite-ambiguous-by-associ.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li><code>+</code> 号是 ambiguous 的, 因为没有说明是左结合还是右结合, 因此会产生两种 parse tree</li>
+<li>通过 <code>%left +</code>, 声明其为左结合的, 因此只会出现左边的 parse tree</li>
+</ul>
+<figure class="highlight haml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haml"><span class="hljs-tag">%<span class="hljs-selector-tag">left</span></span> +<br><span class="hljs-tag">%<span class="hljs-selector-tag">left</span></span> *<br></code></pre></td></tr></table></figure>
+<ul>
+<li>后声明 <code>*</code> 表明其优先级更高</li>
+</ul>
 <h2 id="自顶向下分析"><a href="#自顶向下分析" class="headerlink" title="自顶向下分析"></a>自顶向下分析</h2><p>自顶向下分析是一种语法分析 (Parsing) 方式, 从文法的开始符号出发, 逐步推导出与输入字符串匹配的语法树. 即分析方向是从根节点 (顶层) 向叶子节点 (底层) 展开, 尝试用产生式规则匹配输入符号.</p>
 <p>如, 给定文法: $S\ \rightarrow\ aSb\ |\ \epsilon$.</p>
 <ul>
