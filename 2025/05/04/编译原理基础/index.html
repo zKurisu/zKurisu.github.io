@@ -131,6 +131,7 @@
 <meta property="og:image" content="http://example.com/img/cs143-shift-reduce-parsing-seperate-string.png">
 <meta property="og:image" content="http://example.com/img/cs143-shift-reduce-parsing-how-shift-works.png">
 <meta property="og:image" content="http://example.com/img/cs143-shift-reduce-parsing-reduce-example.png">
+<meta property="og:image" content="http://example.com/img/cs143-relationship-between-cfgs.png">
 <meta property="og:image" content="http://example.com/img/compiler-how-from-botton-to-top-work.png">
 <meta property="og:image" content="http://example.com/img/compiler-from-botton-to-top-point-note.png">
 <meta property="og:image" content="http://example.com/img/compiler-point-node-example1.png">
@@ -162,7 +163,7 @@
 <meta property="og:image" content="http://example.com/img/compiler-symbol-table-scope-example.png">
 <meta property="og:image" content="http://example.com/img/compiler-symbol-table-scope-example2.png">
 <meta property="article:published_time" content="2025-05-04T09:25:11.000Z">
-<meta property="article:modified_time" content="2025-06-12T02:23:03.067Z">
+<meta property="article:modified_time" content="2025-06-12T03:24:33.662Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/compiler-intro-to-compiler.png">
@@ -374,7 +375,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          34k 字
+          35k 字
         
       </span>
     
@@ -385,7 +386,7 @@
         
         
         
-          286 分钟
+          295 分钟
         
       </span>
     
@@ -1804,6 +1805,37 @@
 <p><img src="/../img/cs143-shift-reduce-parsing-how-shift-works.png" srcset="/img/loading.gif" lazyload></p>
 <p>Reduce 指: 对 left-string 应用 inverse production, 如:</p>
 <p><img src="/../img/cs143-shift-reduce-parsing-reduce-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>这个过程同样能通过 Stack 来模拟:</p>
+<ul>
+<li><code>|</code> 表示栈顶位置</li>
+<li><code>Shift</code> 向 stack push 一个 terminal</li>
+<li><code>Reduce</code> 会 pop 掉 right-hand production, 并 push 一个 non-terminal (left-hand production)</li>
+</ul>
+<p>当一个状态下, 面临多种 action 可以选择时, 如此时可以 <code>shift</code>, 也可以 <code>reduce</code>. 称 <code>shift-reudce conflict</code>.</p>
+<p>如果有两个 <code>production</code> 可以用于 reduce, 此时称 <code>reduce-reduce conflict</code>.</p>
+<h3 id="Handle"><a href="#Handle" class="headerlink" title="Handle"></a>Handle</h3><p>对于 bottom-up parsing, 一个重要问题是: 决定 shift 以及 reduce 的时机.</p>
+<p>考虑下面 grammar:</p>
+<figure class="highlight excel"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs excel">E -&gt; <span class="hljs-built_in">T</span> + E | <span class="hljs-built_in">T</span><br><span class="hljs-built_in">T</span> -&gt; <span class="hljs-built_in">int</span> * <span class="hljs-built_in">T</span> | <span class="hljs-built_in">int</span> | (E)<br></code></pre></td></tr></table></figure>
+
+<p>对于 <code>int | * int + int</code>, 如果此时采用 <code>T -&gt; int</code> 的 reduce, 得到 <code>T | * int + int</code>, 则无法最终 reduce 到 <code>E</code>.</p>
+<p>Handle 指一个正确的 reduction, 即这个 reduction 能保证后面最终 reduce to start symbol.</p>
+<p>这里只是定义了什么是 handle, 还没讲如何找 handle.</p>
+<p>在 shift-reduce parsing 中, 需要保证 handles 永远出现在栈顶, 而非内部. 在每一次 reduce 之后, 进行 sequence of shift moves 来保证到达下一个 handle.</p>
+<p>因此 bottom-up parsing 的算法基础则是识别出 handle.</p>
+<h3 id="Recognizing-Handles"><a href="#Recognizing-Handles" class="headerlink" title="Recognizing Handles"></a>Recognizing Handles</h3><p>当前没有一个算法能高效找到 handles, 但有很多方法 guessing handles.</p>
+<p>一些文法的包含关系:</p>
+<p><img src="/../img/cs143-relationship-between-cfgs.png" srcset="/img/loading.gif" lazyload></p>
+<p><code>L</code> 指 left-to-right, <code>R</code> 指 right-most, <code>k</code> 指 lookahead.</p>
+<p>Viable prefix 定义为: 如果有 $\omega$, such taht $\alpha | \omega$ 是 shift-reduce parser 中的 state, 则称 $\alpha$ 为 viable prefix. (叫 <code>viable</code>, 可行的, 因为它是 handle 的 prefix)</p>
+<p>Bottom-up parsing 的另一个重要性质是:</p>
+<ul>
+<li>对于任意 grammar, viable prefixes 的集合是一个 regular language</li>
+</ul>
+<p><code>Item</code> 定义为: 一个 <code>production</code> 加上一个 <code>.</code> 符号.</p>
+<p>一个 production 的 <code>Items</code> 定义为: 以 <code>T -&gt; (E)</code> 为例:</p>
+<figure class="highlight clean"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs clean">T -&gt; .(E)<br>T -&gt; (.E)<br>T -&gt; (E.)<br>T -&gt; (E).<br></code></pre></td></tr></table></figure>
+
+<p>对于 $X \rightarrow \epsilon$, 只有一个 <code>item</code>: $X \rightarrow .$</p>
 <h2 id="自底向上分析"><a href="#自底向上分析" class="headerlink" title="自底向上分析"></a>自底向上分析</h2><p>自底向上分析的核心, 思想是: 从输入符号串出发, 通过一系列 Reduce 到文法的开始符号, 最终构建出语法树. 如:</p>
 <p><strong>文法规则</strong></p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">Expr → Expr + Term | Term<br>Term → Term * Factor | Factor<br>Factor → ( Expr ) | number<br></code></pre></td></tr></table></figure>
