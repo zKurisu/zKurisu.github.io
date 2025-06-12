@@ -132,6 +132,9 @@
 <meta property="og:image" content="http://example.com/img/cs143-shift-reduce-parsing-how-shift-works.png">
 <meta property="og:image" content="http://example.com/img/cs143-shift-reduce-parsing-reduce-example.png">
 <meta property="og:image" content="http://example.com/img/cs143-relationship-between-cfgs.png">
+<meta property="og:image" content="http://example.com/img/cs143-how-slr-improve-from-lr0.png">
+<meta property="og:image" content="http://example.com/img/cs143-slr-parsing-flow.png">
+<meta property="og:image" content="http://example.com/img/cs143-slr-parsing-example.png">
 <meta property="og:image" content="http://example.com/img/compiler-how-from-botton-to-top-work.png">
 <meta property="og:image" content="http://example.com/img/compiler-from-botton-to-top-point-note.png">
 <meta property="og:image" content="http://example.com/img/compiler-point-node-example1.png">
@@ -163,7 +166,7 @@
 <meta property="og:image" content="http://example.com/img/compiler-symbol-table-scope-example.png">
 <meta property="og:image" content="http://example.com/img/compiler-symbol-table-scope-example2.png">
 <meta property="article:published_time" content="2025-05-04T09:25:11.000Z">
-<meta property="article:modified_time" content="2025-06-12T04:24:29.757Z">
+<meta property="article:modified_time" content="2025-06-12T04:59:48.158Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/compiler-intro-to-compiler.png">
@@ -386,7 +389,7 @@
         
         
         
-          305 分钟
+          307 分钟
         
       </span>
     
@@ -1852,8 +1855,7 @@
 <li>也就是说, 当前栈上的内容, 这里是 $\alpha$, 加上 item 中被识别的内容, 这里是 $\beta$, 能够被 reduce</li>
 </ul>
 <p>每个 viable prefix 都会对应一组 valid items (LR 自动机中的一个状态).</p>
-<h3 id="SLR-Parsing"><a href="#SLR-Parsing" class="headerlink" title="SLR Parsing"></a>SLR Parsing</h3><p>SLR 指 Simple LR.</p>
-<p><code>LR(0)</code> parsing 假设:</p>
+<h3 id="LR-0-parsing"><a href="#LR-0-parsing" class="headerlink" title="LR(0) parsing"></a>LR(0) parsing</h3><p><code>LR(0)</code> parsing 假设:</p>
 <ul>
 <li>当前 stack 包含 $\alpha$</li>
 <li>下一个输入是 $t$</li>
@@ -1864,7 +1866,15 @@
 <p><code>LR(0)</code> 也会遇到两种常见冲突:</p>
 <ul>
 <li>如果某个 state 有两个 reduce items, 如 $X \rightarrow \beta .$ 和 $Y \rightarrow \omega$, 则是 <code>reduce/reduce conflict</code></li>
+<li>如果某个 state 有一个 reduce item 和一个 shift item, 如 $X \rightarrow \beta .$ 和 $Y \rightarrow \omega . t \delta$, 则称 <code>shift/reduce conflict</code></li>
 </ul>
+<h3 id="SLR-Parsing"><a href="#SLR-Parsing" class="headerlink" title="SLR Parsing"></a>SLR Parsing</h3><p>SLR, Simple LR, 是 <code>LR(0)</code> reduce 策略的改进版本, 已得到更少冲突.</p>
+<p><img src="/../img/cs143-how-slr-improve-from-lr0.png" srcset="/img/loading.gif" lazyload></p>
+<p>工作流程:</p>
+<p><img src="/../img/cs143-slr-parsing-flow.png" srcset="/img/loading.gif" lazyload></p>
+<p>示例:</p>
+<p><img src="/../img/cs143-slr-parsing-example.png" srcset="/img/loading.gif" lazyload></p>
+<h3 id="SLR-Improvements"><a href="#SLR-Improvements" class="headerlink" title="SLR Improvements"></a>SLR Improvements</h3><p>SLR 算法中有许多低效的部分.</p>
 <h2 id="自底向上分析"><a href="#自底向上分析" class="headerlink" title="自底向上分析"></a>自底向上分析</h2><p>自底向上分析的核心, 思想是: 从输入符号串出发, 通过一系列 Reduce 到文法的开始符号, 最终构建出语法树. 如:</p>
 <p><strong>文法规则</strong></p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs plaintext">Expr → Expr + Term | Term<br>Term → Term * Factor | Factor<br>Factor → ( Expr ) | number<br></code></pre></td></tr></table></figure>
