@@ -24,7 +24,7 @@
 <meta property="og:description" content="介绍这篇是 “Linux 内核设计的艺术” 这本书的笔记. 这本书基于 Linux 0.11 内核代码, 获取如下: 1git clone https:&#x2F;&#x2F;github.com&#x2F;yuan-xy&#x2F;Linux-0.11.git  查看基本文件: 123456789101112131415$ tree -L 1.├── boot├── fs├── hdc-0.11.img├── include├── i">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-06-14T11:42:36.000Z">
-<meta property="article:modified_time" content="2025-06-17T02:46:07.950Z">
+<meta property="article:modified_time" content="2025-06-17T06:57:53.641Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.6k 字
+          3.9k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          22 分钟
+          33 分钟
         
       </span>
     
@@ -366,6 +366,28 @@
 <li>将 <code>sp</code> (栈顶指针) 设置为 <code>0xFF00</code></li>
 </ul>
 <p>从这里开始 (设置好 <code>ss</code> 和 <code>sp</code>), 可以在后续使用栈操作进行更复杂的数据运算了.</p>
+<h3 id="加载-setup-程序到内存"><a href="#加载-setup-程序到内存" class="headerlink" title="加载 setup 程序到内存"></a>加载 setup 程序到内存</h3><p><code>bootsect.s</code> 程序的第二步工作是将 <code>setup.s</code> 程序加载到内存中.</p>
+<p>该操作需要借助 BIOS 提供的 <code>0x13</code> 中断向量指向的服务程序, 即 “磁盘服务程序”. 可以把指定扇区的代码加载到内存的指定位置. 需要传递这几个参数: 指定的扇区, 内存位置.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs assembly">……！注意：SETUPLEN为4<br>load_setup：<br>mov dx，#0x0000！drive 0，head 0<br>mov cx，#0x0002！sector 2，track 0<br>mov bx，#0x0200！address=512，in INITSEG<br>mov ax，#0x0200+SETUPLEN！service 2，nr of sectors<br>int 0x13！read it<br>jnc ok_load_setup！ok-continue<br>mov dx，#0x0000<br>mov ax，#0x0000！reset the diskette int 0x13<br>j load_setup<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>mov ax, #0x0200 + SETUPLEN</code>, 这里 <code>ah = 0x02</code> 是 BIOS 中断 <code>0x13</code> 的功能号, 表示读取磁盘扇区. <code>al = SETUPLEN</code> 表示要读取的扇区数</li>
+<li><code>int 0x13</code> 调用中断, 成功时 <code>CF=0</code>, 数据存入 <code>es:bx</code>; 失败时 <code>CF=1</code></li>
+<li><code>jnc ok_load_setup</code>, 先检查 <code>CF</code> 标志位, 成功则跳转到 <code>ok_load_setup</code> 执行; 失败则执行下一行</li>
+<li><code>j load_setup</code>, 重新执行读取操作</li>
+</ul>
+<p>由于 <code>bootsec.s</code> 程序长度为 <code>512B</code>, 占用 <code>0x90000</code> 开始到 <code>0x90200</code> 的空间, 因此 <code>mov bx, #0x0200</code>, 表示 <code>setup.s</code> 从这里开始存储.</p>
+<h3 id="加载-system-内核模块"><a href="#加载-system-内核模块" class="headerlink" title="加载 system 内核模块"></a>加载 system 内核模块</h3><p>同样用 BIOS 提供的 <code>int 0x13</code> 中断来加载.</p>
+<p>这一次需要加载 240 个扇区的 system 模块到内存 <code>SYSSEG</code> (<code>0x10000</code>) 处.</p>
+<p>完成这部分程序的加载后, <code>bootsec.s</code> 还需要确认根设备号.</p>
+<p>Root Device, 根文件系统设备是 Linux0.11 延续 Minix 的文件系统管理方式, 其要求系统必须存在一个根文件系统, 其他文件系统挂载在其下 (如 <code>/</code>, <code>/home</code>, <code>/dev</code> 等), 而不是同等地位.</p>
+<p>Linux0.11 没有提供在设备上建立文件系统的工具, 因此需要在一个正在运行的系统上利用类似 <code>fdisk</code>, <code>format</code> 的工具为设备制作一个文件系统.</p>
+<p>因此 Linux0.11 的启动需要两部分数据:</p>
+<ul>
+<li>系统内核镜像, 如 <code>vmlinuz</code> 或 <code>bzImage</code>, 包含 Linux 内核的可执行代码, 负责进程管理, 内存管理等核心功能</li>
+<li>根文件系统, 如 <code>rootfs.img</code>, 包含操作系统运行所需的目录结构, 配置文件, 工具程序, 如 <code>/bin</code>, <code>/etc</code>. 内核启动后, 会挂载根文件系统, 并从中加载必要的程序和配置</li>
+</ul>
+<p>注意区分 “根文件系统” 和 “根目录”, 前者是一个具体的存储设备, 如硬盘分区, <code>initramfs</code>, 包含所有目录和文件, 而后者只是一个逻辑节点, 实际内容来自根文件系统或其他挂载的文件系统. 后者也是 “根文件系统” 的用户入口.</p>
+<p>简而言之, 就是要先格式化设备成一个文件系统, 然后往上挂载目录. 这个格式化后的设备就是根文件系统.</p>
 
                 
               </div>
