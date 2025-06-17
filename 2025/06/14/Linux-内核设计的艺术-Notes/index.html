@@ -24,7 +24,7 @@
 <meta property="og:description" content="介绍这篇是 “Linux 内核设计的艺术” 这本书的笔记. 这本书基于 Linux 0.11 内核代码, 获取如下: 1git clone https:&#x2F;&#x2F;github.com&#x2F;yuan-xy&#x2F;Linux-0.11.git  查看基本文件: 123456789101112131415$ tree -L 1.├── boot├── fs├── hdc-0.11.img├── include├── i">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-06-14T11:42:36.000Z">
-<meta property="article:modified_time" content="2025-06-16T15:21:34.268Z">
+<meta property="article:modified_time" content="2025-06-17T01:40:28.494Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.7k 字
+          2.5k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          14 分钟
+          21 分钟
         
       </span>
     
@@ -338,8 +338,42 @@
 <ul>
 <li><code>.global</code> 后面声明的符号为全局可见, 可以被其他文件或链接器使用</li>
 <li><code>_start</code> 是程序的入口点, 链接器默认从这里开始执行</li>
+<li><code>begtext</code>, <code>begdata</code>, <code>begbss</code> 分别标记代码段 (<code>.text</code>), 数据段 (<code>.data</code>) 和 BSS 段 (<code>.bss</code>) 的起始地址</li>
+<li><code>endtext</code>, <code>enddata</code>, <code>endbss</code> 分别标记结束地址</li>
+<li><code>.equ</code> 用于定义常量</li>
 </ul>
-<p>之后 <code>bootsec</code> 会将它自身 (<code>512B</code>) 内容从内存 <code>0x07C00</code> (<code>BOOTSEG</code>) 处复制到 <code>0x90000</code> (<code>INITSEG</code>).</p>
+<p>之后 <code>bootsec</code> 会将它自身 (<code>512B</code>) 内容从内存 <code>0x07C00</code> (<code>BOOTSEG</code>) 处复制到 <code>0x90000</code> (<code>INITSEG</code>). 这部分代码为:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs assembly">entry start<br>start：<br>mov ax，#BOOTSEG<br>mov ds,ax<br>mov ax，#INITSEG<br>mov es,ax<br>mov cx，#256<br>sub si,si<br>sub di,di<br>rep movw<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>entry start</code> 声明入口标签为 <code>start</code></li>
+<li><code>mov ax, #BOOTSEG</code>, 将 <code>BOOTSEG</code> 变量存储的值赋值给 <code>ax</code></li>
+<li><code>es</code> 存储原本代码所处的段的地址, <code>ds</code> 存储目标段地址</li>
+<li><code>sub si, si</code> 和 <code>sub di, di</code> 将寄存器清零, 此时有两个地址, 源偏移地址为 <code>ds:si = 0x07C0:0x0000</code>, 目标偏移地址为 <code>es:di = 0x9000:0x0000</code></li>
+<li><code>mov cx, #256</code>, 每次移动 2 bytes, 256 次移动 512 bytes, 正好一扇区</li>
+<li><code>req movw</code>, 重复执行 <code>movw</code>, 移动 2 bytes, 直到 <code>cx</code> 减到 0, 每次操作后, <code>si</code> 和 <code>di</code> 自动递增 <code>2</code></li>
+</ul>
+<p>复制完成后, 运行下面代码:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs assembly">rep movw<br>jmpi go,INITSEG<br>go：mov ax,cs<br>mov ds,ax<br></code></pre></td></tr></table></figure>
+<ul>
+<li>由于代码复制到 <code>INITSEG</code> 段 (此时两个段都包含同样的代码), 因此需要跳转到新的段执行 (不然某些偏移地址会计算错误)</li>
+<li><code>jmpi</code> 跳转到 <code>INITSEG:go</code> 地址处执行</li>
+</ul>
+<p>之后运行:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs assembly">go：mov ax,cs<br>mov ds,ax<br>mov es,ax<br>mov ss,ax ！put stack at 0x9ﬀ00.<br>mov sp，#0xFF00！arbitrary value＞＞512<br>！load the setup-sectors directly after the bootblock.<br>！Note that&#x27;es&#x27;is already set up.<br></code></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
                 
               </div>
