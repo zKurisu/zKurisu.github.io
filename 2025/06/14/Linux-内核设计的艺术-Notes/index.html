@@ -24,7 +24,7 @@
 <meta property="og:description" content="介绍这篇是 “Linux 内核设计的艺术” 这本书的笔记. 这本书基于 Linux 0.11 内核代码, 获取如下: 1git clone https:&#x2F;&#x2F;github.com&#x2F;yuan-xy&#x2F;Linux-0.11.git  查看基本文件: 123456789101112131415$ tree -L 1.├── boot├── fs├── hdc-0.11.img├── include├── i">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-06-14T11:42:36.000Z">
-<meta property="article:modified_time" content="2025-06-17T01:40:28.494Z">
+<meta property="article:modified_time" content="2025-06-17T02:46:07.950Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.5k 字
+          2.6k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          21 分钟
+          22 分钟
         
       </span>
     
@@ -357,23 +357,15 @@
 <ul>
 <li>由于代码复制到 <code>INITSEG</code> 段 (此时两个段都包含同样的代码), 因此需要跳转到新的段执行 (不然某些偏移地址会计算错误)</li>
 <li><code>jmpi</code> 跳转到 <code>INITSEG:go</code> 地址处执行</li>
+<li>这里 <code>jmpi</code> 的第二个操作数, 会赋值给 <code>cs</code></li>
 </ul>
 <p>之后运行:</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs assembly">go：mov ax,cs<br>mov ds,ax<br>mov es,ax<br>mov ss,ax ！put stack at 0x9ﬀ00.<br>mov sp，#0xFF00！arbitrary value＞＞512<br>！load the setup-sectors directly after the bootblock.<br>！Note that&#x27;es&#x27;is already set up.<br></code></pre></td></tr></table></figure>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+<ul>
+<li>将 <code>ds</code>, <code>es</code>, <code>ss</code> (栈段地址, stack segment, 也称栈基址地址) 的值设置为 <code>0x9000</code></li>
+<li>将 <code>sp</code> (栈顶指针) 设置为 <code>0xFF00</code></li>
+</ul>
+<p>从这里开始 (设置好 <code>ss</code> 和 <code>sp</code>), 可以在后续使用栈操作进行更复杂的数据运算了.</p>
 
                 
               </div>
