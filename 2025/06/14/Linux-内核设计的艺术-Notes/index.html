@@ -24,7 +24,7 @@
 <meta property="og:description" content="介绍这篇是 “Linux 内核设计的艺术” 这本书的笔记. 这本书基于 Linux 0.11 内核代码, 获取如下: 1git clone https:&#x2F;&#x2F;github.com&#x2F;yuan-xy&#x2F;Linux-0.11.git  查看基本文件: 123456789101112131415$ tree -L 1.├── boot├── fs├── hdc-0.11.img├── include├── i">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-06-14T11:42:36.000Z">
-<meta property="article:modified_time" content="2025-06-17T06:57:53.641Z">
+<meta property="article:modified_time" content="2025-06-17T07:56:45.956Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3.9k 字
+          5k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          33 分钟
+          43 分钟
         
       </span>
     
@@ -378,7 +378,16 @@
 <p>由于 <code>bootsec.s</code> 程序长度为 <code>512B</code>, 占用 <code>0x90000</code> 开始到 <code>0x90200</code> 的空间, 因此 <code>mov bx, #0x0200</code>, 表示 <code>setup.s</code> 从这里开始存储.</p>
 <h3 id="加载-system-内核模块"><a href="#加载-system-内核模块" class="headerlink" title="加载 system 内核模块"></a>加载 system 内核模块</h3><p>同样用 BIOS 提供的 <code>int 0x13</code> 中断来加载.</p>
 <p>这一次需要加载 240 个扇区的 system 模块到内存 <code>SYSSEG</code> (<code>0x10000</code>) 处.</p>
-<p>完成这部分程序的加载后, <code>bootsec.s</code> 还需要确认根设备号.</p>
+<p>完成这部分程序的加载后, <code>bootsec.s</code> 还需要确认根设备号. 代码如下:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs assembly">seg cs<br>mov ax,root_dev<br>cmp ax，#0<br>jne root_deﬁned<br><br>seg cs<br>mov bx,sectors<br>mov ax，#0x0208     ！/dev/ps0-1.2Mb <br>cmp bx，#15<br>je root_deﬁned<br>mov ax，#0x021c     ！/dev/PS0-1.44Mb<br>cmp bx，#18<br>je root_deﬁned <br><br>undef_root：<br>jmp undef_root<br><br>root_deﬁned：<br>seg cs<br>mov root_dev,ax <br><br>.org 508！注意：508即为0x1FC，当前段是0x9000，所以地址是0x901FC<br>root_dev：<br>.word ROOT_DEV<br><br>boot_ﬂag：<br>.word 0xAA55<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>seg cs</code>, 显示指定后续的 <code>mov</code> 操作使用 <code>cs</code> 作为段基址</li>
+<li><code>mov ax, root_dev</code> 和 <code>cmp ax, #0</code> 检查 <code>root_dev</code> 是否非零, 非零则说明 <code>root_dev</code> 已定义</li>
+<li>之后到 <code>undef_root:</code> 的部分检查磁盘参数, 根据 <code>sectors</code> (每磁道扇区数) 判断软盘类型, 如果是 <code>15</code> 扇区, 则对应 <code>1.2MB</code> 软盘, 设备号为 <code>0x0208</code>; 如果是 <code>18</code> 扇区, 则对应 <code>1.44MB</code> 软盘, 设备号为 <code>0x021c</code></li>
+<li><code>undef_root</code> 在检测失败时, 让系统挂起</li>
+<li><code>root_defined</code> 在检测成功时将设备号保存到 <code>root_dev</code></li>
+<li><code>0xAA55</code> 是魔数, 用于验证引导扇区的有效性</li>
+</ul>
 <p>Root Device, 根文件系统设备是 Linux0.11 延续 Minix 的文件系统管理方式, 其要求系统必须存在一个根文件系统, 其他文件系统挂载在其下 (如 <code>/</code>, <code>/home</code>, <code>/dev</code> 等), 而不是同等地位.</p>
 <p>Linux0.11 没有提供在设备上建立文件系统的工具, 因此需要在一个正在运行的系统上利用类似 <code>fdisk</code>, <code>format</code> 的工具为设备制作一个文件系统.</p>
 <p>因此 Linux0.11 的启动需要两部分数据:</p>
@@ -388,6 +397,21 @@
 </ul>
 <p>注意区分 “根文件系统” 和 “根目录”, 前者是一个具体的存储设备, 如硬盘分区, <code>initramfs</code>, 包含所有目录和文件, 而后者只是一个逻辑节点, 实际内容来自根文件系统或其他挂载的文件系统. 后者也是 “根文件系统” 的用户入口.</p>
 <p>简而言之, 就是要先格式化设备成一个文件系统, 然后往上挂载目录. 这个格式化后的设备就是根文件系统.</p>
+<h2 id="setup-程序执行"><a href="#setup-程序执行" class="headerlink" title="setup 程序执行"></a>setup 程序执行</h2><p><code>setup.s</code> 首先利用 BIOS 提供的中断服务程序从设备上提取内核运行所需的机器系统数据, 如光标位置, 显示页面等. 并从中断向量 <code>0x41</code> 和 <code>0x46</code> 所指内存地址处获取硬盘参数表 1, 硬盘参数表 2, 并存放在 <code>0x9000:0x0080</code> 和 <code>0x9000:0x0090</code> 处.</p>
+<p>机器数据加载到内存的 <code>0x90000~0x901FC</code> 处.</p>
+<p>至此, 操作系统内核程序的加载工作已经完成.</p>
+<h2 id="向-32-位模式转变"><a href="#向-32-位模式转变" class="headerlink" title="向 32 位模式转变"></a>向 32 位模式转变</h2><p>需要先关闭中断, 即将 CPU 标志寄存器中的 <code>IF</code> (中断允许标志) 置 <code>0</code>. 对应的汇编指令为:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs assembly">cli<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>cli</code> 是关闭中断, close interrupt</li>
+<li><code>sti</code> 是启用中断, start interrupt</li>
+</ul>
+<p>此时无论是否发生中断, 系统都不再响应, 直到系统自身提供的中断服务程序重建完成. (这时就不依赖 BIOS 中断了)</p>
+<p><code>setup.s</code> 程序接下来将位于 <code>0x10000</code> 的内核程序复制到内存地址起始位置 <code>0x00000</code> 处, 代码如下:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs assembly">do_move：<br>mov es,ax       ！destination segment<br>add ax，#0x1000<br>cmp ax，#0x9000<br>jz end_move<br><br>mov ds,ax       ！source segment<br>sub di,di<br>sub si,si<br>mov cx，#0x8000<br>rep movsw<br>jmp do_move<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>ax</code> 初始值为 <code>0x1000</code>, 每次循环增加 <code>0x1000</code>, 即 <code>4KB</code></li>
+</ul>
 
                 
               </div>
