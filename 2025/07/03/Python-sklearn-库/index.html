@@ -24,7 +24,7 @@
 <meta property="og:description" content="Sklearn 官方文档 简介Scikit-learn, 简称 sklearn, 是一个流行的机器学习库, 其提供丰富的工具用于数据挖掘和分析, 其基于 NumPy, SciPy 和 Matplotlib 构建. 安装1pip install scikit-learn numpy pandas matplotlib  导入如: 1234import sklearnfrom sklearn.mode">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-07-03T05:42:49.000Z">
-<meta property="article:modified_time" content="2025-07-03T05:53:47.458Z">
+<meta property="article:modified_time" content="2025-07-03T06:35:45.303Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          297 字
+          3.1k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          3 分钟
+          26 分钟
         
       </span>
     
@@ -295,6 +295,35 @@
 
 <p>导入如:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">import sklearn<br>from sklearn.model_selection import train_test_split<br>from sklearn.ensemble import RandomForestClassifier<br>from sklearn.metrics import accuracy_score<br></code></pre></td></tr></table></figure>
+
+<h1 id="拟合和预处理"><a href="#拟合和预处理" class="headerlink" title="拟合和预处理"></a>拟合和预处理</h1><p>SKlearn 实现了大量机器学习的算法和模型, 称 “estimators”, 每个 estimator 能够通过 <code>fit</code> 方法来利用数据进行拟合.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.ensemble <span class="hljs-keyword">import</span> RandomForestClassifier<br><br>clf = RandomForestClassifier(random_state=<span class="hljs-number">0</span>)<br>X = [[ <span class="hljs-number">1</span>,  <span class="hljs-number">2</span>,  <span class="hljs-number">3</span>],  <span class="hljs-comment"># 2 samples, 3 features</span><br>     [<span class="hljs-number">11</span>, <span class="hljs-number">12</span>, <span class="hljs-number">13</span>]]<br>y = [<span class="hljs-number">0</span>, <span class="hljs-number">1</span>]  <span class="hljs-comment"># classes of each sample</span><br>clf.fit(X, y)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>X</code> 指数据集, 一般是二维数据, 第一层是样本, 第二层是 features</li>
+<li><code>y</code> 指目标集 (target value), 对于 regression 任务而言是一组 real numbers, 对于 classification 任务而言是一组离散值, 如果是 unsupervised learning tasks 则不需要指定</li>
+</ul>
+<p>拟合好后, 可以用 <code>predict</code> 方法来利用测试数据预测结果:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python">clf.predict(X)  <span class="hljs-comment"># predict classes of the training data</span><br>clf.predict([[<span class="hljs-number">4</span>, <span class="hljs-number">5</span>, <span class="hljs-number">6</span>], [<span class="hljs-number">14</span>, <span class="hljs-number">15</span>, <span class="hljs-number">16</span>]])  <span class="hljs-comment"># predict classes of new data</span><br></code></pre></td></tr></table></figure>
+
+<h1 id="Transformers-和-pre-processors"><a href="#Transformers-和-pre-processors" class="headerlink" title="Transformers 和 pre-processors"></a>Transformers 和 pre-processors</h1><p>Machine learning 任务通常分多个阶段, 一般需要 pre-processing 来处理或转换数据.</p>
+<p>Sklearn 中的 pre-processors 和 transformers 与 estimator 对象的接口大致相同 (都继承自 <code>BaseEstimator</code> 类), 但 <code>predict</code> 方法换成了 <code>transform</code> 方法来产生新的样本数据.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.preprocessing <span class="hljs-keyword">import</span> StandardScaler<br><br>X = [[<span class="hljs-number">0</span>, <span class="hljs-number">15</span>],<br>     [<span class="hljs-number">1</span>, -<span class="hljs-number">10</span>]]<br><span class="hljs-comment"># scale data according to computed scaling values</span><br>StandardScaler().fit(X).transform(X)<br></code></pre></td></tr></table></figure>
+
+<h1 id="Pipelines"><a href="#Pipelines" class="headerlink" title="Pipelines"></a>Pipelines</h1><p>可以把 transformers 和 estimators 组合到一个对象中, 即 <code>Pipeline</code>:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.preprocessing <span class="hljs-keyword">import</span> StandardScaler<br><span class="hljs-keyword">from</span> sklearn.linear_model <span class="hljs-keyword">import</span> LogisticRegression<br><span class="hljs-keyword">from</span> sklearn.pipeline <span class="hljs-keyword">import</span> make_pipeline<br><span class="hljs-keyword">from</span> sklearn.datasets <span class="hljs-keyword">import</span> load_iris<br><span class="hljs-keyword">from</span> sklearn.model_selection <span class="hljs-keyword">import</span> train_test_split<br><span class="hljs-keyword">from</span> sklearn.metrics <span class="hljs-keyword">import</span> accuracy_score<br><br><span class="hljs-comment"># create a pipeline object</span><br>pipe = make_pipeline(<br>    StandardScaler(),<br>    LogisticRegression()<br>)<br><br><span class="hljs-comment"># load the iris dataset and split it into train and test sets</span><br>X, y = load_iris(return_X_y=<span class="hljs-literal">True</span>)<br>X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=<span class="hljs-number">0</span>)<br><br><span class="hljs-comment"># fit the whole pipeline</span><br>pipe.fit(X_train, y_train)<br><br><span class="hljs-comment"># we can now use it like any other estimator</span><br>accuracy_score(pipe.predict(X_test), y_test)<br></code></pre></td></tr></table></figure>
+
+<h1 id="Model-evaluation"><a href="#Model-evaluation" class="headerlink" title="Model evaluation"></a>Model evaluation</h1><p>在用一些数据拟合好一个模型后, 可以用 <code>cross_validate</code> 函数来验证 (Sklearn 当然还提供了很多其他验证方法):</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.datasets <span class="hljs-keyword">import</span> make_regression<br><span class="hljs-keyword">from</span> sklearn.linear_model <span class="hljs-keyword">import</span> LinearRegression<br><span class="hljs-keyword">from</span> sklearn.model_selection <span class="hljs-keyword">import</span> cross_validate<br><br>X, y = make_regression(n_samples=<span class="hljs-number">1000</span>, random_state=<span class="hljs-number">0</span>)<br>lr = LinearRegression()<br><br>result = cross_validate(lr, X, y)  <span class="hljs-comment"># defaults to 5-fold CV</span><br><span class="hljs-built_in">print</span>(result[<span class="hljs-string">&#x27;test_score&#x27;</span>])  <span class="hljs-comment"># r_squared score is high because dataset is easy</span><br></code></pre></td></tr></table></figure>
+
+<h1 id="自动寻找参数"><a href="#自动寻找参数" class="headerlink" title="自动寻找参数"></a>自动寻找参数</h1><p><code>Sklearn</code> 提供一些工具用于自动寻找模型合适的参数:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.datasets <span class="hljs-keyword">import</span> fetch_california_housing<br><span class="hljs-keyword">from</span> sklearn.ensemble <span class="hljs-keyword">import</span> RandomForestRegressor<br><span class="hljs-keyword">from</span> sklearn.model_selection <span class="hljs-keyword">import</span> RandomizedSearchCV<br><span class="hljs-keyword">from</span> sklearn.model_selection <span class="hljs-keyword">import</span> train_test_split<br><span class="hljs-keyword">from</span> scipy.stats <span class="hljs-keyword">import</span> randint<br><br>X, y = fetch_california_housing(return_X_y=<span class="hljs-literal">True</span>)<br>X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=<span class="hljs-number">0</span>)<br><br><span class="hljs-comment"># define the parameter space that will be searched over</span><br>param_distributions = &#123;<span class="hljs-string">&#x27;n_estimators&#x27;</span>: randint(<span class="hljs-number">1</span>, <span class="hljs-number">5</span>),<br>                       <span class="hljs-string">&#x27;max_depth&#x27;</span>: randint(<span class="hljs-number">5</span>, <span class="hljs-number">10</span>)&#125;<br><br><span class="hljs-comment"># now create a searchCV object and fit it to the data</span><br>search = RandomizedSearchCV(estimator=RandomForestRegressor(random_state=<span class="hljs-number">0</span>),<br>                            n_iter=<span class="hljs-number">5</span>,<br>                            param_distributions=param_distributions,<br>                            random_state=<span class="hljs-number">0</span>)<br>search.fit(X_train, y_train)<br>search.best_params_<br>search.score(X_test, y_test)<br></code></pre></td></tr></table></figure>
+
+
+
+
+
+
+
 
 
                 
