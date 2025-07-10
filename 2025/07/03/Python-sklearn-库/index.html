@@ -24,7 +24,7 @@
 <meta property="og:description" content="Sklearn 官方文档 简介Scikit-learn, 简称 sklearn, 是一个流行的机器学习库, 其提供丰富的工具用于数据挖掘和分析, 其基于 NumPy, SciPy 和 Matplotlib 构建. 安装1pip install scikit-learn numpy pandas matplotlib  导入如: 1234import sklearnfrom sklearn.mode">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-07-03T05:42:49.000Z">
-<meta property="article:modified_time" content="2025-07-09T04:32:36.933Z">
+<meta property="article:modified_time" content="2025-07-10T12:14:46.157Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          7.4k 字
+          8.2k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          62 分钟
+          69 分钟
         
       </span>
     
@@ -339,6 +339,14 @@
 <li>第二个是 transformer 对象</li>
 <li>第三个是要施加到的指定列</li>
 </ul>
+<h2 id="LinearRegression"><a href="#LinearRegression" class="headerlink" title="LinearRegression"></a>LinearRegression</h2><p>Time-step feature 示例:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.linear_model <span class="hljs-keyword">import</span> LinearRegression<br><br><span class="hljs-comment"># Training data</span><br>X = df.loc[:, [<span class="hljs-string">&#x27;Time&#x27;</span>]]  <span class="hljs-comment"># features</span><br>y = df.loc[:, <span class="hljs-string">&#x27;NumVehicles&#x27;</span>]  <span class="hljs-comment"># target</span><br><br><span class="hljs-comment"># Train the model</span><br>model = LinearRegression()<br>model.fit(X, y)<br><br><span class="hljs-comment"># Store the fitted values as a time series with the same time index as</span><br><span class="hljs-comment"># the training data</span><br>y_pred = pd.Series(model.predict(X), index=X.index)<br></code></pre></td></tr></table></figure>
+
+<p>Lag feature 示例:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.linear_model <span class="hljs-keyword">import</span> LinearRegression<br><br>df[<span class="hljs-string">&#x27;Lag_1&#x27;</span>] = df[<span class="hljs-string">&#x27;NumVehicles&#x27;</span>].shift(<span class="hljs-number">1</span>)<br>X = df.loc[:, [<span class="hljs-string">&#x27;Lag_1&#x27;</span>]]<br>X.dropna(inplace=<span class="hljs-literal">True</span>)  <span class="hljs-comment"># drop missing values in the feature set</span><br>y = df.loc[:, <span class="hljs-string">&#x27;NumVehicles&#x27;</span>]  <span class="hljs-comment"># create the target</span><br>y, X = y.align(X, join=<span class="hljs-string">&#x27;inner&#x27;</span>)  <span class="hljs-comment"># drop corresponding values in target</span><br><br>model = LinearRegression()<br>model.fit(X, y)<br><br>y_pred = pd.Series(model.predict(X), index=X.index)<br></code></pre></td></tr></table></figure>
+
+
+
 <h1 id="常用预处理器"><a href="#常用预处理器" class="headerlink" title="常用预处理器"></a>常用预处理器</h1><h2 id="StandardScaler"><a href="#StandardScaler" class="headerlink" title="StandardScaler"></a>StandardScaler</h2><p><code>StandardScaler</code> 用 Z-score 对特征进行标准化处理, 转换为均值为 <code>0</code>, 方差为 <code>1</code> 的标准正态分布:</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">from</span> sklearn.preprocessing <span class="hljs-keyword">import</span> StandardScaler<br><br><span class="hljs-comment"># 初始化标准化器</span><br>scaler = StandardScaler()<br><br><span class="hljs-comment"># 示例数据</span><br>X = np.array([[<span class="hljs-number">1</span>, <span class="hljs-number">2</span>], [<span class="hljs-number">3</span>, <span class="hljs-number">4</span>], [<span class="hljs-number">5</span>, <span class="hljs-number">6</span>]])<br><br><span class="hljs-comment"># 拟合数据（计算μ和σ）</span><br>scaler.fit(X)<br><br><span class="hljs-comment"># 查看计算出的参数</span><br><span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;均值:&quot;</span>, scaler.mean_)  <span class="hljs-comment"># [3. 4.]</span><br><span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;方差:&quot;</span>, scaler.var_)   <span class="hljs-comment"># [2.66666667 2.66666667]</span><br><br><span class="hljs-comment"># 转换数据</span><br>X_scaled = scaler.transform(X)<br><span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;标准化结果:\n&quot;</span>, X_scaled)<br><span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">标准化结果:</span><br><span class="hljs-string"> [[-1.22474487 -1.22474487]</span><br><span class="hljs-string"> [ 0.          0.        ]</span><br><span class="hljs-string"> [ 1.22474487  1.22474487]]</span><br><span class="hljs-string">&quot;&quot;&quot;</span><br></code></pre></td></tr></table></figure>
 
