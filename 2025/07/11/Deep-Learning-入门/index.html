@@ -25,8 +25,12 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/deep-learning-neuron-example.png">
 <meta property="og:image" content="http://example.com/img/deep-learning-neuron-with-multiple-input.png">
+<meta property="og:image" content="http://example.com/img/deep-learning-the-learning-curves.png">
+<meta property="og:image" content="http://example.com/img/deep-learning-underfitting-curve-example.png">
+<meta property="og:image" content="http://example.com/img/deep-learning-overfitting-curve-example.png">
+<meta property="og:image" content="http://example.com/img/deep-learning-early-stopping-curve-example.png">
 <meta property="article:published_time" content="2025-07-11T11:15:58.000Z">
-<meta property="article:modified_time" content="2025-07-12T05:58:57.906Z">
+<meta property="article:modified_time" content="2025-07-14T06:23:19.609Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/deep-learning-neuron-example.png">
@@ -238,7 +242,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          504 字
+          1.8k 字
         
       </span>
     
@@ -249,7 +253,7 @@
         
         
         
-          5 分钟
+          15 分钟
         
       </span>
     
@@ -316,7 +320,44 @@
 <ul>
 <li>这里 $y &#x3D; w_0 x_0 + w_1 x_1 + w_2 x_2 + b$</li>
 </ul>
-<h2 id="Connection"><a href="#Connection" class="headerlink" title="Connection"></a>Connection</h2><h2 id="Neural-networks"><a href="#Neural-networks" class="headerlink" title="Neural networks"></a>Neural networks</h2>
+<h2 id="Connection"><a href="#Connection" class="headerlink" title="Connection"></a>Connection</h2><h2 id="Neural-networks"><a href="#Neural-networks" class="headerlink" title="Neural networks"></a>Neural networks</h2><h2 id="Learning-curves"><a href="#Learning-curves" class="headerlink" title="Learning curves"></a>Learning curves</h2><p>Learning curves 描述 training 和 validation 的 loss 值随 epochs 的变化情况:</p>
+<p><img src="/../img/deep-learning-the-learning-curves.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li><code>signal</code> 指训练集中能让模型预测新数据的信息</li>
+<li><code>noise</code> 指训练集中只能让模型预测训练集内容的信息</li>
+<li>只有当 model 从 <code>signal</code> 中学习时, <code>validation</code> 的 loss 曲线才会下降</li>
+<li>遇到 <code>noise</code> 时会形成 <code>gap</code></li>
+</ul>
+<p>当 <code>signal</code> 很少, 会出现 underfitting:</p>
+<p><img src="/../img/deep-learning-underfitting-curve-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>当 <code>noise</code> 过多, 会出现 overfitting:</p>
+<p><img src="/../img/deep-learning-overfitting-curve-example.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="Capacity"><a href="#Capacity" class="headerlink" title="Capacity"></a>Capacity</h2><p>Capacity 指模型能够学习的 partterns 的复杂程度以及大小, 其很大程度上取决于 neurons 的数量以及连接方式.</p>
+<p>当 underfitting 时, 就需要增加 capacity: 添加更多 layers (deeper) 或者每个 layer 添加更多 units (wider).</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs python">model = keras.Sequential([<br>    layers.Dense(<span class="hljs-number">16</span>, activation=<span class="hljs-string">&#x27;relu&#x27;</span>),<br>    layers.Dense(<span class="hljs-number">1</span>),<br>])<br><br>wider = keras.Sequential([<br>    layers.Dense(<span class="hljs-number">32</span>, activation=<span class="hljs-string">&#x27;relu&#x27;</span>),<br>    layers.Dense(<span class="hljs-number">1</span>),<br>])<br><br>deeper = keras.Sequential([<br>    layers.Dense(<span class="hljs-number">16</span>, activation=<span class="hljs-string">&#x27;relu&#x27;</span>),<br>    layers.Dense(<span class="hljs-number">16</span>, activation=<span class="hljs-string">&#x27;relu&#x27;</span>),<br>    layers.Dense(<span class="hljs-number">1</span>),<br>])<br></code></pre></td></tr></table></figure>
+
+<h2 id="Early-stopping"><a href="#Early-stopping" class="headerlink" title="Early stopping"></a>Early stopping</h2><p>Early stopping 指, 在所有轮次的 epochs 跑完之前停止:</p>
+<p><img src="/../img/deep-learning-early-stopping-curve-example.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>可以看到, 接着往后训练, validation 的 loss 会增加</li>
+<li>一般设置 epochs 尽可能大, 然后通过 early stopping 来停止</li>
+</ul>
+<p>在 Keras 中通过 callback 来设置 (每轮 epoch 后调用):</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> tensorflow.keras.callbacks <span class="hljs-keyword">import</span> EarlyStopping<br><br>early_stopping = EarlyStopping(<br>    min_delta=<span class="hljs-number">0.001</span>, <span class="hljs-comment"># minimium amount of change to count as an improvement</span><br>    patience=<span class="hljs-number">20</span>, <span class="hljs-comment"># how many epochs to wait before stopping</span><br>    restore_best_weights=<span class="hljs-literal">True</span>,<br>)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>min_delta</code> 指定可以容忍的波动大小</li>
+</ul>
+<p>之后通过 <code>fit</code> 方法传递:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs python">history = model.fit(<br>    X_train, y_train,<br>    validation_data=(X_valid, y_valid),<br>    batch_size=<span class="hljs-number">256</span>,<br>    epochs=<span class="hljs-number">500</span>,<br>    callbacks=[early_stopping], <span class="hljs-comment"># put your callbacks in a list</span><br>    verbose=<span class="hljs-number">0</span>,  <span class="hljs-comment"># turn off training log</span><br>)<br></code></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
                 
               </div>
             
