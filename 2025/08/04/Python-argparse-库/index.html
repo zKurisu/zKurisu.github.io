@@ -24,7 +24,7 @@
 <meta property="og:description" content="argparse 官方文档 介绍argparse 是 Python 标准库中用于解析命令行参数的库, 相较 sys.argv 功能更多. 关键对象似乎只定义了两种对象:  ArgumentParser, 负责命令行参数解析 ArgumentError 和 ArgumentTypeError 两个 Exceptions  基本使用123import argparseparser &#x3D; argparse">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-08-04T11:02:40.000Z">
-<meta property="article:modified_time" content="2025-08-04T12:30:30.922Z">
+<meta property="article:modified_time" content="2025-08-04T13:32:22.026Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3.7k 字
+          4.9k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          31 分钟
+          41 分钟
         
       </span>
     
@@ -307,6 +307,9 @@
 <p>测试:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ python prog.py<br>$ python prog.py --<span class="hljs-built_in">help</span><br>usage: prog.py [-h]<br><br>options:<br>  -h, --<span class="hljs-built_in">help</span>  show this <span class="hljs-built_in">help</span> message and <span class="hljs-built_in">exit</span><br><br>$ python prog.py --verbose<br>usage: prog.py [-h]<br>prog.py: error: unrecognized arguments: --verbose<br><br>$ python prog.py foo<br>usage: prog.py [-h]<br>prog.py: error: unrecognized arguments: foo<br></code></pre></td></tr></table></figure>
 
+<p>可以添加整个程序的描述信息:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">parser = argparse.ArgumentParser(description=<span class="hljs-string">&quot;calculate X to the power of Y&quot;</span>)<br></code></pre></td></tr></table></figure>
+
 <h2 id="Positional-arguments"><a href="#Positional-arguments" class="headerlink" title="Positional arguments"></a>Positional arguments</h2><p>Positional arguments 设置后是必需输入的.</p>
 <p>用 <code>add_argument()</code> 方法来添加:</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> argparse<br><br>parser = argparse.ArgumentParser()<br>parser.add_argument(<span class="hljs-string">&quot;hello&quot;</span>)<br>args = parser.parse_args()<br><span class="hljs-built_in">print</span>(args.hello)<br></code></pre></td></tr></table></figure>
@@ -360,6 +363,14 @@
 <li>用 <code>--</code> 表示后续参数都是输入参数</li>
 <li><code>*</code> 表示可以为空</li>
 </ul>
+<h2 id="Conflicting-options"><a href="#Conflicting-options" class="headerlink" title="Conflicting options"></a>Conflicting options</h2><p>Conflicting options 指 group 中一个 option 启用后, 就不能启用其他 option 了:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> argparse<br><br>parser = argparse.ArgumentParser()<br>group = parser.add_mutually_exclusive_group()<br>group.add_argument(<span class="hljs-string">&quot;-v&quot;</span>, <span class="hljs-string">&quot;--verbose&quot;</span>, action=<span class="hljs-string">&quot;store_true&quot;</span>)<br>group.add_argument(<span class="hljs-string">&quot;-q&quot;</span>, <span class="hljs-string">&quot;--quiet&quot;</span>, action=<span class="hljs-string">&quot;store_true&quot;</span>)<br>parser.add_argument(<span class="hljs-string">&quot;x&quot;</span>, <span class="hljs-built_in">type</span>=<span class="hljs-built_in">int</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&quot;the base&quot;</span>)<br>parser.add_argument(<span class="hljs-string">&quot;y&quot;</span>, <span class="hljs-built_in">type</span>=<span class="hljs-built_in">int</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">&quot;the exponent&quot;</span>)<br>args = parser.parse_args()<br>answer = args.x**args.y<br><br><span class="hljs-keyword">if</span> args.quiet:<br>    <span class="hljs-built_in">print</span>(answer)<br><span class="hljs-keyword">elif</span> args.verbose:<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;<span class="hljs-subst">&#123;args.x&#125;</span> to the power <span class="hljs-subst">&#123;args.y&#125;</span> equals <span class="hljs-subst">&#123;answer&#125;</span>&quot;</span>)<br><span class="hljs-keyword">else</span>:<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;<span class="hljs-subst">&#123;args.x&#125;</span>^<span class="hljs-subst">&#123;args.y&#125;</span> == <span class="hljs-subst">&#123;answer&#125;</span>&quot;</span>)<br></code></pre></td></tr></table></figure>
+
+<p>示例:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ python prog.py 4 2<br>4^2 == 16<br><br>$ python prog.py 4 2 -q<br>16<br><br>$ python prog.py 4 2 -v<br>4 to the power 2 equals 16<br><br>$ python prog.py 4 2 -vq<br>usage: prog.py [-h] [-v | -q] x y<br>prog.py: error: argument -q/--quiet: not allowed with argument -v/--verbose<br><br>$ python prog.py 4 2 -v --quiet<br>usage: prog.py [-h] [-v | -q] x y<br>prog.py: error: argument -q/--quiet: not allowed with argument -v/--verbose<br></code></pre></td></tr></table></figure>
+
+
+
 
                 
               </div>
@@ -440,6 +451,12 @@
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2025/08/04/Python-tqdm-%E5%BA%93/" title="Python-tqdm-库">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Python-tqdm-库</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">
