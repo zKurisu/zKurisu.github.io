@@ -39,7 +39,7 @@
 <meta property="og:image" content="http://example.com/img/tencent-poster-task-log-info.png">
 <meta property="og:image" content="http://example.com/img/tencent-poster-output-example.png">
 <meta property="article:published_time" content="2025-08-03T03:43:12.000Z">
-<meta property="article:modified_time" content="2025-08-04T07:22:10.632Z">
+<meta property="article:modified_time" content="2025-08-04T08:22:01.045Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/tencent-poster-comp-ques-example.png">
@@ -251,7 +251,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.5k 字
+          2.6k 字
         
       </span>
     
@@ -262,7 +262,7 @@
         
         
         
-          13 分钟
+          22 分钟
         
       </span>
     
@@ -362,7 +362,31 @@
 <li><code>TRAIN_CKPT_PATH</code>, 模型产出路径</li>
 <li><code>TRAIN_TF_EVENTS_PATH</code>, Tensorboard 指标产出路径</li>
 </ul>
-<h2 id="模型发布与管理"><a href="#模型发布与管理" class="headerlink" title="模型发布与管理"></a>模型发布与管理</h2><h2 id="模型推理与评测"><a href="#模型推理与评测" class="headerlink" title="模型推理与评测"></a>模型推理与评测</h2><h2 id="任务运行环境"><a href="#任务运行环境" class="headerlink" title="任务运行环境"></a>任务运行环境</h2><h1 id="Q-amp-A-相关"><a href="#Q-amp-A-相关" class="headerlink" title="Q&amp;A 相关"></a>Q&amp;A 相关</h1><p>进入决赛的 offer 长期有效. 部门涉及腾讯广告下的所有部门, 算法岗位为主体.</p>
+<p>模型权重文件必须产出到 <code>TRAIN_CKPT_PATH</code> 路径下.</p>
+<p>训练产出的 <code>checkpoint</code> 文件必须放到一个以 <code>global_step</code> 开头的目录中, 否则无法被识别.</p>
+<p>如果需要在训练的产出页面展示 <code>loss</code> 等可视化指标, Tensorboard Events 文件必须产出到 <code>TRAIN_TF_EVENTS_PATH</code> 路径下.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> torch.utils.tensorboard <span class="hljs-keyword">import</span> SummaryWritter<br><br>writer = SummaryWritter(os.environ.get(<span class="hljs-string">&#x27;TRAIN_TF_EVENTS_PATH&#x27;</span>))<br></code></pre></td></tr></table></figure>
+
+<h2 id="模型发布与管理"><a href="#模型发布与管理" class="headerlink" title="模型发布与管理"></a>模型发布与管理</h2><p>在训练任务产出页面, 可以选择产出 ckpt (checkpoint) 列表中的模型进行发布, 模型发布后发布状态将更新为 “已发布”, 此时可以在模型管理页面查看已经发布的模型.</p>
+<p>CKPT 指在训练过程中保存的模型状态快照:</p>
+<ul>
+<li>保存训练过程中的权重, 优化器状态等信息, 防止因意外中断导致训练丢失</li>
+<li>可以从检查点恢复训练, 无需从头开始</li>
+<li>可以比较不同 checkpoint 的性能, 来选择最佳模型</li>
+</ul>
+<p>常见框架中都有 CKPT 设置, 如 <code>TensorFlow/Keras</code>:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python">model.save_weights(<span class="hljs-string">&#x27;model.ckpt&#x27;</span>)  <span class="hljs-comment"># 仅权重</span><br>model.save(<span class="hljs-string">&#x27;model_full.ckpt&#x27;</span>)     <span class="hljs-comment"># 完整模型（含结构和优化器）</span><br></code></pre></td></tr></table></figure>
+
+<p>加载:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">model.load_weights(<span class="hljs-string">&#x27;model.ckpt&#x27;</span>)<br></code></pre></td></tr></table></figure>
+
+<p>PyTorch 保存 CKPT:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs python">torch.save(&#123;<br>    <span class="hljs-string">&#x27;epoch&#x27;</span>: epoch,<br>    <span class="hljs-string">&#x27;model_state_dict&#x27;</span>: model.state_dict(),<br>    <span class="hljs-string">&#x27;optimizer_state_dict&#x27;</span>: optimizer.state_dict(),<br>&#125;, <span class="hljs-string">&#x27;model.ckpt&#x27;</span>)<br></code></pre></td></tr></table></figure>
+
+<p>加载:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python">checkpoint = torch.load(<span class="hljs-string">&#x27;model.ckpt&#x27;</span>)<br>model.load_state_dict(checkpoint[<span class="hljs-string">&#x27;model_state_dict&#x27;</span>])<br></code></pre></td></tr></table></figure>
+
+<h2 id="模型推理与评测"><a href="#模型推理与评测" class="headerlink" title="模型推理与评测"></a>模型推理与评测</h2><h2 id="任务运行环境"><a href="#任务运行环境" class="headerlink" title="任务运行环境"></a>任务运行环境</h2><h1 id="Q-amp-A-相关"><a href="#Q-amp-A-相关" class="headerlink" title="Q&amp;A 相关"></a>Q&amp;A 相关</h1><p>进入决赛的 offer 长期有效. 部门涉及腾讯广告下的所有部门, 算法岗位为主体.</p>
 <p>不允许使用外部的公开数据.</p>
 <p>需要规避侵权的风险.</p>
 <p>算力支持具体配置为: 提供虚拟环境, 每个队伍最小的算力提供单元为 0.2 张 H20 卡, 配备 20G 显存, 50G 内存. 使用时间无限制. 最好不使用自己的算力, 以提供公平的环境.</p>
@@ -374,7 +398,8 @@
 <p>如何发现特征, 如何运用.</p>
 <p>每天机会尽量用满. </p>
 <p>注意数据量预留空间.</p>
-<h2 id="什么是-embedding"><a href="#什么是-embedding" class="headerlink" title="什么是 embedding"></a>什么是 embedding</h2><h2 id="什么是表征"><a href="#什么是表征" class="headerlink" title="什么是表征"></a>什么是表征</h2><h2 id="什么是-self-attention"><a href="#什么是-self-attention" class="headerlink" title="什么是 self-attention"></a>什么是 self-attention</h2><h2 id="什么是-encoder-indices-ANN"><a href="#什么是-encoder-indices-ANN" class="headerlink" title="什么是 encoder, indices, ANN"></a>什么是 encoder, indices, ANN</h2><h2 id="Transformer-入门以及相关论文"><a href="#Transformer-入门以及相关论文" class="headerlink" title="Transformer 入门以及相关论文"></a>Transformer 入门以及相关论文</h2><h2 id="什么是表征优化"><a href="#什么是表征优化" class="headerlink" title="什么是表征优化"></a>什么是表征优化</h2><h2 id="什么是召回流程"><a href="#什么是召回流程" class="headerlink" title="什么是召回流程"></a>什么是召回流程</h2><p>不鼓励用 XGBoost 等明显不是生成式的方法. (初赛可以混过去应该)</p>
+<h2 id="什么是-embedding"><a href="#什么是-embedding" class="headerlink" title="什么是 embedding"></a>什么是 embedding</h2><p>在机器学习和自然语言处理中, embedding 是一种将离散数据 (如单词, 类别, 用户 ID 等) 转换为连续向量 (一组实数) 的技术. 其核心是用数学形式捕获数据的语义或关系.</p>
+<h2 id="什么是表征"><a href="#什么是表征" class="headerlink" title="什么是表征"></a>什么是表征</h2><h2 id="什么是-self-attention"><a href="#什么是-self-attention" class="headerlink" title="什么是 self-attention"></a>什么是 self-attention</h2><h2 id="什么是-encoder-indices-ANN"><a href="#什么是-encoder-indices-ANN" class="headerlink" title="什么是 encoder, indices, ANN"></a>什么是 encoder, indices, ANN</h2><h2 id="Transformer-入门以及相关论文"><a href="#Transformer-入门以及相关论文" class="headerlink" title="Transformer 入门以及相关论文"></a>Transformer 入门以及相关论文</h2><h2 id="什么是表征优化"><a href="#什么是表征优化" class="headerlink" title="什么是表征优化"></a>什么是表征优化</h2><h2 id="什么是召回流程"><a href="#什么是召回流程" class="headerlink" title="什么是召回流程"></a>什么是召回流程</h2><p>不鼓励用 XGBoost 等明显不是生成式的方法. (初赛可以混过去应该)</p>
 <h2 id="如何判断是否是生成式"><a href="#如何判断是否是生成式" class="headerlink" title="如何判断是否是生成式"></a>如何判断是否是生成式</h2><p>讲故事.</p>
 <h2 id="如何融合多模态信息到推荐中"><a href="#如何融合多模态信息到推荐中" class="headerlink" title="如何融合多模态信息到推荐中"></a>如何融合多模态信息到推荐中</h2>
                 
