@@ -23,10 +23,12 @@
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="官方 tutorial 介绍PyTorch 是 Facebook 开源的当前最流行的深度学习框架之一. 本地环境搭建对于:  PyTorch Build 2.7.1 Linux Pip Python CUDA 12.8  Archlinux 安装 CUDA 12.8: 1sudo downgrade cuda  选 12.8 的版本即可  安装 torch: 1pip3 install torch">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/pytorch-one-layer-neural-network-example.png">
 <meta property="article:published_time" content="2025-08-04T14:26:44.000Z">
-<meta property="article:modified_time" content="2025-08-05T08:12:28.832Z">
+<meta property="article:modified_time" content="2025-08-05T09:12:17.605Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/pytorch-one-layer-neural-network-example.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -235,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          7.6k 字
+          10k 字
         
       </span>
     
@@ -246,7 +248,7 @@
         
         
         
-          64 分钟
+          83 分钟
         
       </span>
     
@@ -458,7 +460,60 @@
 <h4 id="nn-Linear"><a href="#nn-Linear" class="headerlink" title="nn.Linear"></a>nn.Linear</h4><p><code>nn.Linear</code> 用自身存储的 <code>weights</code> 和 <code>biases</code> 对输入施加线性变换:</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs python">layer1 = nn.Linear(in_features=<span class="hljs-number">28</span>*<span class="hljs-number">28</span>, out_features=<span class="hljs-number">20</span>)<br>hidden1 = layer1(flat_image)<br><span class="hljs-built_in">print</span>(hidden1.size())<br><br><span class="hljs-comment"># torch.Size([3, 20])</span><br></code></pre></td></tr></table></figure>
 
-<h4 id="nn-ReLU"><a href="#nn-ReLU" class="headerlink" title="nn.ReLU"></a>nn.ReLU</h4>
+<h4 id="nn-ReLU"><a href="#nn-ReLU" class="headerlink" title="nn.ReLU"></a>nn.ReLU</h4><p><code>nn.ReLU</code> 提供一种非线性变换:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;Before ReLU: <span class="hljs-subst">&#123;hidden1&#125;</span>\n\n&quot;</span>)<br>hidden1 = nn.ReLU()(hidden1)<br><span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;After ReLU: <span class="hljs-subst">&#123;hidden1&#125;</span>&quot;</span>)<br></code></pre></td></tr></table></figure>
+
+
+<h4 id="nn-Sequential"><a href="#nn-Sequential" class="headerlink" title="nn.Sequential"></a>nn.Sequential</h4><p><code>nn.Sequential</code> 是一个容器, 按序定义各 layer, 数据一层一层传递处理.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs python">seq_modules = nn.Sequential(<br>    flatten,<br>    layer1,<br>    nn.ReLU(),<br>    nn.Linear(<span class="hljs-number">20</span>, <span class="hljs-number">10</span>)<br>)<br><br>input_image = torch.rand(<span class="hljs-number">3</span>, <span class="hljs-number">28</span>, <span class="hljs-number">28</span>)<br>logits = seq_modules(input_image)<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><code>logits</code> 这个命名是一个通用的术语, 通常表示模型输出的未归一化的预测值 (未经过 Softmax 或 Sigmoid 等激活函数的原始输出)</li>
+</ul>
+<h4 id="nn-Softmax"><a href="#nn-Softmax" class="headerlink" title="nn.Softmax"></a>nn.Softmax</h4><p><code>nn.Softmax</code> 将输出归一化到 <code>[0,1]</code> 区间内, 且所有内容相加为 <code>1</code>:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python">softmax = nn.Softmax(dim=<span class="hljs-number">1</span>)<br>pred_probab = softmax(logits)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>dim</code> 指定哪个 dimension 的内容相加为 <code>1</code></li>
+</ul>
+<h3 id="Model-Parameters"><a href="#Model-Parameters" class="headerlink" title="Model Parameters"></a>Model Parameters</h3><p>可以用模型的 <code>parameters()</code> 或 <code>named_parameters()</code> 方法获取内部的参数信息:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;Model structure: <span class="hljs-subst">&#123;model&#125;</span>\n\n&quot;</span>)<br><br><span class="hljs-keyword">for</span> name, param <span class="hljs-keyword">in</span> model.named_parameters():<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;Layer: <span class="hljs-subst">&#123;name&#125;</span> | Size: <span class="hljs-subst">&#123;param.size()&#125;</span> | Values : <span class="hljs-subst">&#123;param[:<span class="hljs-number">2</span>]&#125;</span> \n&quot;</span>)<br></code></pre></td></tr></table></figure>
+
+<h2 id="Automatic-Differentiation"><a href="#Automatic-Differentiation" class="headerlink" title="Automatic Differentiation"></a>Automatic Differentiation</h2><p><a target="_blank" rel="noopener" href="https://docs.pytorch.org/docs/stable/notes/autograd.html">工作机制详情</a></p>
+<p>在训练 neural networks 时, 最常见的算法是 back propagation, 此时参数的调整需根据 loss function 的 gradient. PyTorch 提供内置的微分引擎来计算 gradients, <code>torch.autograd</code>.</p>
+<p>一个 one-layer neural network 示例:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> torch<br><br>x = torch.ones(<span class="hljs-number">5</span>)  <span class="hljs-comment"># input tensor</span><br>y = torch.zeros(<span class="hljs-number">3</span>)  <span class="hljs-comment"># expected output</span><br>w = torch.randn(<span class="hljs-number">5</span>, <span class="hljs-number">3</span>, requires_grad=<span class="hljs-literal">True</span>)<br>b = torch.randn(<span class="hljs-number">3</span>, requires_grad=<span class="hljs-literal">True</span>)<br>z = torch.matmul(x, w)+b<br>loss = torch.nn.functional.binary_cross_entropy_with_logits(z, y)<br></code></pre></td></tr></table></figure>
+
+<p><img src="/../img/pytorch-one-layer-neural-network-example.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>参数指 <code>w</code> (weights) 和 <code>b</code> (bias), 需要计算 loss function 的梯度来进行调整</li>
+<li><code>requires_grad=True</code> 用于启动自动梯度计算, 此时 PyTorch 会记录所有对该张量的操作, 构建一个 computational graph, 以便后续自动计算梯度</li>
+<li>在调用 <code>.backward()</code> 时, PyTorch 会根据 computational graph 自动计算, 并将梯度累计到 tensor 的 <code>.grad</code> 属性中</li>
+</ul>
+<p><code>grad_fn</code> 属性是 computational graph 中创建该张量的操作的引用:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;Gradient function for z = <span class="hljs-subst">&#123;z.grad_fn&#125;</span>&quot;</span>)<br><span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;Gradient function for loss = <span class="hljs-subst">&#123;loss.grad_fn&#125;</span>&quot;</span>)<br></code></pre></td></tr></table></figure>
+
+<h3 id="Computing-gradients"><a href="#Computing-gradients" class="headerlink" title="Computing gradients"></a>Computing gradients</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs python">loss.backward()<br><span class="hljs-built_in">print</span>(w.grad)<br><span class="hljs-built_in">print</span>(b.grad)<br></code></pre></td></tr></table></figure>
+
+<p>调用 <code>.backward()</code> 方法时, PyTorch 会沿着 <code>grad_fn</code> 回溯 computational graph 来计算梯度.</p>
+<h3 id="Disable-gradient-tracking"><a href="#Disable-gradient-tracking" class="headerlink" title="Disable gradient tracking"></a>Disable gradient tracking</h3><p>当只需要 forward computations 时, 不需要计算 gradient, 此时可以关闭 gradient tracking (或者不希望参数修改的时候):</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs python">z = torch.matmul(x, w)+b<br><span class="hljs-built_in">print</span>(z.requires_grad)<br><br><span class="hljs-keyword">with</span> torch.no_grad():<br>    z = torch.matmul(x, w)+b<br><span class="hljs-built_in">print</span>(z.requires_grad)<br></code></pre></td></tr></table></figure>
+
+<p>也可以让 tensor 调用 <code>detach()</code> 方法实现:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs python">z = torch.matmul(x, w)+b<br>z_det = z.detach()<br><span class="hljs-built_in">print</span>(z_det.requires_grad)<br></code></pre></td></tr></table></figure>
+
+<h3 id="Computational-Graphs"><a href="#Computational-Graphs" class="headerlink" title="Computational Graphs"></a>Computational Graphs</h3><p>Computational graph 是一个以 Function objects 构成的 directed acyclic graph, 叶子节点是 input tensors, roots 是 output tensors.</p>
+<p>在 forward pass 中, autograd 会同时进行两个操作:</p>
+<ul>
+<li>执行指定运算以得到 resulting tensor</li>
+<li>在 DAG 中维护该操作的 gradient function</li>
+</ul>
+<p>在 backward pass 中, 即 DAG root 调用 <code>.backward()</code> 方法, autograd 会:</p>
+<ul>
+<li>用 <code>.grad_fn</code> 计算 gradients</li>
+<li>将结果累加到各 tensor 的 <code>grad</code> 属性中</li>
+<li>用 chain rule 计算到 leaf tensors</li>
+</ul>
+
                 
               </div>
             
