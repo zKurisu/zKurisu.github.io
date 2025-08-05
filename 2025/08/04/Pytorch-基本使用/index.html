@@ -25,7 +25,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/pytorch-one-layer-neural-network-example.png">
 <meta property="article:published_time" content="2025-08-04T14:26:44.000Z">
-<meta property="article:modified_time" content="2025-08-05T09:12:17.605Z">
+<meta property="article:modified_time" content="2025-08-05T11:21:00.030Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/pytorch-one-layer-neural-network-example.png">
@@ -237,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          10k 字
+          13k 字
         
       </span>
     
@@ -248,7 +248,7 @@
         
         
         
-          83 分钟
+          113 分钟
         
       </span>
     
@@ -513,7 +513,47 @@
 <li>将结果累加到各 tensor 的 <code>grad</code> 属性中</li>
 <li>用 chain rule 计算到 leaf tensors</li>
 </ul>
+<h2 id="Optimizing-Model-Parameters"><a href="#Optimizing-Model-Parameters" class="headerlink" title="Optimizing Model Parameters"></a>Optimizing Model Parameters</h2><p>需调优的代码:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> torch<br><span class="hljs-keyword">from</span> torch <span class="hljs-keyword">import</span> nn<br><span class="hljs-keyword">from</span> torch.utils.data <span class="hljs-keyword">import</span> DataLoader<br><span class="hljs-keyword">from</span> torchvision <span class="hljs-keyword">import</span> datasets<br><span class="hljs-keyword">from</span> torchvision.transforms <span class="hljs-keyword">import</span> ToTensor<br><br>training_data = datasets.FashionMNIST(<br>    root=<span class="hljs-string">&quot;data&quot;</span>,<br>    train=<span class="hljs-literal">True</span>,<br>    download=<span class="hljs-literal">True</span>,<br>    transform=ToTensor()<br>)<br><br>test_data = datasets.FashionMNIST(<br>    root=<span class="hljs-string">&quot;data&quot;</span>,<br>    train=<span class="hljs-literal">False</span>,<br>    download=<span class="hljs-literal">True</span>,<br>    transform=ToTensor()<br>)<br><br>train_dataloader = DataLoader(training_data, batch_size=<span class="hljs-number">64</span>)<br>test_dataloader = DataLoader(test_data, batch_size=<span class="hljs-number">64</span>)<br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">NeuralNetwork</span>(nn.Module):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self</span>):<br>        <span class="hljs-built_in">super</span>().__init__()<br>        self.flatten = nn.Flatten()<br>        self.linear_relu_stack = nn.Sequential(<br>            nn.Linear(<span class="hljs-number">28</span>*<span class="hljs-number">28</span>, <span class="hljs-number">512</span>),<br>            nn.ReLU(),<br>            nn.Linear(<span class="hljs-number">512</span>, <span class="hljs-number">512</span>),<br>            nn.ReLU(),<br>            nn.Linear(<span class="hljs-number">512</span>, <span class="hljs-number">10</span>),<br>        )<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">self, x</span>):<br>        x = self.flatten(x)<br>        logits = self.linear_relu_stack(x)<br>        <span class="hljs-keyword">return</span> logits<br><br>model = NeuralNetwork()<br></code></pre></td></tr></table></figure>
 
+<p>这里的超参数有:</p>
+<ul>
+<li>Number of epochs</li>
+<li>Batch Size</li>
+<li>Learning Rate</li>
+</ul>
+<p>比如:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs python">learning_rate = <span class="hljs-number">1e-3</span><br>batch_size = <span class="hljs-number">64</span><br>epochs = <span class="hljs-number">5</span><br></code></pre></td></tr></table></figure>
+
+<p>常见的 loss function 有:</p>
+<ul>
+<li><code>nn.MSELoss</code>, Mean Square Error</li>
+<li><code>nn.NLLLoss</code>, Negative Log Likelihood</li>
+<li><code>nn.CrossEntropyLoss</code></li>
+</ul>
+<p>比如:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">loss_fn = nn.CrossEntropyLoss()<br></code></pre></td></tr></table></figure>
+
+<p>优化器如 SGD (Stochastic Gradient Descent):</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)<br></code></pre></td></tr></table></figure>
+
+<p>调优示例:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">train_loop</span>(<span class="hljs-params">dataloader, model, loss_fn, optimizer</span>):<br>    size = <span class="hljs-built_in">len</span>(dataloader.dataset)<br>    <span class="hljs-comment"># Set the model to training mode - important for batch normalization and dropout layers</span><br>    <span class="hljs-comment"># Unnecessary in this situation but added for best practices</span><br>    model.train()<br>    <span class="hljs-keyword">for</span> batch, (X, y) <span class="hljs-keyword">in</span> <span class="hljs-built_in">enumerate</span>(dataloader):<br>        <span class="hljs-comment"># Compute prediction and loss</span><br>        pred = model(X)<br>        loss = loss_fn(pred, y)<br><br>        <span class="hljs-comment"># Backpropagation</span><br>        loss.backward()<br>        optimizer.step()<br>        optimizer.zero_grad()<br><br>        <span class="hljs-keyword">if</span> batch % <span class="hljs-number">100</span> == <span class="hljs-number">0</span>:<br>            loss, current = loss.item(), batch * batch_size + <span class="hljs-built_in">len</span>(X)<br>            <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;loss: <span class="hljs-subst">&#123;loss:&gt;7f&#125;</span>  [<span class="hljs-subst">&#123;current:&gt;5d&#125;</span>/<span class="hljs-subst">&#123;size:&gt;5d&#125;</span>]&quot;</span>)<br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">test_loop</span>(<span class="hljs-params">dataloader, model, loss_fn</span>):<br>    <span class="hljs-comment"># Set the model to evaluation mode - important for batch normalization and dropout layers</span><br>    <span class="hljs-comment"># Unnecessary in this situation but added for best practices</span><br>    model.<span class="hljs-built_in">eval</span>()<br>    size = <span class="hljs-built_in">len</span>(dataloader.dataset)<br>    num_batches = <span class="hljs-built_in">len</span>(dataloader)<br>    test_loss, correct = <span class="hljs-number">0</span>, <span class="hljs-number">0</span><br><br>    <span class="hljs-comment"># Evaluating the model with torch.no_grad() ensures that no gradients are computed during test mode</span><br>    <span class="hljs-comment"># also serves to reduce unnecessary gradient computations and memory usage for tensors with requires_grad=True</span><br>    <span class="hljs-keyword">with</span> torch.no_grad():<br>        <span class="hljs-keyword">for</span> X, y <span class="hljs-keyword">in</span> dataloader:<br>            pred = model(X)<br>            test_loss += loss_fn(pred, y).item()<br>            correct += (pred.argmax(<span class="hljs-number">1</span>) == y).<span class="hljs-built_in">type</span>(torch.<span class="hljs-built_in">float</span>).<span class="hljs-built_in">sum</span>().item()<br><br>    test_loss /= num_batches<br>    correct /= size<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;Test Error: \n Accuracy: <span class="hljs-subst">&#123;(<span class="hljs-number">100</span>*correct):&gt;<span class="hljs-number">0.1</span>f&#125;</span>%, Avg loss: <span class="hljs-subst">&#123;test_loss:&gt;8f&#125;</span> \n&quot;</span>)<br><br>loss_fn = nn.CrossEntropyLoss()<br>optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)<br><br>epochs = <span class="hljs-number">10</span><br><span class="hljs-keyword">for</span> t <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(epochs):<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;Epoch <span class="hljs-subst">&#123;t+<span class="hljs-number">1</span>&#125;</span>\n-------------------------------&quot;</span>)<br>    train_loop(train_dataloader, model, loss_fn, optimizer)<br>    test_loop(test_dataloader, model, loss_fn)<br><span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Done!&quot;</span>)<br></code></pre></td></tr></table></figure>
+
+<h2 id="Saving-and-Loading-Model-Weights"><a href="#Saving-and-Loading-Model-Weights" class="headerlink" title="Saving and Loading Model Weights"></a>Saving and Loading Model Weights</h2><p>还是以 torchvision 的模型为例, 讲解如何保存&#x2F;加载模型参数.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> torch<br><span class="hljs-keyword">import</span> torchvision.models <span class="hljs-keyword">as</span> models<br></code></pre></td></tr></table></figure>
+
+<p>PyTorch models 将学习到的参数保存在一个静态的字典 <code>state_dict</code> 中, 可以通过调用 <code>torch.save</code> 函数来保存:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python">model = models.vgg16(weights=<span class="hljs-string">&#x27;IMAGENET1K_V1&#x27;</span>)<br>torch.save(model.state_dict(), <span class="hljs-string">&#x27;model_weights.pth&#x27;</span>)<br></code></pre></td></tr></table></figure>
+
+<p>可以用 <code>load_state_dict()</code> 方法以及 <code>torch.load()</code> 函数来加载:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs python">model = models.vgg16() <span class="hljs-comment"># we do not specify ``weights``, i.e. create untrained model</span><br>model.load_state_dict(torch.load(<span class="hljs-string">&#x27;model_weights.pth&#x27;</span>, weights_only=<span class="hljs-literal">True</span>))<br>model.<span class="hljs-built_in">eval</span>()<br></code></pre></td></tr></table></figure>
+
+<p>可以保存&#x2F;加载整个模型:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python">torch.save(model, <span class="hljs-string">&#x27;model.pth&#x27;</span>)<br>model = torch.load(<span class="hljs-string">&#x27;model.pth&#x27;</span>, weights_only=<span class="hljs-literal">False</span>)<br></code></pre></td></tr></table></figure>
+
+<h1 id="kaggle-教程"><a href="#kaggle-教程" class="headerlink" title="kaggle 教程"></a>kaggle 教程</h1><p><a target="_blank" rel="noopener" href="https://www.kaggle.com/code/jieorkarin/pytorch-tutorial-for-deep-learning-lovers">kaggle 教程地址</a></p>
+<h1 id="Interactively-debugging"><a href="#Interactively-debugging" class="headerlink" title="Interactively debugging"></a>Interactively debugging</h1><h1 id="Dynamic-graphs"><a href="#Dynamic-graphs" class="headerlink" title="Dynamic graphs"></a>Dynamic graphs</h1>
                 
               </div>
             
