@@ -35,10 +35,22 @@
 <meta property="og:image" content="http://example.com/img/transformer-probability-for-last-token.png">
 <meta property="og:image" content="http://example.com/img/transformer-token-list-to-embedding.png">
 <meta property="og:image" content="http://example.com/img/transformer-embedding-vector-minus.png">
+<meta property="og:image" content="http://example.com/img/transformer-how-to-get-query-vector.png">
+<meta property="og:image" content="http://example.com/img/transformer-how-to-calculate-key-vector.png">
+<meta property="og:image" content="http://example.com/img/transformer-how-query-key-works.png">
+<meta property="og:image" content="http://example.com/img/transformer-how-to-calculate-relation.png">
+<meta property="og:image" content="http://example.com/img/transformer-one-attend-to-another.png">
+<meta property="og:image" content="http://example.com/img/transformer-attention-pattern.png">
+<meta property="og:image" content="http://example.com/img/transformer-how-to-use-value-vector.png">
+<meta property="og:image" content="http://example.com/img/transformer-after-attention-update.png">
+<meta property="og:image" content="http://example.com/img/transformer-self-attention-calculation.png">
+<meta property="og:image" content="http://example.com/img/transformer-adjust-with-qkv-matrix.png">
+<meta property="og:image" content="http://example.com/img/transformer-multi-head-attention-example.png">
+<meta property="og:image" content="http://example.com/img/transformer-multi-head-attention-calculation.png">
 <meta property="og:image" content="http://example.com/img/transformer-how-to-get-output.png">
 <meta property="og:image" content="http://example.com/img/transformer-dot-product-example.png">
 <meta property="article:published_time" content="2025-08-11T08:59:33.000Z">
-<meta property="article:modified_time" content="2025-08-11T11:43:17.641Z">
+<meta property="article:modified_time" content="2025-08-11T12:48:57.197Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/transformer-output-example.png">
@@ -250,7 +262,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          812 字
+          1.5k 字
         
       </span>
     
@@ -261,7 +273,7 @@
         
         
         
-          7 分钟
+          13 分钟
         
       </span>
     
@@ -341,6 +353,37 @@
 </ul>
 <p><img src="/../img/transformer-embedding-vector-minus.png" srcset="/img/loading.gif" lazyload></p>
 <p>Token list 一开始是随机的 vectors, 然后通过训练找出.</p>
+<h2 id="Attention"><a href="#Attention" class="headerlink" title="Attention"></a>Attention</h2><p>一个 token 要进行查询相关性的信息包含在 Query vector, 该 vector 的计算为 $Q &#x3D; W_Q E$:</p>
+<p><img src="/../img/transformer-how-to-get-query-vector.png" srcset="/img/loading.gif" lazyload></p>
+<p>另一个需要计算的 vector 是 Key, 即 Query 查询的内容:</p>
+<p><img src="/../img/transformer-how-to-calculate-key-vector.png" srcset="/img/loading.gif" lazyload></p>
+<p>Query 和 Key vector 都是将 embedding 映射到低维得到的, 通过比较这两个 vector, 就能够知道是否查找的是自己:</p>
+<p><img src="/../img/transformer-how-query-key-works.png" srcset="/img/loading.gif" lazyload></p>
+<p>具体的方式就是计算 dot product:</p>
+<p><img src="/../img/transformer-how-to-calculate-relation.png" srcset="/img/loading.gif" lazyload></p>
+<p>数值越大相关性越高:</p>
+<p><img src="/../img/transformer-one-attend-to-another.png" srcset="/img/loading.gif" lazyload></p>
+<p>这些数值通过 softmax 映射到概率分布, 从而进行加权和来更新 vector:</p>
+<p><img src="/../img/transformer-attention-pattern.png" srcset="/img/loading.gif" lazyload></p>
+<p>Value vector 计算为 $V &#x3D; W_V E$, 其用于与 attention weight 相乘:</p>
+<p><img src="/../img/transformer-how-to-use-value-vector.png" srcset="/img/loading.gif" lazyload></p>
+<p>在 Attention is all you need 论文中, attention 的计算式为:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>Attention(Q,K,V) &#x3D; softmax( \frac{QK^T}{\sqrt{d_k}})V<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>$QK^T$ 表示 dot product 矩阵</li>
+<li>$\sqrt{d_k}$ 是为了保证数值稳定</li>
+</ul>
+<p>经过 attention 更新后的 vector 为:</p>
+<p><img src="/../img/transformer-after-attention-update.png" srcset="/img/loading.gif" lazyload></p>
+<p>这就是 self-attention 的工作过程:</p>
+<p><img src="/../img/transformer-self-attention-calculation.png" srcset="/img/loading.gif" lazyload></p>
+<p>而输出值可以通过修改 QKV 矩阵参数调整:</p>
+<p><img src="/../img/transformer-adjust-with-qkv-matrix.png" srcset="/img/loading.gif" lazyload></p>
+<p>每一个 token 与其他 tokens 的相关性可以从多个方面考虑, 此时 QK 矩阵的参数会发生改变, 这也是为什么需要 multi-head attention.</p>
+<p><img src="/../img/transformer-multi-head-attention-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>每一组 QK 矩阵对应一种 attention pattern:</p>
+<p><img src="/../img/transformer-multi-head-attention-calculation.png" srcset="/img/loading.gif" lazyload></p>
+<p>Attention 的一大好处在于能够并行计算.</p>
 <h2 id="输出"><a href="#输出" class="headerlink" title="输出"></a>输出</h2><p>计算输出矩阵中最后一列在所有 token 中的概率分布 (利用 softmax):</p>
 <p><img src="/../img/transformer-how-to-get-output.png" srcset="/img/loading.gif" lazyload></p>
 <ul>
