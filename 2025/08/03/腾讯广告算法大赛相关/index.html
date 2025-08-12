@@ -43,7 +43,7 @@
 <meta property="og:image" content="http://example.com/img/tencent-poster-modle-get-point.png">
 <meta property="og:image" content="http://example.com/img/tencent-poster-submit-point.png">
 <meta property="article:published_time" content="2025-08-03T03:43:12.000Z">
-<meta property="article:modified_time" content="2025-08-12T02:53:25.305Z">
+<meta property="article:modified_time" content="2025-08-12T03:47:31.817Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/tencent-poster-comp-ques-example.png">
@@ -255,7 +255,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          7.2k 字
+          8.4k 字
         
       </span>
     
@@ -266,7 +266,7 @@
         
         
         
-          60 分钟
+          70 分钟
         
       </span>
     
@@ -447,7 +447,16 @@
 
 <h2 id="forward-函数"><a href="#forward-函数" class="headerlink" title="forward 函数"></a>forward 函数</h2><p>在深度学习中, <code>forward</code> 特指数据从输入层流向输出层的计算过程, 因此任何模块&#x2F;模型都能用 <code>forward</code> 函数来指代计算过程.</p>
 <h2 id="model-py-文件"><a href="#model-py-文件" class="headerlink" title="model.py 文件"></a>model.py 文件</h2><p>该文件中定义的 classes 都是 model 的组件, 可以替换.</p>
-<h2 id="dataset-py-文件"><a href="#dataset-py-文件" class="headerlink" title="dataset.py 文件"></a>dataset.py 文件</h2><p>该文件定义了一个 PyTorch 数据集类, 用于处理用户行为序列数据, 支持动态加载, 副采样, 特征填充, 序列 padding 等.</p>
+<h2 id="dataset-py-文件"><a href="#dataset-py-文件" class="headerlink" title="dataset.py 文件"></a>dataset.py 文件</h2><p>该文件定义了一个 PyTorch 数据集类, 用于处理用户行为序列数据, 支持动态加载, 副采样, 特征填充, 序列 padding 等, 为 transformer 等序列模型提供标准化的数据格式.</p>
+<h2 id="本地环境修改注意"><a href="#本地环境修改注意" class="headerlink" title="本地环境修改注意"></a>本地环境修改注意</h2><p>需要修改两处:</p>
+<ul>
+<li><code>main.py</code> 文件中, 将 <code>default=[&#39;81&#39;]</code> 改为 <code>default=[&#39;82&#39;]</code>:<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">parser.add_argument(<span class="hljs-string">&#x27;--mm_emb_id&#x27;</span>, nargs=<span class="hljs-string">&#x27;+&#x27;</span>, default=[<span class="hljs-string">&#x27;82&#x27;</span>], <span class="hljs-built_in">type</span>=<span class="hljs-built_in">str</span>, choices=[<span class="hljs-built_in">str</span>(s) <span class="hljs-keyword">for</span> s <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">81</span>, <span class="hljs-number">87</span>)])<br></code></pre></td></tr></table></figure></li>
+<li><code>dataset.py</code> 文件中, <code>*.json</code> 改为 <code>part*</code>:<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">for</span> json_file <span class="hljs-keyword">in</span> base_path.glob(<span class="hljs-string">&#x27;part*&#x27;</span>):<br></code></pre></td></tr></table></figure></li>
+</ul>
+<p>如果遇到物理显存足够, 但是 PyTorch 中分配不足, 则添加环境变量:</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs routeros"><span class="hljs-built_in">export</span> <span class="hljs-attribute">PYTORCH_CUDA_ALLOC_CONF</span>=expandable_segments:True<br></code></pre></td></tr></table></figure>
+
+
 <h1 id="Q-amp-A-相关"><a href="#Q-amp-A-相关" class="headerlink" title="Q&amp;A 相关"></a>Q&amp;A 相关</h1><p>进入决赛的 offer 长期有效. 部门涉及腾讯广告下的所有部门, 算法岗位为主体.</p>
 <p>不允许使用外部的公开数据.</p>
 <p>需要规避侵权的风险.</p>
@@ -489,6 +498,12 @@
 
 <p>加载:</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python">checkpoint = torch.load(<span class="hljs-string">&#x27;model.ckpt&#x27;</span>)<br>model.load_state_dict(checkpoint[<span class="hljs-string">&#x27;model_state_dict&#x27;</span>])<br></code></pre></td></tr></table></figure>
+
+<h2 id="什么是推理"><a href="#什么是推理" class="headerlink" title="什么是推理"></a>什么是推理</h2><p>推理, inference 是深度学习模型在实际应用中对新数据进行预测的核型过程, 此时模型参数固定, 仅执行前向计算.</p>
+<p>给定训练好的模型参数 $\theta$ 和新输入 $x$, 计算输出:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\hat{y} &#x3D; f_{\theta} (x)<br>\end{aligned}<br>}<br>$$</p>
+<p>示例:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># 1. 加载训练好的模型</span><br>model = torch.load(<span class="hljs-string">&#x27;resnet50.pth&#x27;</span>).<span class="hljs-built_in">eval</span>()  <span class="hljs-comment"># 注意eval()模式</span><br>model.to(<span class="hljs-string">&#x27;cuda&#x27;</span>)<br><br><span class="hljs-comment"># 2. 数据预处理</span><br>transform = transforms.Compose([<br>    transforms.Resize(<span class="hljs-number">256</span>),<br>    transforms.CenterCrop(<span class="hljs-number">224</span>),<br>    transforms.ToTensor(),<br>    transforms.Normalize([<span class="hljs-number">0.485</span>, <span class="hljs-number">0.456</span>, <span class="hljs-number">0.406</span>], [<span class="hljs-number">0.229</span>, <span class="hljs-number">0.224</span>, <span class="hljs-number">0.225</span>])<br>])<br>input_tensor = transform(image).unsqueeze(<span class="hljs-number">0</span>).cuda()  <span class="hljs-comment"># 增加batch维度</span><br><br><span class="hljs-comment"># 3. 执行推理</span><br><span class="hljs-keyword">with</span> torch.no_grad():  <span class="hljs-comment"># 禁用梯度计算</span><br>    output = model(input_tensor)<br>    probs = torch.nn.functional.softmax(output[<span class="hljs-number">0</span>], dim=<span class="hljs-number">0</span>)<br><br><span class="hljs-comment"># 4. 后处理</span><br>pred_class = torch.argmax(probs).item()<br><span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;预测类别: <span class="hljs-subst">&#123;class_names[pred_class]&#125;</span>, 置信度: <span class="hljs-subst">&#123;probs[pred_class]:<span class="hljs-number">.2</span>%&#125;</span>&quot;</span>)<br></code></pre></td></tr></table></figure>
+
 
                 
               </div>
