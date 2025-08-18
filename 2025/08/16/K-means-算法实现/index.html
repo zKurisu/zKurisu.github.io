@@ -24,7 +24,7 @@
 <meta property="og:description" content="该 blog 仅记录一个课程任务. 大纲是照着提交模板写的. 介绍K-means 算法用于将 N-dimensional population 分到 k 个集合中 (clustering). 该算法不能保证每次都能找到 optimal partition (k 的取值, 初始化的位置都会影响). 相关概念或术语PopulationPopulation 在统计学和信号处理中, 指研究对象的完整数据集">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-08-16T04:32:05.000Z">
-<meta property="article:modified_time" content="2025-08-18T13:19:33.194Z">
+<meta property="article:modified_time" content="2025-08-18T14:19:30.845Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3.8k 字
+          4k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          32 分钟
+          34 分钟
         
       </span>
     
@@ -343,6 +343,12 @@
 <h2 id="目标函数"><a href="#目标函数" class="headerlink" title="目标函数"></a>目标函数</h2><p>K-means 的目标是最小化目标函数 $W(S)$:</p>
 <p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>W(x) &#x3D; \sum_{i&#x3D;1}^k \int_{S_i} |z - x_i|^2 dp(z)<br>\end{aligned}<br>}<br>$$</p>
 <h2 id="Lloyd-版本"><a href="#Lloyd-版本" class="headerlink" title="Lloyd 版本"></a>Lloyd 版本</h2><p>Lloyd 的算法会从 data points 中随机选取 k 个 centers, 然后将其他 point 分配给最近的 center. 之后 centers 会重新计算为各 cluster 的质心 (均值). 这里的两个步骤 (assignment 和 center calculation) 会重复进行直到稳定.</p>
+<p>但该算法不一定会得到最优解, 当 $n$ 和 $k$ 固定时, $\frac{\phi}{\phi_{OPT}}$ 仍然是无界的:</p>
+<ul>
+<li>$\phi$ 是 k-means 算法生成的 clusters 的总方差</li>
+<li>$\phi_{OPT}$ 是理论上可能达到的最优 clusters 的方差 (也就是全局最优解)</li>
+<li>无界的, 说明这个比值可以是无限大, 也就是说结果可能很差</li>
+</ul>
 <h2 id="算法改进-动态调整-K"><a href="#算法改进-动态调整-K" class="headerlink" title="算法改进: 动态调整 K"></a>算法改进: 动态调整 K</h2><p>初始化时使用用户指定的 k, 但后续会根据数据分布动态合并或拆分 group, 最终 k 可能不等于初始值:</p>
 <ul>
 <li>合并, coarsening, 若两个 groups 中心距离 $&lt; C$, 则合并</li>
@@ -355,17 +361,22 @@
 <li>效果不稳定, 多次运行结果差异大</li>
 </ul>
 <p>比如数据有 3 个 groups, 如果初始随机质心全部落在一个 group 内, 最终聚类会合并其他 group.</p>
-<p><code>K-means++</code> 通过概率加权来选择初始质心, 确保质心分散且覆盖不同 group, 具体步骤如下:</p>
+<p><code>K-means++</code> 通过概率加权来选择初始质心 (不再完全随机), 确保质心分散且覆盖不同 group, 具体步骤如下:</p>
 <ol>
 <li>首个质心: 随机选择一个数据点作为第一个质心</li>
 <li>后续质心: <ul>
 <li>计算每个点 $x$ 到当前已选质心的最短距离 $D(x)$</li>
-<li>按概率 $\frac{D(x)^2}{\sum D(x)^2}$ 选择下一个质心 (距离越大的点概率越高)</li>
+<li>按概率 $\frac{D(x)^2}{\sum D(x)^2}$ 选择下一个质心 (距离越大的点概率越高, 但不是直接取概率最高的那个)</li>
 </ul>
 </li>
 <li>重复: 直到选出 k 个质心</li>
 </ol>
 <p>因为优先选择远离已有质心的点, 能够使质心覆盖不同的区域.</p>
+<p>该算法将原来的无界复杂度, 降低到 $E[\phi] \le 8(lnk + 2) \phi_{OPT}$:</p>
+<ul>
+<li>$E[\phi]$ 是 <code>k-means++</code> 的期望方差</li>
+</ul>
+<p>在 well formed data sets 上, 能达到 O(1)-competitive 的速度.</p>
 <h1 id="代码实现思路"><a href="#代码实现思路" class="headerlink" title="代码实现思路"></a>代码实现思路</h1><p>整体需要的组件:</p>
 <ul>
 <li>初始化模块</li>
@@ -376,7 +387,6 @@
 <p>不限于上述说明的子目录.</p>
 <h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><h1 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h1><p>MacQueen, J. (1967). “Some methods for classification and analysis of multivariate observations.”Proceedings of the Fifth Berkeley Symposium on Mathematical Statistics and Probability.</p>
 <p>Arthur, D., &amp; Vassilvitskii, S. (2007). “k-means++: The advantages of careful seeding.”Proceedings of SODA</p>
-<p>Scikit-learn: Machine Learning in Python”(Pedregosa et al., 2011, JMLR)</p>
 
                 
               </div>
@@ -457,6 +467,12 @@
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2025/08/18/Google-Cpp-Style-Guide-Notes/" title="Google-C++-Style-Guide-Notes">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Google-C++-Style-Guide-Notes</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">
