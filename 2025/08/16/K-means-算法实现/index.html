@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="该 blog 仅记录一个课程任务. 大纲是照着提交模板写的. 介绍K-means 相关概念或术语PopulationPopulation 在统计学和信号处理中, 指研究对象的完整数据集合. Within-class varianceWithin-class variance, 类内方差, 衡量同一类别 (或聚类) 内部数据的离散程度, 数学表达为: $$\displaylines{\begin{a">
+    <meta name="description" content="该 blog 仅记录一个课程任务. 大纲是照着提交模板写的. 介绍K-means 算法用于将 N-dimensional population 分到 k 个集合中. 相关概念或术语PopulationPopulation 在统计学和信号处理中, 指研究对象的完整数据集合. Within-class varianceWithin-class variance, 类内方差, 衡量同一类别 (或聚类)">
 <meta property="og:type" content="article">
 <meta property="og:title" content="K-means-算法实现">
 <meta property="og:url" content="http://example.com/2025/08/16/K-means-%E7%AE%97%E6%B3%95%E5%AE%9E%E7%8E%B0/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="该 blog 仅记录一个课程任务. 大纲是照着提交模板写的. 介绍K-means 相关概念或术语PopulationPopulation 在统计学和信号处理中, 指研究对象的完整数据集合. Within-class varianceWithin-class variance, 类内方差, 衡量同一类别 (或聚类) 内部数据的离散程度, 数学表达为: $$\displaylines{\begin{a">
+<meta property="og:description" content="该 blog 仅记录一个课程任务. 大纲是照着提交模板写的. 介绍K-means 算法用于将 N-dimensional population 分到 k 个集合中. 相关概念或术语PopulationPopulation 在统计学和信号处理中, 指研究对象的完整数据集合. Within-class varianceWithin-class variance, 类内方差, 衡量同一类别 (或聚类)">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-08-16T04:32:05.000Z">
-<meta property="article:modified_time" content="2025-08-18T03:22:55.971Z">
+<meta property="article:modified_time" content="2025-08-18T04:18:32.086Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          875 字
+          1.5k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          8 分钟
+          13 分钟
         
       </span>
     
@@ -290,17 +290,27 @@
               <div class="markdown-body">
                 
                 <p>该 blog 仅记录一个课程任务. 大纲是照着提交模板写的.</p>
-<h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>K-means</p>
+<h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>K-means 算法用于将 N-dimensional population 分到 k 个集合中.</p>
 <h1 id="相关概念或术语"><a href="#相关概念或术语" class="headerlink" title="相关概念或术语"></a>相关概念或术语</h1><h2 id="Population"><a href="#Population" class="headerlink" title="Population"></a>Population</h2><p>Population 在统计学和信号处理中, 指研究对象的完整数据集合.</p>
 <h2 id="Within-class-variance"><a href="#Within-class-variance" class="headerlink" title="Within-class variance"></a>Within-class variance</h2><p>Within-class variance, 类内方差, 衡量同一类别 (或聚类) 内部数据的离散程度, 数学表达为:</p>
-<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>w^2 (S) &#x3D; \sum_{i&#x3D;1}^k \sum_{z \in S_i} | z - \mu_i |^2<br>\end{aligned}<br>}<br>$$</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>w^2 (S) &#x3D; \sum_{i&#x3D;1}^k \int S_i | z - \mu_i |^2 dp(z)<br>\end{aligned}<br>}<br>$$</p>
 <ul>
-<li>$S_i$ 指第 <code>i</code> 个聚类</li>
-<li>$\mu_i$ 是 $S_i$ 的质心 (均值)</li>
+<li>$\sum_{i&#x3D;1}^k$ 外层求和, 对所有 k 个聚类求和, 用于得到整体聚类质量的评估, 可以用来比较初始条件不同, 或者不同划分时的好坏</li>
+<li>$\int_{S_i}$ 指第 <code>i</code> 个聚类内所有元素</li>
 <li>$z$ 是一个数据点</li>
+<li>$\mu_i$ 是 $S_i$ 的质心 (均值)</li>
+<li>$dp(z)$ 是概率测度, 描述数据点在z处的概率密度 (连续) 或概率质量 (离散), $dp(z) &#x3D; f(z) dz$, $f(z)$ 是概率密度函数. 乘以这个概率是为了加权</li>
 </ul>
 <h2 id="Probability-Mass-Function"><a href="#Probability-Mass-Function" class="headerlink" title="Probability Mass Function"></a>Probability Mass Function</h2><p>Probability Mass Function, 概率质量函数, 描述离散随机变量在各取值点上的概率分布, 记为 $p(z)$, 满足:</p>
 <p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\sum_{z} p(z) &#x3D; 1<br>\end{aligned}<br>}<br>$$</p>
+<h2 id="Conditional-Mean"><a href="#Conditional-Mean" class="headerlink" title="Conditional Mean"></a>Conditional Mean</h2><p>Conditional Mean, 条件均值, 指在已知某些条件下的随机变量的期望值. 其目的是计算 “均值”, 而不是 “概率”.</p>
+<p>数学定义:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\mu_S &#x3D; E[Z | Z \in S] &#x3D; \frac{\int_S dp(z)}{\int_S dp(z)}<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>分子, 是数据点 z 在 $dp(z)$ 作为权的加权和</li>
+<li>分母, $S$ 的总概率, 也就是所有权之和</li>
+</ul>
+<h2 id="Ordinary-Sample-Mean"><a href="#Ordinary-Sample-Mean" class="headerlink" title="Ordinary Sample Mean"></a>Ordinary Sample Mean</h2><p>Ordinary Sample Mean, 普通样本均值, 仅表示一组数据的平均值:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\overline &#x3D; \frac{1}{n} \sum_{i&#x3D;1}^n z_i<br>\end{aligned}<br>}<br>$$</p>
 <h1 id="算法原理描述"><a href="#算法原理描述" class="headerlink" title="算法原理描述"></a>算法原理描述</h1><p>含每个任务相关的模型, 算法细节描述.</p>
 <h2 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h2><h1 id="实验结果与分析"><a href="#实验结果与分析" class="headerlink" title="实验结果与分析"></a>实验结果与分析</h1><p>实验数据 (数据集等)</p>
 <p>实验设置 (参数, 实验过程等说明)</p>
