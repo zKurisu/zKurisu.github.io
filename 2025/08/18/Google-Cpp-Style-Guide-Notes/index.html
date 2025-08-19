@@ -24,7 +24,7 @@
 <meta property="og:description" content="Header Files基本上每个 .cc 文件都会对应一个 .h 文件, 除了单元测试或者只包含 main 函数的 .cc 文件. Self-contained Headers.h 的头文件需要是 self-contained 的, 即能够独立编译. 不能独立编译的用 .inc 作为文件后缀. Header file 应该包含自己需要的所有其他 headers (比如用了一些标准库), 需要包含">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-08-18T14:23:41.000Z">
-<meta property="article:modified_time" content="2025-08-19T06:52:24.697Z">
+<meta property="article:modified_time" content="2025-08-19T07:53:36.488Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.7k 字
+          4k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          14 分钟
+          34 分钟
         
       </span>
     
@@ -309,12 +309,59 @@
 <p>避免头文件被冗长实现干扰, 突出接口设计.</p>
 <h2 id="Names-and-Order-of-Includes"><a href="#Names-and-Order-of-Includes" class="headerlink" title="Names and Order of Includes"></a>Names and Order of Includes</h2><p>包含 headers 的顺序为:</p>
 <ul>
-<li>Related header</li>
+<li>Related header, 比如要调试的目标 header</li>
 <li>C system headers</li>
 <li>C++ standard library headers</li>
 <li>other libraries headers</li>
 <li>your project’s headers</li>
 </ul>
+<p>注意不使用 UNIX 目录记号如 <code>.</code> 和 <code>..</code>.</p>
+<p>只有下面一些 headers 用 <code>&lt;&gt;</code> 包裹:</p>
+<ul>
+<li>C 和 C++ standard library headers, 如 <code>&lt;stdlib.h&gt;</code>, <code>&lt;string&gt;</code></li>
+<li>POSIX, linux 和 windows system headers, 如 <code>&lt;unistd.h&gt;</code> 和 <code>&lt;windows.h&gt;</code></li>
+<li>部分第三方库, 如 <code>&lt;Python.h&gt;</code></li>
+</ul>
+<p>比如一个 <code>google-awesome-project/src/foo/internal/fooserver.cc</code> 可能包含下面代码:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;foo/server/fooserver.h&quot;</span></span><br><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;sys/types.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;string&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;vector&gt;</span></span><br><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;base/basictypes.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;foo/server/bar.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;third_party/absl/flags/flag.h&quot;</span></span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>不同部分用空行区分</li>
+</ul>
+<h1 id="Scoping"><a href="#Scoping" class="headerlink" title="Scoping"></a>Scoping</h1><h2 id="Namespaces"><a href="#Namespaces" class="headerlink" title="Namespaces"></a>Namespaces</h2><p>除了极少数情况外 (如全聚德 <code>main</code> 函数), 代码必须放在命名空间内, 注意命名空间名称需要唯一, 一般基于项目名称或路径, 避免冲突:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">namespace</span> project1 &#123; <span class="hljs-keyword">class</span> <span class="hljs-title class_">Foo</span> &#123;&#125;; &#125;  <span class="hljs-comment">// project1::Foo</span><br><span class="hljs-keyword">namespace</span> project2 &#123; <span class="hljs-keyword">class</span> <span class="hljs-title class_">Foo</span> &#123;&#125;; &#125;  <span class="hljs-comment">// project2::Foo</span><br></code></pre></td></tr></table></figure>
+
+<p>避免使用 <code>using namespace xxx;</code>, 会污染当前作用域, 比如 <code>using namespace std;</code>.</p>
+<p>匿名命名空间可以用来实现文件内作用域, 替代 C 风格的 <code>static</code>:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">namespace</span> &#123; <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">Helper</span><span class="hljs-params">()</span> </span>&#123; &#125; &#125;<br></code></pre></td></tr></table></figure>
+
+<p>Namespaces 的命名风格如 <code>snake_case</code>, 所有字符小写, 单词间用 <code>_</code> 分隔, 避免使用有名的 top-level namespaces, 如 <code>std</code>, <code>absl</code>. 一个 namespace 下的代码都放在同名的目录下:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-comment">// In the .h file</span><br><span class="hljs-keyword">namespace</span> mynamespace &#123;<br><br><span class="hljs-comment">// All declarations are within the namespace scope.</span><br><span class="hljs-comment">// Notice the lack of indentation.</span><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">MyClass</span> &#123;<br><span class="hljs-keyword">public</span>:<br>    ...<br>    <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">Foo</span><span class="hljs-params">()</span></span>;<br>&#125;;<br><br>&#125; <span class="hljs-comment">// namespace mynamespace</span><br><br><span class="hljs-comment">// In the .cc file</span><br><span class="hljs-keyword">namespace</span> mynamespace &#123;<br><br><span class="hljs-comment">// Definition of functions is within scope of the namespace.</span><br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">MyClass::Foo</span><span class="hljs-params">()</span> </span>&#123;<br>    ...<br>&#125;<br><br>&#125;<br> <span class="hljs-comment">// namespace mynamespace</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="Internal-Linkage"><a href="#Internal-Linkage" class="headerlink" title="Internal Linkage"></a>Internal Linkage</h2><p>当在一个 <code>.cc</code> 文件中定义的内容不会被外部文件引用时, 即确保这些符号只在当前文件内可见, 可以利用 unnamed namespace 或 static 关键字:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">namespace</span> &#123;  <span class="hljs-comment">// 匿名命名空间</span><br>    <span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">helper</span><span class="hljs-params">()</span> </span>&#123; <span class="hljs-keyword">return</span> <span class="hljs-number">42</span>; &#125;  <span class="hljs-comment">// 仅在当前文件可用</span><br>&#125; <span class="hljs-comment">// namespace</span><br><br><span class="hljs-function"><span class="hljs-type">static</span> <span class="hljs-type">int</span> <span class="hljs-title">helper</span><span class="hljs-params">()</span> </span>&#123; <span class="hljs-keyword">return</span> <span class="hljs-number">42</span>; &#125;  <span class="hljs-comment">// 等效于匿名命名空间</span><br></code></pre></td></tr></table></figure>
+
+<p>在头文件中禁止这样做, 可能会违反 ODR (One Definition Rule) 规则, 导致链接错误.</p>
+<h2 id="Nonmember-Static-Member-和-Global-Functions"><a href="#Nonmember-Static-Member-和-Global-Functions" class="headerlink" title="Nonmember, Static Member 和 Global Functions"></a>Nonmember, Static Member 和 Global Functions</h2><ul>
+<li>Nonmember function 指命名空间中的普通函数</li>
+<li>Static member function 在与类强相关时使用</li>
+<li>Global function 仅限特殊场景如 <code>main()</code></li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-comment">// 非成员函数置于命名空间</span><br><span class="hljs-keyword">namespace</span> network &#123;<br><span class="hljs-function"><span class="hljs-type">bool</span> <span class="hljs-title">SendPacket</span><span class="hljs-params">(<span class="hljs-type">const</span> Packet&amp; pkt)</span></span>;  <span class="hljs-comment">// 声明</span><br>&#125; <span class="hljs-comment">// namespace network</span><br><br><span class="hljs-comment">// 静态成员函数（与类相关）</span><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">Logger</span> &#123;<br><span class="hljs-keyword">public</span>:<br>    <span class="hljs-function"><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title">Write</span><span class="hljs-params">(<span class="hljs-type">const</span> std::string&amp; msg)</span></span>;  <span class="hljs-comment">// 日志功能与Logger强相关</span><br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<h2 id="Local-Variables"><a href="#Local-Variables" class="headerlink" title="Local Variables"></a>Local Variables</h2><p>要将一个变量限制在尽量最小的 scope 内并在声明时初始化. 并且越靠近第一次使用越好.</p>
+<p>比较差的例子:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-type">int</span> jobs = <span class="hljs-built_in">NumJobs</span>();<br><span class="hljs-comment">// More code...</span><br><span class="hljs-built_in">f</span>(jobs);<br></code></pre></td></tr></table></figure>
+
+<p>好的例子:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-type">int</span> jobs = <span class="hljs-built_in">NumJobs</span>();<br><span class="hljs-built_in">f</span>(jobs);<br></code></pre></td></tr></table></figure>
+
+<p>如果变量与 <code>while</code>, <code>for</code>, <code>if</code> 等绑定, 尽量在这些语句内声明:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">while</span> (<span class="hljs-type">const</span> <span class="hljs-type">char</span>* p = <span class="hljs-built_in">strchr</span>(str, <span class="hljs-string">&#x27;/&#x27;</span>)) str = p + <span class="hljs-number">1</span>;<br></code></pre></td></tr></table></figure>
+
+<p>但如果是 object 需要注意开销, 在语句外声明:</p>
+<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs abnf">Foo f<span class="hljs-comment">; // My ctor and dtor get called once each.</span><br>for (int i <span class="hljs-operator">=</span> <span class="hljs-number">0</span><span class="hljs-comment">; i &lt; 1000000; ++i) &#123;</span><br>    f.DoSomething(i)<span class="hljs-comment">;</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="Static-and-Global-Variables"><a href="#Static-and-Global-Variables" class="headerlink" title="Static and Global Variables"></a>Static and Global Variables</h2><p>每一个 object 都有一个 storage duration</p>
 
                 
               </div>
