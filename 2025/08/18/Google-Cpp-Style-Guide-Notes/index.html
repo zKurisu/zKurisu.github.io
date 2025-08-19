@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="Header Files基本上每个 .cc 文件都会对应一个 .h 文件, 除了单元测试或者只包含 main 函数的 .cc 文件. Self-contained Headers.h 的头文件需要是 self-contained 的, 即能够独立编译.">
+    <meta name="description" content="Header Files基本上每个 .cc 文件都会对应一个 .h 文件, 除了单元测试或者只包含 main 函数的 .cc 文件. Self-contained Headers.h 的头文件需要是 self-contained 的, 即能够独立编译. 不能独立编译的用 .inc 作为文件后缀. Header file 应该包含自己需要的所有其他 headers (比如用了一些标准库), 需要包含">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Google-C++-Style-Guide-Notes">
 <meta property="og:url" content="http://example.com/2025/08/18/Google-Cpp-Style-Guide-Notes/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="Header Files基本上每个 .cc 文件都会对应一个 .h 文件, 除了单元测试或者只包含 main 函数的 .cc 文件. Self-contained Headers.h 的头文件需要是 self-contained 的, 即能够独立编译.">
+<meta property="og:description" content="Header Files基本上每个 .cc 文件都会对应一个 .h 文件, 除了单元测试或者只包含 main 函数的 .cc 文件. Self-contained Headers.h 的头文件需要是 self-contained 的, 即能够独立编译. 不能独立编译的用 .inc 作为文件后缀. Header file 应该包含自己需要的所有其他 headers (比如用了一些标准库), 需要包含">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-08-18T14:23:41.000Z">
-<meta property="article:modified_time" content="2025-08-19T05:53:00.257Z">
+<meta property="article:modified_time" content="2025-08-19T06:52:24.697Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          110 字
+          1.7k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          1 分钟
+          14 分钟
         
       </span>
     
@@ -291,6 +291,30 @@
                 
                 <h1 id="Header-Files"><a href="#Header-Files" class="headerlink" title="Header Files"></a>Header Files</h1><p>基本上每个 <code>.cc</code> 文件都会对应一个 <code>.h</code> 文件, 除了单元测试或者只包含 <code>main</code> 函数的 <code>.cc</code> 文件.</p>
 <h2 id="Self-contained-Headers"><a href="#Self-contained-Headers" class="headerlink" title="Self-contained Headers"></a>Self-contained Headers</h2><p><code>.h</code> 的头文件需要是 self-contained 的, 即能够独立编译.</p>
+<p>不能独立编译的用 <code>.inc</code> 作为文件后缀.</p>
+<p>Header file 应该包含自己需要的所有其他 <code>headers</code> (比如用了一些标准库), 需要包含 header guards, 如:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">ifndef</span> MY_HEADER_H_  <span class="hljs-comment">// 必须唯一（通常用项目路径_文件名）, &lt;PROJECT&gt;_&lt;PATH&gt;_&lt;FILE&gt;_H_</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> MY_HEADER_H_</span><br><span class="hljs-comment">// 头文件内容</span><br><span class="hljs-meta">#<span class="hljs-keyword">endif</span> <span class="hljs-comment">// MY_HEADER_H_</span></span><br></code></pre></td></tr></table></figure>
+
+<p>如果 header file 中声明了 inline function 或 templates, 需要直接包含其定义, 因为它们需要在编译时实例化, 若定义不可见会导致链接错误.</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-comment">// math_utils.h</span><br><span class="hljs-meta">#<span class="hljs-keyword">ifndef</span> MATH_UTILS_H_</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> MATH_UTILS_H_</span><br><br><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt;<br><span class="hljs-function">T <span class="hljs-title">add</span><span class="hljs-params">(T a, T b)</span> </span>&#123;  <span class="hljs-comment">// 模板定义直接在头文件</span><br>    <span class="hljs-keyword">return</span> a + b;<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">inline</span> <span class="hljs-type">int</span> <span class="hljs-title">square</span><span class="hljs-params">(<span class="hljs-type">int</span> x)</span> </span>&#123;  <span class="hljs-comment">// 内联函数定义在头文件</span><br>    <span class="hljs-keyword">return</span> x * x;<br>&#125;<br><br><span class="hljs-meta">#<span class="hljs-keyword">endif</span> <span class="hljs-comment">// MATH_UTILS_H_</span></span><br></code></pre></td></tr></table></figure>
+
+<h2 id="Include-What-You-Use"><a href="#Include-What-You-Use" class="headerlink" title="Include What You Use"></a>Include What You Use</h2><p>如果源文件 (<code>.cc</code>) 或头文件 (<code>.h</code>) 使用了其他文件中定义的符号 (如类, 函数, 变量), 必须直接包含该符号的声明头文件, 不能依赖其他啊头文件间接包含的符号.</p>
+<p>比如 <code>foo.cc</code> 用了 <code>bar.h</code> 中的符号, 即使 <code>foo.h</code> 中包含了 <code>bar.h</code>, <code>foo.cc</code> 仍需显式包含 <code>bar.h</code>.</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-comment">// bar.h</span><br><span class="hljs-meta">#<span class="hljs-keyword">ifndef</span> BAR_H</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> BAR_H</span><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">Bar</span> &#123; <span class="hljs-comment">/* ... */</span> &#125;;<br><span class="hljs-meta">#<span class="hljs-keyword">endif</span> <span class="hljs-comment">// BAR_H</span></span><br><br><span class="hljs-comment">// foo.h</span><br><span class="hljs-meta">#<span class="hljs-keyword">ifndef</span> FOO_H</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> FOO_H</span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;bar.h&quot;</span>  <span class="hljs-comment">// foo.h 需要用到 Bar</span></span><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">Foo</span> &#123; <br>    Bar bar; <br>&#125;;<br><span class="hljs-meta">#<span class="hljs-keyword">endif</span> <span class="hljs-comment">// FOO_H</span></span><br><br><span class="hljs-comment">// foo.cc</span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;foo.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;bar.h&quot;</span>  <span class="hljs-comment">// 即使 foo.h 已包含 bar.h，仍需显式包含</span></span><br><br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">process</span><span class="hljs-params">()</span> </span>&#123;<br>    Bar b;  <span class="hljs-comment">// 直接使用 Bar</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="Defining-Functions-in-Header-Files"><a href="#Defining-Functions-in-Header-Files" class="headerlink" title="Defining Functions in Header Files"></a>Defining Functions in Header Files</h2><p>只有在函数很短时 (10 行或更短) 才直接在 header file 中定义. 通常用 <code>inline</code> 修饰.</p>
+<p>对于必须要放在 header file 中的长函数定义, 需通过注释或命名空间隔离, 而非直接声明在 <code>public</code> 部分:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt;<br><span class="hljs-keyword">class</span> <span class="hljs-title class_">Foo</span> &#123;<br><span class="hljs-keyword">public</span>:<br>    <span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">bar</span><span class="hljs-params">()</span> </span>&#123; <span class="hljs-keyword">return</span> bar_; &#125;<br>    <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">MethodWithHugeBody</span><span class="hljs-params">()</span></span>;<br><br><span class="hljs-keyword">private</span>:<br>    <span class="hljs-type">int</span> bar_;<br>&#125;;<br><br><span class="hljs-comment">// Implementation details only below here</span><br><br><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt;<br>    <span class="hljs-type">void</span> Foo&lt;T&gt;::<span class="hljs-built_in">MethodWithHugeBody</span>() &#123;<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>避免头文件被冗长实现干扰, 突出接口设计.</p>
+<h2 id="Names-and-Order-of-Includes"><a href="#Names-and-Order-of-Includes" class="headerlink" title="Names and Order of Includes"></a>Names and Order of Includes</h2><p>包含 headers 的顺序为:</p>
+<ul>
+<li>Related header</li>
+<li>C system headers</li>
+<li>C++ standard library headers</li>
+<li>other libraries headers</li>
+<li>your project’s headers</li>
+</ul>
 
                 
               </div>
