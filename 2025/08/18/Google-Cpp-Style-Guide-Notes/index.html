@@ -24,7 +24,7 @@
 <meta property="og:description" content="Header Files基本上每个 .cc 文件都会对应一个 .h 文件, 除了单元测试或者只包含 main 函数的 .cc 文件. Self-contained Headers.h 的头文件需要是 self-contained 的, 即能够独立编译. 不能独立编译的用 .inc 作为文件后缀. Header file 应该包含自己需要的所有其他 headers (比如用了一些标准库), 需要包含">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-08-18T14:23:41.000Z">
-<meta property="article:modified_time" content="2025-08-19T07:53:36.488Z">
+<meta property="article:modified_time" content="2025-08-19T08:46:53.605Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          4k 字
+          4.9k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          34 分钟
+          41 分钟
         
       </span>
     
@@ -327,7 +327,7 @@
 <ul>
 <li>不同部分用空行区分</li>
 </ul>
-<h1 id="Scoping"><a href="#Scoping" class="headerlink" title="Scoping"></a>Scoping</h1><h2 id="Namespaces"><a href="#Namespaces" class="headerlink" title="Namespaces"></a>Namespaces</h2><p>除了极少数情况外 (如全聚德 <code>main</code> 函数), 代码必须放在命名空间内, 注意命名空间名称需要唯一, 一般基于项目名称或路径, 避免冲突:</p>
+<h1 id="Scoping"><a href="#Scoping" class="headerlink" title="Scoping"></a>Scoping</h1><h2 id="Namespaces"><a href="#Namespaces" class="headerlink" title="Namespaces"></a>Namespaces</h2><p>除了极少数情况外 (如全局的 <code>main</code> 函数), 代码必须放在命名空间内, 注意命名空间名称需要唯一, 一般基于项目名称或路径, 避免冲突:</p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">namespace</span> project1 &#123; <span class="hljs-keyword">class</span> <span class="hljs-title class_">Foo</span> &#123;&#125;; &#125;  <span class="hljs-comment">// project1::Foo</span><br><span class="hljs-keyword">namespace</span> project2 &#123; <span class="hljs-keyword">class</span> <span class="hljs-title class_">Foo</span> &#123;&#125;; &#125;  <span class="hljs-comment">// project2::Foo</span><br></code></pre></td></tr></table></figure>
 
 <p>避免使用 <code>using namespace xxx;</code>, 会污染当前作用域, 比如 <code>using namespace std;</code>.</p>
@@ -361,7 +361,29 @@
 <p>但如果是 object 需要注意开销, 在语句外声明:</p>
 <figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs abnf">Foo f<span class="hljs-comment">; // My ctor and dtor get called once each.</span><br>for (int i <span class="hljs-operator">=</span> <span class="hljs-number">0</span><span class="hljs-comment">; i &lt; 1000000; ++i) &#123;</span><br>    f.DoSomething(i)<span class="hljs-comment">;</span><br>&#125;<br></code></pre></td></tr></table></figure>
 
-<h2 id="Static-and-Global-Variables"><a href="#Static-and-Global-Variables" class="headerlink" title="Static and Global Variables"></a>Static and Global Variables</h2><p>每一个 object 都有一个 storage duration</p>
+<h2 id="Static-and-Global-Variables"><a href="#Static-and-Global-Variables" class="headerlink" title="Static and Global Variables"></a>Static and Global Variables</h2><p>每一个 object 都有一个 storage duration:</p>
+<ul>
+<li>全局变量在程序启动时按源码中的定义顺序初始化, 程序退出时, 全局变量按初始化顺序的逆序析构 (后初始化的先析构)</li>
+<li>Static storage duration 指 namespace 中定义的变量或 class 中的 data members, 或者 <code>static</code> 修饰的变量, 会在程序启动时初始化</li>
+<li>Function-local static variables 之函数中定义的变量, 在首次执行到声明时初始化</li>
+<li>所有静态变量在程序退出时析构</li>
+</ul>
+<p>Trivially Destructible 指一个类型的析构函数 <code>~T()</code> 满足下面条件:</p>
+<ol>
+<li>析构函数是编译器自动生成的或显示定义为 <code>= default</code></li>
+<li>析构函数非虚</li>
+<li>析构函数不执行任何额外操作</li>
+</ol>
+<p>定义全局变量时, 仅允许 trivially destructible 的类型, 如 <code>int</code>, <code>float</code>, <code>std::array&lt;int, 3&gt;</code> 等. 避免程序退出时的析构顺序问题.</p>
+<p>比如全局变脸是跨文件的, 析构顺序未定义 (由编译器&#x2F;链接器决定):</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-comment">// logger.h</span><br><span class="hljs-keyword">extern</span> Logger global_logger;  <span class="hljs-comment">// 声明</span><br><br><span class="hljs-comment">// network.cpp</span><br>Socket global_socket;        <span class="hljs-comment">// 析构时需要写日志</span><br>Logger::~<span class="hljs-built_in">Logger</span>() &#123; <span class="hljs-comment">/* 关闭日志文件 */</span> &#125;<br><br><span class="hljs-comment">// logger.cpp</span><br>Logger global_logger;        <span class="hljs-comment">// 可能比global_socket先析构</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>global_socket</code> 析构时若 <code>global_logger</code> 已销毁, 无法记录日志</li>
+</ul>
+<p>变量初始化的策略是, 常量初始化 (确保值能够在编译期确定).</p>
+<p>下面跳过了 <code>thread_local variables</code> 的小节.</p>
+<h1 id="Classes"><a href="#Classes" class="headerlink" title="Classes"></a>Classes</h1><h2 id="Doing-Work-in-Constructores"><a href="#Doing-Work-in-Constructores" class="headerlink" title="Doing Work in Constructores"></a>Doing Work in Constructores</h2><p>在构造函数内禁止调用 virtual function, 因为子类尚未构造完成, 此时虚函数表 (vtable) 未正确初始化, 导致调用的是当前类的实现, 而非子类重写版本.</p>
+<p>使用简单的初始化构造函数, 避免构造失败.</p>
 
                 
               </div>
