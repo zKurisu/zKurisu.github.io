@@ -37,7 +37,7 @@
 <meta property="og:image" content="http://example.com/img/machine-learning-time-dummy-example.png">
 <meta property="og:image" content="http://example.com/img/machine-learning-lag-feature-example.png">
 <meta property="article:published_time" content="2025-07-02T08:55:01.000Z">
-<meta property="article:modified_time" content="2025-08-17T06:10:48.089Z">
+<meta property="article:modified_time" content="2025-08-22T13:26:08.775Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/machine-learning-k-fold-cross-validation.png">
@@ -249,7 +249,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          14k 字
+          15k 字
         
       </span>
     
@@ -260,7 +260,7 @@
         
         
         
-          120 分钟
+          128 分钟
         
       </span>
     
@@ -491,6 +491,15 @@
 <li>颜色为灰度, 单通道 <code>0-255</code> 像素值</li>
 </ul>
 <h2 id="End-to-End"><a href="#End-to-End" class="headerlink" title="End-to-End"></a>End-to-End</h2><p>End-to-End 指, 输入原始的图片, 文字, 不做任何预处理, 然后直接通过机器学习得到结果.</p>
+<h2 id="Vanishing-Gradients-和-Exploding-Gradients"><a href="#Vanishing-Gradients-和-Exploding-Gradients" class="headerlink" title="Vanishing Gradients 和 Exploding Gradients"></a>Vanishing Gradients 和 Exploding Gradients</h2><p>Vanishing Gradients (梯度消失) 和 Exploding Gradients (梯度爆炸) 都源自深度神经网络中的反向传播算法.</p>
+<h3 id="Vanishing-Gradients"><a href="#Vanishing-Gradients" class="headerlink" title="Vanishing Gradients"></a>Vanishing Gradients</h3><p>Vanishing Gradients 指在反向传播过程中, 梯度值变得非常非常小, 无限接近于 0. 因为链式法则中的连续乘法, 假设每一层传递梯度时都乘以一个小于 1 的因子 (例如 sigmoid 函数的导数最大值是 <code>0.25</code>), 经过很多层之后, 这些小于 1 的数连续相乘, 放结果指数级趋近 0:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\frac{\partial Loss}{\partial W_{early}} \approx \frac{\partial Loss}{\partial W_{late}} \cdot (小导数) \cdot (小导数) \cdot (小导数) … \rightarrow 0<br>\end{aligned}<br>}<br>$$</p>
+<p>这会导致网络深层的权重能有效更新 (因为梯度还正常), 但浅层的权重几乎得不到更新 (梯度趋于 0). 此时网络无法进一步优化.</p>
+<p>想象一个 10 层的网络. 在更新第一层的参数时, 梯度需要穿过后面 9 层才能传回来. 如果每一层平均使梯度缩小一半 (乘以0.5), 那么传到第一层的梯度就是最初的梯度乘以 $0.5^9&#x3D;1&#x2F;512$. 这个值已经非常小了, 如果网络更深, 梯度会小到计算机无法表示 (下溢).</p>
+<h3 id="Exploding-Gradients"><a href="#Exploding-Gradients" class="headerlink" title="Exploding Gradients"></a>Exploding Gradients</h3><p>Exploding Gradients 指在反向传播过程中, 梯度值变得非常大, 最终变成 <code>NaN</code>.</p>
+<p>同样是由于链式乘法, 如果每一层传递梯度时都乘以一个大于 1 的因子, 经过很多层之后, 导致结果指数级增长:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\frac{\partial Loss}{\partial W_{early}} \approx \frac{\partial Loss}{\partial W_{late}} \cdot (大导数) \cdot (大导数) \cdot (大导数) … \rightarrow 0<br>\end{aligned}<br>}<br>$$</p>
+<p>梯度值大到超出计算机浮点数的表示范围, 变成 <code>NaN</code>. 一旦出现 <code>NaN</code>, 后续所有计算都会失效.</p>
 <h1 id="Random-forest-model"><a href="#Random-forest-model" class="headerlink" title="Random forest model"></a>Random forest model</h1><p>Random forest model, 随机森林模型, 是一种 “集成学习 (Ensemble learning)” (将多个小模型组合成一个大模型) 的机器学习算法, 由多个决策树 (Decision trees, 也就是这里的小模型) 组成. 利用决策树的结果进行 “少数服从多数” 的投票来提高准确性. 适用于分类和回归.</p>
 <ul>
 <li>随机, 指随机从数据集中采样, 随机选择特征, 以分别训练模型中的每棵决策树 (每次都随机)</li>
