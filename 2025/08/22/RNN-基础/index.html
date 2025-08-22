@@ -16,17 +16,19 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="介绍RNN (Recurrent Nueron Network), 循环神经网络, 是处理序列数据的神经网络, 能够利用历史信息影响当前的计算. 相关概念序列数据序列数据指数据点之间存在强烈的顺序和上下文依赖关系, 比如:  Time series Video series Natural language">
+    <meta name="description" content="介绍RNN (Recurrent Nueron Network), 循环神经网络, 是处理序列数据的神经网络, 能够利用历史信息影响当前的计算. RNN 的出现是为了处理传统网络的局限: 所有输入 (和输出) 是相互独立的, 网络在处理每个输入时都是 “从头开始”, 没有 “记忆” 功能. RNN 引入 Recurrent (循环) 结构, 通过一个 hidden state (内部状态) 来 “">
 <meta property="og:type" content="article">
 <meta property="og:title" content="RNN-基础">
 <meta property="og:url" content="http://example.com/2025/08/22/RNN-%E5%9F%BA%E7%A1%80/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="介绍RNN (Recurrent Nueron Network), 循环神经网络, 是处理序列数据的神经网络, 能够利用历史信息影响当前的计算. 相关概念序列数据序列数据指数据点之间存在强烈的顺序和上下文依赖关系, 比如:  Time series Video series Natural language">
+<meta property="og:description" content="介绍RNN (Recurrent Nueron Network), 循环神经网络, 是处理序列数据的神经网络, 能够利用历史信息影响当前的计算. RNN 的出现是为了处理传统网络的局限: 所有输入 (和输出) 是相互独立的, 网络在处理每个输入时都是 “从头开始”, 没有 “记忆” 功能. RNN 引入 Recurrent (循环) 结构, 通过一个 hidden state (内部状态) 来 “">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/rnn-simple-structure.png">
 <meta property="article:published_time" content="2025-08-22T08:59:24.000Z">
-<meta property="article:modified_time" content="2025-08-22T11:29:36.056Z">
+<meta property="article:modified_time" content="2025-08-22T12:28:55.208Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/rnn-simple-structure.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -235,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          139 字
+          769 字
         
       </span>
     
@@ -246,7 +248,7 @@
         
         
         
-          2 分钟
+          7 分钟
         
       </span>
     
@@ -290,11 +292,28 @@
               <div class="markdown-body">
                 
                 <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>RNN (Recurrent Nueron Network), 循环神经网络, 是处理序列数据的神经网络, 能够利用历史信息影响当前的计算.</p>
+<p>RNN 的出现是为了处理传统网络的局限: 所有输入 (和输出) 是相互独立的, 网络在处理每个输入时都是 “从头开始”, 没有 “记忆” 功能.</p>
+<p>RNN 引入 Recurrent (循环) 结构, 通过一个 hidden state (内部状态) 来 “记住” 历史信息.</p>
 <h1 id="相关概念"><a href="#相关概念" class="headerlink" title="相关概念"></a>相关概念</h1><h2 id="序列数据"><a href="#序列数据" class="headerlink" title="序列数据"></a>序列数据</h2><p>序列数据指数据点之间存在强烈的顺序和上下文依赖关系, 比如:</p>
 <ul>
-<li>Time series</li>
-<li>Video series</li>
-<li>Natural language</li>
+<li>Time series, 数据点按时间顺序排列, 比如股票价格: 今天的股价可能受前几天的影响</li>
+<li>Video series, 一系列连续的图像帧组成的序列, 按时间顺序播放就能形成动态数据</li>
+<li>Natural language, 由单词按照一定规则组织起来的序列, 词语之间有前后顺序</li>
+</ul>
+<h2 id="时间步"><a href="#时间步" class="headerlink" title="时间步"></a>时间步</h2><p>时间步, time step, 是 RNN 处理序列数据的基本单位. 指网络顺序处理序列中一个独立元素的时刻.</p>
+<p>比如:</p>
+<ul>
+<li>整部电影是完整序列</li>
+<li>每一帧画面则是一个 time step 输入</li>
+</ul>
+<h1 id="RNN-结构"><a href="#RNN-结构" class="headerlink" title="RNN 结构"></a>RNN 结构</h1><p><img src="/../img/rnn-simple-structure.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>上边的 $O_{t-1},O_{t},O_{t+1}$ 是 output series, $t-1, t, t+1$ 是 time step</li>
+<li>中间的 $S_{t-1}, S_t, S_{t+1}$ 是 state, 表示 hidden layer 以及内部状态, 是 RNN 的 “记忆单元”</li>
+<li>下面的 $X_{t-1},X_{t},X_{t+1}$ 是 input series, 例如一句话中的连续三个单词</li>
+<li>$U$ 是输入权重矩阵, 负责将当前输入 $X_t$ 转换并融入 hidden state 的参数中, 所有 time step 共享</li>
+<li>$W$ 是循环权重矩阵, 负责将前一时刻的隐藏状态 $S_{t-1}$ 传递并融入到当前计算中, 所有 time step 共享</li>
+<li>$V$ 是输出权重矩阵, 负责将当前隐藏状态 $S_t$ 转换为最终输出 $O_t$, 所有 time step 共享</li>
 </ul>
 
                 
