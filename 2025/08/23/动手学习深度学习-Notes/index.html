@@ -27,7 +27,7 @@
 <meta property="og:image" content="http://example.com/img/d2l-derivative-for-scalar-value.png">
 <meta property="og:image" content="http://example.com/img/d2l-derivative-for-matrix.png">
 <meta property="article:published_time" content="2025-08-23T01:24:48.000Z">
-<meta property="article:modified_time" content="2025-08-23T07:47:05.047Z">
+<meta property="article:modified_time" content="2025-08-23T08:53:28.291Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/d2l-open-jupyter-notebook-example.png">
@@ -239,7 +239,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          5.1k 字
+          6.2k 字
         
       </span>
     
@@ -250,7 +250,7 @@
         
         
         
-          43 分钟
+          52 分钟
         
       </span>
     
@@ -417,7 +417,32 @@
 <li>此时的损失函数是凸函数, 其最优解满足:</li>
 </ul>
 <p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\frac{\partial loss(X,y,w)}{\partial w} &#x3D; 0 \newline~ \newline<br>\frac{1}{n} (y - Xw)^T X &#x3D; 0 \newline~ \newline<br>(y - Xw) X^T &#x3D; 0 \newline~ \newline<br>yX^T &#x3D; XX^T w \newline~ \newline<br>(X^TX)^{-1} (X^TX) w &#x3D; (X^T X)^{-1} X^T y \newline~ \newline<br> (X^TX)^{-1} (X^TX) &#x3D; I &#x3D; w^* \newline~ \newline<br>w^* &#x3D; (X^TX)^{-1} X^Ty<br>\end{aligned}<br>}<br>$$</p>
-<h2 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h2><p>构造线性模型数据集:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>y &#x3D; Xw + b + \epsilon<br>\end{aligned}<br>}<br>$$</p>
+<h2 id="实现准备"><a href="#实现准备" class="headerlink" title="实现准备"></a>实现准备</h2><p>构造线性模型数据集:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>y &#x3D; Xw + b + \epsilon<br>\end{aligned}<br>}<br>$$</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> torch<br><span class="hljs-keyword">def</span> <span class="hljs-title function_">synthetic_data</span>(<span class="hljs-params">w, b, number</span>):<br>    X = torch.normal(<span class="hljs-number">0</span>, <span class="hljs-number">1</span>, (number, <span class="hljs-built_in">len</span>(w)))<br>    y = torch.matmul(w, X) + b<br>    y += torch.normal(<span class="hljs-number">0</span>, <span class="hljs-number">0.01</span>, y.shape)<br>    <span class="hljs-keyword">return</span> X, y.reshape((-<span class="hljs-number">1</span>, <span class="hljs-number">1</span>))<br><br>true_w = torch.tensor([<span class="hljs-number">2</span>, -<span class="hljs-number">3.4</span>])<br>true_b = <span class="hljs-number">4.2</span><br>X, y = synthetic_data(true_w, true_b, <span class="hljs-number">1000</span>)<br>X, y = synthetic_data(true_w, true_b, <span class="hljs-number">1000</span>)<br>plt.scatter(X[<span class="hljs-number">0</span>, :].detach(), y.detach())<br>plt.show()<br></code></pre></td></tr></table></figure>
+<ul>
+<li>假设 <code>w</code> 是 <code>(m,)</code>, <code>X</code> 是 <code>(m,n)</code>, 则 <code>y</code> 是 <code>(n,)</code>, 是一个一维张量</li>
+<li><code>reshape((-1, 1))</code>, 这里的 <code>-1</code> 是自动推断维度, <code>1</code> 表示每列 1 个元素, 变为二维张量</li>
+<li><code>torch.normal(mean, std, size)</code> 生成正态分布采样的随机数</li>
+</ul>
+<p>注意 <code>detach()</code> 的调用, 能够避免 pytorch 张量自动微分引发的潜在问题.</p>
+<p>定义一个数据遍历函数 <code>data_iter(batch_size, X, y)</code>:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">data_iter</span>(<span class="hljs-params">batch_size, X, y</span>):<br>    X_num = X.shape[<span class="hljs-number">0</span>]<br>    indices = <span class="hljs-built_in">list</span>(<span class="hljs-built_in">range</span>(X_num))<br>    random.shuffle(indices)<br>    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">0</span>, X_num, batch_size):<br>        batch_indices = indices[i:<span class="hljs-built_in">min</span>(X_num, i+batch_size)]<br>        <span class="hljs-keyword">yield</span> X[batch_indices], y[batch_indices]<br></code></pre></td></tr></table></figure>
+<ul>
+<li>注意 <code>random.shuffle</code> 会原地修改</li>
+</ul>
+<h2 id="模型实现"><a href="#模型实现" class="headerlink" title="模型实现"></a>模型实现</h2><p>先定义初始化参数:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python">w = torch.normal(<span class="hljs-number">0</span>, <span class="hljs-number">0.01</span>, size=(<span class="hljs-number">2</span>,<span class="hljs-number">1</span>), requires_grad=<span class="hljs-literal">True</span>)<br>b = torch.zeros(<span class="hljs-number">1</span>, requires_grad=<span class="hljs-literal">True</span>)<br></code></pre></td></tr></table></figure>
+
+<p>定义模型:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">linreg</span>(<span class="hljs-params">X, w, b</span>):<br>    <span class="hljs-keyword">return</span> torch.matmul(X, w) + b<br></code></pre></td></tr></table></figure>
+
+<p>定义损失函数:</p>
+<figure class="highlight py"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs py"><span class="hljs-keyword">def</span> <span class="hljs-title function_">squared_loss</span>(<span class="hljs-params">y_hat, y</span>):<br>    <span class="hljs-keyword">return</span> (y_hat - y.reshape(y_hat.shape))**<span class="hljs-number">2</span> / <span class="hljs-number">2</span><br></code></pre></td></tr></table></figure>
+
+<p>定义优化算法:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">sgd</span>(<span class="hljs-params">params, lr, batch_size</span>):<br>    <span class="hljs-keyword">with</span> torch.no_grad():<br>        <span class="hljs-keyword">for</span> param <span class="hljs-keyword">in</span> params:<br>            param = lr * param.grad / batch_size<br>            param.grad.zero_()<br></code></pre></td></tr></table></figure>
+
+
 
                 
               </div>
