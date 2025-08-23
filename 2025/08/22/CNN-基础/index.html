@@ -28,8 +28,12 @@
 <meta property="og:image" content="http://example.com/img/cnn-rotate-could-move-example.png">
 <meta property="og:image" content="http://example.com/img/cnn-function-example1.png">
 <meta property="og:image" content="http://example.com/img/cnn-function-example2.png">
+<meta property="og:image" content="http://example.com/img/cnn-how-convolutional-kernel-work.png">
+<meta property="og:image" content="http://example.com/img/cnn-convolutional-kernel-dot-product.png">
+<meta property="og:image" content="http://example.com/img/cnn-fin-all-dot-product.png">
+<meta property="og:image" content="http://example.com/img/cnn-padding-example.png">
 <meta property="article:published_time" content="2025-08-22T13:43:53.000Z">
-<meta property="article:modified_time" content="2025-08-23T00:52:42.862Z">
+<meta property="article:modified_time" content="2025-08-23T01:24:38.011Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/cnn-convolutional-rotate-example1.png">
@@ -241,7 +245,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.1k 字
+          1.6k 字
         
       </span>
     
@@ -252,7 +256,7 @@
         
         
         
-          10 分钟
+          14 分钟
         
       </span>
     
@@ -318,6 +322,28 @@
 <p>简单来说, 就是固定一个 $t$ 值后, 求两个函数重叠的面积. 若 $t$ 在变化, 就像是一个滑动的过程, 但需要不断求面积.</p>
 <p>也可以交换 $f(t)$ 和 $g(t)$ 的身份.</p>
 <h2 id="Kernel-x2F-Filter"><a href="#Kernel-x2F-Filter" class="headerlink" title="Kernel&#x2F;Filter"></a>Kernel&#x2F;Filter</h2><p>Kernel&#x2F;Filter 指一个矩阵, 用作卷积操作的 $g(t)$.</p>
+<p>图片的每个像素是 RGB (如果是 3 通道) 叠加而成, 因此可以把整个图片转换为数字矩阵, 如:</p>
+<figure class="highlight tap"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs tap">[[237<span class="hljs-number"> 192 </span>123 <span class="hljs-number"> 56 </span><span class="hljs-number"> 19 </span>117 <span class="hljs-number"> 17 </span><span class="hljs-number"> 41 </span><span class="hljs-number"> 88 </span>115<span class="hljs-number"> 173 </span>203]<br> [212<span class="hljs-number"> 181 </span>190<span class="hljs-number"> 129 </span>163<span class="hljs-number"> 199 </span><span class="hljs-number"> 94 </span><span class="hljs-number"> 29 </span><span class="hljs-number"> 26 </span><span class="hljs-number"> 66 </span>135 252]<br> [207<span class="hljs-number"> 228 </span>245 <span class="hljs-number"> 30 </span>159 <span class="hljs-number"> 30 </span><span class="hljs-number"> 85 </span>223<span class="hljs-number"> 247 </span>194<span class="hljs-number"> 156 </span>  5]]<br></code></pre></td></tr></table></figure>
+<ul>
+<li>每一列是一个像素</li>
+</ul>
+<p>将其转换为 <code>nxn</code> 矩阵形式:</p>
+<figure class="highlight tap"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs tap">[[223<span class="hljs-number"> 189 </span>110 <span class="hljs-number"> 88 </span>102 134]<br> [229<span class="hljs-number"> 238 </span>248 <span class="hljs-number"> 20 </span>124 181]<br> [<span class="hljs-number"> 56 </span><span class="hljs-number"> 68 </span>125<span class="hljs-number"> 200 </span><span class="hljs-number"> 13 </span> 69]<br> [237<span class="hljs-number"> 203 </span><span class="hljs-number"> 37 </span><span class="hljs-number"> 36 </span>199 185]<br> [200 <span class="hljs-number"> 92 </span>248<span class="hljs-number"> 129 </span><span class="hljs-number"> 20 </span>164]<br> [<span class="hljs-number"> 13 </span>229<span class="hljs-number"> 190 </span>177  <span class="hljs-number"> 1 </span> 41]]<br></code></pre></td></tr></table></figure>
+
+<p>假设有一个 <code>3x3</code> 的卷积核:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-string">[[-1, 1, -1]</span><br><span class="hljs-string"> [ 1, 1,  1]</span><br><span class="hljs-string"> [-1, 1, -1]]</span><br></code></pre></td></tr></table></figure>
+
+<p>将卷积核与像素矩阵左上角重合, 然后从左到右, 从上到下, 遍历所有元素 (下面图的像素矩阵与我上面举的例子数字不同但不影响结论):</p>
+<p><img src="/../img/cnn-how-convolutional-kernel-work.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>计算重合部分的点乘, 得到新的矩阵值</li>
+</ul>
+<p><img src="/../img/cnn-convolutional-kernel-dot-product.png" srcset="/img/loading.gif" lazyload></p>
+<p>完成所有计算:</p>
+<p><img src="/../img/cnn-fin-all-dot-product.png" srcset="/img/loading.gif" lazyload></p>
+<p>这个过程是一个二维离散卷积操作, 想象每一次移动就是变换 $t$ 值, 卷积核是 $f(\tau)$, 而变换后的像素矩阵是 $g(t-\tau)$.</p>
+<p>由于这样遍历会让输出矩阵的维度减小 (少了一圈), 因此会对输入矩阵先进行 padding (添加一圈 0), 保证输入输出维度一致:</p>
+<p><img src="/../img/cnn-padding-example.png" srcset="/img/loading.gif" lazyload></p>
 <h1 id="核心组件"><a href="#核心组件" class="headerlink" title="核心组件"></a>核心组件</h1><h2 id="Convolutional-layer"><a href="#Convolutional-layer" class="headerlink" title="Convolutional layer"></a>Convolutional layer</h2><p>Convolutional layer (卷积层) 负责特征提取, 关键参数有:</p>
 <ul>
 <li>Kernel&#x2F;Filter (卷积核), 小的权重矩阵 (如 3x3)</li>
@@ -404,6 +430,12 @@
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2025/08/23/%E5%8A%A8%E6%89%8B%E5%AD%A6%E4%B9%A0%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-Notes/" title="动手学习深度学习-Notes">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">动手学习深度学习-Notes</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">
