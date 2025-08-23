@@ -27,7 +27,7 @@
 <meta property="og:image" content="http://example.com/img/d2l-derivative-for-scalar-value.png">
 <meta property="og:image" content="http://example.com/img/d2l-derivative-for-matrix.png">
 <meta property="article:published_time" content="2025-08-23T01:24:48.000Z">
-<meta property="article:modified_time" content="2025-08-23T08:53:28.291Z">
+<meta property="article:modified_time" content="2025-08-23T09:19:58.935Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/d2l-open-jupyter-notebook-example.png">
@@ -239,7 +239,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          6.2k 字
+          7k 字
         
       </span>
     
@@ -250,7 +250,7 @@
         
         
         
-          52 分钟
+          58 分钟
         
       </span>
     
@@ -430,7 +430,7 @@
 <ul>
 <li>注意 <code>random.shuffle</code> 会原地修改</li>
 </ul>
-<h2 id="模型实现"><a href="#模型实现" class="headerlink" title="模型实现"></a>模型实现</h2><p>先定义初始化参数:</p>
+<h2 id="模型手动实现"><a href="#模型手动实现" class="headerlink" title="模型手动实现"></a>模型手动实现</h2><p>先定义初始化参数:</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python">w = torch.normal(<span class="hljs-number">0</span>, <span class="hljs-number">0.01</span>, size=(<span class="hljs-number">2</span>,<span class="hljs-number">1</span>), requires_grad=<span class="hljs-literal">True</span>)<br>b = torch.zeros(<span class="hljs-number">1</span>, requires_grad=<span class="hljs-literal">True</span>)<br></code></pre></td></tr></table></figure>
 
 <p>定义模型:</p>
@@ -440,8 +440,17 @@
 <figure class="highlight py"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs py"><span class="hljs-keyword">def</span> <span class="hljs-title function_">squared_loss</span>(<span class="hljs-params">y_hat, y</span>):<br>    <span class="hljs-keyword">return</span> (y_hat - y.reshape(y_hat.shape))**<span class="hljs-number">2</span> / <span class="hljs-number">2</span><br></code></pre></td></tr></table></figure>
 
 <p>定义优化算法:</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">sgd</span>(<span class="hljs-params">params, lr, batch_size</span>):<br>    <span class="hljs-keyword">with</span> torch.no_grad():<br>        <span class="hljs-keyword">for</span> param <span class="hljs-keyword">in</span> params:<br>            param = lr * param.grad / batch_size<br>            param.grad.zero_()<br></code></pre></td></tr></table></figure>
-
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">sgd</span>(<span class="hljs-params">params, lr, batch_size</span>):<br>    <span class="hljs-keyword">with</span> torch.no_grad():<br>        <span class="hljs-keyword">for</span> param <span class="hljs-keyword">in</span> params:<br>            param -= lr * param.grad / batch_size<br>            param.grad.zero_()<br></code></pre></td></tr></table></figure>
+<ul>
+<li>注意这里的 <code>-=</code> 是 torch 中的实现, 不能写成 <code>param = param - xxx</code>, 后者会生成一个新的张量, 且默认 <code>requires_grad=False</code>. 另一种写法是 <code>param.data.sub(xx)</code></li>
+</ul>
+<p>主体实现:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs python">lr = <span class="hljs-number">0.03</span><br>num_epochs = <span class="hljs-number">3</span><br>net = linreg<br>loss = squared_loss<br><br><span class="hljs-keyword">for</span> epoch <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(num_epochs):<br>    <span class="hljs-keyword">for</span> X, y <span class="hljs-keyword">in</span> data_iter(batch_size, features, labels):<br>        l = loss(net(X, w, b), y)<br>        l.<span class="hljs-built_in">sum</span>().backward()<br>        sgd([w, b], lr, batch_size)<br>    <span class="hljs-keyword">with</span> torch.no_grad():<br>        train_l = loss(net(features, w, b), labels)<br>        <span class="hljs-built_in">print</span>(<span class="hljs-string">f&#x27;epoch <span class="hljs-subst">&#123;epoch + <span class="hljs-number">1</span>&#125;</span>, loss <span class="hljs-subst">&#123;<span class="hljs-built_in">float</span>(train_1.mean()):f&#125;</span>)</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>需要时刻注意关闭自动微分</li>
+</ul>
+<h2 id="torch-API"><a href="#torch-API" class="headerlink" title="torch API"></a>torch API</h2><p>用 <code>torch</code> 中读取数据的 API:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">load_array</span>(<span class="hljs-params">data_arrays, batch_size, is_train=<span class="hljs-literal">True</span></span>):<br>    dataset = data.TensorDataset(*data_arrays)<br>    <span class="hljs-keyword">return</span> data.DataLoader(dataset, batch_size, shuffle=is_train)<br><br>batch_size = <span class="hljs-number">10</span><br>data_iter = load_array((features, labels), batch_size)<br><br><span class="hljs-built_in">next</span>(<span class="hljs-built_in">iter</span>(data_iter))<br></code></pre></td></tr></table></figure>
 
 
                 
