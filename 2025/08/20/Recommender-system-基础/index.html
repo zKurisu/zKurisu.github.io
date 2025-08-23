@@ -46,8 +46,15 @@
 <meta property="og:image" content="http://example.com/img/recommender-system-item-item-index-example.png">
 <meta property="og:image" content="http://example.com/img/recommender-system-online-recall-example.png">
 <meta property="og:image" content="http://example.com/img/recommender-system-itemCF-with-bad-people.png">
+<meta property="og:image" content="http://example.com/img/recommender-system-how-usercf-works.png">
+<meta property="og:image" content="http://example.com/img/recommender-system-two-users-does-not-sim.png">
+<meta property="og:image" content="http://example.com/img/recommender-system-two-similar-user.png">
+<meta property="og:image" content="http://example.com/img/recommender-system-item-with-high-population.png">
+<meta property="og:image" content="http://example.com/img/recommender-system-usercf-user-item-index.png">
+<meta property="og:image" content="http://example.com/img/recommender-system-usercf-user-user-index.png">
+<meta property="og:image" content="http://example.com/img/recommender-system-usercf-process.png">
 <meta property="article:published_time" content="2025-08-20T09:35:07.000Z">
-<meta property="article:modified_time" content="2025-08-22T08:44:50.569Z">
+<meta property="article:modified_time" content="2025-08-23T13:43:49.439Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/recommender-system-buckets-example.png">
@@ -259,7 +266,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          5.7k 字
+          7.1k 字
         
       </span>
     
@@ -270,7 +277,7 @@
         
         
         
-          48 分钟
+          60 分钟
         
       </span>
     
@@ -508,7 +515,62 @@
 <ul>
 <li>$\alpha$ 是可调整的参数</li>
 </ul>
-
+<h1 id="UserCF"><a href="#UserCF" class="headerlink" title="UserCF"></a>UserCF</h1><p>UserCF (User Collaborative Filtering), 基于用户的协同过滤, 其计算用户间的相似度用于推荐.</p>
+<p>一个用户的点击, 收藏, 点赞, 转发会体现出其兴趣爱好, 而系统中存在许多与其兴趣类似的用户.</p>
+<p>如果某个类似的用户对某物品点赞, 转发, 而一个用户如果没有看过这个物品, 那么推荐系统则有可能会推荐该物品.</p>
+<p>每个用户都有一个列表, 记录了其点击, 点赞, 收藏, 转发的物品的 id, 对比两个用户的列表, 就能得知重合率, 重合越多说明两个用户越相似.</p>
+<p>也可以通过对比用户关注的的作者列表得到是否相似.</p>
+<p>在用 UserCF 做推荐之前, 需要先离线计算用户之间的相似度:</p>
+<p><img src="/../img/recommender-system-how-usercf-works.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>similarity 数值越大表示越相似</li>
+<li>要接受推荐的用户的兴趣值通过 $\sum sim \cdot like$ 计算</li>
+<li>假设有 2000 个候选物品, 可以分别计算出兴趣值后排序, 取前 100 的进行推荐</li>
+</ul>
+<p>用户的相似度是用户之间相近兴趣点的度量:</p>
+<ul>
+<li>两个用户不相似, 指喜欢的物品没有重合</li>
+</ul>
+<p><img src="/../img/recommender-system-two-users-does-not-sim.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>两个用户相似, 指喜欢的物品有重合</li>
+</ul>
+<p><img src="/../img/recommender-system-two-similar-user.png" srcset="/img/loading.gif" lazyload></p>
+<p>具体计算如下:</p>
+<ul>
+<li>用户 $u_1$ 喜欢的物品记作集合 $J_1$</li>
+<li>用户 $u_2$ 喜欢的物品记作集合 $J_2$</li>
+<li>定义交集 $I &#x3D; J_1 \cap J_2$, 包含两个用户共同喜欢的物品</li>
+<li>计算相似度, 结果介于 $0~1$, 越接近 $1$ 说明越相似:</li>
+</ul>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>sim(u_1, u_2) &#x3D; \frac{|I|}{\sqrt{|J_1| \cdot |J_2|}}<br>\end{aligned}<br>}<br>$$</p>
+<p>上述公式还需考虑物品的权重, 热门的物品两个用户都看过的概率很大, 越热门的物品, 越不能反应用户独特的兴趣, 需要降低其权重; 重合的物品越冷门, 越能反应用户的兴趣:</p>
+<p><img src="/../img/recommender-system-item-with-high-population.png" srcset="/img/loading.gif" lazyload></p>
+<p>若考虑物品权重, 但不区分冷门和热门, 可以把上述公式改写为:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>sim(u_1, u_2) &#x3D; \frac{\sum_{l \in I} 1}{\sqrt{|J_1| \cdot |J_2|}}<br>\end{aligned}<br>}<br>$$<br>(权重都是 $1$ 说明不区分)</p>
+<p>考虑热门程度, 公式应该改写为:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>sim(u_1, u_2) &#x3D; \frac{\sum_{l \in I} \frac{1}{\log(1 + n_l)}}{\sqrt{|J_1| \cdot |J_2|}}<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>$n_l$ 是喜欢物品 $l$ 的用户数量, 反映其热门程度. 越热门会让分子越小</li>
+</ul>
+<h2 id="UserCF-的召回流程"><a href="#UserCF-的召回流程" class="headerlink" title="UserCF 的召回流程"></a>UserCF 的召回流程</h2><p>先做离线计算, 建立两组索引:</p>
+<ul>
+<li>$用户 \rightarrow 物品$ 的索引, 记录每个用户最近点击, 交互过的物品 ID. 若给定任意用户 ID, 可以找到他近期感兴趣的物品列表</li>
+</ul>
+<p><img src="/../img/recommender-system-usercf-user-item-index.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>$用户 \rightarrow 用户$ 的索引, 索引与他最相似的 $k$ 个用户. 若给定任意用户 ID, 则可以快速找到他最相似的 $k$ 个用户</li>
+</ul>
+<p><img src="/../img/recommender-system-usercf-user-user-index.png" srcset="/img/loading.gif" lazyload></p>
+<p>然后做线上召回:</p>
+<ol>
+<li>一个用户在使用系统, 通过用户 ID, 检索其 $用户 \rightarrow 用户$ 索引, 找到 <code>top-k</code> 相似用户</li>
+<li>对于每个 <code>top-k</code> 相似用户, 通过 $用户 \rightarrow 物品$ 索引, 找到用户近期感兴趣的物品列表 <code>last-n</code></li>
+<li>对于召回的 $nk$ 个相似物品, 用公式预估用户对每个物品的兴趣分数并排序</li>
+<li>返回分数最高的 100 个物品, 作为召回的结果</li>
+</ol>
+<p><img src="/../img/recommender-system-usercf-process.png" srcset="/img/loading.gif" lazyload></p>
+<h1 id="离散特征处理"><a href="#离散特征处理" class="headerlink" title="离散特征处理"></a>离散特征处理</h1>
                 
               </div>
             
