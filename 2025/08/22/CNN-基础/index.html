@@ -23,10 +23,16 @@
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="介绍CNN (Convolutional Neuron Network), 卷积神经网络, 是一种前馈神经网络, 利用 sparse connectivity 和 parameter sharing 技术来提取空间或时序特征. 相关概念Sparse connectivitySparse connectivity (局部连接), 每个神经元只连接输入数据中的局部区域 (比如图像中的一块像素), 而非">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/cnn-convolutional-rotate-example1.png">
+<meta property="og:image" content="http://example.com/img/cnn-rotate-t-to-negative-t.png">
+<meta property="og:image" content="http://example.com/img/cnn-rotate-could-move-example.png">
+<meta property="og:image" content="http://example.com/img/cnn-function-example1.png">
+<meta property="og:image" content="http://example.com/img/cnn-function-example2.png">
 <meta property="article:published_time" content="2025-08-22T13:43:53.000Z">
-<meta property="article:modified_time" content="2025-08-22T23:49:24.171Z">
+<meta property="article:modified_time" content="2025-08-23T00:52:42.862Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/cnn-convolutional-rotate-example1.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -235,7 +241,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          500 字
+          1.1k 字
         
       </span>
     
@@ -246,7 +252,7 @@
         
         
         
-          5 分钟
+          10 分钟
         
       </span>
     
@@ -292,6 +298,26 @@
                 <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>CNN (Convolutional Neuron Network), 卷积神经网络, 是一种前馈神经网络, 利用 sparse connectivity 和 parameter sharing 技术来提取空间或时序特征.</p>
 <h1 id="相关概念"><a href="#相关概念" class="headerlink" title="相关概念"></a>相关概念</h1><h2 id="Sparse-connectivity"><a href="#Sparse-connectivity" class="headerlink" title="Sparse connectivity"></a>Sparse connectivity</h2><p>Sparse connectivity (局部连接), 每个神经元只连接输入数据中的局部区域 (比如图像中的一块像素), 而非全部输入.</p>
 <h2 id="Parameter-sharing"><a href="#Parameter-sharing" class="headerlink" title="Parameter sharing"></a>Parameter sharing</h2><p>Parameter sharing (参数共享), 同一个特征在整个图像的不同区域是通用的. CNN 使用卷积核 (滤波器) 在图像上滑动, 共享同一组参数来检测不同位置的相同特征, 能极大减少参数量.</p>
+<h2 id="Convolution"><a href="#Convolution" class="headerlink" title="Convolution"></a>Convolution</h2><p><a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1Di4y1o7vX/?spm_id_from=333.337.search-card.all.click&vd_source=bc8ddbb1a08707dc809c3fd9bb85290d">参考讲解1</a></p>
+<p>Convolution, “col” 是 “共同” 的意思可以理解为积分, 词根 “vol” 是 “卷&#x2F;转” 的意思, 因此翻译成卷积.</p>
+<p>数学定义:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>f(t) * g(t) &#x3D; \int f(\tau)g(t- \tau)d\tau<br>\end{aligned}<br>}<br>$$<br><code>*</code> 是卷积运算符, 其本质就是定义了一种运算, 但要比加减乘除高级很多, 卷积的过程包括 (以 2-D 坐标为例):</p>
+<ul>
+<li>旋转, 从 $f(t) * g(t)$ 可以看出, 两个函数在同一个因变量 $t$ 下, 比如都在坐标轴右侧:</li>
+</ul>
+<p><img src="/../img/cnn-convolutional-rotate-example1.png" srcset="/img/loading.gif" lazyload></p>
+<p>假设 $f(t)$ 是山洞, $g(t)$ 是火车, 要描述火车进洞的过程, 则需要让 <code>g(t)</code> 旋转, 即 $g(t) \rightarrow g(-t)$, 把所有 $t$ 换成临时变量 $\tau$, 得到 $f(\tau)$, $g(-\tau)$:</p>
+<p><img src="/../img/cnn-rotate-t-to-negative-t.png" srcset="/img/loading.gif" lazyload></p>
+<p>再加上 $t$ 得到 $g(t-\tau)$, 则能让 $g$ 沿着 $t$ 轴移动:</p>
+<p><img src="/../img/cnn-rotate-could-move-example.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>相乘, 表示 $f(\tau)$ 和 $\g(t-\tau)$ 某一时刻 (特定 $t$) 的重合 (表示相互作用)</li>
+<li>积分, 计算面积</li>
+</ul>
+<p><img src="/../img/cnn-function-example1.png" srcset="/img/loading.gif" lazyload></p>
+<p><img src="/../img/cnn-function-example2.png" srcset="/img/loading.gif" lazyload></p>
+<p>简单来说, 就是固定一个 $t$ 值后, 求两个函数重叠的面积. 若 $t$ 在变化, 就像是一个滑动的过程, 但需要不断求面积.</p>
+<p>也可以交换 $f(t)$ 和 $g(t)$ 的身份.</p>
+<h2 id="Kernel-x2F-Filter"><a href="#Kernel-x2F-Filter" class="headerlink" title="Kernel&#x2F;Filter"></a>Kernel&#x2F;Filter</h2><p>Kernel&#x2F;Filter 指一个矩阵, 用作卷积操作的 $g(t)$.</p>
 <h1 id="核心组件"><a href="#核心组件" class="headerlink" title="核心组件"></a>核心组件</h1><h2 id="Convolutional-layer"><a href="#Convolutional-layer" class="headerlink" title="Convolutional layer"></a>Convolutional layer</h2><p>Convolutional layer (卷积层) 负责特征提取, 关键参数有:</p>
 <ul>
 <li>Kernel&#x2F;Filter (卷积核), 小的权重矩阵 (如 3x3)</li>
