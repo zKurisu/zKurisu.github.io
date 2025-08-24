@@ -63,8 +63,13 @@
 <meta property="og:image" content="http://example.com/img/recommender-system-two-tower-deal-user.png">
 <meta property="og:image" content="http://example.com/img/recommender-system-two-tower-deal-item.png">
 <meta property="og:image" content="http://example.com/img/recommender-system-two-tower-structure.png">
+<meta property="og:image" content="http://example.com/img/recommender-system-pairwise-structure-example.png">
+<meta property="og:image" content="http://example.com/img/recommender-system-listwise-structure.png">
+<meta property="og:image" content="http://example.com/img/recommender-system-how-to-chose-negative-sample.png">
+<meta property="og:image" content="http://example.com/img/recommender-system-in-batch-negative-sample-example.png">
+<meta property="og:image" content="http://example.com/img/recommender-system-can-not-used-in-recall.png">
 <meta property="article:published_time" content="2025-08-20T09:35:07.000Z">
-<meta property="article:modified_time" content="2025-08-24T08:10:53.531Z">
+<meta property="article:modified_time" content="2025-08-24T09:05:24.139Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/recommender-system-buckets-example.png">
@@ -276,7 +281,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          10k 字
+          12k 字
         
       </span>
     
@@ -287,7 +292,7 @@
         
         
         
-          84 分钟
+          100 分钟
         
       </span>
     
@@ -399,6 +404,13 @@
 <h2 id="正负样本"><a href="#正负样本" class="headerlink" title="正负样本"></a>正负样本</h2><p>正样本, Positive samples, 指我们感兴趣的目标, 含感兴趣特征&#x2F;模式的样本.</p>
 <p>负样本, Negative samples, 指不包含目标特征, 代表背景, 正常情况或非目标类别的样本.</p>
 <p>在实际应用中, 通常正样本比负样本少得多.</p>
+<p>比如在垃圾邮件检测中:</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs makefile"><span class="hljs-section">正样本: 垃圾邮件</span><br><span class="hljs-section">负样本: 正常邮件</span><br></code></pre></td></tr></table></figure>
+
+<p>在人脸识别中:</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs makefile"><span class="hljs-section">正样本: 包含人脸的图像区域</span><br><span class="hljs-section">负样本: 不包含人脸的图像区域</span><br></code></pre></td></tr></table></figure>
+
+<p>模型训练中, 需要正负样本共同帮助模型区分不同类别的界限, 以提升模型的泛化能力.</p>
 <h1 id="一个示例"><a href="#一个示例" class="headerlink" title="一个示例"></a>一个示例</h1><p>Recommender system 会根据用户的点击, 点赞, 收藏, 转发, 评论等行为, 来推荐用户可能感兴趣的东西.</p>
 <p><img src="/../img/recommender-system-top-k-example.png" srcset="/img/loading.gif" lazyload></p>
 <p>系统把物品展示给用户称为 Exposure (曝光), 如果用户对该物品感兴趣并点击, 且停留了一段时间, 可以粗略判断用户真的感兴趣, 此时可以算作一次有效点击, 如果用户向下滑动并阅读到底, 更能说明用户对其感兴趣:</p>
@@ -528,7 +540,7 @@
 <ul>
 <li>$\alpha$ 是可调整的参数</li>
 </ul>
-<h1 id="UserCF"><a href="#UserCF" class="headerlink" title="UserCF"></a>UserCF</h1><p>UserCF (User Collaborative Filtering), 基于用户的协同过滤, 其计算用户间的相似度用于推荐.</p>
+<h1 id="UserCF-召回通道"><a href="#UserCF-召回通道" class="headerlink" title="UserCF 召回通道"></a>UserCF 召回通道</h1><p>UserCF (User Collaborative Filtering), 基于用户的协同过滤, 其计算用户间的相似度用于推荐.</p>
 <p>一个用户的点击, 收藏, 点赞, 转发会体现出其兴趣爱好, 而系统中存在许多与其兴趣类似的用户.</p>
 <p>如果某个类似的用户对某物品点赞, 转发, 而一个用户如果没有看过这个物品, 那么推荐系统则有可能会推荐该物品.</p>
 <p>每个用户都有一个列表, 记录了其点击, 点赞, 收藏, 转发的物品的 id, 对比两个用户的列表, 就能得知重合率, 重合越多说明两个用户越相似.</p>
@@ -716,6 +728,7 @@
 <p>整个模型结构:</p>
 <p><img src="/../img/recommender-system-two-tower-structure.png" srcset="/img/loading.gif" lazyload></p>
 <ul>
+<li>用户塔, 物品塔各输出一个向量</li>
 <li>余弦向量表示两个向量的夹角</li>
 </ul>
 <h2 id="模型训练"><a href="#模型训练" class="headerlink" title="模型训练"></a>模型训练</h2><p>模型训练的常见方法有:</p>
@@ -739,7 +752,88 @@
 <li><code>Jui-Ting Huang et al. Embedding-based Retrieval in Facebook Search. In KDD, 2020</code></li>
 <li><code>Xinyang Yi et al. Sampling-Bias-Corrected Neural Modeling for Large Corpus Item Recommendations. In RecSys, 2019.</code></li>
 </ol>
-<h2 id="Pointwise-训练"><a href="#Pointwise-训练" class="headerlink" title="Pointwise 训练"></a>Pointwise 训练</h2>
+<h2 id="Pointwise-训练"><a href="#Pointwise-训练" class="headerlink" title="Pointwise 训练"></a>Pointwise 训练</h2><p>Pointwise 是最简单的训练方式, 把召回看作是二元分类任务.</p>
+<p>对于正样本, 鼓励 $cos(a,b)$ 接近 $+1$.</p>
+<p>对于负样本, 鼓励 $cos(a,b)$ 接近 $-1$.</p>
+<p>一般需要控制正负样本数量为 $1:2$ 或者 $1:3$ (原因不明虽然).</p>
+<h2 id="Pairwise-训练"><a href="#Pairwise-训练" class="headerlink" title="Pairwise 训练"></a>Pairwise 训练</h2><p>做训练时, 每组的输入是一个三元组, 包括 <code>(物品正样本, 用户, 物品负样本)</code>:</p>
+<p><img src="/../img/recommender-system-pairwise-structure-example.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>特征变换的 embedding 层和神经网络共享参数</li>
+<li>需要让 $cos(a,b^+)$ 接近 $+1$</li>
+<li>需要让 $cos(a,b^-)$ 接近 $-1$</li>
+</ul>
+<p>做 Pairwise 训练的基本想法是, 鼓励用户对正样本的兴趣大于负样本, 也就是 $cos(a,b^+) &gt; cos(a,b^-)$, 且两者之差越大越好.</p>
+<p>损失函数:</p>
+<ul>
+<li>如果 $cos(a,b^+) &gt; cos(a,b^-) + m$, 则没有损失</li>
+<li>否则, 损失等于 $cos(a,b^-) + m - cos(a,b^+)$</li>
+<li>得到:</li>
+</ul>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>L(a,b^+,b^-) &#x3D; max\{0, cos(a,b^-) + m - cos(a,b^+)\}<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>$m$ 是需要手动设置的超参数</li>
+</ul>
+<p>即 triplet hinge loss.</p>
+<p>还有其他损失函数可用, 比如 triplet logistic loss:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>L(a,b^+,b^-) &#x3D; log(1 + exp[\sigma \cdot (cos(a,b^-) - cos(a,b^+))])<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>$\sigma$ 是需要手动设置的超参数</li>
+</ul>
+<p>通过最小化上述损失函数来训练模型.</p>
+<h2 id="Listwise-训练"><a href="#Listwise-训练" class="headerlink" title="Listwise 训练"></a>Listwise 训练</h2><p>Listwise 训练时, 每次取一个正样本和多个负样本.</p>
+<p>一条数据包含:</p>
+<ul>
+<li>一个用户, 特征向量记作 $a$</li>
+<li>一个正样本, 特征向量记作 $b^+$</li>
+<li>多个负样本, 特征向量记作 $b_1^-,…,b_n^-$</li>
+</ul>
+<p>要鼓励 $cos(a,b^+)$ 尽量大.</p>
+<p>要鼓励 $cos(a,b_1^-),…,cos(a,b_n^-)$ 尽量小.</p>
+<p><img src="/../img/recommender-system-listwise-structure.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li><code>softmax</code> 输出分数, 正样本的分数越大越好, 接近 <code>1</code>. 负样本的分数越小越好, 接近 <code>0</code></li>
+<li>训练时, 将正样本的标签设为输出 <code>1</code>, 负样本为 <code>0</code></li>
+</ul>
+<h2 id="正样本选择"><a href="#正样本选择" class="headerlink" title="正样本选择"></a>正样本选择</h2><p>正样本一般选择: 曝光而且有点击的 “用户-物品” 二元组 (用户对物品感兴趣).</p>
+<p>但由于少部分物品会占据大部分点击, 会导致正样本大多是热门物品, 解决方案是: 对冷门物品用过采样, 对热门物品用降采样:</p>
+<ul>
+<li>过采样 (up-sampling), 指让一个样本出现多次</li>
+<li>降采样 (down-sampling), 指抛弃一些样本</li>
+</ul>
+<h2 id="负样本选择"><a href="#负样本选择" class="headerlink" title="负样本选择"></a>负样本选择</h2><p><img src="/../img/recommender-system-how-to-chose-negative-sample.png" srcset="/img/loading.gif" lazyload></p>
+<h3 id="简单负样本"><a href="#简单负样本" class="headerlink" title="简单负样本"></a>简单负样本</h3><p>简单负样本指未被召回的物品, 大概率是用户不感兴趣的. 在全部物品达上亿规模时, $未被召回的物品 \approx 全体物品$. 因此直接从全体物品中做抽样, 作为负样本.</p>
+<p>如果完全均匀抽取, 会对冷门物品不公平:</p>
+<ul>
+<li>因为正样本大多是热门物品</li>
+<li>均匀采样出的负样本, 大多是冷门物品</li>
+</ul>
+<p>这会导致热门物品越热 (每次都做正样品, 容易被推荐), 冷门物品越冷 (每次都做负样品, 更不会被推荐).</p>
+<p>因此采用非均匀抽样, 打压热门物品:</p>
+<ul>
+<li>负样本的抽样概率与热门程度 (点击次数) 正相关</li>
+<li>比如 $抽样概率 \propto (点击次数)^{0.75}$</li>
+</ul>
+<p>另一种简单负样本: batch 内负样本例子:</p>
+<p><img src="/../img/recommender-system-in-batch-negative-sample-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>但这会导致热门物品成为负样本的概率过大 $\propto 点击次数$. 可以参考 <code>Xinyang Yi et al. Sampling-Bias-Corrected Neural Modeling for Large Corpus Item Recommendations. In RecSys, 2019.</code> 来修正偏差.</p>
+<h3 id="困难负样本"><a href="#困难负样本" class="headerlink" title="困难负样本"></a>困难负样本</h3><p>困难负样本, 指:</p>
+<ul>
+<li>被粗排淘汰的物品 (比较困难)</li>
+<li>精排分数靠后的物品 (非常困难, 与正样本很相似, 难以分类正确)</li>
+</ul>
+<p>之所以称困难负样本, 因为其容易被模型分错, 认定为正样本. 这些物品用户可能感兴趣, 但是还不够感兴趣.</p>
+<hr>
+<p>业界通常混合几种负样本, 比如:</p>
+<ul>
+<li><code>50%</code> 简单负样本</li>
+<li><code>50%</code> 困难负样本</li>
+</ul>
+<h3 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h3><p>训练召回模型时不能把 <code>曝光但是没有点击</code> 的物品作为负样本:</p>
+<p><img src="/../img/recommender-system-can-not-used-in-recall.png" srcset="/img/loading.gif" lazyload></p>
+<p>因为召回的目标是找到用户可能感兴趣的物品, 而不是区分比较感兴趣和非常感兴趣, 上述物品就属于 “比较感兴趣” 的范畴, 不该在召回时被剔除. 更何况可能是用户 “非常感兴趣” 但是碰巧没有点击.</p>
+<p>这部分物品更适合做召回的正样本.</p>
+
                 
               </div>
             
