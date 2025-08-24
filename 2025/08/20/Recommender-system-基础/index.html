@@ -53,8 +53,13 @@
 <meta property="og:image" content="http://example.com/img/recommender-system-usercf-user-item-index.png">
 <meta property="og:image" content="http://example.com/img/recommender-system-usercf-user-user-index.png">
 <meta property="og:image" content="http://example.com/img/recommender-system-usercf-process.png">
+<meta property="og:image" content="http://example.com/img/recommender-system-embedding-example.png">
+<meta property="og:image" content="http://example.com/img/recommender-system-good-embedding-example.png">
+<meta property="og:image" content="http://example.com/img/recommender-system-embedding-calculation-example.png">
+<meta property="og:image" content="http://example.com/img/recommender-system-matrix-completion-model-structure.png">
+<meta property="og:image" content="http://example.com/img/recommender-system-basic-idea-for-matrix-completion.png">
 <meta property="article:published_time" content="2025-08-20T09:35:07.000Z">
-<meta property="article:modified_time" content="2025-08-23T13:43:49.439Z">
+<meta property="article:modified_time" content="2025-08-24T07:10:57.925Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/recommender-system-buckets-example.png">
@@ -266,7 +271,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          7.1k 字
+          8.7k 字
         
       </span>
     
@@ -277,7 +282,7 @@
         
         
         
-          60 分钟
+          73 分钟
         
       </span>
     
@@ -570,7 +575,88 @@
 <li>返回分数最高的 100 个物品, 作为召回的结果</li>
 </ol>
 <p><img src="/../img/recommender-system-usercf-process.png" srcset="/img/loading.gif" lazyload></p>
-<h1 id="离散特征处理"><a href="#离散特征处理" class="headerlink" title="离散特征处理"></a>离散特征处理</h1>
+<h1 id="离散特征处理"><a href="#离散特征处理" class="headerlink" title="离散特征处理"></a>离散特征处理</h1><p>几个离散特征示例:</p>
+<ul>
+<li>性别: 男, 女两种类别</li>
+<li>国籍: 中国, 美国等 200 个国家</li>
+<li>英文单词: 常见的几万个英文单词</li>
+<li>物品 ID: 商品中的上亿个物品, 每个物品有一个 ID</li>
+<li>用户 ID: 系统中的上亿个用户, 每个用户有一个 ID</li>
+</ul>
+<p>推荐系统需要先将这些离散特征映射为向量:</p>
+<ol>
+<li>建立字典: 把类别映射为序号, 比如:<br> a. 中国 $\rightarrow 1$<br> b. 美国 $\rightarrow 2$<br> c. 日本 $\rightarrow 3$</li>
+<li>向量化: 把序号映射成向量<br> a. One-hot 编码: 把序号映射成高维稀疏向量<br> b. Embedding: 把序号映射成低维稠密向量</li>
+</ol>
+<h2 id="One-hot-编码"><a href="#One-hot-编码" class="headerlink" title="One-hot 编码"></a>One-hot 编码</h2><p>One-hot 编码会把所有类别都设为一个特征, 取该类别时, 该特征值取 <code>1</code>, 其余特征值取 <code>0</code>.</p>
+<p>以性别特征为例, 有 “男”, “女” 两种类别, 先为每种类别编号:</p>
+<ul>
+<li>$男 \rightarrow 1$</li>
+<li>$女 \rightarrow 2$</li>
+</ul>
+<p>之后用 one-hot 编码为 2 维向量, 如:</p>
+<ul>
+<li>未知 $\rightarrow$ 0 $\rightarrow$ $[0,0]$</li>
+<li>男 $\rightarrow$ 1 $\rightarrow$ $[1,0]$</li>
+<li>女 $\rightarrow$ 2 $\rightarrow$ $[0,1]$</li>
+</ul>
+<p>用国籍为例, 有 “中国”, “美国”, “日本” 等 200 种类别, 先用字典进行编号:</p>
+<ul>
+<li>$中国 \rightarrow 1$</li>
+<li>$美国 \rightarrow 2$</li>
+<li>$日本 \rightarrow 3$</li>
+</ul>
+<p>之后用 one-hot 编码为 200 维稀疏向量:</p>
+<ul>
+<li>未知 $\rightarrow$ 0 $\rightarrow$ $[0,0,0,0,…,0]$</li>
+<li>中国 $\rightarrow$ 1 $\rightarrow$ $[1,0,0,0,…,0]$</li>
+<li>美国 $\rightarrow$ 2 $\rightarrow$ $[0,1,0,0,…,0]$</li>
+<li>日本 $\rightarrow$ 3 $\rightarrow$ $[0,0,1,0,…,0]$</li>
+</ul>
+<p>One-hot 编码的局限在于, 对于自然语言等类别很多的问题, 需要几万的维度. 对于推荐系统中有上亿的 ID 编码, 维度达到几亿.</p>
+<h2 id="Embedding"><a href="#Embedding" class="headerlink" title="Embedding"></a>Embedding</h2><p>Embedding 会将类别进行编码, 变为一个低维的稠密矩阵.</p>
+<p>以国籍为例:</p>
+<p><img src="/../img/recommender-system-embedding-example.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>假设一个类别用一个 <code>4x1</code> 的向量表示</li>
+</ul>
+<p>Embedding 层的全部参数为 $向量维度 \times 类别数量$, 比如上述例子就是 $4 \times 200 &#x3D; 800$ (就是 embedding 表中的数字个数).</p>
+<p>一个好的训练能让相似 embedding 在特征空间中位置相近:</p>
+<p><img src="/../img/recommender-system-good-embedding-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>Embedding 的计算本质上是:</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ini"><span class="hljs-attr">Embedding</span> = 参数矩阵 x <span class="hljs-literal">On</span>e-Hot 向量<br></code></pre></td></tr></table></figure>
+
+<p><img src="/../img/recommender-system-embedding-calculation-example.png" srcset="/img/loading.gif" lazyload></p>
+<h1 id="矩阵补充"><a href="#矩阵补充" class="headerlink" title="矩阵补充"></a>矩阵补充</h1><p>矩阵补充 (matrix completion), 是向量召回中最简单的一种方法 (现在不再常用).</p>
+<p>模型结构:</p>
+<p><img src="/../img/recommender-system-matrix-completion-model-structure.png" srcset="/img/loading.gif" lazyload></p>
+<p>应用了两个 embedding layer:</p>
+<ul>
+<li>内积 $&lt;a, b&gt;$ 越大说明用户对该物品的兴趣分数越大</li>
+<li>两个 embedding layer 不共享参数</li>
+</ul>
+<p>基本的训练思路:</p>
+<ul>
+<li>用户 embedding 参数矩阵记作 $A$. 第 $u$ 号用户对应矩阵第 $u$ 列, 记作向量 $a_u$</li>
+<li>物品 embedding 参数矩阵记作 $B$. 地 $i$ 号物品对应矩阵第 $i$ 列, 记作向量 $b_i$</li>
+</ul>
+<p><img src="/../img/recommender-system-basic-idea-for-matrix-completion.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>内积 $\langle a_u, b_i \rangle$ 是第 $u$ 号用户对第 $i$ 号物品的兴趣的预估值</li>
+<li>训练模型的目的是学习到矩阵 A 和 B, 使得预估值拟合真实观测的兴趣分数</li>
+</ul>
+<h2 id="数据集准备"><a href="#数据集准备" class="headerlink" title="数据集准备"></a>数据集准备</h2><p>数据集为三元组 <code>(用户ID, 物品ID, 兴趣分数)</code> 的集合, 记作 $\Omega &#x3D; \{(u,i,y)\}$.</p>
+<p>数据集中的兴趣分数是系统记录的, 比如:</p>
+<ul>
+<li>曝光但是没有点击 $\rightarrow$ 0 分</li>
+<li>点击, 点赞, 收藏, 转发 $\rightarrow$ 各算 1 分</li>
+<li>分数最低是 0, 最高是 4</li>
+</ul>
+<h2 id="训练"><a href="#训练" class="headerlink" title="训练"></a>训练</h2><p>要把用户 ID, 物品 ID 映射成向量:</p>
+<ul>
+<li>第 $u$ 号用户 $\rightarrow$ 向量 $a_u$</li>
+</ul>
+
                 
               </div>
             
