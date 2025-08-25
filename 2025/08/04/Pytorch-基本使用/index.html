@@ -25,7 +25,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/pytorch-one-layer-neural-network-example.png">
 <meta property="article:published_time" content="2025-08-04T14:26:44.000Z">
-<meta property="article:modified_time" content="2025-08-25T07:42:01.912Z">
+<meta property="article:modified_time" content="2025-08-25T08:09:40.679Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/pytorch-one-layer-neural-network-example.png">
@@ -237,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          17k 字
+          18k 字
         
       </span>
     
@@ -248,7 +248,7 @@
         
         
         
-          145 分钟
+          146 分钟
         
       </span>
     
@@ -638,7 +638,11 @@
 </ul>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> torch.optim <span class="hljs-keyword">as</span> optim<br><br>optimizer = optim.Adam(model.parameters(), lr=<span class="hljs-number">1e-3</span>, weight_decay=<span class="hljs-number">1e-5</span>)<br>scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=<span class="hljs-number">30</span>, gamma=<span class="hljs-number">0.1</span>)<br><br><span class="hljs-keyword">for</span> epoch <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">100</span>):<br>    <span class="hljs-comment"># ... training steps ...</span><br>    scheduler.step() <span class="hljs-comment"># 每个epoch后更新学习率</span><br></code></pre></td></tr></table></figure>
 
-<h1 id="技巧积累"><a href="#技巧积累" class="headerlink" title="技巧积累"></a>技巧积累</h1><h1 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h1><h2 id="backward"><a href="#backward" class="headerlink" title="backward"></a>backward</h2><p><code>backward()</code> 方法只能由标量调用, 即 <code>1x1</code> 的张量.</p>
+<h1 id="技巧积累"><a href="#技巧积累" class="headerlink" title="技巧积累"></a>技巧积累</h1><h2 id="torch-zeros-like"><a href="#torch-zeros-like" class="headerlink" title="torch.zeros_like()"></a>torch.zeros_like()</h2><p><code>torch.zeros_like()</code> 函数用于创建一个与输入 tensor 形状相同, 但所有元素值为 0 的新张量.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">relu</span>(<span class="hljs-params">X</span>):<br>    a = torch.zeros_like(X)<br>    <span class="hljs-keyword">return</span> torch.<span class="hljs-built_in">max</span>(X, a)<br></code></pre></td></tr></table></figure>
+
+
+<h1 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h1><h2 id="backward"><a href="#backward" class="headerlink" title="backward"></a>backward</h2><p><code>backward()</code> 方法只能由标量调用, 即 <code>1x1</code> 的张量.</p>
 <p>梯度计算本质是 “标量函数对张量的导数”, 即输出每个元素对输入每个元素的偏导数.</p>
 <p>假设 $y$ 是标量 (如 <code>loss</code>), 则 <code>y.backward()</code> 会计算 $\frac{\partial y}{\partial x}$, 结果是一个与 x 形状相同的梯度张量.</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> torch<br><br>A = torch.tensor([[<span class="hljs-number">1.0</span>, <span class="hljs-number">2.0</span>],<br>                  [<span class="hljs-number">3.0</span>, <span class="hljs-number">4.0</span>]], requires_grad=<span class="hljs-literal">True</span>)<br>X = torch.tensor([[<span class="hljs-number">5.0</span>], [<span class="hljs-number">6.0</span>]], requires_grad=<span class="hljs-literal">True</span>)<br>Y = torch.matmul(A, X)<br><br>Y.<span class="hljs-built_in">sum</span>().backward()<br><span class="hljs-built_in">print</span>(A.grad)<br><span class="hljs-built_in">print</span>(X.grad)<br><br><span class="hljs-comment"># tensor([[5., 6.],</span><br><span class="hljs-comment">#         [5., 6.]])</span><br><span class="hljs-comment"># tensor([[4.],</span><br><span class="hljs-comment">#         [6.]])</span><br></code></pre></td></tr></table></figure>
