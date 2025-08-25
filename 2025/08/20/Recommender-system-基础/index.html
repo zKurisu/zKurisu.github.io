@@ -79,8 +79,13 @@
 <meta property="og:image" content="http://example.com/img/recommender-system-cal-two-related-features.png">
 <meta property="og:image" content="http://example.com/img/recommender-system-how-to-do-mask-related.png">
 <meta property="og:image" content="http://example.com/img/recommender-system-learn-with-self-supervised.png">
+<meta property="og:image" content="http://example.com/img/recommender-system-item-as-path-example.png">
+<meta property="og:image" content="http://example.com/img/deep-retrivel-get-path-example.png">
+<meta property="og:image" content="http://example.com/img/recommender-system-beam-search-with-size-1.png">
+<meta property="og:image" content="http://example.com/img/recommender-system-beam-size-4-example1.png">
+<meta property="og:image" content="http://example.com/img/recommender-system-how-item-to-path.png">
 <meta property="article:published_time" content="2025-08-20T09:35:07.000Z">
-<meta property="article:modified_time" content="2025-08-25T09:04:33.925Z">
+<meta property="article:modified_time" content="2025-08-25T13:44:21.396Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/recommender-system-buckets-example.png">
@@ -292,7 +297,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          13k 字
+          15k 字
         
       </span>
     
@@ -303,7 +308,7 @@
         
         
         
-          111 分钟
+          129 分钟
         
       </span>
     
@@ -911,7 +916,88 @@
 <p><img src="/../img/recommender-system-cal-two-related-features.png" srcset="/img/loading.gif" lazyload></p>
 <p><img src="/../img/recommender-system-how-to-do-mask-related.png" srcset="/img/loading.gif" lazyload></p>
 <h2 id="训练过程"><a href="#训练过程" class="headerlink" title="训练过程"></a>训练过程</h2><p><img src="/../img/recommender-system-learn-with-self-supervised.png" srcset="/img/loading.gif" lazyload></p>
-<h1 id="Deep-Retrieval-召回"><a href="#Deep-Retrieval-召回" class="headerlink" title="Deep Retrieval 召回"></a>Deep Retrieval 召回</h1>
+<h1 id="Deep-Retrieval-召回"><a href="#Deep-Retrieval-召回" class="headerlink" title="Deep Retrieval 召回"></a>Deep Retrieval 召回</h1><p>Deep Retrieval 把物品表征为路径 (path), 线上查找用户最匹配的路径. (可参考 <code>Weihao Gao et al. Learning A Retrievable Structure for Large-Scale Recommendations. In CIKM, 2021.</code>)</p>
+<p>Deep Retrieval 部分的讲解流程 (就这个视频教程的):</p>
+<ol>
+<li>索引:<br> a. $路径 \rightarrow List\langle 物品 \rangle$<br> b. $物品 \rightarrow List\langle 路径 \rangle$ </li>
+<li>预估模型: 神经网络预估用户对路径的兴趣</li>
+<li>线上召回: $用户 \rightarrow 路径 \rightarrow 物品$</li>
+<li>训练:<br> a. 学习神经网络参数, 学习用户对物品的兴趣<br> b. 学习物品表征 ($物品 \rightarrow 路径$), 将物品映射到路径</li>
+</ol>
+<h2 id="索引"><a href="#索引" class="headerlink" title="索引"></a>索引</h2><p>索引用于关联物品和路径.</p>
+<p>物品表征为路径的示例:</p>
+<p><img src="/../img/recommender-system-item-as-path-example.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>深度: <code>depth = 3</code></li>
+<li>宽度: <code>width = K</code></li>
+<li>把一个物品表示为一条路径, 比如 <code>[2, 4, 1]</code></li>
+<li>一个物品可以表示为多条路径, 如 <code>&#123;[2, 4, 1], [4, 1, 1]&#125;</code></li>
+</ul>
+<p>第一种索引 $item \rightarrow List\langle path \rangle$:</p>
+<ul>
+<li>一个物品对应多条路径</li>
+<li>用 3 个节点表示一条路径: <code>path = [a, b, c]</code> (<code>depth=3</code> 的情况)</li>
+</ul>
+<p>第二种索引 $path \rightarrow List\langle item \rangle$:</p>
+<ul>
+<li>一条路径对应多个物品, 召回时, 用一条路径取回多个物品</li>
+</ul>
+<h2 id="预估模型"><a href="#预估模型" class="headerlink" title="预估模型"></a>预估模型</h2><p>Deep retrieval 中设计了一种神经网络: 给定用户特征, 神经网络可以预估用户对路径的兴趣分数, 这样可以根据用户特征召回多条路径</p>
+<ul>
+<li>用 3 个节点表示一条路径: <code>path = [a,b,c]</code></li>
+<li>给定用户特征 $x$, 预估用户对节点 $a$ 的兴趣 $p_1(a|x)$</li>
+<li>给定 $x$ 和 $a$, 预估用户对节点 $b$ 的兴趣 $p_2(b|a;x)$</li>
+<li>给定 $x,a,b$, 预估用户对节点 $c$ 的兴趣 $p_3(c|a,b;x)$</li>
+<li>预估用户对 <code>path = [a,b,c]</code> 的兴趣:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>p(a,b,c|x) &#x3D; p_1 (a|x) \times p_2 (b|a;x) \times p_3(c|a,b;x)<br>\end{aligned}<br>}<br>$$</li>
+</ul>
+<p><img src="/../img/deep-retrivel-get-path-example.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="线上召回-2"><a href="#线上召回-2" class="headerlink" title="线上召回"></a>线上召回</h2><p>线上召回负责, 给定用户特征, 返回一批物品: $用户 \rightarrow 路径 \rightarrow 物品$:</p>
+<ol>
+<li>给定用户特征, 用 beam search 召回一批路径</li>
+<li>利用索引 $path \rightarrow List\langle item \rangle$ 召回一批物品</li>
+<li>对物品做打分和排序, 选出一个子集</li>
+</ol>
+<h3 id="Beam-search"><a href="#Beam-search" class="headerlink" title="Beam search"></a>Beam search</h3><p>假设有 3 层, 每层 K 个节点, 共 $K^3$ 条路径. 用神经网络给所有 $K^3$ 条路径打分, 计算量比较大, 因此这里采用 beam search 来减少计算量 (每层选分数最大的 n 个节点), 需要设置超参数 <code>beam size</code> (选中的路径数量), 比如 <code>beam size=1</code>:</p>
+<p><img src="/../img/recommender-system-beam-search-with-size-1.png" srcset="/img/loading.gif" lazyload></p>
+<p><code>beam size=4</code> 的例子:</p>
+<p><img src="/../img/recommender-system-beam-size-4-example1.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="训练-1"><a href="#训练-1" class="headerlink" title="训练"></a>训练</h2><p>训练部分需要同时学习神经网络参数和物品表征:</p>
+<ul>
+<li><p>神经网络预估用户对路径 <code>[a,b,c]</code> 的兴趣分数记作 $p(a,b,c|x)$</p>
+</li>
+<li><p>把一个物品表征为多条路径 <code>&#123;[a,b,c]&#125;</code>, 以建立索引:</p>
+<ul>
+<li>$item \rightarrow List\langle path \rangle$</li>
+<li>$path \rightarrow List\langle item \rangle$</li>
+</ul>
+</li>
+<li><p>训练时只用到正样本 <code>(user, item)</code>: <code>click(user,item) = 1</code>, 即只要点过就能算正样本</p>
+</li>
+</ul>
+<p>学习神经网络参数的过程, 假设:</p>
+<ul>
+<li>物品表征为 $J$ 条路径: $[a_1,b_1,c_1],…,[a_J,b_J,c_J]$</li>
+<li>此时用户对路径 <code>[a,b,c]</code> 的兴趣为:<ul>
+<li>$p(a,b,c|x) &#x3D; p_1(a|x) \times p_2(b|a;x) \times p_3(c|a,b;x)$</li>
+</ul>
+</li>
+<li>如果用户点击过物品, 说明用户对 J 条路径感兴趣, 此时要:<ul>
+<li>让 $\sum_{j&#x3D;1}^J p(a_j,b_j,c_j|x)$ 变大</li>
+<li>损失函数: $loss &#x3D; -log(\sum_{j&#x3D;1}^J p(a_j,b_j,c_j|x))$</li>
+</ul>
+</li>
+</ul>
+<p>学习物品表征的过程:</p>
+<ul>
+<li>用户 <code>user</code> 对路径 <code>path=[a,b,c]</code> 的兴趣记作:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>p(path|user) &#x3D; p(a,b,c|x)<br>\end{aligned}<br>}<br>$$</li>
+<li>物品 <code>item</code> 与路径 <code>path</code> 的相关性:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>score(item, patth) &#x3D; \sum_{user} p(path|user) \times click(user,item)<br>\end{aligned}<br>}<br>$$</li>
+<li>根据 <code>score(item,path)</code> 选出 J 条路径作为 <code>item</code> 的表征, $\Pi &#x3D; \{path_1,…,path_j\}$</li>
+</ul>
+<p><img src="/../img/recommender-system-how-item-to-path.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>损失函数: $loss(item,\Pi) &#x3D; -\log (\sum_{j&#x3D;1}^J score(item,path_j))$</li>
+</ul>
+
                 
               </div>
             
