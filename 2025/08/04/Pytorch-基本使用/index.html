@@ -25,7 +25,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/pytorch-one-layer-neural-network-example.png">
 <meta property="article:published_time" content="2025-08-04T14:26:44.000Z">
-<meta property="article:modified_time" content="2025-08-25T06:07:06.239Z">
+<meta property="article:modified_time" content="2025-08-25T07:06:32.002Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/pytorch-one-layer-neural-network-example.png">
@@ -237,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          14k 字
+          17k 字
         
       </span>
     
@@ -248,7 +248,7 @@
         
         
         
-          119 分钟
+          140 分钟
         
       </span>
     
@@ -566,13 +566,61 @@
 <p>可以保存&#x2F;加载整个模型:</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python">torch.save(model, <span class="hljs-string">&#x27;model.pth&#x27;</span>)<br>model = torch.load(<span class="hljs-string">&#x27;model.pth&#x27;</span>, weights_only=<span class="hljs-literal">False</span>)<br></code></pre></td></tr></table></figure>
 
-<h1 id="kaggle-教程"><a href="#kaggle-教程" class="headerlink" title="kaggle 教程"></a>kaggle 教程</h1><p><a target="_blank" rel="noopener" href="https://www.kaggle.com/code/jieorkarin/pytorch-tutorial-for-deep-learning-lovers">kaggle 教程地址</a></p>
-<h1 id="技巧积累"><a href="#技巧积累" class="headerlink" title="技巧积累"></a>技巧积累</h1><h2 id="torch-nn-Module-的-apply-方法"><a href="#torch-nn-Module-的-apply-方法" class="headerlink" title="torch.nn.Module 的 apply 方法"></a>torch.nn.Module 的 apply 方法</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">apply</span>(<span class="hljs-params">self, fn</span>)<br></code></pre></td></tr></table></figure>
+<h1 id="torch-nn-Module-类"><a href="#torch-nn-Module-类" class="headerlink" title="torch.nn.Module 类"></a>torch.nn.Module 类</h1><p><code>torch.nn.Module</code> 是一个基类, PyTorch 中所有神经网络模型都继承自这个类.</p>
+<p><code>nn.Module</code> 封装了所有神经网络层, 模型和组件的共同行为, 主要负责:</p>
+<ul>
+<li>管理状态 (state), 接管网络的所有 “可学习参数” (如 <code>weight</code> 和 <code>bias</code>)</li>
+<li>定义计算, 通过 <code>forward</code> 方法定义数据如何从输入流向输出</li>
+</ul>
+<h2 id="简单示例"><a href="#简单示例" class="headerlink" title="简单示例"></a>简单示例</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> torch.nn <span class="hljs-keyword">as</span> nn<br><span class="hljs-keyword">import</span> torch.nn.functional <span class="hljs-keyword">as</span> F<br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">TestNet</span>(nn.Module):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, input_size, hidden_size, num_classes</span>):<br>        <span class="hljs-built_in">super</span>(TestNet, self).__init__()<br><br>        self.fc1 = nn.Linear(input_size, hidden_size)<br>        self.fc2 = nn.Linear(hidden_size, hidden_size)<br>        self.fc3 = nn.Linear(hidden_size, num_classes)<br>        self.dropout = nn.Dropout(p=<span class="hljs-number">0.5</span>)<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">self, x</span>):<br>        x = F.relu(self.fc1(x))<br>        x = self.dropout(x)<br>        x = F.relu(self.fc2(x))<br>        x = self.dropout(x)<br>        x = self.fc3(x)<br>        <span class="hljs-keyword">return</span> x<br><br>net = TestNet(input_size=<span class="hljs-number">784</span>, hidden_size=<span class="hljs-number">128</span>, num_classes=<span class="hljs-number">10</span>)<br><span class="hljs-built_in">print</span>(net)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>在 <code>__init__()</code> 初始化时, 定义网络中的组件</li>
+<li>在 <code>forward()</code> 中组织运算顺序</li>
+</ul>
+<h2 id="参数管理"><a href="#参数管理" class="headerlink" title="参数管理"></a>参数管理</h2><p><code>nn.Module</code> 自动跟踪的所有可学习参数, 可以通过下面方法访问:</p>
+<ul>
+<li><code>parameters()</code>, 返回一个迭代器, 包含模型的所有参数</li>
+<li><code>named_parameters()</code>, 返回包含参数名称和参数本身的迭代器</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># 获取所有参数</span><br><span class="hljs-keyword">for</span> param <span class="hljs-keyword">in</span> net.parameters():<br>    <span class="hljs-built_in">print</span>(param.size()) <span class="hljs-comment"># 打印每个参数的维度</span><br><br><span class="hljs-comment"># 获取带名称的参数（非常有用用于调试）</span><br><span class="hljs-keyword">for</span> name, param <span class="hljs-keyword">in</span> net.named_parameters():<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;Name: <span class="hljs-subst">&#123;name&#125;</span> | Size: <span class="hljs-subst">&#123;param.size()&#125;</span> | Values: <span class="hljs-subst">&#123;param[:<span class="hljs-number">2</span>]&#125;</span>&quot;</span>)<br><br><span class="hljs-comment"># 输出示例：</span><br><span class="hljs-comment"># Name: fc1.weight | Size: torch.Size([128, 784]) </span><br><span class="hljs-comment"># Name: fc1.bias | Size: torch.Size([128])</span><br><span class="hljs-comment"># Name: fc2.weight | Size: torch.Size([128, 128])</span><br><span class="hljs-comment"># ...</span><br></code></pre></td></tr></table></figure>
 
+<h2 id="模块结构管理"><a href="#模块结构管理" class="headerlink" title="模块结构管理"></a>模块结构管理</h2><p><code>nn.Module</code> 可以嵌套成为一个树, 可以用下面方法访问内部模块:</p>
+<ul>
+<li><code>children()</code>, 返回直接子模块的迭代器</li>
+<li><code>modules()</code>, 递归返回网络中的所有模块 (包括自身) 的迭代器</li>
+<li><code>named_modules()</code>, 递归地返回包含名称和模块本身的迭代器</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># 打印直接子层（fc1, fc2, fc3, dropout）</span><br><span class="hljs-keyword">for</span> child <span class="hljs-keyword">in</span> net.children():<br>    <span class="hljs-built_in">print</span>(child)<br><br><span class="hljs-comment"># 打印所有模块（包括整个模型本身和所有层）</span><br><span class="hljs-keyword">for</span> module <span class="hljs-keyword">in</span> net.modules():<br>    <span class="hljs-built_in">print</span>(module)<br><br><span class="hljs-comment"># 打印带名称的模块</span><br><span class="hljs-keyword">for</span> name, module <span class="hljs-keyword">in</span> net.named_modules():<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;Name: <span class="hljs-subst">&#123;name&#125;</span> | Module: <span class="hljs-subst">&#123;module&#125;</span>&quot;</span>)<br></code></pre></td></tr></table></figure>
+
+<h2 id="状态管理"><a href="#状态管理" class="headerlink" title="状态管理"></a>状态管理</h2><p>State 以字典形式存储, 可以保存供以后加载:</p>
+<ul>
+<li><code>state_dict()</code>, 返回一个字典, 包含模型的所有参数和持久缓冲区</li>
+<li><code>load_state_dict()</code>, 从字典中加载参数</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># 保存模型</span><br>torch.save(model.state_dict(), <span class="hljs-string">&#x27;my_model.pth&#x27;</span>)<br><br><span class="hljs-comment"># 加载模型</span><br>loaded_model = MyCustomNet(input_size=<span class="hljs-number">784</span>, hidden_size=<span class="hljs-number">128</span>, num_classes=<span class="hljs-number">10</span>)<br>loaded_model.load_state_dict(torch.load(<span class="hljs-string">&#x27;my_model.pth&#x27;</span>))<br></code></pre></td></tr></table></figure>
+
+<h2 id="设备管理"><a href="#设备管理" class="headerlink" title="设备管理"></a>设备管理</h2><p><code>nn.Module</code> 可以在设备间 (CPU, GPU) 移动:</p>
+<ul>
+<li><code>to(device)</code> 方法, 将模型的所有参数和缓冲区移动到指定的设备</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python">device = torch.device(<span class="hljs-string">&#x27;cuda&#x27;</span> <span class="hljs-keyword">if</span> torch.cuda.is_available() <span class="hljs-keyword">else</span> <span class="hljs-string">&#x27;cpu&#x27;</span>)<br>model.to(device) <span class="hljs-comment"># 将整个模型移动到GPU</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="训练和评估模式"><a href="#训练和评估模式" class="headerlink" title="训练和评估模式"></a>训练和评估模式</h2><p>一些层在训练模式和评估模式下的行为不同:</p>
+<ul>
+<li><code>train()</code>, 将模块设置为训练模式</li>
+<li><code>eval()</code>, 将模块设置为评估模式</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs python">model.train()  <span class="hljs-comment"># 训练时调用，Dropout会随机丢弃神经元</span><br><span class="hljs-comment"># ... 训练循环 ...</span><br>model.<span class="hljs-built_in">eval</span>()   <span class="hljs-comment"># 测试/推理时调用，Dropout不会丢弃神经元</span><br><br><span class="hljs-keyword">with</span> torch.no_grad(): <span class="hljs-comment"># 通常与eval()配合使用，禁用自动求导以节省内存和计算</span><br>    <span class="hljs-comment"># 进行推理</span><br>    outputs = model(inputs)<br></code></pre></td></tr></table></figure>
+
+<h2 id="函数应用"><a href="#函数应用" class="headerlink" title="函数应用"></a>函数应用</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">apply</span>(<span class="hljs-params">self, fn</span>)<br></code></pre></td></tr></table></figure>
 <ul>
 <li><code>apply</code> 方法是对该模块以及所有子模块 (即整个网络) 递归应用一个指定函数</li>
+<li>指定函数的调用时 <code>fn(net)</code>, 即会传入当前层作为参数</li>
 </ul>
-<h1 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h1><h2 id="backward"><a href="#backward" class="headerlink" title="backward"></a>backward</h2><p><code>backward()</code> 方法只能由标量调用, 即 <code>1x1</code> 的张量.</p>
+<p><code>apply</code> 方法常用于初始化网络权重以及自定义修改网络模块:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs python">net = nn.Sequential(nn.Flatten(), nn.Linear(<span class="hljs-number">784</span>, <span class="hljs-number">10</span>))<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">init_weights</span>(<span class="hljs-params">net</span>):<br>    <span class="hljs-keyword">if</span> <span class="hljs-built_in">type</span>(m) == nn.Linear:<br>        nn.init.normal_(m.weight, std=<span class="hljs-number">0.01</span>)<br><br>net.apply(init_weights)<br></code></pre></td></tr></table></figure>
+
+<h2 id="torch-nn-init"><a href="#torch-nn-init" class="headerlink" title="torch.nn.init"></a>torch.nn.init</h2><h1 id="技巧积累"><a href="#技巧积累" class="headerlink" title="技巧积累"></a>技巧积累</h1><h1 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h1><h2 id="backward"><a href="#backward" class="headerlink" title="backward"></a>backward</h2><p><code>backward()</code> 方法只能由标量调用, 即 <code>1x1</code> 的张量.</p>
 <p>梯度计算本质是 “标量函数对张量的导数”, 即输出每个元素对输入每个元素的偏导数.</p>
 <p>假设 $y$ 是标量 (如 <code>loss</code>), 则 <code>y.backward()</code> 会计算 $\frac{\partial y}{\partial x}$, 结果是一个与 x 形状相同的梯度张量.</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> torch<br><br>A = torch.tensor([[<span class="hljs-number">1.0</span>, <span class="hljs-number">2.0</span>],<br>                  [<span class="hljs-number">3.0</span>, <span class="hljs-number">4.0</span>]], requires_grad=<span class="hljs-literal">True</span>)<br>X = torch.tensor([[<span class="hljs-number">5.0</span>], [<span class="hljs-number">6.0</span>]], requires_grad=<span class="hljs-literal">True</span>)<br>Y = torch.matmul(A, X)<br><br>Y.<span class="hljs-built_in">sum</span>().backward()<br><span class="hljs-built_in">print</span>(A.grad)<br><span class="hljs-built_in">print</span>(X.grad)<br><br><span class="hljs-comment"># tensor([[5., 6.],</span><br><span class="hljs-comment">#         [5., 6.]])</span><br><span class="hljs-comment"># tensor([[4.],</span><br><span class="hljs-comment">#         [6.]])</span><br></code></pre></td></tr></table></figure>
