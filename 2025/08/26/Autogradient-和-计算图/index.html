@@ -24,8 +24,9 @@
 <meta property="og:description" content="CS231n optimization-2CMU introduction to computation graphPyTorch community 介绍详细说明下计算图以及如何自动计算梯度. 梯度的简单例子假设有: $f(x,y) &#x3D; xy$, 分别计算两个输入的偏导: $$\displaylines{\begin{aligned}f(x,y) &#x3D; xy \rightarr">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/computational-graph-simple-example.png">
+<meta property="og:image" content="http://example.com/img/computational-graph-sigmoid-example.png">
 <meta property="article:published_time" content="2025-08-26T06:46:01.000Z">
-<meta property="article:modified_time" content="2025-08-26T08:02:45.189Z">
+<meta property="article:modified_time" content="2025-08-26T08:56:01.863Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/computational-graph-simple-example.png">
@@ -237,7 +238,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2k 字
+          5.4k 字
         
       </span>
     
@@ -248,7 +249,7 @@
         
         
         
-          17 分钟
+          45 分钟
         
       </span>
     
@@ -320,7 +321,39 @@
 <li>计算 output value</li>
 <li>计算该 output 于 input 的 local gradient</li>
 </ol>
-<p>在 <code>forward pass</code> 结束后, <code>backward pass</code> 可以利用 chain rule 将各 local gradient 乘起来得到所有 inputs 的 gradient.</p>
+<p>也就是说, <code>forward pass</code> 不仅会计算 output, 还会计算 local gradient 并缓存.</p>
+<p>在 <code>forward pass</code> 结束后, <code>backward pass</code> 可以利用 chain rule 将各 local gradient 乘起来得到总输出对于所有 inputs 的 gradient.</p>
+<p>还是以上面图为例子, <code>forward pass</code> 时, 先进行的计算是:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>q &#x3D; x + y, x &#x3D; -2, y &#x3D; 5 \newline~ \newline<br>\therefore q &#x3D; 3, \frac{\partial q}{\partial x} &#x3D; 1, \frac{\partial q}{\partial y} &#x3D; 1 \newline~ \newline<br>\end{aligned}<br>}<br>$$</p>
+<p>然后进行的计算是:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>f &#x3D; q z, q &#x3D; 3, z &#x3D; -4 \newline~ \newline<br>\therefore f &#x3D; -12, \frac{\partial f}{\partial q} &#x3D; z &#x3D; -4, \frac{\partial f}{\partial z} &#x3D; q &#x3D; 3<br>\end{aligned}<br>}<br>$$</p>
+<p>之后进行 <code>backward pass</code>, 要求:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\frac{\partial f}{\partial q} &amp;&#x3D; -4 (forward pass 求出了) \newline~ \newline<br>\frac{\partial f}{\partial z} &amp;&#x3D; 3 (forward pass 求出了) \newline~ \newline<br>\frac{\partial f}{\partial x} &#x3D; \frac{\partial f}{\partial q} \times \frac{\partial q}{\partial x} &amp;&#x3D; -4 \times 1 &#x3D; -4 (两个都在 forward pass 过程中求出了) \newline~ \newline<br>\frac{\partial f}{\partial y} &#x3D; \frac{\partial f}{\partial q} \times \frac{\partial q}{\partial y} &amp;&#x3D; -4 \times 1 &#x3D; -4 (两个也都在 forward pass 过程中求出了) \newline~ \newline<br>\end{aligned}<br>}<br>$$</p>
+<h1 id="Sigmoid-example"><a href="#Sigmoid-example" class="headerlink" title="Sigmoid example"></a>Sigmoid example</h1><p>以 sigmoid 函数作为复杂一点的例子:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>f(w, x) &#x3D; \frac{1}{1 + e^{-(w_0 x_0 + w_1 x_1 + w_2)}}<br>\end{aligned}<br>}<br>$$</p>
+<p>这里给出一些常见的求导公式:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>f(x) &#x3D; \frac{1}{x} &amp;\rightarrow \frac{df}{dx} &#x3D; - \frac{1}{x^2} \newline~ \newline<br>f_c(x) &#x3D; c + x &amp;\rightarrow \frac{df}{dx} &#x3D; 1 \newline~ \newline<br>f(x) &#x3D; e^x &amp;\rightarrow \frac{df}{dx} &#x3D; e^x \newline~ \newline<br>f_a(x) &#x3D; ax &amp;\rightarrow \frac{df}{dx} &#x3D; a<br>\end{aligned}<br>}<br>$$</p>
+<p>完整的 computational graph 如下:</p>
+<p><img src="/../img/computational-graph-sigmoid-example.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>可以看到这个 graph 是从内层函数开始构建的</li>
+<li>输入是 <code>[x_0, x_1]</code>, 可学习的 weights 是 <code>[w_0, w_1, w_2]</code></li>
+</ul>
+<p>手动求导:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\sigma (x) &#x3D; \frac{1}{1 + e^{-x}} \newline~ \newline<br>\rightarrow \frac{d \sigma(x)}{dx} &#x3D; \frac{e^{-x}}{(1 + e^{-x})^2} &#x3D; ( \frac{1 + e^{-x} - 1}{1 + e^{-x}}) ( \frac{1}{1 + e^{-x}}) &#x3D; (1 - \sigma(x)) \sigma(x)<br>\end{aligned}<br>}<br>$$</p>
+<p>对应代码:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs python">w = [<span class="hljs-number">2</span>,-<span class="hljs-number">3</span>,-<span class="hljs-number">3</span>] <span class="hljs-comment"># assume some random weights and data</span><br>x = [-<span class="hljs-number">1</span>, -<span class="hljs-number">2</span>]<br><br><span class="hljs-comment"># forward pass</span><br>dot = w[<span class="hljs-number">0</span>]*x[<span class="hljs-number">0</span>] + w[<span class="hljs-number">1</span>]*x[<span class="hljs-number">1</span>] + w[<span class="hljs-number">2</span>]<br>f = <span class="hljs-number">1.0</span> / (<span class="hljs-number">1</span> + math.exp(-dot)) <span class="hljs-comment"># sigmoid function</span><br><br><span class="hljs-comment"># backward pass through the neuron (backpropagation)</span><br>ddot = (<span class="hljs-number">1</span> - f) * f <span class="hljs-comment"># gradient on dot variable, using the sigmoid gradient derivation</span><br>dx = [w[<span class="hljs-number">0</span>] * ddot, w[<span class="hljs-number">1</span>] * ddot] <span class="hljs-comment"># backprop into x</span><br>dw = [x[<span class="hljs-number">0</span>] * ddot, x[<span class="hljs-number">1</span>] * ddot, <span class="hljs-number">1.0</span> * ddot] <span class="hljs-comment"># backprop into w</span><br><span class="hljs-comment"># we&#x27;re done! we have the gradients on the inputs to the circuit</span><br></code></pre></td></tr></table></figure>
+
+<h1 id="更复杂的例子"><a href="#更复杂的例子" class="headerlink" title="更复杂的例子"></a>更复杂的例子</h1><p>一个函数形式如下:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>f(x,y) &#x3D; \frac{x + \sigma(y)}{\sigma(x) + (x + y)^2}<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>如果写出完整的 $\frac{\partial f}{\partial x}$ 以及 $\frac{\partial f}{\partial y}$ 会是一个非常长且复杂的式子, 但这里不用写出完整表达式, 只需要进行链式计算</li>
+</ul>
+<p>Forward pass 的过程:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs python">x = <span class="hljs-number">3</span> <span class="hljs-comment"># example values</span><br>y = -<span class="hljs-number">4</span><br><br><span class="hljs-comment"># forward pass</span><br>sigy = <span class="hljs-number">1.0</span> / (<span class="hljs-number">1</span> + math.exp(-y)) <span class="hljs-comment"># sigmoid in numerator   #(1)</span><br>num = x + sigy <span class="hljs-comment"># numerator                               #(2)</span><br>sigx = <span class="hljs-number">1.0</span> / (<span class="hljs-number">1</span> + math.exp(-x)) <span class="hljs-comment"># sigmoid in denominator #(3)</span><br>xpy = x + y                                              <span class="hljs-comment">#(4)</span><br>xpysqr = xpy**<span class="hljs-number">2</span>                                          <span class="hljs-comment">#(5)</span><br>den = sigx + xpysqr <span class="hljs-comment"># denominator                        #(6)</span><br>invden = <span class="hljs-number">1.0</span> / den                                       <span class="hljs-comment">#(7)</span><br>f = num * invden <span class="hljs-comment"># done!                                 #(8)</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>f</code> 是整个 <code>forward pass</code> 的输出</li>
+</ul>
+<p>下面 <code>backward pass</code> 的代码中 (求 local gradient 其实在 <code>forward pass</code> 中), 只是给 <code>sigy</code>, <code>num</code>, <code>sigx</code>, <code>xpy</code>, <code>xpysqr</code>, <code>den</code>, <code>invden</code> 前加上 <code>d</code>, 表示整个 circuit 的 output 对该变量的 gradient:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># backprop f = num * invden</span><br>dnum = invden <span class="hljs-comment"># gradient on numerator                             #(8)</span><br>dinvden = num                                                     <span class="hljs-comment">#(8)</span><br><span class="hljs-comment"># backprop invden = 1.0 / den </span><br>dden = (-<span class="hljs-number">1.0</span> / (den**<span class="hljs-number">2</span>)) * dinvden                                <span class="hljs-comment">#(7)</span><br><span class="hljs-comment"># backprop den = sigx + xpysqr</span><br>dsigx = (<span class="hljs-number">1</span>) * dden                                                <span class="hljs-comment">#(6)</span><br>dxpysqr = (<span class="hljs-number">1</span>) * dden                                              <span class="hljs-comment">#(6)</span><br><span class="hljs-comment"># backprop xpysqr = xpy**2</span><br>dxpy = (<span class="hljs-number">2</span> * xpy) * dxpysqr                                        <span class="hljs-comment">#(5)</span><br><span class="hljs-comment"># backprop xpy = x + y</span><br>dx = (<span class="hljs-number">1</span>) * dxpy                                                   <span class="hljs-comment">#(4)</span><br>dy = (<span class="hljs-number">1</span>) * dxpy                                                   <span class="hljs-comment">#(4)</span><br><span class="hljs-comment"># backprop sigx = 1.0 / (1 + math.exp(-x))</span><br>dx += ((<span class="hljs-number">1</span> - sigx) * sigx) * dsigx <span class="hljs-comment"># Notice += !! See notes below  #(3)</span><br><span class="hljs-comment"># backprop num = x + sigy</span><br>dx += (<span class="hljs-number">1</span>) * dnum                                                  <span class="hljs-comment">#(2)</span><br>dsigy = (<span class="hljs-number">1</span>) * dnum                                                <span class="hljs-comment">#(2)</span><br><span class="hljs-comment"># backprop sigy = 1.0 / (1 + math.exp(-y))</span><br>dy += ((<span class="hljs-number">1</span> - sigy) * sigy) * dsigy                                 <span class="hljs-comment">#(1)</span><br><span class="hljs-comment"># done! phew</span><br></code></pre></td></tr></table></figure>
+
 
                 
               </div>
