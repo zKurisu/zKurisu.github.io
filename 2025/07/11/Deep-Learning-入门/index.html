@@ -30,7 +30,7 @@
 <meta property="og:image" content="http://example.com/img/deep-learning-overfitting-curve-example.png">
 <meta property="og:image" content="http://example.com/img/deep-learning-early-stopping-curve-example.png">
 <meta property="article:published_time" content="2025-07-11T11:15:58.000Z">
-<meta property="article:modified_time" content="2025-08-14T08:16:09.471Z">
+<meta property="article:modified_time" content="2025-08-27T03:15:40.504Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/deep-learning-neuron-example.png">
@@ -242,7 +242,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.8k 字
+          2.3k 字
         
       </span>
     
@@ -253,7 +253,7 @@
         
         
         
-          15 分钟
+          20 分钟
         
       </span>
     
@@ -320,7 +320,7 @@
 <ul>
 <li>这里 $y &#x3D; w_0 x_0 + w_1 x_1 + w_2 x_2 + b$</li>
 </ul>
-<h2 id="Connection"><a href="#Connection" class="headerlink" title="Connection"></a>Connection</h2><h2 id="Neural-networks"><a href="#Neural-networks" class="headerlink" title="Neural networks"></a>Neural networks</h2><h2 id="Learning-curves"><a href="#Learning-curves" class="headerlink" title="Learning curves"></a>Learning curves</h2><p>Learning curves 描述 training 和 validation 的 loss 值随 epochs (或训练数据量) 的变化情况:</p>
+<h2 id="Learning-curves"><a href="#Learning-curves" class="headerlink" title="Learning curves"></a>Learning curves</h2><p>Learning curves 描述 training 和 validation 的 loss 值随 epochs (或训练数据量) 的变化情况:</p>
 <p><img src="/../img/deep-learning-the-learning-curves.png" srcset="/img/loading.gif" lazyload></p>
 <ul>
 <li><code>signal</code> 指训练集中能让模型预测新数据的信息</li>
@@ -350,13 +350,17 @@
 <p>之后通过 <code>fit</code> 方法传递:</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs python">history = model.fit(<br>    X_train, y_train,<br>    validation_data=(X_valid, y_valid),<br>    batch_size=<span class="hljs-number">256</span>,<br>    epochs=<span class="hljs-number">500</span>,<br>    callbacks=[early_stopping], <span class="hljs-comment"># put your callbacks in a list</span><br>    verbose=<span class="hljs-number">0</span>,  <span class="hljs-comment"># turn off training log</span><br>)<br></code></pre></td></tr></table></figure>
 
+<h1 id="神经网络的处理方法"><a href="#神经网络的处理方法" class="headerlink" title="神经网络的处理方法"></a>神经网络的处理方法</h1><blockquote>
+<p>神经网络是按行输入样本, 比如 shape 为 <code>(1, features)</code>, 还是说按 batch 输入样本, 比如 shape 为 <code>(batch_size, features)</code>?</p>
+</blockquote>
+<p>单样本输入 (逐行处理) 一般只会出现在在线学习或实时推理场景, 缺点是无法利用硬件并行计算, 效率极低:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python">x = torch.randn(<span class="hljs-number">1</span>, <span class="hljs-number">784</span>)<br>output = model(x)<br></code></pre></td></tr></table></figure>
 
+<p>批量处理 (batch processing), 默认一次处理多个样本, 比如 shape 为 <code>(batch_size, features)</code>, 优点是能够并行运算, 比如 GPU 同时处理整个 batch, 显著提升速度, 且 batch 内样本的梯度平均后更新参数能减少噪声:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># PyTorch 批量输入</span><br>x = torch.randn(<span class="hljs-number">32</span>, <span class="hljs-number">784</span>)  <span class="hljs-comment"># shape: (32, 784)</span><br>output = model(x)          <span class="hljs-comment"># 并行处理32个样本</span><br></code></pre></td></tr></table></figure>
 
-
-
-
-
-
+<h2 id="框架底层实现"><a href="#框架底层实现" class="headerlink" title="框架底层实现"></a>框架底层实现</h2><p>如 PyTorch&#x2F;TensorFlow 等框架, 会将 batch 内所有样本的运算向量化, 利用矩阵乘法一次性处理整个 batch, 比如:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>Z &#x3D; XW + b, X \in R^{batch_size \times features}, W \in R^{features \times hidden_dim}<br>\end{aligned}<br>}<br>$$</p>
 
                 
               </div>
