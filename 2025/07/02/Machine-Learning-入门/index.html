@@ -37,7 +37,7 @@
 <meta property="og:image" content="http://example.com/img/machine-learning-time-dummy-example.png">
 <meta property="og:image" content="http://example.com/img/machine-learning-lag-feature-example.png">
 <meta property="article:published_time" content="2025-07-02T08:55:01.000Z">
-<meta property="article:modified_time" content="2025-08-26T01:40:30.101Z">
+<meta property="article:modified_time" content="2025-08-28T10:43:22.855Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/machine-learning-k-fold-cross-validation.png">
@@ -249,7 +249,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          19k 字
+          20k 字
         
       </span>
     
@@ -260,7 +260,7 @@
         
         
         
-          159 分钟
+          168 分钟
         
       </span>
     
@@ -705,6 +705,39 @@
 </ol>
 <p>最终导数:</p>
 <p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\frac{\partial S_i}{\partial z_j} &#x3D; \begin{cases}<br>S_i (1 - S_j),\ if\ i&#x3D;j \newline~ \newline<br>-S_i S_j,\ if\ i \ne j<br>\end{cases}<br>\end{aligned}<br>}<br>$$</p>
+<h1 id="数值溢出-x2F-下溢问题和解决"><a href="#数值溢出-x2F-下溢问题和解决" class="headerlink" title="数值溢出&#x2F;下溢问题和解决"></a>数值溢出&#x2F;下溢问题和解决</h1><h2 id="溢出"><a href="#溢出" class="headerlink" title="溢出"></a>溢出</h2><p>在 cross entropy 或 softmax 等实现中, 需要用到指数运算如:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python">X_exp = np.exp(X)<br>X_exp_sum = X_exp.<span class="hljs-built_in">sum</span>(dim=<span class="hljs-number">1</span>, keepdims=<span class="hljs-literal">True</span>)<br></code></pre></td></tr></table></figure>
+
+<p>当 <code>X</code> 的值较大时 (比如 <code>&gt; 709</code>), <code>np.exp(X)</code> 会产生 <code>inf</code> 导致:</p>
+<ul>
+<li><code>X_exp_sum</code> 也变成 <code>inf</code></li>
+<li>最终结果 <code>X_exp / X_exp_sum</code> 变成 <code>nan</code></li>
+</ul>
+<h2 id="下溢"><a href="#下溢" class="headerlink" title="下溢"></a>下溢</h2><p>当 <code>X</code> 的值很小且为负数时 (比如 <code>&lt; -745</code>), <code>np.exp(X)</code> 会下溢为 <code>0</code>, 导致:</p>
+<ul>
+<li>除法时出现 <code>0/0</code> 的情况, 产生 <code>nan</code> 值</li>
+</ul>
+<h2 id="log-0-问题"><a href="#log-0-问题" class="headerlink" title="log(0) 问题"></a>log(0) 问题</h2><p>交叉熵中用:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">losses[i] = -np.log(y_hat[i, y[i]])<br></code></pre></td></tr></table></figure>
+<ul>
+<li>如果 <code>y_hat[i, y[i]] = 0</code>, 会导致 <code>log(0) = -inf</code> 产生 <code>nan</code> 值</li>
+</ul>
+<h2 id="解决"><a href="#解决" class="headerlink" title="解决"></a>解决</h2><h3 id="对于-Softmax-的数值稳定"><a href="#对于-Softmax-的数值稳定" class="headerlink" title="对于 Softmax 的数值稳定"></a>对于 <code>Softmax</code> 的数值稳定</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python">X_shifted = X - np.<span class="hljs-built_in">max</span>(X, axis=<span class="hljs-number">1</span>, keepdims=<span class="hljs-literal">True</span>)  <span class="hljs-comment"># 关键步骤！</span><br>X_exp = np.exp(X_shifted)  <span class="hljs-comment"># 现在最大值是0，exp(0)=1，不会溢出</span><br></code></pre></td></tr></table></figure>
+
+<p>数学原理:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>softmax(x_i) &#x3D; \frac{e^{x_i}}{\sum_j e^{x_j}} &#x3D; \frac{e^{-C} \cdot e^{x_i}}{e^{-C} \cdot \sum_je^{x_k}} &#x3D; \frac{e^{x_i - C}}{\sum_j e^{x_j - C}} \newline~ \newline<br>\because C &#x3D; max(x_j) \newline~ \newline<br>x_i - C \le 0 \newline~ \newline<br>e^{x_i - C} \le e^0 &#x3D; 1 (分子分母不会溢出) \newline~ \newline<br>e^{C - C} &#x3D; e^0 &#x3D; 1, 分母至少比 1 大 (不会下溢为 0)<br>\end{aligned}<br>}<br>$$</p>
+<p>不稳定的实现示例:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><br><span class="hljs-comment"># 危险的大数值</span><br>X = np.array([<span class="hljs-number">1000</span>, <span class="hljs-number">1001</span>, <span class="hljs-number">1002</span>])<br><br><span class="hljs-comment"># 不稳定的计算</span><br><span class="hljs-keyword">try</span>:<br>    exp_X = np.exp(X)<br>    softmax_unsafe = exp_X / exp_X.<span class="hljs-built_in">sum</span>()<br>    <span class="hljs-built_in">print</span>(softmax_unsafe)<br><span class="hljs-keyword">except</span>:<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;溢出错误！&quot;</span>)<br></code></pre></td></tr></table></figure>
+
+<p>输出:</p>
+<figure class="highlight arcade"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs arcade">[<span class="hljs-literal">nan</span> <span class="hljs-literal">nan</span> <span class="hljs-literal">nan</span>]<br></code></pre></td></tr></table></figure>
+
+<p>稳定输出的例子:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs python">X = np.array([<span class="hljs-number">1000</span>, <span class="hljs-number">1001</span>, <span class="hljs-number">1002</span>])<br>C = np.<span class="hljs-built_in">max</span>(X)<br>X_shifted = X - C<br>exp_X_shifted = np.exp(X_shifted)<br></code></pre></td></tr></table></figure>
+
+
+
+
+
 
                 
               </div>
