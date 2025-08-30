@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="介绍AE, Autoencoder, 是一种特殊的神经网络, 用于学习数据的表示 (输出是数据的编码). 其思想是通过无监督学习来压缩和重建数据 基本结构自编码器有两个主要部分: 编码器, 解码器, 结构如下: 1输入数据 → [编码器] → 潜在表示（编码） → [解码器] → 重建数据  实现示例需要注意一点:  编码器把 input_dim 编码为 latent_dim 解码器需要把 lat">
+    <meta name="description" content="介绍AE, Autoencoder, 是一种特殊的神经网络, 用于学习数据的表示 (输出是数据的编码). 其思想是通过无监督学习来压缩和重建数据 用一组输入数据来训练 Autoencoder, 输出要尽可能与输入相同, 此时才说明其掌握了重构的能力. 基本结构自编码器有两个主要部分: 编码器, 解码器, 结构如下: 1输入数据 → [编码器] → 潜在表示（编码） → [解码器] → 重建数据">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Autoencoder-基础">
 <meta property="og:url" content="http://example.com/2025/08/30/Autoencoder-%E5%9F%BA%E7%A1%80/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="介绍AE, Autoencoder, 是一种特殊的神经网络, 用于学习数据的表示 (输出是数据的编码). 其思想是通过无监督学习来压缩和重建数据 基本结构自编码器有两个主要部分: 编码器, 解码器, 结构如下: 1输入数据 → [编码器] → 潜在表示（编码） → [解码器] → 重建数据  实现示例需要注意一点:  编码器把 input_dim 编码为 latent_dim 解码器需要把 lat">
+<meta property="og:description" content="介绍AE, Autoencoder, 是一种特殊的神经网络, 用于学习数据的表示 (输出是数据的编码). 其思想是通过无监督学习来压缩和重建数据 用一组输入数据来训练 Autoencoder, 输出要尽可能与输入相同, 此时才说明其掌握了重构的能力. 基本结构自编码器有两个主要部分: 编码器, 解码器, 结构如下: 1输入数据 → [编码器] → 潜在表示（编码） → [解码器] → 重建数据">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-08-30T12:05:54.000Z">
-<meta property="article:modified_time" content="2025-08-30T12:21:48.857Z">
+<meta property="article:modified_time" content="2025-08-30T13:04:08.879Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.1k 字
+          1.7k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          9 分钟
+          15 分钟
         
       </span>
     
@@ -290,8 +290,25 @@
               <div class="markdown-body">
                 
                 <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>AE, Autoencoder, 是一种特殊的神经网络, 用于学习数据的表示 (输出是数据的编码). 其思想是通过无监督学习来压缩和重建数据</p>
+<p>用一组输入数据来训练 Autoencoder, 输出要尽可能与输入相同, 此时才说明其掌握了重构的能力.</p>
 <h1 id="基本结构"><a href="#基本结构" class="headerlink" title="基本结构"></a>基本结构</h1><p>自编码器有两个主要部分: 编码器, 解码器, 结构如下:</p>
 <figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs css">输入数据 → <span class="hljs-selector-attr">[编码器]</span> → 潜在表示（编码） → <span class="hljs-selector-attr">[解码器]</span> → 重建数据<br></code></pre></td></tr></table></figure>
+
+<p>若单看 Autoencoder 整体, 输入一组数据, 返回一个和输入类似的数据似乎没什么用, 但实际这个过程能去除噪音数据:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># 整体使用自编码器</span><br>noisy_data = add_noise(clean_data)<br>denoised_data = autoencoder(noisy_data)  <span class="hljs-comment"># 自动去噪</span><br><br><span class="hljs-comment"># 原理：编码器提取本质特征，解码器基于干净特征重建</span><br></code></pre></td></tr></table></figure>
+
+<p>大部分时候也会把 Autoencoder 拆开用:</p>
+<ul>
+<li>比如单独用 <code>encoder</code> 进行特征提取或降维:</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># 训练好的自编码器</span><br>autoencoder = Autoencoder(input_dim=<span class="hljs-number">784</span>, latent_dim=<span class="hljs-number">32</span>)<br><br><span class="hljs-comment"># 单独使用编码器提取特征</span><br>encoder = autoencoder.encoder<br>latent_features = encoder(input_data)  <span class="hljs-comment"># 将784维数据压缩到32维</span><br><br><span class="hljs-comment"># 应用场景：</span><br><span class="hljs-comment"># - 数据可视化（降维到2D/3D）</span><br><span class="hljs-comment"># - 监督学习的特征输入（替代原始数据）</span><br><span class="hljs-comment"># - 异常检测（比较潜在空间距离）</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>用解码器来生成新数据:</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># 随机潜在向量生成新数据</span><br>random_z = torch.randn(<span class="hljs-number">1</span>, <span class="hljs-number">32</span>)  <span class="hljs-comment"># 32维随机向量</span><br>generated_image = autoencoder.decoder(random_z)  <span class="hljs-comment"># 生成新样本</span><br><br><span class="hljs-comment"># 应用场景：</span><br><span class="hljs-comment"># - 图像生成（需配合VAE/GAN结构）</span><br><span class="hljs-comment"># - 数据增强（生成类似真实数据的新样本）</span><br></code></pre></td></tr></table></figure>
+
+
 
 <h1 id="实现示例"><a href="#实现示例" class="headerlink" title="实现示例"></a>实现示例</h1><p>需要注意一点:</p>
 <ul>
