@@ -33,7 +33,7 @@
 <meta property="og:image" content="http://example.com/img/cnn-fin-all-dot-product.png">
 <meta property="og:image" content="http://example.com/img/cnn-padding-example.png">
 <meta property="article:published_time" content="2025-08-22T13:43:53.000Z">
-<meta property="article:modified_time" content="2025-08-31T11:57:12.887Z">
+<meta property="article:modified_time" content="2025-08-31T13:24:39.764Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/cnn-convolutional-rotate-example1.png">
@@ -245,7 +245,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.7k 字
+          3.1k 字
         
       </span>
     
@@ -256,7 +256,7 @@
         
         
         
-          15 分钟
+          27 分钟
         
       </span>
     
@@ -350,7 +350,17 @@
 </ul>
 <h2 id="Pooling-layer"><a href="#Pooling-layer" class="headerlink" title="Pooling layer"></a>Pooling layer</h2><p>Pooling layer (池化层), 负责降维, 缩小特征图的空间尺寸.</p>
 <h2 id="Fully-connected-layer"><a href="#Fully-connected-layer" class="headerlink" title="Fully connected layer"></a>Fully connected layer</h2><p>Fully connected layer (全连接层), 负责将特征映射到输出, 通常位于 CNN 末尾.</p>
-<h1 id="实现示例"><a href="#实现示例" class="headerlink" title="实现示例"></a>实现示例</h1><h2 id="PyTorch-接口实现"><a href="#PyTorch-接口实现" class="headerlink" title="PyTorch 接口实现"></a>PyTorch 接口实现</h2><p>用 PyTorch 实现一个用于 CIFAR-10 数据集的简单 CNN:</p>
+<h1 id="实现示例"><a href="#实现示例" class="headerlink" title="实现示例"></a>实现示例</h1><h2 id="手动实现"><a href="#手动实现" class="headerlink" title="手动实现"></a>手动实现</h2><p>先实现 1d 卷积操作, 注意下面的参数设计:</p>
+<ul>
+<li>输入是 3 维, 各维度大小是: <code>(batch_size, in_channels, in_length)</code></li>
+<li>需要设置滤波器数量, 每个滤波器单独计算, 且对于每个 sample 而言, 所需的 weight 是 2 维, 因此整体是 3 维, 各维度大小是: <code>(out_channels, in_channels, kernel_size)</code>, <code>in_channels</code> 乘以 <code>kernel_size</code> 也就是每次参与卷积的输入个数</li>
+<li>每个滤波器每次计算输出一个标量, 为每个滤波器添加一组 <code>bias</code>, 只需要 1 维, 大小为 <code>(out_channels,)</code></li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> torch<br><span class="hljs-keyword">import</span> torch.nn <span class="hljs-keyword">as</span> nn<br><span class="hljs-keyword">import</span> torch.nn.functional <span class="hljs-keyword">as</span> F<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">manual_conv1d</span>(<span class="hljs-params"><span class="hljs-built_in">input</span>, weight, bias, stride=<span class="hljs-number">1</span>, padding=<span class="hljs-number">0</span></span>):<br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    手动实现1D卷积</span><br><span class="hljs-string">    参数:</span><br><span class="hljs-string">        input : (batch_size, in_channels, in_length)</span><br><span class="hljs-string">        weight: (out_channels, in_channels, kernel_size)</span><br><span class="hljs-string">        bias   : (out_channels)</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br>    batch_size, in_channels, in_length = <span class="hljs-built_in">input</span>.shape<br>    out_channels, _, kernel_size = weight.shape<br>    <br>    <span class="hljs-comment"># 计算输出长度</span><br>    out_length = (in_length + <span class="hljs-number">2</span> * padding - kernel_size) // stride + <span class="hljs-number">1</span><br>    <br>    <span class="hljs-comment"># 添加padding</span><br>    <span class="hljs-keyword">if</span> padding &gt; <span class="hljs-number">0</span>:<br>        input_padded = F.pad(<span class="hljs-built_in">input</span>, (padding, padding))<br>    <span class="hljs-keyword">else</span>:<br>        input_padded = <span class="hljs-built_in">input</span><br>    <br>    <span class="hljs-comment"># 初始化输出</span><br>    output = torch.zeros(batch_size, out_channels, out_length)<br>    <br>    <span class="hljs-comment"># 手动卷积计算</span><br>    <span class="hljs-keyword">for</span> b <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(batch_size):<br>        <span class="hljs-keyword">for</span> oc <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(out_channels):<br>            <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">0</span>, out_length):<br>                conv_start = i * stride<br>                conv_end = start + kernel_size<br>                <span class="hljs-comment"># 跨所有输入通道求和</span><br>                output[b, oc, i] = torch.<span class="hljs-built_in">sum</span>(<br>                    input_padded[b, :, start:end] * weight[oc]<br>                ) + bias[oc]<br>    <br>    <span class="hljs-keyword">return</span> output<br><br><span class="hljs-comment"># 测试验证</span><br>x = torch.randn(<span class="hljs-number">2</span>, <span class="hljs-number">1</span>, <span class="hljs-number">10</span>)  <span class="hljs-comment"># 输入数据</span><br>w = torch.randn(<span class="hljs-number">16</span>, <span class="hljs-number">1</span>, <span class="hljs-number">3</span>)  <span class="hljs-comment"># 卷积核权重</span><br>b = torch.randn(<span class="hljs-number">16</span>)        <span class="hljs-comment"># 偏置项</span><br><br><span class="hljs-comment"># 手动实现</span><br>manual_out = manual_conv1d(x, w, b, stride=<span class="hljs-number">1</span>, padding=<span class="hljs-number">0</span>)<br><span class="hljs-comment"># PyTorch官方实现</span><br>conv1d = nn.Conv1d(<span class="hljs-number">1</span>, <span class="hljs-number">16</span>, <span class="hljs-number">3</span>, bias=<span class="hljs-literal">True</span>)<br>conv1d.weight.data = w<br>conv1d.bias.data = b<br>torch_out = conv1d(x)<br><br><span class="hljs-comment"># 验证结果一致性</span><br><span class="hljs-built_in">print</span>(torch.allclose(manual_out, torch_out, atol=<span class="hljs-number">1e-6</span>))  <span class="hljs-comment"># 应输出True</span><br></code></pre></td></tr></table></figure>
+
+
+<h2 id="PyTorch-接口实现"><a href="#PyTorch-接口实现" class="headerlink" title="PyTorch 接口实现"></a>PyTorch 接口实现</h2><p>用 PyTorch 实现一个用于 CIFAR-10 数据集的简单 CNN:</p>
+<p>…<br>…</p>
 
                 
               </div>

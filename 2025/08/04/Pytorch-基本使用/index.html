@@ -26,7 +26,7 @@
 <meta property="og:image" content="http://example.com/img/torch-nn-conv1d-example.jpg">
 <meta property="og:image" content="http://example.com/img/pytorch-one-layer-neural-network-example.png">
 <meta property="article:published_time" content="2025-08-04T14:26:44.000Z">
-<meta property="article:modified_time" content="2025-08-31T12:25:53.953Z">
+<meta property="article:modified_time" content="2025-08-31T13:22:52.441Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/torch-nn-conv1d-example.jpg">
@@ -249,7 +249,7 @@
         
         
         
-          155 分钟
+          161 分钟
         
       </span>
     
@@ -509,7 +509,23 @@
 <ul>
 <li>如果想要输出维度不变, 可以加上 <code>padding=1</code></li>
 </ul>
-<h4 id="nn-MaxPool1d"><a href="#nn-MaxPool1d" class="headerlink" title="nn.MaxPool1d"></a>nn.MaxPool1d</h4><h3 id="Model-Parameters"><a href="#Model-Parameters" class="headerlink" title="Model Parameters"></a>Model Parameters</h3><p>可以用模型的 <code>parameters()</code> 或 <code>named_parameters()</code> 方法获取内部的参数信息:</p>
+<h4 id="nn-MaxPool1d"><a href="#nn-MaxPool1d" class="headerlink" title="nn.MaxPool1d"></a>nn.MaxPool1d</h4><p><code>nn.MaxPool1d</code> 对序列数据进行 max pool 操作, 以保留重要特征:</p>
+<ul>
+<li>输入形状 <code>(batch_size, channels, length)</code></li>
+<li>输出形状 <code>(batch_size, channels, floor((length - kernel_size) / stride) + 1)</code></li>
+</ul>
+<figure class="highlight py"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs py"><span class="hljs-comment"># 1D池化：序列数据</span><br>pool1d = nn.MaxPool1d(kernel_size=<span class="hljs-number">2</span>, stride=<span class="hljs-number">2</span>)<br><span class="hljs-comment"># 输入：(32, 16, 100) → 输出：(32, 16, 50)</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>一般都取 <code>kernel_size=stride</code>, 此时有 <code>output_length = input_length // kernel_size</code></li>
+</ul>
+<h4 id="nn-MaxPool2d"><a href="#nn-MaxPool2d" class="headerlink" title="nn.MaxPool2d"></a>nn.MaxPool2d</h4><p><code>nn.MaxPool2d</code> 对图像数据进行 max pool 操作:</p>
+<ul>
+<li>输入形状: <code>(batch_size, channels, height, width)</code></li>
+<li>输出形状: 当 <code>kernel_size = stride</code> 时有 <code>(batch_size, channels, height // pool_size, width // pool_size)</code></li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># 2D池化：图像数据</span><br>pool2d = nn.MaxPool2d(kernel_size=<span class="hljs-number">2</span>, stride=<span class="hljs-number">2</span>)<br><span class="hljs-comment"># 输入：(32, 16, 64, 64) → 输出：(32, 16, 32, 32)</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="Model-Parameters"><a href="#Model-Parameters" class="headerlink" title="Model Parameters"></a>Model Parameters</h3><p>可以用模型的 <code>parameters()</code> 或 <code>named_parameters()</code> 方法获取内部的参数信息:</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;Model structure: <span class="hljs-subst">&#123;model&#125;</span>\n\n&quot;</span>)<br><br><span class="hljs-keyword">for</span> name, param <span class="hljs-keyword">in</span> model.named_parameters():<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;Layer: <span class="hljs-subst">&#123;name&#125;</span> | Size: <span class="hljs-subst">&#123;param.size()&#125;</span> | Values : <span class="hljs-subst">&#123;param[:<span class="hljs-number">2</span>]&#125;</span> \n&quot;</span>)<br></code></pre></td></tr></table></figure>
 
 <h2 id="Automatic-Differentiation"><a href="#Automatic-Differentiation" class="headerlink" title="Automatic Differentiation"></a>Automatic Differentiation</h2><p><a target="_blank" rel="noopener" href="https://docs.pytorch.org/docs/stable/notes/autograd.html">工作机制详情</a></p>
@@ -663,6 +679,15 @@
 
 <h2 id="获取-tensor-展开的维度"><a href="#获取-tensor-展开的维度" class="headerlink" title="获取 tensor 展开的维度"></a>获取 tensor 展开的维度</h2><p>用 <code>numel()</code> 方法:</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> torch<br><br><span class="hljs-comment"># 假设输入张量形状为 [batch_size, channels, height, width]</span><br>x = torch.randn(<span class="hljs-number">64</span>, <span class="hljs-number">1</span>, <span class="hljs-number">28</span>, <span class="hljs-number">28</span>)  <span class="hljs-comment"># batch_size=64, 单通道28x28图像</span><br><br><span class="hljs-comment"># 计算展开后的特征维度（保留batch_size）</span><br>flatten_dim = x[<span class="hljs-number">0</span>].numel()  <span class="hljs-comment"># 计算单个样本的展开大小</span><br><span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;展开后特征维度: <span class="hljs-subst">&#123;flatten_dim&#125;</span>&quot;</span>)  <span class="hljs-comment"># 输出: 784 (28 * 28 * 1)</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="添加-padding"><a href="#添加-padding" class="headerlink" title="添加 padding"></a>添加 padding</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">torch.nn.functional.pad(<span class="hljs-built_in">input</span>, pad, mode=<span class="hljs-string">&#x27;constant&#x27;</span>, value=<span class="hljs-number">0</span>)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>input</code> 是输入的 tensor</li>
+<li><code>pad</code> 用于指定各维度如何填充, 通常是一个列表或元组, 长度必须是偶数, 比如:</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">pad = (left, right, top, bottom, front, back, ...)<br></code></pre></td></tr></table></figure>
+
+
 
 <h1 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h1><h2 id="backward"><a href="#backward" class="headerlink" title="backward"></a>backward</h2><p><code>backward()</code> 方法只能由标量调用, 即 <code>1x1</code> 的张量.</p>
 <p>梯度计算本质是 “标量函数对张量的导数”, 即输出每个元素对输入每个元素的偏导数.</p>
