@@ -16,18 +16,19 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="torchvision 中 resnet 实现Pytorch resnet tutorialWriting ResNet from Scratch in PyTorch 介绍ResNet (Residual Network, 残差神经网络), 利用 residual connection 和 shortcut connection, 解决了深度学习中的 vanishing&#x2F;explodi">
+    <meta name="description" content="torchvision 中 resnet 实现Pytorch resnet tutorialWriting ResNet from Scratch in PyTorch 介绍ResNet (Residual Network, 残差神经网络), 利用 residual connection 和 shortcut connection, 解决了深度学习中的 vanishing gradient 问题,">
 <meta property="og:type" content="article">
 <meta property="og:title" content="ResNet-基础">
 <meta property="og:url" content="http://example.com/2025/08/24/ResNet-%E5%9F%BA%E7%A1%80/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="torchvision 中 resnet 实现Pytorch resnet tutorialWriting ResNet from Scratch in PyTorch 介绍ResNet (Residual Network, 残差神经网络), 利用 residual connection 和 shortcut connection, 解决了深度学习中的 vanishing&#x2F;explodi">
+<meta property="og:description" content="torchvision 中 resnet 实现Pytorch resnet tutorialWriting ResNet from Scratch in PyTorch 介绍ResNet (Residual Network, 残差神经网络), 利用 residual connection 和 shortcut connection, 解决了深度学习中的 vanishing gradient 问题,">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/resnet-before-residual-deeper-is-bad.png">
 <meta property="og:image" content="http://example.com/img/resnet-net-with-residual.png">
 <meta property="og:image" content="http://example.com/img/resnet-total-structure.png">
+<meta property="og:image" content="http://example.com/img/resnet-34-layer-example.png">
 <meta property="article:published_time" content="2025-08-24T14:09:51.000Z">
-<meta property="article:modified_time" content="2025-08-31T07:23:13.314Z">
+<meta property="article:modified_time" content="2025-08-31T09:58:28.814Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/resnet-before-residual-deeper-is-bad.png">
@@ -239,7 +240,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          710 字
+          2.3k 字
         
       </span>
     
@@ -250,7 +251,7 @@
         
         
         
-          6 分钟
+          20 分钟
         
       </span>
     
@@ -294,7 +295,7 @@
               <div class="markdown-body">
                 
                 <p><a target="_blank" rel="noopener" href="https://github.com/pytorch/vision/blob/main/torchvision/models/resnet.py">torchvision 中 resnet 实现</a><br><a target="_blank" rel="noopener" href="https://docs.pytorch.org/vision/stable/models/generated/torchvision.models.resnet50.html">Pytorch resnet tutorial</a><br><a target="_blank" rel="noopener" href="https://www.digitalocean.com/community/tutorials/writing-resnet-from-scratch-in-pytorch">Writing ResNet from Scratch in PyTorch</a></p>
-<h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>ResNet (Residual Network, 残差神经网络), 利用 residual connection 和 shortcut connection, 解决了深度学习中的 vanishing&#x2F;exploding gradient 问题, 使得训练成百上千层深度的网络成为可能.</p>
+<h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>ResNet (Residual Network, 残差神经网络), 利用 residual connection 和 shortcut connection, 解决了深度学习中的 vanishing gradient 问题, 使得训练成百上千层深度的网络成为可能.</p>
 <p>在不使用 residual 时, 训练层数越多会导致结果更差 (过拟合, 梯度消失&#x2F;爆炸等):</p>
 <p><img src="/../img/resnet-before-residual-deeper-is-bad.png" srcset="/img/loading.gif" lazyload></p>
 <p>下面左图没有加 residual, 右图增加了 residual, 测试精度更好:</p>
@@ -307,7 +308,15 @@
 </ul>
 <h2 id="Identity-Mapping"><a href="#Identity-Mapping" class="headerlink" title="Identity Mapping"></a>Identity Mapping</h2><p>Identity mapping, 恒等映射, 指一个函数的输出等于其输入, 即 $f(x) &#x3D; x$.</p>
 <p>在神经网络中, 需要通过一条没有任何权重, 直接跳转的连接来实现.</p>
-<h2 id="CIFAR10"><a href="#CIFAR10" class="headerlink" title="CIFAR10"></a>CIFAR10</h2><h1 id="整体架构"><a href="#整体架构" class="headerlink" title="整体架构"></a>整体架构</h1><p><img src="/../img/resnet-total-structure.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="CIFAR10"><a href="#CIFAR10" class="headerlink" title="CIFAR10"></a>CIFAR10</h2><p>CIFAR10, Canadian Institute for Advanced Research 10, 是一个用于图像识别和机器学习的小型数据集. 包含:</p>
+<ul>
+<li><code>10</code> 个类别的彩色图片</li>
+<li><code>60,000</code> 张图像: <code>50,000</code> 张用于训练 (每个类别 <code>10,000</code> 张), <code>10,000</code> (每个类别 <code>1,000</code> 张) 用于测试</li>
+<li>每张图片为 32x32 像素</li>
+</ul>
+<h2 id="VGG"><a href="#VGG" class="headerlink" title="VGG"></a>VGG</h2><p>VGG, 是一个经典的用于图像分类任务的 CNN 模型, 由牛津大学 Visual Geometry Group 提出, 因此得名. 最著名的版本是 <code>VGG-16</code> 和 <code>VGG-19</code>, 其中数字代表层数.</p>
+<p>之前的网络, 如 AlexNet, 都会使用较大的卷积核, 如 <code>11x11</code>, <code>7x7</code>, <code>5x5</code>. 而 VGG 的设计中都使用 <code>3x3</code> 卷积核.</p>
+<h1 id="整体架构"><a href="#整体架构" class="headerlink" title="整体架构"></a>整体架构</h1><p><img src="/../img/resnet-total-structure.png" srcset="/img/loading.gif" lazyload></p>
 <ul>
 <li>$x$ 是浅层的输出</li>
 <li><code>weight layer</code> 是新加的层</li>
@@ -315,12 +324,32 @@
 <li>此时不让网络直接去找理想输出 $H(x)$, 而是学习 $F(x) &#x3D; H(x) - x$, 也就是目标函数与输入 $x$ 的差值 </li>
 <li>$F(x)$ 称残差函数</li>
 </ul>
-<p>外围的 shortcut connection 其实就是残差连接, 让输入直达输出.</p>
-<h1 id="Residual-Network"><a href="#Residual-Network" class="headerlink" title="Residual Network"></a>Residual Network</h1><p>残差连接解决输入和输出维度不匹配问题 (不匹配没法做加法) 的方法:</p>
-<ol>
-<li>给增加的维度补零</li>
-<li>投影</li>
-</ol>
+<p>外围的 shortcut connection 其实就是残差连接, 让输入直达输出. 此时网络的输出从 $h(x) &#x3D; f(wx + b)$ 改写成 $h(x) &#x3D; f(x) + x$.</p>
+<p>Shortcut connection 是解决 vanishing gradient 的关键:</p>
+<ul>
+<li>没有 shortcut connection 的传统网络, 梯度必须从输出层一层一层地反向传播到输入层, 每经过一层, 梯度就可能被减弱一次, 层数越深, 梯度在传播到底层之前就可能变得无限接近于零 (消失) 或无限大 (爆炸).</li>
+</ul>
+<p>对于传统网络, 第 <code>l</code> 层的输出是:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>x_l &#x3D; F(x_{l-1})<br>\end{aligned}<br>}<br>$$</p>
+<p>最终输出 $y$ 相对于早期输入 $x_s$ 的梯度为:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\frac{\partial y}{\partial x_s} &#x3D; \frac{\partial y}{\partial x_L} \cdot \frac{\partial x_L}{\partial x_{L-1}} … \frac{\partial x_{s+1}}{\partial x_s}<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>有 shortcut connection 的网络, 创建了一条从早期层直接连接到后期层的通道, 梯度可以通过这条捷径几乎无衰减地直接反向传播到较浅的层, 避免梯度消失.</li>
+</ul>
+<p>对于带有 shortcut connection 的网络, 第 <code>l</code> 层的输出是:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>x_l &#x3D; x_{l-1} + F(x_{l-1})<br>\end{aligned}<br>}<br>$$</p>
+<p>此时计算 $x_l$ 对 $x_{l-1}$ 的梯度:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\frac{\partial x_l}{\partial x_{l-1}} &#x3D; \frac{\partial}{\partial x_{l-1}} [x_{l-1} + F(x_{l-1})] \newline~ \newline<br>&#x3D; I + \frac{\partial F(x_{l-1})}{\partial x_{l-1}}<br>\end{aligned}<br>}<br>$$</p>
+<p>其中 $I$ 是单位矩阵.</p>
+<p>此时反向传播梯度的计算可以是:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\frac{\partial L}{\partial x_{l-1}} &#x3D; \frac{\partial L}{\partial x_l} \cdot (I + \frac{\partial F(x_{l-1})}{\partial x_{l-1}})<br>\end{aligned}<br>}<br>$$</p>
+<p>此时梯度 $\frac{\partial L}{\partial x_{l-1}}$ 有两条路可走:</p>
+<ul>
+<li>一条是通过复杂的非线性函数 $F$, 梯度为: $\frac{\partial L}{\partial x_l} \cdot \frac{\partial F(x_{l-1})}{\partial x_{l-1}}$</li>
+<li>另一条是通过 identity mapping 的路径, 梯度为: $\frac{\partial L}{\partial x_l} \cdot I$</li>
+</ul>
+<p>此时, 就算函数 $F$ 的梯度非常小, 也总会有 $\frac{\partial L}{\partial x_l}$ 传回去.</p>
+<h1 id="34-layer-ResNet-example"><a href="#34-layer-ResNet-example" class="headerlink" title="34-layer ResNet example"></a>34-layer ResNet example</h1><p><img src="/../img/resnet-34-layer-example.png" srcset="/img/loading.gif" lazyload></p>
 
                 
               </div>
