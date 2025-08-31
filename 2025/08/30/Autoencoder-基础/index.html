@@ -24,7 +24,7 @@
 <meta property="og:description" content="介绍AE, Autoencoder, 是一种特殊的神经网络, 用于学习数据的表示. 其思想是通过无监督学习来压缩和重建数据. 用一组输入数据来训练 Autoencoder, 输出要尽可能与输入相同, 此时才说明其掌握了重构的能力. Autoencoder 基本结构自编码器有两个主要部分: 编码器, 解码器, 结构如下: 1输入数据 → [编码器] → 潜在表示（编码） → [解码器] → 重建数据">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-08-30T12:05:54.000Z">
-<meta property="article:modified_time" content="2025-08-31T00:03:02.427Z">
+<meta property="article:modified_time" content="2025-08-31T01:38:26.082Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          4.4k 字
+          5.2k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          37 分钟
+          44 分钟
         
       </span>
     
@@ -361,11 +361,33 @@
 <p>因此在梯度反向传播时, 在采样处会断裂:</p>
 <figure class="highlight autohotkey"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs autohotkey"><span class="hljs-built_in">mu,</span> sigma → [采样黑盒] → z<br></code></pre></td></tr></table></figure>
 
-
+<blockquote>
+<p>证明: 如果 $\epsilon ~ N(0,1)$, 那么 $z &#x3D; \mu + \sigma \cdot \epsilon ~ N(\mu, \sigma^2)$</p>
+</blockquote>
+<ul>
+<li>几个符号说明: <ul>
+<li>$E[\epsilon]$ 是 $N(0,1)$ 的均值, 即 <code>0</code></li>
+<li>$Var[\epsilon]$ 是 $N(0,1)$ 的方差, 即 <code>1</code></li>
+<li>$E[z]$ 是 $N(\mu,\sigma^2)$ 的均值, 即 $\mu$</li>
+<li>$Var[z]$ 是 $N(\mu,\sigma^2)$ 的方差, 即 $\sigma^2$</li>
+<li>也就是说 $E()$ 表示求均值的函数, $Var()$ 表示求方差的函数</li>
+</ul>
+</li>
+</ul>
+<p>推导:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>E[z] &#x3D; E[\mu + \sigma \cdot \epsilon] &#x3D; \mu + \sigma \cdot E[\epsilon] &#x3D; \mu \newline~ \newline<br>Var[z] &#x3D; Var[\mu + \sigma \cdot \epsilon] &#x3D; \sigma^2 \cdot Var[\epsilon] &#x3D; \sigma^2 \cdot 1 &#x3D; \sigma^2<br>\end{aligned}<br>}<br>$$</p>
 <h2 id="VAE-loss"><a href="#VAE-loss" class="headerlink" title="VAE loss"></a>VAE loss</h2><p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>L &#x3D; E_{q(z|X)} [\log_p (X|z)] + \beta \cdot D_{KL} (q(z|X)\Vert p(z))<br>\end{aligned}<br>}<br>$$</p>
 <ul>
-<li>前一项是重建损失</li>
-<li>后一项是正则化项 (KL 散度), 惩罚那些方差 <code>σ</code> 过大或均值 <code>μ</code> 远离 0 的分布, 防止模型退化成普通自编码器</li>
+<li>前一项是重建损失:<ul>
+<li>$q(z|X) 是编码器输出的分布, 通常是 $N(\mu,\sigma^2)$ 的高斯分布, 学习如何将数据映射到潜在空间</li>
+<li>$p(X|z)$ 是解码器的似然, 即解码器重建出原始数据 $X$ 的可能性, 学习如何从潜在表示重建数据</li>
+<li>$E_{q(z|X)}$ 求期望, 即平均值</li>
+</ul>
+</li>
+<li>后一项是正则化项 (KL 散度), 惩罚那些方差 <code>σ</code> 过大或均值 <code>μ</code> 远离 0 的分布, 防止模型退化成普通自编码器:<ul>
+<li>$p(z)$ 是先验分布, 即希望潜在变量 $z$ 服从的分布, 通常是标准正态分布 $N(0,1)$</li>
+<li>$D_{KL}(… \Vert …)$ 求 KL 散度, 衡量两个概率分布之间的差异或 “距离”. 公式为 $D_{KL}(q \Vert p) &#x3D; E_q[log^q_p]$. 这里用来惩罚 $q(z|X)$ 与 $p(z)$ 的差异</li>
+</ul>
+</li>
 </ul>
 <h2 id="实现示例"><a href="#实现示例" class="headerlink" title="实现示例"></a>实现示例</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> torch<br><span class="hljs-keyword">import</span> torch.nn <span class="hljs-keyword">as</span> nn<br><span class="hljs-keyword">import</span> torch.nn.functional <span class="hljs-keyword">as</span> F<br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">VAE</span>(nn.Module):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, input_dim, latent_dim</span>):<br>        <span class="hljs-built_in">super</span>(VAE, self).__init__()<br>        <br>        <span class="hljs-comment"># 编码器：学习均值和方差</span><br>        self.encoder = nn.Sequential(<br>            nn.Linear(input_dim, <span class="hljs-number">512</span>),<br>            nn.ReLU(),<br>            nn.Linear(<span class="hljs-number">512</span>, <span class="hljs-number">256</span>),<br>            nn.ReLU(),<br>        )<br>        <br>        self.fc_mu = nn.Linear(<span class="hljs-number">256</span>, latent_dim)    <span class="hljs-comment"># 均值μ</span><br>        self.fc_logvar = nn.Linear(<span class="hljs-number">256</span>, latent_dim) <span class="hljs-comment"># 对数方差logσ²</span><br>        <br>        <span class="hljs-comment"># 解码器：从潜在空间重建</span><br>        self.decoder = nn.Sequential(<br>            nn.Linear(latent_dim, <span class="hljs-number">256</span>),<br>            nn.ReLU(),<br>            nn.Linear(<span class="hljs-number">256</span>, <span class="hljs-number">512</span>),<br>            nn.ReLU(),<br>            nn.Linear(<span class="hljs-number">512</span>, input_dim),<br>            nn.Sigmoid()  <span class="hljs-comment"># 对于图像生成</span><br>        )<br>    <br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">reparameterize</span>(<span class="hljs-params">self, mu, logvar</span>):<br>        <span class="hljs-string">&quot;&quot;&quot;重参数化技巧：从N(μ, σ²)采样&quot;&quot;&quot;</span><br>        std = torch.exp(<span class="hljs-number">0.5</span> * logvar)  <span class="hljs-comment"># σ = exp(0.5 * logσ²)</span><br>        eps = torch.randn_like(std)   <span class="hljs-comment"># 随机噪声ε ~ N(0,1)</span><br>        <span class="hljs-keyword">return</span> mu + eps * std          <span class="hljs-comment"># z = μ + εσ</span><br>    <br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">self, x</span>):<br>        <span class="hljs-comment"># 编码</span><br>        h = self.encoder(x)<br>        mu, logvar = self.fc_mu(h), self.fc_logvar(h)<br>        <br>        <span class="hljs-comment"># 重参数化采样</span><br>        z = self.reparameterize(mu, logvar)<br>        <br>        <span class="hljs-comment"># 解码重建</span><br>        x_recon = self.decoder(z)<br>        <br>        <span class="hljs-keyword">return</span> x_recon, mu, logvar<br></code></pre></td></tr></table></figure>
 
