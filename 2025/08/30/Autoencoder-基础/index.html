@@ -24,7 +24,7 @@
 <meta property="og:description" content="介绍AE, Autoencoder, 是一种特殊的神经网络, 用于学习数据的表示. 其思想是通过无监督学习来压缩和重建数据. 用一组输入数据来训练 Autoencoder, 输出要尽可能与输入相同, 此时才说明其掌握了重构的能力. Autoencoder 基本结构自编码器有两个主要部分: 编码器, 解码器, 结构如下: 1输入数据 → [编码器] → 潜在表示（编码） → [解码器] → 重建数据">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-08-30T12:05:54.000Z">
-<meta property="article:modified_time" content="2025-08-30T14:42:08.636Z">
+<meta property="article:modified_time" content="2025-08-31T00:03:02.427Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3.5k 字
+          4.4k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          30 分钟
+          37 分钟
         
       </span>
     
@@ -326,7 +326,46 @@
 <p>而 variational autoencoder 中, 能够学习数据的概率分布以生成新样本, 且 “中间表示” 具有良好的概率结构和连续性:</p>
 <figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs">输入 → 编码器 → 均值μ和方差σ → 采样 → 潜在向量z → 解码器 → 重建输出<br></code></pre></td></tr></table></figure>
 <ul>
-<li>均值 $\mu$</li>
+<li>此时编码器的输出不再是 “潜在向量” (中间表示), 而是用于计算高斯分布的两个参数向量:<ul>
+<li>均值 $\mu$ 用于表示输入数据分布的中心</li>
+<li>方差 $\sigma$ 用于表示输入可以有多大的变化或不确定性</li>
+</ul>
+</li>
+</ul>
+<h2 id="采样"><a href="#采样" class="headerlink" title="采样"></a>采样</h2><p>VAE 的采样分两步:</p>
+<ol>
+<li>从标准正态分布 (均值为 <code>0</code>, 方差为 <code>1</code>) 中随机采样一个噪声向量 $\epsilon$:</li>
+</ol>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\epsilon ~ N(0, 1)<br>\end{aligned}<br>}<br>$$</p>
+<ol start="2">
+<li>通过 reparameterize trick (一个简单的变换), 将随机噪声 $\epsilon$ “推到” 由 $\mu$ 和 $\sigma$ 定义的分布中:</li>
+</ol>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>z &#x3D; \mu + \sigma \odot \epsilon<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>$\odot$ 表示逐元素相乘</li>
+</ul>
+<blockquote>
+<p>分为两步的原因</p>
+</blockquote>
+<p>直接从 $N(\mu, \sigma^2)$ 采样, 由于 $z ~ N(\mu, \sigma^2)$ 不可导, 梯度无法在采样后反向传播回编码器.</p>
+<p>使用 reparameterize trick 后, 采样过程被分解为一个可导的确定部分 $\mu + \sigma \cdot …$ 和一个随机部分 $\epsilon$, 梯度可以正确反向传播.</p>
+<blockquote>
+<p>为什么采样 $z ~ N(\mu, \sigma^2)$ 不可导</p>
+</blockquote>
+<p>因为在数学上, 随机性具有不可微性. 直接采样是一个随机过程, 而不是数学函数:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">z = sampling_function(mu, sigma) <span class="hljs-comment"># 实际上是随机操作而不是数学函数</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>因为对于固定的 <code>(mu, sigma)</code>, 每次调用都会得到不同的随机结果</li>
+<li>而导数需要衡量 “输入微小变化时输出的变化”, 在随机性下该关系不成立</li>
+</ul>
+<p>因此在梯度反向传播时, 在采样处会断裂:</p>
+<figure class="highlight autohotkey"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs autohotkey"><span class="hljs-built_in">mu,</span> sigma → [采样黑盒] → z<br></code></pre></td></tr></table></figure>
+
+
+<h2 id="VAE-loss"><a href="#VAE-loss" class="headerlink" title="VAE loss"></a>VAE loss</h2><p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>L &#x3D; E_{q(z|X)} [\log_p (X|z)] + \beta \cdot D_{KL} (q(z|X)\Vert p(z))<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>前一项是重建损失</li>
+<li>后一项是正则化项 (KL 散度), 惩罚那些方差 <code>σ</code> 过大或均值 <code>μ</code> 远离 0 的分布, 防止模型退化成普通自编码器</li>
 </ul>
 <h2 id="实现示例"><a href="#实现示例" class="headerlink" title="实现示例"></a>实现示例</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> torch<br><span class="hljs-keyword">import</span> torch.nn <span class="hljs-keyword">as</span> nn<br><span class="hljs-keyword">import</span> torch.nn.functional <span class="hljs-keyword">as</span> F<br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">VAE</span>(nn.Module):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, input_dim, latent_dim</span>):<br>        <span class="hljs-built_in">super</span>(VAE, self).__init__()<br>        <br>        <span class="hljs-comment"># 编码器：学习均值和方差</span><br>        self.encoder = nn.Sequential(<br>            nn.Linear(input_dim, <span class="hljs-number">512</span>),<br>            nn.ReLU(),<br>            nn.Linear(<span class="hljs-number">512</span>, <span class="hljs-number">256</span>),<br>            nn.ReLU(),<br>        )<br>        <br>        self.fc_mu = nn.Linear(<span class="hljs-number">256</span>, latent_dim)    <span class="hljs-comment"># 均值μ</span><br>        self.fc_logvar = nn.Linear(<span class="hljs-number">256</span>, latent_dim) <span class="hljs-comment"># 对数方差logσ²</span><br>        <br>        <span class="hljs-comment"># 解码器：从潜在空间重建</span><br>        self.decoder = nn.Sequential(<br>            nn.Linear(latent_dim, <span class="hljs-number">256</span>),<br>            nn.ReLU(),<br>            nn.Linear(<span class="hljs-number">256</span>, <span class="hljs-number">512</span>),<br>            nn.ReLU(),<br>            nn.Linear(<span class="hljs-number">512</span>, input_dim),<br>            nn.Sigmoid()  <span class="hljs-comment"># 对于图像生成</span><br>        )<br>    <br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">reparameterize</span>(<span class="hljs-params">self, mu, logvar</span>):<br>        <span class="hljs-string">&quot;&quot;&quot;重参数化技巧：从N(μ, σ²)采样&quot;&quot;&quot;</span><br>        std = torch.exp(<span class="hljs-number">0.5</span> * logvar)  <span class="hljs-comment"># σ = exp(0.5 * logσ²)</span><br>        eps = torch.randn_like(std)   <span class="hljs-comment"># 随机噪声ε ~ N(0,1)</span><br>        <span class="hljs-keyword">return</span> mu + eps * std          <span class="hljs-comment"># z = μ + εσ</span><br>    <br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">self, x</span>):<br>        <span class="hljs-comment"># 编码</span><br>        h = self.encoder(x)<br>        mu, logvar = self.fc_mu(h), self.fc_logvar(h)<br>        <br>        <span class="hljs-comment"># 重参数化采样</span><br>        z = self.reparameterize(mu, logvar)<br>        <br>        <span class="hljs-comment"># 解码重建</span><br>        x_recon = self.decoder(z)<br>        <br>        <span class="hljs-keyword">return</span> x_recon, mu, logvar<br></code></pre></td></tr></table></figure>
 
