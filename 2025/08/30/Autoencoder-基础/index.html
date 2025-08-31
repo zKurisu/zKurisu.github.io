@@ -24,7 +24,7 @@
 <meta property="og:description" content="介绍AE, Autoencoder, 是一种特殊的神经网络, 用于学习数据的表示. 其思想是通过无监督学习来压缩和重建数据. 用一组输入数据来训练 Autoencoder, 输出要尽可能与输入相同, 此时才说明其掌握了重构的能力. Autoencoder 基本结构自编码器有两个主要部分: 编码器, 解码器, 结构如下: 1输入数据 → [编码器] → 潜在表示（编码） → [解码器] → 重建数据">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-08-30T12:05:54.000Z">
-<meta property="article:modified_time" content="2025-08-31T03:33:49.581Z">
+<meta property="article:modified_time" content="2025-08-31T04:43:40.892Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          7.2k 字
+          7.8k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          60 分钟
+          66 分钟
         
       </span>
     
@@ -475,6 +475,57 @@
 <p>VAE 能够生成数据集中不存在的新数据.</p>
 <h1 id="VQ-VAE"><a href="#VQ-VAE" class="headerlink" title="VQ-VAE"></a>VQ-VAE</h1><p>VQ-VAE, Vector Quantized Variational Autoencoder, 向量量化自编码器, 核心思想是: 用离散的潜在表示代替传统 VAE 中连续的潜在表示.</p>
 <p>它通过引入一个码本 (Codebook), 将编码器输出的连续向量 “量化” 或 “映射” 为码本中最接近的离散向量.</p>
+<p>传统 VAE 的潜在表示是高斯分布:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>z ~ N(\mu, \sigma^2)<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>分布中的所有连续值都可能取到, 因此说是连续的</li>
+</ul>
+<p>VQ-VAE 的潜在表示只能是码本中的向量, 是离散的.</p>
+<h2 id="相关概念-1"><a href="#相关概念-1" class="headerlink" title="相关概念"></a>相关概念</h2><h3 id="量化"><a href="#量化" class="headerlink" title="量化"></a>量化</h3><p>量化, Quantization, 是一种优化技术, 在深度学习中, 通过降低数值精度来减小模型大小, 加快推理速度, 同时尽量保持模型性能. </p>
+<p>比如:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># 原始32位浮点数（高精度）</span><br>original = [<span class="hljs-number">0.123456</span>, <span class="hljs-number">1.987654</span>, -<span class="hljs-number">0.543210</span>]<br><br><span class="hljs-comment"># 量化后的8位整数（低精度）</span><br>quantized = [<span class="hljs-number">12</span>, <span class="hljs-number">199</span>, -<span class="hljs-number">54</span>]  <span class="hljs-comment"># 通过缩放因子转换</span><br></code></pre></td></tr></table></figure>
+
+<p>从 <code>FP32</code> 量化到 <code>INT8</code> 对于一些指标的影响:</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>FP32（浮点32）</th>
+<th>INT8（整型8）</th>
+<th>提升效果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>模型大小</strong></td>
+<td>100%</td>
+<td>25%</td>
+<td>⬇️ 75%</td>
+</tr>
+<tr>
+<td><strong>内存带宽</strong></td>
+<td>100%</td>
+<td>25%</td>
+<td>⬇️ 75%</td>
+</tr>
+<tr>
+<td><strong>推理速度</strong></td>
+<td>100%</td>
+<td>200-400%</td>
+<td>⬆️ 2-4倍</td>
+</tr>
+<tr>
+<td><strong>功耗</strong></td>
+<td>100%</td>
+<td>20-30%</td>
+<td>⬇️ 70-80%</td>
+</tr>
+</tbody></table>
+<p>量化会带来一些误差, 可以用量化感知训练 (训练时模拟量化误差), 分层量化 (不同层使用不同的量化策略), 混合精度 (关键层保持 FP16&#x2F;FP32) 等方法解决.</p>
+<h2 id="结构"><a href="#结构" class="headerlink" title="结构"></a>结构</h2><p>VQ-VAE 相比 AE 引入了向量量化层, 结构如下:</p>
+<figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs stata">输入 → 编码器 → 连续潜在表示 → 向量量化 → 离散编码 → 解码器 → 重建输出<br>                      ↓              ↑<br>                      码本（<span class="hljs-keyword">Codebook</span>）<br></code></pre></td></tr></table></figure>
+<ul>
+<li>注意这里的 “连续潜在表示” 并不是概率建模, 而是 AE 中的编码器输出</li>
+</ul>
 <h1 id="RQ-VAE"><a href="#RQ-VAE" class="headerlink" title="RQ-VAE"></a>RQ-VAE</h1><p>RQ-VAE, Residual Quantized VAE, 残差量化 VAE.</p>
 
                 
