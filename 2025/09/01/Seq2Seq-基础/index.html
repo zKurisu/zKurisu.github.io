@@ -16,17 +16,20 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="介绍Seq2Seq, Sequence-to-Sequence, 是一种将输入序列 (如句子, 时间序列) 映射到输出序列 (如翻译结果, 摘要) 的模型. 模型结构1输入数据 → [编码器RNN] → 上下文向量 → [解码器RNN] → 输出序列  注意与 Autoencoder 做区分, 虽然两者都有 Encoder-Decoder 结构:    特性 Autoencoder Seq2Seq">
+    <meta name="description" content="介绍Seq2Seq, Sequence-to-Sequence, 是一种将输入序列 (如句子, 时间序列) 映射到输出序列 (如翻译结果, 摘要) 的模型. 最早用于机器翻译, 给定一个源语言的句子, 自动翻译成目标语言. 模型结构1输入数据 → [编码器RNN] → 上下文向量 → [解码器RNN] → 输出序列  一个示例:   &lt;bos&gt; 和 &lt;eos&gt; 是自然语言处">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Seq2Seq-基础">
 <meta property="og:url" content="http://example.com/2025/09/01/Seq2Seq-%E5%9F%BA%E7%A1%80/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="介绍Seq2Seq, Sequence-to-Sequence, 是一种将输入序列 (如句子, 时间序列) 映射到输出序列 (如翻译结果, 摘要) 的模型. 模型结构1输入数据 → [编码器RNN] → 上下文向量 → [解码器RNN] → 输出序列  注意与 Autoencoder 做区分, 虽然两者都有 Encoder-Decoder 结构:    特性 Autoencoder Seq2Seq">
+<meta property="og:description" content="介绍Seq2Seq, Sequence-to-Sequence, 是一种将输入序列 (如句子, 时间序列) 映射到输出序列 (如翻译结果, 摘要) 的模型. 最早用于机器翻译, 给定一个源语言的句子, 自动翻译成目标语言. 模型结构1输入数据 → [编码器RNN] → 上下文向量 → [解码器RNN] → 输出序列  一个示例:   &lt;bos&gt; 和 &lt;eos&gt; 是自然语言处">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/seq2seq-structure-example.png">
+<meta property="og:image" content="http://example.com/img/seq2seq-with-multi-layer-rnn-structure.png">
 <meta property="article:published_time" content="2025-09-01T03:14:15.000Z">
-<meta property="article:modified_time" content="2025-09-01T03:22:34.523Z">
+<meta property="article:modified_time" content="2025-09-01T12:57:07.860Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/seq2seq-structure-example.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -235,7 +238,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          327 字
+          2.4k 字
         
       </span>
     
@@ -246,7 +249,7 @@
         
         
         
-          3 分钟
+          20 分钟
         
       </span>
     
@@ -289,10 +292,26 @@
             
               <div class="markdown-body">
                 
-                <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>Seq2Seq, Sequence-to-Sequence, 是一种将输入序列 (如句子, 时间序列) 映射到输出序列 (如翻译结果, 摘要) 的模型.</p>
+                <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>Seq2Seq, Sequence-to-Sequence, 是一种将输入序列 (如句子, 时间序列) 映射到输出序列 (如翻译结果, 摘要) 的模型. 最早用于机器翻译, 给定一个源语言的句子, 自动翻译成目标语言.</p>
 <h1 id="模型结构"><a href="#模型结构" class="headerlink" title="模型结构"></a>模型结构</h1><figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs css">输入数据 → <span class="hljs-selector-attr">[编码器RNN]</span> → 上下文向量 → <span class="hljs-selector-attr">[解码器RNN]</span> → 输出序列<br></code></pre></td></tr></table></figure>
 
-<p>注意与 Autoencoder 做区分, 虽然两者都有 <code>Encoder-Decoder</code> 结构:</p>
+<p>一个示例:</p>
+<p><img src="/../img/seq2seq-structure-example.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li><code>&lt;bos&gt;</code> 和 <code>&lt;eos&gt;</code> 是自然语言处理中两个重要的特殊标记:<ul>
+<li><code>&lt;bos&gt;</code>, Begin Of Sentence, 表示一个序列的开始</li>
+<li><code>&lt;eos&gt;</code>, End Of Sentence, 表示一个序列的结束</li>
+</ul>
+</li>
+</ul>
+<p>对这个结构的大致理解是, 用 RNN 把 input sequence 的信息压缩到 hidden state 中, 然后用另一个 RNN 从 hidden state 中提取信息输出.</p>
+<p>可以接受任意长度的输入, 产生任意长度的输出.</p>
+<p>构建 Seq2Seq 模型时, 更常用下面的结构:</p>
+<p><img src="/../img/seq2seq-with-multi-layer-rnn-structure.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>Encoder 的输出会与 Decoder Embedding 输出拼接后输入 Decoder 的 RNN</li>
+</ul>
+<h1 id="对比-Autoencoder"><a href="#对比-Autoencoder" class="headerlink" title="对比 Autoencoder"></a>对比 Autoencoder</h1><p>Autoencoder 和 Seq2Seq 模型两者都有 <code>Encoder-Decoder</code> 结构:</p>
 <table>
 <thead>
 <tr>
@@ -327,6 +346,10 @@
 <td>最小化序列预测损失（如交叉熵）</td>
 </tr>
 </tbody></table>
+<h1 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h1><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> torch<br><span class="hljs-keyword">import</span> torch.nn <span class="hljs-keyword">as</span> nn<br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">Encoder</span>(nn.Module):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, input_dim, emb_dim, hid_dim</span>):<br>        <span class="hljs-built_in">super</span>().__init__()<br>        self.embedding = nn.Embedding(input_dim, emb_dim)<br>        self.rnn = nn.GRU(emb_dim, hid_dim)<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">self, src</span>):<br>        <span class="hljs-comment"># src: [seq_len, batch_size]</span><br>        embedded = self.embedding(src)  <span class="hljs-comment"># [seq_len, batch_size, emb_dim]</span><br>        outputs, hidden = self.rnn(embedded)<br>        <span class="hljs-keyword">return</span> hidden  <span class="hljs-comment"># 返回最后一个隐藏状态</span><br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">Decoder</span>(nn.Module):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, output_dim, emb_dim, hid_dim</span>):<br>        <span class="hljs-built_in">super</span>().__init__()<br>        self.embedding = nn.Embedding(output_dim, emb_dim)<br>        self.rnn = nn.GRU(emb_dim + hid_dim, hid_dim)  <span class="hljs-comment"># 输入包含上下文向量</span><br>        self.fc_out = nn.Linear(hid_dim, output_dim)<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">self, <span class="hljs-built_in">input</span>, hidden, context</span>):<br>        <span class="hljs-comment"># input: [batch_size], hidden: [1, batch_size, hid_dim]</span><br>        <span class="hljs-built_in">input</span> = <span class="hljs-built_in">input</span>.unsqueeze(<span class="hljs-number">0</span>)  <span class="hljs-comment"># [1, batch_size]</span><br>        embedded = self.embedding(<span class="hljs-built_in">input</span>)  <span class="hljs-comment"># [1, batch_size, emb_dim]</span><br>        output, hidden = self.rnn(torch.cat([embedded, context], dim=<span class="hljs-number">2</span>), hidden)<br>        prediction = self.fc_out(output.squeeze(<span class="hljs-number">0</span>))<br>        <span class="hljs-keyword">return</span> prediction, hidden<br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">Seq2Seq</span>(nn.Module):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, encoder, decoder</span>):<br>        <span class="hljs-built_in">super</span>().__init__()<br>        self.encoder = encoder<br>        self.decoder = decoder<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">self, src, trg, teacher_forcing_ratio=<span class="hljs-number">0.5</span></span>):<br>        <span class="hljs-comment"># src: [src_len, batch_size], trg: [trg_len, batch_size]</span><br>        batch_size = trg.shape[<span class="hljs-number">1</span>]<br>        trg_len = trg.shape[<span class="hljs-number">0</span>]<br>        trg_vocab_size = self.decoder.fc_out.out_features<br><br>        outputs = torch.zeros(trg_len, batch_size, trg_vocab_size).to(trg.device)<br>        context = self.encoder(src)  <span class="hljs-comment"># 编码器输出上下文</span><br>        hidden = context  <span class="hljs-comment"># 初始隐藏状态</span><br><br>        <span class="hljs-built_in">input</span> = trg[<span class="hljs-number">0</span>, :]  <span class="hljs-comment"># 初始输入为 &lt;sos&gt; 标记</span><br>        <span class="hljs-keyword">for</span> t <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">1</span>, trg_len):<br>            output, hidden = self.decoder(<span class="hljs-built_in">input</span>, hidden, context)<br>            outputs[t] = output<br>            teacher_force = random.random() &lt; teacher_forcing_ratio<br>            top1 = output.argmax(<span class="hljs-number">1</span>)<br>            <span class="hljs-built_in">input</span> = trg[t] <span class="hljs-keyword">if</span> teacher_force <span class="hljs-keyword">else</span> top1  <span class="hljs-comment"># Teacher Forcing</span><br>        <span class="hljs-keyword">return</span> outputs<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>context</code> 是 <code>encoder</code> 对输入序列的压缩</li>
+</ul>
 
                 
               </div>
