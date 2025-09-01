@@ -33,7 +33,7 @@
 <meta property="og:image" content="http://example.com/img/cnn-fin-all-dot-product.png">
 <meta property="og:image" content="http://example.com/img/cnn-padding-example.png">
 <meta property="article:published_time" content="2025-08-22T13:43:53.000Z">
-<meta property="article:modified_time" content="2025-08-31T14:16:25.298Z">
+<meta property="article:modified_time" content="2025-08-31T15:15:00.679Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/cnn-convolutional-rotate-example1.png">
@@ -245,7 +245,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          4.7k 字
+          5.2k 字
         
       </span>
     
@@ -256,7 +256,7 @@
         
         
         
-          40 分钟
+          44 分钟
         
       </span>
     
@@ -350,7 +350,22 @@
 </ul>
 <h2 id="Pooling-layer"><a href="#Pooling-layer" class="headerlink" title="Pooling layer"></a>Pooling layer</h2><p>Pooling layer (池化层), 负责降维, 缩小特征图的空间尺寸.</p>
 <h2 id="Fully-connected-layer"><a href="#Fully-connected-layer" class="headerlink" title="Fully connected layer"></a>Fully connected layer</h2><p>Fully connected layer (全连接层), 负责将特征映射到输出, 通常位于 CNN 末尾.</p>
-<h1 id="梯度计算"><a href="#梯度计算" class="headerlink" title="梯度计算"></a>梯度计算</h1><h1 id="实现示例"><a href="#实现示例" class="headerlink" title="实现示例"></a>实现示例</h1><h2 id="手动实现"><a href="#手动实现" class="headerlink" title="手动实现"></a>手动实现</h2><p>先实现 1d 卷积操作, 注意下面的参数设计:</p>
+<h1 id="卷积层梯度计算"><a href="#卷积层梯度计算" class="headerlink" title="卷积层梯度计算"></a>卷积层梯度计算</h1><p>这里计算卷积层输出对于输入, 卷积核权重, 偏置的梯度.</p>
+<p>以 <code>conv1d</code> 为例, 忽略填充, 设步长为 <code>1</code>, 假设:</p>
+<ul>
+<li>输入 $X$ 的形状为 $(C_{in}, L_{in})$</li>
+<li>卷积核权重 $W$ 的形状为 $(C_{out}, C_{in}, K)$</li>
+<li>偏置 $b$ 的形状为 $(C_{out}$</li>
+<li>输出 $Y$ 的形状为 $(C_{out}, L_{out})$</li>
+</ul>
+<p>输出的计算过程:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>Y[c,i] &#x3D; \sum_{k&#x3D;0}^{K-1} \sum_{c_{in} &#x3D; 0}^{C_{in} - 1} W[c,c_{in},k] \cdot X[c_{in}, i+k] + b[c]<br>\end{aligned}<br>}<br>$$<br>(事实证明这个计算过程比较复杂, 因为输出的形状较大)</p>
+<p>卷积层的反向传播需要计算三个梯度:</p>
+<ol>
+<li>输入梯度 (<code>input_grad</code>), 损失对输入数据的梯度 $\frac{\partial L}{\partial X}$</li>
+<li>权重梯度 (<code>weight_grad</code>), 损失对卷积核权重的梯度 $\frac{\partial L}{\partial W}$</li>
+<li>偏置梯度 (<code>bias_grad</code>), 损失对偏置项的梯度 $\frac{\partial L}{\partial b}$</li>
+</ol>
+<h1 id="实现示例"><a href="#实现示例" class="headerlink" title="实现示例"></a>实现示例</h1><h2 id="手动实现"><a href="#手动实现" class="headerlink" title="手动实现"></a>手动实现</h2><p>先实现 1d 卷积操作, 注意下面的参数设计:</p>
 <ul>
 <li>输入是 3 维, 各维度大小是: <code>(batch_size, in_channels, in_length)</code></li>
 <li>需要设置滤波器数量, 每个滤波器单独计算, 且对于每个 sample 而言, 所需的 weight 是 2 维, 因此整体是 3 维, 各维度大小是: <code>(out_channels, in_channels, kernel_size)</code>, <code>in_channels</code> 乘以 <code>kernel_size</code> 也就是每次参与卷积的输入个数</li>
@@ -366,9 +381,6 @@
 
 <p>组合成一个 CNN:</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">ManualCNN</span>:<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self</span>):<br>        <span class="hljs-comment"># 初始化卷积参数（模拟nn.Conv1d(1,16,3)）</span><br>        self.conv_weight = torch.randn(<span class="hljs-number">16</span>, <span class="hljs-number">1</span>, <span class="hljs-number">3</span>) * <span class="hljs-number">0.1</span><br>        self.conv_bias = torch.zeros(<span class="hljs-number">16</span>)<br>        <br>        <span class="hljs-comment"># 初始化全连接层参数</span><br>        self.fc_weight = torch.randn(<span class="hljs-number">10</span>, <span class="hljs-number">16</span> * <span class="hljs-number">3</span>)  <span class="hljs-comment"># 假设池化后长度=3</span><br>        self.fc_bias = torch.zeros(<span class="hljs-number">10</span>)<br>    <br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">self, x</span>):<br>        <span class="hljs-comment"># Conv1d</span><br>        x = manual_conv1d(x, self.conv_weight, self.conv_bias)<br>        <br>        <span class="hljs-comment"># ReLU</span><br>        x = manual_relu(x)<br>        <br>        <span class="hljs-comment"># MaxPool1d</span><br>        x = manual_maxpool1d(x, kernel_size=<span class="hljs-number">2</span>)<br>        <br>        <span class="hljs-comment"># Flatten</span><br>        x = x.view(x.shape[<span class="hljs-number">0</span>], -<span class="hljs-number">1</span>)  <span class="hljs-comment"># [batch, channels*length]</span><br>        <br>        <span class="hljs-comment"># 全连接层</span><br>        x = torch.matmul(x, self.fc_weight.t()) + self.fc_bias<br>        <br>        <span class="hljs-keyword">return</span> x<br><br><span class="hljs-comment"># 测试完整模型</span><br>model = ManualCNN()<br>x = torch.randn(<span class="hljs-number">32</span>, <span class="hljs-number">1</span>, <span class="hljs-number">10</span>)  <span class="hljs-comment"># batch=32, 序列长度=10</span><br>output = model.forward(x)<br><span class="hljs-built_in">print</span>(output.shape)  <span class="hljs-comment"># 应输出 torch.Size([32, 10])</span><br></code></pre></td></tr></table></figure>
-
-
-
 
 <h2 id="PyTorch-接口实现"><a href="#PyTorch-接口实现" class="headerlink" title="PyTorch 接口实现"></a>PyTorch 接口实现</h2><p>用 PyTorch 实现一个用于 CIFAR-10 数据集的简单 CNN:</p>
 <p>…<br>…</p>
