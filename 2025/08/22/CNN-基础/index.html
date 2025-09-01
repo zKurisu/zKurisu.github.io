@@ -33,7 +33,7 @@
 <meta property="og:image" content="http://example.com/img/cnn-fin-all-dot-product.png">
 <meta property="og:image" content="http://example.com/img/cnn-padding-example.png">
 <meta property="article:published_time" content="2025-08-22T13:43:53.000Z">
-<meta property="article:modified_time" content="2025-09-01T01:08:11.131Z">
+<meta property="article:modified_time" content="2025-09-01T02:10:16.246Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/cnn-convolutional-rotate-example1.png">
@@ -245,7 +245,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          5.9k 字
+          6.5k 字
         
       </span>
     
@@ -256,7 +256,7 @@
         
         
         
-          49 分钟
+          54 分钟
         
       </span>
     
@@ -385,6 +385,18 @@
 <h2 id="PyTorch-接口实现"><a href="#PyTorch-接口实现" class="headerlink" title="PyTorch 接口实现"></a>PyTorch 接口实现</h2><p>用 PyTorch 实现一个简单的 CNN:</p>
 <figure class="highlight py"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs py"><span class="hljs-comment"># 创建相同结构的PyTorch模型</span><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">TorchCNN</span>(nn.Module):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self</span>):<br>        <span class="hljs-built_in">super</span>().__init__()<br>        self.conv = nn.Conv1d(<span class="hljs-number">1</span>, <span class="hljs-number">16</span>, <span class="hljs-number">3</span>)<br>        self.fc = nn.Linear(<span class="hljs-number">16</span> * <span class="hljs-number">3</span>, <span class="hljs-number">10</span>)  <span class="hljs-comment"># 假设池化后长度=3</span><br>    <br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">self, x</span>):<br>        x = F.relu(self.conv(x))<br>        x = F.max_pool1d(x, kernel_size=<span class="hljs-number">2</span>)<br>        x = x.view(x.size(<span class="hljs-number">0</span>), -<span class="hljs-number">1</span>)<br>        <span class="hljs-keyword">return</span> self.fc(x)<br><br><span class="hljs-comment"># 验证一致性</span><br>torch_model = TorchCNN()<br><span class="hljs-keyword">with</span> torch.no_grad():<br>    <span class="hljs-comment"># 手动设置相同参数</span><br>    torch_model.conv.weight.data = model.conv_weight<br>    torch_model.conv.bias.data = model.conv_bias<br>    torch_model.fc.weight.data = model.fc_weight<br>    torch_model.fc.bias.data = model.fc_bias<br><br>x = torch.randn(<span class="hljs-number">2</span>, <span class="hljs-number">1</span>, <span class="hljs-number">10</span>)<br>manual_out = model.forward(x)<br>torch_out = torch_model(x)<br><span class="hljs-built_in">print</span>(torch.allclose(manual_out, torch_out))  <span class="hljs-comment"># 应输出True</span><br></code></pre></td></tr></table></figure>
 
+<h1 id="kernel-size-stride-padding-的数值关系"><a href="#kernel-size-stride-padding-的数值关系" class="headerlink" title="kernel_size, stride, padding 的数值关系"></a><code>kernel_size</code>, <code>stride</code>, <code>padding</code> 的数值关系</h1><p>对于输入尺寸为  $(H_{in}, W_{in})$ 的特征图, 输出尺寸 $(H_{out}, W_{out})$ 的计算公式为:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>H_{out} &#x3D; [ \frac{H_{in} + 2 \times padding - kernel_size}{stride} + 1] \newline~ \newline<br>W_{out} &#x3D; [ \frac{W_{in} + 2 \times padding - kernel_size}{stride} + 1]<br>\end{aligned}<br>}<br>$$</p>
+<p>若要保证尺寸不变, 当 <code>stride=1</code> 时, 需要满足:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>padding &#x3D; \frac{kernel_size - 1}{2}<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>比如: <code>kernel_size = 3</code> $\rightarrow$ <code>padding = 1</code>; <code>kernel_size=5</code> $\rightarrow$ <code>padding=2</code></li>
+</ul>
+<p><code>stride</code> 用于缩小尺寸, 当 <code>stride &gt; 1</code> 时, 输出尺寸按比例缩小, 比如:</p>
+<ul>
+<li><code>stride=2</code>, 尺寸约减半 (配合 <code>padding</code> 调整)</li>
+</ul>
+<p>在设计时, 一般要注意让 $(H_{in} + 2 \times padding − kernel_size)$ 能够被 <code>stride</code> 整除, 避免向下取整导致边缘信息丢失.</p>
 
                 
               </div>
