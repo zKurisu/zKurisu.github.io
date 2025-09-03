@@ -45,6 +45,14 @@
 <meta property="og:image" content="http://example.com/img/illu-trans-whole-process-for-attention-layer.png">
 <meta property="og:image" content="http://example.com/img/illu-trans-positional-encoding-cal.png">
 <meta property="og:image" content="http://example.com/img/illu-trans-residual-connection-example.png">
+<meta property="og:image" content="http://example.com/img/illu-trans-residual-detail-fig.png">
+<meta property="og:image" content="http://example.com/img/illu-trans-encoder-connect-decoder.png">
+<meta property="og:image" content="http://example.com/img/illu-trans-encoder-pass-to-decoder.png">
+<meta property="og:image" content="http://example.com/img/illu-trans-train-example-process.png">
+<meta property="og:image" content="http://example.com/img/illu-trans-final-linear-and-softmax-layer.png">
+<meta property="og:image" content="http://example.com/img/illu-trans-output-example1.png">
+<meta property="og:image" content="http://example.com/img/illu-trans-target-model-outputs.png">
+<meta property="og:image" content="http://example.com/img/illu-trans-trained-model-output-example.png">
 <meta property="og:image" content="http://example.com/img/transformer-splite-into-tokens.png">
 <meta property="og:image" content="http://example.com/img/transformer-split-input.png">
 <meta property="og:image" content="http://example.com/img/transformer-token-to-vectors.png">
@@ -76,7 +84,7 @@
 <meta property="og:image" content="http://example.com/img/attention-is-all-you-need-transformer-structure.png">
 <meta property="og:image" content="http://example.com/img/transformer-train-two-output-in-structure.png">
 <meta property="article:published_time" content="2025-08-11T08:59:33.000Z">
-<meta property="article:modified_time" content="2025-09-03T06:13:15.928Z">
+<meta property="article:modified_time" content="2025-09-03T07:13:52.648Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/transformer-output-example.png">
@@ -288,7 +296,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          4.1k 字
+          4.7k 字
         
       </span>
     
@@ -299,7 +307,7 @@
         
         
         
-          34 分钟
+          39 分钟
         
       </span>
     
@@ -419,6 +427,28 @@
 <p><img src="/../img/illu-trans-positional-encoding-cal.png" srcset="/img/loading.gif" lazyload></p>
 <h2 id="Residuals"><a href="#Residuals" class="headerlink" title="Residuals"></a>Residuals</h2><p>数据每经过一层, 都要用 residual connection 处理, 以解决梯度消失问题:</p>
 <p><img src="/../img/illu-trans-residual-connection-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>Residual connection 就是让原来的输出加上输入:</p>
+<p><img src="/../img/illu-trans-residual-detail-fig.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="Encoder-连接-Decoder"><a href="#Encoder-连接-Decoder" class="headerlink" title="Encoder 连接 Decoder"></a>Encoder 连接 Decoder</h2><p><img src="/../img/illu-trans-encoder-connect-decoder.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="Decoder"><a href="#Decoder" class="headerlink" title="Decoder"></a>Decoder</h2><p>多个 encoder 的输出会被转换为 KV 矩阵待 decoder 中的 <code>encoder-decoder attention</code> 使用:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>K &#x3D; W_K \times Enc_out \newline~ \newline<br>V &#x3D; W_V \times Enc_out<br>\end{aligned}<br>}<br>$$</p>
+<p><img src="/../img/illu-trans-encoder-pass-to-decoder.png" srcset="/img/loading.gif" lazyload></p>
+<p>训练的时候会在 decoder 端直接输入正确答案 (推理时用之前的输出作为输入):</p>
+<p><img src="/../img/illu-trans-train-example-process.png" srcset="/img/loading.gif" lazyload></p>
+<p>Encoder-Decoder Attention 和 self-attention 的不同之处在于:</p>
+<ul>
+<li>Query 矩阵基于 Decoder 的输入计算得到</li>
+<li>KV 矩阵使用 Encoder 传递的</li>
+</ul>
+<h2 id="Final-Linear-and-Softmax"><a href="#Final-Linear-and-Softmax" class="headerlink" title="Final Linear and Softmax"></a>Final Linear and Softmax</h2><p>Decoder stack 会输出一个 vector of floats, 其作为 Linear layer 的输入, 得到 logits vector (长度和词表一致), 之后输入 softmax layer 计算每个词输出的概率:</p>
+<p><img src="/../img/illu-trans-final-linear-and-softmax-layer.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="Loss-计算"><a href="#Loss-计算" class="headerlink" title="Loss 计算"></a>Loss 计算</h2><p>一般用 Cross-entropy 和 Kullback-Leibler divergence.</p>
+<p>在模型没训练时, 由于 $W_Q, W_K, W_V$ 随机初始化, 输出比较乱, 而训练后输出确定:</p>
+<p><img src="/../img/illu-trans-output-example1.png" srcset="/img/loading.gif" lazyload></p>
+<p>在计算 Loss 之前, 先有 target model output, 比如:</p>
+<p><img src="/../img/illu-trans-target-model-outputs.png" srcset="/img/loading.gif" lazyload></p>
+<p>实际训练的输出可能是:</p>
+<p><img src="/../img/illu-trans-trained-model-output-example.png" srcset="/img/loading.gif" lazyload></p>
 <h1 id="工作原理"><a href="#工作原理" class="headerlink" title="工作原理"></a>工作原理</h1><p>下面先过一遍整体流程:</p>
 <p>首先将输入转化为 token, 如输入一段文本:</p>
 <p><img src="/../img/transformer-splite-into-tokens.png" srcset="/img/loading.gif" lazyload></p>
