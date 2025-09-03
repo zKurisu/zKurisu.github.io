@@ -32,6 +32,19 @@
 <meta property="og:image" content="http://example.com/img/illu-trans-decoder-detail-structure.png">
 <meta property="og:image" content="http://example.com/img/illu-trans-encoder-add-vector-structure.png">
 <meta property="og:image" content="http://example.com/img/illu-trans-feed-forward-output.png">
+<meta property="og:image" content="http://example.com/img/illu-trans-self-attention-get-from-other-word.png">
+<meta property="og:image" content="http://example.com/img/illu-trans-calculate-qkv-vector.png">
+<meta property="og:image" content="http://example.com/img/illu-trans-calculate-attention-score.png">
+<meta property="og:image" content="http://example.com/img/illu-trans-calculating-attention-weight.png">
+<meta property="og:image" content="http://example.com/img/illu-trans-calculate-attention-output.png">
+<meta property="og:image" content="http://example.com/img/illu-trans-calculate-qkv-matrix.png">
+<meta property="og:image" content="http://example.com/img/illu-trans-calculate-self-attention-output-by-matrix.png">
+<meta property="og:image" content="http://example.com/img/illu-trans-multi-head-qkv-calculation.png">
+<meta property="og:image" content="http://example.com/img/illu-trans-multihead-attention-output.png">
+<meta property="og:image" content="http://example.com/img/illu-trans-concatenate-attention-heads.png">
+<meta property="og:image" content="http://example.com/img/illu-trans-whole-process-for-attention-layer.png">
+<meta property="og:image" content="http://example.com/img/illu-trans-positional-encoding-cal.png">
+<meta property="og:image" content="http://example.com/img/illu-trans-residual-connection-example.png">
 <meta property="og:image" content="http://example.com/img/transformer-splite-into-tokens.png">
 <meta property="og:image" content="http://example.com/img/transformer-split-input.png">
 <meta property="og:image" content="http://example.com/img/transformer-token-to-vectors.png">
@@ -63,7 +76,7 @@
 <meta property="og:image" content="http://example.com/img/attention-is-all-you-need-transformer-structure.png">
 <meta property="og:image" content="http://example.com/img/transformer-train-two-output-in-structure.png">
 <meta property="article:published_time" content="2025-08-11T08:59:33.000Z">
-<meta property="article:modified_time" content="2025-09-03T05:09:02.376Z">
+<meta property="article:modified_time" content="2025-09-03T06:13:15.928Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/transformer-output-example.png">
@@ -275,7 +288,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3.2k 字
+          4.1k 字
         
       </span>
     
@@ -286,7 +299,7 @@
         
         
         
-          27 分钟
+          34 分钟
         
       </span>
     
@@ -357,6 +370,55 @@
 <p>经过 self-attention layer 后, 向量的形状不变.</p>
 <p>之后经 Feed Forward Neural network, 向量的形状同样不变:</p>
 <p><img src="/../img/illu-trans-feed-forward-output.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="Self-attention-细节"><a href="#Self-attention-细节" class="headerlink" title="Self-attention 细节"></a>Self-attention 细节</h2><p>假设要翻译:</p>
+<figure class="highlight vbnet"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs vbnet">The animal didn<span class="hljs-comment">&#x27;t cross the street because it was too tired</span><br></code></pre></td></tr></table></figure>
+
+<p>要判断 <code>it</code> 在这个句子中指代的是什么, 需要让 <code>it</code> 查看整个句子然后做判断.</p>
+<p>Self-attention 能让当前处理的向量整合其与整个句子中其他向量的相关性:</p>
+<p><img src="/../img/illu-trans-self-attention-get-from-other-word.png" srcset="/img/loading.gif" lazyload><br>(颜色越深表示相关度越高)</p>
+<p>Self-attention 的计算过程如下:</p>
+<ol>
+<li>先利用 encoder 的输入计算三个 vector: Query vector, Key vector, value vector (一个 batch 就是一个矩阵)</li>
+</ol>
+<p><img src="/../img/illu-trans-calculate-qkv-vector.png" srcset="/img/loading.gif" lazyload></p>
+<p>具体计算是:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>q_1 &#x3D; X_1 \times W^Q \newline~ \newline<br>k_1 &#x3D; X_1 \times W^K \newline~ \newline<br>v_1 &#x3D; X_1 \times W^V<br>\end{aligned}<br>}<br>$$</p>
+<ol start="2">
+<li>计算每个输入对其他输入的 attention score, 用自己的 query vector 点乘其他输入的 key vector:</li>
+</ol>
+<p><img src="/../img/illu-trans-calculate-attention-score.png" srcset="/img/loading.gif" lazyload></p>
+<ol start="3">
+<li><p>将所有分数除以 $\sqrt{d_k}$</p>
+</li>
+<li><p>所有分数做 softmax 得到权重:</p>
+</li>
+</ol>
+<p><img src="/../img/illu-trans-calculating-attention-weight.png" srcset="/img/loading.gif" lazyload></p>
+<ol start="5">
+<li><p>Softmax 输出的权重乘以各自的 value vector</p>
+</li>
+<li><p>将结果求和:</p>
+</li>
+</ol>
+<p><img src="/../img/illu-trans-calculate-attention-output.png" srcset="/img/loading.gif" lazyload></p>
+<p>将上述过程转为矩阵形式 (batch 处理):</p>
+<ol>
+<li>计算 QKV 矩阵:</li>
+</ol>
+<p><img src="/../img/illu-trans-calculate-qkv-matrix.png" srcset="/img/loading.gif" lazyload></p>
+<ol start="2">
+<li>计算 self-attention 输出:</li>
+</ol>
+<p><img src="/../img/illu-trans-calculate-self-attention-output-by-matrix.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="Multi-heads-attention"><a href="#Multi-heads-attention" class="headerlink" title="Multi-heads attention"></a>Multi-heads attention</h2><p>Multi-heads attention 指, 构建多组 QKV 矩阵, 然后计算多组 self-attention 的输出:</p>
+<p><img src="/../img/illu-trans-multi-head-qkv-calculation.png" srcset="/img/loading.gif" lazyload></p>
+<p><img src="/../img/illu-trans-multihead-attention-output.png" srcset="/img/loading.gif" lazyload></p>
+<p>在输入 feed forward neural network 之前, 将多头输出拼接, 然后乘以一个 $W_O$ 矩阵:</p>
+<p><img src="/../img/illu-trans-concatenate-attention-heads.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="Attention-layer-整体计算"><a href="#Attention-layer-整体计算" class="headerlink" title="Attention layer 整体计算"></a>Attention layer 整体计算</h2><p><img src="/../img/illu-trans-whole-process-for-attention-layer.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="Positional-encoding"><a href="#Positional-encoding" class="headerlink" title="Positional encoding"></a>Positional encoding</h2><p>Words 在 input sequence 中的顺序很重要. Transformer 的解决方法是, 为每个 input vector 加上一个 positional encoding vector:</p>
+<p><img src="/../img/illu-trans-positional-encoding-cal.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="Residuals"><a href="#Residuals" class="headerlink" title="Residuals"></a>Residuals</h2><p>数据每经过一层, 都要用 residual connection 处理, 以解决梯度消失问题:</p>
+<p><img src="/../img/illu-trans-residual-connection-example.png" srcset="/img/loading.gif" lazyload></p>
 <h1 id="工作原理"><a href="#工作原理" class="headerlink" title="工作原理"></a>工作原理</h1><p>下面先过一遍整体流程:</p>
 <p>首先将输入转化为 token, 如输入一段文本:</p>
 <p><img src="/../img/transformer-splite-into-tokens.png" srcset="/img/loading.gif" lazyload></p>
