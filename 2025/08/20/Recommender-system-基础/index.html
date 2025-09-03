@@ -86,7 +86,7 @@
 <meta property="og:image" content="http://example.com/img/recommender-system-how-item-to-path.png">
 <meta property="og:image" content="http://example.com/img/recommender-system-deep-retrievel-train-process.png">
 <meta property="article:published_time" content="2025-08-20T09:35:07.000Z">
-<meta property="article:modified_time" content="2025-08-30T01:18:32.028Z">
+<meta property="article:modified_time" content="2025-09-03T02:16:33.959Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/recommender-system-buckets-example.png">
@@ -298,7 +298,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          16k 字
+          18k 字
         
       </span>
     
@@ -309,7 +309,7 @@
         
         
         
-          137 分钟
+          154 分钟
         
       </span>
     
@@ -429,6 +429,90 @@
 
 <p>模型训练中, 需要正负样本共同帮助模型区分不同类别的界限, 以提升模型的泛化能力.</p>
 <h2 id="Long-Tail-items"><a href="#Long-Tail-items" class="headerlink" title="Long-Tail items"></a>Long-Tail items</h2><p>Long-Tail items (长尾物品), 指曝光量低, 点击量少, 销量小的物品, 它们通常占据了物品库的绝大多数, 单个物品的流行度远低于头部热门物品.</p>
+<h2 id="常见特征工程术语"><a href="#常见特征工程术语" class="headerlink" title="常见特征工程术语"></a>常见特征工程术语</h2><h3 id="User-Sparse-Features"><a href="#User-Sparse-Features" class="headerlink" title="User Sparse Features"></a>User Sparse Features</h3><p>User Sparse Features, 用户稀疏特征, 指离散的类别特征, 通常为低维, 高基数 (比如性别, 城市, 职业).</p>
+<p>这种特征:</p>
+<ul>
+<li>取值有限</li>
+<li>需要编码为整数索引</li>
+<li>通过 Embedding 层转换为稠密向量</li>
+</ul>
+<p>比如:</p>
+<ul>
+<li>用户性别: <code>[&quot;男&quot;, &quot;女&quot;]</code> $\rightarrow$ <code>[0,1]</code></li>
+<li>用户城市: <code>[&quot;北京&quot;, &quot;上海&quot;, &quot;深圳&quot;]</code> $\rightarrow$ <code>[0,1,2]</code></li>
+<li>用户职业: <code>[&quot;学生&quot;, &quot;工程师&quot;, &quot;教师&quot;]</code> $\rightarrow$ <code>[0,1,2]</code></li>
+</ul>
+<h2 id="User-Array-Features"><a href="#User-Array-Features" class="headerlink" title="User Array Features"></a>User Array Features</h2><p>User Array Features, 多值离散特征, 表示用户有多个标签或行为.</p>
+<p>对于这类特征:</p>
+<ul>
+<li>每个用户对应一个列表 (如兴趣标签, 历史行为)</li>
+<li>需要处理为 <code>multi-hot encoding</code> 或聚合统计</li>
+</ul>
+<p>比如:</p>
+<ul>
+<li>用户兴趣标签: <code>[&quot;科技&quot;, &quot;体育&quot;, &quot;音乐&quot;]</code> $\rightarrow$ <code>[1,1,0]</code></li>
+<li>用户最近点击的物品 ID 列表: <code>[&quot;item1&quot;, &quot;item2&quot;]</code> $\rightarrow$ <code>[0,1,1,0]</code> (假设物品库为 <code>[item1, item2, item3, item4]</code>)</li>
+</ul>
+<h3 id="Item-Sparse-Features"><a href="#Item-Sparse-Features" class="headerlink" title="Item Sparse Features"></a>Item Sparse Features</h3><p>Item Sparse Features, 物品稀疏特征, 指物品的离散类别属性, 描述物品的静态分类信息.</p>
+<p>与用户稀疏特征类似:</p>
+<ul>
+<li>取值有限</li>
+<li>需要编码为整数索引</li>
+<li>通过 Embedding 层转换为稠密向量</li>
+</ul>
+<p>比如:</p>
+<ul>
+<li>物品类别: <code>[&quot;电子产品&quot;, &quot;服装&quot;, &quot;食品&quot;]</code> $\rightarrow$ <code>[0, 1, 2]</code></li>
+<li>物品品牌: <code>[&quot;苹果&quot;, &quot;华为&quot;, &quot;小米&quot;]</code> $\rightarrow$ <code>[0, 1, 2]</code></li>
+<li>物品价格区间: <code>[&quot;0-100&quot;, &quot;100-500&quot;, &quot;500+&quot;]</code> $\rightarrow$ <code>[0, 1, 2]</code></li>
+</ul>
+<h3 id="Item-Array-Features"><a href="#Item-Array-Features" class="headerlink" title="Item Array Features"></a>Item Array Features</h3><p>Item Array Features, 物品多值特征, 表示物品的多个关联标签或属性:</p>
+<ul>
+<li>每个物品对应一个列表, 如关键词, 适用人群</li>
+<li>处理方式与 user array features 类似</li>
+</ul>
+<p>比如:</p>
+<ul>
+<li>物品关键词: <code>[&quot;轻薄&quot;, &quot;高性能&quot;, &quot;便捷&quot;]</code> $\rightarrow$ <code>[1, 1, 0]</code></li>
+<li>物品适用场景: <code>[&quot;办公&quot;, &quot;游戏&quot;, &quot;学习&quot;]</code> $\rightarrow$ <code>[1, 0, 1]</code></li>
+</ul>
+<h3 id="Item-Embedding-Features"><a href="#Item-Embedding-Features" class="headerlink" title="Item Embedding Features"></a>Item Embedding Features</h3><p>Item Embedding Features, 物品嵌入特征, 指预训练的稠密向量, 表示物品的隐含语义 (如通过 <code>Word2Vec</code>, 矩阵分解生成).</p>
+<ul>
+<li>可以直接作为模型输入, 无需额外编码</li>
+<li>通常需要通过其他模型预训练得到</li>
+</ul>
+<p>比如:</p>
+<ul>
+<li>电影嵌入向量: <code>[0.1, -0.2, 0.5, ...]</code> (维度由预训练模型决定)</li>
+<li>商品潜入向量: 通过用户行为序列训练得到</li>
+</ul>
+<h3 id="User-Continual-Features"><a href="#User-Continual-Features" class="headerlink" title="User Continual Features"></a>User Continual Features</h3><p>User Continual Features, 用户连续特征, 是数值型特征, 描述用户的连续属性:</p>
+<ul>
+<li>需要标准化 (z-score) 或分桶 (年龄分段)</li>
+<li>可以直接输入模型作为辅助特征</li>
+</ul>
+<p>比如:</p>
+<ul>
+<li>用户年龄: <code>25</code> (原始值) $\rightarrow$ 标准化为 <code>0.3</code></li>
+<li>用户活跃度 (日均点击次数) $\rightarrow$ 分桶为 <code>[0-5:0, 5-10:1]</code> $\rightarrow$ 编码为 <code>1</code></li>
+</ul>
+<h3 id="Item-Continual-Features"><a href="#Item-Continual-Features" class="headerlink" title="Item Continual Features"></a>Item Continual Features</h3><p>Item Continual Features, 物品连续特征, 物品的数值型特征, 描述物品的物理或统计特性.</p>
+<p>与 User Continual Features 类似:</p>
+<ul>
+<li>需要标准化 (z-score) 或分桶</li>
+<li>可以直接输入模型作为辅助特征</li>
+</ul>
+<p>比如:</p>
+<ul>
+<li>物品价格: <code>299.0</code> $\rightarrow$ 标准化为 <code>-0.1</code></li>
+<li>物品评分均值: <code>4.5</code> $\rightarrow$ 直接输入模型</li>
+</ul>
+<h2 id="ANN"><a href="#ANN" class="headerlink" title="ANN"></a>ANN</h2><p>ANN, Approximate Nearest Neighbor, 是一种从海量高维数据中快速查找 “近似” 最相似项的技术. 其核心思想是牺牲一些精度以加速检索:</p>
+<ul>
+<li>Exact NN, 精确最近邻, 能够 <code>100%</code> 找到最相似项, 但计算成本高 (<code>O(n)</code> 或更高)</li>
+<li>ANN, 近似最近邻, 找到足够相似 (Top-K) 的项, 速度提升百千倍, 允许在毫秒级处理十亿级数据</li>
+</ul>
+<p>所有 ANN 算法都会预先对数据索引 (indexing), 以减少检索时的计算量.</p>
 <h1 id="一个示例"><a href="#一个示例" class="headerlink" title="一个示例"></a>一个示例</h1><p>Recommender system 会根据用户的点击, 点赞, 收藏, 转发, 评论等行为, 来推荐用户可能感兴趣的东西.</p>
 <p><img src="/../img/recommender-system-top-k-example.png" srcset="/img/loading.gif" lazyload></p>
 <p>系统把物品展示给用户称为 Exposure (曝光), 如果用户对该物品感兴趣并点击, 且停留了一段时间, 可以粗略判断用户真的感兴趣, 此时可以算作一次有效点击, 如果用户向下滑动并阅读到底, 更能说明用户对其感兴趣:</p>
