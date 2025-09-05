@@ -24,7 +24,7 @@
 <meta property="og:description" content="这里分析几篇文章. Self-Attentive Sequential RecommendationSASRec model github repo 该文章是 2018 年的一篇文章, 其首次将 self-attention 引入序列化推荐任务. Sequential RecommendationSequential Recommendation, 序列化推荐, 核心思想是利用用户的历史行为序列">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-08-30T09:06:15.000Z">
-<meta property="article:modified_time" content="2025-09-05T00:56:40.452Z">
+<meta property="article:modified_time" content="2025-09-05T02:09:01.533Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.7k 字
+          3.2k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          23 分钟
+          27 分钟
         
       </span>
     
@@ -330,6 +330,22 @@
 <p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>mask &#x3D; \begin{bmatrix}<br>0 &amp; -\infty &amp; -\infty &amp; -\infty \newline~ \newline<br>0 &amp; 0 &amp; -\infty &amp; -\infty \newline~ \newline<br>0 &amp; 0 &amp; 0 &amp; -\infty \newline~ \newline<br>0 &amp; 0 &amp; 0 &amp; 0 \newline~ \newline<br>\end{bmatrix}<br>\end{aligned}<br>}<br>$$</p>
 <p>在计算注意力权重时应用掩码:</p>
 <p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>A &#x3D; softmax( \frac{Q K^T}{\sqrt{d}} + Mask) V<br>\end{aligned}<br>}<br>$$</p>
+<h2 id="Prediction-layer"><a href="#Prediction-layer" class="headerlink" title="Prediction layer"></a>Prediction layer</h2><p>在 prediction layer 做的计算为:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>r_{i,t} &#x3D; F_t^{(b)} N_i^T 或 r_{i,t} &#x3D; F_t^{(b)} M_i^T<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>$N_i$ 或 $M_i$ 是物品 $i$ 的 embedding vector, 来自矩阵 $N$ 或 $M$</li>
+<li>$r_{i,t}$ 是一个标量, 表示给定前 $t$ 个物品, 下一个物品是 $i$ 的可能性</li>
+</ul>
+<blockquote>
+<p>为什么不能直接对 $F_t^{(b)}$ 做 softmax</p>
+</blockquote>
+<p>因为 $F_t^{(b)}$ 本身并不是一个概率分布, 而是一个序列的隐状态表示, 是经过多层注意力计算后的特征向量, 其表示特征空间中的点, 而不是每个类别的概率分数, 对其做 softmax 会导致无意义的概率, 且无法计算 $F_t^{(b)}$ 和候选物品 $i$ 的匹配程度.</p>
+<p>预测的过程, 就是拿输出的特征向量与物品的 embedding 相乘, 得到匹配分数, 之后做 softmax 得到概率分数.</p>
+<p>$F_t^{(b)}$ 可以看作 “用户当前兴趣” 的编码, 由历史序列 $[s_1, s_2, ,…, s_t]$ 计算而来.</p>
+<p>这种计算方式类似:</p>
+<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs abnf">用户兴趣 x 物品特征 <span class="hljs-operator">=</span> 匹配分数<br></code></pre></td></tr></table></figure>
+
+
 <h1 id="Recommender-Systems-with-Generative-Retrieval"><a href="#Recommender-Systems-with-Generative-Retrieval" class="headerlink" title="Recommender Systems with Generative Retrieval"></a>Recommender Systems with Generative Retrieval</h1><p>该文章不依赖传统推荐系统的双塔模型, 而是直接用 Transformer 生成语义 ID.</p>
 
                 
