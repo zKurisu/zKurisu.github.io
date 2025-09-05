@@ -24,7 +24,7 @@
 <meta property="og:description" content="这里分析几篇文章. Self-Attentive Sequential RecommendationSASRec model github repo 该文章是 2018 年的一篇文章, 其首次将 self-attention 引入序列化推荐任务. Sequential RecommendationSequential Recommendation, 序列化推荐, 核心思想是利用用户的历史行为序列">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-08-30T09:06:15.000Z">
-<meta property="article:modified_time" content="2025-09-04T14:13:13.516Z">
+<meta property="article:modified_time" content="2025-09-05T00:56:40.452Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.9k 字
+          2.7k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          16 分钟
+          23 分钟
         
       </span>
     
@@ -323,6 +323,13 @@
 <p>PyTorch 示例:</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">PointWiseFFN</span>(nn.Module):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self</span>):<br>        <span class="hljs-built_in">super</span>(PointWiseFFN, self).__init__()<br><br>        self.fc1  = nn.Linear(input_dim, hidden_dim)<br>        self.fc2  = nn.Linear(hidden_dim, input_dim)<br>        self.relu = nn.ReLU()<br>    <br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">self, x</span>):<br>        <span class="hljs-comment"># x: [batch_size, seq_len, d_model]</span><br>        <span class="hljs-keyword">return</span> self.linear2(self.activation(self.linear1(x)))<br><br><span class="hljs-comment"># 示例使用</span><br>input_dim = <span class="hljs-number">512</span>  <span class="hljs-comment"># 输入/输出维度</span><br>hidden_dim = <span class="hljs-number">2048</span>    <span class="hljs-comment"># 中间层维度（通常为d_model的4倍）</span><br>ffn = PointWiseFFN(input_dim, hidden_dim)<br><br>x = torch.randn(<span class="hljs-number">32</span>, <span class="hljs-number">10</span>, input_dim)  <span class="hljs-comment"># 模拟输入：[batch_size=32, seq_len=10, d_model=512]</span><br>output = ffn(x)<br><span class="hljs-built_in">print</span>(output.shape)  <span class="hljs-comment"># torch.Size([32, 10, 512])</span><br></code></pre></td></tr></table></figure>
 
+<h2 id="Self-attention-和-causality"><a href="#Self-attention-和-causality" class="headerlink" title="Self-attention 和 causality"></a>Self-attention 和 causality</h2><p>对于 sequential model, causality 比较重要, 因为模型在预测 $t+1$ 个元素时, 只能依赖前 $t$ 个元素, 而不能 “偷看” 未来的信息.</p>
+<p>标准的 self-attention 机制是 non-causal 的, 因为其允许每个位置的输出依赖整个序列的所有位置 (包括未来位置), 这在训练时问题不大, 但推理时会导致信息泄漏, 此时模型会利用未来的数据导致预测不符合当前逻辑.</p>
+<p>需要用 mask 来实现 causal attention, 在计算 $Q_i$ 和 $K_j$ 的注意力权重时, 如果 $j &gt; i$, 则强制设为 $-\infty$, 这样第 $t$ 个位置的输出 $S_t$ 仅依赖于 $x_1,x_2,…,x_t$, 而不会受到 $x_{t+1},…,x_n$ 的影响.</p>
+<p>生成一个 causal mask, 一个上三角矩阵, 对角线及以下为 <code>0</code>, 以上为 $-\infty$, 例如对序列长度为 <code>4</code>:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>mask &#x3D; \begin{bmatrix}<br>0 &amp; -\infty &amp; -\infty &amp; -\infty \newline~ \newline<br>0 &amp; 0 &amp; -\infty &amp; -\infty \newline~ \newline<br>0 &amp; 0 &amp; 0 &amp; -\infty \newline~ \newline<br>0 &amp; 0 &amp; 0 &amp; 0 \newline~ \newline<br>\end{bmatrix}<br>\end{aligned}<br>}<br>$$</p>
+<p>在计算注意力权重时应用掩码:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>A &#x3D; softmax( \frac{Q K^T}{\sqrt{d}} + Mask) V<br>\end{aligned}<br>}<br>$$</p>
 <h1 id="Recommender-Systems-with-Generative-Retrieval"><a href="#Recommender-Systems-with-Generative-Retrieval" class="headerlink" title="Recommender Systems with Generative Retrieval"></a>Recommender Systems with Generative Retrieval</h1><p>该文章不依赖传统推荐系统的双塔模型, 而是直接用 Transformer 生成语义 ID.</p>
 
                 

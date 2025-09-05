@@ -26,7 +26,7 @@
 <meta property="og:image" content="http://example.com/img/torch-nn-conv1d-example.jpg">
 <meta property="og:image" content="http://example.com/img/pytorch-one-layer-neural-network-example.png">
 <meta property="article:published_time" content="2025-08-04T14:26:44.000Z">
-<meta property="article:modified_time" content="2025-08-31T13:58:11.229Z">
+<meta property="article:modified_time" content="2025-09-05T01:13:28.952Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/torch-nn-conv1d-example.jpg">
@@ -249,7 +249,7 @@
         
         
         
-          166 分钟
+          170 分钟
         
       </span>
     
@@ -700,6 +700,28 @@
 
 <p>输出:</p>
 <figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-built_in">output</span>:  tensor(<span class="hljs-string">[[3, 3, 3],</span><br><span class="hljs-string">        [3, 4, 5]]</span>)<br></code></pre></td></tr></table></figure>
+
+<h2 id="生成上三角矩阵"><a href="#生成上三角矩阵" class="headerlink" title="生成上三角矩阵"></a>生成上三角矩阵</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs python">seq_len = Q.size(<span class="hljs-number">1</span>)<br>mask = torch.triu(torch.ones(seq_len, seq_len), diagonal=<span class="hljs-number">1</span>) * -<span class="hljs-number">1e9</span><br>scores = scores + mask  <span class="hljs-comment"># 屏蔽未来信息</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>torch.ones(seq_len, seq_len)</code> 创建一个全 <code>1</code> 的矩阵, 假设 <code>seq_len=4</code>:</li>
+</ul>
+<figure class="highlight inform7"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs inform7"><span class="hljs-comment">[<span class="hljs-comment">[1, 1, 1, 1]</span>,</span><br><span class="hljs-comment"> <span class="hljs-comment">[1, 1, 1, 1]</span>,</span><br><span class="hljs-comment"> <span class="hljs-comment">[1, 1, 1, 1]</span>,</span><br><span class="hljs-comment"> <span class="hljs-comment">[1, 1, 1, 1]</span>]</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><code>torch.triu(..., diagonal=1)</code>, 获取矩阵的上三角部分, 并将其他位置置 <code>0</code>, <code>diagonal=1</code> 表示从主对角线向上偏移 <code>1</code> 条对角线的位置开始保留值</li>
+</ul>
+<figure class="highlight inform7"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs inform7"><span class="hljs-comment">[<span class="hljs-comment">[0, 1, 1, 1]</span>,</span><br><span class="hljs-comment"> <span class="hljs-comment">[0, 0, 1, 1]</span>,</span><br><span class="hljs-comment"> <span class="hljs-comment">[0, 0, 0, 1]</span>,</span><br><span class="hljs-comment"> <span class="hljs-comment">[0, 0, 0, 0]</span>]</span><br></code></pre></td></tr></table></figure>
+
+<p>如果是 <code>diagonal=0</code> 会包含主对角线:</p>
+<figure class="highlight inform7"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs inform7"><span class="hljs-comment">[<span class="hljs-comment">[1, 1, 1, 1]</span>,</span><br><span class="hljs-comment"> <span class="hljs-comment">[0, 1, 1, 1]</span>,</span><br><span class="hljs-comment"> <span class="hljs-comment">[0, 0, 1, 1]</span>,</span><br><span class="hljs-comment"> <span class="hljs-comment">[0, 0, 0, 1]</span>]</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><code>* -1e9</code>, 乘以一个极大的负数:</li>
+</ul>
+<figure class="highlight subunit"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs subunit">[[0, <span class="hljs-string">-1</span>e9, <span class="hljs-string">-1</span>e9, <span class="hljs-string">-1</span>e9],<br> [0, 0, <span class="hljs-string">-1</span>e9, <span class="hljs-string">-1</span>e9],<br> [0, 0, 0, <span class="hljs-string">-1</span>e9],<br> [0, 0, 0, 0]]<br></code></pre></td></tr></table></figure>
+
+
+
 
 <h1 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h1><h2 id="backward"><a href="#backward" class="headerlink" title="backward"></a>backward</h2><p><code>backward()</code> 方法只能由标量调用, 即 <code>1x1</code> 的张量.</p>
 <p>梯度计算本质是 “标量函数对张量的导数”, 即输出每个元素对输入每个元素的偏导数.</p>
