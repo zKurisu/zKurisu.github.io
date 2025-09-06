@@ -23,10 +23,15 @@
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="Faiss Official Doc 介绍Faiss, Facebook AI Similarity Search, 是 Meta 开源的一个专门用于高效相似性搜索和稠密向量聚类的库. 其核心目标是: 在海量高维度向量中快速找到与查询向量最相似的 Top-K 个向量. 相关概念Word embedding or vectorWord embedding or vector 都是文本数据的数值表示,">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/faiss-flow-chart-example.webp">
+<meta property="og:image" content="http://example.com/img/faiss-example-dataframe.webp">
+<meta property="og:image" content="http://example.com/img/faiss-example-search-result.webp">
+<meta property="og:image" content="http://example.com/img/faiss-merge-example.webp">
 <meta property="article:published_time" content="2025-09-03T02:25:39.000Z">
-<meta property="article:modified_time" content="2025-09-06T04:50:38.643Z">
+<meta property="article:modified_time" content="2025-09-06T05:39:52.178Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/faiss-flow-chart-example.webp">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -235,7 +240,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.1k 字
+          3.4k 字
         
       </span>
     
@@ -246,7 +251,7 @@
         
         
         
-          9 分钟
+          29 分钟
         
       </span>
     
@@ -294,7 +299,31 @@
 <h1 id="相关概念"><a href="#相关概念" class="headerlink" title="相关概念"></a>相关概念</h1><h2 id="Word-embedding-or-vector"><a href="#Word-embedding-or-vector" class="headerlink" title="Word embedding or vector"></a>Word embedding or vector</h2><p>Word embedding or vector 都是文本数据的数值表示, 比如 <code>name</code> 这个字符串可以表示为:</p>
 <figure class="highlight subunit"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs subunit">[<span class="hljs-string">-1</span>.12725616e<span class="hljs-string">-01</span> <span class="hljs-string">-5</span>.19371144e<span class="hljs-string">-02</span> <span class="hljs-string">-6</span>.94938377e<span class="hljs-string">-02</span> 2.93748770e<span class="hljs-string">-02</span><span class="hljs-string">-7</span>.56825879e<span class="hljs-string">-02</span> 8.83060396e<span class="hljs-string">-02</span> <span class="hljs-string">-5</span>.42510450e<span class="hljs-string">-02</span> <span class="hljs-string">-1</span>.52141722e<span class="hljs-string">-02</span>]<br></code></pre></td></tr></table></figure>
 
-<h2 id="Euclidean-distance-L2"><a href="#Euclidean-distance-L2" class="headerlink" title="Euclidean distance (L2)"></a>Euclidean distance (L2)</h2><h2 id="Similarity-search"><a href="#Similarity-search" class="headerlink" title="Similarity search"></a>Similarity search</h2><p>Similarity search 用于找到向量空间中两个欧氏距离最近的点:</p>
+<h2 id="Euclidean-Space"><a href="#Euclidean-Space" class="headerlink" title="Euclidean Space"></a>Euclidean Space</h2><p>Euclidean Space 指符合日常几何直觉的空间, 比如:</p>
+<ul>
+<li>二维平面: 一张纸上的点</li>
+<li>三维空间: 现实世界中的长宽高</li>
+<li>高维平坦空间</li>
+</ul>
+<p>该空间以古希腊数学家 Euclid 的几何学理论为基础构建的, 因此称 <code>Euclidean Space</code>.</p>
+<h2 id="Euclidean-distance-L2"><a href="#Euclidean-distance-L2" class="headerlink" title="Euclidean distance (L2)"></a>Euclidean distance (L2)</h2><p>Euclidean distance 指欧几里得空间中, 两个点之间的 “直线距离”.</p>
+<p>比如二维平面中的欧几里得距离计算:</p>
+<ul>
+<li>如果有点 $A(x_1,y_1)$ 和点 $B(x_2,y_2)$, 那么它们之间的欧几里得距离 $d$ 为:</li>
+</ul>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>d &#x3D; \sqrt{(x_2-x_1)^2 + (y_2-y_1)^2}<br>\end{aligned}<br>}<br>$$<br>(勾股定理)</p>
+<p>三维空间中的欧几里得距离计算:</p>
+<ul>
+<li>如果有点 $A(x_1,y_1,z_1)$ 和点 $B(x_2,y_2,z_2)$, 那么它们之间的欧几里得距离 $d$ 为:</li>
+</ul>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>d &#x3D; \sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2 + (z_2 - z_1)^2}<br>\end{aligned}<br>}<br>$$</p>
+<p>n 维空间中, 如果有两个 n 维向量 (或点):</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>a &#x3D; (a_1, a_2,…, a_n), b &#x3D; (b_1, b_2, …, b_n)<br>\end{aligned}<br>}<br>$$</p>
+<p>其欧氏距离 (欧几里得距离的简写) $d$ 为:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>d(a,b) &#x3D; \sqrt{(b_1 - a_1)^2 + (b_2 - a_2)^2 + … + (b_n - a_n)^2}<br>\end{aligned}<br>}<br>$$</p>
+<p>可以写为更紧凑的形式:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>d(a,b) &#x3D; \sqrt{\sum_{i&#x3D;1}^n (b_i - a_i)^2}<br>\end{aligned}<br>}<br>$$</p>
+<h2 id="Similarity-search"><a href="#Similarity-search" class="headerlink" title="Similarity search"></a>Similarity search</h2><p>Similarity search 用于找到向量空间中两个欧氏距离最近的点:</p>
 <p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>j &#x3D; \underset{i}{argmin} \Vert x - x_i \Vert<br>\end{aligned}<br>}<br>$$</p>
 <p>对于其他距离计算方式, 可能是求:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>j &#x3D; \underset{i}{argmax} \Vert x - x_i \Vert<br>\end{aligned}<br>}<br>$$</p>
 <h1 id="Data-structure"><a href="#Data-structure" class="headerlink" title="Data structure"></a>Data structure</h1><p>Faiss 中的数据结构称 <code>index</code> (一个对象), 包含:</p>
@@ -319,6 +348,37 @@
 <li><code>LSH</code>: 局部敏感哈希, 内存小, 适用于内存受限环境</li>
 </ul>
 <h1 id="基本使用"><a href="#基本使用" class="headerlink" title="基本使用"></a>基本使用</h1><p><a target="_blank" rel="noopener" href="https://medium.com/loopio-tech/how-to-use-faiss-to-build-your-first-similarity-search-bf0f708aa772">Medium Faiss usage</a></p>
+<p>这里安装一些辅助用的 Python 库:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">pip3 install pandas sentence-transformers<br></code></pre></td></tr></table></figure>
+
+<p>整体过程图:</p>
+<p><img src="/../img/faiss-flow-chart-example.webp" srcset="/img/loading.gif" lazyload></p>
+<h2 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h2><h3 id="先创建一个包含文本内容以及-categories-的-DataFrame"><a href="#先创建一个包含文本内容以及-categories-的-DataFrame" class="headerlink" title="先创建一个包含文本内容以及 categories 的 DataFrame"></a>先创建一个包含文本内容以及 categories 的 DataFrame</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> pandas <span class="hljs-keyword">as</span> pd<br>data = [<br>    [<span class="hljs-string">&#x27;Where are your headquarters located?&#x27;</span>, <span class="hljs-string">&#x27;location&#x27;</span>],<br>    [<span class="hljs-string">&#x27;Throw my cellphone in the water&#x27;</span>, <span class="hljs-string">&#x27;random&#x27;</span>],<br>    [<span class="hljs-string">&#x27;Network Access Control?&#x27;</span>, <span class="hljs-string">&#x27;networking&#x27;</span>],<br>    [<span class="hljs-string">&#x27;Address&#x27;</span>, <span class="hljs-string">&#x27;location&#x27;</span>]<br>]<br><br>df = pd.DataFrame(data, columns = [<span class="hljs-string">&#x27;text&#x27;</span>, <span class="hljs-string">&#x27;category&#x27;</span>])<br></code></pre></td></tr></table></figure>
+
+<p>该 DataFrame 长这样:</p>
+<p><img src="/../img/faiss-example-dataframe.webp" srcset="/img/loading.gif" lazyload></p>
+<h3 id="用-sentence-transformers-架构将文本转为-vectors"><a href="#用-sentence-transformers-架构将文本转为-vectors" class="headerlink" title="用 sentence transformers 架构将文本转为 vectors"></a>用 sentence transformers 架构将文本转为 vectors</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> sentence_transformers <span class="hljs-keyword">import</span> SentenceTransformer<br><br>text = df[<span class="hljs-string">&#x27;text&#x27;</span>]<br>encoder = SentenceTransformer(<span class="hljs-string">&quot;paraphrase-mpnet-base-v2&quot;</span>)<br>vectors = encoder.encode(text)<br></code></pre></td></tr></table></figure>
+
+<h3 id="用-vectors-构建-faiss-index"><a href="#用-vectors-构建-faiss-index" class="headerlink" title="用 vectors 构建 faiss index"></a>用 vectors 构建 faiss index</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> faiss<br><br>vector_dimension = vectors.shape[<span class="hljs-number">1</span>]<br>index = faiss.IndexFlatL2(vector_dimension)<br>faiss.normalize_L2(vectors)<br>index.add(vectors)<br></code></pre></td></tr></table></figure>
+
+<h3 id="创建-search-vector"><a href="#创建-search-vector" class="headerlink" title="创建 search vector"></a>创建 search vector</h3><p>比如查找与 “where is your office” 最接近的句子, 同样先 <code>encode</code> 为 vector 然后经 <code>normalize_L2</code> 处理:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><br>search_text = <span class="hljs-string">&#x27;where is your office?&#x27;</span><br>search_vector = encoder.encode(search_text)<br>_vector = np.array([search_vector])<br>faiss.normalize_L2(_vector)<br></code></pre></td></tr></table></figure>
+
+<h3 id="Search"><a href="#Search" class="headerlink" title="Search"></a>Search</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python">k = index.ntotal<br>distances, ann = index.search(_vector, k=k)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>这里查找所有 nearest neighbors</li>
+</ul>
+<h3 id="Sort-search-results"><a href="#Sort-search-results" class="headerlink" title="Sort search results"></a>Sort search results</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">results = pd.DataFrame(&#123;<span class="hljs-string">&#x27;distances&#x27;</span>: distances[<span class="hljs-number">0</span>], <span class="hljs-string">&#x27;ann&#x27;</span>: ann[<span class="hljs-number">0</span>]&#125;)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>ann</code> 指 Approximate nearest neighbor</li>
+</ul>
+<p><img src="/../img/faiss-example-search-result.webp" srcset="/img/loading.gif" lazyload></p>
+<h3 id="获取-search-text-的类别"><a href="#获取-search-text-的类别" class="headerlink" title="获取 search text 的类别"></a>获取 search text 的类别</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">merge = pd.merge(results, df, left-on=<span class="hljs-string">&#x27;ann&#x27;</span>, right_index=<span class="hljs-literal">True</span>)<br></code></pre></td></tr></table></figure>
+
+<p><img src="/../img/faiss-merge-example.webp" srcset="/img/loading.gif" lazyload></p>
+<p>可以看出 “where is your office” 与 “where are your headquarters located” 距离最近.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python">labels = df[<span class="hljs-string">&#x27;category&#x27;</span>]<br>category = labels[ann[<span class="hljs-number">0</span>][<span class="hljs-number">0</span>]]<br></code></pre></td></tr></table></figure>
+
 
                 
               </div>
