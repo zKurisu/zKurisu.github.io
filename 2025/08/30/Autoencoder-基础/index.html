@@ -25,7 +25,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/rq-vae-structure-example.png">
 <meta property="article:published_time" content="2025-08-30T12:05:54.000Z">
-<meta property="article:modified_time" content="2025-09-07T13:08:19.624Z">
+<meta property="article:modified_time" content="2025-09-07T13:47:28.068Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/rq-vae-structure-example.png">
@@ -237,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          11k 字
+          13k 字
         
       </span>
     
@@ -248,7 +248,7 @@
         
         
         
-          96 分钟
+          105 分钟
         
       </span>
     
@@ -569,6 +569,34 @@
 <h1 id="RQ-VAE"><a href="#RQ-VAE" class="headerlink" title="RQ-VAE"></a>RQ-VAE</h1><p>RQ-VAE, Residual Quantized VAE (残差量化 VAE), 是 VQ-VAE 的增强版, 通过残差连接, 分层量化等方式处理输入信息.</p>
 <p>核心思想就是不利用一次量化捕捉所有信息, 而是通过多次量化残差来逐步细化表示.</p>
 <p><img src="/../img/rq-vae-structure-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>Residual Quantization 的计算:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>RQ(z;C,D) &#x3D; (k_1, …, k_D) \in [K]^D \newline~ \newline<br>k_d &#x3D; Q(r_{d-1} ; C) \newline~ \newline<br>r_d &#x3D; r_{d-1} - e(k_d)<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>$RQ$ 表示 residual quantization 计算</li>
+<li>$z$ 是输入 vector</li>
+<li>$C$ 是预定义的 codebook</li>
+<li>$D$ 是 quantization depth</li>
+<li>$k_i$ 是某一层 quantization 的输出索引</li>
+<li>$K$ 是 codebook size</li>
+<li>$Q$ 指量化操作, 计算最短距离 embedding 的返回索引</li>
+<li>$k_d$ 是 $z$ 在第 $d$ 层计算出的索引</li>
+<li>$r_{0} &#x3D; z$ 是初始 residual, 等于输入 vector</li>
+<li>计算出索引后计算下一层的输入 (新的残差), 用当前 residual 减去索引对应的 embedding</li>
+</ul>
+<p>RQ 的思路是递归地量化残差, 先用码本量化原始信号得到第一个残差, 再用同一个 (或另一个) 码本量化这个残差得到下一个残差, 以此类推, 直到残差足够小或者达到预设的层数 <code>D</code>.</p>
+<p>量化操作永远是 “对当前剩余的残差” 做近似, 要得到第 <code>d</code> 层的码 $k_d$ , 我们得先看 “还没被量化的那部分残差” 是什么. 在量化第 $d$ 层之前, 我们已经把前 <code>d−1</code> 层的残差都减掉了, 所以 “当前待量化的残差” 就是 $r_{d−1}$.</p>
+<p>计算索引和 embedding:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>M_{hw} &#x3D; RQ(E(X)_{hw} ; C,D) \newline~ \newline<br>\hat{Z}_{hw}^{(d)} &#x3D; \sum_{d’&#x3D;1}^d e (M_{hw d’})<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>$C$ 指当前 codebook</li>
+<li>$D$ 指 residual quantizer 的深度</li>
+<li>$X$ 是输入二维图像, $hw$ 指二维图像内的一个位置, </li>
+<li>$E(X)_{hw}$ 指而二维图像某个位置对应的向量</li>
+<li>$RQ$ 指 residual quantization</li>
+<li>$M_{hw}$ 指 $hw$ 位置处的 codebook index</li>
+<li>$d’$ 表示当前 residual quantization 的层数</li>
+<li>$e(…)$ 表示检索出对应索引的 embedding</li>
+<li>$\hat{Z}^{(d)}_{hw}$ 表示 $hw$ 处 $d$ 层 embedding 的最终 embedding 输出</li>
+</ul>
 
                 
               </div>
