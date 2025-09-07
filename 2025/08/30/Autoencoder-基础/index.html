@@ -24,7 +24,7 @@
 <meta property="og:description" content="介绍AE, Autoencoder, 是一种特殊的神经网络, 用于学习数据的表示. 其思想是通过无监督学习来压缩和重建数据. 用一组输入数据来训练 Autoencoder, 输出要尽可能与输入相同, 此时才说明其掌握了重构的能力. Autoencoder 基本结构自编码器有两个主要部分: 编码器, 解码器, 结构如下: 1输入数据 → [编码器] → 潜在表示（编码） → [解码器] → 重建数据">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-08-30T12:05:54.000Z">
-<meta property="article:modified_time" content="2025-09-07T08:12:13.521Z">
+<meta property="article:modified_time" content="2025-09-07T09:21:27.112Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          8.6k 字
+          11k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          73 分钟
+          96 分钟
         
       </span>
     
@@ -539,6 +539,32 @@
 <li><code>num_embeddings</code> 指定 codebook 中可选的离散表示数量</li>
 <li><code>embedding_dim</code> 指定每个离散表示的维度</li>
 </ul>
+<p>处理输入, 假设输入是图片, 维度为 <code>[batch_size, embedding_dim, h, w]</code>, 将其 flatten 为: <code>[batch_size * h * w, embedding_dim]</code>:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">self, z</span>):<br>  b, c, h, w = z.shape<br>  z_channel_last = z.permute(<span class="hljs-number">0</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">1</span>)<br>  z_flattened = z_channel_last.reshape(b*h*w, self.embedding_dim)<br></code></pre></td></tr></table></figure>
+
+<h3 id="Distance-computation"><a href="#Distance-computation" class="headerlink" title="Distance computation"></a>Distance computation</h3><p>Vector quantization 的核心是计算 encoded vectors 与 codebook embeddings 之间的距离. 这利用 Mean Squared Error (MSE) loss, 假设输入的两个向量为 $z$ (original vector), $z_q$ (the quantized vector):</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>MSE &#x3D; \frac{1}{N} \sum_{i&#x3D;1}^N (z_i - z_{qi})^2<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li><code>N</code> 是 vector 的维度 (元素数量)</li>
+<li>$z_i$ 和 $z_{qi}$ 是 vecotr 中的第 $i$ 个元素</li>
+</ul>
+<p>该公式可以改写为:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>(z_i - z_{qi})^2 &#x3D; z_i^2 - 2z_iz_{qi} + z_{qi}^2 \newline~ \newline<br>MSE &#x3D; \frac{1}{N} \sum_{i&#x3D;1}^N (z_i^2 - 2z_i z_{qi} + z_{qi}^2) \newline~ \newline<br>MSE &#x3D; \frac{1}{N} (\sum_{i&#x3D;1}^N - 2 \sum_{i&#x3D;1}^N z_i z_{qi} + \sum_{i&#x3D;1}^N z_{qi}^2) \newline~ \newline<br>MSE &#x3D; \frac{1}{N} (\Vert z \Vert^2 + \Vert z_q \Vert^2 - 2z \cdot z_q)<br>\end{aligned}<br>}<br>$$</p>
+<p>计算代码:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># Calculate distances between z and the codebook embeddings |a-b|²</span><br>distances = (<br>    torch.<span class="hljs-built_in">sum</span>(z_flattened ** <span class="hljs-number">2</span>, dim=-<span class="hljs-number">1</span>, keepdim=<span class="hljs-literal">True</span>)                 <span class="hljs-comment"># a²</span><br>    + torch.<span class="hljs-built_in">sum</span>(self.embedding.weight.t() ** <span class="hljs-number">2</span>, dim=<span class="hljs-number">0</span>, keepdim=<span class="hljs-literal">True</span>)  <span class="hljs-comment"># b²</span><br>    - <span class="hljs-number">2</span> * torch.matmul(z_flattened, self.embedding.weight.t())        <span class="hljs-comment"># -2ab</span><br>)<br></code></pre></td></tr></table></figure>
+
+<h3 id="选择最接近的-codebook-embedding"><a href="#选择最接近的-codebook-embedding" class="headerlink" title="选择最接近的 codebook embedding"></a>选择最接近的 codebook embedding</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># Get the index with the smallest distance</span><br>encoding_indices = torch.argmin(distances, dim=-<span class="hljs-number">1</span>)<br></code></pre></td></tr></table></figure>
+
+<h3 id="Quantization-and-reshaping"><a href="#Quantization-and-reshaping" class="headerlink" title="Quantization and reshaping"></a>Quantization and reshaping</h3><p>将量化后的值 reshape 回输入的维度:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># Get the quantized vector</span><br>z_q = self.embedding(encoding_indices)<br>z_q = z_q.reshape(b, h, w, self.embedding_dim)<br>z_q = z_q.permute(<span class="hljs-number">0</span>, <span class="hljs-number">3</span>, <span class="hljs-number">1</span>, <span class="hljs-number">2</span>)<br></code></pre></td></tr></table></figure>
+
+<h3 id="计算-loss"><a href="#计算-loss" class="headerlink" title="计算 loss"></a>计算 loss</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># Calculate the commitment loss</span><br>loss = F.mse_loss(z_q, z.detach()) + commitment_cost * F.mse_loss(z_q.detach(), z)<br><br><span class="hljs-comment"># Straight-through estimator trick for gradient backpropagation</span><br>z_q = z + (z_q - z).detach()<br><br><span class="hljs-keyword">return</span> z_q, loss, encoding_indices<br></code></pre></td></tr></table></figure>
+
+<h3 id="完整-VQEmbedding-示例"><a href="#完整-VQEmbedding-示例" class="headerlink" title="完整 VQEmbedding 示例"></a>完整 VQEmbedding 示例</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">VQEmbedding</span>(nn.Module):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, num_embeddings, embedding_dim</span>):<br>        <span class="hljs-built_in">super</span>().__init__()<br>        self.embedding_dim = embedding_dim<br>        self.num_embeddings = num_embeddings<br><br>        self.embedding = nn.Embedding(num_embeddings, embedding_dim)<br>        self.embedding.weight.data.uniform_(-<span class="hljs-number">1</span>/self.num_embeddings, <span class="hljs-number">1</span>/self.num_embeddings)<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">self, z</span>):<br>        b, c, h, w = z.shape<br>        z_channel_last = z.permute(<span class="hljs-number">0</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">1</span>)<br>        z_flattened = z_channel_last.reshape(b*h*w, self.embedding_dim)<br><br>        <span class="hljs-comment"># Calculate distances between z and the codebook embeddings |a-b|²</span><br>        distances = (<br>            torch.<span class="hljs-built_in">sum</span>(z_flattened ** <span class="hljs-number">2</span>, dim=-<span class="hljs-number">1</span>, keepdim=<span class="hljs-literal">True</span>)                 <span class="hljs-comment"># a²</span><br>            + torch.<span class="hljs-built_in">sum</span>(self.embedding.weight.t() ** <span class="hljs-number">2</span>, dim=<span class="hljs-number">0</span>, keepdim=<span class="hljs-literal">True</span>)  <span class="hljs-comment"># b²</span><br>            - <span class="hljs-number">2</span> * torch.matmul(z_flattened, self.embedding.weight.t())        <span class="hljs-comment"># -2ab</span><br>        )<br><br>        <span class="hljs-comment"># Get the index with the smallest distance</span><br>        encoding_indices = torch.argmin(distances, dim=-<span class="hljs-number">1</span>)<br><br>        <span class="hljs-comment"># Get the quantized vector</span><br>        z_q = self.embedding(encoding_indices)<br>        z_q = z_q.reshape(b, h, w, self.embedding_dim)<br>        z_q = z_q.permute(<span class="hljs-number">0</span>, <span class="hljs-number">3</span>, <span class="hljs-number">1</span>, <span class="hljs-number">2</span>)<br><br>        <span class="hljs-comment"># Calculate the commitment loss</span><br>        loss = F.mse_loss(z_q, z.detach()) + commitment_cost * F.mse_loss(z_q.detach(), z)<br><br>        <span class="hljs-comment"># Straight-through estimator trick for gradient backpropagation</span><br>        z_q = z + (z_q - z).detach()<br><br>        <span class="hljs-keyword">return</span> z_q, loss, encoding_indices<br></code></pre></td></tr></table></figure>
+
+
+
+
 <h1 id="RQ-VAE"><a href="#RQ-VAE" class="headerlink" title="RQ-VAE"></a>RQ-VAE</h1><p>RQ-VAE, Residual Quantized VAE (残差量化 VAE), 是 VQ-VAE 的增强版, 使用分层残差量化来替代单层量化, 从而更精细表示数据的潜在空间.</p>
 <p>核心思想就是不利用一次量化捕捉所有信息, 而是通过多次量化残差来逐步细化表示.</p>
 
