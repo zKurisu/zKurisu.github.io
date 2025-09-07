@@ -16,13 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta property="og:type" content="article">
+    <meta name="description" content="介绍在看推荐系统模型源码时, 发现既有 user_embedding, item_embedding, 也有 sparse_embedding, 比较好奇为什么不直接把 sparse_embedding 融合到 user_embedding 和 item_embedding 中, 而要单独列出. 综合表征综合表征, Composite Embedding, 这个 embedding matrix">
+<meta property="og:type" content="article">
 <meta property="og:title" content="综合表征和单独-embedding">
 <meta property="og:url" content="http://example.com/2025/09/06/%E7%BB%BC%E5%90%88%E8%A1%A8%E5%BE%81%E5%92%8C%E5%8D%95%E7%8B%AC-embedding/index.html">
 <meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="介绍在看推荐系统模型源码时, 发现既有 user_embedding, item_embedding, 也有 sparse_embedding, 比较好奇为什么不直接把 sparse_embedding 融合到 user_embedding 和 item_embedding 中, 而要单独列出. 综合表征综合表征, Composite Embedding, 这个 embedding matrix">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-09-06T15:17:39.000Z">
-<meta property="article:modified_time" content="2025-09-06T15:17:42.088Z">
+<meta property="article:modified_time" content="2025-09-07T02:12:45.675Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -233,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          0 字
+          995 字
         
       </span>
     
@@ -244,7 +246,7 @@
         
         
         
-          1 分钟
+          9 分钟
         
       </span>
     
@@ -287,7 +289,40 @@
             
               <div class="markdown-body">
                 
-                
+                <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>在看推荐系统模型源码时, 发现既有 <code>user_embedding</code>, <code>item_embedding</code>, 也有 <code>sparse_embedding</code>, 比较好奇为什么不直接把 <code>sparse_embedding</code> 融合到 <code>user_embedding</code> 和 <code>item_embedding</code> 中, 而要单独列出.</p>
+<h1 id="综合表征"><a href="#综合表征" class="headerlink" title="综合表征"></a>综合表征</h1><p>综合表征, Composite Embedding, 这个 embedding matrix 通常可以通过 <code>user_id</code>, <code>item_id</code> 来检索对应的 vector, 其为 <code>user/item</code> 的全局, 综合的向量表示, 目标是反应出用户兴趣或物品特征.</p>
+<p>综合表征一般用于:</p>
+<ul>
+<li>计算 <code>user/item</code> 的相似度</li>
+<li>用于召回, 排序等</li>
+</ul>
+<p>综合表征通常用下面几种数据训练得到:</p>
+<ul>
+<li>强行为信号, 如用户历史点击序列, 购买序列, 观看序列</li>
+<li>聚合统计特征, 用户 7 天点击次数, 物品总购买量, 平均评分等</li>
+</ul>
+<h1 id="单独的-embedding"><a href="#单独的-embedding" class="headerlink" title="单独的 embedding"></a>单独的 embedding</h1><p>单独的 embedding 通常指某些类别型, 稀疏的, 辅助性的特征, 比如城市, 品牌, 性别, 通常有下面特点:</p>
+<ul>
+<li>取值空间大, 稀疏, 且动态变化</li>
+<li>有独立的语义和业务意义</li>
+</ul>
+<p>单独的 embedding 通常用这些特征训练:</p>
+<ul>
+<li>稀疏类别特征, 如 city, gender, category, brand, device. 取值空间大, 稀疏, 不连续</li>
+<li>动态可选特征, 比如某些用户没有填写姓名&#x2F;城市, 某些物品没有品牌&#x2F;标签</li>
+<li>业务标签, 比如 tag, topic, level, 语义独立</li>
+</ul>
+<h1 id="为什么不融合为一个-embedding"><a href="#为什么不融合为一个-embedding" class="headerlink" title="为什么不融合为一个 embedding"></a>为什么不融合为一个 embedding</h1><p><code>user_embedding</code>, <code>item_embedding</code> 代表综合表征 (潜在特征), 本质上是一个黑盒向量, 是融合了很多数据训练出的, 因此具有不可解释性, 比如我们不知道哪一部分向量受性别影响, 哪一部分受城市影响.</p>
+<p>而单独列出的 embedding, 通常称 <code>sparse_embedding</code>, 是具有单独语义的辅助信息, 比如:</p>
+<ul>
+<li>用户: 性别 (男&#x2F;女), 年龄分段, 城市, 注册设备, VIP等级</li>
+<li>物品: 类目, 品牌, 价格区间, 标签 (热销&#x2F;新品), 颜色</li>
+</ul>
+<p>这些特征可解释性强.</p>
+<p>若把所有特征都融合到一个 <code>ebmedding</code> 中, 模型很难学到特征之间的相互作用, 也难以针对某些特征做定向优化 (比如针对城市进行推荐), 模型的可解释性和灵活性都会下降.</p>
+<p>对于动态的特征, 由于经常变化, 也不适合与大规模数据训练出的综合表征放一起, 不然每天都得重新训练.</p>
+<p>训练时, 可以通过拼接融合多个 embedding.</p>
+
                 
               </div>
             
