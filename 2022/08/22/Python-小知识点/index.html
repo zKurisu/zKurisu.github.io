@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="pathlib.Path 的路径拼接符pathlib.Path 类重载了 &#x2F; 运算符, 用于路径拼接操作: 12345from pathlib import Pathdata_dir &#x3D; Path(&quot;&#x2F;home&#x2F;user&#x2F;data&quot;)  # 创建Path对象file_path &#x3D; data_dir &#x2F; &quot;indexer.pkl&quot;  # 路径拼接print(f">
+    <meta name="description" content="with … as 语法Python 中的 with ... as: 是一个上下文管理的语法糖, 用于简化资源管理. 语法是: 12with expression [as variable]:    # 代码块，在这里使用资源  在 with 块包裹的内容会确保使用后正确释放或清理, 比如自动调用 .close(), .release(), .shutdown() 等方法. 对于要使用 with">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Python 小知识点">
 <meta property="og:url" content="http://example.com/2022/08/22/Python-%E5%B0%8F%E7%9F%A5%E8%AF%86%E7%82%B9/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="pathlib.Path 的路径拼接符pathlib.Path 类重载了 &#x2F; 运算符, 用于路径拼接操作: 12345from pathlib import Pathdata_dir &#x3D; Path(&quot;&#x2F;home&#x2F;user&#x2F;data&quot;)  # 创建Path对象file_path &#x3D; data_dir &#x2F; &quot;indexer.pkl&quot;  # 路径拼接print(f">
+<meta property="og:description" content="with … as 语法Python 中的 with ... as: 是一个上下文管理的语法糖, 用于简化资源管理. 语法是: 12with expression [as variable]:    # 代码块，在这里使用资源  在 with 块包裹的内容会确保使用后正确释放或清理, 比如自动调用 .close(), .release(), .shutdown() 等方法. 对于要使用 with">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2022-08-22T02:31:52.000Z">
-<meta property="article:modified_time" content="2025-09-03T01:06:59.976Z">
+<meta property="article:modified_time" content="2025-09-09T01:45:47.874Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          15k 字
+          16k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          128 分钟
+          135 分钟
         
       </span>
     
@@ -289,7 +289,20 @@
             
               <div class="markdown-body">
                 
-                <h1 id="pathlib-Path-的路径拼接符"><a href="#pathlib-Path-的路径拼接符" class="headerlink" title="pathlib.Path 的路径拼接符"></a>pathlib.Path 的路径拼接符</h1><p><code>pathlib.Path</code> 类重载了 <code>/</code> 运算符, 用于路径拼接操作:</p>
+                <h1 id="with-…-as-语法"><a href="#with-…-as-语法" class="headerlink" title="with … as 语法"></a>with … as 语法</h1><p>Python 中的 <code>with ... as:</code> 是一个上下文管理的语法糖, 用于简化资源管理. 语法是:</p>
+<figure class="highlight py"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs py"><span class="hljs-keyword">with</span> expression [<span class="hljs-keyword">as</span> variable]:<br>    <span class="hljs-comment"># 代码块，在这里使用资源</span><br></code></pre></td></tr></table></figure>
+
+<p>在 <code>with</code> 块包裹的内容会确保使用后正确释放或清理, 比如自动调用 <code>.close()</code>, <code>.release()</code>, <code>.shutdown()</code> 等方法.</p>
+<p>对于要使用 <code>with ... as</code> 块的对象, 需要实现:</p>
+<ul>
+<li><code>__enter__()</code> 方法, 在进入 <code>with</code> 代码块之前调用, 用于初始化资源, 返回的对象被 <code>as</code> 接收</li>
+<li><code>__exit__(exc_type, exc_val, exc_tb)</code> 方法, 在退出 with 代码块时调用, 用于清理资源</li>
+</ul>
+<p>比如:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">MyResource</span>:<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__enter__</span>(<span class="hljs-params">self</span>):<br>        <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;🔹 进入 with 块，正在获取资源...&quot;</span>)<br>        <span class="hljs-keyword">return</span> self  <span class="hljs-comment"># 这个返回值会被 as 接收，比如 as r</span><br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__exit__</span>(<span class="hljs-params">self, exc_type, exc_val, exc_tb</span>):<br>        <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;🔸 退出 with 块，正在释放资源...&quot;</span>)<br>        <span class="hljs-keyword">if</span> exc_type <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>:<br>            <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;⚠️ 发生了异常: <span class="hljs-subst">&#123;exc_val&#125;</span>&quot;</span>)<br>        <span class="hljs-comment"># 返回 False 表示异常继续往外抛，True 表示异常已被处理（一般很少用 True）</span><br>        <span class="hljs-keyword">return</span> <span class="hljs-literal">False</span><br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">do_something</span>(<span class="hljs-params">self</span>):<br>        <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;✅ 正在使用资源...&quot;</span>)<br><br><span class="hljs-comment"># 使用 with 语句</span><br><span class="hljs-keyword">with</span> MyResource() <span class="hljs-keyword">as</span> resource:<br>    resource.do_something()<br>    <span class="hljs-comment"># 如果你取消下面这行的注释，会触发异常，但 __exit__ 仍会执行</span><br>    <span class="hljs-comment"># raise ValueError(&quot;Oops, something went wrong!&quot;)</span><br></code></pre></td></tr></table></figure>
+
+
+<h1 id="pathlib-Path-的路径拼接符"><a href="#pathlib-Path-的路径拼接符" class="headerlink" title="pathlib.Path 的路径拼接符"></a>pathlib.Path 的路径拼接符</h1><p><code>pathlib.Path</code> 类重载了 <code>/</code> 运算符, 用于路径拼接操作:</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> pathlib <span class="hljs-keyword">import</span> Path<br><br>data_dir = Path(<span class="hljs-string">&quot;/home/user/data&quot;</span>)  <span class="hljs-comment"># 创建Path对象</span><br>file_path = data_dir / <span class="hljs-string">&quot;indexer.pkl&quot;</span>  <span class="hljs-comment"># 路径拼接</span><br><span class="hljs-built_in">print</span>(file_path)  <span class="hljs-comment"># 输出: /home/user/data/indexer.pkl</span><br></code></pre></td></tr></table></figure>
 
 
