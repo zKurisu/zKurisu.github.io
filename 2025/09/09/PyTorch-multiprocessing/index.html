@@ -24,7 +24,7 @@
 <meta property="og:description" content="介绍Python 标准库中的 multiprocessing 模块与 PyTorch 的 Tensor&#x2F;CUDA 张量 不兼容, 比如:  Tensor 不可跨进程直接传递 CUDA 上下文问题 共享内存问题  因此使用 torch.multiprocessing, 来兼容. 基本使用导入: 12import torch.multiprocessing as mpmp.set_start_meth">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-09-09T04:55:50.000Z">
-<meta property="article:modified_time" content="2025-09-09T05:02:51.841Z">
+<meta property="article:modified_time" content="2025-09-09T05:38:16.977Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.7k 字
+          2.1k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          15 分钟
+          18 分钟
         
       </span>
     
@@ -313,7 +313,17 @@
 <h2 id="启用共享内存"><a href="#启用共享内存" class="headerlink" title="启用共享内存"></a>启用共享内存</h2><p>需要让 <code>tensor</code> 调用 <code>share_memory_()</code> 方法:</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> torch<br><span class="hljs-keyword">import</span> torch.multiprocessing <span class="hljs-keyword">as</span> mp<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">worker</span>(<span class="hljs-params">shared_tensor</span>):<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;子进程读取共享 tensor: <span class="hljs-subst">&#123;shared_tensor.<span class="hljs-built_in">sum</span>().item()&#125;</span>&quot;</span>)<br>    shared_tensor.add_(<span class="hljs-number">1</span>)  <span class="hljs-comment"># 修改共享内存中的 tensor</span><br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;子进程修改后: <span class="hljs-subst">&#123;shared_tensor.<span class="hljs-built_in">sum</span>().item()&#125;</span>&quot;</span>)<br><br><span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">&#x27;__main__&#x27;</span>:<br>    mp.set_start_method(<span class="hljs-string">&#x27;spawn&#x27;</span>)<br><br>    <span class="hljs-comment"># 创建一个 tensor，并设置共享内存</span><br>    t = torch.tensor([<span class="hljs-number">1.0</span>, <span class="hljs-number">2.0</span>, <span class="hljs-number">3.0</span>], dtype=torch.float32)<br>    t.share_memory_()  <span class="hljs-comment"># ⬅️ 关键：让 tensor 使用共享内存</span><br><br>    p = mp.Process(target=worker, args=(t,))<br>    p.start()<br>    p.join()<br><br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;主进程看到修改后的 tensor: <span class="hljs-subst">&#123;t.<span class="hljs-built_in">sum</span>().item()&#125;</span>&quot;</span>)<br></code></pre></td></tr></table></figure>
 
+<h1 id="错误解决"><a href="#错误解决" class="headerlink" title="错误解决"></a>错误解决</h1><h2 id="Too-many-open-files"><a href="#Too-many-open-files" class="headerlink" title="Too many open files"></a>Too many open files</h2><p>若遇到报错:</p>
+<figure class="highlight inform7"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs inform7">OSError: <span class="hljs-comment">[Errno 24]</span> Too many <span class="hljs-keyword">open</span> files<br></code></pre></td></tr></table></figure>
 
+<p>解决办法是:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> torch.multiprocessing <span class="hljs-keyword">as</span> mp<br>mp.set_sharing_strategy(<span class="hljs-string">&#x27;file_system&#x27;</span>)<br></code></pre></td></tr></table></figure>
+
+<h2 id="Cannot-re-initialize-CUDA"><a href="#Cannot-re-initialize-CUDA" class="headerlink" title="Cannot re-initialize CUDA"></a>Cannot re-initialize CUDA</h2><p>若遇到报错:</p>
+<figure class="highlight oxygene"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs oxygene">RuntimeError: Cannot re-initialize CUDA <span class="hljs-keyword">in</span> forked subprocess. <span class="hljs-keyword">To</span> use CUDA <span class="hljs-keyword">with</span> multiprocessing, you must use the <span class="hljs-string">&#x27;spawn&#x27;</span> start <span class="hljs-keyword">method</span><br></code></pre></td></tr></table></figure>
+
+<p>解决办法是设置 <code>start_method</code> 为 <code>spawn</code>:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> torch.multiprocessing <span class="hljs-keyword">as</span> mp<br>mp.set_start_method(<span class="hljs-string">&#x27;spawn&#x27;</span>)<br></code></pre></td></tr></table></figure>
 
                 
               </div>
