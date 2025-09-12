@@ -24,7 +24,7 @@
 <meta property="og:description" content="介绍Unix&#x2F;Linux 系统编程中 execve() 封装出了多个变体: execl, execlp, execle, execv, execvp, execvpe, 这些函数称 exec 函数族. 这些函数的本质都是用一个新的程序替换当前正在运行的进程, 原进程的代码, 数据, 堆栈都会被新进程取代. 定义这些变体是为了便利不同参数传递方式和环境变量, 路径搜索等. 这些函数名是多个">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-09-12T03:25:28.000Z">
-<meta property="article:modified_time" content="2025-09-12T03:37:41.835Z">
+<meta property="article:modified_time" content="2025-09-12T15:14:48.276Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          377 字
+          1k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          4 分钟
+          9 分钟
         
       </span>
     
@@ -298,6 +298,25 @@
 <li><code>v</code>, “vector” 表示参数以数组 <code>argv[]</code> 传入, 用 <code>char *argv[]</code> 数组</li>
 <li><code>p</code>, “PATH”, 表示会自动在系统的 <code>PATH</code> 环境变量中查找可执行文件</li>
 <li><code>e</code>, “environment”, 允许自定义传递环境变量, 可以传入 <code>char *envp[]</code> 环境变量数组</li>
+</ul>
+<p>主要分两大类:</p>
+<ul>
+<li>含 <code>l</code>, 参数以分开的列表传递给函数, 如 <code>execl</code>, <code>execlp</code>, <code>execle</code></li>
+<li>含 <code>v</code>, 函数以数组传递给函数, 如 <code>execv</code>, <code>execvp</code>, <code>execve</code>, <code>execvpe</code></li>
+</ul>
+<h1 id="l-类-exec-函数原型"><a href="#l-类-exec-函数原型" class="headerlink" title="l 类 exec 函数原型"></a><code>l</code> 类 exec 函数原型</h1><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">execl</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *path, <span class="hljs-type">const</span> <span class="hljs-type">char</span> *arg, ...</span><br><span class="hljs-params">                <span class="hljs-comment">/*, (char *) NULL */</span>)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">execlp</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *file, <span class="hljs-type">const</span> <span class="hljs-type">char</span> *arg, ...</span><br><span class="hljs-params">                <span class="hljs-comment">/*, (char *) NULL */</span>)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">execle</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *path, <span class="hljs-type">const</span> <span class="hljs-type">char</span> *arg, ...</span><br><span class="hljs-params">                <span class="hljs-comment">/*, (char *) NULL, char *const envp[] */</span>)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>需要注意最后一个参数必须是 <code>NULL</code>, 表示参数列表结束</li>
+</ul>
+<p>这类函数的第一个参数和第二个参数是一样的, 比如:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">execlp(<span class="hljs-string">&quot;ls&quot;</span>, <span class="hljs-string">&quot;ls&quot;</span>, <span class="hljs-string">&quot;-l&quot;</span>, <span class="hljs-literal">NULL</span>);<br></code></pre></td></tr></table></figure>
+<ul>
+<li>第一个 <code>ls</code> 是要执行的程序名</li>
+<li>第二个 <code>ls</code> 是传给程序的 <code>argv[0]</code> , 通常也是程序名, 当然也可以设为其他的, 但这是约定俗称的, 比如 <code>C</code> 的 <code>main</code> 程序的 <code>argv[0]</code> 是默认传入当前文件名</li>
+</ul>
+<h1 id="v-类-exec-函数原型"><a href="#v-类-exec-函数原型" class="headerlink" title="v 类 exec 函数原型"></a><code>v</code> 类 exec 函数原型</h1><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">execv</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *path, <span class="hljs-type">char</span> *<span class="hljs-type">const</span> argv[])</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">execvp</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *file, <span class="hljs-type">char</span> *<span class="hljs-type">const</span> argv[])</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">execvpe</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *file, <span class="hljs-type">char</span> *<span class="hljs-type">const</span> argv[], <span class="hljs-type">char</span> *<span class="hljs-type">const</span> envp[])</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>注意数组的最后一个元素需要是 <code>NULL</code></li>
 </ul>
 
                 
