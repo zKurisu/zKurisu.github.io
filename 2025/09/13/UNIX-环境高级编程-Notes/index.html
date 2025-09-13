@@ -24,7 +24,7 @@
 <meta property="og:description" content="线程和线程 ID一个进程内的所有线程共享同一地址空间, 文件描述符, 栈以及与进程相关的属性. 因为它们能访问同一存储区, 所以各线程在访问共享数据时需要采取同步措施以避免不一致性. 与进程相同, 线程也用 ID 标识. 但其只在所属的进程中起作用. 线程是在进程模型建立很久之后引入的, 使用另一套控制函数. 出错处理UNIX 系统函数出错时, 通常会返回一个负值, 且将整型变量 errno 设置">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-09-13T13:06:04.000Z">
-<meta property="article:modified_time" content="2025-09-13T13:33:49.128Z">
+<meta property="article:modified_time" content="2025-09-13T14:35:02.732Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          876 字
+          2k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          8 分钟
+          18 分钟
         
       </span>
     
@@ -319,7 +319,56 @@
 <p>输出:</p>
 <figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs livecodeserver">EACCES: Permission denied<br>./<span class="hljs-keyword">stderr</span>: No such <span class="hljs-built_in">file</span> <span class="hljs-keyword">or</span> <span class="hljs-built_in">directory</span><br></code></pre></td></tr></table></figure>
 
+<h1 id="用户标识"><a href="#用户标识" class="headerlink" title="用户标识"></a>用户标识</h1><p>每个用户都有一个唯一的数值 ID 标识 (<code>uid</code>), 内核通过该 ID 来检验用户是否有执行某些操作的权限.</p>
+<p>用户 ID 为 <code>0</code> 的为 root 用户或 superuser, 如果一个进程有 root 权限, 则大多数文件权限检查都不再进行.</p>
+<p>每个用户也会包括 组 ID (<code>group id</code>, <code>gid</code>), 允许各个成员之间共享资源 (如文件).</p>
+<p>可以用 <code>getuid()</code> 和 <code>getgid()</code> 函数获取当前进程的 uid 和 gid:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;apue.h&gt;</span></span><br><br><span class="hljs-type">int</span><br><span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> &#123;<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;uid = %d, gid = %d\n&quot;</span>, getuid(), getgid());<br><br>    <span class="hljs-built_in">exit</span>(<span class="hljs-number">0</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
 
+<h1 id="信号"><a href="#信号" class="headerlink" title="信号"></a>信号</h1><p>信号, Signal, 用于通知进程发生了某种情况. 当向一个进程发送信号时, 我们必须是那个进程的所有者或者是超级用户.</p>
+<p>终端上产生信号的方法一般有:</p>
+<ul>
+<li><code>Ctrl+C</code>, <code>Ctrl+\</code>, <code>delete</code> 用于中断当前运行的进程</li>
+<li><code>kill</code> 发送指定信号</li>
+</ul>
+<p>常见的信号有:</p>
+<ul>
+<li><code>SIGINT</code>, 值为 2, 终止进程</li>
+<li><code>SIGQUIT</code>, 值为 3, 终止进程 + core dump</li>
+<li><code>SIGKILL</code>, 值为 9, 立即终止</li>
+<li><code>SIGTERM</code>, 值为 15, 请求终止</li>
+</ul>
+<p>可以用 <code>signal</code> 函数捕获指定信号, 并调用一个函数.</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;signal.h&gt;</span></span><br><br><span class="hljs-keyword">typedef</span> <span class="hljs-title function_">void</span> <span class="hljs-params">(*<span class="hljs-type">sighandler_t</span>)</span><span class="hljs-params">(<span class="hljs-type">int</span>)</span>;<br><br><span class="hljs-type">sighandler_t</span> <span class="hljs-title function_">signal</span><span class="hljs-params">(<span class="hljs-type">int</span> signum, <span class="hljs-type">sighandler_t</span> handler)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>signum</code> 是要捕获的信号</li>
+<li><code>handler</code> 是信号处理函数, 可以是:<ul>
+<li>自定义函数, 信号发射时调用, 接收信号编号作为参数</li>
+<li><code>SIG_IGN</code>, 忽略这个信号</li>
+<li><code>SIG_DFL</code>, 使用系统默认行为</li>
+</ul>
+</li>
+</ul>
+<p>返回值:</p>
+<ul>
+<li>成功时, 返回信号的处理方式, 可能是一个函数指针, 或 <code>SIG_IGN</code>, <code>SIG_DFL</code></li>
+<li>失败时返回 <code>SIG_ERR</code>, 并设置 <code>errno</code></li>
+</ul>
+<p>示例:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">if</span> (signal(SIGINT, sig_int) == SIG_ERR)<br>    err_sys(<span class="hljs-string">&quot;signal error&quot;</span>);<br><br><span class="hljs-type">void</span><br><span class="hljs-title function_">sig_int</span><span class="hljs-params">(<span class="hljs-type">int</span> signo)</span> &#123;<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;interrupt\n%% &quot;</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h1 id="时间值"><a href="#时间值" class="headerlink" title="时间值"></a>时间值</h1><p>UNIX 使用过两种不同的时间值:</p>
+<ul>
+<li>日历时间, 从 1970 年 1 月 1 日 <code>00:00:00</code> 到当前积累的秒数, 一般用于记录文件最近一次修改时间, 通常用 <code>time_t</code> 类型保存</li>
+<li>进程时间, 也称 CPU 时间, 用于度量进程使用的 CPU 资源, 以时钟滴答计算, 通常用 <code>clock_t</code> 来保存</li>
+</ul>
+<p>UNIX 会为一个进程维护 3 个进程时间值:</p>
+<ul>
+<li>时钟时间, 指进程运行的时间总量</li>
+<li>用户 CPU 时间, 指执行用户指令所用的时间量</li>
+<li>系统 CPU 时间, 指为了执行该进程内核程序所经历的时间</li>
+</ul>
+<p>用户 CPU 时间和系统 CPU 时间之和称 “CPU 时间”.</p>
 
                 
               </div>
