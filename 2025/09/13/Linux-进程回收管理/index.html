@@ -24,7 +24,7 @@
 <meta property="og:description" content="介绍这里说明下 &lt;sys&#x2F;wait.h&gt; 中的 wait 和 waitpid 函数, 一般用于 fork 后, 父进程获取子进程退出的信息. 在一个子进程终止时, 其进程不会立即被完全清理, 而是会保留一部分信息, 直到父进程通过 wait 或类似的函数来获取. 如果父进程没有获取, 子进程终止后就变成了一个 “僵尸进程”:  其不再运行 进程 ID 仍然存在 占用系统进程表项, 可能">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-09-12T16:05:22.000Z">
-<meta property="article:modified_time" content="2025-09-12T16:26:57.591Z">
+<meta property="article:modified_time" content="2025-09-12T16:32:50.659Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          799 字
+          2.1k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          7 分钟
+          18 分钟
         
       </span>
     
@@ -317,6 +317,8 @@
 <li>成功时, 返回结束的子进程 PID</li>
 <li>失败时, 返回 <code>-1</code>, 并设置 <code>errno</code></li>
 </ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdlib.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;sys/wait.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;sys/types.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-type">pid_t</span> pid = fork();<br><br>    <span class="hljs-keyword">if</span> (pid &lt; <span class="hljs-number">0</span>) &#123;<br>        perror(<span class="hljs-string">&quot;fork failed&quot;</span>);<br>        <span class="hljs-built_in">exit</span>(<span class="hljs-number">1</span>);<br>    &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (pid == <span class="hljs-number">0</span>) &#123;<br>        <span class="hljs-comment">// 子进程</span><br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;Child process, PID = %d\n&quot;</span>, getpid());<br>        sleep(<span class="hljs-number">2</span>);<br>        <span class="hljs-built_in">exit</span>(<span class="hljs-number">42</span>);  <span class="hljs-comment">// 子进程以退出码 42 正常退出</span><br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>        <span class="hljs-comment">// 父进程</span><br>        <span class="hljs-type">int</span> status;<br>        <span class="hljs-type">pid_t</span> child_pid = wait(&amp;status);<br><br>        <span class="hljs-keyword">if</span> (child_pid == <span class="hljs-number">-1</span>) &#123;<br>            perror(<span class="hljs-string">&quot;wait failed&quot;</span>);<br>        &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (WIFEXITED(status)) &#123;<br>            <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;Child %d exited normally with status: %d\n&quot;</span>,<br>                   child_pid, WEXITSTATUS(status));<br>        &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (WIFSIGNALED(status)) &#123;<br>            <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;Child %d was killed by signal: %d\n&quot;</span>,<br>                   child_pid, WTERMSIG(status));<br>        &#125;<br>    &#125;<br><br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
 <h1 id="waitpid"><a href="#waitpid" class="headerlink" title="waitpid"></a>waitpid</h1><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">pid_t</span> <span class="hljs-title function_">waitpid</span><span class="hljs-params">(<span class="hljs-type">pid_t</span> pid, <span class="hljs-type">int</span> *status, <span class="hljs-type">int</span> options)</span>;<br></code></pre></td></tr></table></figure>
 <p><code>waitpid</code> 相比 <code>wait</code> 更灵活, 可以:</p>
 <ul>
@@ -330,10 +332,19 @@
 <li><code>pid &gt; 0</code>, 指定特定 PID</li>
 <li><code>pid == -1</code>, 等待任意子进程 (同 <code>wait</code>)</li>
 <li><code>pid == 0</code>, 等待与父进程同进程组的任意子进程</li>
-<li><code>pid &lt; -1</code>, 等待进程组 ID</li>
+<li><code>pid &lt; -1</code>, 等待 ID 与 pid 绝对值相等的进程组中的任意子进程</li>
+</ul>
+</li>
+<li><code>status</code>, 用于接收子进程退出状态的整型指针</li>
+<li><code>options</code>, 常用的为:<ul>
+<li><code>0</code> 表示阻塞</li>
+<li><code>WNOHANG</code> 表示非阻塞</li>
 </ul>
 </li>
 </ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">pid_t</span> pid = fork();<br><span class="hljs-keyword">if</span> (pid == <span class="hljs-number">0</span>) &#123;<br>    <span class="hljs-comment">// 子进程</span><br>    sleep(<span class="hljs-number">3</span>);<br>    <span class="hljs-built_in">exit</span>(<span class="hljs-number">0</span>);<br>&#125; <span class="hljs-keyword">else</span> &#123;<br>    <span class="hljs-comment">// 父进程</span><br>    <span class="hljs-type">int</span> status;<br>    <span class="hljs-keyword">while</span> (<span class="hljs-number">1</span>) &#123;<br>        <span class="hljs-type">pid_t</span> ret = waitpid(pid, &amp;status, WNOHANG);<br>        <span class="hljs-keyword">if</span> (ret == <span class="hljs-number">-1</span>) &#123;<br>            perror(<span class="hljs-string">&quot;waitpid error&quot;</span>);<br>            <span class="hljs-keyword">break</span>;<br>        &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (ret == <span class="hljs-number">0</span>) &#123;<br>            <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;Child still running...\n&quot;</span>);<br>            sleep(<span class="hljs-number">1</span>);<br>        &#125; <span class="hljs-keyword">else</span> &#123;<br>            <span class="hljs-keyword">if</span> (WIFEXITED(status)) &#123;<br>                <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;Child exited with status: %d\n&quot;</span>, WEXITSTATUS(status));<br>            &#125;<br>            <span class="hljs-keyword">break</span>;<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
 
                 
               </div>
