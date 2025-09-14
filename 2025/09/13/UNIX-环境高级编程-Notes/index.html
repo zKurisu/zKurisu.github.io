@@ -23,10 +23,12 @@
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="线程和线程 ID一个进程内的所有线程共享同一地址空间, 文件描述符, 栈以及与进程相关的属性. 因为它们能访问同一存储区, 所以各线程在访问共享数据时需要采取同步措施以避免不一致性. 与进程相同, 线程也用 ID 标识. 但其只在所属的进程中起作用. 线程是在进程模型建立很久之后引入的, 使用另一套控制函数. 出错处理UNIX 系统函数出错时, 通常会返回一个负值, 且将整型变量 errno 设置">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/unix-iso-c-defined-header-file.png">
 <meta property="article:published_time" content="2025-09-13T13:06:04.000Z">
-<meta property="article:modified_time" content="2025-09-14T02:11:47.446Z">
+<meta property="article:modified_time" content="2025-09-14T02:46:07.889Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/unix-iso-c-defined-header-file.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -235,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.5k 字
+          4.2k 字
         
       </span>
     
@@ -246,7 +248,7 @@
         
         
         
-          21 分钟
+          36 分钟
         
       </span>
     
@@ -376,6 +378,8 @@
 <p>输出:</p>
 <figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">INT_MAX</span>: <span class="hljs-number">2147483647</span><br><span class="hljs-attribute">INT_MIN</span>: -<span class="hljs-number">2147483648</span><br></code></pre></td></tr></table></figure>
 
+<p>ISO C 标准定义的头文件有:</p>
+<p><img src="/../img/unix-iso-c-defined-header-file.png" srcset="/img/loading.gif" lazyload></p>
 <h1 id="运行时查看环境限制"><a href="#运行时查看环境限制" class="headerlink" title="运行时查看环境限制"></a>运行时查看环境限制</h1><p>可以用 <code>sysconf</code>, <code>pathconf</code>, <code>fpathconf</code> 三个函数在运行时查询系统运行环境中的各种配置限制或参数, 比如:</p>
 <ul>
 <li>文件系统支持的最大路径长度</li>
@@ -384,6 +388,49 @@
 <li>等等</li>
 </ul>
 <p>这些限制都不是编译时常量, 而是运行时由操作系统决定的配置值.</p>
+<h2 id="sysconf"><a href="#sysconf" class="headerlink" title="sysconf"></a><code>sysconf</code></h2><p><code>sysconf</code> 用于查询系统级别的配置限制 (与整个操作系统相关), 比如一个进程最多能打开多少文件, 其函数原型为:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><span class="hljs-type">long</span> <span class="hljs-title function_">sysconf</span><span class="hljs-params">(<span class="hljs-type">int</span> name)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>name</code> 是一个预定义的宏, 即要查询的配置参数</li>
+<li>成功时返回对应整数, 出错时返回 <code>-1</code></li>
+</ul>
+<p>常见的 <code>name</code> 参数定义在 <code>&lt;unistd.h&gt;</code> 中, 比如:</p>
+<ul>
+<li><code>_SC_ARG_MAX</code>, 命令行参数的最大总长度 (包括环境变量)</li>
+<li><code>_SC_CHILD_MAX</code>, 每个用户 ID 最多可拥有的子进程数</li>
+<li><code>_SC_OPEN_MAX</code>, 一个进程最多可打开的文件描述符数目</li>
+<li><code>_SC_PAGESIZE</code>, 系统内存页大小</li>
+<li>等等</li>
+</ul>
+<p>可以在 <code>man 3 sysconf</code> 中查看.</p>
+<p>示例:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;apue.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><span class="hljs-type">int</span><br><span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> &#123;<br>    <span class="hljs-type">int</span> max_open_files = <span class="hljs-number">0</span>;<br>    <span class="hljs-keyword">if</span> ((max_open_files = sysconf(_SC_OPEN_MAX)) != <span class="hljs-number">-1</span>)<br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;OPEN_MAX: %ld&quot;</span>, sysconf(_SC_OPEN_MAX));<br>    <span class="hljs-keyword">else</span><br>        perror(<span class="hljs-string">&quot;Get open_max error &quot;</span>);<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="pathconf"><a href="#pathconf" class="headerlink" title="pathconf"></a><code>pathconf</code></h2><p><code>pathconf</code> 查询与路径相关 (某个文件或目录路径) 的配置限制, 原型为:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><span class="hljs-type">long</span> <span class="hljs-title function_">pathconf</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *pathname, <span class="hljs-type">int</span> name)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>pathname</code> 文件或目录的路径</li>
+<li><code>name</code> 是要查询的限制类型, 也是预定义宏</li>
+<li>成功时返回对应数字, 错误时返回 <code>-1</code></li>
+</ul>
+<p>常见 <code>name</code> 参数有:</p>
+<ul>
+<li><code>_PC_PATH_MAX</code>, 该路径所在文件系统允许的最大路径长度</li>
+<li><code>_PC_NAME_MAX</code>, 该目录下文件名的最大长度</li>
+<li><code>_PC_LINK_MAX</code>, 一个文件最多有多少个硬链接</li>
+</ul>
+<p>比如:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-type">const</span> <span class="hljs-type">char</span> *path = <span class="hljs-string">&quot;/&quot;</span>;<br>    <span class="hljs-type">long</span> max_path_len = pathconf(path, _PC_PATH_MAX);<br>    <span class="hljs-keyword">if</span> (max_path_len == <span class="hljs-number">-1</span>) &#123;<br>        perror(<span class="hljs-string">&quot;pathconf(_PC_PATH_MAX) failed&quot;</span>);<br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;在路径 \&quot;%s\&quot; 下，最大路径长度为 %ld\n&quot;</span>, path, max_path_len);<br>    &#125;<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="fpathconf"><a href="#fpathconf" class="headerlink" title="fpathconf"></a><code>fpathconf</code></h2><p><code>fpathconf</code> 用于查询与已打开文件描述符关联的文件系统或文件的限制, 其原型如下:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><span class="hljs-type">long</span> <span class="hljs-title function_">fpathconf</span><span class="hljs-params">(<span class="hljs-type">int</span> fd, <span class="hljs-type">int</span> name)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>fd</code> 是打开的文件描述符</li>
+<li><code>name</code> 是要查询的限制类型</li>
+</ul>
+<p>比如:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;fcntl.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-type">int</span> fd = open(<span class="hljs-string">&quot;/&quot;</span>, O_RDONLY);<br>    <span class="hljs-keyword">if</span> (fd == <span class="hljs-number">-1</span>) &#123;<br>        perror(<span class="hljs-string">&quot;open failed&quot;</span>);<br>        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;<br>    &#125;<br><br>    <span class="hljs-type">long</span> max_name_len = fpathconf(fd, _PC_NAME_MAX);<br>    <span class="hljs-keyword">if</span> (max_name_len == <span class="hljs-number">-1</span>) &#123;<br>        perror(<span class="hljs-string">&quot;fpathconf(_PC_NAME_MAX) failed&quot;</span>);<br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;在打开的文件描述符对应的文件系统中，文件名最大长度为 %ld\n&quot;</span>, max_name_len);<br>    &#125;<br><br>    close(fd);<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
 
                 
               </div>
