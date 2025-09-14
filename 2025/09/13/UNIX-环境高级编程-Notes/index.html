@@ -26,7 +26,7 @@
 <meta property="og:image" content="http://example.com/img/unix-iso-c-defined-header-file.png">
 <meta property="og:image" content="http://example.com/img/unix-posix-interface-example.png">
 <meta property="article:published_time" content="2025-09-13T13:06:04.000Z">
-<meta property="article:modified_time" content="2025-09-14T11:43:02.150Z">
+<meta property="article:modified_time" content="2025-09-14T12:15:44.656Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/unix-iso-c-defined-header-file.png">
@@ -238,7 +238,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          4.9k 字
+          5.6k 字
         
       </span>
     
@@ -249,7 +249,7 @@
         
         
         
-          41 分钟
+          47 分钟
         
       </span>
     
@@ -454,6 +454,30 @@
 <p>Open Group 拥有 UNIX 商标, 他们使用 Single UNIX Specification 定义了一系列接口, 一个系统想要称 UNIX 系统, 其实现必须支持这些接口并通过验证测试.</p>
 <h1 id="文件-I-x2F-O"><a href="#文件-I-x2F-O" class="headerlink" title="文件 I&#x2F;O"></a>文件 I&#x2F;O</h1><p>文件 I&#x2F;O 相关接口定义在 <code>&lt;fcntl.h&gt;</code> (“File Control”) 头文件中.</p>
 <p><code>open</code> 和 <code>openat</code> 函数返回的文件描述符一定是最小的未用描述符数值.</p>
+<p>几个基础接口:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;fcntl.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">open</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *path, <span class="hljs-type">int</span> oflag,... <span class="hljs-comment">/* mode_t mode*/</span>)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">openat</span><span class="hljs-params">(<span class="hljs-type">int</span> fd, <span class="hljs-type">const</span> <span class="hljs-type">char</span> *path, <span class="hljs-type">int</span> oflag, ...<span class="hljs-comment">/* mode_t mode */</span>)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">creat</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *path, <span class="hljs-type">mode_t</span> mode)</span>;<br></code></pre></td></tr></table></figure>
+
+<p><code>close</code> 函数用于关闭一个打开文件, 但有时不会显式调用, 因为当一个进程终止时, 内核会自动关闭它所有的打开文件.</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">close</span><span class="hljs-params">(<span class="hljs-type">int</span> fd)</span>;<br></code></pre></td></tr></table></figure>
+
+<p><code>lseek</code> (<code>l</code> 是 “long” 长整型的意思, 是过去接口的返回值) 函数用于显式为一个打开文件设置偏移量:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><span class="hljs-type">off_t</span> <span class="hljs-title function_">lseek</span><span class="hljs-params">(<span class="hljs-type">int</span> fd, <span class="hljs-type">off_t</span> offset, <span class="hljs-type">int</span> whence)</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>通常, 文件的读, 写操作都从当前文件偏移量处开始</li>
+<li>默认情况下, 当打开一个文件时, 除非指定 <code>O_APPEND</code> 选项, 否则偏移量都会设置为 <code>0</code></li>
+<li><code>whence</code> 的设置决定如何解析 <code>offset</code> 值:<ul>
+<li><code>SEEK_SET</code>, 将文件的偏移量设置为距文件开始处 offset 个字节</li>
+<li><code>SEEK_CUR</code>, 将该文件的偏移量设置为其当前值加 offset, offset 可为正或负</li>
+<li><code>SEEK_END</code>, 将该文件的偏移量设置为文件长度加 offset, offset可正可负</li>
+</ul>
+</li>
+</ul>
+<p>返回值:</p>
+<ul>
+<li>成功时, 返回新的文件偏移量</li>
+<li>失败时, 返回 <code>-1</code></li>
+</ul>
+<p>文件偏移量可以大于文件长度, 这种情况下, 下次 “写” 会加长该文件, 并在文件中形成空洞, 中间没有写过的字节都读为 <code>0</code>. 通常这些空洞不会占据磁盘块.</p>
 
                 
               </div>
