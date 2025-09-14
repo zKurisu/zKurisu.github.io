@@ -24,8 +24,9 @@
 <meta property="og:description" content="线程和线程 ID一个进程内的所有线程共享同一地址空间, 文件描述符, 栈以及与进程相关的属性. 因为它们能访问同一存储区, 所以各线程在访问共享数据时需要采取同步措施以避免不一致性. 与进程相同, 线程也用 ID 标识. 但其只在所属的进程中起作用. 线程是在进程模型建立很久之后引入的, 使用另一套控制函数. 出错处理UNIX 系统函数出错时, 通常会返回一个负值, 且将整型变量 errno 设置">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/unix-iso-c-defined-header-file.png">
+<meta property="og:image" content="http://example.com/img/unix-posix-interface-example.png">
 <meta property="article:published_time" content="2025-09-13T13:06:04.000Z">
-<meta property="article:modified_time" content="2025-09-14T02:46:07.889Z">
+<meta property="article:modified_time" content="2025-09-14T05:02:15.323Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/unix-iso-c-defined-header-file.png">
@@ -237,7 +238,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          4.2k 字
+          4.8k 字
         
       </span>
     
@@ -248,7 +249,7 @@
         
         
         
-          36 分钟
+          40 分钟
         
       </span>
     
@@ -371,6 +372,19 @@
 <li>系统 CPU 时间, 指为了执行该进程内核程序所经历的时间</li>
 </ul>
 <p>用户 CPU 时间和系统 CPU 时间之和称 “CPU 时间”.</p>
+<h1 id="限制"><a href="#限制" class="headerlink" title="限制"></a>限制</h1><p>限制分两种:</p>
+<ul>
+<li>编译时限制 (比如, <code>short</code> 的最大值是什么)</li>
+<li>运行时限制 (比如, 文件名最多有多少字符)</li>
+</ul>
+<p>编译时限制可以在头文件中定义, 程序在编译时包含这些头文件.</p>
+<p>运行时限制需要进程调用一个函数来获得限制值.</p>
+<p>为了解决这些问题, 提供了 3 种限制查询方法:</p>
+<ol>
+<li>编译时限制 (头文件)</li>
+<li>与文件或目录无关的运行时限制 (<code>sysconf</code> 函数)</li>
+<li>与文件或目录有关的运行时限制 (<code>pathconf</code> 和 <code>fpathconf</code> 函数)</li>
+</ol>
 <h1 id="ISO-C-限制"><a href="#ISO-C-限制" class="headerlink" title="ISO C 限制"></a>ISO C 限制</h1><p>ISO C 定义的所有编译时限制都列在 <code>&lt;limits.h&gt;</code> 头文件中, 这些常量在一个给定的系统中不会改变.</p>
 <p>比如 <code>INT_MAX</code>, <code>INT_MIN</code>:</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;limits.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><br><span class="hljs-type">int</span><br><span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> &#123;<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;INT_MAX: %d\n&quot;</span>, INT_MAX);<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;INT_MIN: %d\n&quot;</span>, INT_MIN);<br>&#125;<br></code></pre></td></tr></table></figure>
@@ -431,6 +445,12 @@
 <p>比如:</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;fcntl.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-type">int</span> fd = open(<span class="hljs-string">&quot;/&quot;</span>, O_RDONLY);<br>    <span class="hljs-keyword">if</span> (fd == <span class="hljs-number">-1</span>) &#123;<br>        perror(<span class="hljs-string">&quot;open failed&quot;</span>);<br>        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;<br>    &#125;<br><br>    <span class="hljs-type">long</span> max_name_len = fpathconf(fd, _PC_NAME_MAX);<br>    <span class="hljs-keyword">if</span> (max_name_len == <span class="hljs-number">-1</span>) &#123;<br>        perror(<span class="hljs-string">&quot;fpathconf(_PC_NAME_MAX) failed&quot;</span>);<br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;在打开的文件描述符对应的文件系统中，文件名最大长度为 %ld\n&quot;</span>, max_name_len);<br>    &#125;<br><br>    close(fd);<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
 
+<h1 id="POSIX-标准"><a href="#POSIX-标准" class="headerlink" title="POSIX 标准"></a>POSIX 标准</h1><p>POSIX, Portable Operating System Interface, 该标准定义了一系列便于程序在操作系统间移植的接口, 以 UNIX 操作系统为基础但不限于此.</p>
+<p>若一个操作系统符合 POSIX 定义, 则必须满足这些头文件内容:</p>
+<p><img src="/../img/unix-posix-interface-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>POSIX.1 标准现在由 Austin Group 开放工作组 (<a target="_blank" rel="noopener" href="http://www.opengroup.org/austin">http://www.opengroup.org/austin</a>) 维护.</p>
+<h1 id="Single-UNIX-Specification"><a href="#Single-UNIX-Specification" class="headerlink" title="Single UNIX Specification"></a>Single UNIX Specification</h1><p>Single UNIX Specification 是 POSIX.1 标准的一个超集, 定义了一些附加接口.</p>
+<p>Open Group 拥有 UNIX 商标, 他们使用 Single UNIX Specification 定义了一系列接口, 一个系统想要称 UNIX 系统, 其实现必须支持这些接口并通过验证测试.</p>
 
                 
               </div>
