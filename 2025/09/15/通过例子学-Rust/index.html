@@ -24,7 +24,7 @@
 <meta property="og:description" content="通过例子学 Rust 中文版 Hello World定义函数的语法: 123fn main() &amp;#123;    ...&amp;#125;  在 Rust 中, ! 是 “宏” 的标识符, 如: 1println!(&quot;Hello World!&quot;); println! 就是一个宏. 123fn main() &amp;#123;    println!(&quot;Hello World!&amp;">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-09-15T01:13:37.000Z">
-<meta property="article:modified_time" content="2025-09-15T10:49:27.529Z">
+<meta property="article:modified_time" content="2025-09-15T11:08:08.155Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          23k 字
+          24k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          191 分钟
+          204 分钟
         
       </span>
     
@@ -533,7 +533,9 @@
 
 <h1 id="Attribute"><a href="#Attribute" class="headerlink" title="Attribute"></a>Attribute</h1><p>Attribute (“属性”), 指附加在代码元素 (如 <code>struct</code>, 函数, 模块等) 上的元信息或指令, 其告诉 Rust 编译器, 这部分需要做特殊处理.</p>
 <p>添加 Attribute 的语法如下, 通常写在被修饰对象的上方或左侧:</p>
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#[attribute_name]</span>            <span class="hljs-comment">// 最常见，作用于紧随其后的项</span><br><span class="hljs-meta">#[attribute_name(key = <span class="hljs-string">&quot;value&quot;</span>)]</span>  <span class="hljs-comment">// 带参数的属性</span><br><span class="hljs-meta">#![attribute_for_crate]</span>       <span class="hljs-comment">// 作用于整个 crate（放在文件顶层，用 !）</span><br></code></pre></td></tr></table></figure>
+<p>当 attribute 作用于整个 crate 时, 语法为 <code>#![crate_attribute]</code>, 作用于 mod 或 item 时为 <code>#[item_attribute]</code>.</p>
+<p>Attribute 可以接受参数, 语法形式有:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#[attribute_name = <span class="hljs-string">&quot;value&quot;</span>]</span><br><span class="hljs-meta">#[attribute_name(key = <span class="hljs-string">&quot;value&quot;</span>)]</span><br><span class="hljs-meta">#[attribute_name(value)]</span><br></code></pre></td></tr></table></figure>
 
 <p>Attribute 分三类:</p>
 <ul>
@@ -545,6 +547,23 @@
 <li><code>#[derive(Trait_name)]</code>, 为结构体自动生成某个 trait 的实现</li>
 </ul>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#[derive(Debug)]</span><br><span class="hljs-keyword">struct</span> <span class="hljs-title class_">Person</span> &#123;<br>    name: <span class="hljs-type">String</span>,<br>    age: <span class="hljs-type">u32</span>,<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="dead-code"><a href="#dead-code" class="headerlink" title="dead_code"></a><code>dead_code</code></h2><p>编译器提供了 <code>dead_code</code> lint, 会对未使用的函数产生警告, 可以用 <code>allow</code> 属性来警用这个 lint:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#[allow(dead_code)]</span><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">unused_function</span>() &#123;&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="crate"><a href="#crate" class="headerlink" title="crate"></a>crate</h2><p><code>crate_type</code> 属性告知编译器 crate 是一个二进制可执行文件还是一个库. <code>crate_name</code> 用于设定 <code>crate</code> 的名称.</p>
+<p>但使用 cargo 时这两个属性不会起作用:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// 这个 crate 是一个库文件</span><br><span class="hljs-meta">#![crate_type = <span class="hljs-string">&quot;lib&quot;</span>]</span><br><span class="hljs-comment">// 库的名称为 “rary”</span><br><span class="hljs-meta">#![crate_name = <span class="hljs-string">&quot;rary&quot;</span>]</span><br></code></pre></td></tr></table></figure>
+
+<p>此时不需要给 <code>rustc</code> 加上 <code>--crate-type</code> 标记:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ rustc lib.rs<br>$ <span class="hljs-built_in">ls</span> lib*<br>library.rlib<br></code></pre></td></tr></table></figure>
+
+<h2 id="cfg"><a href="#cfg" class="headerlink" title="cfg"></a>cfg</h2><p>条件编译通过两种方式实现:</p>
+<ul>
+<li><code>cfg</code> attribute, <code>#[cfg(...)]</code></li>
+<li><code>cfg!</code> 宏, 在布尔表达式中使用 <code>cfg!(...)</code></li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// 这个函数仅当目标系统是 Linux 的时候才会编译</span><br><span class="hljs-meta">#[cfg(target_os = <span class="hljs-string">&quot;linux&quot;</span>)]</span><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">are_you_on_linux</span>() &#123;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;You are running linux!&quot;</span>)<br>&#125;<br><br><span class="hljs-comment">// 而这个函数仅当目标系统 **不是** Linux 时才会编译</span><br><span class="hljs-meta">#[cfg(not(target_os = <span class="hljs-string">&quot;linux&quot;</span>))]</span><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">are_you_on_linux</span>() &#123;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;You are *not* running linux!&quot;</span>)<br>&#125;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-title function_ invoke__">are_you_on_linux</span>();<br>    <br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Are you sure?&quot;</span>);<br>    <span class="hljs-keyword">if</span> <span class="hljs-built_in">cfg!</span>(target_os = <span class="hljs-string">&quot;linux&quot;</span>) &#123;<br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Yes. It&#x27;s definitely linux!&quot;</span>);<br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Yes. It&#x27;s definitely *not* linux!&quot;</span>);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <h1 id="Ownership-borrowing-和-mutability"><a href="#Ownership-borrowing-和-mutability" class="headerlink" title="Ownership, borrowing 和 mutability"></a>Ownership, borrowing 和 mutability</h1><p>Ownership 指, Rust 中的所有值都有一个 owner (一个变量), 当 owner 离开作用域时, 值会被自动释放.</p>
 <p>Borrowing 指, 可以用过 reference (<code>&amp;T</code> 或 <code>&amp;mut T</code>) 来借用一个值, 而不用获取其所有权.</p>
@@ -759,7 +778,7 @@
 <ul>
 <li>类型说明为 <code>FnOnce</code> 时, 闭包可能会采取 <code>&amp;T</code>, <code>&amp;mut T</code> 或 <code>T</code> 中的一种捕获方式</li>
 </ul>
-<h1 id="crate"><a href="#crate" class="headerlink" title="crate"></a>crate</h1><p>crate (“包, 包装箱”) 是 Rust 的一个编译单元, 比如 <code>rustc some_file.rs</code>, 这里的 <code>some_file.rs</code> 会被当作 crate 文件. 如果 <code>some_file.rs</code> 内包含 <code>mod</code> 声明, 那么模块文件的内容会在编译之前插入 crate 文件的相应声明处.</p>
+<h1 id="crate-1"><a href="#crate-1" class="headerlink" title="crate"></a>crate</h1><p>crate (“包, 包装箱”) 是 Rust 的一个编译单元, 比如 <code>rustc some_file.rs</code>, 这里的 <code>some_file.rs</code> 会被当作 crate 文件. 如果 <code>some_file.rs</code> 内包含 <code>mod</code> 声明, 那么模块文件的内容会在编译之前插入 crate 文件的相应声明处.</p>
 <p>crate 可以被编译为二进制可执行文件或库文件, 默认情况下 <code>rustc</code> 将 crate 编译为二进制可执行文件, 也可以用 <code>--crate-type</code> 选项重载.</p>
 <h2 id="编译得到库文件"><a href="#编译得到库文件" class="headerlink" title="编译得到库文件"></a>编译得到库文件</h2><p>假设有一个文件 <code>rary.rs</code>, 内容为:</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">public_function</span>() &#123;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;called rary&#x27;s `public_function()`&quot;</span>);<br>&#125;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">private_function</span>() &#123;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;called rary&#x27;s `private_function()`&quot;</span>);<br>&#125;<br><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">indirect_access</span>() &#123;<br>    <span class="hljs-built_in">print!</span>(<span class="hljs-string">&quot;called rary&#x27;s `indirect_access()`, that\n&gt; &quot;</span>);<br><br>    <span class="hljs-title function_ invoke__">private_function</span>();<br>&#125;<br></code></pre></td></tr></table></figure>
@@ -781,7 +800,31 @@
 <p><code>name</code> 是项目名称, 在发布 crate 时, <code>crate.io</code> 将此字段标明为名称, 也是编译输出的二进制可执行文件的名称.</p>
 <p><code>authors</code> 是发布 <code>crate</code> 时的作者列表.</p>
 <p><code>dependencies</code> section 用于添加依赖, 比如:</p>
-<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs ini"><span class="hljs-section">[dependencies]</span><br><span class="hljs-attr">clap</span> = <span class="hljs-string">&quot;2.27.1&quot;</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs toml"><span class="hljs-section">[dependencies]</span><br><span class="hljs-attr">clap</span> = <span class="hljs-string">&quot;2.27.1&quot;</span><br></code></pre></td></tr></table></figure>
+
+<p>然后再文件中写上 <code>extern crate clap</code>.</p>
+<p>依赖可以是不同来源:</p>
+<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs toml"><span class="hljs-section">[dependencies]</span><br><span class="hljs-attr">clap</span> = <span class="hljs-string">&quot;2.27.1&quot;</span> <span class="hljs-comment"># 来自 crates.io</span><br><span class="hljs-attr">rand</span> = &#123; git = <span class="hljs-string">&quot;https://github.com/rust-lang-nursery/rand&quot;</span> &#125; <span class="hljs-comment"># 来自网上的仓库</span><br><span class="hljs-attr">bar</span> = &#123; path = <span class="hljs-string">&quot;../bar&quot;</span> &#125; <span class="hljs-comment"># 来自本地文件系统的路径</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="构建"><a href="#构建" class="headerlink" title="构建"></a>构建</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">cargo build<br></code></pre></td></tr></table></figure>
+
+<p>可执行文件会生成在 <code>target/debug/</code> 目录下.</p>
+<p>其会在项目根目录创建 <code>Cargo.lock</code> 文件, 其会记录项目实际使用的以来以及其版本.</p>
+<h2 id="构建并运行"><a href="#构建并运行" class="headerlink" title="构建并运行"></a>构建并运行</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">cargo run<br></code></pre></td></tr></table></figure>
+
+<h2 id="检查代码但不运行"><a href="#检查代码但不运行" class="headerlink" title="检查代码但不运行"></a>检查代码但不运行</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">cargo check<br></code></pre></td></tr></table></figure>
+
+<h2 id="项目发布"><a href="#项目发布" class="headerlink" title="项目发布"></a>项目发布</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">cargo build --release<br></code></pre></td></tr></table></figure>
+
+<h2 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h2><p>将测试代码放在 <code>tests/</code> 目录中:</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs stylus">foo<br>├── Cargo<span class="hljs-selector-class">.toml</span><br>├── <span class="hljs-attribute">src</span><br>│   └── <span class="hljs-selector-tag">main</span><span class="hljs-selector-class">.rs</span><br>└── tests<br>    ├── my_test<span class="hljs-selector-class">.rs</span><br>    └── my_other_test.rs<br></code></pre></td></tr></table></figure>
+
+<p>之后可以用:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">cargo <span class="hljs-built_in">test</span><br></code></pre></td></tr></table></figure>
+<p>来运行所有测试.</p>
+<p>或者运行匹配的测试:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">cargo <span class="hljs-built_in">test</span> test_foo<br></code></pre></td></tr></table></figure>
+
 
 
                 
