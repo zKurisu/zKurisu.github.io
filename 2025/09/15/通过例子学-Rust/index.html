@@ -24,7 +24,7 @@
 <meta property="og:description" content="通过例子学 Rust 中文版 Hello World定义函数的语法: 123fn main() &amp;#123;    ...&amp;#125;  在 Rust 中, ! 是 “宏” 的标识符, 如: 1println!(&quot;Hello World!&quot;); println! 就是一个宏. 123fn main() &amp;#123;    println!(&quot;Hello World!&amp;">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-09-15T01:13:37.000Z">
-<meta property="article:modified_time" content="2025-09-15T08:11:28.078Z">
+<meta property="article:modified_time" content="2025-09-15T09:14:52.543Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          18k 字
+          20k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          152 分钟
+          167 分钟
         
       </span>
     
@@ -382,6 +382,18 @@
 <li><code>Option&lt;T&gt;</code>, 表示有值 (<code>Some(T)</code>) 或无值 (<code>None</code>)</li>
 <li><code>Result&lt;T, E&gt;</code>, 表示可能成功 (<code>Ok(T)</code>) 或失败 (<code>Err(E)</code>)</li>
 <li><code>Box&lt;T&gt;</code>, 指向堆上数据的指针，用于堆分配和所有权管理</li>
+</ul>
+<p>对于字符串字面量, 类型是 <code>&amp;&#39;static str</code>, 表明其为不可变的字符串切片. 下面是对这个类型的解释:</p>
+<ul>
+<li><code>&amp;</code> 表示这是一个 reference, 仅借用</li>
+<li><code>&#39;static</code> 表示引用的生命周期是 <code>&#39;static</code>, 在程序运行期间都有效</li>
+<li><code>str</code> 表示是一个字符串切片, 是指向一段 UTF-8 编码的字符数据的视图</li>
+</ul>
+<p>比如:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">s</span>: &amp;<span class="hljs-symbol">&#x27;static</span> <span class="hljs-type">str</span> = <span class="hljs-string">&quot;Hello, Rust!&quot;</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>这里的 <code>&quot;Hello, Rust!&quot;</code> 就是一个字符串字面量, 是硬编码到程序中的一个不可变的 UTF-8 字符串</li>
+<li>一般情况下编译器能自己推断</li>
 </ul>
 <h1 id="变量绑定"><a href="#变量绑定" class="headerlink" title="变量绑定"></a>变量绑定</h1><p>使用 <code>let</code> 将一个 “值” 绑定到 “变量”:</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">an_integer</span> = <span class="hljs-number">1u32</span>;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">a_boolean</span> = <span class="hljs-literal">true</span>;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">unit</span> = ();<br><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">copied_integer</span> = an_integer;<br>&#125;<br></code></pre></td></tr></table></figure>
@@ -558,6 +570,54 @@
 <p>不可变引用可以创建多个.</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">x</span> = <span class="hljs-number">10</span>;     <span class="hljs-comment">// 变量必须是 mut 的</span><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">r</span> = &amp;<span class="hljs-keyword">mut</span> x;     <span class="hljs-comment">// r 是一个可变引用</span><br>    *r = <span class="hljs-number">20</span>;            <span class="hljs-comment">// 通过解引用修改值</span><br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;x = &#123;&#125;&quot;</span>, x); <span class="hljs-comment">// 输出：x = 20</span><br>&#125;<br></code></pre></td></tr></table></figure>
 
+<h2 id="释放资源"><a href="#释放资源" class="headerlink" title="释放资源"></a>释放资源</h2><p>可以用 <code>std::mem::drop</code> 来显式地提前终止一个值的所有权 (会自动调用析构逻辑), 从而释放它占用的资源:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::mem;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">s</span> = <span class="hljs-type">String</span>::<span class="hljs-title function_ invoke__">from</span>(<span class="hljs-string">&quot;hello&quot;</span>);<br>    mem::<span class="hljs-title function_ invoke__">drop</span>(s);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>在 Rust 中, 每个类型可以选择性实现 <code>Drop</code> trait:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">trait</span> <span class="hljs-title class_">Drop</span> &#123;<br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">drop</span>(&amp;<span class="hljs-keyword">mut</span> <span class="hljs-keyword">self</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="所有权转移"><a href="#所有权转移" class="headerlink" title="所有权转移"></a>所有权转移</h2><p>Rust 中, 任何时候, 一个值只能有一个 owner.</p>
+<p>如果一个类型没有实现 <code>Copy</code> trait 则在下面操作时都会发生所有权转移 (<code>move</code>), 导致原变量不再有效:</p>
+<ul>
+<li>把一个值赋给另一个变量 (如 <code>let a = b;</code>)</li>
+<li>把值作为参数传给函数 (如 <code>foo(x)</code>)</li>
+<li>把值放如集合 (如 <code>vec.push(x)</code>)</li>
+<li>把值作为返回值返回</li>
+</ul>
+<p>比如:</p>
+<ul>
+<li><code>String</code></li>
+<li><code>Vec&lt;T&gt;</code></li>
+<li><code>Box&lt;T&gt;</code></li>
+<li><code>struct</code></li>
+<li><code>enum</code></li>
+<li>闭包</li>
+<li>文件句柄, 网络连接, 锁等资源类型</li>
+</ul>
+<p>变量赋值时的所有权转移:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">s1</span> = <span class="hljs-type">String</span>::<span class="hljs-title function_ invoke__">from</span>(<span class="hljs-string">&quot;hello&quot;</span>);<br><span class="hljs-keyword">let</span> <span class="hljs-variable">s2</span> = s1;  <span class="hljs-comment">// 所有权从 s1 转移到了 s2</span><br><br><span class="hljs-comment">// println!(&quot;&#123;&#125;&quot;, s1); // ❌ 编译错误！s1 不再有效</span><br><span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;&#125;&quot;</span>, s2); <span class="hljs-comment">// ✅ 只有 s2 可用</span><br></code></pre></td></tr></table></figure>
+
+<p>将值传给函数时的所有权转移:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">take_ownership</span>(s: <span class="hljs-type">String</span>) &#123;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;&#125;&quot;</span>, s);<br>&#125; <span class="hljs-comment">// s 离开作用域，drop 被调用，内存释放</span><br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">s</span> = <span class="hljs-type">String</span>::<span class="hljs-title function_ invoke__">from</span>(<span class="hljs-string">&quot;hello&quot;</span>);<br>    <span class="hljs-title function_ invoke__">take_ownership</span>(s); <span class="hljs-comment">// 所有权从 main 中的 s 移动到了函数参数 s</span><br><br>    <span class="hljs-comment">// println!(&quot;&#123;&#125;&quot;, s); // ❌ 编译错误！s 的所有权已经转移走</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>把值放入集合时的所有权转移:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">s</span> = <span class="hljs-type">String</span>::<span class="hljs-title function_ invoke__">from</span>(<span class="hljs-string">&quot;world&quot;</span>);<br><span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">v</span> = <span class="hljs-type">Vec</span>::<span class="hljs-title function_ invoke__">new</span>();<br>v.<span class="hljs-title function_ invoke__">push</span>(s); <span class="hljs-comment">// 所有权从 s 移动到了 Vec 中</span><br><br><span class="hljs-comment">// println!(&quot;&#123;&#125;&quot;, s); // ❌ 编译错误！s 已经被移动进 Vec</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="不发生所有权转移"><a href="#不发生所有权转移" class="headerlink" title="不发生所有权转移"></a>不发生所有权转移</h2><p>如果类型实现了 <code>Copy</code> trait, 比如:</p>
+<ul>
+<li>所有整数类型: <code>i32</code>, <code>u8</code> …</li>
+<li>布尔类型: <code>bool</code></li>
+<li>浮点数: <code>f32</code>, <code>f64</code></li>
+<li>字符: <code>char</code></li>
+<li>某些固定大小的数组, 如 <code>[i32; 2]</code></li>
+</ul>
+<p>此时发生拷贝, 而非所有权转移. 比如;</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">x</span> = <span class="hljs-number">5</span>;<br><span class="hljs-keyword">let</span> <span class="hljs-variable">y</span> = x; <span class="hljs-comment">// 拷贝，不是 move</span><br><br><span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;x = &#123;&#125;, y = &#123;&#125;&quot;</span>, x, y); <span class="hljs-comment">// ✅ x 依然有效</span><br></code></pre></td></tr></table></figure>
+
+<p>借用时也不会发生所有权转移:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">s</span> = <span class="hljs-type">String</span>::<span class="hljs-title function_ invoke__">from</span>(<span class="hljs-string">&quot;hello&quot;</span>);<br><span class="hljs-keyword">let</span> <span class="hljs-variable">len</span> = <span class="hljs-title function_ invoke__">calculate_length</span>(&amp;s); <span class="hljs-comment">// 传递引用，不是所有权</span><br><br><span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;字符串 &#x27;&#123;&#125;&#x27; 的长度是 &#123;&#125;&quot;</span>, s, len); <span class="hljs-comment">// ✅ s 依然有效</span><br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">calculate_length</span>(s: &amp;<span class="hljs-type">String</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">usize</span> &#123;<br>    s.<span class="hljs-title function_ invoke__">len</span>()<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
 <h1 id="Debug-输出"><a href="#Debug-输出" class="headerlink" title="Debug 输出"></a>Debug 输出</h1><p>实现了 <code>std::fmt</code> 中的 <code>fmt::Debug</code> trait 的类型可以用 <code>&#123;:?&#125;</code> 标记来格式化 debug 输出:</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#[derive(Debug)]</span><br><span class="hljs-keyword">struct</span> <span class="hljs-title class_">Person</span> &#123;<br>    name: <span class="hljs-type">String</span>,<br>    age:  <span class="hljs-type">u8</span><br>&#125;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">p</span> = Person &#123;<br>        name: <span class="hljs-type">String</span>::<span class="hljs-title function_ invoke__">from</span>(<span class="hljs-string">&quot;orkarin&quot;</span>),<br>        age: <span class="hljs-number">22</span>,<br>    &#125;;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Debug print: &#123;:?&#125;&quot;</span>, p);<br>&#125;<br></code></pre></td></tr></table></figure>
 
@@ -668,10 +728,11 @@
 
 <h2 id="作为输入参数"><a href="#作为输入参数" class="headerlink" title="作为输入参数"></a>作为输入参数</h2><p>把闭包作为输入参数时, 需要用 <code>trait</code> 来制定其类型:</p>
 <ul>
-<li><code>Fn</code>, 表示捕获方式通过引用 (<code>&amp;T</code>) 的闭包</li>
-<li><code>FnMut</code>, 表示捕获方式为通过可变引用 (<code>&amp;mut T</code>) 的闭包</li>
-<li><code>FnOnece</code>, 表示捕获方式为通过值 (<code>T</code>) 的闭包<br>(受限制程度递减)</li>
+<li><code>Fn</code>, 表示捕获方式通过引用 (<code>&amp;T</code>, 不可变引用) 的闭包</li>
+<li><code>FnMut</code>, 表示捕获方式为通过可变引用 (<code>&amp;mut T</code>, 可变引用) 的闭包</li>
+<li><code>FnOnece</code>, 表示捕获方式为通过值 (<code>T</code>, 拿到变量的所有权) 的闭包<br>(受限制程度递减)</li>
 </ul>
+<p>对于可复制的类型且没有 <code>mut</code> 修饰, 则通过 “引用” 捕获; 对于可复制的类型且用 <code>mut</code> 修饰, 则通过可变引用捕获; 对于一个不可复制的类型, 就会捕获 “值”.</p>
 <p>比如:</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">apply</span>&lt;F&gt;(f: F)<br><span class="hljs-keyword">where</span><br>    F: <span class="hljs-title function_ invoke__">FnOnce</span>()<br>&#123;<br>    <span class="hljs-title function_ invoke__">f</span>();<br>&#125;<br></code></pre></td></tr></table></figure>
 <ul>
