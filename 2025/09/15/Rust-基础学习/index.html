@@ -24,7 +24,7 @@
 <meta property="og:description" content="通过例子学 Rust 中文版 Hello World定义函数的语法: 123fn main() &amp;#123;    ...&amp;#125;  在 Rust 中, ! 是 “宏” 的标识符, 如: 1println!(&quot;Hello World!&quot;); println! 就是一个宏. 123fn main() &amp;#123;    println!(&quot;Hello World!&amp;">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-09-15T01:13:37.000Z">
-<meta property="article:modified_time" content="2025-09-16T12:02:09.706Z">
+<meta property="article:modified_time" content="2025-09-16T12:11:35.874Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          55k 字
+          57k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          460 分钟
+          476 分钟
         
       </span>
     
@@ -1116,7 +1116,24 @@
 <h1 id="测试-1"><a href="#测试-1" class="headerlink" title="测试"></a>测试</h1><h2 id="单元测试"><a href="#单元测试" class="headerlink" title="单元测试"></a>单元测试</h2><p>测试单元都会放在名为 <code>tests</code>, 带 <code>#[cfg(test)]</code> 属性的 Mod 中, 测试函数需要加上 <code>#[test]</code> 属性.</p>
 <ul>
 <li><code>#[cfg(test)]</code> 表示, 只有当编译目标是 test 时, 才编译包含此属性的代码</li>
+<li><code>#[test]</code> 会让 <code>cargo test</code> 等测试运行器识别并运行</li>
 </ul>
+<p>测试函数中如果发生 <code>panic</code>, 则测试失败, 通常使用:</p>
+<ul>
+<li><code>assert!(exporession)</code>, 如果表达式为 <code>false</code> 则 <code>panic</code></li>
+<li><code>assert_eq!(left, right)</code>, <code>assert_ne!(left, right)</code></li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">add</span>(a: <span class="hljs-type">i32</span>, b: <span class="hljs-type">i32</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">i32</span> &#123;<br>    a + b<br>&#125;<br><br><span class="hljs-comment">// 这个加法函数写得很差，本例中我们会使它失败。</span><br><span class="hljs-meta">#[allow(dead_code)]</span><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">bad_add</span>(a: <span class="hljs-type">i32</span>, b: <span class="hljs-type">i32</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">i32</span> &#123;<br>    a - b<br>&#125;<br><br><span class="hljs-meta">#[cfg(test)]</span><br><span class="hljs-keyword">mod</span> tests &#123;<br>    <span class="hljs-comment">// 注意这个惯用法：在 tests 模块中，从外部作用域导入所有名字。</span><br>    <span class="hljs-keyword">use</span> super::*;<br><br>    <span class="hljs-meta">#[test]</span><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">test_add</span>() &#123;<br>        <span class="hljs-built_in">assert_eq!</span>(<span class="hljs-title function_ invoke__">add</span>(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>), <span class="hljs-number">3</span>);<br>    &#125;<br><br>    <span class="hljs-meta">#[test]</span><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">test_bad_add</span>() &#123;<br>        <span class="hljs-comment">// 这个断言会导致测试失败。注意私有的函数也可以被测试！</span><br>        <span class="hljs-built_in">assert_eq!</span>(<span class="hljs-title function_ invoke__">bad_add</span>(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>), <span class="hljs-number">3</span>);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>之后可以用 <code>cargo test</code> 运行测试.</p>
+<h3 id="panic-测试"><a href="#panic-测试" class="headerlink" title="panic 测试"></a>panic 测试</h3><p>有时需要测试一个函数是否能正确 <code>panic</code>, 此时要加上 <code>#[should_panic]</code> 属性, 可以用 <code>expected = </code> 参数来制定期望的报错信息:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">divide_non_zero_result</span>(a: <span class="hljs-type">u32</span>, b: <span class="hljs-type">u32</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">u32</span> &#123;<br>    <span class="hljs-keyword">if</span> b == <span class="hljs-number">0</span> &#123;<br>        <span class="hljs-built_in">panic!</span>(<span class="hljs-string">&quot;Divide-by-zero error&quot;</span>);<br>    &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> a &lt; b &#123;<br>        <span class="hljs-built_in">panic!</span>(<span class="hljs-string">&quot;Divide result is zero&quot;</span>);<br>    &#125;<br>    a / b<br>&#125;<br><br><span class="hljs-meta">#[cfg(test)]</span><br><span class="hljs-keyword">mod</span> tests &#123;<br>    <span class="hljs-keyword">use</span> super::*;<br><br>    <span class="hljs-meta">#[test]</span><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">test_divide</span>() &#123;<br>        <span class="hljs-built_in">assert_eq!</span>(<span class="hljs-title function_ invoke__">divide_non_zero_result</span>(<span class="hljs-number">10</span>, <span class="hljs-number">2</span>), <span class="hljs-number">5</span>);<br>    &#125;<br><br>    <span class="hljs-meta">#[test]</span><br>    <span class="hljs-meta">#[should_panic]</span><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">test_any_panic</span>() &#123;<br>        <span class="hljs-title function_ invoke__">divide_non_zero_result</span>(<span class="hljs-number">1</span>, <span class="hljs-number">0</span>);<br>    &#125;<br><br>    <span class="hljs-meta">#[test]</span><br>    <span class="hljs-meta">#[should_panic(expected = <span class="hljs-string">&quot;Divide result is zero&quot;</span>)]</span><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">test_specific_panic</span>() &#123;<br>        <span class="hljs-title function_ invoke__">divide_non_zero_result</span>(<span class="hljs-number">1</span>, <span class="hljs-number">10</span>);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="忽略测试"><a href="#忽略测试" class="headerlink" title="忽略测试"></a>忽略测试</h3><p>可以加上 <code>#[ignore]</code> 以排除部分测试, 且用 <code>cargo test -- --ignored</code> 来运行.</p>
+<h2 id="文档测试"><a href="#文档测试" class="headerlink" title="文档测试"></a>文档测试</h2><p>Rust 源码中的注释用 <code>markdown</code> 编写, 如:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">divide_non_zero_result</span>(a: <span class="hljs-type">u32</span>, b: <span class="hljs-type">u32</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">u32</span> &#123;<br>    <span class="hljs-keyword">if</span> b == <span class="hljs-number">0</span> &#123;<br>        <span class="hljs-built_in">panic!</span>(<span class="hljs-string">&quot;Divide-by-zero error&quot;</span>);<br>    &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> a &lt; b &#123;<br>        <span class="hljs-built_in">panic!</span>(<span class="hljs-string">&quot;Divide result is zero&quot;</span>);<br>    &#125;<br>    a / b<br>&#125;<br><br><span class="hljs-meta">#[cfg(test)]</span><br><span class="hljs-keyword">mod</span> tests &#123;<br>    <span class="hljs-keyword">use</span> super::*;<br><br>    <span class="hljs-meta">#[test]</span><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">test_divide</span>() &#123;<br>        <span class="hljs-built_in">assert_eq!</span>(<span class="hljs-title function_ invoke__">divide_non_zero_result</span>(<span class="hljs-number">10</span>, <span class="hljs-number">2</span>), <span class="hljs-number">5</span>);<br>    &#125;<br><br>    <span class="hljs-meta">#[test]</span><br>    <span class="hljs-meta">#[should_panic]</span><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">test_any_panic</span>() &#123;<br>        <span class="hljs-title function_ invoke__">divide_non_zero_result</span>(<span class="hljs-number">1</span>, <span class="hljs-number">0</span>);<br>    &#125;<br><br>    <span class="hljs-meta">#[test]</span><br>    <span class="hljs-meta">#[should_panic(expected = <span class="hljs-string">&quot;Divide result is zero&quot;</span>)]</span><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">test_specific_panic</span>() &#123;<br>        <span class="hljs-title function_ invoke__">divide_non_zero_result</span>(<span class="hljs-number">1</span>, <span class="hljs-number">10</span>);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>可以在 <code>cargo test</code> 中检查注释中 markdown 的语法正确性.</p>
 
                 
               </div>
@@ -1197,6 +1214,12 @@
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2025/09/16/Rust-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/" title="Rust-技巧积累">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Rust-技巧积累</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">
