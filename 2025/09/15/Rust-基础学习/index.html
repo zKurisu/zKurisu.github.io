@@ -24,7 +24,7 @@
 <meta property="og:description" content="通过例子学 Rust 中文版 Hello World定义函数的语法: 123fn main() &amp;#123;    ...&amp;#125;  在 Rust 中, ! 是 “宏” 的标识符, 如: 1println!(&quot;Hello World!&quot;); println! 就是一个宏. 123fn main() &amp;#123;    println!(&quot;Hello World!&amp;">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-09-15T01:13:37.000Z">
-<meta property="article:modified_time" content="2025-09-16T04:18:56.117Z">
+<meta property="article:modified_time" content="2025-09-16T05:44:34.669Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          38k 字
+          40k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          321 分钟
+          332 分钟
         
       </span>
     
@@ -933,7 +933,38 @@
 <h2 id="创建宏"><a href="#创建宏" class="headerlink" title="创建宏"></a>创建宏</h2><p>宏通过 <code>macro_rules!</code> 宏来创建:</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// 这是一个简单的宏，名为 `say_hello`。</span><br><span class="hljs-built_in">macro_rules!</span> say_hello &#123;<br>    <span class="hljs-comment">// `()` 表示此宏不接受任何参数。</span><br>    () =&gt; (<br>        <span class="hljs-comment">// 此宏将会展开成这个代码块里面的内容。</span><br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Hello!&quot;</span>);<br>    )<br>&#125;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-comment">// 这个调用将会展开成 `println(&quot;Hello&quot;);`!</span><br>    say_hello!()<br>&#125;<br></code></pre></td></tr></table></figure>
 
+<h2 id="指示符"><a href="#指示符" class="headerlink" title="指示符"></a>指示符</h2><p>宏的参数使用美元符号 <code>$</code> 作为前缀, 并用一个指示符 (<code>designator</code>) 来标注类型, 如:</p>
+<ul>
+<li><code>block</code></li>
+<li><code>expr</code>, 表达式</li>
+<li><code>ident</code>, 变量名或函数名</li>
+<li><code>item</code></li>
+<li><code>literal</code>, 字面常量</li>
+<li><code>pat</code>, “pattern” 模式</li>
+<li><code>stmt</code>, “statement” 语句</li>
+<li><code>tt</code>, “token tree” 标记树</li>
+<li><code>ty</code>, “type” 类型</li>
+<li><code>vis</code>, “visible” 可见性描述符</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-built_in">macro_rules!</span> create_function &#123;<br>    ($func_name:ident) =&gt; (<br>        <span class="hljs-keyword">fn</span> $<span class="hljs-title function_ invoke__">func_name</span>() &#123;<br>            <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;You call &#123;:?&#125;()&quot;</span>, <span class="hljs-built_in">stringify!</span>($func_name))<br>        &#125;<br>    )<br>&#125;<br><br>create_function!(foo);<br>create_function!(bar);<br></code></pre></td></tr></table></figure>
 
+<h2 id="重载"><a href="#重载" class="headerlink" title="重载"></a>重载</h2><p>一个宏可以通过重载来接受不同的参数组合, 比如:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-built_in">macro_rules!</span> test &#123;<br>    ($left:expr; and $right:expr) =&gt; (<br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;:?&#125; and &#123;:?&#125; is &#123;:?&#125;&quot;</span>,<br>            <span class="hljs-title function_ invoke__">stringify</span>($left),<br>            <span class="hljs-title function_ invoke__">stringify</span>($right),<br>            $left &amp;&amp; $right)<br>    )<br><br>    ($left:expr; or $right:expr) =&gt; (<br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;:?&#125; or &#123;:?&#125; is &#123;:?&#125;&quot;</span>,<br>            <span class="hljs-title function_ invoke__">stringify</span>($left),<br>            <span class="hljs-title function_ invoke__">stringify</span>($right),<br>            $left || $right)<br>    )<br>&#125;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    test!(<span class="hljs-number">1i32</span> + <span class="hljs-number">1</span> == <span class="hljs-number">2i32</span>; and <span class="hljs-number">2i32</span> * <span class="hljs-number">2</span> == <span class="hljs-number">4i32</span>);<br>    test!(<span class="hljs-literal">true</span>; or <span class="hljs-literal">false</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>stringify!</code> 宏用于将代码片段转换为字符串字面量, 比如 <code>stringify(1 + 1 == 2)</code></li>
+<li><code>; and </code> 和 <code>; or </code> 都不是 Rust 关键字或者语法, 只是模式匹配 (字符串匹配而已)</li>
+<li>宏定义中的参数不需要用逗号隔开</li>
+</ul>
+<h2 id="重复"><a href="#重复" class="headerlink" title="重复"></a>重复</h2><p>宏在参数列表中, 可以用 <code>+</code> 表示一个参数可能出现一次或多次, 用 <code>*</code> 表示参数可能出现零次或多次:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-built_in">macro_rules!</span> find_min &#123;<br>    ($x:expr) =&gt; ($x);<br>    ($x:expr, $($y:expr),+) =&gt; (<br>        std::cmp::<span class="hljs-title function_ invoke__">min</span>($x, find_min!($($y),+))<br>    )<br>&#125;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;&#125;&quot;</span>, find_min!(<span class="hljs-number">1u32</span>));<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;&#125;&quot;</span>, find_min!(<span class="hljs-number">1u32</span> + <span class="hljs-number">2</span> , <span class="hljs-number">2u32</span>));<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;&#125;&quot;</span>, find_min!(<span class="hljs-number">5u32</span>, <span class="hljs-number">2u32</span> * <span class="hljs-number">3</span>, <span class="hljs-number">4u32</span>));<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>$(...)</code> 是 token 匹配组</li>
+<li><code>,+</code>:<ul>
+<li>这里的 <code>,</code> 指定分隔符, 只能有一个 token, 因此不能写为 <code>,,</code>, <code>,,,</code> 这种</li>
+<li><code>+</code> 是重复限定符</li>
+</ul>
+</li>
+</ul>
 
                 
               </div>
