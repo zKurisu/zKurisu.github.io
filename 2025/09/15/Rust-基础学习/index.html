@@ -24,7 +24,7 @@
 <meta property="og:description" content="通过例子学 Rust 中文版 Hello World定义函数的语法: 123fn main() &amp;#123;    ...&amp;#125;  在 Rust 中, ! 是 “宏” 的标识符, 如: 1println!(&quot;Hello World!&quot;); println! 就是一个宏. 123fn main() &amp;#123;    println!(&quot;Hello World!&amp;">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-09-15T01:13:37.000Z">
-<meta property="article:modified_time" content="2025-09-16T05:44:34.669Z">
+<meta property="article:modified_time" content="2025-09-16T06:16:24.658Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          40k 字
+          43k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          332 分钟
+          355 分钟
         
       </span>
     
@@ -933,6 +933,7 @@
 <h2 id="创建宏"><a href="#创建宏" class="headerlink" title="创建宏"></a>创建宏</h2><p>宏通过 <code>macro_rules!</code> 宏来创建:</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// 这是一个简单的宏，名为 `say_hello`。</span><br><span class="hljs-built_in">macro_rules!</span> say_hello &#123;<br>    <span class="hljs-comment">// `()` 表示此宏不接受任何参数。</span><br>    () =&gt; (<br>        <span class="hljs-comment">// 此宏将会展开成这个代码块里面的内容。</span><br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Hello!&quot;</span>);<br>    )<br>&#125;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-comment">// 这个调用将会展开成 `println(&quot;Hello&quot;);`!</span><br>    say_hello!()<br>&#125;<br></code></pre></td></tr></table></figure>
 
+<p>对于宏而言, 参数括号用 <code>()</code> 或 <code>&#123;&#125;</code> 的都可以.</p>
 <h2 id="指示符"><a href="#指示符" class="headerlink" title="指示符"></a>指示符</h2><p>宏的参数使用美元符号 <code>$</code> 作为前缀, 并用一个指示符 (<code>designator</code>) 来标注类型, 如:</p>
 <ul>
 <li><code>block</code></li>
@@ -965,6 +966,42 @@
 </ul>
 </li>
 </ul>
+<h2 id="DSL"><a href="#DSL" class="headerlink" title="DSL"></a>DSL</h2><p>可以在宏内部定义微型语言:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-built_in">macro_rules!</span> calculate &#123;<br>    (eval $e:expr) =&gt; &#123;&#123;<br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">val</span>: <span class="hljs-type">usize</span> = $e; <span class="hljs-comment">// 强制类型为整型</span><br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;&#125; = &#123;&#125;&quot;</span>, <span class="hljs-built_in">stringify!</span>&#123;$e&#125;, val);<br>    &#125;&#125;;<br>&#125;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    calculate! &#123;<br>        eval <span class="hljs-number">1</span> + <span class="hljs-number">2</span> <span class="hljs-comment">// 看到了吧，`eval` 可并不是 Rust 的关键字！</span><br>    &#125;<br><br>    calculate! &#123;<br>        <span class="hljs-title function_ invoke__">eval</span> (<span class="hljs-number">1</span> + <span class="hljs-number">2</span>) * (<span class="hljs-number">3</span> / <span class="hljs-number">4</span>)<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>这里的 <code>&#123;&#123; &#125;&#125;</code> 表示内部内容是一个 Rust block, </li>
+<li></li>
+</ul>
+<h2 id="可变参数接口"><a href="#可变参数接口" class="headerlink" title="可变参数接口"></a>可变参数接口</h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-built_in">macro_rules!</span> calculate &#123;<br>    <span class="hljs-comment">// 单个 `eval` 的模式</span><br>    (eval $e:expr) =&gt; &#123;&#123;<br>        &#123;<br>            <span class="hljs-keyword">let</span> <span class="hljs-variable">val</span>: <span class="hljs-type">usize</span> = $e; <span class="hljs-comment">// Force types to be integers</span><br>            <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;&#125; = &#123;&#125;&quot;</span>, <span class="hljs-built_in">stringify!</span>&#123;$e&#125;, val);<br>        &#125;<br>    &#125;&#125;;<br><br>    <span class="hljs-comment">// 递归地拆解多重的 `eval`</span><br>    (eval $e:expr, $(eval $es:expr),+) =&gt; &#123;&#123;<br>        calculate! &#123; eval $e &#125;<br>        calculate! &#123; $(eval $es),+ &#125;<br>    &#125;&#125;;<br>&#125;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    calculate! &#123; <span class="hljs-comment">// 妈妈快看，可变参数的 `calculate!`！</span><br>        eval <span class="hljs-number">1</span> + <span class="hljs-number">2</span>,<br>        eval <span class="hljs-number">3</span> + <span class="hljs-number">4</span>,<br>        <span class="hljs-title function_ invoke__">eval</span> (<span class="hljs-number">2</span> * <span class="hljs-number">3</span>) + <span class="hljs-number">1</span><br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h1 id="错误处理"><a href="#错误处理" class="headerlink" title="错误处理"></a>错误处理</h1><p>Rust 有多种错误处理方式:</p>
+<ul>
+<li>显式的 <code>panic</code>, 用于测试, 以及处理不可恢复的错误</li>
+<li><code>Option</code> 类型, 值可选或缺少值时</li>
+<li><code>Result</code>, 由调用者处理错误</li>
+</ul>
+<h2 id="panic"><a href="#panic" class="headerlink" title="panic"></a>panic</h2><p><code>panic!</code> 宏会打印一个错误消息并退出:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">give_princess</span>(gift: &amp;<span class="hljs-type">str</span>) &#123;<br>    <span class="hljs-keyword">if</span> gift == <span class="hljs-string">&quot;snake&quot;</span> &#123; <span class="hljs-built_in">panic!</span>(<span class="hljs-string">&quot;AAAaaaaaa!!&quot;</span>); &#125;<br>&#125;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-title function_ invoke__">give_princess</span>(<span class="hljs-string">&quot;teddy bear&quot;</span>);<br>    <span class="hljs-title function_ invoke__">give_princess</span>(<span class="hljs-string">&quot;snake&quot;</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="Option-和-unwrap"><a href="#Option-和-unwrap" class="headerlink" title="Option 和 unwrap"></a>Option 和 unwrap</h2><p><code>std</code> 标准库中有 <code>Option&lt;T&gt;</code> 的枚举类型, 用于有 “不存在” 的可能性的情况, 其表现为下面两个之一:</p>
+<ul>
+<li><code>Some(T)</code>, 找到一个属于 <code>T</code> 类型的元素</li>
+<li><code>None</code>, 找不到相应元素</li>
+</ul>
+<p>这些选项可以用 <code>match</code> 显式处理或者用 <code>unwrap</code> 隐式处理:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// 平民（commoner）们见多识广，收到什么礼物都能应对。</span><br><span class="hljs-comment">// 所有礼物都显式地使用 `match` 来处理。</span><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">give_commoner</span>(gift: <span class="hljs-type">Option</span>&lt;&amp;<span class="hljs-type">str</span>&gt;) &#123;<br>    <span class="hljs-comment">// 指出每种情况下的做法。</span><br>    <span class="hljs-keyword">match</span> gift &#123;<br>        <span class="hljs-title function_ invoke__">Some</span>(<span class="hljs-string">&quot;snake&quot;</span>) =&gt; <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Yuck! I&#x27;m throwing that snake in a fire.&quot;</span>),<br>        <span class="hljs-title function_ invoke__">Some</span>(inner)   =&gt; <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;&#125;? How nice.&quot;</span>, inner),<br>        <span class="hljs-literal">None</span>          =&gt; <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;No gift? Oh well.&quot;</span>),<br>    &#125;<br>&#125;<br><br><span class="hljs-comment">// 养在深闺人未识的公主见到蛇就会 `panic`（恐慌）。</span><br><span class="hljs-comment">// 这里所有的礼物都使用 `unwrap` 隐式地处理。</span><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">give_princess</span>(gift: <span class="hljs-type">Option</span>&lt;&amp;<span class="hljs-type">str</span>&gt;) &#123;<br>    <span class="hljs-comment">// `unwrap` 在接收到 `None` 时将返回 `panic`。</span><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">inside</span> = gift.<span class="hljs-title function_ invoke__">unwrap</span>();<br>    <span class="hljs-keyword">if</span> inside == <span class="hljs-string">&quot;snake&quot;</span> &#123; <span class="hljs-built_in">panic!</span>(<span class="hljs-string">&quot;AAAaaaaa!!!!&quot;</span>); &#125;<br><br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;I love &#123;&#125;s!!!!!&quot;</span>, inside);<br>&#125;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">food</span>  = <span class="hljs-title function_ invoke__">Some</span>(<span class="hljs-string">&quot;chicken&quot;</span>);<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">snake</span> = <span class="hljs-title function_ invoke__">Some</span>(<span class="hljs-string">&quot;snake&quot;</span>);<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">void</span>  = <span class="hljs-literal">None</span>;<br><br>    <span class="hljs-title function_ invoke__">give_commoner</span>(food);<br>    <span class="hljs-title function_ invoke__">give_commoner</span>(snake);<br>    <span class="hljs-title function_ invoke__">give_commoner</span>(void);<br><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">bird</span> = <span class="hljs-title function_ invoke__">Some</span>(<span class="hljs-string">&quot;robin&quot;</span>);<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">nothing</span> = <span class="hljs-literal">None</span>;<br><br>    <span class="hljs-title function_ invoke__">give_princess</span>(bird);<br>    <span class="hljs-title function_ invoke__">give_princess</span>(nothing);<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>unwrap</code> 是 <code>Option&lt;T&gt;</code> 的一个方法, 其尝试取出 <code>T</code>, 如果 <code>Option</code> 是 <code>Some(value)</code>, 则返回 <code>value</code>; 如果 <code>Option</code> 是 <code>None</code>, 则触发 <code>panic</code></li>
+</ul>
+<h3 id="用-运算符提取-Option"><a href="#用-运算符提取-Option" class="headerlink" title="用 ? 运算符提取 Option"></a>用 <code>?</code> 运算符提取 Option</h3><p>可以用 <code>?</code> 运算符解开 <code>Option</code>:</p>
+<ul>
+<li>假设 <code>x</code> 是 <code>Option</code></li>
+<li>如果 <code>x</code> 是 <code>Some</code>, 那么 <code>x?</code> 返回底层值</li>
+<li>如果 <code>x</code> 是 <code>None</code>, 那么 <code>x?</code> 会宗旨函数且返回 <code>None</code></li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">next_birthday</span>(current_age: <span class="hljs-type">Option</span>&lt;<span class="hljs-type">u8</span>&gt;) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">Option</span>&lt;<span class="hljs-type">String</span>&gt; &#123;<br>    <span class="hljs-comment">// 如果 `current_age` 是 `None`，这将返回 `None`。</span><br>    <span class="hljs-comment">// 如果 `current_age` 是 `Some`，内部的 `u8` 将赋值给 `next_age`。</span><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">next_age</span>: <span class="hljs-type">u8</span> = current_age?;<br>    <span class="hljs-title function_ invoke__">Some</span>(<span class="hljs-built_in">format!</span>(<span class="hljs-string">&quot;Next year I will be &#123;&#125;&quot;</span>, next_age))<br>&#125;<br></code></pre></td></tr></table></figure>
+
 
                 
               </div>
