@@ -24,7 +24,7 @@
 <meta property="og:description" content="通过例子学 Rust 中文版 Hello World定义函数的语法: 123fn main() &amp;#123;    ...&amp;#125;  在 Rust 中, ! 是 “宏” 的标识符, 如: 1println!(&quot;Hello World!&quot;); println! 就是一个宏. 123fn main() &amp;#123;    println!(&quot;Hello World!&amp;">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-09-15T01:13:37.000Z">
-<meta property="article:modified_time" content="2025-09-17T08:30:20.737Z">
+<meta property="article:modified_time" content="2025-09-17T09:29:48.410Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -246,7 +246,7 @@
         
         
         
-          477 分钟
+          478 分钟
         
       </span>
     
@@ -874,6 +874,11 @@
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// 下面使用连线来标注各个变量的创建和销毁，从而显示出生命周期。</span><br><span class="hljs-comment">// `i` 的生命周期最长，因为它的作用域完全覆盖了 `borrow1` 和</span><br><span class="hljs-comment">// `borrow2` 的。`borrow1` 和 `borrow2` 的周期没有关联，</span><br><span class="hljs-comment">// 因为它们各不相交。</span><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">i</span> = <span class="hljs-number">3</span>; <span class="hljs-comment">// Lifetime for `i` starts. ────────────────┐</span><br>    <span class="hljs-comment">//                                                     │</span><br>    &#123; <span class="hljs-comment">//                                                   │</span><br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">borrow1</span> = &amp;i; <span class="hljs-comment">// `borrow1` lifetime starts. ──┐│</span><br>        <span class="hljs-comment">//                                                ││</span><br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;borrow1: &#123;&#125;&quot;</span>, borrow1); <span class="hljs-comment">//              ││</span><br>    &#125; <span class="hljs-comment">// `borrow1 ends. ──────────────────────────────────┘│</span><br>    <span class="hljs-comment">//                                                     │</span><br>    <span class="hljs-comment">//                                                     │</span><br>    &#123; <span class="hljs-comment">//                                                   │</span><br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">borrow2</span> = &amp;i; <span class="hljs-comment">// `borrow2` lifetime starts. ──┐│</span><br>        <span class="hljs-comment">//                                                ││</span><br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;borrow2: &#123;&#125;&quot;</span>, borrow2); <span class="hljs-comment">//              ││</span><br>    &#125; <span class="hljs-comment">// `borrow2` ends. ─────────────────────────────────┘│</span><br>    <span class="hljs-comment">//                                                     │</span><br>&#125;   <span class="hljs-comment">// Lifetime ends. ─────────────────────────────────────┘</span><br><br></code></pre></td></tr></table></figure>
 
 <h2 id="显式标注生命周期"><a href="#显式标注生命周期" class="headerlink" title="显式标注生命周期"></a>显式标注生命周期</h2><p>当 Rust 无法自动推断引用关系时, 需要手动告诉编译器 “引用的有效时间应该持续多久”, 也就是用显式生命周期标注 (explicit lifetime annotations).</p>
+<p>一个 Rust 规则, 当函数返回引用 (如 <code>&amp;str</code>) 并且这个引用来自函数的参数 (也是引用), 此时必须显式标注生命周期来告诉编译器, 返回的引用与哪个输入引用寿命相同, 否则编译器不知道:</p>
+<ul>
+<li>引用的有效期需要与谁一致</li>
+</ul>
+<p>在结构体等定义中若出现引用也要显式标注生命周期.</p>
 <p>语法是, 在函数签名, 结构体定义等地方. 类似泛型, 给出 <code>&#39;a</code>, <code>&#39;b</code> 这样的标记:</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs rust">foo&lt;<span class="hljs-symbol">&#x27;a</span>, <span class="hljs-symbol">&#x27;b</span>&gt;<br><span class="hljs-comment">// `foo` 带有生命周期参数 `&#x27;a` 和 `&#x27;b`</span><br></code></pre></td></tr></table></figure>
 
