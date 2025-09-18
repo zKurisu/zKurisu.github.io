@@ -24,7 +24,7 @@
 <meta property="og:description" content="通过例子学 Rust 中文版 Hello World定义函数的语法: 123fn main() &amp;#123;    ...&amp;#125;  在 Rust 中, ! 是 “宏” 的标识符, 如: 1println!(&quot;Hello World!&quot;); println! 就是一个宏. 123fn main() &amp;#123;    println!(&quot;Hello World!&amp;">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-09-15T01:13:37.000Z">
-<meta property="article:modified_time" content="2025-09-17T09:29:48.410Z">
+<meta property="article:modified_time" content="2025-09-18T01:17:38.022Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          57k 字
+          58k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          478 分钟
+          481 分钟
         
       </span>
     
@@ -1142,6 +1142,17 @@
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">divide_non_zero_result</span>(a: <span class="hljs-type">u32</span>, b: <span class="hljs-type">u32</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">u32</span> &#123;<br>    <span class="hljs-keyword">if</span> b == <span class="hljs-number">0</span> &#123;<br>        <span class="hljs-built_in">panic!</span>(<span class="hljs-string">&quot;Divide-by-zero error&quot;</span>);<br>    &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> a &lt; b &#123;<br>        <span class="hljs-built_in">panic!</span>(<span class="hljs-string">&quot;Divide result is zero&quot;</span>);<br>    &#125;<br>    a / b<br>&#125;<br><br><span class="hljs-meta">#[cfg(test)]</span><br><span class="hljs-keyword">mod</span> tests &#123;<br>    <span class="hljs-keyword">use</span> super::*;<br><br>    <span class="hljs-meta">#[test]</span><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">test_divide</span>() &#123;<br>        <span class="hljs-built_in">assert_eq!</span>(<span class="hljs-title function_ invoke__">divide_non_zero_result</span>(<span class="hljs-number">10</span>, <span class="hljs-number">2</span>), <span class="hljs-number">5</span>);<br>    &#125;<br><br>    <span class="hljs-meta">#[test]</span><br>    <span class="hljs-meta">#[should_panic]</span><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">test_any_panic</span>() &#123;<br>        <span class="hljs-title function_ invoke__">divide_non_zero_result</span>(<span class="hljs-number">1</span>, <span class="hljs-number">0</span>);<br>    &#125;<br><br>    <span class="hljs-meta">#[test]</span><br>    <span class="hljs-meta">#[should_panic(expected = <span class="hljs-string">&quot;Divide result is zero&quot;</span>)]</span><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">test_specific_panic</span>() &#123;<br>        <span class="hljs-title function_ invoke__">divide_non_zero_result</span>(<span class="hljs-number">1</span>, <span class="hljs-number">10</span>);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <p>可以在 <code>cargo test</code> 中检查注释中 markdown 的语法正确性.</p>
+<h1 id="Cow"><a href="#Cow" class="headerlink" title="Cow"></a>Cow</h1><p>Cow, Copy on Write, 写时复制, 核心是: 读共享, 写时才复制.</p>
+<p>假如有这个场景: 有一份数据 (比如一个字符串, 一份文档), 多个地方 (变量, 线程, 结构体) 都在 “读取” 这份数据, 一开始, 这些地方都共享一份数据, 不进行复制, 节省内存和开销, 一旦有某个地方想要修改数据, 系统才真正复制一份新的数据.</p>
+<p>在 Rust 中, 其定义在 <code>std::borrow::Cow&lt;&#39;a, T&gt;</code>, 是一个 enum 类型, 表示一个智能指针:</p>
+<ul>
+<li><code>&#39;a</code> 是一个生命周期</li>
+<li><code>T</code> 泛型, 一般要求实现 <code>ToOwned</code> trait, 即可以复制</li>
+</ul>
+<p>该 enum 类型的简化定义如下:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">enum</span> <span class="hljs-title class_">Cow</span>&lt;<span class="hljs-symbol">&#x27;a</span>, T&gt;<br><span class="hljs-keyword">where</span><br>    T: <span class="hljs-built_in">ToOwned</span>,<br>&#123;<br>    <span class="hljs-title function_ invoke__">Borrowed</span>(&amp;<span class="hljs-symbol">&#x27;a</span> T),    <span class="hljs-comment">// 借用的数据，不拥有</span><br>    <span class="hljs-title function_ invoke__">Owned</span>(T::Owned),    <span class="hljs-comment">// 拥有的数据，比如 String，而不是 &amp;str</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>示例:</p>
 
                 
               </div>
