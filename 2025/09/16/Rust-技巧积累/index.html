@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="程序计时使用 std::time::&amp;#123;Instance, Duration&amp;#125;:  Instance 表示某个时间点 Duration 表示一段时间间隔  可以用:  Instance::now() 获取当前时间  123456789101112131415161718192021use std::time::&amp;#123;Instant, Duration&amp;#125;;fn ma">
+    <meta name="description" content="模块中定义的 MacroMacro 的位置Macro 需要定义在调用之前, 否则编译器会报错 macro undefined, 因为 Rust 的宏是在编译器展开, 编译器解析代码时, 必须先知道宏定义, 才能正确展开. 1234567fn main() &amp;#123;    my_macro!(...); &#x2F;&#x2F; ❌ 报错：cannot find macro &#96;my_macro&#96; in this s">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Rust-技巧积累">
 <meta property="og:url" content="http://example.com/2025/09/16/Rust-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="程序计时使用 std::time::&amp;#123;Instance, Duration&amp;#125;:  Instance 表示某个时间点 Duration 表示一段时间间隔  可以用:  Instance::now() 获取当前时间  123456789101112131415161718192021use std::time::&amp;#123;Instant, Duration&amp;#125;;fn ma">
+<meta property="og:description" content="模块中定义的 MacroMacro 的位置Macro 需要定义在调用之前, 否则编译器会报错 macro undefined, 因为 Rust 的宏是在编译器展开, 编译器解析代码时, 必须先知道宏定义, 才能正确展开. 1234567fn main() &amp;#123;    my_macro!(...); &#x2F;&#x2F; ❌ 报错：cannot find macro &#96;my_macro&#96; in this s">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-09-16T13:15:22.000Z">
-<meta property="article:modified_time" content="2025-09-18T01:43:40.832Z">
+<meta property="article:modified_time" content="2025-09-18T06:39:43.027Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -246,7 +246,7 @@
         
         
         
-          99 分钟
+          102 分钟
         
       </span>
     
@@ -289,7 +289,13 @@
             
               <div class="markdown-body">
                 
-                <h1 id="程序计时"><a href="#程序计时" class="headerlink" title="程序计时"></a>程序计时</h1><p>使用 <code>std::time::&#123;Instance, Duration&#125;</code>:</p>
+                <h1 id="模块中定义的-Macro"><a href="#模块中定义的-Macro" class="headerlink" title="模块中定义的 Macro"></a>模块中定义的 Macro</h1><h1 id="Macro-的位置"><a href="#Macro-的位置" class="headerlink" title="Macro 的位置"></a>Macro 的位置</h1><p>Macro 需要定义在调用之前, 否则编译器会报错 <code>macro undefined</code>, 因为 Rust 的宏是在编译器展开, 编译器解析代码时, 必须先知道宏定义, 才能正确展开.</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    my_macro!(...); <span class="hljs-comment">// ❌ 报错：cannot find macro `my_macro` in this scope</span><br>&#125;<br><br><span class="hljs-built_in">macro_rules!</span> my_macro &#123;<br>    ($($t:tt)*) =&gt; &#123; ... &#125;;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>正确的顺序:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// ✅ 先定义宏</span><br><span class="hljs-built_in">macro_rules!</span> say_hello &#123;<br>    () =&gt; &#123;<br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Hello from macro!&quot;</span>);<br>    &#125;;<br>&#125;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-comment">// 然后调用宏</span><br>    say_hello!(); <span class="hljs-comment">// 输出：Hello from macro!</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h1 id="程序计时"><a href="#程序计时" class="headerlink" title="程序计时"></a>程序计时</h1><p>使用 <code>std::time::&#123;Instance, Duration&#125;</code>:</p>
 <ul>
 <li><code>Instance</code> 表示某个时间点</li>
 <li><code>Duration</code> 表示一段时间间隔</li>
