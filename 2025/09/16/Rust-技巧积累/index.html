@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="build.rs 构建脚本build.rs 是用 Rust 编写的程序, 会在主程序编译之前运行. 可以进行代码生成, 环境检测, 外部工具调用, 设置编译参数等. 该文件一般位于项目根目录: 12345your_crate&#x2F;├── Cargo.toml├── build.rs      &lt;-- 构建脚本（可选）└── src&#x2F;    └── main.rs   &lt;-- 你的主代码">
+    <meta name="description" content="FFI 接口FFI, Foreign Function Interface, 外部函数接口, 允许一种编程语言 (如 Rust) 调用另一种语言 (如 C) 编写的函数. Rust FFI 可以用来:  调用 C&#x2F;C++ 等语言的库函数 暴露 Rust 函数供其他语言调用  FFI 的核心是利用 C 语言的 ABI (Application Binary Interface), 因为其最通用和稳定">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Rust-技巧积累">
 <meta property="og:url" content="http://example.com/2025/09/16/Rust-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="build.rs 构建脚本build.rs 是用 Rust 编写的程序, 会在主程序编译之前运行. 可以进行代码生成, 环境检测, 外部工具调用, 设置编译参数等. 该文件一般位于项目根目录: 12345your_crate&#x2F;├── Cargo.toml├── build.rs      &lt;-- 构建脚本（可选）└── src&#x2F;    └── main.rs   &lt;-- 你的主代码">
+<meta property="og:description" content="FFI 接口FFI, Foreign Function Interface, 外部函数接口, 允许一种编程语言 (如 Rust) 调用另一种语言 (如 C) 编写的函数. Rust FFI 可以用来:  调用 C&#x2F;C++ 等语言的库函数 暴露 Rust 函数供其他语言调用  FFI 的核心是利用 C 语言的 ABI (Application Binary Interface), 因为其最通用和稳定">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-09-16T13:15:22.000Z">
-<meta property="article:modified_time" content="2025-09-19T05:19:19.452Z">
+<meta property="article:modified_time" content="2025-09-19T06:06:05.341Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          17k 字
+          19k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          140 分钟
+          158 分钟
         
       </span>
     
@@ -289,7 +289,37 @@
             
               <div class="markdown-body">
                 
-                <h1 id="build-rs-构建脚本"><a href="#build-rs-构建脚本" class="headerlink" title="build.rs 构建脚本"></a><code>build.rs</code> 构建脚本</h1><p><code>build.rs</code> 是用 Rust 编写的程序, 会在主程序编译之前运行. 可以进行代码生成, 环境检测, 外部工具调用, 设置编译参数等.</p>
+                <h1 id="FFI-接口"><a href="#FFI-接口" class="headerlink" title="FFI 接口"></a>FFI 接口</h1><p>FFI, Foreign Function Interface, 外部函数接口, 允许一种编程语言 (如 Rust) 调用另一种语言 (如 C) 编写的函数.</p>
+<p>Rust FFI 可以用来:</p>
+<ul>
+<li>调用 <code>C/C++</code> 等语言的库函数</li>
+<li>暴露 <code>Rust</code> 函数供其他语言调用</li>
+</ul>
+<p>FFI 的核心是利用 C 语言的 ABI (Application Binary Interface), 因为其最通用和稳定, 几乎所有语言都支持.</p>
+<h2 id="extern-关键字"><a href="#extern-关键字" class="headerlink" title="extern 关键字"></a>extern 关键字</h2><p>Rust 中的 <code>extern</code> 关键字用于:</p>
+<ul>
+<li>定义或调用 FFI</li>
+<li>指定函数使用的调用约定</li>
+<li>声明外部库中的函数, 使得 Rust 可以调用</li>
+</ul>
+<h2 id="暴露-Rust-函数"><a href="#暴露-Rust-函数" class="headerlink" title="暴露 Rust 函数"></a>暴露 Rust 函数</h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::os::raw::c_char;<br><span class="hljs-keyword">use</span> std::ffi::CString;<br><br><span class="hljs-comment">/// 一个简单的 FFI 函数：返回一个字符串 &quot;Hello from Rust!&quot;</span><br><span class="hljs-comment">/// 使用 C ABI，可以被其他语言调用</span><br><span class="hljs-meta">#[no_mangle]</span><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">extern</span> <span class="hljs-string">&quot;C&quot;</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">greet</span>() <span class="hljs-punctuation">-&gt;</span> *<span class="hljs-keyword">mut</span> c_char &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">s</span> = CString::<span class="hljs-title function_ invoke__">new</span>(<span class="hljs-string">&quot;Hello from Rust FFI!&quot;</span>)<br>        .<span class="hljs-title function_ invoke__">expect</span>(<span class="hljs-string">&quot;CString::new failed&quot;</span>);<br>    s.<span class="hljs-title function_ invoke__">into_raw</span>() <span class="hljs-comment">// 转为 *mut c_char，调用者需负责释放</span><br>&#125;<br><br><span class="hljs-comment">/// 释放由 Rust 分配的字符串内存</span><br><span class="hljs-meta">#[no_mangle]</span><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">extern</span> <span class="hljs-string">&quot;C&quot;</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">free_string</span>(s: *<span class="hljs-keyword">mut</span> c_char) &#123;<br>    <span class="hljs-keyword">if</span> s.<span class="hljs-title function_ invoke__">is_null</span>() &#123;<br>        <span class="hljs-keyword">return</span>;<br>    &#125;<br>    <span class="hljs-comment">// 将裸指针转回 CString 并自动释放</span><br>    <span class="hljs-keyword">unsafe</span> &#123;<br>        CString::<span class="hljs-title function_ invoke__">from_raw</span>(s);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>#[no_mangle]</code> 能确保函数名在编译后保持不变</li>
+<li><code>extern &quot;C&quot;</code> 使用 C 的调用约定, 确保 ABI 兼容</li>
+<li><code>std::ffi::CString</code> 是 C 风格的字符串</li>
+</ul>
+<p>还需要确保编译为动态库:</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs ini"><span class="hljs-section">[package]</span><br><span class="hljs-attr">name</span> = <span class="hljs-string">&quot;my_ffi_lib&quot;</span><br><span class="hljs-attr">version</span> = <span class="hljs-string">&quot;0.1.0&quot;</span><br><span class="hljs-attr">edition</span> = <span class="hljs-string">&quot;2021&quot;</span><br><br><span class="hljs-section">[lib]</span><br><span class="hljs-attr">name</span> = <span class="hljs-string">&quot;my_ffi_lib&quot;</span><br><span class="hljs-attr">crate-type</span> = [<span class="hljs-string">&quot;cdylib&quot;</span>]  <span class="hljs-comment"># 重要！生成动态库，其他语言才能调用</span><br></code></pre></td></tr></table></figure>
+
+<p>C 使用示例:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><br><span class="hljs-comment">// 假设你已经用 cbindgen 生成了头文件，或者手动声明</span><br><span class="hljs-keyword">extern</span> <span class="hljs-type">char</span>* <span class="hljs-title function_">greet</span><span class="hljs-params">()</span>;<br><span class="hljs-keyword">extern</span> <span class="hljs-type">void</span> <span class="hljs-title function_">free_string</span><span class="hljs-params">(<span class="hljs-type">char</span>*)</span>;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-type">char</span>* msg = greet();<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%s\n&quot;</span>, msg);<br>    free_string(msg);<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>注意编译时进行链接</li>
+</ul>
+<h2 id="声明外部函数"><a href="#声明外部函数" class="headerlink" title="声明外部函数"></a>声明外部函数</h2><p>将外部函数声明放 <code>extern</code> 块中:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">extern</span> <span class="hljs-string">&quot;Rust&quot;</span> &#123;<br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">my_demo_function</span>(a: <span class="hljs-type">u32</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">u32</span>;<br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">my_demo_function_alias</span>(a: <span class="hljs-type">u32</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">u32</span>;<br>&#125;<br><br><span class="hljs-keyword">mod</span> foo &#123;<br>    <span class="hljs-comment">// No `extern` equals `extern &quot;Rust&quot;`.</span><br>    <span class="hljs-meta">#[no_mangle]</span><br>    <span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">my_demo_function</span>(a: <span class="hljs-type">u32</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">u32</span> &#123;<br>        a<br>    &#125;<br><br>    <span class="hljs-meta">#[no_mangle]</span><br>    <span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">my_demo_function_alias</span>(a: <span class="hljs-type">u32</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">u32</span> &#123;<br>        a<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h1 id="build-rs-构建脚本"><a href="#build-rs-构建脚本" class="headerlink" title="build.rs 构建脚本"></a><code>build.rs</code> 构建脚本</h1><p><code>build.rs</code> 是用 Rust 编写的程序, 会在主程序编译之前运行. 可以进行代码生成, 环境检测, 外部工具调用, 设置编译参数等.</p>
 <p>该文件一般位于项目根目录:</p>
 <figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs stylus">your_crate/<br>├── Cargo<span class="hljs-selector-class">.toml</span><br>├── build<span class="hljs-selector-class">.rs</span>      &lt;-- 构建脚本（可选）<br>└── <span class="hljs-attribute">src</span>/<br>    └── <span class="hljs-selector-tag">main</span><span class="hljs-selector-class">.rs</span>   &lt;-- 你的主代码<br></code></pre></td></tr></table></figure>
 
@@ -312,7 +342,15 @@
 <p>注意调用 <code>cargo build</code> 时需要加上 <code>-vv</code> 参数才行:</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;cargo::warning=Hello cargo build!&quot;</span>)<br>&#125;<br></code></pre></td></tr></table></figure>
 
-<h2 id="设置环境变量"><a href="#设置环境变量" class="headerlink" title="设置环境变量"></a>设置环境变量</h2><p>用 <code>cargo::rustc-env=VAR=VALUE</code></p>
+<h2 id="设置环境变量"><a href="#设置环境变量" class="headerlink" title="设置环境变量"></a>设置环境变量</h2><p>用 <code>cargo::rustc-env=VAR=VALUE</code>:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">timestamp</span> = std::time::SystemTime::<span class="hljs-title function_ invoke__">now</span>()<br>        .<span class="hljs-title function_ invoke__">duration_since</span>(std::time::UNIX_EPOCH)<br>        .<span class="hljs-title function_ invoke__">unwrap</span>()<br>        .<span class="hljs-title function_ invoke__">as_secs</span>(); <span class="hljs-comment">// What&#x27;s the use of this timestamp here?</span><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">your_command</span> = <span class="hljs-built_in">format!</span>(<br>        <span class="hljs-string">&quot;rustc-env=TEST_FOO=&#123;&#125;&quot;</span>,<br>        timestamp<br>    );<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;cargo:&#123;&#125;&quot;</span>, your_command);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="启用-cfg-配置"><a href="#启用-cfg-配置" class="headerlink" title="启用 cfg 配置"></a>启用 cfg 配置</h2><p>用 <code>cargo::rustc-cfg=KEY[=&quot;VALUE&quot;]</code>:</p>
+<ul>
+<li>这里的 <code>[]</code> 是可选的意思, 不是要加上括号</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">your_command</span> = <span class="hljs-string">&quot;rustc-cfg=feature=\&quot;pass\&quot;&quot;</span>;<br><span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;cargo:&#123;&#125;&quot;</span>, your_command);<br></code></pre></td></tr></table></figure>
+
 <h2 id="链接-C-库"><a href="#链接-C-库" class="headerlink" title="链接 C 库"></a>链接 C 库</h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-comment">// 告诉 Cargo 要链接名为 `mylib` 的库</span><br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;cargo::rustc-link-lib=mylib&quot;</span>);<br><br>    <span class="hljs-comment">// 如果库不在系统默认路径，你也可以指定库搜索路径</span><br>    <span class="hljs-comment">// 比如库在 ./libs/ 目录下：</span><br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;cargo::rustc-link-search=native=./libs&quot;</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <h2 id="OUT-DIR"><a href="#OUT-DIR" class="headerlink" title="OUT_DIR"></a><code>OUT_DIR</code></h2><p><code>OUT_DIR</code> 是 Rust 自动设置的一个环境变量, 指向一个临时目录, 用于存放构建脚本生成的文件, 其位于;</p>
