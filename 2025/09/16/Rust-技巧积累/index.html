@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="裸指针构造和处理裸指针, Raw pointer, 是一种不提供任何运行时安全检查的指针类型, 类似 C 中的普通指针. Rust 中有两种裸指针:  *const T, 指向类型 T 的不可变裸指针 *mut T, 指向类型 T 的可变裸指针  之所以称为 “裸”, 就是因为其能绕过 Rust 的安全规则, 比如借用检查, 生命周期, 可变性规则等. 需要和 unsafe 关键字一起只用. 示例">
+    <meta name="description" content="build.rs 构建脚本build.rs 是用 Rust 编写的程序, 会在主程序编译之前运行. 可以进行代码生成, 环境检测, 外部工具调用, 设置编译参数等. 该文件一般位于项目根目录: 12345your_crate&#x2F;├── Cargo.toml├── build.rs      &lt;-- 构建脚本（可选）└── src&#x2F;    └── main.rs   &lt;-- 你的主代码">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Rust-技巧积累">
 <meta property="og:url" content="http://example.com/2025/09/16/Rust-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="裸指针构造和处理裸指针, Raw pointer, 是一种不提供任何运行时安全检查的指针类型, 类似 C 中的普通指针. Rust 中有两种裸指针:  *const T, 指向类型 T 的不可变裸指针 *mut T, 指向类型 T 的可变裸指针  之所以称为 “裸”, 就是因为其能绕过 Rust 的安全规则, 比如借用检查, 生命周期, 可变性规则等. 需要和 unsafe 关键字一起只用. 示例">
+<meta property="og:description" content="build.rs 构建脚本build.rs 是用 Rust 编写的程序, 会在主程序编译之前运行. 可以进行代码生成, 环境检测, 外部工具调用, 设置编译参数等. 该文件一般位于项目根目录: 12345your_crate&#x2F;├── Cargo.toml├── build.rs      &lt;-- 构建脚本（可选）└── src&#x2F;    └── main.rs   &lt;-- 你的主代码">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-09-16T13:15:22.000Z">
-<meta property="article:modified_time" content="2025-09-19T02:40:19.350Z">
+<meta property="article:modified_time" content="2025-09-19T05:19:19.452Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          15k 字
+          17k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          122 分钟
+          140 分钟
         
       </span>
     
@@ -289,7 +289,45 @@
             
               <div class="markdown-body">
                 
-                <h1 id="裸指针构造和处理"><a href="#裸指针构造和处理" class="headerlink" title="裸指针构造和处理"></a>裸指针构造和处理</h1><p>裸指针, Raw pointer, 是一种不提供任何运行时安全检查的指针类型, 类似 C 中的普通指针.</p>
+                <h1 id="build-rs-构建脚本"><a href="#build-rs-构建脚本" class="headerlink" title="build.rs 构建脚本"></a><code>build.rs</code> 构建脚本</h1><p><code>build.rs</code> 是用 Rust 编写的程序, 会在主程序编译之前运行. 可以进行代码生成, 环境检测, 外部工具调用, 设置编译参数等.</p>
+<p>该文件一般位于项目根目录:</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs stylus">your_crate/<br>├── Cargo<span class="hljs-selector-class">.toml</span><br>├── build<span class="hljs-selector-class">.rs</span>      &lt;-- 构建脚本（可选）<br>└── <span class="hljs-attribute">src</span>/<br>    └── <span class="hljs-selector-tag">main</span><span class="hljs-selector-class">.rs</span>   &lt;-- 你的主代码<br></code></pre></td></tr></table></figure>
+
+<p>如果用 <code>cargo</code> 进行项目管理, 在运行 <code>cargo build</code> 时:</p>
+<ol>
+<li>执行 <code>build.rs</code> 脚本</li>
+<li>编译 crate</li>
+</ol>
+<p><code>build.rs</code> 通过输出向 cargo 传递构建指令. 这些指令都以 <code>cargo::</code> 开头.</p>
+<p><code>build.rs</code> 的输出会写入 <code>target/debug/build/&lt;pkg&gt;/output</code> 文件中.</p>
+<h2 id="hello-world"><a href="#hello-world" class="headerlink" title="hello world"></a>hello world</h2><p>仅打印信息:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// build.rs</span><br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Hello from build.rs!&quot;</span>);<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Run before compile&quot;</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这些信息不会打印到终端, 而是捕获到 <code>output</code> 文件中.</p>
+<h2 id="打印到终端的输出"><a href="#打印到终端的输出" class="headerlink" title="打印到终端的输出"></a>打印到终端的输出</h2><p>可以用:</p>
+<ul>
+<li><code>cargo::error=Message</code>, 在 terminal 输出 error</li>
+<li><code>cargo::warning=Message</code>, 在 terminal 输出 warning 信息</li>
+</ul>
+<p>注意调用 <code>cargo build</code> 时需要加上 <code>-vv</code> 参数才行:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;cargo::warning=Hello cargo build!&quot;</span>)<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="设置环境变量"><a href="#设置环境变量" class="headerlink" title="设置环境变量"></a>设置环境变量</h2><p>用 <code>cargo::rustc-env=VAR=VALUE</code></p>
+<h2 id="链接-C-库"><a href="#链接-C-库" class="headerlink" title="链接 C 库"></a>链接 C 库</h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-comment">// 告诉 Cargo 要链接名为 `mylib` 的库</span><br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;cargo::rustc-link-lib=mylib&quot;</span>);<br><br>    <span class="hljs-comment">// 如果库不在系统默认路径，你也可以指定库搜索路径</span><br>    <span class="hljs-comment">// 比如库在 ./libs/ 目录下：</span><br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;cargo::rustc-link-search=native=./libs&quot;</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="OUT-DIR"><a href="#OUT-DIR" class="headerlink" title="OUT_DIR"></a><code>OUT_DIR</code></h2><p><code>OUT_DIR</code> 是 Rust 自动设置的一个环境变量, 指向一个临时目录, 用于存放构建脚本生成的文件, 其位于;</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs awk">target<span class="hljs-regexp">/debug/</span>build<span class="hljs-regexp">/&lt;your_crate_name&gt;-&lt;hash&gt;/</span>out/<br></code></pre></td></tr></table></figure>
+
+<p>如果是 <code>release</code> 模式, 则位于:</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs awk">target<span class="hljs-regexp">/release/</span>build<span class="hljs-regexp">/&lt;your_crate_name&gt;-&lt;hash&gt;/</span>out/<br></code></pre></td></tr></table></figure>
+
+<p>在 <code>build.rs</code> 通过标准库来获取该环境变量的值:</p>
+<figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lasso"><span class="hljs-keyword">let</span> out_dir = std<span class="hljs-type">::env</span><span class="hljs-type">::var_os</span>(<span class="hljs-string">&quot;OUT_DIR&quot;</span>).expect(<span class="hljs-string">&quot;OUT_DIR 环境变量未设置&quot;</span>);<br></code></pre></td></tr></table></figure>
+
+
+
+
+<h1 id="裸指针构造和处理"><a href="#裸指针构造和处理" class="headerlink" title="裸指针构造和处理"></a>裸指针构造和处理</h1><p>裸指针, Raw pointer, 是一种不提供任何运行时安全检查的指针类型, 类似 C 中的普通指针.</p>
 <p>Rust 中有两种裸指针:</p>
 <ul>
 <li><code>*const T</code>, 指向类型 <code>T</code> 的不可变裸指针</li>
@@ -309,6 +347,18 @@
 <li>指针不对齐 (aligned), 指向非法对齐的地址</li>
 <li>指向其他类型, 不是类型 <code>T</code></li>
 </ul>
+<h2 id="Box-和裸指针"><a href="#Box-和裸指针" class="headerlink" title="Box 和裸指针"></a>Box 和裸指针</h2><p>可以用 <code>Box::into_raw()</code>, 将一个 <code>Box</code> 转为裸指针, 放弃所有权但不释放内存:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">into_raw</span>(b: <span class="hljs-type">Box</span>&lt;T&gt;) <span class="hljs-punctuation">-&gt;</span> *<span class="hljs-keyword">mut</span> T<br></code></pre></td></tr></table></figure>
+
+<p>注意这块内存需要后续手动释放:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-comment">// 1. 在堆上分配一个整数，用 Box 管理</span><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">boxed</span> = <span class="hljs-type">Box</span>::<span class="hljs-title function_ invoke__">new</span>(<span class="hljs-number">42</span>);<br><br>    <span class="hljs-comment">// 2. 将 Box 转为裸指针，Box 的所有权被转移，不再自动释放内存</span><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">raw_ptr</span>: *<span class="hljs-keyword">mut</span> <span class="hljs-type">i32</span> = <span class="hljs-type">Box</span>::<span class="hljs-title function_ invoke__">into_raw</span>(boxed);<br><br>    <span class="hljs-comment">// ⚠️ 此时 boxed 变量不能再使用！所有权已经转移</span><br>    <span class="hljs-comment">// println!(&quot;&#123;&#125;&quot;, boxed); // 编译错误！</span><br><br>    <span class="hljs-comment">// 3. 裸指针仍然指向有效的堆内存，值为 42</span><br>    <span class="hljs-keyword">unsafe</span> &#123;<br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;裸指针指向的值: &#123;&#125;&quot;</span>, *raw_ptr); <span class="hljs-comment">// 42</span><br>    &#125;<br><br>    <span class="hljs-comment">// 4. ⚠️ 注意：你必须在某个时刻手动将这块内存转回 Box，或者手动释放！</span><br>    <span class="hljs-comment">// 否则会导致内存泄漏！</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>可以用 <code>Box::from_raw()</code>, 将裸指针 <code>*mut T</code> 转回 <code>Box&lt;T&gt;</code>, 重新获得所有权, 能够安全释放.</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">from_raw</span>(raw: *<span class="hljs-keyword">mut</span> T) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">Box</span>&lt;T&gt;<br></code></pre></td></tr></table></figure>
+
+<p>示例:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-comment">// 1. 创建一个 Box，分配堆内存</span><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">boxed</span> = <span class="hljs-type">Box</span>::<span class="hljs-title function_ invoke__">new</span>(<span class="hljs-number">42</span>);<br><br>    <span class="hljs-comment">// 2. 转为裸指针，放弃 Box 所有权（不释放内存）</span><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">raw_ptr</span>: *<span class="hljs-keyword">mut</span> <span class="hljs-type">i32</span> = <span class="hljs-type">Box</span>::<span class="hljs-title function_ invoke__">into_raw</span>(boxed);<br><br>    <span class="hljs-comment">// 3. 使用裸指针（通过 unsafe）</span><br>    <span class="hljs-keyword">unsafe</span> &#123;<br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;裸指针指向的值: &#123;&#125;&quot;</span>, *raw_ptr); <span class="hljs-comment">// 42</span><br>    &#125;<br><br>    <span class="hljs-comment">// 4. 将裸指针转回 Box，重新获得所有权，内存将被自动管理</span><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">boxed_again</span>: <span class="hljs-type">Box</span>&lt;<span class="hljs-type">i32</span>&gt; = <span class="hljs-keyword">unsafe</span> &#123; <span class="hljs-type">Box</span>::<span class="hljs-title function_ invoke__">from_raw</span>(raw_ptr) &#125;;<br><br>    <span class="hljs-comment">// 5. Box 再次管理内存，离开作用域时会自动释放</span><br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;重新装箱后的值: &#123;&#125;&quot;</span>, boxed_again); <span class="hljs-comment">// 42</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
 <h1 id="获取数值类型最大值"><a href="#获取数值类型最大值" class="headerlink" title="获取数值类型最大值"></a>获取数值类型最大值</h1><p>比如 <code>u8</code> 的最大值: <code>u8::MAX</code>.</p>
 <h1 id="Turbofish-语法"><a href="#Turbofish-语法" class="headerlink" title="Turbofish 语法"></a>Turbofish 语法</h1><p>Turbofish 语法指, 调用泛型函数或方法时, 在调用点后面使用 <code>::&lt;Type1, Type2, ...&gt;</code> 的方式, 显式指定泛型参数的具体类型.</p>
 <p>语法格式:</p>
