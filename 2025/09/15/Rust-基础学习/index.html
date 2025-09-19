@@ -24,7 +24,7 @@
 <meta property="og:description" content="通过例子学 Rust 中文版 Hello World定义函数的语法: 123fn main() &amp;#123;    ...&amp;#125;  在 Rust 中, ! 是 “宏” 的标识符, 如: 1println!(&quot;Hello World!&quot;); println! 就是一个宏. 123fn main() &amp;#123;    println!(&quot;Hello World!&amp;">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-09-15T01:13:37.000Z">
-<meta property="article:modified_time" content="2025-09-18T07:07:16.961Z">
+<meta property="article:modified_time" content="2025-09-19T02:30:20.263Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          61k 字
+          62k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          512 分钟
+          514 分钟
         
       </span>
     
@@ -1187,6 +1187,8 @@
 <p>多个生产者的示例:</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::sync::mpsc;<br><span class="hljs-keyword">use</span> std::thread;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> (tx, rx) = mpsc::<span class="hljs-title function_ invoke__">channel</span>();<br><br>    <span class="hljs-keyword">for</span> <span class="hljs-variable">i</span> <span class="hljs-keyword">in</span> <span class="hljs-number">0</span>..<span class="hljs-number">3</span> &#123;<br>        <span class="hljs-comment">// 克隆 Sender，使得每个线程都有自己的发送端</span><br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">tx_clone</span> = tx.<span class="hljs-title function_ invoke__">clone</span>();<br><br>        thread::<span class="hljs-title function_ invoke__">spawn</span>(<span class="hljs-keyword">move</span> || &#123;<br>            <span class="hljs-keyword">let</span> <span class="hljs-variable">msg</span> = <span class="hljs-built_in">format!</span>(<span class="hljs-string">&quot;Message from thread &#123;&#125;&quot;</span>, i);<br>            tx_clone.<span class="hljs-title function_ invoke__">send</span>(msg).<span class="hljs-title function_ invoke__">unwrap</span>();<br>        &#125;);<br>    &#125;<br><br>    <span class="hljs-comment">// 注意：必须在所有 Sender 被 drop 后才能安全地结束接收</span><br>    <span class="hljs-comment">// 为了让主线程能收到所有消息，我们在这里 drop 原始的 tx（可选，但推荐）</span><br>    <span class="hljs-title function_ invoke__">drop</span>(tx);<br><br>    <span class="hljs-comment">// 接收所有消息</span><br>    <span class="hljs-keyword">for</span> <span class="hljs-variable">received</span> <span class="hljs-keyword">in</span> rx &#123;<br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Got: &#123;&#125;&quot;</span>, received);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 
+<h1 id="unsafe-关键字"><a href="#unsafe-关键字" class="headerlink" title="unsafe 关键字"></a>unsafe 关键字</h1><p><code>unsafe</code> 关键字用于标记一个代码块, 表明其可能 “不安全”, 需要程序员自己保证正确性.</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// 标记为 unsafe 函数</span><br><span class="hljs-keyword">unsafe</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">dangerous</span>() &#123;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;这是一个 unsafe 函数！&quot;</span>);<br>    <span class="hljs-comment">// 可能包含不安全操作，比如解引用裸指针、访问 static mut 等</span><br>&#125;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-comment">// 调用 unsafe 函数也必须放在 unsafe 块中</span><br>    <span class="hljs-keyword">unsafe</span> &#123;<br>        <span class="hljs-title function_ invoke__">dangerous</span>();<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 
 
 

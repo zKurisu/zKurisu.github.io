@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="获取数值类型最大值比如 u8 的最大值: u8::Max. Turbofish 语法Turbofish 语法指, 调用泛型函数或方法时, 在调用点后面使用 ::&lt;Type1, Type2, ...&gt; 的方式, 显式指定泛型参数的具体类型. 语法格式: 123some_function::&lt;TypeA, TypeB&gt;(args...);&#x2F;&#x2F; 或者对于方法：some_value">
+    <meta name="description" content="裸指针构造和处理裸指针, Raw pointer, 是一种不提供任何运行时安全检查的指针类型, 类似 C 中的普通指针. Rust 中有两种裸指针:  *const T, 指向类型 T 的不可变裸指针 *mut T, 指向类型 T 的可变裸指针  之所以称为 “裸”, 就是因为其能绕过 Rust 的安全规则, 比如借用检查, 生命周期, 可变性规则等. 需要和 unsafe 关键字一起只用. 示例">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Rust-技巧积累">
 <meta property="og:url" content="http://example.com/2025/09/16/Rust-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="获取数值类型最大值比如 u8 的最大值: u8::Max. Turbofish 语法Turbofish 语法指, 调用泛型函数或方法时, 在调用点后面使用 ::&lt;Type1, Type2, ...&gt; 的方式, 显式指定泛型参数的具体类型. 语法格式: 123some_function::&lt;TypeA, TypeB&gt;(args...);&#x2F;&#x2F; 或者对于方法：some_value">
+<meta property="og:description" content="裸指针构造和处理裸指针, Raw pointer, 是一种不提供任何运行时安全检查的指针类型, 类似 C 中的普通指针. Rust 中有两种裸指针:  *const T, 指向类型 T 的不可变裸指针 *mut T, 指向类型 T 的可变裸指针  之所以称为 “裸”, 就是因为其能绕过 Rust 的安全规则, 比如借用检查, 生命周期, 可变性规则等. 需要和 unsafe 关键字一起只用. 示例">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-09-16T13:15:22.000Z">
-<meta property="article:modified_time" content="2025-09-18T16:01:22.824Z">
+<meta property="article:modified_time" content="2025-09-19T02:40:19.350Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          14k 字
+          15k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          116 分钟
+          122 分钟
         
       </span>
     
@@ -289,7 +289,27 @@
             
               <div class="markdown-body">
                 
-                <h1 id="获取数值类型最大值"><a href="#获取数值类型最大值" class="headerlink" title="获取数值类型最大值"></a>获取数值类型最大值</h1><p>比如 <code>u8</code> 的最大值: <code>u8::Max</code>.</p>
+                <h1 id="裸指针构造和处理"><a href="#裸指针构造和处理" class="headerlink" title="裸指针构造和处理"></a>裸指针构造和处理</h1><p>裸指针, Raw pointer, 是一种不提供任何运行时安全检查的指针类型, 类似 C 中的普通指针.</p>
+<p>Rust 中有两种裸指针:</p>
+<ul>
+<li><code>*const T</code>, 指向类型 <code>T</code> 的不可变裸指针</li>
+<li><code>*mut T</code>, 指向类型 <code>T</code> 的可变裸指针</li>
+</ul>
+<p>之所以称为 “裸”, 就是因为其能绕过 Rust 的安全规则, 比如借用检查, 生命周期, 可变性规则等. 需要和 <code>unsafe</code> 关键字一起只用.</p>
+<p>示例:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">x</span> = <span class="hljs-number">42</span>;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">raw_ptr</span>: *<span class="hljs-keyword">const</span> <span class="hljs-type">i32</span> = &amp;x; <span class="hljs-comment">// 创建一个不可变裸指针，指向 x</span><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">raw_mut_ptr</span>: *<span class="hljs-keyword">mut</span> <span class="hljs-type">i32</span> = &amp;<span class="hljs-keyword">mut</span> x; <span class="hljs-comment">// 创建一个可变裸指针（如果 x 是 mut 的）</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>解引用裸指针必须放在 <code>unsafe</code> 块中:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">x</span> = <span class="hljs-number">42</span>;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">raw_ptr</span>: *<span class="hljs-keyword">const</span> <span class="hljs-type">i32</span> = &amp;x;<br><br>    <span class="hljs-comment">// ❌ 下面这行不能直接运行，解引用裸指针必须放在 unsafe 块中</span><br>    <span class="hljs-comment">// println!(&quot;&#123;&#125;&quot;, *raw_ptr);</span><br><br>    <span class="hljs-comment">// ✅ 正确方式：使用 unsafe 块</span><br>    <span class="hljs-keyword">unsafe</span> &#123;<br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;裸指针指向的值: &#123;&#125;&quot;</span>, *raw_ptr); <span class="hljs-comment">// 42</span><br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>因为其可能遇到:</p>
+<ul>
+<li>指针为 <code>null</code>, 即指向地址为 <code>0</code> 的无效地址</li>
+<li>指针悬垂 (dangling), 指向已释放的内存</li>
+<li>指针不对齐 (aligned), 指向非法对齐的地址</li>
+<li>指向其他类型, 不是类型 <code>T</code></li>
+</ul>
+<h1 id="获取数值类型最大值"><a href="#获取数值类型最大值" class="headerlink" title="获取数值类型最大值"></a>获取数值类型最大值</h1><p>比如 <code>u8</code> 的最大值: <code>u8::MAX</code>.</p>
 <h1 id="Turbofish-语法"><a href="#Turbofish-语法" class="headerlink" title="Turbofish 语法"></a>Turbofish 语法</h1><p>Turbofish 语法指, 调用泛型函数或方法时, 在调用点后面使用 <code>::&lt;Type1, Type2, ...&gt;</code> 的方式, 显式指定泛型参数的具体类型.</p>
 <p>语法格式:</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust">some_function::&lt;TypeA, TypeB&gt;(args...);<br><span class="hljs-comment">// 或者对于方法：</span><br>some_value.some_method::&lt;TypeA&gt;(args...);<br></code></pre></td></tr></table></figure>
