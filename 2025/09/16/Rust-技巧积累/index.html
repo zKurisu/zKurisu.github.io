@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="非空指针std::ptr::NonNull 智能指针, 包裹一个 *mut T 的可变裸指针, 但能保证指针非空. NonNull&lt;T&gt; 的常用方法有:  .as_ptr(), 获取内部的 *mut T 指针 .as_ref(), 获取 &amp;T .as_mut(), 获取 &amp;mut T NonNull::new_unchecked(ptr: *mut T) -&gt; N">
+    <meta name="description" content="Eq 和 PartialEq在 Rust 中, 并不是所有类型都支持任意两个值都可判定是否相等. 实现 Eq trait 表示, 对于类型中的任意两个值, 都总是可以判定它们是否相等, 且满足:  Reflexive (自反性), $a &#x3D;&#x3D; a$ 为 true Symmetric (对称性), 如果 $a &#x3D;&#x3D; b$, 则 $b &#x3D;&#x3D;">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Rust-技巧积累">
 <meta property="og:url" content="http://example.com/2025/09/16/Rust-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="非空指针std::ptr::NonNull 智能指针, 包裹一个 *mut T 的可变裸指针, 但能保证指针非空. NonNull&lt;T&gt; 的常用方法有:  .as_ptr(), 获取内部的 *mut T 指针 .as_ref(), 获取 &amp;T .as_mut(), 获取 &amp;mut T NonNull::new_unchecked(ptr: *mut T) -&gt; N">
+<meta property="og:description" content="Eq 和 PartialEq在 Rust 中, 并不是所有类型都支持任意两个值都可判定是否相等. 实现 Eq trait 表示, 对于类型中的任意两个值, 都总是可以判定它们是否相等, 且满足:  Reflexive (自反性), $a &#x3D;&#x3D; a$ 为 true Symmetric (对称性), 如果 $a &#x3D;&#x3D; b$, 则 $b &#x3D;&#x3D;">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-09-16T13:15:22.000Z">
-<meta property="article:modified_time" content="2025-09-19T08:39:16.457Z">
+<meta property="article:modified_time" content="2025-09-20T04:30:57.741Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          19k 字
+          20k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          160 分钟
+          169 分钟
         
       </span>
     
@@ -289,7 +289,47 @@
             
               <div class="markdown-body">
                 
-                <h1 id="非空指针"><a href="#非空指针" class="headerlink" title="非空指针"></a>非空指针</h1><p><code>std::ptr::NonNull</code> 智能指针, 包裹一个 <code>*mut T</code> 的可变裸指针, 但能保证指针非空.</p>
+                <h1 id="Eq-和-PartialEq"><a href="#Eq-和-PartialEq" class="headerlink" title="Eq 和 PartialEq"></a>Eq 和 PartialEq</h1><p>在 Rust 中, 并不是所有类型都支持任意两个值都可判定是否相等.</p>
+<p>实现 <code>Eq</code> trait 表示, 对于类型中的任意两个值, 都总是可以判定它们是否相等, 且满足:</p>
+<ul>
+<li>Reflexive (自反性), $a &#x3D;&#x3D; a$ 为 true</li>
+<li>Symmetric (对称性), 如果 $a &#x3D;&#x3D; b$, 则 $b &#x3D;&#x3D; a$</li>
+<li>Transitive (传递性), 如果 $a &#x3D;&#x3D; b$ 且 $b &#x3D;&#x3D; c$, 则 $a &#x3D;&#x3D; c$</li>
+</ul>
+<p><code>Eq</code> 是一个标记 trait, 没有任何方法, 继承自 <code>PartialEq</code>, 任何实现了 <code>Eq</code> 的类型, 需要保证对于任意两个值 <code>a</code> 和 <code>b</code>, <code>a == b</code> 的结果是可靠且符合逻辑的.</p>
+<p><code>PartialEq</code> 指, 可能存在某些值无法用于是否相等的判断, 该 <code>trait</code> 提供一个方法:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">eq</span>(&amp;<span class="hljs-keyword">self</span>, other: &amp;<span class="hljs-keyword">Self</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">bool</span>;<br></code></pre></td></tr></table></figure>
+
+<p>对于无法比较的, 都返回 <code>false</code>:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">nan</span> = <span class="hljs-type">f64</span>::NAN;<br><span class="hljs-built_in">assert_eq!</span>(nan == nan, <span class="hljs-literal">false</span>); <span class="hljs-comment">// 哇，连自己都不等！这是部分相等的典型表现</span><br></code></pre></td></tr></table></figure>
+
+
+<h1 id="Ord-和-PartialOrd"><a href="#Ord-和-PartialOrd" class="headerlink" title="Ord 和 PartialOrd"></a>Ord 和 PartialOrd</h1><p>Ordering (排序), 指一组元素之间的大小关系或顺序关系.</p>
+<p>Total Ordering (完全排序), 指对于集合中的任意两个元素 $a$ 和 $b$, 一定能确定它们之间的关系, 并且只有以下三种情况之一成立:</p>
+<ol>
+<li>$a &lt; b$, a 小于 b</li>
+<li>$a &#x3D;&#x3D; b$, a 等于 b</li>
+<li>$a &gt; b$, a 大于 b</li>
+</ol>
+<p>在 Rust 中, 实现 <code>Ord</code> trait 表示该类型能够进行完全排序, 实现 <code>Ord</code> 必须先实现 <code>Eq</code> 和 <code>PartialOrd</code> 两个 <code>trait</code>, 并且提供:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">cmp</span>(&amp;<span class="hljs-keyword">self</span>, other: &amp;<span class="hljs-keyword">Self</span>) <span class="hljs-punctuation">-&gt;</span> Ordering<br></code></pre></td></tr></table></figure>
+
+<p><code>Ordering</code> 是一个 <code>enum</code> 类型, 包括三种值:</p>
+<ul>
+<li><code>Ordering::Less</code></li>
+<li><code>Ordering::Equal</code></li>
+<li><code>Ordering::Greater</code></li>
+</ul>
+<p>实现 <code>PartialOrd</code> 表示能进行 Partial Ordering (部分排序), 指并不是任意两个元素都一定能够比较. 可能存在两个元素 <code>a</code> 和 <code>b</code>, 既不能说 <code>a &lt; b</code>, 也不能说 <code>a == b</code> 或 <code>a &gt; b</code>. 其提供方法:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">partial_cmp</span>(&amp;<span class="hljs-keyword">self</span>, other: &amp;<span class="hljs-keyword">Self</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">Option</span>&lt;Ordering&gt;;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>返回 <code>None</code> 时表明两个值无法比较</li>
+</ul>
+<p>比如浮点数 <code>f32</code> 和 <code>f64</code> 中的特殊值 <code>NaN</code>, 它与任何值都不能比较:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">a</span> = <span class="hljs-number">1.0</span>;<br><span class="hljs-keyword">let</span> <span class="hljs-variable">b</span> = <span class="hljs-type">f64</span>::NAN;<br><span class="hljs-built_in">assert_eq!</span>(a.<span class="hljs-title function_ invoke__">partial_cmp</span>(&amp;b), <span class="hljs-literal">None</span>); <span class="hljs-comment">// 无法比较！</span><br></code></pre></td></tr></table></figure>
+
+
+<h1 id="非空指针"><a href="#非空指针" class="headerlink" title="非空指针"></a>非空指针</h1><p><code>std::ptr::NonNull</code> 智能指针, 包裹一个 <code>*mut T</code> 的可变裸指针, 但能保证指针非空.</p>
 <p><code>NonNull&lt;T&gt;</code> 的常用方法有:</p>
 <ul>
 <li><code>.as_ptr()</code>, 获取内部的 <code>*mut T</code> 指针</li>
