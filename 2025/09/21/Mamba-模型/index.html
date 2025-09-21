@@ -25,9 +25,12 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/mamba-compared-to-rnn-and-transformer.png">
 <meta property="og:image" content="http://example.com/img/mamba-selective-input-example.png">
+<meta property="og:image" content="http://example.com/img/mamba-copying-task-example.png">
+<meta property="og:image" content="http://example.com/img/mamba-selective-copying-example.png">
+<meta property="og:image" content="http://example.com/img/mamba-induction-heads-task-example.png">
 <meta property="og:image" content="http://example.com/img/mamba-scan-operation-sequential-computation-example.png">
 <meta property="article:published_time" content="2025-09-21T02:28:28.000Z">
-<meta property="article:modified_time" content="2025-09-21T08:54:38.845Z">
+<meta property="article:modified_time" content="2025-09-21T11:06:24.831Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/mamba-compared-to-rnn-and-transformer.png">
@@ -239,7 +242,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.3k 字
+          3k 字
         
       </span>
     
@@ -250,7 +253,7 @@
         
         
         
-          20 分钟
+          25 分钟
         
       </span>
     
@@ -320,10 +323,6 @@
 <p><img src="/../img/mamba-selective-input-example.png" srcset="/img/loading.gif" lazyload></p>
 <p>Selective 机制的核心是 “动态选择”, 模型不是平等处理所有输入信息, 而是根据输入的重要性, 动态决定哪些信息需要被重点关注和处理. 这样能让模型在处理长序列时聚焦关键信息.</p>
 <p>这与 Transformer 中计算注意力权重类似, 但 Attention 的计算复杂度是 $O(n^2)$.</p>
-<h2 id="Parallel-Scan"><a href="#Parallel-Scan" class="headerlink" title="Parallel Scan"></a>Parallel Scan</h2><p>Scan 指从左到右依次计算的操作, 对应到 recurrence 计算里就是: 先计算 previous state 然后才能计算 current state:</p>
-<p><img src="/../img/mamba-scan-operation-sequential-computation-example.png" srcset="/img/loading.gif" lazyload></p>
-<p>这种方式无法进行并行运算.</p>
-<p>Mamba 实现了一种 parallel scan algorithm.</p>
 <h2 id="Subquadratic-Time-architectures"><a href="#Subquadratic-Time-architectures" class="headerlink" title="Subquadratic-Time architectures"></a>Subquadratic-Time architectures</h2><p>Subquadratic-time architectures, 亚二次时间复杂度架构, 指计算复杂度低于传统 $O(n^2)$ 的模型架构, 用于高效处理长序列数据, 如长文本, 时间序列, 视频帧序列.</p>
 <p>Transformer 的 self-attention 的计算复杂度是 $O(n^2)$ (n 是序列长度), 因为每个 token 都要与其他所有 token 计算注意力权重. 当 $n$ 很大时, 计算两和内存占用会急剧上升, 导致训练和推理速度极慢.</p>
 <p>如果计算的时间复杂度为 $O(n logn)$ 或 $O(n)$, 能够在不显著损失性能的情况下, 大幅提升长序列处理效率.</p>
@@ -343,6 +342,25 @@
 <p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>若 x_1(t) \rightarrow y_1(t), x_2(t) \rightarrow y_2(t) \newline~ \newline<br>则 a x_1(t) + bx_2(t) \rightarrow ay_1(t) + by_2(t)<br>\end{aligned}<br>}<br>$$</p>
 <p>一个系统是 time invariant 的, 当且仅当系统的行为不随时间改变, 也就是说:</p>
 <p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>若 x(t) \rightarrow y(t), 则 x(t - t_0) \rightarrow y(t - t_0)<br>\end{aligned}<br>}<br>$$</p>
+<h2 id="Copying-任务"><a href="#Copying-任务" class="headerlink" title="Copying 任务"></a>Copying 任务</h2><p>Copying 任务用于练习模型对给定标记的简单记忆和再现能力, 其让模型看到一系列标记 (tokens), 其中一部分标记是需要被记住并在后续输出的, 这些标记按固定规则排列, </p>
+<p><img src="/../img/mamba-copying-task-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>这里彩色标记需要记忆, 白色需要过滤, 黑色标记表示从这里开始再现. 模型需要有内容感知能力 (能够理解每个标记的含义和重要性)&lt; 能够记忆相关标记并过滤无关标记.</p>
+<p>Selective Copying 任务是 Copying 任务的改进, 通过改变需要记忆的标记的位置来增加任务难度.</p>
+<p><img src="/../img/mamba-selective-copying-example.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="Induction-heads-任务"><a href="#Induction-heads-任务" class="headerlink" title="Induction heads 任务"></a>Induction heads 任务</h2><p>Induction heads 任务用于解释大语言模型的上下文学习能力 (in-context learning), 需要模型根据输入的上下文信息, 在没有明确训练的情况下, 生成合适的输出.</p>
+<p>Context-aware reasoning 指模型能理解输入的上下文信息, 包括标记的顺序, 周围标记的含义等.</p>
+<p>模型要根据上下文信息, 判断在什么情况下应该产生什么样的输出:</p>
+<p><img src="/../img/mamba-induction-heads-task-example.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>当黑色标记出现时, 输出合适内容 (这里是蓝色标记)</li>
+</ul>
+<h2 id="Kernel-fusion"><a href="#Kernel-fusion" class="headerlink" title="Kernel fusion"></a>Kernel fusion</h2><p>Kernel 在深度学习中, 通常指一个核心的计算单元或函数, 可以是一个矩阵乘法, 卷积操作或者其他复杂数学运算.</p>
+<p>Kernel fusion 指一种优化计算的技术, 将多个独立的小核函数合并成一个大的核函数进行一次性计算, 减少计算过程中的内存访问开销和内核启动开销.</p>
+<p>比如连续的矩阵乘法, 加法, 如果分开执行, 每次都会涉及数据的读取和写入带来较大开销. 可以将多个矩阵乘法操作合并成一个大的矩阵乘法, 一次性完成计算.</p>
+<h2 id="Parallel-Scan"><a href="#Parallel-Scan" class="headerlink" title="Parallel Scan"></a>Parallel Scan</h2><p>Scan 指从左到右依次计算的操作, 对应到 recurrence 计算里就是: 先计算 previous state 然后才能计算 current state:</p>
+<p><img src="/../img/mamba-scan-operation-sequential-computation-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>这种方式无法进行并行运算.</p>
+<p>Mamba 实现了一种 parallel scan algorithm.</p>
 
                 
               </div>
