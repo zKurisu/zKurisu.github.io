@@ -23,10 +23,14 @@
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="B 站讲解Arxiv mamba 论文Vision Mamba 论文Visual Guide to mamba and state space modelsMamba Github 介绍Mamba 模型源自论文: “Mamba: Linear-Time Sequence Modeling with Selective State Spaces”, 是一种序列模型, 旨在解决传统 Transform">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/mamba-compared-to-rnn-and-transformer.png">
+<meta property="og:image" content="http://example.com/img/mamba-selective-input-example.png">
+<meta property="og:image" content="http://example.com/img/mamba-scan-operation-sequential-computation-example.png">
 <meta property="article:published_time" content="2025-09-21T02:28:28.000Z">
-<meta property="article:modified_time" content="2025-09-21T06:07:38.081Z">
+<meta property="article:modified_time" content="2025-09-21T07:53:11.221Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/mamba-compared-to-rnn-and-transformer.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -235,7 +239,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          851 字
+          1.6k 字
         
       </span>
     
@@ -246,7 +250,7 @@
         
         
         
-          8 分钟
+          14 分钟
         
       </span>
     
@@ -291,10 +295,11 @@
                 
                 <p><a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1KH4y1W7cm?spm_id_from=333.788.videopod.sections&vd_source=bc8ddbb1a08707dc809c3fd9bb85290d">B 站讲解</a><br><a target="_blank" rel="noopener" href="https://arxiv.org/pdf/2312.00752">Arxiv mamba 论文</a><br><a target="_blank" rel="noopener" href="https://arxiv.org/pdf/2401.09417">Vision Mamba 论文</a><br><a target="_blank" rel="noopener" href="https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-mamba-and-state">Visual Guide to mamba and state space models</a><br><a target="_blank" rel="noopener" href="https://github.com/state-spaces/mamba">Mamba Github</a></p>
 <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>Mamba 模型源自论文: “Mamba: Linear-Time Sequence Modeling with Selective State Spaces”, 是一种序列模型, 旨在解决传统 Transformer 架构在长序列模型建模时计算效率低, 内存占用高的问题.</p>
+<p><img src="/../img/mamba-compared-to-rnn-and-transformer.png" srcset="/img/loading.gif" lazyload></p>
 <h1 id="对比-Transformer"><a href="#对比-Transformer" class="headerlink" title="对比 Transformer"></a>对比 Transformer</h1><p>Transformer 的空间和时间复杂度都是 $O(n^2)$.</p>
 <h1 id="对比-RNN"><a href="#对比-RNN" class="headerlink" title="对比 RNN"></a>对比 RNN</h1><p>RNN 能够以 $O(n)$ 时间复杂度处理序列数据, 但是处理长序列容易遗忘.</p>
-<h1 id="State-Space"><a href="#State-Space" class="headerlink" title="State Space"></a>State Space</h1><p>State space, 状态空间, 用来描述一个 dynamic system 的内部所有可能的隐藏状态.</p>
-<h1 id="State-Space-Model"><a href="#State-Space-Model" class="headerlink" title="State Space Model"></a>State Space Model</h1><p>State Space Model (SSM), 状态空间模型, 描述 state space 中的状态如何随时间变化.</p>
+<h1 id="相关概念"><a href="#相关概念" class="headerlink" title="相关概念"></a>相关概念</h1><h2 id="State-Space"><a href="#State-Space" class="headerlink" title="State Space"></a>State Space</h2><p>State space, 状态空间, 用来描述一个 dynamic system 的内部所有可能的隐藏状态.</p>
+<h2 id="State-Space-Model"><a href="#State-Space-Model" class="headerlink" title="State Space Model"></a>State Space Model</h2><p>State Space Model (SSM), 状态空间模型, 描述 state space 中的状态如何随时间变化.</p>
 <p>Input 会影响 state 的变化, state 决定输出.</p>
 <p>数学表示通常为:</p>
 <p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>x_t &#x3D; f(x_{t-1}, u_t) (状态转移方程) \newline~ \newline<br>y_t &#x3D; g(x_t) (观测方程)<br>\end{aligned}<br>}<br>$$</p>
@@ -310,6 +315,17 @@
 <li>这里状态的更新和输出的计算都是线性表达式</li>
 <li>可以把 $D u_t$ 视作 skip connection</li>
 </ul>
+<h2 id="Structured-State-Space-Model"><a href="#Structured-State-Space-Model" class="headerlink" title="Structured State Space Model"></a>Structured State Space Model</h2><p>Structured State Space Models, 结构化状态空间模型, 是 SSM 的一种改进版本, 通过引入结构化约束 (如选择性机制, 线性动态系统), 使模型更高效用于序列建模.</p>
+<h2 id="Selectively-Retain-Information"><a href="#Selectively-Retain-Information" class="headerlink" title="Selectively Retain Information"></a>Selectively Retain Information</h2><p>Selectively Retain Information 指选择性压缩输入的信息. 比如输入一段文本, 其中会有一些没有实际意义的信息, 将其忽略. 从而能够动态决定哪些输入信息需要存储到状态中.</p>
+<p><img src="/../img/mamba-selective-input-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>Selective 机制的核心是 “动态选择”, 模型不是平等处理所有输入信息, 而是根据输入的重要性, 动态决定哪些信息需要被重点关注和处理.</p>
+<h2 id="Parallel-Scan"><a href="#Parallel-Scan" class="headerlink" title="Parallel Scan"></a>Parallel Scan</h2><p>Scan 指从左到右依次计算的操作, 对应到 recurrence 计算里就是: 先计算 previous state 然后才能计算 current state:</p>
+<p><img src="/../img/mamba-scan-operation-sequential-computation-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>这种方式无法进行并行运算.</p>
+<p>Mamba 实现了一种 parallel scan algorithm.</p>
+<h2 id="Subquadratic-Time-architectures"><a href="#Subquadratic-Time-architectures" class="headerlink" title="Subquadratic-Time architectures"></a>Subquadratic-Time architectures</h2><p>Subquadratic-time architectures, 亚二次时间复杂度架构, 指计算复杂度低于传统 $O(n^2)$ 的模型架构, 用于高效处理长序列数据, 如长文本, 时间序列, 视频帧序列.</p>
+<p>Transformer 的 self-attention 的计算复杂度是 $O(n^2)$ (n 是序列长度), 因为每个 token 都要与其他所有 token 计算注意力权重. 当 $n$ 很大时, 计算两和内存占用会急剧上升, 导致训练和推理速度极慢.</p>
+<p>如果计算的时间复杂度为 $O(n logn)$ 或 $O(n)$, 能够在不显著损失性能的情况下, 大幅提升长序列处理效率.</p>
 
                 
               </div>
