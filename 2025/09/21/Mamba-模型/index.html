@@ -30,7 +30,7 @@
 <meta property="og:image" content="http://example.com/img/mamba-induction-heads-task-example.png">
 <meta property="og:image" content="http://example.com/img/mamba-scan-operation-sequential-computation-example.png">
 <meta property="article:published_time" content="2025-09-21T02:28:28.000Z">
-<meta property="article:modified_time" content="2025-09-21T11:06:24.831Z">
+<meta property="article:modified_time" content="2025-09-21T11:45:34.560Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/mamba-compared-to-rnn-and-transformer.png">
@@ -242,7 +242,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3k 字
+          3.6k 字
         
       </span>
     
@@ -253,7 +253,7 @@
         
         
         
-          25 分钟
+          31 分钟
         
       </span>
     
@@ -319,6 +319,7 @@
 <li>可以把 $D u_t$ 视作 skip connection</li>
 </ul>
 <h2 id="Structured-State-Space-Model"><a href="#Structured-State-Space-Model" class="headerlink" title="Structured State Space Model"></a>Structured State Space Model</h2><p>Structured State Space Models, 结构化状态空间模型, 是 SSM 的一种改进版本, 通过引入结构化约束 (如选择性机制, 线性动态系统), 使模型更高效用于序列建模.</p>
+<h2 id="S4"><a href="#S4" class="headerlink" title="S4"></a>S4</h2><p>S4, Structured State Space Sequential Model, 是一种高效处理长序列的 SSM 架构, 核心创新是将 SSM 结构化, 以更好结合现代深度学习框架, 并利用硬件加速.</p>
 <h2 id="Selectively-Retain-Information"><a href="#Selectively-Retain-Information" class="headerlink" title="Selectively Retain Information"></a>Selectively Retain Information</h2><p>Selectively Retain Information 指选择性压缩输入的信息. 比如输入一段文本, 其中会有一些没有实际意义的信息, 将其忽略. 从而能够动态决定哪些输入信息需要存储到状态中.</p>
 <p><img src="/../img/mamba-selective-input-example.png" srcset="/img/loading.gif" lazyload></p>
 <p>Selective 机制的核心是 “动态选择”, 模型不是平等处理所有输入信息, 而是根据输入的重要性, 动态决定哪些信息需要被重点关注和处理. 这样能让模型在处理长序列时聚焦关键信息.</p>
@@ -357,10 +358,21 @@
 <h2 id="Kernel-fusion"><a href="#Kernel-fusion" class="headerlink" title="Kernel fusion"></a>Kernel fusion</h2><p>Kernel 在深度学习中, 通常指一个核心的计算单元或函数, 可以是一个矩阵乘法, 卷积操作或者其他复杂数学运算.</p>
 <p>Kernel fusion 指一种优化计算的技术, 将多个独立的小核函数合并成一个大的核函数进行一次性计算, 减少计算过程中的内存访问开销和内核启动开销.</p>
 <p>比如连续的矩阵乘法, 加法, 如果分开执行, 每次都会涉及数据的读取和写入带来较大开销. 可以将多个矩阵乘法操作合并成一个大的矩阵乘法, 一次性完成计算.</p>
-<h2 id="Parallel-Scan"><a href="#Parallel-Scan" class="headerlink" title="Parallel Scan"></a>Parallel Scan</h2><p>Scan 指从左到右依次计算的操作, 对应到 recurrence 计算里就是: 先计算 previous state 然后才能计算 current state:</p>
+<h2 id="Parallel-Scan"><a href="#Parallel-Scan" class="headerlink" title="Parallel Scan"></a>Parallel Scan</h2><p>Scan 在计算机科学中, 是一种对序列数据进行累积操作的过程. 例如, 对一个序列 $x_1,x_2,…,x_n$ 进行累加扫描, 就是计算:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>y_1 &#x3D; x_1, y_2 &#x3D; x_1 + x_2, y_3 &#x3D; x_1 + x_2 + x_3, …, \newline~ \newline<br>y_n &#x3D; x_1 + x_2 + … + x_n<br>\end{aligned}<br>}<br>$$</p>
+<p>对应到 recurrence 计算里就是: 先计算 previous state 然后才能计算 current state:</p>
 <p><img src="/../img/mamba-scan-operation-sequential-computation-example.png" srcset="/img/loading.gif" lazyload></p>
-<p>这种方式无法进行并行运算.</p>
-<p>Mamba 实现了一种 parallel scan algorithm.</p>
+<p>这种方式难以进行并行运算.</p>
+<p>Parallel scan 指, 将 scan 操作分解成多个可以同时进行的子任务, 可以将状态转移过程中的部分计算进行并行处理.</p>
+<h2 id="Recomputation"><a href="#Recomputation" class="headerlink" title="Recomputation"></a>Recomputation</h2><p>Recomputation, 是一种在深度学习中用于减少内存占用的技术.</p>
+<p>在训练神经网络时, 通常需要保存中间层的激活值, 以便在反向传播时使用, 但这会占用大量内存.</p>
+<p>Recomputation 的核心思想是, 在反向传播时, 不保留所有的中间激活值, 而是在需要时重新计算.</p>
+<h2 id="FLOPs"><a href="#FLOPs" class="headerlink" title="FLOPs"></a>FLOPs</h2><p>FLOPs, Floating Point Operations Per Second, 每秒浮点运算数. 通常用来分析模型的计算复杂度. FLOP 则指 “总浮点运算数量”.</p>
+<p>比如:</p>
+<ul>
+<li>Addition, <code>a + b</code> 算 1 FLOP</li>
+<li>Multiplication, <code>a * b</code> 算 1 FLOP</li>
+<li>Matrix multiplication, <code>A x B</code>, 其中 $A \in R^{B \times C}, B \in R^{C \times D}$, 简化为 $B \times C \times D$ FLOPs</li>
+</ul>
 
                 
               </div>
