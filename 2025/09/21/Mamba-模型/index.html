@@ -24,15 +24,17 @@
 <meta property="og:description" content="B 站讲解Arxiv mamba 论文Vision Mamba 论文Visual Guide to mamba and state space modelsMamba Github 介绍Mamba 模型源自论文: “Mamba: Linear-Time Sequence Modeling with Selective State Spaces”, 是一种序列模型, 旨在解决传统 Transform">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/mamba-compared-to-rnn-and-transformer.png">
+<meta property="og:image" content="http://example.com/img/">
 <meta property="og:image" content="http://example.com/img/mamba-selective-input-example.png">
 <meta property="og:image" content="http://example.com/img/mamba-copying-task-example.png">
 <meta property="og:image" content="http://example.com/img/mamba-selective-copying-example.png">
 <meta property="og:image" content="http://example.com/img/mamba-induction-heads-task-example.png">
 <meta property="og:image" content="http://example.com/img/mamba-scan-operation-sequential-computation-example.png">
 <meta property="og:image" content="http://example.com/img/parallel-scan-example.jpg">
+<meta property="og:image" content="http://example.com/img/mamba-gated-mlp-example.png">
 <meta property="og:image" content="http://example.com/img/mamba-block-example.png">
 <meta property="article:published_time" content="2025-09-21T02:28:28.000Z">
-<meta property="article:modified_time" content="2025-09-22T09:13:07.561Z">
+<meta property="article:modified_time" content="2025-09-22T11:28:29.010Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/mamba-compared-to-rnn-and-transformer.png">
@@ -244,7 +246,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          7.5k 字
+          7.8k 字
         
       </span>
     
@@ -255,7 +257,7 @@
         
         
         
-          63 分钟
+          65 分钟
         
       </span>
     
@@ -351,11 +353,12 @@
 <li>RNN 对每个 token 的常数时间推理速度</li>
 </ul>
 <h2 id="State-Space"><a href="#State-Space" class="headerlink" title="State Space"></a>State Space</h2><p>State space, 状态空间, 用来描述一个 dynamic system 的内部所有可能的隐藏状态.</p>
-<h2 id="State-Space-Model"><a href="#State-Space-Model" class="headerlink" title="State Space Model"></a>State Space Model</h2><p>State Space Model (SSM), 状态空间模型, 描述 state space 中的状态如何随时间变化.</p>
-<p>Input 会影响 state 的变化, state 决定输出.</p>
+<h2 id="State-Space-Model"><a href="#State-Space-Model" class="headerlink" title="State Space Model"></a>State Space Model</h2><p>State Space Model 描述一个系统接受输入, 产生输出并维持一些内部状态. 系统的输出取决于输入和当前状态:</p>
+<p><img src="/../img/" srcset="/img/loading.gif" lazyload></p>
 <p>数学表示通常为:</p>
 <p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>x_t &#x3D; f(x_{t-1}, u_t) (状态转移方程) \newline~ \newline<br>y_t &#x3D; g(x_t) (观测方程)<br>\end{aligned}<br>}<br>$$</p>
 <ul>
+<li>$t$ 表示时间</li>
 <li>$x_t$, 状态 (State), 表示系统在时间 $t$ 的隐藏内部情况</li>
 <li>$u_t$, 输入 (Input), 表示外部对系统的影响</li>
 <li>$y_t$, 输出 (Output), 表示我们实际观测到的东西</li>
@@ -366,6 +369,13 @@
 <ul>
 <li>这里状态的更新和输出的计算都是线性表达式</li>
 <li>可以把 $D u_t$ 视作 skip connection</li>
+</ul>
+<p>这里的 $A, B, C, D$ 通常称 State Space Model Parameters:</p>
+<ul>
+<li>$A$: the state transition matrix</li>
+<li>$B$: the input matrix</li>
+<li>$C$: the output matrix</li>
+<li>$D$: the feedthrough matrix</li>
 </ul>
 <h2 id="Structured-State-Space-Model"><a href="#Structured-State-Space-Model" class="headerlink" title="Structured State Space Model"></a>Structured State Space Model</h2><p>Structured State Space Models, 结构化状态空间模型, 是 SSM 的一种改进版本, 通过引入结构化约束 (如选择性机制, 线性动态系统), 使模型更高效用于序列建模.</p>
 <h2 id="S4"><a href="#S4" class="headerlink" title="S4"></a>S4</h2><p>S4, Structured State Space Sequential Model, 是一种高效处理长序列的 SSM 架构, 核心创新是将 SSM 结构化, 以更好结合现代深度学习框架, 并利用硬件加速.</p>
@@ -516,6 +526,13 @@
 </ul>
 <p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\sigma (x) &#x3D; \frac{1}{1 + e^{-x}}<br>\end{aligned}<br>}<br>$$</p>
 <p>SILU 将输入与一个 <code>0~1</code> 的权重相乘, 动态调整输入的强度.</p>
+<h2 id="Gated-MLP"><a href="#Gated-MLP" class="headerlink" title="Gated MLP"></a>Gated MLP</h2><p><img src="/../img/mamba-gated-mlp-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>这里其实就是实现了 SILU activation:</p>
+<ul>
+<li>一路输入经 Linear Projection 调整维度</li>
+<li>另一路输入先经 Linear Projection 调整维度, 再经 sigmoid 调整为权重</li>
+<li>两路输入相乘: $x \cdot \sigma (x)$</li>
+</ul>
 <h1 id="Mamba-Block"><a href="#Mamba-Block" class="headerlink" title="Mamba Block"></a>Mamba Block</h1><p>Mamba block 是 Mamba 模型的基本计算单元, 示意图如下:</p>
 <p><img src="/../img/mamba-block-example.png" srcset="/img/loading.gif" lazyload></p>
 <p>包含的组件有:</p>
