@@ -29,8 +29,10 @@
 <meta property="og:image" content="http://example.com/img/mamba-selective-copying-example.png">
 <meta property="og:image" content="http://example.com/img/mamba-induction-heads-task-example.png">
 <meta property="og:image" content="http://example.com/img/mamba-scan-operation-sequential-computation-example.png">
+<meta property="og:image" content="http://example.com/img/parallel-scan-example.jpg">
+<meta property="og:image" content="http://example.com/img/mamba-block-example.png">
 <meta property="article:published_time" content="2025-09-21T02:28:28.000Z">
-<meta property="article:modified_time" content="2025-09-22T04:45:39.522Z">
+<meta property="article:modified_time" content="2025-09-22T07:37:56.975Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/mamba-compared-to-rnn-and-transformer.png">
@@ -242,7 +244,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          6.7k 字
+          7.3k 字
         
       </span>
     
@@ -253,7 +255,7 @@
         
         
         
-          56 分钟
+          61 分钟
         
       </span>
     
@@ -410,6 +412,21 @@
 <p><img src="/../img/mamba-scan-operation-sequential-computation-example.png" srcset="/img/loading.gif" lazyload></p>
 <p>这种方式难以进行并行运算.</p>
 <p>Parallel scan 指, 将 scan 操作分解成多个可以同时进行的子任务, 可以将状态转移过程中的部分计算进行并行处理.</p>
+<p><img src="/../img/parallel-scan-example.jpg" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>比如这里, 将每个计算分为 4 个部分:<ul>
+<li>$x_0$ 是最开始的输入</li>
+<li>$x_1$ 只需要计算 $x_0 + x_1$</li>
+<li>$x_2$ 分为 $x_1 + x_2$ 和 $x_0 + (x_1 + x_2)$ 两部分</li>
+<li>$x_3$ 分为 $x_2 + x_3$, $(x_0 + x_1) + (x_2 + x_3)$</li>
+<li>$x_4$ 分为 $x_3 + x_4$, $(x_1 + x_2) + (x_3 + x_4)$, $x_0 + (x_1 + x_2) + (x_3 + x_4)$</li>
+</ul>
+</li>
+<li>垂直的计算不能并行计算, 但是横向可以, 比如可以同时计算:<ul>
+<li>$x_0 + x_1$, $x_1 + x_2$, $x_2 + x_3$, $x_3 + x_4$ 这些</li>
+</ul>
+</li>
+</ul>
 <h2 id="Recomputation"><a href="#Recomputation" class="headerlink" title="Recomputation"></a>Recomputation</h2><p>Recomputation, 是一种在深度学习中用于减少内存占用的技术.</p>
 <p>在训练神经网络时, 通常需要保存中间层的激活值, 以便在反向传播时使用, 但这会占用大量内存.</p>
 <p>Recomputation 的核心思想是, 在反向传播时, 不保留所有的中间激活值, 而是在需要时重新计算.</p>
@@ -491,6 +508,19 @@
 <li>当 $N &#x3D; 64$, 可记忆约 <code>1000</code> 步依赖</li>
 <li>当 $N &#x3D; 256$, 可记忆约 <code>10000</code> 步依赖</li>
 </ul>
+<h1 id="Mamba-Block"><a href="#Mamba-Block" class="headerlink" title="Mamba Block"></a>Mamba Block</h1><p>Mamba block 是 Mamba 模型的基本计算单元, 示意图如下:</p>
+<p><img src="/../img/mamba-block-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>包含的组件有:</p>
+<ul>
+<li>Linear Projection, 用于调整特征维度</li>
+<li>Skip connections, 残差连接, 缓解梯度消失</li>
+<li>A Selective State Space Machine, 建立长程依赖</li>
+<li>1D Convolution layer, 对输入进行局部特征提取</li>
+<li>SILU activation function, 门控机制, 增强非线性表达能力, 控制信息流动</li>
+</ul>
+<p>Mamba 由多个 Mamba block 堆叠而成:</p>
+<figure class="highlight mathematica"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs mathematica"><span class="hljs-built_in">Input</span> → <span class="hljs-variable">Embedding</span> → <span class="hljs-punctuation">[</span><span class="hljs-variable">Mamba</span> <span class="hljs-built_in">Block</span> × <span class="hljs-built_in">N</span><span class="hljs-punctuation">]</span> → <span class="hljs-variable">Layer</span> <span class="hljs-built_in">Norm</span> → <span class="hljs-variable">Output</span> <span class="hljs-built_in">Head</span><br></code></pre></td></tr></table></figure>
+
 
                 
               </div>
