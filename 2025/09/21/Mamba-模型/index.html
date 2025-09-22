@@ -30,7 +30,7 @@
 <meta property="og:image" content="http://example.com/img/mamba-induction-heads-task-example.png">
 <meta property="og:image" content="http://example.com/img/mamba-scan-operation-sequential-computation-example.png">
 <meta property="article:published_time" content="2025-09-21T02:28:28.000Z">
-<meta property="article:modified_time" content="2025-09-21T12:52:16.936Z">
+<meta property="article:modified_time" content="2025-09-22T03:58:28.683Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/mamba-compared-to-rnn-and-transformer.png">
@@ -242,7 +242,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          5.6k 字
+          6.7k 字
         
       </span>
     
@@ -253,7 +253,7 @@
         
         
         
-          47 分钟
+          57 分钟
         
       </span>
     
@@ -301,7 +301,54 @@
 <p><img src="/../img/mamba-compared-to-rnn-and-transformer.png" srcset="/img/loading.gif" lazyload></p>
 <h1 id="对比-Transformer"><a href="#对比-Transformer" class="headerlink" title="对比 Transformer"></a>对比 Transformer</h1><p>Transformer 的空间和时间复杂度都是 $O(n^2)$.</p>
 <h1 id="对比-RNN"><a href="#对比-RNN" class="headerlink" title="对比 RNN"></a>对比 RNN</h1><p>RNN 能够以 $O(n)$ 时间复杂度处理序列数据, 但是处理长序列容易遗忘.</p>
-<h1 id="相关概念"><a href="#相关概念" class="headerlink" title="相关概念"></a>相关概念</h1><h2 id="State-Space"><a href="#State-Space" class="headerlink" title="State Space"></a>State Space</h2><p>State space, 状态空间, 用来描述一个 dynamic system 的内部所有可能的隐藏状态.</p>
+<h1 id="相关概念"><a href="#相关概念" class="headerlink" title="相关概念"></a>相关概念</h1><h2 id="Sequence-modelling"><a href="#Sequence-modelling" class="headerlink" title="Sequence modelling"></a>Sequence modelling</h2><p>Sequence modelling 指, 将一个输入序列映射到一个输出序列. Discrete 或 continuous 序列都行, 比如:</p>
+<ul>
+<li>text 是 discrete sequence</li>
+<li>audio signals 是 continuous sequence</li>
+</ul>
+<p>通常用 <code>context window</code>, <code>training compute complexity</code>, <code>parallelizability</code> 和 <code>inference compute complexity</code> 来衡量 sequence model 的性能:</p>
+<table>
+<thead>
+<tr>
+<th>Properties</th>
+<th>RNN</th>
+<th>CNN</th>
+<th>Transformers</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Context Window</td>
+<td>Infinite context window</td>
+<td>context window dependent on kernel size</td>
+<td>infinite context window</td>
+</tr>
+<tr>
+<td>Training Complexity</td>
+<td>$O(N)$</td>
+<td>Training dependents on kernel size</td>
+<td>$O(N^2)$</td>
+</tr>
+<tr>
+<td>Parallelizability</td>
+<td>Not parallelizable</td>
+<td>Easily parallelizable</td>
+<td>Easily parallelizable</td>
+</tr>
+<tr>
+<td>Inference Complexity</td>
+<td>$O(1)$</td>
+<td>Inference dependent on kernel size</td>
+<td>O(N) after KV Caching</td>
+</tr>
+</tbody></table>
+<p>(注意这里的 inference 应该是单步计算, 而不是整个序列)</p>
+<p>Mamba 想要达到:</p>
+<ul>
+<li>Transformer 的并行训练</li>
+<li>RNN 的线性时间复杂度</li>
+<li>RNN 对每个 token 的常数时间推理速度</li>
+</ul>
+<h2 id="State-Space"><a href="#State-Space" class="headerlink" title="State Space"></a>State Space</h2><p>State space, 状态空间, 用来描述一个 dynamic system 的内部所有可能的隐藏状态.</p>
 <h2 id="State-Space-Model"><a href="#State-Space-Model" class="headerlink" title="State Space Model"></a>State Space Model</h2><p>State Space Model (SSM), 状态空间模型, 描述 state space 中的状态如何随时间变化.</p>
 <p>Input 会影响 state 的变化, state 决定输出.</p>
 <p>数学表示通常为:</p>
@@ -432,6 +479,18 @@
 <p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\int_0^\Deltaa e^{A\tau} d\tau &#x3D; A^{-1} (e^{A \Delta} - I)<br>\end{aligned}<br>}<br>$$</p>
 <p>因此有:</p>
 <p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\overline{A} &#x3D; e^{A\Delta} \newline~ \newline<br>\overline{B} &#x3D; A^{-1} (e^{A \Delta} - I) B<br>\end{aligned}<br>}<br>$$</p>
+<h2 id="State-Expansion"><a href="#State-Expansion" class="headerlink" title="State Expansion"></a>State Expansion</h2><p>State Expansion 指, 在状态空间中, 通过增加隐藏状态 $h_t \in R^N$ 的维度 $N$ 来提升模型容量和表达能力的策略.</p>
+<p>传统 SSM 的状态转移方程为:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>h_t &#x3D; \overline{A} h_{t-1} + \overline{B} x_t<br>\end{aligned}<br>}<br>$$</p>
+<p>当 $N$ 较小时, 状态 $h_t$ 的记忆容量有限, 难以捕捉长程复杂依赖.</p>
+<p>通过参数矩阵升维:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\overline{A} \in R^{N \times N}, \overline{B} \in R^{N \times d}, C \in R^{d \times N}<br>\end{aligned}<br>}<br>$$</p>
+<p>将输入 $x_t \in R^d$ 投影到高维状态空间 $R^N$.</p>
+<p>根据 HIPPO 理论, 记忆时间常数 $\tau \approx \frac{N}{\log N}$:</p>
+<ul>
+<li>当 $N &#x3D; 64$, 可记忆约 <code>1000</code> 步依赖</li>
+<li>当 $N &#x3D; 256$, 可记忆约 <code>10000</code> 步依赖</li>
+</ul>
 
                 
               </div>
@@ -512,6 +571,12 @@
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2025/09/22/%E5%BE%AE%E7%A7%AF%E5%88%86%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/" title="微积分技巧积累">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">微积分技巧积累</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">
