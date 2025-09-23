@@ -31,10 +31,17 @@
 <meta property="og:image" content="http://example.com/img/mamba-induction-heads-task-example.png">
 <meta property="og:image" content="http://example.com/img/mamba-scan-operation-sequential-computation-example.png">
 <meta property="og:image" content="http://example.com/img/parallel-scan-example.jpg">
+<meta property="og:image" content="http://example.com/img/state-space-model-convolution-kernel-for-2d-example.png">
+<meta property="og:image" content="http://example.com/img/state-space-model-1d-convolution-kernel-example.png">
+<meta property="og:image" content="http://example.com/img/state-space-model-convolution-kernel-len-as-input.png">
+<meta property="og:image" content="http://example.com/img/state-space-model-sequence-with-padding.png">
+<meta property="og:image" content="http://example.com/img/state-space-model-function-of-matrix-A.png">
+<meta property="og:image" content="http://example.com/img/state-space-model-bad-selection-of-A.png">
+<meta property="og:image" content="http://example.com/img/lssl-number-of-parameters.png">
 <meta property="og:image" content="http://example.com/img/mamba-gated-mlp-example.png">
 <meta property="og:image" content="http://example.com/img/mamba-block-example.png">
 <meta property="article:published_time" content="2025-09-21T02:28:28.000Z">
-<meta property="article:modified_time" content="2025-09-22T11:49:00.928Z">
+<meta property="article:modified_time" content="2025-09-23T00:54:39.136Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/mamba-compared-to-rnn-and-transformer.png">
@@ -246,7 +253,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          7.8k 字
+          10k 字
         
       </span>
     
@@ -257,7 +264,7 @@
         
         
         
-          65 分钟
+          84 分钟
         
       </span>
     
@@ -377,7 +384,6 @@
 <li>$C$: the output matrix</li>
 <li>$D$: the feedthrough matrix</li>
 </ul>
-<h2 id="Structured-State-Space-Model"><a href="#Structured-State-Space-Model" class="headerlink" title="Structured State Space Model"></a>Structured State Space Model</h2><p>Structured State Space Models, 结构化状态空间模型, 是 SSM 的一种改进版本, 通过引入结构化约束 (如选择性机制, 线性动态系统), 使模型更高效用于序列建模.</p>
 <h2 id="S4"><a href="#S4" class="headerlink" title="S4"></a>S4</h2><p>S4, Structured State Space Sequential Model, 是一种高效处理长序列的 SSM 架构, 核心创新是将 SSM 结构化, 以更好结合现代深度学习框架, 并利用硬件加速.</p>
 <h2 id="Selectively-Retain-Information"><a href="#Selectively-Retain-Information" class="headerlink" title="Selectively Retain Information"></a>Selectively Retain Information</h2><p>Selectively Retain Information 指选择性压缩输入的信息. 比如输入一段文本, 其中会有一些没有实际意义的信息, 将其忽略. 从而能够动态决定哪些输入信息需要存储到状态中.</p>
 <p><img src="/../img/mamba-selective-input-example.png" srcset="/img/loading.gif" lazyload></p>
@@ -519,6 +525,52 @@
 <li>当 $N &#x3D; 64$, 可记忆约 <code>1000</code> 步依赖</li>
 <li>当 $N &#x3D; 256$, 可记忆约 <code>10000</code> 步依赖</li>
 </ul>
+<h2 id="SSMs-as-Convolutional-Neural-network"><a href="#SSMs-as-Convolutional-Neural-network" class="headerlink" title="SSMs as Convolutional Neural network"></a>SSMs as Convolutional Neural network</h2><p>可以把 State Space Model 看作 CNN.</p>
+<p>状态转移方程为:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>x_t &#x3D; A x_{t - 1} + Bu_t<br>\end{aligned}<br>}<br>$$</p>
+<p>假设初始状态 $x_{-1} &#x3D; 0$, 则有:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>x_0 &#x3D; A x_{-1} + B u_0 &#x3D; B u_0 \newline~ \newline<br>x_1 &#x3D; A x_0 + B u_1 &#x3D; AB u_0 + B u_1 \newline~ \newline<br>x_2 &#x3D; A x_1 + B u_2 &#x3D; A^2 B u_0 + A B u_1 + B u_2 \newline~ \newline<br>x_3 &#x3D; A x_2 + B u_3 &#x3D; A^3 B u_0 + A^2 B u_1 + A B u_2 + B u_3<br>\end{aligned}<br>}<br>$$</p>
+<p>可以推出:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>x_t &#x3D; A^t B u_0 + A^{t-1} B u_1 + A^{t-2} B u_2 + … + B u_t<br>\end{aligned}<br>}<br>$$</p>
+<p>假设有一个卷积核:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>K_t &#x3D; (A^t B, A^{t-1} B, A^{t-2}B, …, B)<br>\end{aligned}<br>}<br>$$</p>
+<p>可以将 $x$ 的计算过程重写为:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>x &#x3D; K * u<br>\end{aligned}<br>}<br>$$</p>
+<p>一般情况下, 卷积核是 2D 的, 用作 filter:</p>
+<p><img src="/../img/state-space-model-convolution-kernel-for-2d-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>对于 1D 的卷积核 (用在 1D 数据上):</p>
+<p><img src="/../img/state-space-model-1d-convolution-kernel-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>在这里, 相当于卷积核的长度等于序列长度:</p>
+<p><img src="/../img/state-space-model-convolution-kernel-len-as-input.png" srcset="/img/loading.gif" lazyload></p>
+<p>这样只进行了一次运算, 也可以通过 padding 增加运算:</p>
+<p><img src="/../img/state-space-model-sequence-with-padding.png" srcset="/img/loading.gif" lazyload></p>
+<p>能这样并行运算的前提是该模型是 Time-Invariant 的, 参数 $A$, $B$ 与时间步 <code>t</code> 无关.</p>
+<p>因为这里有:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>y &#x3D; Cx + Du \newline~ \newline<br>&#x3D; C(K * u) + Du \newline~ \newline<br>&#x3D; (CK * u) + Du<br>\end{aligned}<br>}<br>$$</p>
+<p>可以把 $C$ 并到 $K$ 中:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>K_t &#x3D; (CA^tB, CA^{t-1}B, CA^{t-2}B, …, CB)<br>\end{aligned}<br>}<br>$$</p>
+<h2 id="HiPPO"><a href="#HiPPO" class="headerlink" title="HiPPO"></a>HiPPO</h2><p>SSM2 中的 matrix A 用来决定那些 previous state 要传递到 current state 中:</p>
+<p><img src="/../img/state-space-model-function-of-matrix-A.png" srcset="/img/loading.gif" lazyload></p>
+<p>这里 state 的长度是固定的, 记为 $N$.</p>
+<p>如果 $A$ 选取比较差, 可能会导致信息丢失, 比如一个极端的例子, 将 $A$ 取为全 <code>0</code>, 则会丢失全部 previous state:</p>
+<p><img src="/../img/state-space-model-bad-selection-of-A.png" srcset="/img/loading.gif" lazyload></p>
+<p>很多基于 SSMs 的语言模型都利用 HiPPO Matrix 来初始化 $A$:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>A_{nk} &#x3D; - \begin{cases}<br>(2n + 1)^{1&#x2F;2} (2k + 1)^{1&#x2F;2}\ if\ n &gt; k \newline~ \newline<br>n + 1\ if\ n &#x3D; k \newline~ \newline<br>0\ if\ n &gt; k \newline~ \newline<br>\end{cases}<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>$n$ 是行号, $k$ 是列号</li>
+</ul>
+<p>代码示例:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> torch<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">hippo_matrix</span>(<span class="hljs-params">state_size</span>):<br>    <br>    <span class="hljs-comment"># Generate a square matrix with values (1, state_size+1) on the diagonal</span><br>    A = torch.diag(torch.arange(<span class="hljs-number">1</span>, state_size+<span class="hljs-number">1</span>, dtype=torch.<span class="hljs-built_in">float</span>))<br><br>    <span class="hljs-comment"># Function to generate the elements below the diagonal based on </span><br>    <span class="hljs-comment"># the row and column index</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">lower_triangle_elements</span>(<span class="hljs-params">n, k</span>):<br>        <span class="hljs-keyword">return</span> (<span class="hljs-number">2</span>*n + <span class="hljs-number">1</span>)**<span class="hljs-number">0.5</span> * (<span class="hljs-number">2</span>*k + <span class="hljs-number">1</span>)**<span class="hljs-number">0.5</span><br><br>    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">1</span>, state_size):<br>        <span class="hljs-keyword">for</span> j <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(i):<br>            A[i, j] = lower_triangle_elements(i, j)<br>    <br>    <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span>*A<br><br>hippo_matrix(state_size=<span class="hljs-number">5</span>)<br><br><span class="hljs-comment"># tensor([[-1.0000, -0.0000, -0.0000, -0.0000, -0.0000],</span><br><span class="hljs-comment">#         [-1.7321, -2.0000, -0.0000, -0.0000, -0.0000],</span><br><span class="hljs-comment">#         [-2.2361, -3.8730, -3.0000, -0.0000, -0.0000],</span><br><span class="hljs-comment">#         [-2.6458, -4.5826, -5.9161, -4.0000, -0.0000],</span><br><span class="hljs-comment">#         [-3.0000, -5.1962, -6.7082, -7.9373, -5.0000]])</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="LSSL"><a href="#LSSL" class="headerlink" title="LSSL"></a>LSSL</h2><p>Linear State Space Layer, 的数学形式:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>x_t &#x3D; A{x_t} + B u_t \newline~ \newline<br>y_t &#x3D; C x_t + D u_t<br>\end{aligned}<br>}<br>$$</p>
+<p>LSSL 中的参数量取决于:</p>
+<ul>
+<li>$N$, the state size, 即 state vector 的维度</li>
+<li>$H$, the hidden size, 取决于输入的维度</li>
+<li>$M$, the number of output channels</li>
+</ul>
+<p><img src="/../img/lssl-number-of-parameters.png" srcset="/img/loading.gif" lazyload></p>
 <h2 id="SILU"><a href="#SILU" class="headerlink" title="SILU"></a>SILU</h2><p>SILU, Sigmoid Linear Unit, 也称 switch 激活函数, 数学定义为:</p>
 <p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>SILU(x) &#x3D; x \cdot \sigma (x)<br>\end{aligned}<br>}<br>$$</p>
 <ul>
