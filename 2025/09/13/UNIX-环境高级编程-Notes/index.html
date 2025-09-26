@@ -29,7 +29,7 @@
 <meta property="og:image" content="http://example.com/img/unix-two-process-open-the-same-file.png">
 <meta property="og:image" content="http://example.com/img/unix-dup-function-example.png">
 <meta property="article:published_time" content="2025-09-13T13:06:04.000Z">
-<meta property="article:modified_time" content="2025-09-26T02:33:31.009Z">
+<meta property="article:modified_time" content="2025-09-26T03:29:44.996Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/unix-iso-c-defined-header-file.png">
@@ -241,7 +241,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          7.3k 字
+          8.7k 字
         
       </span>
     
@@ -252,7 +252,7 @@
         
         
         
-          62 分钟
+          73 分钟
         
       </span>
     
@@ -553,6 +553,48 @@
 <p>(但也有区别, 细节见书)</p>
 <h2 id="sync-和-fsync-和-fdatasync"><a href="#sync-和-fsync-和-fdatasync" class="headerlink" title="sync 和 fsync 和 fdatasync"></a>sync 和 fsync 和 fdatasync</h2><p>传统 UNIX 系统实现在内核中设有缓冲区高速缓存或页高速缓存, 大多数的磁盘 I&#x2F;O 都会通过缓冲区进行.</p>
 <p>当我们向文件写入数据时, 内核通常先将数据复制到缓冲区, 然后排入队列, 晚些时候再写入磁盘. 这种策略称 delayed write (延迟写).</p>
+<p>当内核需要再次复制数据到缓冲区时, 它会先将延迟写数据块写入磁盘.</p>
+<p>UNIX 系统提供了 <code>sync</code>, <code>fsync</code>, <code>fdatasync</code> 来保证磁盘上实际文件系统与缓冲区中内容的一致:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">fsync</span><span class="hljs-params">(<span class="hljs-type">int</span> fd)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">fdatasync</span><span class="hljs-params">(<span class="hljs-type">int</span> fd)</span>;<br><span class="hljs-type">void</span> <span class="hljs-title function_">sync</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>对于有返回值的: 若成功, 返回 <code>0</code>; 若出错, 返回 <code>-1</code></li>
+<li><code>sync</code> 只是将修改过的块缓冲区排入写队列, 然后返回, 而不会等待磁盘操作结束</li>
+<li><code>fsync</code> 对指定文件描述符 <code>fd</code> 对应的文件起作用, 且会等待写磁盘操作结束才返回</li>
+<li><code>fdatasync</code> 与 <code>fsync</code> 类似, 但只影响文件的数据部分, <code>fsync</code> 还会更新文件的属性</li>
+</ul>
+<h2 id="fcntl"><a href="#fcntl" class="headerlink" title="fcntl"></a>fcntl</h2><p><code>fcntl</code> (“file control”) 可以改变已经打开文件的属性:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;fcntl.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">fcntl</span><span class="hljs-params">(<span class="hljs-type">int</span> fd, <span class="hljs-type">int</span> cmd, ... <span class="hljs-comment">/*int arg*/</span>)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>若成功, 返回依赖于 <code>cmd</code>; 若失败, 返回 <code>-1</code></li>
+</ul>
+<p><code>fcntl</code> 的功能有:</p>
+<ol>
+<li>复制一个已有的描述符 (<code>cmd=F_DUPFD</code> 或 <code>F_DUPFD_CLOESEC</code>)</li>
+<li>获取&#x2F;设置文件描述符标志 (<code>cmd=F_GETFD</code> 或 <code>F_SETFL</code>)</li>
+<li>获取&#x2F;设置文件状态标志 (<code>cmd=F_GETFL</code> 或 <code>F_SETFL</code>)</li>
+<li>获取&#x2F;设置异步 I&#x2F;O 所有权 (<code>cmd=F_GETOWN</code> 或 <code>F_SETOWN</code>)</li>
+<li>获取&#x2F;设置记录锁 (<code>cmd=F_GETLK</code>, <code>F_SETLK</code> 或 <code>F_SETLKW</code>)</li>
+</ol>
+<p>在修改文件描述符或文件状态标志时需要谨慎, 先获得现在的标志值, 再修改为新的标志值.</p>
+<p>只执行 <code>F_SETFD</code> 或 <code>F_SETFL</code> 命令会关闭以前设置的标志位.</p>
+<p>一个示例:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;apue.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;fcntl.h&gt;</span></span><br><br><span class="hljs-type">void</span><br><span class="hljs-title function_">set_fl</span><span class="hljs-params">(<span class="hljs-type">int</span> fd, <span class="hljs-type">int</span> flags)</span><br>&#123;<br>    <span class="hljs-type">int</span> val;<br>    <span class="hljs-keyword">if</span> ((val = fcntl(fd, F_GETFL, <span class="hljs-number">0</span>)) &lt; <span class="hljs-number">0</span>)<br>        err_sys(<span class="hljs-string">&quot;fcntl F_GETFL error&quot;</span>);<br><br>    val |= flags;<br><br>    <span class="hljs-keyword">if</span> ((val = fcntl(fd, F_SETFL, val)) &lt; <span class="hljs-number">0</span>)<br>        err_sys(<span class="hljs-string">&quot;fcntl F_SETFL error&quot;</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="ioctl"><a href="#ioctl" class="headerlink" title="ioctl"></a>ioctl</h2><p><code>ioctl</code> 能进行很多杂项 I&#x2F;O 操作:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;sys/ioctl.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">ioctl</span><span class="hljs-params">(<span class="hljs-type">int</span> fd, <span class="hljs-type">int</span> request, ...)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>返回值: 若出错则返回 <code>-1</code>, 若成功则返回其他值</li>
+</ul>
+<p>除了引入 <code>&lt;sys/ioctl.h&gt;</code> 头文件外, 通常还需要引入设备专用头文件, 比如终端 I&#x2F;O 的 <code>ioctl</code> 需要头文件 <code>&lt;termios.h&gt;</code>.</p>
+<h2 id="x2F-dev-x2F-fd"><a href="#x2F-dev-x2F-fd" class="headerlink" title="&#x2F;dev&#x2F;fd"></a>&#x2F;dev&#x2F;fd</h2><p><code>/dev/fd</code> 目录下的目录项名为 <code>0, 1, 2</code> 等文件.</p>
+<p>打开 <code>/dev/fd/n</code> 相当于复制了文件描述符 <code>n</code>. 比如:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">fd = open(<span class="hljs-string">&quot;/dev/fd/0&quot;</span>, mode);<br></code></pre></td></tr></table></figure>
+
+<p>其等价于:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">fd = dup(<span class="hljs-number">0</span>);<br></code></pre></td></tr></table></figure>
+
+
 
                 
               </div>
