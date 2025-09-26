@@ -27,8 +27,9 @@
 <meta property="og:image" content="http://example.com/img/unix-posix-interface-example.png">
 <meta property="og:image" content="http://example.com/img/unix-open-file-kernel-data-structure.png">
 <meta property="og:image" content="http://example.com/img/unix-two-process-open-the-same-file.png">
+<meta property="og:image" content="http://example.com/img/unix-dup-function-example.png">
 <meta property="article:published_time" content="2025-09-13T13:06:04.000Z">
-<meta property="article:modified_time" content="2025-09-26T01:24:42.477Z">
+<meta property="article:modified_time" content="2025-09-26T02:33:31.009Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/unix-iso-c-defined-header-file.png">
@@ -240,7 +241,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          6.4k 字
+          7.3k 字
         
       </span>
     
@@ -251,7 +252,7 @@
         
         
         
-          54 分钟
+          62 分钟
         
       </span>
     
@@ -507,6 +508,51 @@
 <li>进程位于不同的进程表项, 各自有文件描述符表, 指向不同文件表项 (方便各进程设置自己的文件偏移量), 最终指向同一个 <code>i-node</code> 表项</li>
 </ul>
 <h2 id="原子操作"><a href="#原子操作" class="headerlink" title="原子操作"></a>原子操作</h2><p>任何要求多于一个函数调用的操作都不是原子操作, 因为在两个函数调用之间, 内核有可能会临时挂起进程.</p>
+<p>比如:</p>
+<ul>
+<li>假设两个进程同时修改一个文件</li>
+<li>两个进程都用 <code>lseek</code> 定位到文件末尾然后 <code>write</code> 100 个字节</li>
+<li>假设进程 A <code>lseek</code> 到文件末尾后被内核挂起, 进程 B 也 <code>lseek</code> 到末尾</li>
+<li>此时恢复进程 <code>A</code>, 其写入 100 字节后, 文件长度发生了变化, 但 <code>B</code> 并不会定位到新的末尾</li>
+<li>此时进程 <code>B</code> 再写入则会覆盖 <code>A</code> 写入的内容</li>
+</ul>
+<p>这里一个进程包含两个系统调用, 但在执行完成一个系统调用后可能就会被挂起, 因此不是原子的.</p>
+<p><code>pread</code> 相当于把 <code>lseek</code> 和 <code>read</code> 合并为一个系统调用:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><span class="hljs-type">ssize_t</span> <span class="hljs-title function_">pread</span><span class="hljs-params">(<span class="hljs-type">int</span> fd, <span class="hljs-type">void</span>* buf, <span class="hljs-type">size_t</span> nbytes, <span class="hljs-type">off_t</span> offset)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>若成功, 返回值是读到的字节数, 若到文件末尾则返回 <code>0</code>, 若出错则返回 <code>-1</code></li>
+</ul>
+<p><code>pwrite</code> 相当于把 <code>lseek</code> 和 <code>write</code> 合并为一个系统调用:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><span class="hljs-type">ssize_t</span> <span class="hljs-title function_">pwrite</span><span class="hljs-params">(<span class="hljs-type">int</span> fd, <span class="hljs-type">const</span> <span class="hljs-type">void</span>* buf, <span class="hljs-type">size_t</span> nbytes, <span class="hljs-type">off_t</span> offset)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>若成功, 返回写入的字节数, 若出错则返回 <code>-1</code></li>
+</ul>
+<h2 id="dup-和-dup2"><a href="#dup-和-dup2" class="headerlink" title="dup 和 dup2"></a>dup 和 dup2</h2><p><code>dup</code> (“duplicate”) 和 <code>dup2</code> 都用于复制一个现有的文件描述符:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">dup</span><span class="hljs-params">(<span class="hljs-type">int</span> fd)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">dup2</span><span class="hljs-params">(<span class="hljs-type">int</span> fd, <span class="hljs-type">int</span> fd2)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>两函数的返回值, 若成功, 返回新的文件描述符, 若出错, 返回 <code>-1</code></li>
+</ul>
+<p><code>dup</code> 返回的新文件描述符一定是当前可用文件描述符中的最小数值.</p>
+<p><code>dup2</code> 可以用 <code>fd2</code> 指定一个新描述符的值.</p>
+<p><img src="/../img/unix-dup-function-example.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>指向同一个文件表项, 共享同一文件状态标志以及当前文件偏移量</li>
+</ul>
+<p>也可以用 <code>fcntl</code> 函数来复制文件描述符.</p>
+<p>事实上:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">dup(fd);<br></code></pre></td></tr></table></figure>
+
+<p>等价于:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">fcntl(fd, F_DUPFD, <span class="hljs-number">0</span>);<br></code></pre></td></tr></table></figure>
+
+<p>而:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">dup2(fd, fd2);<br></code></pre></td></tr></table></figure>
+
+<p>等价于:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c">close(fd2);<br>fcntl(fd, F_DUPFD, fd2);<br></code></pre></td></tr></table></figure>
+<p>(但也有区别, 细节见书)</p>
+<h2 id="sync-和-fsync-和-fdatasync"><a href="#sync-和-fsync-和-fdatasync" class="headerlink" title="sync 和 fsync 和 fdatasync"></a>sync 和 fsync 和 fdatasync</h2><p>传统 UNIX 系统实现在内核中设有缓冲区高速缓存或页高速缓存, 大多数的磁盘 I&#x2F;O 都会通过缓冲区进行.</p>
+<p>当我们向文件写入数据时, 内核通常先将数据复制到缓冲区, 然后排入队列, 晚些时候再写入磁盘. 这种策略称 delayed write (延迟写).</p>
 
                 
               </div>
