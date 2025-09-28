@@ -48,8 +48,9 @@
 <meta property="og:image" content="http://example.com/img/riscv-conditional-branch-instructions-table.png">
 <meta property="og:image" content="http://example.com/img/riscv-conditional-branch-pseudo-instructions-table.png">
 <meta property="og:image" content="http://example.com/img/riscv-jal-instruction-format.png">
+<meta property="og:image" content="http://example.com/img/riscv-jalr-instruction-format-example.png">
 <meta property="article:published_time" content="2025-09-25T02:41:59.000Z">
-<meta property="article:modified_time" content="2025-09-28T06:28:22.112Z">
+<meta property="article:modified_time" content="2025-09-28T07:07:09.515Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/riscv-isa-position-example.png">
@@ -261,7 +262,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          5.3k 字
+          5.7k 字
         
       </span>
     
@@ -272,7 +273,7 @@
         
         
         
-          45 分钟
+          48 分钟
         
       </span>
     
@@ -580,20 +581,54 @@
 <li>一般指定 label 而非 IMM (你也不好找到一个指令地址的具体 IMM)</li>
 </ul>
 <h3 id="条件分支伪指令汇总"><a href="#条件分支伪指令汇总" class="headerlink" title="条件分支伪指令汇总"></a>条件分支伪指令汇总</h3><p><img src="/../img/riscv-conditional-branch-pseudo-instructions-table.png" srcset="/img/loading.gif" lazyload></p>
-<h2 id="Unconditional-Jump-Instructions"><a href="#Unconditional-Jump-Instructions" class="headerlink" title="Unconditional Jump Instructions"></a>Unconditional Jump Instructions</h2><h3 id="JAL"><a href="#JAL" class="headerlink" title="JAL"></a>JAL</h3><p><code>JAL</code> (“Jump And Link”), 使用 <code>J-type</code> 编码格式, 用于调用 subroutine&#x2F;function:</p>
+<h2 id="Unconditional-Jump-Instructions"><a href="#Unconditional-Jump-Instructions" class="headerlink" title="Unconditional Jump Instructions"></a>Unconditional Jump Instructions</h2><h3 id="JAL"><a href="#JAL" class="headerlink" title="JAL"></a>JAL</h3><p><code>JAL</code> (“Jump And Link”), 使用 <code>J-type</code> 编码格式, 用于调用 subroutine&#x2F;function, 会跳转到指定地址执行并将当前指令的下一条的地址保存在寄存器中:</p>
 <p><img src="/../img/riscv-jal-instruction-format.png" srcset="/img/loading.gif" lazyload></p>
 <p>语法:</p>
-<figure class="highlight dos"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs dos">JAL <span class="hljs-built_in">RD</span>, <span class="hljs-built_in">LABEL</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs asm">JAL RD, LABEL<br></code></pre></td></tr></table></figure>
 
 <p>示例:</p>
-<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs css">jal x1, <span class="hljs-selector-tag">label</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs asm">jal x1, label<br></code></pre></td></tr></table></figure>
 
 <ul>
-<li>Subroutine 的地址计算方法为: 对 20 bits 宽的 IMM x 2 后进行 sign-extended, 然后将扩展后的值与 <code>PC</code> 的值相加</li>
+<li>Subroutine 的地址计算方法为: 对 20 bits 宽的 IMM x 2 后进行 sign-extended, 然后将扩展后的值与 <code>PC</code> 的值相加, 注意跳转范围是 1MB</li>
 <li><code>JAL</code> 指令的下一条指令的地址会写入 <code>RD</code>, 保存为返回地址</li>
 <li><code>label</code> 是实际要跳转的目标地址</li>
 </ul>
-<h1 id="M-Mode-S-Mode-U-Mode"><a href="#M-Mode-S-Mode-U-Mode" class="headerlink" title="M-Mode, S-Mode, U-Mode"></a>M-Mode, S-Mode, U-Mode</h1>
+<h3 id="JALR"><a href="#JALR" class="headerlink" title="JALR"></a>JALR</h3><p><code>JALR</code> (Jump And Link Register) 使用 <code>I-type</code> 编码格式, 也用于调用 subroutine&#x2F;function (但这个指令一般用于返回, 因为 <code>jal</code> 将返回地址存在一个寄存器中), 与 <code>JAL</code> 的不同之处在于, 基地址存储在指定 register 中而非 <code>PC</code>:</p>
+<p><img src="/../img/riscv-jalr-instruction-format-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>语法:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs asm">JALR RD, IMM(RS1)<br></code></pre></td></tr></table></figure>
+
+<p>示例:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs asm">jalr x0, 0(x5)<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>子过程地址的计算方法是: 先对 12 bits 宽的 IMM 进行 <code>sign-extended</code>, 然后将扩展后的值与 <code>RS1</code> 的值相加, 得到最终结果后将最低位设置为 <code>0</code></li>
+</ul>
+<h3 id="J-和-JR-伪指令"><a href="#J-和-JR-伪指令" class="headerlink" title="J 和 JR 伪指令"></a>J 和 JR 伪指令</h3><p>如果跳转后不需要返回, 则会用到 <code>J</code> (“Jump”) 和 <code>JR</code> (“Jump Register”) 伪指令:</p>
+<table>
+<thead>
+<tr>
+<th>伪指令</th>
+<th>语法</th>
+<th>等价指令</th>
+<th>例子</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>J</code></td>
+<td><code>J OFFSET</code></td>
+<td><code>JAL X0, OFFSET</code></td>
+<td><code>j leap</code></td>
+</tr>
+<tr>
+<td><code>JR</code></td>
+<td><code>JR RS</code></td>
+<td><code>JALR X0, 0(RS)</code></td>
+<td><code>jr x2</code></td>
+</tr>
+</tbody></table>
+<h2 id="汇编函数调用约定"><a href="#汇编函数调用约定" class="headerlink" title="汇编函数调用约定"></a>汇编函数调用约定</h2><h1 id="M-Mode-S-Mode-U-Mode"><a href="#M-Mode-S-Mode-U-Mode" class="headerlink" title="M-Mode, S-Mode, U-Mode"></a>M-Mode, S-Mode, U-Mode</h1>
                 
               </div>
             
