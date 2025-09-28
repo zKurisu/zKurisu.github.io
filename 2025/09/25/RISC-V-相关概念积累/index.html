@@ -49,8 +49,12 @@
 <meta property="og:image" content="http://example.com/img/riscv-conditional-branch-pseudo-instructions-table.png">
 <meta property="og:image" content="http://example.com/img/riscv-jal-instruction-format.png">
 <meta property="og:image" content="http://example.com/img/riscv-jalr-instruction-format-example.png">
+<meta property="og:image" content="http://example.com/img/riscv-function-call-example.png">
+<meta property="og:image" content="http://example.com/img/riscv-function-for-each-register.png">
+<meta property="og:image" content="http://example.com/img/riscv-function-jump-and-ret-rule.png">
+<meta property="og:image" content="http://example.com/img/riscv-function-call-callee-rule.png">
 <meta property="article:published_time" content="2025-09-25T02:41:59.000Z">
-<meta property="article:modified_time" content="2025-09-28T07:07:09.515Z">
+<meta property="article:modified_time" content="2025-09-28T08:28:45.681Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/riscv-isa-position-example.png">
@@ -262,7 +266,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          5.7k 字
+          6k 字
         
       </span>
     
@@ -273,7 +277,7 @@
         
         
         
-          48 分钟
+          51 分钟
         
       </span>
     
@@ -533,7 +537,7 @@
 <p>例子:</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs asm">li x5, 0x12345678 # x5 = 0x12345678<br></code></pre></td></tr></table></figure>
 
-<h3 id="AUIPC"><a href="#AUIPC" class="headerlink" title="AUIPC"></a>AUIPC</h3><p><code>AUIPC</code> 指令采用 <code>U-type</code>, 其与 <code>AUI</code> 指令类似, 也构造一个 32 bits 的立即数, 高 20 位设置为提供的 IMM, 低 <code>12</code> 位清零. 与 <code>LUI</code> 不同的是, <code>AUIPC</code> 会再加上 PC 值, 然后将结果存放在 RD 中:</p>
+<h3 id="AUIPC"><a href="#AUIPC" class="headerlink" title="AUIPC"></a>AUIPC</h3><p><code>AUIPC</code> (“Add Upper Immediate Program Counter”) 指令采用 <code>U-type</code>, 其与 <code>LUI</code> 指令类似, 也构造一个 32 bits 的立即数, 高 20 位设置为提供的 IMM, 低 <code>12</code> 位清零. 与 <code>LUI</code> 不同的是, <code>AUIPC</code> 会再加上 PC 值, 然后将结果存放在 RD 中:</p>
 <p><img src="/../img/riscv-auipc-instruction-format.png" srcset="/img/loading.gif" lazyload></p>
 <p>语法:</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs asm">AUIPC RD, IMM<br></code></pre></td></tr></table></figure>
@@ -628,7 +632,26 @@
 <td><code>jr x2</code></td>
 </tr>
 </tbody></table>
-<h2 id="汇编函数调用约定"><a href="#汇编函数调用约定" class="headerlink" title="汇编函数调用约定"></a>汇编函数调用约定</h2><h1 id="M-Mode-S-Mode-U-Mode"><a href="#M-Mode-S-Mode-U-Mode" class="headerlink" title="M-Mode, S-Mode, U-Mode"></a>M-Mode, S-Mode, U-Mode</h1>
+<h2 id="汇编函数调用约定"><a href="#汇编函数调用约定" class="headerlink" title="汇编函数调用约定"></a>汇编函数调用约定</h2><p>调用者称 “Caller”, 被调用者称 “Callee”:</p>
+<p><img src="/../img/riscv-function-call-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>需要注意调用参数, 返回地址, 返回参数是如何传递与保存的.</p>
+<p>这里需要注意 3 种约定:</p>
+<ul>
+<li>有关寄存器的编程约定</li>
+<li>函数跳转和返回指令的编程约定</li>
+<li>实现被调用函数的编程约定</li>
+</ul>
+<h3 id="寄存器编程约定"><a href="#寄存器编程约定" class="headerlink" title="寄存器编程约定"></a>寄存器编程约定</h3><p>各寄存器对应的职能:</p>
+<p><img src="/../img/riscv-function-for-each-register.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li><code>ABI 名</code> 实际上是寄存器的别名, 可以在编程时直接使用</li>
+<li><code>ra</code> 是 <code>return address</code> 的缩写, 存放返回地址</li>
+</ul>
+<h3 id="函数跳转和返回指令的编程约定"><a href="#函数跳转和返回指令的编程约定" class="headerlink" title="函数跳转和返回指令的编程约定"></a>函数跳转和返回指令的编程约定</h3><p><img src="/../img/riscv-function-jump-and-ret-rule.png" srcset="/img/loading.gif" lazyload></p>
+<h3 id="函数调用过程中被调函数的约定"><a href="#函数调用过程中被调函数的约定" class="headerlink" title="函数调用过程中被调函数的约定"></a>函数调用过程中被调函数的约定</h3><p>Callee 需要保存信息以及运行结束后恢复:</p>
+<p><img src="/../img/riscv-function-call-callee-rule.png" srcset="/img/loading.gif" lazyload></p>
+<h1 id="RISC-V-汇编与-C-混合编程"><a href="#RISC-V-汇编与-C-混合编程" class="headerlink" title="RISC-V 汇编与 C 混合编程"></a>RISC-V 汇编与 C 混合编程</h1><h2 id="在-RISC-V-汇编中调用-C-函数"><a href="#在-RISC-V-汇编中调用-C-函数" class="headerlink" title="在 RISC-V 汇编中调用 C 函数"></a>在 RISC-V 汇编中调用 C 函数</h2><p>函数参数通过 <code>a0~a7</code> 传递, 返回值用 <code>a0</code> 和 <code>a1</code> 接收.</p>
+<h2 id="C-函数中潜入-RISC-V-汇编"><a href="#C-函数中潜入-RISC-V-汇编" class="headerlink" title="C 函数中潜入 RISC-V 汇编"></a>C 函数中潜入 RISC-V 汇编</h2><h1 id="M-Mode-S-Mode-U-Mode"><a href="#M-Mode-S-Mode-U-Mode" class="headerlink" title="M-Mode, S-Mode, U-Mode"></a>M-Mode, S-Mode, U-Mode</h1>
                 
               </div>
             
