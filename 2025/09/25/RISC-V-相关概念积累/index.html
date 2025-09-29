@@ -54,7 +54,7 @@
 <meta property="og:image" content="http://example.com/img/riscv-function-jump-and-ret-rule.png">
 <meta property="og:image" content="http://example.com/img/riscv-function-call-callee-rule.png">
 <meta property="article:published_time" content="2025-09-25T02:41:59.000Z">
-<meta property="article:modified_time" content="2025-09-28T08:59:42.192Z">
+<meta property="article:modified_time" content="2025-09-29T01:57:06.681Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/riscv-isa-position-example.png">
@@ -266,7 +266,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          6.8k 字
+          6.9k 字
         
       </span>
     
@@ -277,7 +277,7 @@
         
         
         
-          57 分钟
+          58 分钟
         
       </span>
     
@@ -398,7 +398,7 @@
 <h1 id="RISC-V-汇编"><a href="#RISC-V-汇编" class="headerlink" title="RISC-V 汇编"></a>RISC-V 汇编</h1><p>RISC-V 汇编由多条语句 (statement) 构成, 一条语句有 3 部分组成 (以 GNU 汇编为例):</p>
 <figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs css"><span class="hljs-selector-attr">[label:]</span> <span class="hljs-selector-attr">[operation]</span> <span class="hljs-selector-attr">[comment]</span><br></code></pre></td></tr></table></figure>
 <ul>
-<li><code>label</code>, 标号, 在 GNU 汇编中, 任何以 <code>:</code> 结尾的标识符都被认为是一个标号</li>
+<li><code>label</code>, 标号, 在 GNU 汇编中, 任何以 <code>:</code> 结尾的标识符都被认为是一个标号, 在用作跳转时汇编器会自动计算与 PC 的 Offset</li>
 <li><code>operation</code> 分几类:<ul>
 <li><code>instruction</code>, 对应机器指令的字符串</li>
 <li><code>pseudo-instruction</code> (伪指令), 为了提高编写代码的效率, 可以用一条伪指令指示汇编器产生多条实际的 instructions</li>
@@ -651,6 +651,12 @@
 <h3 id="函数跳转和返回指令的编程约定"><a href="#函数跳转和返回指令的编程约定" class="headerlink" title="函数跳转和返回指令的编程约定"></a>函数跳转和返回指令的编程约定</h3><p><img src="/../img/riscv-function-jump-and-ret-rule.png" srcset="/img/loading.gif" lazyload></p>
 <h3 id="函数调用过程中被调函数的约定"><a href="#函数调用过程中被调函数的约定" class="headerlink" title="函数调用过程中被调函数的约定"></a>函数调用过程中被调函数的约定</h3><p>Callee 需要保存信息以及运行结束后恢复:</p>
 <p><img src="/../img/riscv-function-call-callee-rule.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="rept"><a href="#rept" class="headerlink" title=".rept"></a>.rept</h2><p><code>.rept</code> (“Repeat”) 伪指令和 <code>.endr</code> (“end repeat”) 伪指令表明重复中间的指令指定次数:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs asm">.rept 12<br>.word 0<br>.endr<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>.word 0</code> 表示插入一个 32 位 (4 字节) 整数 <code>0</code> 到当前段</li>
+<li>这里表示重复 <code>12</code> 次, 也就是初始化 <code>4 x 12 = 48</code> 字节的空间</li>
+</ul>
 <h1 id="RISC-V-汇编与-C-混合编程"><a href="#RISC-V-汇编与-C-混合编程" class="headerlink" title="RISC-V 汇编与 C 混合编程"></a>RISC-V 汇编与 C 混合编程</h1><h2 id="在-RISC-V-汇编中调用-C-函数"><a href="#在-RISC-V-汇编中调用-C-函数" class="headerlink" title="在 RISC-V 汇编中调用 C 函数"></a>在 RISC-V 汇编中调用 C 函数</h2><p>函数参数通过 <code>a0~a7</code> 传递, 返回值用 <code>a0</code> 和 <code>a1</code> 接收.</p>
 <h2 id="C-函数中潜入-RISC-V-汇编"><a href="#C-函数中潜入-RISC-V-汇编" class="headerlink" title="C 函数中潜入 RISC-V 汇编"></a>C 函数中潜入 RISC-V 汇编</h2><p>需要用 <code>asm</code> 关键字. 语法为:</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">asm</span> [<span class="hljs-keyword">volatile</span>] (<br>    <span class="hljs-string">&quot;汇编指令&quot;</span><br>    :输出操作数列表 (可选)<br>    :输入操作数列表 (可选)<br>    :可能影响的寄存器或者存储器 (可选)<br>);<br></code></pre></td></tr></table></figure>
