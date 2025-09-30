@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="GNU Ld 文档 默认链接脚本1ld --verbose">
+    <meta name="description" content="GNU Ld 文档 介绍链接脚本用来控制 linker 的整个链接过程, 其告诉 linker:  如何将各个 section 放置到输出文件的哪个位置 如何组织内存布局 如何定义符号等  默认链接脚本1ld --verbose  指定链接脚本用 gcc 或 g++ 链接时, 可以用 -T 参数来指定链接脚本文件: 1gcc main.o -o output.elf -T my_linker_sc">
 <meta property="og:type" content="article">
 <meta property="og:title" content="GNU-linker-script">
 <meta property="og:url" content="http://example.com/2025/09/30/GNU-linker-script/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="GNU Ld 文档 默认链接脚本1ld --verbose">
+<meta property="og:description" content="GNU Ld 文档 介绍链接脚本用来控制 linker 的整个链接过程, 其告诉 linker:  如何将各个 section 放置到输出文件的哪个位置 如何组织内存布局 如何定义符号等  默认链接脚本1ld --verbose  指定链接脚本用 gcc 或 g++ 链接时, 可以用 -T 参数来指定链接脚本文件: 1gcc main.o -o output.elf -T my_linker_sc">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-09-30T03:29:46.000Z">
-<meta property="article:modified_time" content="2025-09-30T06:21:50.302Z">
+<meta property="article:modified_time" content="2025-09-30T06:41:56.331Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          25 字
+          752 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          1 分钟
+          7 分钟
         
       </span>
     
@@ -290,7 +290,19 @@
               <div class="markdown-body">
                 
                 <p><a target="_blank" rel="noopener" href="https://sourceware.org/binutils/docs/ld.pdf">GNU Ld 文档</a></p>
+<h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>链接脚本用来控制 linker 的整个链接过程, 其告诉 linker:</p>
+<ul>
+<li>如何将各个 section 放置到输出文件的哪个位置</li>
+<li>如何组织内存布局</li>
+<li>如何定义符号等</li>
+</ul>
 <h1 id="默认链接脚本"><a href="#默认链接脚本" class="headerlink" title="默认链接脚本"></a>默认链接脚本</h1><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ld --verbose<br></code></pre></td></tr></table></figure>
+
+<h1 id="指定链接脚本"><a href="#指定链接脚本" class="headerlink" title="指定链接脚本"></a>指定链接脚本</h1><p>用 <code>gcc</code> 或 <code>g++</code> 链接时, 可以用 <code>-T</code> 参数来指定链接脚本文件:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">gcc main.o -o output.elf -T my_linker_script.ld<br></code></pre></td></tr></table></figure>
+
+<h1 id="语法"><a href="#语法" class="headerlink" title="语法"></a>语法</h1><h2 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h2><p>根据下面例子来学习语法:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><code class="hljs ld">OUTPUT_ARCH(riscv)<br>ENTRY(_start)<br>BASE_ADDRESS = 0x80200000;<br><br>SECTIONS<br>&#123;<br>    . = BASE_ADDRESS;<br>    skernel = .;<br><br>    stext = .;<br>    .text : &#123;<br>        *(.text.entry)<br>        *(.text .text.*)<br>    &#125;<br><br>    . = ALIGN(4K);<br>    etext = .;<br>    srodata = .;<br>    .rodata : &#123;<br>        *(.rodata .rodata.*)<br>        *(.srodata .srodata.*)<br>    &#125;<br><br>    . = ALIGN(4K);<br>    erodata = .;<br>    sdata = .;<br>    .data : &#123;<br>        *(.data .data.*)<br>        *(.sdata .sdata.*)<br>    &#125;<br><br>    . = ALIGN(4K);<br>    edata = .;<br>    .bss : &#123;<br>        *(.bss.stack)<br>        sbss = .;<br>        *(.bss .bss.*)<br>        *(.sbss .sbss.*)<br>    &#125;<br><br>    . = ALIGN(4K);<br>    ebss = .;<br>    ekernel = .;<br><br>    /DISCARD/ : &#123;<br>        *(.eh_frame)<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 
 
                 
