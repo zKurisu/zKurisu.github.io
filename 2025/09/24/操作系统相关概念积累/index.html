@@ -35,7 +35,7 @@
 <meta property="og:image" content="http://example.com/img/os-where-is-abi-sbi.png">
 <meta property="og:image" content="http://example.com/img/os-elf-file-structure-example.png">
 <meta property="article:published_time" content="2025-09-24T11:43:14.000Z">
-<meta property="article:modified_time" content="2025-10-02T01:53:44.110Z">
+<meta property="article:modified_time" content="2025-10-02T05:08:33.511Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/os-memory-page-mapping-example.png">
@@ -247,7 +247,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          13k 字
+          14k 字
         
       </span>
     
@@ -258,7 +258,7 @@
         
         
         
-          106 分钟
+          114 分钟
         
       </span>
     
@@ -573,6 +573,30 @@
 
 <p><img src="/../img/os-function-call-stack-example1.png" srcset="/img/loading.gif" lazyload></p>
 <h1 id="ABI-和-SBI"><a href="#ABI-和-SBI" class="headerlink" title="ABI 和 SBI"></a>ABI 和 SBI</h1><p><img src="/../img/os-where-is-abi-sbi.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="ABI"><a href="#ABI" class="headerlink" title="ABI"></a>ABI</h2><p>ABI, Application Binary Interface (应用二进制接口), 是一个接口规范, 其规定了代码编译出的二进制如何与其他二进制交互:</p>
+<ul>
+<li>函数调用时参数如何传递 (通过寄存器还是栈)</li>
+<li>返回值如何返回</li>
+<li>调用约定</li>
+<li>寄存器的使用约定</li>
+<li>栈的布局</li>
+<li>二进制的文件格式 (如 <code>ELF</code>, <code>PE</code>)</li>
+<li>数据类型在内存中的布局</li>
+</ul>
+<p>比如:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#[no_mangle]</span><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">extern</span> <span class="hljs-string">&quot;C&quot;</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">hello</span>() &#123;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Hello from Rust!&quot;</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>表示使用 <code>C</code> 的 ABI, 以保证跨语言的兼容性</li>
+</ul>
+<h2 id="SBI"><a href="#SBI" class="headerlink" title="SBI"></a>SBI</h2><p>SBI, Supervisor Binary Interface (监管者二进制接口), 是 RISC-V 框架中, Supervisor Mode 与 Machine Mode 之间交互的一套标准接口.</p>
+<p>用 Rust 写的操作系统内核一般运行在 Supervisor Mode, 其不能直接操作某些底层硬件功能, 而是调用 SBI 接口, 由 Machine Mode 来完成.</p>
+<p>SBI 提供了一系列的标准化函数来完成底层操作, 比如:</p>
+<ul>
+<li><code>sbi_console_putchar</code>, 向控制台输出一个字符</li>
+<li><code>sbi_console_getchar</code>, 从控制台读取一个字符</li>
+<li><code>sbi_set_timer</code>, 设置定时器中断</li>
+<li><code>sbi_shutdown</code>, 关机或重启</li>
+</ul>
 <h1 id="Prologue-和-epilogue"><a href="#Prologue-和-epilogue" class="headerlink" title="Prologue 和 epilogue"></a>Prologue 和 epilogue</h1><h1 id="ELF-文件格式"><a href="#ELF-文件格式" class="headerlink" title="ELF 文件格式"></a>ELF 文件格式</h1><p>ELF, Executable and Linkable Format (可执行与链接格式), 定义了操作系统如何加载和运行文件.</p>
 <p>其结构如下:</p>
 <p><img src="/../img/os-elf-file-structure-example.png" srcset="/img/loading.gif" lazyload></p>
@@ -671,7 +695,17 @@
 <p>由于该文件中地址是相对的, 因此不能直接运行. 需要 linker 将地址修改为运行时的正确地址.</p>
 <h2 id="Position-independent-executable-file"><a href="#Position-independent-executable-file" class="headerlink" title="Position independent executable file"></a>Position independent executable file</h2><p>Position independent executable file (PIE) 能够在运行时由动态链接器加载到随机地址, 可以直接运行.</p>
 <h2 id="Shared-object-file"><a href="#Shared-object-file" class="headerlink" title="Shared object file"></a>Shared object file</h2><p>Shared object file 设计为在运行时被动态加载和共享, 多个进程可以共用同一份物理内存中的代码段, 节省内存.</p>
-<h2 id="相关工具"><a href="#相关工具" class="headerlink" title="相关工具"></a>相关工具</h2><p><code>objdump</code>, <code>readelf</code>, <code>objcopy</code> 工具.</p>
+<h2 id="相关工具"><a href="#相关工具" class="headerlink" title="相关工具"></a>相关工具</h2><h3 id="readelf"><a href="#readelf" class="headerlink" title="readelf"></a>readelf</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">readelf -h &lt;file&gt;  <span class="hljs-comment"># Display the ELF header</span><br>readelf -l &lt;file&gt;  <span class="hljs-comment"># Display the program header</span><br>readelf -S &lt;file&gt;  <span class="hljs-comment"># Display the section header table</span><br>readelf -a &lt;file&gt;  <span class="hljs-comment"># Display all content</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="objdump"><a href="#objdump" class="headerlink" title="objdump"></a>objdump</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">objdump -d &lt;file&gt;  <span class="hljs-comment"># Disassemble the executable code</span><br>objdump -t &lt;file&gt;  <span class="hljs-comment"># Display the symbol table</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="nm"><a href="#nm" class="headerlink" title="nm"></a>nm</h3><p><code>nm</code> 用来列出 object file 中的 symbols:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">nm &lt;file&gt;  <span class="hljs-comment"># List symbols</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="strace"><a href="#strace" class="headerlink" title="strace"></a>strace</h3><p><code>strace</code> 用于跟踪系统调用:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">strace ./&lt;executable&gt;  <span class="hljs-comment"># Trace the system calls made by the executable</span><br></code></pre></td></tr></table></figure>
+
+
 
                 
               </div>
