@@ -35,7 +35,7 @@
 <meta property="og:image" content="http://example.com/img/os-where-is-abi-sbi.png">
 <meta property="og:image" content="http://example.com/img/os-elf-file-structure-example.png">
 <meta property="article:published_time" content="2025-09-24T11:43:14.000Z">
-<meta property="article:modified_time" content="2025-09-30T07:17:00.762Z">
+<meta property="article:modified_time" content="2025-10-02T01:42:19.904Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/os-memory-page-mapping-example.png">
@@ -247,7 +247,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          11k 字
+          12k 字
         
       </span>
     
@@ -258,7 +258,7 @@
         
         
         
-          95 分钟
+          102 分钟
         
       </span>
     
@@ -574,7 +574,41 @@
 <p><img src="/../img/os-function-call-stack-example1.png" srcset="/img/loading.gif" lazyload></p>
 <h1 id="ABI-和-SBI"><a href="#ABI-和-SBI" class="headerlink" title="ABI 和 SBI"></a>ABI 和 SBI</h1><p><img src="/../img/os-where-is-abi-sbi.png" srcset="/img/loading.gif" lazyload></p>
 <h1 id="Prologue-和-epilogue"><a href="#Prologue-和-epilogue" class="headerlink" title="Prologue 和 epilogue"></a>Prologue 和 epilogue</h1><h1 id="ELF-文件格式"><a href="#ELF-文件格式" class="headerlink" title="ELF 文件格式"></a>ELF 文件格式</h1><p>ELF, Executable and Linkable Format (可执行与链接格式), 定义了操作系统如何加载和运行文件.</p>
-<p>有 3 种类型, 在 ELF Header 中的 <code>e_type</code> 字段来标识:</p>
+<p>其结构如下:</p>
+<p><img src="/../img/os-elf-file-structure-example.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li><code>ELF Header</code> 包含 elf 文件的元信息, 比如 type, architecture, entry point</li>
+<li><code>Program Header Table</code> 描述在 runtime 使用的 segments 的信息</li>
+<li><code>Sections and Segments</code> 包含实际的数据, 如 code, data, symbols, debug information</li>
+<li><code>Section Header Table</code> 描述在 linking 和 debuging 时使用的 sections 信息</li>
+</ul>
+<h2 id="ELF-Header"><a href="#ELF-Header" class="headerlink" title="ELF Header"></a>ELF Header</h2><p>ELF Header 中重要的 fields 有:</p>
+<ul>
+<li><code>e_ident</code>, “ELF Identification”, 一个标识此文件为 ELF file 的 magic number</li>
+<li><code>e_type</code>, 标记 ELF 类型 (有 3 种, executable, shared object, relocatable)</li>
+<li><code>e_machine</code>, 指明当前 ELF 是运行在哪个 architecture 上的 (<code>x86_64</code>, <code>arm</code>, <code>riscv</code>)</li>
+<li><code>e_version</code>, ELF 文件格式的版本</li>
+<li><code>e_entry</code>, entry point 的入口地址</li>
+<li><code>e_phoff</code>, program header table 的偏置</li>
+<li><code>e_shoff</code>, section header table 的偏置</li>
+</ul>
+<h2 id="Program-header-table"><a href="#Program-header-table" class="headerlink" title="Program header table"></a>Program header table</h2><p>Program header table 告诉 loader 如何将文件中的各部分装载进内存.</p>
+<p>Key fields 有:</p>
+<ul>
+<li><code>p_type</code>, <code>segment</code> 的类型 (如 <code>LOAD</code>, <code>DYNAMIC</code>)</li>
+<li><code>p_off</code>, “offset”, <code>segment</code> 在文件里的偏移量</li>
+<li><code>p_vaddr</code>, “virtual address”, <code>segment</code> 该被加载到哪个虚拟地址</li>
+<li><code>p_paddr</code>, “physical address”, 物理地址</li>
+<li><code>p_filesz</code>, “file size”, <code>segment</code> 的大小</li>
+<li><code>p_memsz</code>, “memory size”, <code>segment</code> 在内存中占用的大小</li>
+</ul>
+<p>segment types 有:</p>
+<ul>
+<li><code>LOAD</code>, 包含需要被加载进内存的 code or data</li>
+<li><code>DYNAMIC</code>, 包含 dynamic linking 信息</li>
+<li><code>INTERP</code>, 包含 dynamic linker 的名称</li>
+</ul>
+<h2 id="E-TYPE"><a href="#E-TYPE" class="headerlink" title="E_TYPE"></a><code>E_TYPE</code></h2><p>有 3 种类型, 在 ELF Header 中的 <code>e_type</code> 字段来标识:</p>
 <table>
 <thead>
 <tr>
@@ -609,8 +643,6 @@
 <td><code>core</code></td>
 </tr>
 </tbody></table>
-<p>其结构如下:</p>
-<p><img src="/../img/os-elf-file-structure-example.png" srcset="/img/loading.gif" lazyload></p>
 <h2 id="Relocatable-file"><a href="#Relocatable-file" class="headerlink" title="Relocatable file"></a>Relocatable file</h2><p>Relocatable file 是汇编器生成的, 尚未链接的中间文件, 其包含:</p>
 <ul>
 <li>机器码</li>
