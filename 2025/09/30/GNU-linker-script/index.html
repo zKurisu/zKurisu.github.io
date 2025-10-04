@@ -24,7 +24,7 @@
 <meta property="og:description" content="GNU Ld 文档 介绍链接脚本用来控制 linker 的整个链接过程, 其告诉 linker:  如何将各个 section 放置到输出文件的哪个位置 如何组织内存布局 如何定义符号等  默认链接脚本1ld --verbose  指定链接脚本用 gcc 或 g++ 链接时, 可以用 -T 参数来指定链接脚本文件: 1gcc main.o -o output.elf -T my_linker_sc">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-09-30T03:29:46.000Z">
-<meta property="article:modified_time" content="2025-10-04T05:28:28.782Z">
+<meta property="article:modified_time" content="2025-10-04T06:22:55.761Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3.3k 字
+          5.2k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          28 分钟
+          44 分钟
         
       </span>
     
@@ -301,7 +301,7 @@
 <h1 id="指定链接脚本"><a href="#指定链接脚本" class="headerlink" title="指定链接脚本"></a>指定链接脚本</h1><p>用 <code>gcc</code> 或 <code>g++</code> 链接时, 可以用 <code>-T</code> 参数来指定链接脚本文件:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">gcc main.o -o output.elf -T my_linker_script.ld<br></code></pre></td></tr></table></figure>
 
-<h1 id="语法"><a href="#语法" class="headerlink" title="语法"></a>语法</h1><p>Linker scripts 用哦 linker command language 来编写, linker 会把多个 input files (object file) 合并为一个 output file (executable file, 也可以称 object file).</p>
+<h1 id="语法"><a href="#语法" class="headerlink" title="语法"></a>语法</h1><p>Linker scripts 用 linker command language 来编写, linker 会把多个 input files (object file) 合并为一个 output file (executable file, 也可以称 object file).</p>
 <p>Object file 中的 section 有名称和大小, 有的还会有关联的数据, 称 section contents. 如果一个 section 被标记为 loadable, 表明其 contents 会在运行时加载进内存. 如果一个 section 没有 contents (可能只是占位符, 暂时不包含内容, 但要求分配内存), 通常被标记为 allocatable, 此时不需要加载特定内容到这块内存区域, 但某些情况下需要将这块内存初始化为零.</p>
 <p>如果一个 section 既不是 <code>loadable</code> 也不是 <code>allocatable</code>, 通常包含 debugging information.</p>
 <p>任何一个 <code>loadable</code> 或 <code>allocatable</code> section 都包含两个地址:</p>
@@ -364,7 +364,76 @@
 <li>output section description</li>
 <li>overlay description</li>
 </ul>
-<p>如果 linker script 中不使用 <code>SECTIONS</code> command</p>
+<p>如果 linker script 中不使用 <code>SECTIONS</code> command, linker 会将 input section 按照顺序映射到同名的 output section 中.</p>
+<h3 id="Output-section-description"><a href="#Output-section-description" class="headerlink" title="Output section description"></a>Output section description</h3><p>完整的语法描述为:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs ld">section [address] [(type)] :<br>    [AT(1ma)]<br>    [ALIGN(section_align) | ALIGN_WITH_INPUT]<br>    [SUBALIGN(subsection_align)]<br>    [constraint]<br>    &#123;<br>        output-section-command<br>        output-section-command<br>        ...<br>    &#125; [&gt;region] [AT&gt;1ma_region] [:phdr :phdr ...] [=fillexp] [,]<br></code></pre></td></tr></table></figure>
+
+<p>Output-section-command 可以是:</p>
+<ul>
+<li>symbol assignment</li>
+<li>input section description</li>
+<li>data values to include directly</li>
+<li>special output section keyword</li>
+</ul>
+<h3 id="Output-section-name"><a href="#Output-section-name" class="headerlink" title="Output section name"></a>Output section name</h3><p>Output section name 不能随便取, 有的格式比如 <code>a.out</code> 只允许特定的 section name 比如 <code>.text</code>, <code>.data</code>, <code>.bss</code>. 不同的可执行文件格式 (如 <code>ELF</code>, <code>a.out</code>, <code>PE</code>, <code>COFF</code>) 对 section 的命名规则和支持的段名集合有不同的限制.</p>
+<p>在 ELF 格式下, section name 就是一个字符串, 几乎可以取任何名字, 比如:</p>
+<ul>
+<li><code>.text</code></li>
+<li><code>.data</code></li>
+<li><code>.my_custom_section</code></li>
+<li><code>.rodata</code></li>
+<li><code>.init_array</code></li>
+</ul>
+<h3 id="Output-section-address"><a href="#Output-section-address" class="headerlink" title="Output section address"></a>Output section address</h3><p>Output section address 将 section 地址设置到一个特定值, 通常是可选的.</p>
+<p>如果没有指定 output address, 则地址的设置取决于下面几种情况:</p>
+<ul>
+<li>如果用 <code>&gt; REGION</code> 语法显示指定某个内存区域, 则将其放入该区域中的下一个可用地址, 比如:</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ld">.text : &#123; *(.text) &#125; &gt; FLASH<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>如果用 <code>MEMORY</code> command 定义了一些内存区域, 链接器会选择第一个与该 section 属性兼容的内存区域来存放, 输出地址是该区域中的下一个可用地址, 比如:</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs ld">MEMORY<br>&#123;<br>    ROM (rx)  : ORIGIN = 0x00000000, LENGTH = 64K<br>    RAM (xrw) : ORIGIN = 0x80000000, LENGTH = 128K<br>&#125;<br><br>...<br>SECTIONS<br>&#123;<br>    .text : &#123; *(.text) &#125;<br>    .data : &#123; *(.data) &#125;<br>&#125;<br>...<br></code></pre></td></tr></table></figure>
+<p>(<code>.text</code> 通常是只读, 可执行, 可能会选择 <code>ROM(rx)</code>)</p>
+<ul>
+<li>如果也没有定义 memory region, 则基于当前 location counter 放置</li>
+</ul>
+<p>一个指定地址的示例:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ld">.text ALIGN(0x10) : &#123; *(.text) &#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>ALIGN</code> 返回当前 location counter 对齐后的值</li>
+</ul>
+<h3 id="Input-section-description"><a href="#Input-section-description" class="headerlink" title="Input section description"></a>Input section description</h3><p>一个 input section description 包含:</p>
+<ul>
+<li>一个文件名</li>
+<li>括号内的 section names</li>
+</ul>
+<p>文件名和 section name 都可以是通配符. 比如:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ld">*(.text)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>包含所有输入文件的 <code>.text</code> 段</li>
+</ul>
+<p>可以用 <code>EXCLUDE_FILE</code> 来排除一些文件:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ld">EXCLUDE_FILE (*crtend.o *otherfile.o) *(.ctors)<br></code></pre></td></tr></table></figure>
+
+<p>也可以写在括号内:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ld">*(EXCLUDE_FILE (*crtend.o *otherfile.o) .ctors)<br></code></pre></td></tr></table></figure>
+
+<p>包含多个 section:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs ld">*(.text .rdata)<br>*(.text) *(.rdata)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>对于前者, 两个 section 的排列顺序为先遇到哪个就排哪个</li>
+<li>对于后者, 先排 <code>.text</code>, 再排 <code>.rdata</code></li>
+</ul>
+<p>注意:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ld">*(EXCLUDE_FILE (*somefile.o) .text .rdata)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>这里的 <code>EXCLUDE_FILE</code> 只对 <code>.text</code> 起作用</li>
+</ul>
+<p>一些示例:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs ld">SECTIONS &#123;<br>    outputa 0x10000 :<br>    &#123;<br>        all.o<br>        foo.o (.input)<br>    &#125;<br>    outputb :<br>    &#123;<br>        foo.o (.input2)<br>        foo1.o (.input1)<br>    &#125;<br><br>    outputc :<br>    &#123;<br>        *(.input1)<br>        *(.input2)<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
 <h2 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h2><p>根据下面例子来学习语法:</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><code class="hljs ld">OUTPUT_ARCH(riscv)<br>ENTRY(_start)<br>BASE_ADDRESS = 0x80200000;<br><br>SECTIONS<br>&#123;<br>    . = BASE_ADDRESS;<br>    skernel = .;<br><br>    stext = .;<br>    .text : &#123;<br>        *(.text.entry)<br>        *(.text .text.*)<br>    &#125;<br><br>    . = ALIGN(4K);<br>    etext = .;<br>    srodata = .;<br>    .rodata : &#123;<br>        *(.rodata .rodata.*)<br>        *(.srodata .srodata.*)<br>    &#125;<br><br>    . = ALIGN(4K);<br>    erodata = .;<br>    sdata = .;<br>    .data : &#123;<br>        *(.data .data.*)<br>        *(.sdata .sdata.*)<br>    &#125;<br><br>    . = ALIGN(4K);<br>    edata = .;<br>    .bss : &#123;<br>        *(.bss.stack)<br>        sbss = .;<br>        *(.bss .bss.*)<br>        *(.sbss .sbss.*)<br>    &#125;<br><br>    . = ALIGN(4K);<br>    ebss = .;<br>    ekernel = .;<br><br>    /DISCARD/ : &#123;<br>        *(.eh_frame)<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 
