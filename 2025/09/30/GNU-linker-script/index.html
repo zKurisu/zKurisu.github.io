@@ -24,7 +24,7 @@
 <meta property="og:description" content="GNU Ld 文档 介绍链接脚本用来控制 linker 的整个链接过程, 其告诉 linker:  如何将各个 section 放置到输出文件的哪个位置 如何组织内存布局 如何定义符号等  默认链接脚本1ld --verbose  指定链接脚本用 gcc 或 g++ 链接时, 可以用 -T 参数来指定链接脚本文件: 1gcc main.o -o output.elf -T my_linker_sc">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-09-30T03:29:46.000Z">
-<meta property="article:modified_time" content="2025-10-04T02:30:05.591Z">
+<meta property="article:modified_time" content="2025-10-04T02:55:57.504Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.8k 字
+          2.8k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          15 分钟
+          24 分钟
         
       </span>
     
@@ -318,7 +318,35 @@
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs linker">SECTIONS<br>&#123;<br>    . = 0x10000;<br>    .text : &#123; *(.text) &#125;<br>    . = 0x8000000;<br>    .data = : &#123; *(.data) &#125;<br>    .bss : &#123; *(.bss) &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 <ul>
 <li><code>SECTIONS &#123; ... &#125;</code> 标记对 sections 布局的起始和结束位置</li>
-<li><code>.</code> 是 location counter, 表示接下来的内容应该存放在哪里</li>
+<li><code>.</code> 是 location counter, 表示接下来的内容应该存放在哪里, 在 <code>SECTIONS</code> 的开头部分, 其值为 0</li>
+<li><code>. = 0x10000;</code> 是一个 command, 表明接下来的内容存放的位置, 用 <code>;</code> 与后续内容分隔</li>
+<li><code>.text : &#123; *(.text) &#125;</code> 定义一个 output section, 名字叫 <code>.text</code>, 这个 section 的内容来自于所有输入 object files 中的 <code>.text</code> section, 即 <code>*(.text)</code>:<ul>
+<li><code>.text</code> 是 output section 名字</li>
+<li><code>:</code> 分隔 section name 和定义的内容</li>
+<li><code>&#123; ... &#125;</code> 定义该 section 包含哪些内容</li>
+<li><code>*(.text)</code> 是一个通配符, 表示从 <code>*</code> 中提取 <code>.text</code> section 的内容</li>
+</ul>
+</li>
+<li><code>.bss</code> section 紧跟在 <code>.data</code> section 之后</li>
+</ul>
+<h2 id="Simple-Linker-Script-Commands"><a href="#Simple-Linker-Script-Commands" class="headerlink" title="Simple Linker Script Commands"></a>Simple Linker Script Commands</h2><h3 id="Setting-the-Entry-Point"><a href="#Setting-the-Entry-Point" class="headerlink" title="Setting the Entry Point"></a>Setting the Entry Point</h3><p>用 <code>ENTRY</code> command 来设置 entry point:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs linker">ENTRY(symbol)<br></code></pre></td></tr></table></figure>
+
+<h3 id="与文件相关的-commands"><a href="#与文件相关的-commands" class="headerlink" title="与文件相关的 commands"></a>与文件相关的 commands</h3><ul>
+<li><code>INCLUDE filename</code>, 包含其他 linker script</li>
+<li><code>INPUT(file, file, ...)</code>, 包含 object file, 通常会在 command line 上指定</li>
+<li><code>OUTPUT(filename)</code>, 指定输出文件名, 命令行的 <code>-o</code> 参数优先级更高</li>
+<li><code>SEARCH_DIR(path)</code>, 添加搜索路径, 等价于 <code>-L path</code></li>
+</ul>
+<h2 id="Assigning-Values-to-Symbols"><a href="#Assigning-Values-to-Symbols" class="headerlink" title="Assigning Values to Symbols"></a>Assigning Values to Symbols</h2><p>可以用 C assignment operators:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs linker">symbol = expression ;<br>symbol += expression ;<br>symbol -= expression ;<br>symbol *= expression ;<br>symbol /= expression ;<br>symbol &lt;&lt;= expression ;<br>symbol &gt;&gt;= expression ;<br>symbol &amp;= expression ;<br>symbol |= expression ;<br></code></pre></td></tr></table></figure>
+
+<p>注意 <code>.</code> 这个特殊的 symbol 只能用在 <code>SECTIONS</code> command 里.</p>
+<p>示例:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs linker">floating_point = 0<br>SECTIONS<br>&#123;<br>    .text : &#123;<br>        &#123;<br>            *(.text)<br>            _etext = .;<br>        &#125;<br>    &#125;<br>    _bdata = (. + 3) &amp; ~ 3;<br>    .data : &#123; *(.data) &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>floating_point</code> 赋值为 <code>0</code></li>
+<li><code>_etext</code> 赋值为最后一个 <code>.text</code> section 之后的地址</li>
 </ul>
 <h2 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h2><p>根据下面例子来学习语法:</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><code class="hljs ld">OUTPUT_ARCH(riscv)<br>ENTRY(_start)<br>BASE_ADDRESS = 0x80200000;<br><br>SECTIONS<br>&#123;<br>    . = BASE_ADDRESS;<br>    skernel = .;<br><br>    stext = .;<br>    .text : &#123;<br>        *(.text.entry)<br>        *(.text .text.*)<br>    &#125;<br><br>    . = ALIGN(4K);<br>    etext = .;<br>    srodata = .;<br>    .rodata : &#123;<br>        *(.rodata .rodata.*)<br>        *(.srodata .srodata.*)<br>    &#125;<br><br>    . = ALIGN(4K);<br>    erodata = .;<br>    sdata = .;<br>    .data : &#123;<br>        *(.data .data.*)<br>        *(.sdata .sdata.*)<br>    &#125;<br><br>    . = ALIGN(4K);<br>    edata = .;<br>    .bss : &#123;<br>        *(.bss.stack)<br>        sbss = .;<br>        *(.bss .bss.*)<br>        *(.sbss .sbss.*)<br>    &#125;<br><br>    . = ALIGN(4K);<br>    ebss = .;<br>    ekernel = .;<br><br>    /DISCARD/ : &#123;<br>        *(.eh_frame)<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
