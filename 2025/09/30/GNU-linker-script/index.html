@@ -24,7 +24,7 @@
 <meta property="og:description" content="GNU Ld 文档 介绍链接脚本用来控制 linker 的整个链接过程, 其告诉 linker:  如何将各个 section 放置到输出文件的哪个位置 如何组织内存布局 如何定义符号等  默认链接脚本1ld --verbose  指定链接脚本用 gcc 或 g++ 链接时, 可以用 -T 参数来指定链接脚本文件: 1gcc main.o -o output.elf -T my_linker_sc">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-09-30T03:29:46.000Z">
-<meta property="article:modified_time" content="2025-09-30T06:41:56.331Z">
+<meta property="article:modified_time" content="2025-10-04T02:30:05.591Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          752 字
+          1.8k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          7 分钟
+          15 分钟
         
       </span>
     
@@ -301,10 +301,29 @@
 <h1 id="指定链接脚本"><a href="#指定链接脚本" class="headerlink" title="指定链接脚本"></a>指定链接脚本</h1><p>用 <code>gcc</code> 或 <code>g++</code> 链接时, 可以用 <code>-T</code> 参数来指定链接脚本文件:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">gcc main.o -o output.elf -T my_linker_script.ld<br></code></pre></td></tr></table></figure>
 
-<h1 id="语法"><a href="#语法" class="headerlink" title="语法"></a>语法</h1><h2 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h2><p>根据下面例子来学习语法:</p>
+<h1 id="语法"><a href="#语法" class="headerlink" title="语法"></a>语法</h1><p>Linker scripts 用哦 linker command language 来编写, linker 会把多个 input files (object file) 合并为一个 output file (executable file, 也可以称 object file).</p>
+<p>Object file 中的 section 有名称和大小, 有的还会有关联的数据, 称 section contents. 如果一个 section 被标记为 loadable, 表明其 contents 会在运行时加载进内存. 如果一个 section 没有 contents (可能只是占位符, 暂时不包含内容, 但要求分配内存), 通常被标记为 allocatable, 此时不需要加载特定内容到这块内存区域, 但某些情况下需要将这块内存初始化为零.</p>
+<p>如果一个 section 既不是 <code>loadable</code> 也不是 <code>allocatable</code>, 通常包含 debugging information.</p>
+<p>任何一个 <code>loadable</code> 或 <code>allocatable</code> section 都包含两个地址:</p>
+<ul>
+<li>VMA, Virtual Memory Address, 程序运行时该 section 所在的地址 (程序看到的地址)</li>
+<li>LMA, Local Memory Address, 程序被加载到内存中该 section 的地址</li>
+</ul>
+<p>通常这两个地址相同, 加载到哪里就从哪里开始运行.</p>
+<p>可以用 <code>objdump -h xxx</code> 来查看这两个地址. </p>
+<h2 id="Format"><a href="#Format" class="headerlink" title="Format"></a>Format</h2><p>Linker scripts 由一系列 commands 组成, 每个 command 可以是一个 keyword 加上 arguments 或者是一个对 symbol 的赋值语句. 多个 commands 之间用 <code>;</code> 分隔, 忽略 whitespace.</p>
+<p>注释采用 C 风格, 用 <code>/*</code> 和 <code>*/</code> 包裹.</p>
+<p>最简单的 linker script 只包含 <code>SECTIONS</code> command, 用来描述 output file 的内存布局.</p>
+<p>假设程序只包含 <code>.text</code>, <code>.data</code> 和 <code>.bss</code> 段, 假设代码加载到 <code>0x10000</code> 地址, 数据加载到 <code>0x8000000</code> 地址:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs linker">SECTIONS<br>&#123;<br>    . = 0x10000;<br>    .text : &#123; *(.text) &#125;<br>    . = 0x8000000;<br>    .data = : &#123; *(.data) &#125;<br>    .bss : &#123; *(.bss) &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>SECTIONS &#123; ... &#125;</code> 标记对 sections 布局的起始和结束位置</li>
+<li><code>.</code> 是 location counter, 表示接下来的内容应该存放在哪里</li>
+</ul>
+<h2 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h2><p>根据下面例子来学习语法:</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><code class="hljs ld">OUTPUT_ARCH(riscv)<br>ENTRY(_start)<br>BASE_ADDRESS = 0x80200000;<br><br>SECTIONS<br>&#123;<br>    . = BASE_ADDRESS;<br>    skernel = .;<br><br>    stext = .;<br>    .text : &#123;<br>        *(.text.entry)<br>        *(.text .text.*)<br>    &#125;<br><br>    . = ALIGN(4K);<br>    etext = .;<br>    srodata = .;<br>    .rodata : &#123;<br>        *(.rodata .rodata.*)<br>        *(.srodata .srodata.*)<br>    &#125;<br><br>    . = ALIGN(4K);<br>    erodata = .;<br>    sdata = .;<br>    .data : &#123;<br>        *(.data .data.*)<br>        *(.sdata .sdata.*)<br>    &#125;<br><br>    . = ALIGN(4K);<br>    edata = .;<br>    .bss : &#123;<br>        *(.bss.stack)<br>        sbss = .;<br>        *(.bss .bss.*)<br>        *(.sbss .sbss.*)<br>    &#125;<br><br>    . = ALIGN(4K);<br>    ebss = .;<br>    ekernel = .;<br><br>    /DISCARD/ : &#123;<br>        *(.eh_frame)<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 
-
+<h2 id=""><a href="#" class="headerlink" title=""></a></h2>
                 
               </div>
             
