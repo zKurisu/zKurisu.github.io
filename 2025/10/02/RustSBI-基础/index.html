@@ -24,7 +24,7 @@
 <meta property="og:description" content="RustSBI 官方 startup 介绍RustSBI 是 RISC-V SBI (Supervisor Binary Interface) 的第三方 Rust 实现. SBI calls 和系统调用类似, 用 SBI extension 定义参数列表以及 function id 然后调用. 调用 SBI calls 需要先用 ecall 指令陷入到 M mode (Machine mode).">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-10-02T05:20:50.000Z">
-<meta property="article:modified_time" content="2025-10-02T11:55:06.520Z">
+<meta property="article:modified_time" content="2025-10-04T01:27:01.238Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          287 字
+          1.2k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          3 分钟
+          10 分钟
         
       </span>
     
@@ -299,6 +299,12 @@
 <li>Error number</li>
 <li>Return value</li>
 </ul>
+<h1 id="导入"><a href="#导入" class="headerlink" title="导入"></a>导入</h1><p>在 <code>Cargo.toml</code> 中添加:</p>
+<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs toml"><span class="hljs-attr">rustsbi</span> = &#123; version = <span class="hljs-string">&quot;0.4.0&quot;</span>, features = [<span class="hljs-string">&quot;machine&quot;</span>] &#125;<br></code></pre></td></tr></table></figure>
+
+
+<h1 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h1><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#[inline(always)]</span><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">sbi_call_2</span>(extension: <span class="hljs-type">usize</span>, function: <span class="hljs-type">usize</span>, arg0: <span class="hljs-type">usize</span>, arg1: <span class="hljs-type">usize</span>) <span class="hljs-punctuation">-&gt;</span> SbiRet &#123;<br>    <span class="hljs-keyword">let</span> (error, value);<br>    <span class="hljs-title function_ invoke__">match</span> () &#123;<br>        <span class="hljs-meta">#[cfg(any(target_arch = <span class="hljs-string">&quot;riscv32&quot;</span>, target_arch = <span class="hljs-string">&quot;riscv64&quot;</span>))]</span><br>        () =&gt; <span class="hljs-keyword">unsafe</span> &#123; asm!(<br>            <span class="hljs-string">&quot;ecall&quot;</span>,<br>            <span class="hljs-title function_ invoke__">in</span>(<span class="hljs-string">&quot;a0&quot;</span>) arg0, <span class="hljs-title function_ invoke__">in</span>(<span class="hljs-string">&quot;a1&quot;</span>) arg1,<br>            <span class="hljs-title function_ invoke__">in</span>(<span class="hljs-string">&quot;a6&quot;</span>) function, <span class="hljs-title function_ invoke__">in</span>(<span class="hljs-string">&quot;a7&quot;</span>) extension,<br>            <span class="hljs-title function_ invoke__">lateout</span>(<span class="hljs-string">&quot;a0&quot;</span>) error, <span class="hljs-title function_ invoke__">lateout</span>(<span class="hljs-string">&quot;a1&quot;</span>) value,<br>        ) &#125;,<br>        <span class="hljs-meta">#[cfg(not(any(target_arch = <span class="hljs-string">&quot;riscv32&quot;</span>, target_arch = <span class="hljs-string">&quot;riscv64&quot;</span>)))]</span><br>        () =&gt; &#123;<br>            <span class="hljs-keyword">let</span> <span class="hljs-variable">_</span> = (extension, function, arg0, arg1);<br>            <span class="hljs-built_in">unimplemented!</span>(<span class="hljs-string">&quot;not RISC-V instruction set architecture&quot;</span>)<br>        &#125;<br>    &#125;;<br>    SbiRet &#123; error, value &#125;<br>&#125;<br><br><span class="hljs-meta">#[inline]</span><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">get_spec_version</span>() <span class="hljs-punctuation">-&gt;</span> SbiRet &#123;<br>    <span class="hljs-title function_ invoke__">sbi_call_2</span>(EXTENSION_BASE, FUNCTION_BASE_GET_SPEC_VERSION, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>)<br>&#125;<br></code></pre></td></tr></table></figure>
+
 
                 
               </div>
