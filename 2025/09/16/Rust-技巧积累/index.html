@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="宏参数展开123456789macro_rules! example1 &amp;#123;    ($($arg: tt)+) &#x3D;&gt; &amp;#123;        println!(&quot;Got some tokens (no comma required): &amp;#123;:?&amp;#125;&quot;, [$($arg),*])    &amp;#125;;&amp;#125;fn main() &amp;#123;">
+    <meta name="description" content="crate 关键字crate 关键字表示当前 Crate 的根模块. 一个 Crate 通常是一个二进制文件或库文件, 比如项目目录为: 1234src&#x2F;├── main.rs          &lt;-- Crate 根模块（二进制 Crate）├── console.rs       &lt;-- 子模块└── syscall.rs       &lt;-- 子模块  这里的 main.rs">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Rust-技巧积累">
 <meta property="og:url" content="http://example.com/2025/09/16/Rust-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="宏参数展开123456789macro_rules! example1 &amp;#123;    ($($arg: tt)+) &#x3D;&gt; &amp;#123;        println!(&quot;Got some tokens (no comma required): &amp;#123;:?&amp;#125;&quot;, [$($arg),*])    &amp;#125;;&amp;#125;fn main() &amp;#123;">
+<meta property="og:description" content="crate 关键字crate 关键字表示当前 Crate 的根模块. 一个 Crate 通常是一个二进制文件或库文件, 比如项目目录为: 1234src&#x2F;├── main.rs          &lt;-- Crate 根模块（二进制 Crate）├── console.rs       &lt;-- 子模块└── syscall.rs       &lt;-- 子模块  这里的 main.rs">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-09-16T13:15:22.000Z">
-<meta property="article:modified_time" content="2025-10-05T06:50:45.800Z">
+<meta property="article:modified_time" content="2025-10-05T08:49:21.063Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -246,7 +246,7 @@
         
         
         
-          184 分钟
+          187 分钟
         
       </span>
     
@@ -289,7 +289,21 @@
             
               <div class="markdown-body">
                 
-                <h1 id="宏参数展开"><a href="#宏参数展开" class="headerlink" title="宏参数展开"></a>宏参数展开</h1><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-built_in">macro_rules!</span> example1 &#123;<br>    ($($arg: tt)+) =&gt; &#123;<br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Got some tokens (no comma required): &#123;:?&#125;&quot;</span>, [$($arg),*])<br>    &#125;;<br>&#125;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    example1!(<span class="hljs-number">42</span> <span class="hljs-number">11</span> <span class="hljs-number">10</span>); <span class="hljs-comment">// 没有逗号！也能匹配</span><br>&#125;<br></code></pre></td></tr></table></figure>
+                <h1 id="crate-关键字"><a href="#crate-关键字" class="headerlink" title="crate 关键字"></a>crate 关键字</h1><p><code>crate</code> 关键字表示当前 <code>Crate</code> 的根模块.</p>
+<p>一个 <code>Crate</code> 通常是一个二进制文件或库文件, 比如项目目录为:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">src/<br>├── main.rs          &lt;-- Crate 根模块（二进制 Crate）<br>├── console.rs       &lt;-- 子模块<br>└── syscall.rs       &lt;-- 子模块<br></code></pre></td></tr></table></figure>
+<ul>
+<li>这里的 <code>main.rs</code> 用于编译成二进制 Crate, 在这里面通过 <code>mod</code> 关键字导入其他子模块来编译</li>
+</ul>
+<p>在子模块如 <code>console.rs</code> 中若要使用 <code>syscall.rs</code> 模块中的内容, 比如 <code>syscall.rs</code> 下的 <code>sys_write</code> 函数, 不能用:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> syscall::sys_write;<br></code></pre></td></tr></table></figure>
+
+<p>来导入路径. 这会查找 <code>src/console/syscall.rs</code> 文件.</p>
+<p>应该用:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> crate::syscall::sys_write;<br></code></pre></td></tr></table></figure>
+
+<p>来导入.</p>
+<h1 id="宏参数展开"><a href="#宏参数展开" class="headerlink" title="宏参数展开"></a>宏参数展开</h1><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-built_in">macro_rules!</span> example1 &#123;<br>    ($($arg: tt)+) =&gt; &#123;<br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Got some tokens (no comma required): &#123;:?&#125;&quot;</span>, [$($arg),*])<br>    &#125;;<br>&#125;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    example1!(<span class="hljs-number">42</span> <span class="hljs-number">11</span> <span class="hljs-number">10</span>); <span class="hljs-comment">// 没有逗号！也能匹配</span><br>&#125;<br></code></pre></td></tr></table></figure>
 <ul>
 <li>这里的 <code>$($arg),*</code> 将 <code>$($arg: tt)+</code> 捕获的参数展开, 并用 <code>,</code> 分隔</li>
 </ul>
