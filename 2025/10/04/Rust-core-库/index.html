@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="介绍core 库是 Rust 中最底层的模块, 是标准库的一个子集, 能够在 #![no_std] 环境下运行, 提供了不依赖操作系统或标准库的类型, 函数和 trait. std 依赖 core, 但 core 不依赖 std. 移除标准库依赖假设 cargo 项目目录是 os, 构建命令为: 1cargo new os  在 os 目录下新建 .cargo 目录, 创建 config.toml">
+    <meta name="description" content="rCore tutorial 介绍core 库是 Rust 中最底层的模块, 是标准库的一个子集, 能够在 #![no_std] 环境下运行, 提供了不依赖操作系统或标准库的类型, 函数和 trait. std 依赖 core, 但 core 不依赖 std. 移除标准库依赖假设 cargo 项目目录是 os, 构建命令为: 1234567cargo new ostree -L 1.|-- Car">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Rust-core-库">
 <meta property="og:url" content="http://example.com/2025/10/04/Rust-core-%E5%BA%93/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="介绍core 库是 Rust 中最底层的模块, 是标准库的一个子集, 能够在 #![no_std] 环境下运行, 提供了不依赖操作系统或标准库的类型, 函数和 trait. std 依赖 core, 但 core 不依赖 std. 移除标准库依赖假设 cargo 项目目录是 os, 构建命令为: 1cargo new os  在 os 目录下新建 .cargo 目录, 创建 config.toml">
+<meta property="og:description" content="rCore tutorial 介绍core 库是 Rust 中最底层的模块, 是标准库的一个子集, 能够在 #![no_std] 环境下运行, 提供了不依赖操作系统或标准库的类型, 函数和 trait. std 依赖 core, 但 core 不依赖 std. 移除标准库依赖假设 cargo 项目目录是 os, 构建命令为: 1234567cargo new ostree -L 1.|-- Car">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-10-04T06:23:02.000Z">
-<meta property="article:modified_time" content="2025-10-04T06:28:31.680Z">
+<meta property="article:modified_time" content="2025-10-05T05:01:47.296Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          284 字
+          2k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          3 分钟
+          17 分钟
         
       </span>
     
@@ -289,16 +289,45 @@
             
               <div class="markdown-body">
                 
-                <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p><code>core</code> 库是 Rust 中最底层的模块, 是标准库的一个子集, 能够在 <code>#![no_std]</code> 环境下运行, 提供了不依赖操作系统或标准库的类型, 函数和 trait.</p>
+                <p><a target="_blank" rel="noopener" href="https://learningos.cn/rCore-Tutorial-Guide/">rCore tutorial</a></p>
+<h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p><code>core</code> 库是 Rust 中最底层的模块, 是标准库的一个子集, 能够在 <code>#![no_std]</code> 环境下运行, 提供了不依赖操作系统或标准库的类型, 函数和 trait.</p>
 <p><code>std</code> 依赖 <code>core</code>, 但 <code>core</code> 不依赖 <code>std</code>.</p>
 <h1 id="移除标准库依赖"><a href="#移除标准库依赖" class="headerlink" title="移除标准库依赖"></a>移除标准库依赖</h1><p>假设 <code>cargo</code> 项目目录是 <code>os</code>, 构建命令为:</p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">cargo new os<br></code></pre></td></tr></table></figure>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs sh">cargo new os<br>tree -L 1<br>.<br>|-- Cargo.lock<br>|-- Cargo.toml<br>|-- src<br>`-- target<br></code></pre></td></tr></table></figure>
 
 <p>在 <code>os</code> 目录下新建 <code>.cargo</code> 目录, 创建 <code>config.toml</code> 文件, 内容为:</p>
 <figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs toml"><span class="hljs-comment"># os/.cargo/config.toml</span><br><span class="hljs-section">[build]</span><br><span class="hljs-attr">target</span> = <span class="hljs-string">&quot;riscv64gc-unknown-none-elf&quot;</span><br></code></pre></td></tr></table></figure>
 <ul>
 <li>指定 <code>riscv64gc-unknown-none-elf</code> 为目标平台</li>
 </ul>
+<p>此时运行 <code>cargo build</code> 会报错:</p>
+<figure class="highlight subunit"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs subunit">   Compiling os v0.1.0 (/hello/os)<br><span class="hljs-keyword">error: </span>cannot find macro `println` in this scope<br> --&gt; src/main.rs:3:5<br>  |<br>3 |     println!(&quot;Hello, world!&quot;);<br>  |     ^^^^^^^<br><br><span class="hljs-keyword">error: </span>`#[panic_handler]` function required, but not found<br><br><span class="hljs-keyword">error: </span>could not compile `os` (bin &quot;os&quot;) due to 2 previous errors<br></code></pre></td></tr></table></figure>
+
+<p>此时注释掉 <code>src/main.rs</code> 内的 <code>println!</code> 并在文件开头添加:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#![no_std]</span><br></code></pre></td></tr></table></figure>
+
+<p>此时再运行 <code>cargo build</code> 报错为:</p>
+<figure class="highlight subunit"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs subunit">   Compiling os v0.1.0 (/hello/os)<br><span class="hljs-keyword">error: </span>`#[panic_handler]` function required, but not found<br><br><span class="hljs-keyword">error: </span>could not compile `os` (bin &quot;os&quot;) due to 1 previous error<br></code></pre></td></tr></table></figure>
+
+<p>因为标准库 <code>std</code> 提供了有 <code>#[panic_handler]</code> 属性的错误处理函数, 用于打印出错位置和原因并 kill 当前应用, 此时需要用 <code>core</code> 手动实现:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// os/src/lang_items.rs</span><br><span class="hljs-keyword">use</span> core::panic::PanicInfo;<br><br><span class="hljs-meta">#[panic_handler]</span><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">panic</span>(_info: &amp;PanicInfo) <span class="hljs-punctuation">-&gt;</span> ! &#123;<br>    <span class="hljs-keyword">loop</span> &#123;&#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>之后在 <code>src/main.rs</code> 开头加上 <code>mod lang_items;</code> 告诉编译器查找该模块文件.</p>
+<p>重新编译会有报错:</p>
+<figure class="highlight subunit"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs subunit">   Compiling os v0.1.0 (/hello/os)<br><span class="hljs-keyword">error: </span>using `fn main` requires the standard library<br>  |<br>  = help: use `#![no_main]` to bypass the Rust generated entrypoint and declare a platform specific entrypoint yourself, usually<br>with `#[no_mangle]`<br><br><span class="hljs-keyword">error: </span>could not compile `os` (bin &quot;os&quot;) due to 1 previous error<br></code></pre></td></tr></table></figure>
+
+<p>此时需要在 <code>main.rs</code> 开头加上 <code>#![no_main]</code> 告诉编译器没有一般意义上的 <code>main</code> 函数, 并将原来的 <code>main</code> 函数删除, 此时就能正常编译了:</p>
+<figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs scss">Compiling os v0<span class="hljs-selector-class">.1</span><span class="hljs-selector-class">.0</span> (/hello/os)<br> Finished `dev` profile <span class="hljs-selector-attr">[unoptimized + debuginfo]</span> <span class="hljs-built_in">target</span>(s) in <span class="hljs-number">0.08s</span><br></code></pre></td></tr></table></figure>
+
+<p>此时所有的代码为:</p>
+<figure class="highlight d"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs d"><span class="hljs-comment">// os/src/main.rs</span><br><span class="hljs-meta">#![no_std]</span><br><span class="hljs-meta">#![no_main]</span><br><br>mod lang_items;<br><br><span class="hljs-comment">// os/src/lang_items.rs</span><br>use core::panic::PanicInfo;<br><br>#[panic_handler]<br>fn panic(_info: &amp;PanicInfo) -&gt; ! &#123;<br>    loop &#123;&#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>分析编译出的程序:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">rust-readobj -h target/riscv64gc-unknown-none-elf/debug/os <span class="hljs-comment"># 查看 ELF Header</span><br>rust-objdump -S target/riscv64gc-unknown-none-elf/debug/os <span class="hljs-comment"># 反汇编</span><br></code></pre></td></tr></table></figure>
+
+<h1 id="构建用户态执行环境"><a href="#构建用户态执行环境" class="headerlink" title="构建用户态执行环境"></a>构建用户态执行环境</h1><p>这里为 Rust 编译器提供入口函数 <code>_start()</code>, 在  <code>main.rs</code> 中添加下面内容:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// os/src/main.rs</span><br><span class="hljs-meta">#[no_mangle]</span><br><span class="hljs-keyword">extern</span> <span class="hljs-string">&quot;C&quot;</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">_start</span>() &#123;<br>    <span class="hljs-keyword">loop</span> &#123;&#125;;<br>&#125;<br></code></pre></td></tr></table></figure>
+
 
                 
               </div>
