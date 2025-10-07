@@ -55,7 +55,7 @@
 <meta property="og:image" content="http://example.com/img/riscv-function-call-callee-rule.png">
 <meta property="og:image" content="http://example.com/img/riscv-stack-frame-spec-example.png">
 <meta property="article:published_time" content="2025-09-25T02:41:59.000Z">
-<meta property="article:modified_time" content="2025-10-07T13:13:21.108Z">
+<meta property="article:modified_time" content="2025-10-07T14:12:09.235Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/riscv-isa-position-example.png">
@@ -267,7 +267,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          8.4k 字
+          9.6k 字
         
       </span>
     
@@ -278,7 +278,7 @@
         
         
         
-          71 分钟
+          80 分钟
         
       </span>
     
@@ -700,6 +700,72 @@
 <h2 id="二进制嵌入"><a href="#二进制嵌入" class="headerlink" title="二进制嵌入"></a>二进制嵌入</h2><p>用 <code>.incbin &quot;filename&quot;</code> directive, 将一个外部的二进制文件 (如 <code>.bin</code> 文件) 直接原样嵌入到当前汇编输出中, 不做任何修改. 常用于打包多个用户程序:</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs asm">app_0_start:<br>    .incbin &quot;../user/target/riscv64gc-unknown-none-elf/release/hello_world.bin&quot;<br>app_0_end:<br></code></pre></td></tr></table></figure>
 
+<h2 id="操作-CSR-寄存器"><a href="#操作-CSR-寄存器" class="headerlink" title="操作 CSR 寄存器"></a>操作 CSR 寄存器</h2><p>CSR (Control and Status Register, 控制与状态寄存器), 是 RISC-V 架构中用于控制 CPU 行为, 管理中断&#x2F;异常, 配置系统模式, 设置内存状态, 读取 CPU 状态等的寄存器. 比如:</p>
+<ul>
+<li><code>sstatus</code>, Supervisor Status, 控制 S-Mode 的各种状态和权限</li>
+<li><code>sepc</code>, Supervisor Exception Program Counter, 保存发生异常时的 PC</li>
+<li><code>sscratch</code>, Supervisor Scratch, 用于 trap 处理中切换栈</li>
+<li><code>stvec</code>, Supervisor Trap Vector, 设置 trap handler 的入口地址</li>
+<li><code>scause</code>, Supervisor Cause, 记录发生 trap 的原因 (比如中断类型, 异常代码)</li>
+<li><code>stval</code>, Supervisor Trap Value, 记录与 trap 相关的附加信息</li>
+<li><code>satp</code>, Supervisor Address Translation Protection, 控制页表 (内存虚拟化)</li>
+</ul>
+<p>RISC-V 提供了专门的指令来访问 CSR, 主要有:</p>
+<table>
+<thead>
+<tr>
+<th>指令</th>
+<th>全称</th>
+<th>作用</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>csrrw</code></td>
+<td>CSR Read and Write</td>
+<td>读取 CSR 到 rd, 同时将 rs1 的值写入 CSR</td>
+<td><code>csrrw rd, csr, rs1</code></td>
+</tr>
+<tr>
+<td><code>csrrs</code></td>
+<td>CSR Read and Set bits</td>
+<td>读取 CSR 到 <code>rd</code>, 同时将 <code>rs1</code> 中为 <code>1</code> 的位设置到 CSR 中</td>
+<td><code>csrrs rd, csr, rs1</code></td>
+</tr>
+<tr>
+<td><code>csrrc</code></td>
+<td>CSR Read and Clear bits</td>
+<td>读取 CSR 到 <code>rd</code>, 同时将 <code>rs1</code> 中为 <code>0</code> 的位清除 CSR 中的对应位</td>
+<td><code>csrrc rd, csr, rs1</code></td>
+</tr>
+<tr>
+<td><code>csrr</code></td>
+<td>CSR Read</td>
+<td>仅将 CSR 的值读到 <code>rd</code>, 不修改 <code>CSR</code></td>
+<td><code>csrr rd, csr</code></td>
+</tr>
+<tr>
+<td><code>csrw</code></td>
+<td>CSR Write</td>
+<td>将 <code>rs1</code> 的值写入 CSR, 不读取旧值</td>
+<td><code>csrw csr, rs1</code></td>
+</tr>
+</tbody></table>
+<p>还有两条伪指令可用:</p>
+<ul>
+<li><code>csrs csr, imm</code>, CSR Set, 对 CSR 的某些位进行置位 (写 1), <code>imm</code> 是立即数</li>
+<li><code>csrc csr, imm</code>, CSR Clear, 对 CSR 的某些位进行清零 (写 0), <code>imm</code> 是立即数</li>
+</ul>
+<h2 id="宏定义和使用"><a href="#宏定义和使用" class="headerlink" title="宏定义和使用"></a>宏定义和使用</h2><p>在 RISC-V 汇编 (使用 GNU 汇编器) 中, Macro 可用于定义代码模板, 通过参数化展开. 类似 <code>C</code> 中的 <code>#define</code> 宏.</p>
+<p>语法如下:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs asm">.macro macro_name param1, param2, ...<br>    ; asm instruction, using parameter: \param1, \param2<br>.endm<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>.macro</code> 表示开始定义一个宏</li>
+<li><code>.endm</code> 表示宏定义结束</li>
+</ul>
+<p>示例:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs asm">.macro SAVE_GP n<br>    sd x\n, \n*8(sp)<br>.endm<br></code></pre></td></tr></table></figure>
+
 
 <h1 id="RISC-V-汇编与-C-混合编程"><a href="#RISC-V-汇编与-C-混合编程" class="headerlink" title="RISC-V 汇编与 C 混合编程"></a>RISC-V 汇编与 C 混合编程</h1><h2 id="在-RISC-V-汇编中调用-C-函数"><a href="#在-RISC-V-汇编中调用-C-函数" class="headerlink" title="在 RISC-V 汇编中调用 C 函数"></a>在 RISC-V 汇编中调用 C 函数</h2><p>函数参数通过 <code>a0~a7</code> 传递, 返回值用 <code>a0</code> 和 <code>a1</code> 接收.</p>
 <h2 id="C-函数中潜入-RISC-V-汇编"><a href="#C-函数中潜入-RISC-V-汇编" class="headerlink" title="C 函数中潜入 RISC-V 汇编"></a>C 函数中潜入 RISC-V 汇编</h2><p>需要用 <code>asm</code> 关键字. 语法为:</p>
@@ -722,6 +788,10 @@
 <p>上述代码可以简写为:</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">foo</span><span class="hljs-params">(<span class="hljs-type">int</span> a, <span class="hljs-type">int</span> b)</span> &#123;<br>    <span class="hljs-type">int</span> c;<br>    <span class="hljs-keyword">asm</span> <span class="hljs-title function_">volatile</span> <span class="hljs-params">(</span><br><span class="hljs-params">        <span class="hljs-string">&quot;add %0, %1, %2&quot;</span></span><br><span class="hljs-params">        :<span class="hljs-string">&quot;=r&quot;</span>(c)</span><br><span class="hljs-params">        :<span class="hljs-string">&quot;r&quot;</span>(a), <span class="hljs-string">&quot;r&quot;</span>(b)</span><br><span class="hljs-params">    )</span>;<br>    <span class="hljs-keyword">return</span> c;<br>&#125;<br></code></pre></td></tr></table></figure>
 
+<h1 id="Trap-处理机制"><a href="#Trap-处理机制" class="headerlink" title="Trap 处理机制"></a>Trap 处理机制</h1><p>在 RISC-V 的 $用户态 \rightarrow 内核态$ trap 流程中, <code>sscratch</code> 寄存器的使用为:</p>
+<ol>
+<li>初始化阶段, 内核启动时, 需要将内核栈的地址写入 <code>sscratch</code>, 即 <code>csrw sscratch, kernel_sp</code></li>
+</ol>
 <h1 id="系统调用"><a href="#系统调用" class="headerlink" title="系统调用"></a>系统调用</h1><p>RISC-V 中用 <code>ecall</code> 进行系统调用, 需要用寄存器来指定调用哪个以及参数如何传递, 传递约定如下:</p>
 <table>
 <thead>
@@ -772,7 +842,7 @@
 <td>第七个参数 (<code>arg6</code>)</td>
 </tr>
 </tbody></table>
-<h1 id="CSR-寄存器"><a href="#CSR-寄存器" class="headerlink" title="CSR 寄存器"></a>CSR 寄存器</h1><h1 id="跨特权级的指令"><a href="#跨特权级的指令" class="headerlink" title="跨特权级的指令"></a>跨特权级的指令</h1><p><code>ecall</code></p>
+<h1 id="跨特权级的指令"><a href="#跨特权级的指令" class="headerlink" title="跨特权级的指令"></a>跨特权级的指令</h1><p><code>ecall</code></p>
 <h1 id="M-Mode-S-Mode-U-Mode"><a href="#M-Mode-S-Mode-U-Mode" class="headerlink" title="M-Mode, S-Mode, U-Mode"></a>M-Mode, S-Mode, U-Mode</h1>
                 
               </div>
