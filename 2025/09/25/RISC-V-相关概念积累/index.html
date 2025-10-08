@@ -55,7 +55,7 @@
 <meta property="og:image" content="http://example.com/img/riscv-function-call-callee-rule.png">
 <meta property="og:image" content="http://example.com/img/riscv-stack-frame-spec-example.png">
 <meta property="article:published_time" content="2025-09-25T02:41:59.000Z">
-<meta property="article:modified_time" content="2025-10-07T14:12:09.235Z">
+<meta property="article:modified_time" content="2025-10-07T14:35:17.735Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/riscv-isa-position-example.png">
@@ -267,7 +267,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          9.6k 字
+          9.9k 字
         
       </span>
     
@@ -278,7 +278,7 @@
         
         
         
-          80 分钟
+          83 分钟
         
       </span>
     
@@ -766,7 +766,14 @@
 <p>示例:</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs asm">.macro SAVE_GP n<br>    sd x\n, \n*8(sp)<br>.endm<br></code></pre></td></tr></table></figure>
 
+<h2 id="简单变量"><a href="#简单变量" class="headerlink" title="简单变量"></a>简单变量</h2><p>可以用 GNU 汇编器提供的 <code>.set</code> directive 来定义常量, 类似赋值语句:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs asm">.set symbol_name, value<br></code></pre></td></tr></table></figure>
 
+<p>比如:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs asm">.set n, 5<br>.rept 27<br>    SAVE_GP %n<br>    .set n, n+1<br>.endr<br></code></pre></td></tr></table></figure>
+<ul>
+<li>当作循环语句来用</li>
+</ul>
 <h1 id="RISC-V-汇编与-C-混合编程"><a href="#RISC-V-汇编与-C-混合编程" class="headerlink" title="RISC-V 汇编与 C 混合编程"></a>RISC-V 汇编与 C 混合编程</h1><h2 id="在-RISC-V-汇编中调用-C-函数"><a href="#在-RISC-V-汇编中调用-C-函数" class="headerlink" title="在 RISC-V 汇编中调用 C 函数"></a>在 RISC-V 汇编中调用 C 函数</h2><p>函数参数通过 <code>a0~a7</code> 传递, 返回值用 <code>a0</code> 和 <code>a1</code> 接收.</p>
 <h2 id="C-函数中潜入-RISC-V-汇编"><a href="#C-函数中潜入-RISC-V-汇编" class="headerlink" title="C 函数中潜入 RISC-V 汇编"></a>C 函数中潜入 RISC-V 汇编</h2><p>需要用 <code>asm</code> 关键字. 语法为:</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">asm</span> [<span class="hljs-keyword">volatile</span>] (<br>    <span class="hljs-string">&quot;汇编指令&quot;</span><br>    :输出操作数列表 (可选)<br>    :输入操作数列表 (可选)<br>    :可能影响的寄存器或者存储器 (可选)<br>);<br></code></pre></td></tr></table></figure>
@@ -791,7 +798,14 @@
 <h1 id="Trap-处理机制"><a href="#Trap-处理机制" class="headerlink" title="Trap 处理机制"></a>Trap 处理机制</h1><p>在 RISC-V 的 $用户态 \rightarrow 内核态$ trap 流程中, <code>sscratch</code> 寄存器的使用为:</p>
 <ol>
 <li>初始化阶段, 内核启动时, 需要将内核栈的地址写入 <code>sscratch</code>, 即 <code>csrw sscratch, kernel_sp</code></li>
+<li>用户态运行时, 此时不需要修改该寄存器内容, <code>sp</code> 保存的是 U-Mode 的栈</li>
+<li><code>Trap</code> 发生 (比如系统调用等), CPU 会从 U-Mode trap 进 S-Mode, 此时交换 <code>sscratch</code> 和 <code>sp</code> 的值, 以使用内核栈, <code>csrrw sp, sscratch, sp</code></li>
 </ol>
+<p>在上电时, <code>sscratch</code> 默认为 <code>0</code> 或未初始化的随机值, 不会自动保存任何有意义的地址.</p>
+<p>典型的初始化设置如:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs asm">la t0, _kernel_stack_top  # 加载内核栈顶地址<br>csrw sscratch, t0         # 将内核栈地址写入 sscratch<br></code></pre></td></tr></table></figure>
+
+
 <h1 id="系统调用"><a href="#系统调用" class="headerlink" title="系统调用"></a>系统调用</h1><p>RISC-V 中用 <code>ecall</code> 进行系统调用, 需要用寄存器来指定调用哪个以及参数如何传递, 传递约定如下:</p>
 <table>
 <thead>
