@@ -55,8 +55,13 @@
 <meta property="og:image" content="http://example.com/img/riscv-function-call-callee-rule.png">
 <meta property="og:image" content="http://example.com/img/riscv-stack-frame-spec-example.png">
 <meta property="og:image" content="http://example.com/img/os-print-hello-world-in-user-mode.png">
+<meta property="og:image" content="http://example.com/img/riscv-machine-mode-register-list.png">
+<meta property="og:image" content="http://example.com/img/riscv-machine-mode-mstatus-detail.png">
+<meta property="og:image" content="http://example.com/img/riscv-machine-mode-mcause-CSR-detail.png">
+<meta property="og:image" content="http://example.com/img/riscv-machine-mode-scause-interrupt-code-list.png">
+<meta property="og:image" content="http://example.com/img/riscv-machine-mode-exception-list.png">
 <meta property="article:published_time" content="2025-09-25T02:41:59.000Z">
-<meta property="article:modified_time" content="2025-10-08T06:54:05.448Z">
+<meta property="article:modified_time" content="2025-10-08T07:32:42.358Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/riscv-isa-position-example.png">
@@ -268,7 +273,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          12k 字
+          13k 字
         
       </span>
     
@@ -279,7 +284,7 @@
         
         
         
-          103 分钟
+          107 分钟
         
       </span>
     
@@ -938,6 +943,27 @@
 <li>异常是同步的: 在执行期间产生, 比如访问无效寄存器地址或者执行了无效操作码的指令</li>
 <li>异步的中断: 指令流是异步的外部事件, 比如时钟中断</li>
 </ul>
+<p>M-Mode 相关的寄存器有:</p>
+<p><img src="/../img/riscv-machine-mode-register-list.png" srcset="/img/loading.gif" lazyload></p>
+<p>注意 <code>sepc</code> 指向的是发生异常的那条指令的地址, 而不是其下一条指令, 其用于让 trap 程序知道是那条指令出了问题, 便于调试和处理. 如果要到下一条指令则需要手动 <code>+4</code> (32 bits) 或者 <code>+8</code> (64 bits).</p>
+<p><code>mstatus</code> (Machine Status) 用于保存全局中断以及其他的状态:</p>
+<p><img src="/../img/riscv-machine-mode-mstatus-detail.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>注意在中断发生后, 需要把 <code>mstatus[MIE]</code> 置零以禁用中断 (避免处理中断过程中产生另一个中断), 并把先前的 <code>MIE</code> 值保存到 <code>MPIE</code> 中.</li>
+<li><code>SIE</code> (Supervisor Interrupt Enable)</li>
+</ul>
+<p><code>mcause</code> 能用来判断当前发生的是异常还是中断, 如果事件由中断引起, 则置 <code>Interrupt</code> 位. <code>Exception Code</code> 字段包含指示最后一个异常的编码:</p>
+<p><img src="/../img/riscv-machine-mode-mcause-CSR-detail.png" srcset="/img/loading.gif" lazyload></p>
+<p>如果是 interrupt, 有这些种类:</p>
+<p><img src="/../img/riscv-machine-mode-scause-interrupt-code-list.png" srcset="/img/loading.gif" lazyload></p>
+<p>如果是 Exception, 有这些种类:</p>
+<p><img src="/../img/riscv-machine-mode-exception-list.png" srcset="/img/loading.gif" lazyload></p>
+<p>Timer 可以稳定产生中断, 以:</p>
+<ul>
+<li>防止应用程序长时间占用 CPU, 让 OS kernel 得到执行权</li>
+<li>让高特权模式的软件获得 CPU 控制权</li>
+</ul>
+<p>当前 RISC-V 的设计中, 能够 disable 中断, 但不能 disable 异常.</p>
 
                 
               </div>
