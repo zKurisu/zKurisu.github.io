@@ -56,7 +56,7 @@
 <meta property="og:image" content="http://example.com/img/riscv-stack-frame-spec-example.png">
 <meta property="og:image" content="http://example.com/img/os-print-hello-world-in-user-mode.png">
 <meta property="article:published_time" content="2025-09-25T02:41:59.000Z">
-<meta property="article:modified_time" content="2025-10-08T04:55:37.951Z">
+<meta property="article:modified_time" content="2025-10-08T06:54:05.448Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/riscv-isa-position-example.png">
@@ -268,7 +268,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          10k 字
+          12k 字
         
       </span>
     
@@ -279,7 +279,7 @@
         
         
         
-          88 分钟
+          103 分钟
         
       </span>
     
@@ -863,7 +863,7 @@
 <td>第七个参数 (<code>arg6</code>)</td>
 </tr>
 </tbody></table>
-<h1 id="跨特权级的指令"><a href="#跨特权级的指令" class="headerlink" title="跨特权级的指令"></a>跨特权级的指令</h1><p><code>ecall</code> (Environment Call, 环境调用) 是 RISC-V 中一条特权指令, 用于从低特权级 (如 User Mode) 向高特权级 (如 Supervisor Mode 或 Machine Mode) 发起一个请求, 通常是请求操作系统内核提供服务 (执行系统调用).</p>
+<h1 id="跨特权级的指令-ecall"><a href="#跨特权级的指令-ecall" class="headerlink" title="跨特权级的指令: ecall"></a>跨特权级的指令: ecall</h1><p><code>ecall</code> (Environment Call, 环境调用) 是 RISC-V 中一条特权指令, 用于从低特权级 (如 User Mode) 向高特权级 (如 Supervisor Mode 或 Machine Mode) 发起一个请求, 通常是请求操作系统内核提供服务 (执行系统调用).</p>
 <p>当 CPU 执行 ecall 时, 会触发一个 Environment Call Exception, 并跳转到对应的 trap 处理程序, 由操作系统处理该请求.</p>
 <p><code>ecall</code> 执行不需要任何参数:</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs asm">ecall<br></code></pre></td></tr></table></figure>
@@ -873,9 +873,71 @@
 <li>立即停止当前程序的执行流程</li>
 <li>产生一个 Environment Call Exception 的特殊异常</li>
 <li>根据当前 Mode 和 <code>mtvec/stvec</code> 的设置, 跳转到对应的 Trap 处理程序 (通常是内核的 <code>trap_handler</code>)</li>
+<li>操作系统内核在 <code>trap</code> 处理程序中, 通过检查 <code>scause/mcause</code> 得知其是一个 <code>ecall</code>, 然后根据 <code>a7</code> (系统调用号) 和其他寄存器决定提供什么服务</li>
 </ol>
+<p>不同 Mode 下 <code>ecall</code> 触发的异常类型不同:</p>
+<table>
+<thead>
+<tr>
+<th>特权模式</th>
+<th>异常类型 (cause 值)</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>User Mode (U-Mode)</td>
+<td>8 (Exception Code: Environment Call from U-Mode)</td>
+<td>用户态程序执行 <code>ecall</code></td>
+</tr>
+<tr>
+<td>Supervisor Mode (S-Mode)</td>
+<td>9 (Exception Code: Environment Call from S-Mode)</td>
+<td>操作系统执行 <code>ecall</code></td>
+</tr>
+<tr>
+<td>Machine Mode (M-Mode)</td>
+<td>11 (Exception Code: Environment Call from M-Mode)</td>
+<td>一般用不着, 保留给底层调用</td>
+</tr>
+</tbody></table>
+<p>假如在 RISC-V 机器上运行:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs asm"># 假设系统调用号 1 表示打印字符<br>li a7, 1           # 系统调用号 = 1 (例如：print_char)<br>li a0, 65          # 参数：ASCII 码 &#x27;A&#x27;<br>ecall              # 触发系统调用<br></code></pre></td></tr></table></figure>
+
+<p>操作系统的 trap handler 逻辑一般是:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">trap_handler</span>(ctx: &amp;<span class="hljs-keyword">mut</span> TrapContext) &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">cause</span> = scause::<span class="hljs-title function_ invoke__">read</span>().<span class="hljs-title function_ invoke__">cause</span>();<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">epc</span> = sepc::<span class="hljs-title function_ invoke__">read</span>();<br><br>    <span class="hljs-keyword">match</span> cause &#123;<br>        TrapCause::<span class="hljs-title function_ invoke__">Exception</span>(Exception::EnvironmentCallFromSMode) =&gt; &#123;<br>            <span class="hljs-keyword">let</span> <span class="hljs-variable">syscall_num</span> = ctx.xregs[<span class="hljs-number">17</span>]; <span class="hljs-comment">// a7</span><br>            <span class="hljs-keyword">match</span> syscall_num &#123;<br>                <span class="hljs-number">1</span> =&gt; &#123;<br>                    <span class="hljs-keyword">let</span> <span class="hljs-variable">c</span> = ctx.xregs[<span class="hljs-number">10</span>] <span class="hljs-keyword">as</span> <span class="hljs-type">u8</span>; <span class="hljs-comment">// a0</span><br>                    <span class="hljs-built_in">print!</span>(<span class="hljs-string">&quot;&#123;&#125;&quot;</span>, c <span class="hljs-keyword">as</span> <span class="hljs-type">char</span>);<br>                &#125;<br>                _ =&gt; <span class="hljs-built_in">panic!</span>(<span class="hljs-string">&quot;Unknown syscall: &#123;&#125;&quot;</span>, syscall_num),<br>            &#125;<br>            <span class="hljs-comment">// 设置返回值到 a0</span><br>            ctx.xregs[<span class="hljs-number">10</span>] = <span class="hljs-number">0</span>; <span class="hljs-comment">// 假设返回 0 表示成功</span><br>        &#125;<br>        _ =&gt; <span class="hljs-built_in">panic!</span>(<span class="hljs-string">&quot;Unhandled trap: &#123;:?&#125;&quot;</span>, cause),<br>    &#125;<br><br>    <span class="hljs-comment">// 返回到用户态</span><br>    <span class="hljs-title function_ invoke__">sret</span>();<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>检查 <code>scause</code> 得知是 <code>ecall</code></li>
+<li>通过 <code>ctx.xregs[17]</code> (<code>a7</code> 寄存器) 得知系统调用号</li>
+<li>通过 <code>ctx.xregs[10]</code> (<code>a0</code> 寄存器) 获取参数</li>
+<li>处理完成后通过 <code>a0</code> 返回</li>
+<li>通过 <code>sret</code> 指令返回到用户程序</li>
+</ul>
+<h1 id="从高特权级返回-sret"><a href="#从高特权级返回-sret" class="headerlink" title="从高特权级返回: sret"></a>从高特权级返回: sret</h1><p><code>sret</code> (Supervisor Return) 也是一条特权指令, 用于从 Supervisor Mode (S-Mode, 通常是操作系统内核) 返回到更低特权级模式 (User Mode), 会恢复执行用户程序的上下文, 包括程序计数器, 特权级别等. 通常用于从 trap 中返回.</p>
+<p>CPU 执行 <code>sret</code> 指令时, 通常会完成下面操作:</p>
+<ol>
+<li>从 <code>sepc</code> 寄存器中读取地址, 设置为新的 PC, 即返回到发生 <code>trap</code> 前用户程序执行的下一条指令</li>
+<li>将当前 privilege 从 <code>S-Mode</code> 返回到之前的 privilege, 该信息一般保存在 <code>sstatus</code> 中的 <code>SPP</code> (Supervisor Previous Privilege) 位</li>
+<li>恢复 interrupt enable 状态, 控制返回后是否允许中断</li>
+<li>继续执行用户程序</li>
+</ol>
+<p>另一类似指令是 <code>mret</code> (Machine Return), 从 M-Mode 返回到 <code>S-Mode</code> 或 <code>U-Mode</code>.</p>
+<h1 id="特权操作"><a href="#特权操作" class="headerlink" title="特权操作"></a>特权操作</h1><p>特权操作包含特权指令以及 CSR 读写操作, 如:</p>
+<ul>
+<li><code>mret</code></li>
+<li><code>sret</code></li>
+<li><code>wfi</code> (Wait For Interrupt), 等待中断, 进入省电状态, 中断到来才继续干活</li>
+<li><code>sfense.vma</code>, 虚拟地址屏障指令</li>
+<li><code>fense.i</code>, i-cache 屏障指令</li>
+</ul>
+<p>其他很多特权指令是通过读写 CSR 寄存器来实现的.</p>
 <h1 id="U-Mode-S-Mode-M-Mode"><a href="#U-Mode-S-Mode-M-Mode" class="headerlink" title="U-Mode, S-Mode, M-Mode"></a>U-Mode, S-Mode, M-Mode</h1><p>U-Mode 下的应用程序不能直接使用计算机的物理资源, 需要用 <code>ecall</code> 发起系统调用借助 S-Mode 执行. 比如在屏幕上打印 “Hello World”:</p>
 <p><img src="/../img/os-print-hello-world-in-user-mode.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="M-Mode"><a href="#M-Mode" class="headerlink" title="M-Mode"></a>M-Mode</h2><p>M-Mode (Machine Mode) 是 RISC-V 中 hart (hardware thread) 的最高权限模式, 有对计算机系统的底层功能的完全使用权.</p>
+<p>M-Mode 最重要的特性是拦截和处理异常与中断:</p>
+<ul>
+<li>异常是同步的: 在执行期间产生, 比如访问无效寄存器地址或者执行了无效操作码的指令</li>
+<li>异步的中断: 指令流是异步的外部事件, 比如时钟中断</li>
+</ul>
 
                 
               </div>
