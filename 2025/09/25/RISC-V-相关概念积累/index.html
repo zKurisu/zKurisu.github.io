@@ -54,8 +54,9 @@
 <meta property="og:image" content="http://example.com/img/riscv-function-jump-and-ret-rule.png">
 <meta property="og:image" content="http://example.com/img/riscv-function-call-callee-rule.png">
 <meta property="og:image" content="http://example.com/img/riscv-stack-frame-spec-example.png">
+<meta property="og:image" content="http://example.com/img/os-print-hello-world-in-user-mode.png">
 <meta property="article:published_time" content="2025-09-25T02:41:59.000Z">
-<meta property="article:modified_time" content="2025-10-07T14:35:17.735Z">
+<meta property="article:modified_time" content="2025-10-08T04:53:48.651Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/riscv-isa-position-example.png">
@@ -267,7 +268,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          9.9k 字
+          10k 字
         
       </span>
     
@@ -278,7 +279,7 @@
         
         
         
-          83 分钟
+          87 分钟
         
       </span>
     
@@ -710,6 +711,12 @@
 <li><code>stval</code>, Supervisor Trap Value, 记录与 trap 相关的附加信息</li>
 <li><code>satp</code>, Supervisor Address Translation Protection, 控制页表 (内存虚拟化)</li>
 </ul>
+<p>OS 可以通过设置 CSR 来实现隔离:</p>
+<ul>
+<li><code>mstatus/sstatus</code> 等地址空间配置寄存器, 能防止应用访问系统管控相关寄存器</li>
+<li><code>sstatus/stvec</code> 等中断配置寄存器, 可以防止应用长期使用 <code>100%</code> 的 CPU</li>
+<li><code>sstatus/satp/stvec</code> 等地址空间相关寄存器能防止应用破坏窃取数据</li>
+</ul>
 <p>RISC-V 提供了专门的指令来访问 CSR, 主要有:</p>
 <table>
 <thead>
@@ -856,8 +863,15 @@
 <td>第七个参数 (<code>arg6</code>)</td>
 </tr>
 </tbody></table>
-<h1 id="跨特权级的指令"><a href="#跨特权级的指令" class="headerlink" title="跨特权级的指令"></a>跨特权级的指令</h1><p><code>ecall</code></p>
-<h1 id="M-Mode-S-Mode-U-Mode"><a href="#M-Mode-S-Mode-U-Mode" class="headerlink" title="M-Mode, S-Mode, U-Mode"></a>M-Mode, S-Mode, U-Mode</h1>
+<h1 id="跨特权级的指令"><a href="#跨特权级的指令" class="headerlink" title="跨特权级的指令"></a>跨特权级的指令</h1><p><code>ecall</code> (Environment Call, 环境调用) 是 RISC-V 中一条特权指令, 用于从低特权级 (如 User Mode) 向高特权级 (如 Supervisor Mode 或 Machine Mode) 发起一个请求, 通常是请求操作系统内核提供服务 (执行系统调用).</p>
+<p>当 CPU 执行 ecall 时, 会触发一个 Environment Call Exception, 并跳转到对应的 trap 处理程序, 由操作系统处理该请求.</p>
+<p><code>ecall</code> 执行不需要任何参数:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs asm">ecall<br></code></pre></td></tr></table></figure>
+
+
+<h1 id="U-Mode-S-Mode-M-Mode"><a href="#U-Mode-S-Mode-M-Mode" class="headerlink" title="U-Mode, S-Mode, M-Mode"></a>U-Mode, S-Mode, M-Mode</h1><p>U-Mode 下的应用程序不能直接使用计算机的物理资源, 需要用 <code>ecall</code> 发起系统调用借助 S-Mode 执行. 比如在屏幕上打印 “Hello World”:</p>
+<p><img src="/../img/os-print-hello-world-in-user-mode.png" srcset="/img/loading.gif" lazyload></p>
+
                 
               </div>
             
