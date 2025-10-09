@@ -24,7 +24,7 @@
 <meta property="og:description" content="类型内存对齐需要用到 #[repr(...)] 属性 (representationn, 表示, 布局), 如:  #[repr(C)], 让类型的布局与 C 兼容 #[repr(align(N))], 控制类型的对齐方式, N 是对齐的字节数, 比如 4, 8, 64, 4096  示例: 123456789#[repr(align(4096))]struct KernelStack &amp;#123">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-09-16T13:15:22.000Z">
-<meta property="article:modified_time" content="2025-10-09T06:21:29.745Z">
+<meta property="article:modified_time" content="2025-10-09T06:24:03.055Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -246,7 +246,7 @@
         
         
         
-          214 分钟
+          215 分钟
         
       </span>
     
@@ -296,7 +296,14 @@
 </ul>
 <p>示例:</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#[repr(align(4096))]</span><br><span class="hljs-keyword">struct</span> <span class="hljs-title class_">KernelStack</span> &#123;<br>    data: [<span class="hljs-type">u8</span>; KERNEL_STACK_SIZE],<br>&#125;<br><br><span class="hljs-meta">#[repr(align(4096))]</span><br><span class="hljs-keyword">struct</span> <span class="hljs-title class_">UserStack</span> &#123;<br>    data: [<span class="hljs-type">u8</span>; USER_STACK_SIZE],<br>&#125;<br></code></pre></td></tr></table></figure>
-
+<ul>
+<li>这里让两个结构体的实例在内存中的地址都是 <code>4096</code> 的倍数, 按照 <code>4KB</code> 对齐</li>
+</ul>
+<p>让栈内存按照 <code>4KB</code> (一页) 对齐, 是为了:</p>
+<ul>
+<li>内存页对齐, 内存以 <code>页</code> 为单位管理, 典型的页大小是 <code>4096</code> 字节 (4KB)</li>
+<li>栈放在独立的页中, 能方便内存管理, 避免跨页问题</li>
+</ul>
 <h1 id="设置弱符号"><a href="#设置弱符号" class="headerlink" title="设置弱符号"></a>设置弱符号</h1><p>这里将 <code>main</code> 函数设为弱符号, 没有找到强符号调用该函数时, 会执行 <code>panic!</code>:</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#![feature(linkage)]</span>    <span class="hljs-comment">// 启用弱链接特性</span><br><br><span class="hljs-meta">#[linkage = <span class="hljs-string">&quot;weak&quot;</span>]</span><br><span class="hljs-meta">#[no_mangle]</span><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">i32</span> &#123;<br>    <span class="hljs-built_in">panic!</span>(<span class="hljs-string">&quot;Cannot find main!&quot;</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
 <ul>
