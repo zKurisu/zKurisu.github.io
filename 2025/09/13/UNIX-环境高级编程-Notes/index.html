@@ -29,7 +29,7 @@
 <meta property="og:image" content="http://example.com/img/unix-two-process-open-the-same-file.png">
 <meta property="og:image" content="http://example.com/img/unix-dup-function-example.png">
 <meta property="article:published_time" content="2025-09-13T13:06:04.000Z">
-<meta property="article:modified_time" content="2025-10-09T14:22:42.496Z">
+<meta property="article:modified_time" content="2025-10-10T01:29:34.386Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/unix-iso-c-defined-header-file.png">
@@ -241,7 +241,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          9k 字
+          10k 字
         
       </span>
     
@@ -252,7 +252,7 @@
         
         
         
-          75 分钟
+          85 分钟
         
       </span>
     
@@ -598,6 +598,33 @@
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;sys/stat.h&gt;</span></span><br><span class="hljs-type">int</span> <span class="hljs-title function_">stat</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *<span class="hljs-keyword">restrict</span> pathname, <span class="hljs-keyword">struct</span> stat *<span class="hljs-keyword">restrict</span> but)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">fstat</span><span class="hljs-params">(<span class="hljs-type">int</span> fd, <span class="hljs-keyword">struct</span> stat *buf)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">lstat</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *<span class="hljs-keyword">restrict</span> pathname, <span class="hljs-keyword">struct</span> stat *<span class="hljs-keyword">restrict</span> buf)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">fstatat</span><span class="hljs-params">(<span class="hljs-type">int</span> fd, <span class="hljs-type">const</span> <span class="hljs-type">char</span> *<span class="hljs-keyword">restrict</span> pathname, <span class="hljs-keyword">struct</span> stat *<span class="hljs-keyword">restrict</span> buf, <span class="hljs-type">int</span> flag)</span>;<br></code></pre></td></tr></table></figure>
 <ul>
 <li>这几个函数若执行成功, 都返回 <code>0</code>, 出错则返回 <code>-1</code></li>
+<li><code>stat</code> 返回与 <code>pathname</code> 对应文件相关的信息</li>
+<li><code>fstat</code> 获得已经在描述符 <code>fd</code> 上打开的文件的信息</li>
+<li><code>lstat</code> 当 <code>pathname</code> 是符号链接时返回符号链接相关信息, 而不是符号链接引用的文件的信息. 如果文件不是符号链接, 则等同于 <code>stat</code></li>
+<li><code>fstatat</code> 返回相对于当前打开目录 (<code>fd</code> 指向的目录) 的路径名 (<code>pathname</code>) 的文件统计信息</li>
+</ul>
+<p>示例:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;apue.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;sys/stat.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> &#123;<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">stat</span> <span class="hljs-title">buf</span>;</span><br>    <span class="hljs-type">char</span> pathname[] = <span class="hljs-string">&quot;list.c&quot;</span>;<br><br>    <span class="hljs-keyword">if</span> (stat(pathname, &amp;buf) &lt; <span class="hljs-number">0</span>)<br>        err_sys(<span class="hljs-string">&quot;Get info of %s wrong&quot;</span>, pathname);<br><br>    <span class="hljs-comment">// 打印 inode 号</span><br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;inode num: %ld\n&quot;</span>, (<span class="hljs-type">long</span>)buf.st_ino);  <span class="hljs-comment">// ✅ 直接访问结构体成员</span><br><br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;File size: %lld bytes\n&quot;</span>, (<span class="hljs-type">long</span> <span class="hljs-type">long</span>)buf.st_size);<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;File mode: %o\n&quot;</span>, (<span class="hljs-type">unsigned</span> <span class="hljs-type">int</span>)buf.st_mode);  <span class="hljs-comment">// 八进制显示权限</span><br><br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="文件类型"><a href="#文件类型" class="headerlink" title="文件类型"></a>文件类型</h2><p>UNIX 系统中文件类型包括:</p>
+<ol>
+<li>Regular file (普通文件), 包含某种形式的数据 (不管是二进制还是文本).</li>
+<li>Directory file (目录文件), 包含其他文件名字以及指向与这些文件有关信息的指针. 只有内核可以直接写目录文件.</li>
+<li>Block special file (块特殊文件), 提供对设备 (如磁盘) 带缓冲的访问, 每次访问以固定长度为单位进行</li>
+<li>Character special file (字符特殊文件), 提供对设备不带缓冲的访问, 每次访问长度可变. 系统中的设备要么是字符特殊文件, 要么是块特殊文件</li>
+<li>FIFO, 也称 named pipe, 用于进程间通信</li>
+<li>Socket (套接字), 用于进程间的网络通信</li>
+<li>Symbolic link (符号链接), 指向另一个文件</li>
+</ol>
+<p>文件类型信息包含在 <code>stat</code> 结构的 <code>st_mode</code> 成员中, 并作为一些宏的参数来判断文件类型:</p>
+<ul>
+<li><code>S_ISREG()</code>, 是否为普通文件</li>
+<li><code>S_ISDIR()</code>, 目录文件</li>
+<li><code>S_ISCHR()</code>, 字符特殊文件</li>
+<li><code>S_ISBLK()</code>, 块特殊文件</li>
+<li><code>S_ISFIFO()</code>, 管道或 FIFO</li>
+<li><code>S_ISLNK()</code>, 符号链接</li>
+<li><code>S_ISSOCK()</code>, 套接字</li>
 </ul>
 
                 
