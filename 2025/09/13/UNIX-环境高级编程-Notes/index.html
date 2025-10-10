@@ -29,7 +29,7 @@
 <meta property="og:image" content="http://example.com/img/unix-two-process-open-the-same-file.png">
 <meta property="og:image" content="http://example.com/img/unix-dup-function-example.png">
 <meta property="article:published_time" content="2025-09-13T13:06:04.000Z">
-<meta property="article:modified_time" content="2025-10-10T01:29:34.386Z">
+<meta property="article:modified_time" content="2025-10-10T02:15:30.972Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/unix-iso-c-defined-header-file.png">
@@ -241,7 +241,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          10k 字
+          11k 字
         
       </span>
     
@@ -252,7 +252,7 @@
         
         
         
-          85 分钟
+          94 分钟
         
       </span>
     
@@ -626,6 +626,51 @@
 <li><code>S_ISLNK()</code>, 符号链接</li>
 <li><code>S_ISSOCK()</code>, 套接字</li>
 </ul>
+<h2 id="Set-user-id-和-set-group-id"><a href="#Set-user-id-和-set-group-id" class="headerlink" title="Set-user-id 和 set-group-id"></a>Set-user-id 和 set-group-id</h2><p>与一个进程相关联的 ID 有 6 个或更多, 如:</p>
+<ul>
+<li>Real User ID (RUID, 实际用户 ID), 启动该进程的用户 ID</li>
+<li>Real Group ID (RGID, 实际组 ID), 启动该进程的用户所属的 primary group 的 ID<br>(表示是谁启动了职责个进程)</li>
+<li>Effective User ID (EUID, 有效用户 ID), 权限判断是看到的是 EUID 而不是 RUID, 一个 Set-UID 程序会临时将 <code>EUID</code> 设置为文件拥有者的 UID 以获取更高权限</li>
+<li>Effective Group ID (EGID, 有效组 ID)</li>
+<li>Supplementary Group IDs (SGIDs, 附属组 ID)<br>(用于文件访问权限检查)</li>
+<li>Saved Set-User-ID (SSUID, 保存的设置用户 ID), 在程序设置了 Set-UID 运行时, 保存原来的 EUID</li>
+<li>Saved Set-Group-ID (SSGID 保存的设置组 ID)<br>(由 <code>exec</code> 函数保存)</li>
+</ul>
+<p><code>stat</code> 结构中的 <code>st_mode</code> 字段中, 可以设置一个特殊标志位 (Set-User-ID 位), 实现:</p>
+<ul>
+<li>当执行此文件时, 将进程的 Effective user id 设置为文件所有者的 user id (<code>st_uid</code>)</li>
+</ul>
+<p>另一个特殊标志位 (Set-Group-ID 位), 实现:</p>
+<ul>
+<li>当执行此文件时, 将进程的 Effective group id 设置为文件所有者的 group id (<code>st_gid</code>)</li>
+</ul>
+<h2 id="文件访问权限"><a href="#文件访问权限" class="headerlink" title="文件访问权限"></a>文件访问权限</h2><p><code>st_mode</code> 值也包含了对文件的访问权限位, 每个文件有 9 个访问权限位 (分为 3 组):</p>
+<ul>
+<li><code>S_IRUSR</code>, 用户读 (文件所有者)</li>
+<li><code>S_IWUSR</code>, 用户写</li>
+<li><code>S_IXUSR</code>, 用户执行</li>
+<li><code>S_IRGRP</code>, 组读 (文件所有者所在 primary group)</li>
+<li><code>S_IRGPR</code>, 组写</li>
+<li><code>S_IXGRP</code>, 组执行</li>
+<li><code>S_IROTH</code>, 其他读</li>
+<li><code>S_IROTH</code>, 其他写</li>
+<li><code>S_IXOTH</code>, 其他执行</li>
+</ul>
+<p>对于普通文件, 执行权限 (<code>x</code>) 表示该文件可以被执行 (作为程序或脚本).</p>
+<p>对于目录文件而言, 执行权限 (<code>x</code>) 与普通文件的含义不同, 被称为搜索位. 决定: 是否允许 “进入” (<code>cd</code>) 该目录, 访问其内部的文件元数据 (比如文件内容), 或者搜索其下的内容. 此时读权限 (<code>r</code>) 决定是否能列出目录下的文件名列表 (<code>ls</code>). 写权限 (<code>w</code>) 决定能否在目录中添加, 删除, 重命名文件.</p>
+<p>比如有一个目录权限为:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ <span class="hljs-built_in">ls</span> -l | grep <span class="hljs-built_in">test</span><br>drwxr-xr--    - root 10 Oct 09:57 <span class="hljs-built_in">test</span><br></code></pre></td></tr></table></figure>
+
+<p>此时普通用户可以:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ <span class="hljs-built_in">ls</span> -l <span class="hljs-built_in">test</span><br>.--------- 0 root - hello<br></code></pre></td></tr></table></figure>
+<ul>
+<li>可以发现, 即使能列出文件名, 也无法看到内部文件的权限信息 (元数据)</li>
+</ul>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ vim <span class="hljs-built_in">test</span>/hello<br></code></pre></td></tr></table></figure>
+<ul>
+<li>也无法看到文件内容</li>
+</ul>
+<p>另一个例子, 如果 <code>PATH</code> 变量中有一个当前用户不具有执行权限的目录, 那么其不会搜索其下的可执行文件.</p>
 
                 
               </div>
