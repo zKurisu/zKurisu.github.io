@@ -31,8 +31,9 @@
 <meta property="og:image" content="http://example.com/img/unix-book-chmod-constant-list.png">
 <meta property="og:image" content="http://example.com/img/unix-book-disk-and-filesystem.png">
 <meta property="og:image" content="http://example.com/img/unix-book-hard-link-example.png">
+<meta property="og:image" content="http://example.com/img/unix-book-reference-count-for-dir.png">
 <meta property="article:published_time" content="2025-09-13T13:06:04.000Z">
-<meta property="article:modified_time" content="2025-10-10T07:15:28.844Z">
+<meta property="article:modified_time" content="2025-10-10T08:14:44.061Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/unix-iso-c-defined-header-file.png">
@@ -244,7 +245,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          14k 字
+          15k 字
         
       </span>
     
@@ -255,7 +256,7 @@
         
         
         
-          121 分钟
+          128 分钟
         
       </span>
     
@@ -763,6 +764,26 @@
 <p><img src="/../img/unix-book-hard-link-example.png" srcset="/img/loading.gif" lazyload></p>
 <p>只有当链接计数减少到 <code>0</code> 时, 才可以删除该文件 (释放其占用的数据块). 这也是为什么删除一个目录项的函数是 <code>unlink</code> 而不是 <code>delete</code>.</p>
 <p>在 <code>stat</code> 结构中, 链接计数保存在 <code>st_nlink</code> 成员中.</p>
+<p>另一种链接类型是符号链接 (symbolic link). 符号链接文件的实际内容包含了该符号链接所指向的文件的名字, 文件类型是 <code>S_IFLNK</code>.</p>
+<p><code>i-node</code> 包含了文件相关的所有信息: 文件类型, 文件访问权限位, 文件长度, 指向文件数据块的指针等. <code>stat</code> 结构中的大多是信息都取自 <code>i-node</code>.</p>
+<p>目录项中只会存放两项数据: 文件名和 <code>i-node number</code> (只能指向同一文件系统中的 <code>i-node</code>, 这也是 <code>ln</code> 命令不能跨文件系统的原因).</p>
+<p>在不更换文件系统的情况下为一个文件重命名, 此时文件的实际内容并未移动, 只需构造一个指向现有 <code>i-node</code> 的新目录项, 并删除老目录项, 链接计数不改变.</p>
+<p>对于一个目录而言, 一创建其引用计数就为 <code>2</code>, 因为默认会创建 <code>.</code> 指向这个目录:</p>
+<p><img src="/../img/unix-book-reference-count-for-dir.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="函数-link-linkat-unlink-unlinkat-和-remove"><a href="#函数-link-linkat-unlink-unlinkat-和-remove" class="headerlink" title="函数 link, linkat, unlink, unlinkat 和 remove"></a>函数 <code>link</code>, <code>linkat</code>, <code>unlink</code>, <code>unlinkat</code> 和 <code>remove</code></h2><p>创建一个指向现有文件的链接的方法是 <code>link</code> 和 <code>linkat</code> 函数:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">link</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *existingpath, <span class="hljs-type">const</span> <span class="hljs-type">char</span> *newpath)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">linkat</span><span class="hljs-params">(<span class="hljs-type">int</span> efd, <span class="hljs-type">const</span> <span class="hljs-type">char</span> *existingpath, <span class="hljs-type">int</span> nfd, <span class="hljs-type">const</span> <span class="hljs-type">char</span> *newpath, <span class="hljs-type">int</span> flag)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>若成功, 返回 <code>0</code>; 出错返回 <code>-1</code></li>
+</ul>
+<p>删除一个目录项可以调用 <code>unlink</code> 函数:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">unlink</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *pathname)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">unlinkat</span><span class="hljs-params">(<span class="hljs-type">int</span> fd, <span class="hljs-type">const</span> <span class="hljs-type">char</span> *pathname, <span class="hljs-type">int</span> flag)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>若成功, 返回 <code>0</code>; 出错返回 <code>-1</code></li>
+<li>这两个函数删除目录项后, 会将由 <code>pathname</code> 所引用文件的链接计数减 1</li>
+<li>只有当链接计数达到 <code>0</code> 时, 该文件的内容才可被真正删除</li>
+<li>当有进程打开了该文件时, 其内容也不能删除</li>
+<li>删除一个文件时, 内核先检查打开该文件的进程个数, 如果这个计数达到 <code>0</code>, 内核再去检查其链接计数, 如果计数也是 <code>0</code>, 则删除该文件的内容</li>
+</ul>
 
                 
               </div>
