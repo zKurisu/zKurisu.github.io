@@ -29,7 +29,7 @@
 <meta property="og:image" content="http://example.com/img/unix-two-process-open-the-same-file.png">
 <meta property="og:image" content="http://example.com/img/unix-dup-function-example.png">
 <meta property="article:published_time" content="2025-09-13T13:06:04.000Z">
-<meta property="article:modified_time" content="2025-10-10T02:15:30.972Z">
+<meta property="article:modified_time" content="2025-10-10T06:16:44.632Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/unix-iso-c-defined-header-file.png">
@@ -241,7 +241,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          11k 字
+          13k 字
         
       </span>
     
@@ -252,7 +252,7 @@
         
         
         
-          94 分钟
+          111 分钟
         
       </span>
     
@@ -671,6 +671,54 @@
 <li>也无法看到文件内容</li>
 </ul>
 <p>另一个例子, 如果 <code>PATH</code> 变量中有一个当前用户不具有执行权限的目录, 那么其不会搜索其下的可执行文件.</p>
+<h2 id="新文件和目录的所有权"><a href="#新文件和目录的所有权" class="headerlink" title="新文件和目录的所有权"></a>新文件和目录的所有权</h2><p>创建新文件或新目录时, 其 User ID 设置为进程的 Effective User ID, 而 Group ID 可以是下面两种情况中的一种:</p>
+<ol>
+<li>是进程的 Effective Group ID</li>
+<li>是所在目录的 Group ID</li>
+</ol>
+<p>在 Linux 下, 其取决于当前目录的 Set-Group-id 位是否设置:</p>
+<ul>
+<li>如果设置, 则新文件&#x2F;目录的 group id 设置为当前目录的 group id</li>
+<li>如果没设置, 则设置为进程的 effective id</li>
+</ul>
+<p>示例:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ <span class="hljs-built_in">touch</span> /tmp/test <span class="hljs-comment"># Current user: jie</span><br>$ sudo <span class="hljs-built_in">touch</span> /tmp/test/test1<br>$ <span class="hljs-built_in">stat</span> /tmp/test/test1<br>  File: test1<br>  Size: 0         	Blocks: 0          IO Block: 4096   regular empty file<br>Device: 0,44	Inode: 446         Links: 1<br>Access: (0644/-rw-r--r--)  Uid: (    0/    root)   Gid: (    0/    root)<br>Access: 2025-10-10 13:33:03.927662560 +0800<br>Modify: 2025-10-10 13:33:03.927662560 +0800<br>Change: 2025-10-10 13:33:03.928662553 +0800<br> Birth: 2025-10-10 13:33:03.927662560 +0800<br></code></pre></td></tr></table></figure>
+
+<p>此时 <code>Gid</code> 是进程的 Effective group id.</p>
+<p>设置 Set-groud-id 并测试:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ <span class="hljs-built_in">chmod</span> +s /tmp/test<br>$ sudo <span class="hljs-built_in">touch</span> /tmp/test/test2<br>$ <span class="hljs-built_in">stat</span> /tmp/test/test2<br>  File: /tmp/test/test2<br>  Size: 0         	Blocks: 0          IO Block: 4096   regular empty file<br>Device: 0,44	Inode: 447         Links: 1<br>Access: (0644/-rw-r--r--)  Uid: (    0/    root)   Gid: ( 1000/     jie)<br>Access: 2025-10-10 13:34:33.604934686 +0800<br>Modify: 2025-10-10 13:34:33.604934686 +0800<br>Change: 2025-10-10 13:34:33.604934686 +0800<br> Birth: 2025-10-10 13:34:33.604934686 +0800<br></code></pre></td></tr></table></figure>
+<p>此时 <code>Gid</code> 是目录的 group id.</p>
+<h2 id="函数-access-和-faccessat"><a href="#函数-access-和-faccessat" class="headerlink" title="函数 access 和 faccessat"></a>函数 access 和 faccessat</h2><p><code>access</code> 和 <code>faccessat</code> 函数用进程的 real user id 和 real group id 来测试进程的访问能力, 而不是进程的 effective user id 和 effective group id.</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">access</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *pathname, <span class="hljs-type">int</span> mode)</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">faccessat</span><span class="hljs-params">(<span class="hljs-type">int</span> fd, <span class="hljs-type">const</span> <span class="hljs-type">char</span> *pathname, <span class="hljs-type">int</span> mode, <span class="hljs-type">int</span> flag)</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回 <code>0</code>, 出错时返回 <code>-1</code></li>
+<li>测试文件是否存在时, <code>mode</code> 取 <code>F_OK</code></li>
+<li>测试权限, 用下面的常量按位或的组合:<ul>
+<li><code>R_OK</code>, 测试读权限</li>
+<li><code>W_OK</code>, 测试写权限</li>
+<li><code>X_OK</code>, 测试执行权限</li>
+</ul>
+</li>
+</ul>
+<p><code>faccessat</code> 计算相对于打开目录 (由 <code>fd</code> 参数指向) 的 <code>pathname</code>.</p>
+<h2 id="函数-umask"><a href="#函数-umask" class="headerlink" title="函数 umask"></a>函数 umask</h2><p><code>umask</code> 用于创建新文件时关闭一些权限位:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;sys/stat.h&gt;</span></span><br><span class="hljs-type">mode_t</span> <span class="hljs-title function_">umask</span><span class="hljs-params">(<span class="hljs-type">mode_t</span> cmask)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>cmask</code> 可以是 <code>S_IRUSR</code> 等常量按位或得到</li>
+</ul>
+<p>示例:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;apue.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;sys/stat.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> &#123;<br>    umask(<span class="hljs-number">0</span>);<br>    <span class="hljs-keyword">if</span> (creat(<span class="hljs-string">&quot;foo&quot;</span>, RWRWRW) &lt; <span class="hljs-number">0</span>)<br>        err_sys((<span class="hljs-string">&quot;creat error for foo&quot;</span>));<br>    umask(S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);<br>    <span class="hljs-keyword">if</span> (creat(<span class="hljs-string">&quot;bar&quot;</span>, RWRWRW) &lt; <span class="hljs-number">0</span>)<br>        err_sys((<span class="hljs-string">&quot;creat error for foo&quot;</span>));<br>    <span class="hljs-built_in">exit</span>(<span class="hljs-number">0</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>这里 <code>foo</code> 会具有 <code>RWRWRW</code> 权限</li>
+<li><code>bar</code> 只有 <code>RW----</code> 权限</li>
+</ul>
+<h2 id="函数-chmod-fchmod-fchmodat"><a href="#函数-chmod-fchmod-fchmodat" class="headerlink" title="函数 chmod, fchmod, fchmodat"></a>函数 <code>chmod</code>, <code>fchmod</code>, <code>fchmodat</code></h2><p><code>chmod</code>, <code>fchmod</code>, <code>fchmodat</code> 函数用于更改文件的访问权限:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;sys/stat.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">chmod</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *pathname, <span class="hljs-type">mode_t</span> mode)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">fchmod</span><span class="hljs-params">(<span class="hljs-type">int</span> fd, <span class="hljs-type">mode_t</span> mode)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">fchmodat</span><span class="hljs-params">(<span class="hljs-type">int</span> fd, <span class="hljs-type">const</span> <span class="hljs-type">char</span> *pathname, <span class="hljs-type">mode_t</span> mode, <span class="hljs-type">int</span> flag)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>若成功则返回 <code>0</code>, 失败返回 <code>-1</code></li>
+<li><code>chmod</code> 函数修改指定 <code>pathname</code> 的权限</li>
+<li><code>fchmod</code> 函数修改已打开文件的权限</li>
+</ul>
 
                 
               </div>
