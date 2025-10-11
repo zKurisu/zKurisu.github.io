@@ -33,7 +33,7 @@
 <meta property="og:image" content="http://example.com/img/unix-book-hard-link-example.png">
 <meta property="og:image" content="http://example.com/img/unix-book-reference-count-for-dir.png">
 <meta property="article:published_time" content="2025-09-13T13:06:04.000Z">
-<meta property="article:modified_time" content="2025-10-10T08:14:44.061Z">
+<meta property="article:modified_time" content="2025-10-10T08:35:55.288Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/unix-iso-c-defined-header-file.png">
@@ -245,7 +245,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          15k 字
+          16k 字
         
       </span>
     
@@ -256,7 +256,7 @@
         
         
         
-          128 分钟
+          135 分钟
         
       </span>
     
@@ -784,6 +784,31 @@
 <li>当有进程打开了该文件时, 其内容也不能删除</li>
 <li>删除一个文件时, 内核先检查打开该文件的进程个数, 如果这个计数达到 <code>0</code>, 内核再去检查其链接计数, 如果计数也是 <code>0</code>, 则删除该文件的内容</li>
 </ul>
+<p>如果 <code>pathname</code> 是符号链接, 那么 <code>unlink</code> 会删除该符号链接而不是其引用的文件.</p>
+<p>可以用 <code>remove</code> 函数解除一个文件或目录的链接, 对于文件, <code>remove</code> 的功能与 <code>unlink</code> 相同; 对于目录, <code>remove</code> 的功能与 <code>rmdir</code> 相同:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">remove</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *pathname)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>若成功返回 <code>0</code>; 出错返回 <code>-1</code></li>
+</ul>
+<h2 id="函数-rename-和-renameat"><a href="#函数-rename-和-renameat" class="headerlink" title="函数 rename 和 renameat"></a>函数 <code>rename</code> 和 <code>renameat</code></h2><p>文件或目录可以用 <code>rename</code> 或 <code>renameat</code> 函数进行重命名:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">rename</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *oldname, <span class="hljs-type">const</span> <span class="hljs-type">char</span> *newname)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">renameat</span><span class="hljs-params">(<span class="hljs-type">int</span> oldfd, <span class="hljs-type">const</span> <span class="hljs-type">char</span> *oldname, <span class="hljs-type">int</span> newfd, <span class="hljs-type">const</span> <span class="hljs-type">char</span> *newname)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>若成功返回 <code>0</code>; 出错返回 <code>-1</code></li>
+</ul>
+<p>对于包含 <code>oldname</code> 和 <code>newname</code> 的目录, 调用进程都必须要有写权限.</p>
+<p>对于 <code>newname</code> 已经存在, 可能会发生:</p>
+<ol>
+<li>如果 <code>oldname</code> 是一个文件, <code>newname</code> 存在的话. 会删除存在的目录项, 然后将 <code>oldname</code> 重命名为 <code>newname</code></li>
+<li>如果 <code>oldname</code> 是一个目录, <code>newname</code> 存在的话. 如果 <code>newname</code> 不为空, 则会报错, 如果为空则先删除, 然后将 <code>oldname</code> 重命名为 <code>newname</code></li>
+</ol>
+<p>如果 <code>oldname</code> 和 <code>newname</code> 引用同一文件, 则不会做任何修改然后成功返回.</p>
+<h2 id="符号链接"><a href="#符号链接" class="headerlink" title="符号链接"></a>符号链接</h2><p>符号链接是对一个文件的间接指针, 其与硬链接不同, 硬链接直接指向文件的 <code>i-node</code>.</p>
+<p>引入符号链接是为了避开硬链接的一些限制:</p>
+<ul>
+<li>硬链接要求链接和文件位于同一文件系统中</li>
+<li>只有超级用户才能创建指向目录的硬链接</li>
+</ul>
+<p>对符号链接以及其指向的对象并没有任何文件系统限制, 任何用户都可以创建指向目录的符号链接. 符号链接一般用于将一个文件或整个目录结构移动到系统中另一个位置.</p>
 
                 
               </div>
