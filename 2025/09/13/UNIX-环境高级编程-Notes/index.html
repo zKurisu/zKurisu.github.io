@@ -34,8 +34,10 @@
 <meta property="og:image" content="http://example.com/img/unix-book-reference-count-for-dir.png">
 <meta property="og:image" content="http://example.com/img/unix-book-common-function-with-symbolic-link.png">
 <meta property="og:image" content="http://example.com/img/unix-book-symbolic-link-recurrent-example.png">
+<meta property="og:image" content="http://example.com/img/unix-book-file-time-fields.png">
+<meta property="og:image" content="http://example.com/img/unix-book-function-influent-time.png">
 <meta property="article:published_time" content="2025-09-13T13:06:04.000Z">
-<meta property="article:modified_time" content="2025-10-11T05:02:25.348Z">
+<meta property="article:modified_time" content="2025-10-11T06:02:28.158Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/unix-iso-c-defined-header-file.png">
@@ -247,7 +249,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          17k 字
+          19k 字
         
       </span>
     
@@ -258,7 +260,7 @@
         
         
         
-          138 分钟
+          158 分钟
         
       </span>
     
@@ -823,6 +825,85 @@
 <p>此时若降序遍历这个目录结构, 可能输出:</p>
 <figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs awk">foo/a<br>foo/testdir<br>foo<span class="hljs-regexp">/testdir/</span>a<br>foo<span class="hljs-regexp">/testdir/</span>testdir<br>foo<span class="hljs-regexp">/testdir/</span>testdir/a<br>foo<span class="hljs-regexp">/testdir/</span>testdir/testdir<br>foo<span class="hljs-regexp">/testdir/</span>testdir<span class="hljs-regexp">/testdir/</span>a<br></code></pre></td></tr></table></figure>
 
+<h2 id="创建和读取符号链接"><a href="#创建和读取符号链接" class="headerlink" title="创建和读取符号链接"></a>创建和读取符号链接</h2><p>可以用 <code>symlink</code> 或 <code>symlinkat</code> 函数创建一个符号链接:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">symlink</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *actualpath, <span class="hljs-type">const</span> <span class="hljs-type">char</span> *sympath)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">symlinkat</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *actualpath, <span class="hljs-type">int</span> fd, <span class="hljs-type">const</span> <span class="hljs-type">char</span> *sympath)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>两个函数在成功时返回 <code>0</code>; 出错时返回 <code>-1</code></li>
+<li>注意在创建符号链接时, 并不要求 <code>actualpath</code> 已经存在, 且 <code>actualpath</code> 和 <code>sympath</code> 并不需要位于同一文件系统中</li>
+</ul>
+<p>由于 <code>open</code> 函数会跟随符号链接, 因此用另外的 <code>readlink</code> 和 <code>readlinkat</code> 函数来读取符号链接本身:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><span class="hljs-type">ssize_t</span> <span class="hljs-title function_">readlink</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *<span class="hljs-keyword">restrict</span> pathname, <span class="hljs-type">char</span> *<span class="hljs-keyword">restrict</span> buf, <span class="hljs-type">size_t</span> bufsize)</span>;<br><span class="hljs-type">ssize_t</span> <span class="hljs-title function_">readlinkat</span><span class="hljs-params">(<span class="hljs-type">int</span> fd, <span class="hljs-type">const</span> <span class="hljs-type">char</span> *<span class="hljs-keyword">restrict</span> pathname, <span class="hljs-type">char</span> *<span class="hljs-keyword">restrict</span> buf, <span class="hljs-type">size_t</span> bufsize)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>两个函数在成功时返回读取的字节数; 出错时返回 <code>-1</code></li>
+<li>两个函数组合了 <code>open</code>, <code>read</code>, <code>close</code> 的所有操作</li>
+</ul>
+<h2 id="文件的时间"><a href="#文件的时间" class="headerlink" title="文件的时间"></a>文件的时间</h2><p>每个文件属性所保存的实际精度依赖于文件系统的实现, 对于把时间戳记录在秒级的文件系统来说, 纳秒这个字段会被填充为 <code>0</code>. 对于时间戳精度高于秒级的文件系统来说, 不足秒的值被转换成纳秒并记录在纳秒这个字段中.</p>
+<p>每个文件维护 3 个时间字段:</p>
+<p><img src="/../img/unix-book-file-time-fields.png" srcset="/img/loading.gif" lazyload></p>
+<p>目录是包含目录项 (文件名和相关的 i-node number) 的文件, 增加, 删除或修改目录项会影响到它所在目录的相关的 3 个时间:</p>
+<p><img src="/../img/unix-book-function-influent-time.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="函数-futimes-utimensat-和-utimes"><a href="#函数-futimes-utimensat-和-utimes" class="headerlink" title="函数 futimes, utimensat 和 utimes"></a>函数 futimes, utimensat 和 utimes</h2><p>可以用下面函数更改一个文件的访问和修改时间, 用到的数据结构是 <code>timespec</code>:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;sys/stat.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">futimens</span><span class="hljs-params">(<span class="hljs-type">int</span> fd, <span class="hljs-type">const</span> <span class="hljs-keyword">struct</span> timespec times[<span class="hljs-number">2</span>])</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">utimensat</span><span class="hljs-params">(<span class="hljs-type">int</span> fd, <span class="hljs-type">const</span> <span class="hljs-type">char</span> *path, <span class="hljs-type">const</span> <span class="hljs-keyword">struct</span> timespec times[<span class="hljs-number">2</span>], <span class="hljs-type">int</span> flag)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>两个函数在成功时返回 <code>0</code>; 若出错返回 <code>-1</code></li>
+<li><code>times</code> 数组参数的第一个元素包含访问时间, 第二个元素包含修改时间</li>
+</ul>
+<h2 id="函数-mkdir-mkdirat-和-rmdir"><a href="#函数-mkdir-mkdirat-和-rmdir" class="headerlink" title="函数 mkdir, mkdirat 和 rmdir"></a>函数 mkdir, mkdirat 和 rmdir</h2><p>用 <code>mkdir</code> 和 <code>mkdirat</code> 创建目录, 用 <code>rmdir</code> 删除目录:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;sys/stat.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">mkdir</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *pathname, <span class="hljs-type">mode_t</span> mode)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">mkdirat</span><span class="hljs-params">(<span class="hljs-type">int</span> fd, <span class="hljs-type">const</span> <span class="hljs-type">char</span> *pathname, <span class="hljs-type">mode_t</span> mode)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>两个函数在成功时返回 <code>0</code>; 若出错返回 <code>-1</code></li>
+<li>都创建一个空目录 (会自动创建 <code>.</code> 和 <code>..</code>)</li>
+</ul>
+<p>用 <code>rmdir</code> 函数可以删除一个空目录 (指只包含 <code>.</code> 和 <code>..</code> 两项的目录):</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><span class="hljs-type">int</span> <span class="hljs-title function_">rmdir</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *pathname)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>两个函数在成功时返回 <code>0</code>; 若出错返回 <code>-1</code></li>
+</ul>
+<h2 id="读目录"><a href="#读目录" class="headerlink" title="读目录"></a>读目录</h2><p>对某个目录具有访问权限的任一用户都可以读该目录, 但是, 为了防止文件系统产生混乱, 只有内核才能写目录.</p>
+<p>一个目录的写权限位和执行权限位决定了在该目录中能否创建新文件以及删除文件, 但不能表示能否写目录本身.</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;dirent.h&gt;</span></span><br>DIR *<span class="hljs-title function_">opendir</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *pathname)</span>;<br>DIR *<span class="hljs-title function_">fdopendir</span><span class="hljs-params">(<span class="hljs-type">int</span> fd)</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>两个函数在成功时返回指针; 出错时返回 <code>NULL</code></li>
+<li><code>fdopendir</code> 可以将文件描述符转换成目录处理需要的 <code>DIR</code> 结构</li>
+<li><code>DIR</code> 结构保存有当前正在被读的目录的有关信息</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">struct</span> dirent *<span class="hljs-title function_">readdir</span><span class="hljs-params">(DIR *dp)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回指针; 出错时返回 <code>NULL</code></li>
+<li><code>struct dirent</code> 至少会包含两个成员: <code>ino_t d_ino;</code> (i-node number) 以及 <code>char d_name[]</code> (filename)</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">rewinddir</span><span class="hljs-params">(DIR *dp)</span>;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>无返回值</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">closedir</span><span class="hljs-params">(DIR *dp)</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>成功时返回 <code>0</code>; 出错返回 <code>-1</code></li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">long</span> <span class="hljs-title function_">telldir</span><span class="hljs-params">(DIR *dp)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>返回与 <code>dp</code> 关联的目录中的当前位置</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">seekdir</span><span class="hljs-params">(DIR *dp, <span class="hljs-type">long</span> loc)</span>;<br></code></pre></td></tr></table></figure>
+
+<h2 id="函数-chdir-fchdir-和-getcwd"><a href="#函数-chdir-fchdir-和-getcwd" class="headerlink" title="函数 chdir, fchdir 和 getcwd"></a>函数 chdir, fchdir 和 getcwd</h2><p>每个进程都有一个工作目录, 这个目录是搜索所有相对路径名的起点 (不以斜线开始的路径名为相对路径名).</p>
+<p>进程调用 <code>chdir</code> 或 <code>fchdir</code> 函数来更改当前工作目录:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">chdir</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *pathname)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">fchdir</span><span class="hljs-params">(<span class="hljs-type">int</span> fd)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>两个函数成功时返回 <code>0</code>; 出错返回 <code>-1</code></li>
+</ul>
+<p><code>getcwd</code> 函数会从当前工作目录 (<code>.</code>) 开始, 用 <code>..</code> 找到其上一级目录, 然后读其目录项, 直到该目录项中的 <code>i</code> 节点编号与工作目录 <code>i</code> 节点编号相同, 这样就能找到对应的文件名, 按照这种方法逐层上移, 直到遇到根, 得到当前工作目录的绝对路径名:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><span class="hljs-type">char</span> *<span class="hljs-title function_">getcwd</span><span class="hljs-params">(<span class="hljs-type">char</span> *buf, <span class="hljs-type">size_t</span> size)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回 <code>buf</code>, 出错时返回 <code>NULL</code></li>
+</ul>
+<h2 id="设备特殊文件"><a href="#设备特殊文件" class="headerlink" title="设备特殊文件"></a>设备特殊文件</h2><p>每个文件系统所在的存储设备都由其主, 次设备号表示. 设备号所用的数据类型是基本系统数据类型 <code>dev_t</code>.</p>
+<p>主设备号标识设备驱动程序; 次设备号标识特定的子设备.</p>
+<p>一个磁盘驱动器通常会包含多个文件系统, 在同一磁盘驱动器上的各文件系统通常具有相同的主设备号, 但次设备号却不同.</p>
+<p>系统中与每个文件名关联的 <code>st_dev</code> 值是文件系统的设备号, 该文件系统包含了这一文件名以及与其对应的 <code>i-node</code>.</p>
+<p>只有字符特殊文件和块特殊文件才有 <code>st_rdev</code> 值, 包含实际设备的设备号.</p>
 
                 
               </div>
