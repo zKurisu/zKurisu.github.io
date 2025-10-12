@@ -38,7 +38,7 @@
 <meta property="og:image" content="http://example.com/img/unix-book-function-influent-time.png">
 <meta property="og:image" content="http://example.com/img/unix-book-fopen-type-list.png">
 <meta property="article:published_time" content="2025-09-13T13:06:04.000Z">
-<meta property="article:modified_time" content="2025-10-12T03:24:10.454Z">
+<meta property="article:modified_time" content="2025-10-12T06:16:13.611Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/unix-iso-c-defined-header-file.png">
@@ -250,7 +250,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          21k 字
+          23k 字
         
       </span>
     
@@ -261,7 +261,7 @@
         
         
         
-          178 分钟
+          193 分钟
         
       </span>
     
@@ -983,6 +983,63 @@
 <li><code>getc</code> 和 <code>fgetc</code> 的区别在于: <code>getc</code> 可被实现为宏, 而 <code>fgetc</code> 不能实现为宏</li>
 <li><code>getchar</code> 等价于 <code>getc(stdin)</code></li>
 </ul>
+<p>由于不管是出错还是到达文家末尾都返回同样值, 因此大多数实现中, 为每个流在 <code>FILE</code> 对象中维护了两个标志: 出错标志和文件结束标志. 需要用 <code>ferror</code> 和 <code>feof</code> 来区分:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-type">int</span> <span class="hljs-title function_">ferror</span><span class="hljs-params">(FILE *fp)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">feof</span><span class="hljs-params">(FILE *fp)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>若条件为真返回非 <code>0</code>; 否则返回 <code>0</code></li>
+</ul>
+<p>可以用 <code>clearerr</code> 来清除标志:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><br><span class="hljs-type">void</span> <span class="hljs-title function_">clearerr</span><span class="hljs-params">(FILE *fp)</span>;<br></code></pre></td></tr></table></figure>
+
+<p>在流中读取数据之后, 可以用 <code>ungetc</code> 将字符送回流中, 下次能接着读出:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">ungetc</span><span class="hljs-params">(<span class="hljs-type">int</span> c, FILE *fp)</span>;<br></code></pre></td></tr></table></figure>
+
+<h3 id="输出函数"><a href="#输出函数" class="headerlink" title="输出函数"></a>输出函数</h3><p>上述输入函数对应的输出函数:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">putc</span><span class="hljs-params">(<span class="hljs-type">int</span> c, FILE *fp)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">fputc</span><span class="hljs-params">(<span class="hljs-type">int</span> c, FILE *fp)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">putchar</span><span class="hljs-params">(<span class="hljs-type">int</span> c)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回 <code>c</code>; 出错时返回 <code>EOF</code></li>
+</ul>
+<h2 id="每次一行-I-x2F-O"><a href="#每次一行-I-x2F-O" class="headerlink" title="每次一行 I&#x2F;O"></a>每次一行 I&#x2F;O</h2><p>下面两个函数提供每次输入一行的功能:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><br><span class="hljs-type">char</span> *<span class="hljs-title function_">fgets</span><span class="hljs-params">(<span class="hljs-type">char</span> *<span class="hljs-keyword">restrict</span> buf, <span class="hljs-type">int</span> n, FILE *<span class="hljs-keyword">restrict</span> fp)</span>;<br><span class="hljs-type">char</span> *<span class="hljs-title function_">gets</span><span class="hljs-params">(<span class="hljs-type">char</span> *buf)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回 <code>buf</code>; 出错或到达文件尾端返回 <code>NULL</code></li>
+<li><code>gets</code> 从 <code>stdin</code> 中读</li>
+<li>对于 <code>fgets</code>, 必须指定缓冲的长度 <code>n</code>. 在读到下一个换行符为止, 但不超过 <code>n-1</code> 个字符, 读入的字符被送入缓冲区, 该缓冲区以 <code>null</code> 字节结尾. <code>fgets</code> 会保留读入的换行符</li>
+<li><code>gets</code> 函数不推荐使用, 因为不能指定缓冲区长度, 可能导致缓冲区溢出, 且 <code>gets</code> 并不将换行符存入缓冲区</li>
+</ul>
+<p><code>fputs</code> 和 <code>puts</code> 提供每次输出一行的功能:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-type">int</span> <span class="hljs-title function_">fputs</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *<span class="hljs-keyword">restrict</span> str, FILE *<span class="hljs-keyword">restrict</span> fp)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">puts</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *str)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回非负值; 出错时返回 <code>EOF</code></li>
+<li><code>fputs</code> 将一个以 <code>null</code> 字节终止的字符串写到指定的流, 尾端的终止符 <code>null</code> 不写出. 但要注意不一定输出一行, 此时不要求换行符最为最后一个非 <code>null</code> 字符</li>
+<li><code>puts</code> 将一个以 <code>null</code> 字节终止的字符串写到标准输出, 终止符不写出, 但 <code>puts</code> 会添加写出一个换行符 (也要注意这个换行符)</li>
+</ul>
+<h2 id="二进制-I-x2F-O"><a href="#二进制-I-x2F-O" class="headerlink" title="二进制 I&#x2F;O"></a>二进制 I&#x2F;O</h2><p>在进行二进制 I&#x2F;O 时, 通常倾向于一次读或写一个完整的结构.</p>
+<p>如果使用 <code>getc/putc</code> 来读&#x2F;写, 则需要循环中每次处理一个字节. 而使用 <code>fgets/fputs</code>, 会因为遇到结构中的 <code>null</code> 字节时就停止.</p>
+<p>因此可以用下面两个函数执行二进制 I&#x2F;O 操作:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><br><span class="hljs-type">size_t</span> <span class="hljs-title function_">fread</span><span class="hljs-params">(<span class="hljs-type">void</span> *<span class="hljs-keyword">restrict</span> ptr, <span class="hljs-type">size_t</span> size, <span class="hljs-type">size_t</span> nobj, FILE *<span class="hljs-keyword">restrict</span> fp)</span>;<br><span class="hljs-type">size_t</span> <span class="hljs-title function_">fwrite</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">void</span> *<span class="hljs-keyword">restrict</span> ptr, <span class="hljs-type">size_t</span> size, <span class="hljs-type">size_t</span> nobj, FILE *<span class="hljs-keyword">restrict</span> fp)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>函数的返回值是读&#x2F;写的对象数</li>
+</ul>
+<p>通常有两种用法:</p>
+<ol>
+<li>读&#x2F;写一个二进制数组. 比如, 将一个浮点数组的第 <code>2~5</code> 个元素写至一个文件上:</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">float</span> data[<span class="hljs-number">10</span>];<br><span class="hljs-keyword">if</span> (fwrite(&amp;data, <span class="hljs-keyword">sizeof</span>(<span class="hljs-type">float</span>), <span class="hljs-number">4</span>, fp) != <span class="hljs-number">4</span>)<br>    err_sys(<span class="hljs-string">&quot;fwrite error&quot;</span>);<br></code></pre></td></tr></table></figure>
+<ul>
+<li>此时 <code>size</code> 指定数组元素的长度</li>
+<li><code>nobj</code> 是要写入的元素数量</li>
+</ul>
+<ol start="2">
+<li>读&#x2F;写一个结构:</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">struct</span> &#123;</span><br>    <span class="hljs-type">short</span> count;<br>    <span class="hljs-type">long</span> total;<br>    <span class="hljs-type">char</span> name[NAMESIZE];<br>&#125; item;<br><span class="hljs-keyword">if</span> (fwrite(&amp;item, <span class="hljs-keyword">sizeof</span>(item), <span class="hljs-number">1</span>, fp) != <span class="hljs-number">1</span>)<br>    err_sys(<span class="hljs-string">&quot;fwrite error&quot;</span>);<br></code></pre></td></tr></table></figure>
+<ul>
+<li>此时 <code>size</code> 为结构体长度</li>
+<li><code>nobj</code> 是要写入的对象个数</li>
+</ul>
+<p>对于写, 如果返回值少于所要求的 <code>nobj</code>, 则出错.</p>
+<p>对于读操作, 如果出错或者到达文件末尾, 返回的数字可以少于 <code>nobj</code>, 此时应该用 <code>ferror</code> 或 <code>feof</code> 来判断是哪种情况.</p>
 
                 
               </div>
