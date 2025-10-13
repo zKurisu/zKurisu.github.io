@@ -39,7 +39,7 @@
 <meta property="og:image" content="http://example.com/img/os-diff-kind-context-example.png">
 <meta property="og:image" content="http://example.com/img/os-time-sharing-os-structure-example.png">
 <meta property="article:published_time" content="2025-09-24T11:43:14.000Z">
-<meta property="article:modified_time" content="2025-10-09T13:09:45.012Z">
+<meta property="article:modified_time" content="2025-10-13T01:05:05.660Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/os-memory-page-mapping-example.png">
@@ -262,7 +262,7 @@
         
         
         
-          138 分钟
+          145 分钟
         
       </span>
     
@@ -817,7 +817,29 @@
 <li>调度信息, 如优先级, 时间片</li>
 <li>其他元数据</li>
 </ul>
-<h1 id="Task-切换"><a href="#Task-切换" class="headerlink" title="Task 切换"></a>Task 切换</h1><p>换栈.</p>
+<h1 id="Task-Trap"><a href="#Task-Trap" class="headerlink" title="Task Trap"></a>Task Trap</h1><p>在操作系统中, 任务通常指一个执行单元, 一般可以是:</p>
+<ul>
+<li>Process (进程), 有独立的地址空间, 资源等</li>
+<li>Thread (线程), 共享地址空间</li>
+</ul>
+<p>任务由内核统一调度, 用 <code>task_structure</code> 结构体来管理.</p>
+<p>控制流 (Control Flow) 是指程序执行的顺序流程. 正常情况下, 从 <code>main</code> 开始, 一条指令一条指令顺序执行. 但在某些情况下, 比如函数调用, 中断, 异常, 系统调用等, CPU 会跳去执行其他代码, 此时称 “控制流被改变”.</p>
+<p>Trap 是 CPU 异常控制流的一种, 是由软件主动触发某某些异常情况导致 CPU 跳转到内核态执行特定处理程序的机制.</p>
+<p>Trap 控制流, 指 Trap 发生时, CPU 切换到内核态, <code>sp</code> 切换到内核栈并保存用户态上下文, 然后跳转到处理函数, 处理结束后恢复用户态上下文, 切换回用户态和用户栈.</p>
+<p>每个任务通常有:</p>
+<ul>
+<li>用户栈: 运行在用户态时使用的栈</li>
+<li>内核栈: 当任务进入内核态时使用的栈. 保证任务在内核中执行时上下文独立</li>
+</ul>
+<p>每个任务在通过 Trap 进入内核后, 会拥有独立的执行上下文 (利用内核栈).</p>
+<p>操作系统中任务的实现示例 (也就是 <code>task_struct</code> 的示例), 通常包含:</p>
+<ul>
+<li>任务运行状态</li>
+<li>任务上下文</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#[derive(Copy, Clone, PartialEq)]</span><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">enum</span> <span class="hljs-title class_">TaskStatus</span> &#123;<br>    UnInit,  <span class="hljs-comment">// 未初始化</span><br>    Ready,   <span class="hljs-comment">// 准备运行</span><br>    Running, <span class="hljs-comment">// 正在运行</span><br>    Exited,  <span class="hljs-comment">// 已退出</span><br>&#125;<br><br><span class="hljs-meta">#[repr(C)]</span><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">struct</span> <span class="hljs-title class_">TaskContext</span> &#123;<br>    ra: <span class="hljs-type">usize</span>,<br>    sp: <span class="hljs-type">usize</span>,<br>    s: [<span class="hljs-type">usize</span>; <span class="hljs-number">12</span>],<br>&#125;<br><br><span class="hljs-meta">#[derive(Copy, Clone)]</span><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">struct</span> <span class="hljs-title class_">TaskControlBlock</span> &#123;<br>    <span class="hljs-keyword">pub</span> task_status: TaskStatus,<br>    <span class="hljs-keyword">pub</span> task_cx: TaskContext,<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
 <h1 id="Time-sharing-OS"><a href="#Time-sharing-OS" class="headerlink" title="Time-sharing OS"></a>Time-sharing OS</h1><p><img src="/../img/os-time-sharing-os-structure-example.png" srcset="/img/loading.gif" lazyload></p>
 <p>收到时钟中断时总会 trap 进 S-Mode 然后判断当前时间片的使用情况, 在时间片用完后, 切换任务.</p>
 
