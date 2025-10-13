@@ -62,7 +62,7 @@
 <meta property="og:image" content="http://example.com/img/riscv-machine-mode-scause-interrupt-code-list.png">
 <meta property="og:image" content="http://example.com/img/riscv-machine-mode-exception-list.png">
 <meta property="article:published_time" content="2025-09-25T02:41:59.000Z">
-<meta property="article:modified_time" content="2025-10-09T12:05:04.679Z">
+<meta property="article:modified_time" content="2025-10-13T06:00:15.932Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/riscv-isa-position-example.png">
@@ -285,7 +285,7 @@
         
         
         
-          115 分钟
+          118 分钟
         
       </span>
     
@@ -987,6 +987,13 @@
 </ul>
 <p>当前 RISC-V 的设计中, 能够 disable 中断, 但不能 disable 异常.</p>
 <h1 id="第一次进入用户态"><a href="#第一次进入用户态" class="headerlink" title="第一次进入用户态"></a>第一次进入用户态</h1><p>系统的初始化都是位于 S-Mode, 在初始化 stack, 一些 context, register 设置后, 就可以用 <code>sret</code> 进入 U-Mode.</p>
+<h1 id="时钟中断和计数器"><a href="#时钟中断和计数器" class="headerlink" title="时钟中断和计数器"></a>时钟中断和计数器</h1><p>时钟中断 (Timer Interrupt) 和计数器 (Timer) 通常用于实现任务调度, 时间片轮转等. 通过固定时间周期触发中断来执行处理逻辑.</p>
+<p>RISC-V 有一套标准的机制来实现定时器中断 (Timer Interrupt), 核心组件有:</p>
+<ul>
+<li><code>mtime</code> 寄存器. 一个单调递增的计时器寄存器, 表示系统启动以来的时间 (通常是 CPU 周期数或某个时间基准单位), 由硬件负责递增</li>
+<li><code>mtimecmp</code> 寄存器. CSR 比较寄存器, 当 <code>mtime &gt;= mtimecmp</code> 时, 会触发一个定时器中断</li>
+</ul>
+<p>中断触发后, CPU 会跳转到定时器中断处理程序. 操作系统内核需要在中断处理程序中重新设置 <code>mtimecmp</code>, 否则中断会一直不停触发.</p>
 
                 
               </div>
