@@ -24,7 +24,7 @@
 <meta property="og:description" content="该部分接口都可以在 :h vim.fs 文档中查看. 包含文件处理的接口. 查看文件类型以及是否存在用 vim.uv.fs_stat() 接口判断文件类型以及文件是否存在: 123if vim.uv.fs_stat(file) then    vim.print(&amp;#x27;file exists&amp;#x27;)end  获取文件绝对路径用 vim.fs.abspath(&amp;#123;path&amp;#12">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-10-24T02:40:14.000Z">
-<meta property="article:modified_time" content="2025-10-24T03:24:30.321Z">
+<meta property="article:modified_time" content="2025-10-24T03:47:00.426Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.6k 字
+          4.4k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          14 分钟
+          37 分钟
         
       </span>
     
@@ -343,7 +343,53 @@
 <p>如:</p>
 <figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs lua">new_path = vim.fs.joinpath(<span class="hljs-string">&quot;foo/&quot;</span>, <span class="hljs-string">&quot;/bar&quot;</span>)<br>vim.<span class="hljs-built_in">print</span>(new_path) <span class="hljs-comment">-- foo/bar</span><br></code></pre></td></tr></table></figure>
 
-<h1 id="查找文件-x2F-目录"><a href="#查找文件-x2F-目录" class="headerlink" title="查找文件&#x2F;目录"></a>查找文件&#x2F;目录</h1>
+<h1 id="查找文件-x2F-目录"><a href="#查找文件-x2F-目录" class="headerlink" title="查找文件&#x2F;目录"></a>查找文件&#x2F;目录</h1><p>用 <code>vim.fs.find(&#123;names&#125;, &#123;opts&#125;)</code> 接口, 从 <code>&#123;path&#125;</code> (<code>&#123;opts&#125; 中指定</code>) 开始查找列举在 <code>&#123;names&#125;</code> 中的文件, 当 <code>&#123;upward&#125;</code> 设置为 <code>true</code> 时会查找父目录; 否则向下查找. 会递归查找, 可以通过 <code>&#123;stop&#125;</code> 来提前结束, 当找到的个数到 <code>&#123;limit&#125; (default 1)</code> 也会结束. 可以设置 <code>&#123;type&#125;</code> 指定查找类型.</p>
+<p>示例:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-comment">-- List all test directories under the runtime directory.</span><br><span class="hljs-keyword">local</span> dirs = vim.fs.<span class="hljs-built_in">find</span>(<br>    &#123; <span class="hljs-string">&#x27;test&#x27;</span>, <span class="hljs-string">&#x27;tst&#x27;</span>, <span class="hljs-string">&#x27;testdir&#x27;</span> &#125;,<br>    &#123; limit = <span class="hljs-built_in">math</span>.<span class="hljs-built_in">huge</span>, <span class="hljs-built_in">type</span> = <span class="hljs-string">&#x27;directory&#x27;</span>, <span class="hljs-built_in">path</span> = <span class="hljs-string">&#x27;./runtime/&#x27;</span> &#125;<br>)<br><br><span class="hljs-comment">-- Get all &quot;lib/*.cpp&quot; and &quot;lib/*.hpp&quot; files, using Lua patterns.</span><br><span class="hljs-comment">-- Or use `vim.glob.to_lpeg(…):match(…)` for glob/wildcard matching.</span><br><span class="hljs-keyword">local</span> files = vim.fs.<span class="hljs-built_in">find</span>(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(name, path)</span></span><br>    <span class="hljs-keyword">return</span> name:<span class="hljs-built_in">match</span>(<span class="hljs-string">&#x27;.*%.[ch]pp$&#x27;</span>) <span class="hljs-keyword">and</span> <span class="hljs-built_in">path</span>:<span class="hljs-built_in">match</span>(<span class="hljs-string">&#x27;[/\\]lib$&#x27;</span>)<br><span class="hljs-keyword">end</span>, &#123; limit = <span class="hljs-built_in">math</span>.<span class="hljs-built_in">huge</span>, <span class="hljs-built_in">type</span> = <span class="hljs-string">&#x27;file&#x27;</span> &#125;)<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><code>&#123;names&#125;</code> 是 <code>string|string[]|fun(name: string, path: string): boolean</code>, 只能是 <code>basename</code>, 不支持绝对和相对路径. 如果 <code>name</code> 是一个 <code>function</code>, 则会在遍历时对每个文件调用, 匹配时返回 <code>true</code> 即可, 这里的 <code>&#123;name&#125;</code> 是 <code>basename</code>, <code>&#123;path&#125;</code> 是 <code>fullpath</code></li>
+<li>{opts} 是包含参数的 table:<ul>
+<li><code>&#123;path&#125;</code>, 指定开始查找的路径, 默认是当前目录</li>
+<li>…</li>
+</ul>
+</li>
+</ul>
+<h1 id="遍历所有父目录"><a href="#遍历所有父目录" class="headerlink" title="遍历所有父目录"></a>遍历所有父目录</h1><p>用 <code>vim.fs.parents(&#123;start&#125;)</code> 接口, 比如 <code>&#123;start&#125;</code> 是 <code>/tmp/test/hello/world</code>, 那么其返回的迭代器会包括:</p>
+<ul>
+<li><code>/tmp/test/hello/world</code></li>
+<li><code>/tmp/test/hello</code></li>
+<li><code>/tmp/test</code></li>
+<li><code>/tmp</code></li>
+<li><code>/</code></li>
+</ul>
+<p>示例:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-keyword">local</span> root_dir<br><span class="hljs-keyword">for</span> dir <span class="hljs-keyword">in</span> vim.fs.parents(vim.api.nvim_buf_get_name(<span class="hljs-number">0</span>)) <span class="hljs-keyword">do</span><br>  <span class="hljs-keyword">if</span> vim.fn.isdirectory(dir .. <span class="hljs-string">&#x27;/.git&#x27;</span>) == <span class="hljs-number">1</span> <span class="hljs-keyword">then</span><br>    root_dir = dir<br>    <span class="hljs-keyword">break</span><br>  <span class="hljs-keyword">end</span><br><span class="hljs-keyword">end</span><br><br><span class="hljs-keyword">if</span> root_dir <span class="hljs-keyword">then</span><br>  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Found git repository at&#x27;</span>, root_dir)<br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+<h1 id="获取相对于某路径的-basename"><a href="#获取相对于某路径的-basename" class="headerlink" title="获取相对于某路径的 basename"></a>获取相对于某路径的 basename</h1><p>用 <code>vim.fs.relpath(&#123;base&#125;, &#123;target&#125;, &#123;opts&#125;)</code> 接口, 如:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs lua">vim.fs.relpath(<span class="hljs-string">&#x27;/var&#x27;</span>, <span class="hljs-string">&#x27;/var/lib&#x27;</span>) <span class="hljs-comment">-- &#x27;lib&#x27;</span><br>vim.fs.relpath(<span class="hljs-string">&#x27;/var&#x27;</span>, <span class="hljs-string">&#x27;/usr/bin&#x27;</span>) <span class="hljs-comment">-- nil</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>&#123;opts&#125;</code> 暂时是保留的</li>
+</ul>
+<h1 id="删除文件-x2F-目录"><a href="#删除文件-x2F-目录" class="headerlink" title="删除文件&#x2F;目录"></a>删除文件&#x2F;目录</h1><p>用 <code>vim.fs.rm(&#123;path&#125;, &#123;opts&#125;)</code> 接口:</p>
+<ul>
+<li><code>&#123;path&#125;</code> 是文件&#x2F;目录的路径</li>
+<li><code>&#123;opts&#125;</code> table 中的参数有:<ul>
+<li><code>&#123;recursize&#125; (boolean)</code>, 是否递归删除</li>
+<li><code>&#123;force&#125; (boolean)</code>, 是否强制删除</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lua">vim.fs.rm(<span class="hljs-string">&quot;/tmp/hello.txt&quot;</span>)<br></code></pre></td></tr></table></figure>
+
+<h1 id="找到包含某文件-x2F-目录的-parent-directory"><a href="#找到包含某文件-x2F-目录的-parent-directory" class="headerlink" title="找到包含某文件&#x2F;目录的 parent directory"></a>找到包含某文件&#x2F;目录的 parent directory</h1><p>用 <code>vim.fs.root(&#123;source&#125;, &#123;marker&#125;)</code> 接口, 如:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-comment">-- Find the root of a Python project, starting from file &#x27;main.py&#x27;</span><br>vim.fs.root(vim.fs.joinpath(vim.env.PWD, <span class="hljs-string">&#x27;main.py&#x27;</span>), &#123;<span class="hljs-string">&#x27;pyproject.toml&#x27;</span>, <span class="hljs-string">&#x27;setup.py&#x27;</span> &#125;)<br><br><span class="hljs-comment">-- Find the root of a git repository</span><br>vim.fs.root(<span class="hljs-number">0</span>, <span class="hljs-string">&#x27;.git&#x27;</span>)<br><br><span class="hljs-comment">-- Find the parent directory containing any file with a .csproj extension</span><br>vim.fs.root(<span class="hljs-number">0</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(name, path)</span></span><br>  <span class="hljs-keyword">return</span> name:<span class="hljs-built_in">match</span>(<span class="hljs-string">&#x27;%.csproj$&#x27;</span>) ~= <span class="hljs-literal">nil</span><br><span class="hljs-keyword">end</span>)<br><br><span class="hljs-comment">-- Find the first ancestor directory containing EITHER &quot;stylua.toml&quot; or &quot;.luarc.json&quot;; if</span><br><span class="hljs-comment">-- not found, find the first ancestor containing &quot;.git&quot;:</span><br>vim.fs.root(<span class="hljs-number">0</span>, &#123; &#123; <span class="hljs-string">&#x27;stylua.toml&#x27;</span>, <span class="hljs-string">&#x27;.luarc.json&#x27;</span> &#125;, <span class="hljs-string">&#x27;.git&#x27;</span> &#125;)<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><code>&#123;source&#125; (integer|string)</code>, 若为数字, 表示 <code>buffer</code> 编号, 若为字符串, 则表示开始的文件路径</li>
+<li><code>&#123;marker&#125;</code>, 表示标记的文件&#x2F;目录</li>
+</ul>
+
                 
               </div>
             
