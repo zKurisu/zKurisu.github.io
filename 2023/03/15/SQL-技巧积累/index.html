@@ -16,17 +16,19 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="AliasAlias 通常有两种方式:  明确 AS 关键字:  1SELECT col1 AS x, col2 AS y FROM table1 AS t;   省略 AS 关键字, 用空格隔开:  1SELECT col1 x, col2 y FROM table1 t;  使用 AS 关键字的可读性更强, 更规范. 联结 Join联结 (Join) 指, 把两个或多个表的数据组合在一起. 内">
+    <meta name="description" content="Join在 SQL 中, JOIN 是一种将多个表中的数据基于某些关键字段组合在一起的操作. 因为在数据库设计中, 不会将所有数据都放在同一张表里, 而是分散存储在多个表中, 因此在查询时, 往往需要同时获取多个表中的相关数据, 比如:  查询 “用户信息” + “他们的订单” 查询 “商品” + “商品的分类” 查询 “部门” + “部门的员工”  一个具体的 mariadb 示例如下:  另一">
 <meta property="og:type" content="article">
 <meta property="og:title" content="SQL-技巧积累">
 <meta property="og:url" content="http://example.com/2023/03/15/SQL-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="AliasAlias 通常有两种方式:  明确 AS 关键字:  1SELECT col1 AS x, col2 AS y FROM table1 AS t;   省略 AS 关键字, 用空格隔开:  1SELECT col1 x, col2 y FROM table1 t;  使用 AS 关键字的可读性更强, 更规范. 联结 Join联结 (Join) 指, 把两个或多个表的数据组合在一起. 内">
+<meta property="og:description" content="Join在 SQL 中, JOIN 是一种将多个表中的数据基于某些关键字段组合在一起的操作. 因为在数据库设计中, 不会将所有数据都放在同一张表里, 而是分散存储在多个表中, 因此在查询时, 往往需要同时获取多个表中的相关数据, 比如:  查询 “用户信息” + “他们的订单” 查询 “商品” + “商品的分类” 查询 “部门” + “部门的员工”  一个具体的 mariadb 示例如下:  另一">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/mariadb-inner-join-example.png">
 <meta property="article:published_time" content="2023-03-15T08:38:52.000Z">
-<meta property="article:modified_time" content="2025-10-27T13:23:28.592Z">
+<meta property="article:modified_time" content="2025-10-28T08:05:12.532Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/mariadb-inner-join-example.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -235,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.5k 字
+          2.9k 字
         
       </span>
     
@@ -246,7 +248,7 @@
         
         
         
-          21 分钟
+          24 分钟
         
       </span>
     
@@ -289,7 +291,56 @@
             
               <div class="markdown-body">
                 
-                <h1 id="Alias"><a href="#Alias" class="headerlink" title="Alias"></a>Alias</h1><p>Alias 通常有两种方式:</p>
+                <h1 id="Join"><a href="#Join" class="headerlink" title="Join"></a>Join</h1><p>在 SQL 中, JOIN 是一种将多个表中的数据基于某些关键字段组合在一起的操作.</p>
+<p>因为在数据库设计中, 不会将所有数据都放在同一张表里, 而是分散存储在多个表中, 因此在查询时, 往往需要同时获取多个表中的相关数据, 比如:</p>
+<ul>
+<li>查询 “用户信息” + “他们的订单”</li>
+<li>查询 “商品” + “商品的分类”</li>
+<li>查询 “部门” + “部门的员工”</li>
+</ul>
+<p>一个具体的 mariadb 示例如下:</p>
+<p><img src="/../img/mariadb-inner-join-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>另一个例子, 假如有两张纸:</p>
+<ul>
+<li>一张上写着 “用户信息”, 包含用户 ID, 姓名</li>
+<li>另一张写着 “订单信息”, 包含订单 ID, 用户 ID, 购买内容</li>
+</ul>
+<p>两张纸都有一个共同的字段: 用户 ID.</p>
+<p>可以通过用户 ID, 把两张纸中相关的行拼在一起, 得到类似:</p>
+<table>
+<thead>
+<tr>
+<th>用户 ID</th>
+<th>姓名</th>
+<th>订单 ID</th>
+<th>购买内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>张三</td>
+<td>1001</td>
+<td>手机</td>
+</tr>
+<tr>
+<td>1</td>
+<td>张三</td>
+<td>1002</td>
+<td>耳机</td>
+</tr>
+<tr>
+<td>2</td>
+<td>李四</td>
+<td>1003</td>
+<td>笔记本</td>
+</tr>
+</tbody></table>
+<p>这就是 JOIN 的结果.</p>
+<p>在 SQL 中, 语法通常是:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs mysql">SELECT 列1, 列2, ...<br>FROM 表1<br>JOIN 表2<br>  ON 表1.字段 = 表2.字段;<br></code></pre></td></tr></table></figure>
+
+
+<h1 id="Alias"><a href="#Alias" class="headerlink" title="Alias"></a>Alias</h1><p>Alias 通常有两种方式:</p>
 <ol>
 <li>明确 <code>AS</code> 关键字:</li>
 </ol>
