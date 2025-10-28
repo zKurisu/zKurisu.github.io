@@ -25,7 +25,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/mariadb-inner-join-example.png">
 <meta property="article:published_time" content="2023-03-15T08:38:52.000Z">
-<meta property="article:modified_time" content="2025-10-28T08:05:12.532Z">
+<meta property="article:modified_time" content="2025-10-28T10:30:11.902Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/mariadb-inner-join-example.png">
@@ -237,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.9k 字
+          3.9k 字
         
       </span>
     
@@ -248,7 +248,7 @@
         
         
         
-          24 分钟
+          33 分钟
         
       </span>
     
@@ -337,9 +337,162 @@
 </tbody></table>
 <p>这就是 JOIN 的结果.</p>
 <p>在 SQL 中, 语法通常是:</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs mysql">SELECT 列1, 列2, ...<br>FROM 表1<br>JOIN 表2<br>  ON 表1.字段 = 表2.字段;<br></code></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs mysql">SELECT col1, col2, ...<br>FROM table1<br>JOIN table2<br>  ON table1.field = table2.field;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>table1</code> 和 <code>table2</code> 是要连接的两个表</li>
+<li><code>ON table1.field = table2.field;</code> 是连接条件, 通常是两个表之间有关联的字段</li>
+</ul>
+<p>底层本质是, 先对两个表做笛卡尔积 (所有可能的行组合), 然后根据 <code>on</code> 条件筛选出匹配行. 比如 <code>users</code> 有 <code>10</code> 行, <code>orders</code> 有 <code>100</code> 行, 那么先会有 <code>10x100=1000</code> 种组合, 然后通过 <code>ON users.id = orders.user_id</code> 筛选真正关联的行.</p>
+<h2 id="JOIN-的类别"><a href="#JOIN-的类别" class="headerlink" title="JOIN 的类别"></a>JOIN 的类别</h2><p>SQL 有几种类型的 JOIN, 区别在于: 当没有匹配的行时, 是否保留某张表的数据.</p>
+<p>这里用两个表作为例子:</p>
+<ul>
+<li><p><code>users</code> 表:</p>
+<table>
+<thead>
+<tr>
+<th>users.id</th>
+<th>users.name</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>张三</td>
+</tr>
+<tr>
+<td>2</td>
+<td>李四</td>
+</tr>
+</tbody></table>
+</li>
+<li><p><code>orders</code> 表:</p>
+<table>
+<thead>
+<tr>
+<th>orders.product</th>
+<th>orders.user_id</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>手机</td>
+<td>1</td>
+</tr>
+<tr>
+<td>耳机</td>
+<td>1</td>
+</tr>
+<tr>
+<td>笔记本</td>
+<td>3</td>
+</tr>
+</tbody></table>
+</li>
+</ul>
+<p>注意: 用户 3 在 users 表中不存在, 用户 2 没有订单.</p>
+<h3 id="INNER-JOIN-内连接"><a href="#INNER-JOIN-内连接" class="headerlink" title="INNER JOIN, 内连接"></a>INNER JOIN, 内连接</h3><p>只返回两张表中匹配的行:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs mysql">SELECT users.name, orders.product<br>FROM users<br>INNER JOIN orders<br>    ON users.id = orders.user_id;<br></code></pre></td></tr></table></figure>
 
+<p>输出:</p>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>product</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>张三</td>
+<td>手机</td>
+</tr>
+<tr>
+<td>张三</td>
+<td>耳机</td>
+</tr>
+</tbody></table>
+<ul>
+<li>这里就只返回了 <code>users.id</code> 和 <code>orders.id</code> 相匹配的行</li>
+</ul>
+<h3 id="LEFT-JOIN-左连接"><a href="#LEFT-JOIN-左连接" class="headerlink" title="LEFT JOIN, 左连接"></a>LEFT JOIN, 左连接</h3><p>返回左表 (FROM 子句中的表) 的所有行, 无论右表是否有匹配. 如果右表没有匹配, 则右表字段为 NULL:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs mysql">SELECT users.name, orders.product<br>FROM users<br>LEFT JOIN orders<br>    ON users.id = orders.user_id;<br></code></pre></td></tr></table></figure>
 
+<p>输出:</p>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>product</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>张三</td>
+<td>手机</td>
+</tr>
+<tr>
+<td>张三</td>
+<td>耳机</td>
+</tr>
+<tr>
+<td>李四</td>
+<td>NULL</td>
+</tr>
+</tbody></table>
+<ul>
+<li>这里左表 (<code>users</code>) 中所有用户都出现了, 但由于李四没有订单, 因此 <code>orders.product</code> 为 <code>NULL</code></li>
+</ul>
+<h3 id="RIGHT-JOIN-右连接"><a href="#RIGHT-JOIN-右连接" class="headerlink" title="RIGHT JOIN, 右连接"></a>RIGHT JOIN, 右连接</h3><p>返回右表的所有行, 无论左表是否有匹配. 如果左表没有匹配, 则左表字段为 NULL:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs mysql">SELECT users.name, orders.product<br>FROM users<br>LEFT JOIN orders<br>    ON users.id = orders.user_id;<br></code></pre></td></tr></table></figure>
+
+<p>输出:</p>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>product</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>张三</td>
+<td>手机</td>
+</tr>
+<tr>
+<td>张三</td>
+<td>耳机</td>
+</tr>
+<tr>
+<td>NULL</td>
+<td>笔记本</td>
+</tr>
+</tbody></table>
+<ul>
+<li>这里右表 (<code>orders</code>) 中所有订单都出现了, 但由于 <code>user_id</code> 为 <code>3</code> 的订单在 <code>users</code> 表中没有对应, 因此为 <code>NULL</code></li>
+</ul>
+<h3 id="FULL-OUTER-JOIN-全外连接"><a href="#FULL-OUTER-JOIN-全外连接" class="headerlink" title="FULL OUTER JOIN, 全外连接"></a>FULL OUTER JOIN, 全外连接</h3><p>返回左右两表所有行, 无论是否有匹配. 没有匹配的部分用 <code>NULL</code> 填充:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs mysql">SELECT users.name, orders.product<br>FROM users<br>FULL OUTER JOIN orders<br>  ON users.id = orders.user_id;<br></code></pre></td></tr></table></figure>
+
+<p>输出:</p>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>product</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>张三</td>
+<td>手机</td>
+</tr>
+<tr>
+<td>张三</td>
+<td>耳机</td>
+</tr>
+<tr>
+<td>李四</td>
+<td>NULL</td>
+</tr>
+<tr>
+<td>NULL</td>
+<td>笔记本</td>
+</tr>
+</tbody></table>
 <h1 id="Alias"><a href="#Alias" class="headerlink" title="Alias"></a>Alias</h1><p>Alias 通常有两种方式:</p>
 <ol>
 <li>明确 <code>AS</code> 关键字:</li>
@@ -352,12 +505,6 @@
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs mysql">SELECT col1 x, col2 y FROM table1 t;<br></code></pre></td></tr></table></figure>
 
 <p>使用 <code>AS</code> 关键字的可读性更强, 更规范.</p>
-<h1 id="联结-Join"><a href="#联结-Join" class="headerlink" title="联结 Join"></a>联结 Join</h1><p>联结 (Join) 指, 把两个或多个表的数据组合在一起.</p>
-<h2 id="内联结-Inner-Join"><a href="#内联结-Inner-Join" class="headerlink" title="内联结 Inner Join"></a>内联结 Inner Join</h2><p>返回两个表符合条件的行中的交集部分.</p>
-<h2 id="外联结-Outer-Join"><a href="#外联结-Outer-Join" class="headerlink" title="外联结 Outer Join"></a>外联结 Outer Join</h2><h3 id="左联结"><a href="#左联结" class="headerlink" title="左联结"></a>左联结</h3><p>返回左表的所有行, 以及右表中满足条件的行.</p>
-<h3 id="右联结"><a href="#右联结" class="headerlink" title="右联结"></a>右联结</h3><p>返回右表的所有行, 以及左表中满足条件的行.</p>
-<h3 id="全联结"><a href="#全联结" class="headerlink" title="全联结"></a>全联结</h3><p>返回左表和右表中的所有行.</p>
-<h2 id="交叉联结-Cross-Join"><a href="#交叉联结-Cross-Join" class="headerlink" title="交叉联结 Cross Join"></a>交叉联结 Cross Join</h2><p>返回两个表中所有行的笛卡尔积.</p>
 <h1 id="区分-group-by-和-order-by"><a href="#区分-group-by-和-order-by" class="headerlink" title="区分 group by 和 order by"></a>区分 <code>group by</code> 和 <code>order by</code></h1><p>注意 <code>group by</code> 的 “分组”, 指的是将某一列的 “相同值合并”, 也就是说一个值只会出现一次. 此时, 值相同的就位于一个组中, 然后再对每一个组进行查询.</p>
 <h1 id="group-by-的作用"><a href="#group-by-的作用" class="headerlink" title="group by 的作用"></a><code>group by</code> 的作用</h1><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> orders (<br>    order_id SERIAL <span class="hljs-keyword">PRIMARY</span> KEY,<br>    customer_name <span class="hljs-type">VARCHAR</span>(<span class="hljs-number">50</span>),<br>    amount <span class="hljs-type">NUMERIC</span>(<span class="hljs-number">10</span>, <span class="hljs-number">2</span>),<br>    order_date <span class="hljs-type">DATE</span><br>);<br><br><span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> orders (customer_name, amount, order_date) <span class="hljs-keyword">VALUES</span><br>    (<span class="hljs-string">&#x27;Alice&#x27;</span>, <span class="hljs-number">100.50</span>, <span class="hljs-string">&#x27;2023-01-01&#x27;</span>),<br>    (<span class="hljs-string">&#x27;Bob&#x27;</span>, <span class="hljs-number">200.75</span>, <span class="hljs-string">&#x27;2023-01-02&#x27;</span>),<br>    (<span class="hljs-string">&#x27;Alice&#x27;</span>, <span class="hljs-number">150.25</span>, <span class="hljs-string">&#x27;2023-01-03&#x27;</span>),<br>    (<span class="hljs-string">&#x27;Charlie&#x27;</span>, <span class="hljs-number">75.80</span>, <span class="hljs-string">&#x27;2023-01-04&#x27;</span>),<br>    (<span class="hljs-string">&#x27;Bob&#x27;</span>, <span class="hljs-number">300.00</span>, <span class="hljs-string">&#x27;2023-01-05&#x27;</span>);<br><br><span class="hljs-keyword">SELECT</span> customer_name, <span class="hljs-built_in">COUNT</span>(<span class="hljs-operator">*</span>) <span class="hljs-keyword">AS</span> order_count, <span class="hljs-built_in">SUM</span>(amount) <span class="hljs-keyword">AS</span> total_amount<br><span class="hljs-keyword">FROM</span> orders<br><span class="hljs-keyword">GROUP</span> <span class="hljs-keyword">BY</span> customer_name;<br></code></pre></td></tr></table></figure>
 <p>结果为:</p>
