@@ -28,7 +28,7 @@
 <meta property="og:image" content="http://example.com/img/database-miniob-structure.png">
 <meta property="og:image" content="http://example.com/img/miniob-thread-model-structure-example.png">
 <meta property="article:published_time" content="2025-10-11T07:21:20.000Z">
-<meta property="article:modified_time" content="2025-10-25T13:58:56.453Z">
+<meta property="article:modified_time" content="2025-10-30T12:32:40.228Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/database-simple-history-list.png">
@@ -240,7 +240,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.8k 字
+          2.5k 字
         
       </span>
     
@@ -251,7 +251,7 @@
         
         
         
-          15 分钟
+          21 分钟
         
       </span>
     
@@ -373,6 +373,17 @@
 <li><code>age + 1 AS next_age</code>  是一个表达式, 最列进行计算并赋予新名字</li>
 </ul>
 <p>Projection 操作本身不改变行数, 这个由 filter 负责.</p>
+<h1 id="Double-Write"><a href="#Double-Write" class="headerlink" title="Double Write"></a>Double Write</h1><p>Double Write (双写), 是数据库存储引擎中的一种机制, 是为了保证数据库崩溃恢复能力和页完整写入而设计的.</p>
+<p>Double Write 用于在将 Page (页) 写入磁盘时, 先将其安全写入磁盘中一个专门的连续区域 (Double Write Buffer, 通常是系统表空间的一块区域), 然后再将其写入真正的位置, 以避免部分页写入 (Partial Page Write) 导致数据损坏. 这个过程 Write 了两次, 因此也得名 Double Write.</p>
+<p>Partial Page Write 问题主要源自磁盘写入不保证 “原子性”, 在数据库中, 数据通常以 Page (页) 为单位进行管理, 比如 InnoDB 默认的页大小是 16 KB.</p>
+<p>当更新一条数据时, 最终会修改某一个 16KB 大小的数据页, 然后需要将整个页写回磁盘. 当系统在写入一个页的过程中, 如果发生了崩溃 (如断电, 宕机), 可能出现:</p>
+<ul>
+<li>该页只写了一般 (比如只写了前 8 KB, 后 8 KB 没写进去)</li>
+<li>写入的页内容不完整&#x2F;损坏</li>
+</ul>
+<p>这会导致数据库重新运行时, 会发现某个页的数据是不完整的, 且没有备份, 可能会影响事务的一致性, 索引正确性.</p>
+<p>如果在写入 Double Write Buffer 过程中出现崩溃, 也只是丢失了脏页的数据, 对于数据库中已经持久化的数据而言, 不会破坏一致性.</p>
+<p>如果在从 Double Write Buffer 写入真正区域的过程中出错, 此时不会有影响. 在数据库恢复后, 会扫描 Double Write Buffer 区域, 找到成功写入 Double Write Buffer 但没有成功写入最终目标的页, 然后将这些页从 Double Write Buffer 中拷贝&#x2F;写入到它们应该在的数据文件位置.</p>
 
                 
               </div>
