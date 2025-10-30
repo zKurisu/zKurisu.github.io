@@ -28,7 +28,7 @@
 <meta property="og:image" content="http://example.com/img/database-miniob-structure.png">
 <meta property="og:image" content="http://example.com/img/miniob-thread-model-structure-example.png">
 <meta property="article:published_time" content="2025-10-11T07:21:20.000Z">
-<meta property="article:modified_time" content="2025-10-30T12:32:40.228Z">
+<meta property="article:modified_time" content="2025-10-30T13:14:04.048Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/database-simple-history-list.png">
@@ -240,7 +240,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.5k 字
+          3.4k 字
         
       </span>
     
@@ -251,7 +251,7 @@
         
         
         
-          21 分钟
+          29 分钟
         
       </span>
     
@@ -354,7 +354,14 @@
 <ul>
 <li>用 <code>LOG_ERROR</code> 宏打印错误信息</li>
 </ul>
-<h1 id="索引"><a href="#索引" class="headerlink" title="索引"></a>索引</h1><p>数据库中的索引 (Index), 是一种特殊的数据结构, 目的是加速数据的查找. 索引可以快速定位到表中的某条记录, 而不必全表扫描.</p>
+<h2 id="Miniob-调用链路"><a href="#Miniob-调用链路" class="headerlink" title="Miniob 调用链路"></a>Miniob 调用链路</h2><p>以 <code>update</code> 语句的实现为例, 首先需要定义 <code>update</code> 解析的语法节点结构, 在 <code>sql/parser/parse_defs.h</code> 中添加 <code>UpdateSqlNode</code> 结构体, 比如:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">UpdateSqlNode</span></span><br><span class="hljs-class">&#123;</span><br>  <span class="hljs-built_in">string</span>                   relation_name;   <span class="hljs-comment">///&lt; Relation to update</span><br>  <span class="hljs-built_in">string</span>                   attribute_name;  <span class="hljs-comment">///&lt; 更新的字段，仅支持一个字段</span><br>  Value                    value;           <span class="hljs-comment">///&lt; 更新的值，仅支持一个字段</span><br>  <span class="hljs-built_in">vector</span>&lt;ConditionSqlNode&gt; conditions;<br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<p>然后在 <code>sql/parser/lex_sql.l</code> 中匹配 <code>update</code> 关键字, 返回正确的 token 类别. 之后在 <code>sql/parser/yacc_sql.y</code> 中添加如何将语句转换为语法节点的内容, 比如:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs yacc">update_stmt:      /*  update 语句的语法解析树*/<br>    UPDATE ID SET ID EQ value where <br>    &#123;<br>      $$ = new ParsedSqlNode(SCF_UPDATE);<br>      $$-&gt;update.relation_name = $2;<br>      $$-&gt;update.attribute_name = $4;<br>      $$-&gt;update.value = *$6;<br>      if ($7 != nullptr) &#123;<br>        $$-&gt;update.conditions.swap(*$7);<br>        delete $7;<br>      &#125;<br>    &#125;<br>    ;<br></code></pre></td></tr></table></figure>
+
+<p><code>update</code> 这里实际的操作用 <code>operator</code> 来实现, 因此在 <code>sql/operator</code> 下添加了 <code>update_logical_operator.&#123;h,cpp&#125;</code> 和 <code>update_physical_operator.&#123;h,cpp&#125;</code> 文件, 在物理算子中, <code>open</code> 方法实际上调用 <code>trx</code> (Transaction) 的接口, 而 <code>trx</code> 调用了 <code>HeapTableEngine</code> 的接口, <code>HeapTableEngine</code> 在底层调用了 <code>RecordFileManager</code> 的接口, <code>RecordFileManager</code> 调用 <code>RowRecordPageHandler</code> 的接口来实现最终的更新.</p>
+<h1 id="Miniob-中的重要类"><a href="#Miniob-中的重要类" class="headerlink" title="Miniob 中的重要类"></a>Miniob 中的重要类</h1><h1 id="索引"><a href="#索引" class="headerlink" title="索引"></a>索引</h1><p>数据库中的索引 (Index), 是一种特殊的数据结构, 目的是加速数据的查找. 索引可以快速定位到表中的某条记录, 而不必全表扫描.</p>
 <p>比如:</p>
 <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">FROM</span> employees <span class="hljs-keyword">WHERE</span> department <span class="hljs-operator">=</span> <span class="hljs-string">&#x27;IT&#x27;</span>;<br></code></pre></td></tr></table></figure>
 <ul>
