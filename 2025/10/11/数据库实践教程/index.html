@@ -28,7 +28,7 @@
 <meta property="og:image" content="http://example.com/img/database-miniob-structure.png">
 <meta property="og:image" content="http://example.com/img/miniob-thread-model-structure-example.png">
 <meta property="article:published_time" content="2025-10-11T07:21:20.000Z">
-<meta property="article:modified_time" content="2025-10-30T15:22:00.410Z">
+<meta property="article:modified_time" content="2025-10-31T02:35:10.746Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/database-simple-history-list.png">
@@ -240,7 +240,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          4.1k 字
+          5.2k 字
         
       </span>
     
@@ -251,7 +251,7 @@
         
         
         
-          35 分钟
+          44 分钟
         
       </span>
     
@@ -371,7 +371,24 @@
 <h2 id="RecordPageHandler"><a href="#RecordPageHandler" class="headerlink" title="RecordPageHandler"></a>RecordPageHandler</h2><p>管理一个 page 内记录的增删改查.</p>
 <h2 id="RowRecordPageHandler"><a href="#RowRecordPageHandler" class="headerlink" title="RowRecordPageHandler"></a>RowRecordPageHandler</h2><p>管理以行存存储的一个 page 内记录的增删改查.</p>
 <h2 id="HeapTableEngine"><a href="#HeapTableEngine" class="headerlink" title="HeapTableEngine"></a>HeapTableEngine</h2><p>为上层提供操作 Record 的接口, 底层利用 RecordFileHandler 和 RecordPageHandler 来进行实际的读写.</p>
+<h2 id="SessionEvent"><a href="#SessionEvent" class="headerlink" title="SessionEvent"></a>SessionEvent</h2><p><code>SessionEvent</code> 代表了从接收到客户端请求到返回结果的整个生命周期, 是一个贯穿始终的 “上下文” 或 “事件” 对象. 包含原始的查询语句 <code>query_</code>, 包含 <code>SqlResult</code> 对象, 用于存放查询的最终结果.</p>
+<h2 id="SqlResult"><a href="#SqlResult" class="headerlink" title="SqlResult"></a>SqlResult</h2><p><code>SqlResult</code> 提供一个访问结果集的接口, 包含:</p>
+<ul>
+<li>返回码 (<code>return_code_</code>), 表示查询是否成功执行</li>
+<li><code>TupleSchema</code>, 描述结果集的元数据, 即列信息 (列名, 类型等)</li>
+<li><code>Operator*</code>, 查询结果就是通过迭代 <code>Operator</code> 树来动态生成的</li>
+</ul>
+<h2 id="TupleSchema"><a href="#TupleSchema" class="headerlink" title="TupleSchema"></a>TupleSchema</h2><p><code>TupleSchema</code> 相当于是表头信息, 包含每一个 field 的名字:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cpp">vector&lt;TupleCellSpec&gt; cells_;<br></code></pre></td></tr></table></figure>
+
+<p>通过遍历 <code>cells_</code> 可以获取所有 field 的信息.</p>
+<h2 id="TupleCellSpec"><a href="#TupleCellSpec" class="headerlink" title="TupleCellSpec"></a>TupleCellSpec</h2><p><code>TupleCellSpec</code> 包含单个 field 的信息.</p>
 <h2 id="Tuple"><a href="#Tuple" class="headerlink" title="Tuple"></a>Tuple</h2><p>表示一行数据, 当返回客户端时使用.</p>
+<p>将查询结果发送给客户端的流程大致为:</p>
+<figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs stata">SqlTaskHandler -&gt; execute_stage -&gt; PlainCommunicator::write_result -&gt; PlainCommunicator::write_tuple_result -&gt; socket<br><br>  发送过程在 PlainCommunicator::write_result_internal 和其调用的函数中完成, 遵循一个清晰的文本协议：<br><br>   1. 发送表头 (Column Headers):<br><span class="hljs-comment">       * 从 SqlResult 中获取 TupleSchema。</span><br><span class="hljs-comment">       * 遍历 TupleSchema 中的每一列 (TupleCellSpec)。</span><br><span class="hljs-comment">       * 获取每一列的别名 (alias) 作为列名。</span><br><span class="hljs-comment">       * 将列名写入 writer_ (一个带缓冲的写入器), 列与列之间用  |  分隔。</span><br><span class="hljs-comment">       * 写完所有列名后, 写入一个换行符 \n。</span><br><br>   2. 发送数据行 (Data Rows):<br><span class="hljs-comment">       * 根据会话模式, 选择 write_tuple_result (行模式) 或 write_chunk_result (块模式)。</span><br><span class="hljs-comment">       * 行模式 (`write_tuple_result`):</span><br><span class="hljs-comment">           * 进入一个 while 循环, 条件是 op-&gt;next() == RC::SUCCESS。</span><br><span class="hljs-comment">           * 在循环中, 调用 op-&gt;current_tuple() 获取当前行 Tuple。</span><br><span class="hljs-comment">           * 遍历 Tuple 中的每一个单元格 (Value)。</span><br><span class="hljs-comment">           * 调用 value.to_string() 将单元格的值转换为字符串。</span><br><span class="hljs-comment">           * 将字符串写入 writer_, 值与值之间用  |  分隔。</span><br><span class="hljs-comment">           * 写完一行所有值后, 写入一个换行符 \n。</span><br><span class="hljs-comment">       * 循环直到 op-&gt;next() 返回 RC::RECORD_EOF, 表示所有行都已发送。</span><br></code></pre></td></tr></table></figure>
+
+
+
 <h1 id="索引"><a href="#索引" class="headerlink" title="索引"></a>索引</h1><p>数据库中的索引 (Index), 是一种特殊的数据结构, 目的是加速数据的查找. 索引可以快速定位到表中的某条记录, 而不必全表扫描.</p>
 <p>比如:</p>
 <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">FROM</span> employees <span class="hljs-keyword">WHERE</span> department <span class="hljs-operator">=</span> <span class="hljs-string">&#x27;IT&#x27;</span>;<br></code></pre></td></tr></table></figure>
