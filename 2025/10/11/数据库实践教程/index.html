@@ -28,7 +28,7 @@
 <meta property="og:image" content="http://example.com/img/database-miniob-structure.png">
 <meta property="og:image" content="http://example.com/img/miniob-thread-model-structure-example.png">
 <meta property="article:published_time" content="2025-10-11T07:21:20.000Z">
-<meta property="article:modified_time" content="2025-10-30T13:14:04.048Z">
+<meta property="article:modified_time" content="2025-10-30T15:22:00.410Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/database-simple-history-list.png">
@@ -240,7 +240,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3.4k 字
+          4.1k 字
         
       </span>
     
@@ -251,7 +251,7 @@
         
         
         
-          29 分钟
+          35 分钟
         
       </span>
     
@@ -361,7 +361,18 @@
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs yacc">update_stmt:      /*  update 语句的语法解析树*/<br>    UPDATE ID SET ID EQ value where <br>    &#123;<br>      $$ = new ParsedSqlNode(SCF_UPDATE);<br>      $$-&gt;update.relation_name = $2;<br>      $$-&gt;update.attribute_name = $4;<br>      $$-&gt;update.value = *$6;<br>      if ($7 != nullptr) &#123;<br>        $$-&gt;update.conditions.swap(*$7);<br>        delete $7;<br>      &#125;<br>    &#125;<br>    ;<br></code></pre></td></tr></table></figure>
 
 <p><code>update</code> 这里实际的操作用 <code>operator</code> 来实现, 因此在 <code>sql/operator</code> 下添加了 <code>update_logical_operator.&#123;h,cpp&#125;</code> 和 <code>update_physical_operator.&#123;h,cpp&#125;</code> 文件, 在物理算子中, <code>open</code> 方法实际上调用 <code>trx</code> (Transaction) 的接口, 而 <code>trx</code> 调用了 <code>HeapTableEngine</code> 的接口, <code>HeapTableEngine</code> 在底层调用了 <code>RecordFileManager</code> 的接口, <code>RecordFileManager</code> 调用 <code>RowRecordPageHandler</code> 的接口来实现最终的更新.</p>
-<h1 id="Miniob-中的重要类"><a href="#Miniob-中的重要类" class="headerlink" title="Miniob 中的重要类"></a>Miniob 中的重要类</h1><h1 id="索引"><a href="#索引" class="headerlink" title="索引"></a>索引</h1><p>数据库中的索引 (Index), 是一种特殊的数据结构, 目的是加速数据的查找. 索引可以快速定位到表中的某条记录, 而不必全表扫描.</p>
+<h1 id="Miniob-中的重要类"><a href="#Miniob-中的重要类" class="headerlink" title="Miniob 中的重要类"></a>Miniob 中的重要类</h1><h2 id="Page"><a href="#Page" class="headerlink" title="Page"></a>Page</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> constexpr <span class="hljs-type">const</span> <span class="hljs-type">int</span> BP_PAGE_SIZE      = (<span class="hljs-number">1</span> &lt;&lt; <span class="hljs-number">13</span>);<br><span class="hljs-type">static</span> constexpr <span class="hljs-type">const</span> <span class="hljs-type">int</span> BP_PAGE_DATA_SIZE = (BP_PAGE_SIZE - <span class="hljs-keyword">sizeof</span>(LSN) - <span class="hljs-keyword">sizeof</span>(CheckSum));<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Page</span></span><br><span class="hljs-class">&#123;</span><br>  LSN      lsn;<br>  CheckSum check_sum;<br>  <span class="hljs-type">char</span>     data[BP_PAGE_DATA_SIZE];<br>&#125;;<br></code></pre></td></tr></table></figure>
+<p><code>Page</code> 就是一个 <code>8kb</code> 的 struct, 其中 <code>data</code> 是一个字节数组.</p>
+<h2 id="Frame"><a href="#Frame" class="headerlink" title="Frame"></a>Frame</h2><p>除了包裹一个 page 外, 还包含一些其他元信息.</p>
+<h2 id="DiskBufferPool"><a href="#DiskBufferPool" class="headerlink" title="DiskBufferPool"></a>DiskBufferPool</h2><p>一个 DiskBufferPool 与一个 table 文件相关联 (描述符和文件名). 管理该 table 内 page 从磁盘到内存的交互.</p>
+<h2 id="BPFrameManager"><a href="#BPFrameManager" class="headerlink" title="BPFrameManager"></a>BPFrameManager</h2><p>整个数据库只有一个全局的 BPFrameManager, 管理整个物理内存.</p>
+<h2 id="BufferPoolManager"><a href="#BufferPoolManager" class="headerlink" title="BufferPoolManager"></a>BufferPoolManager</h2><p>管理所有 DiskBufferPool.</p>
+<h2 id="RecordFileHandler"><a href="#RecordFileHandler" class="headerlink" title="RecordFileHandler"></a>RecordFileHandler</h2><p>管理整个 table 文件内记录的增删改查.</p>
+<h2 id="RecordPageHandler"><a href="#RecordPageHandler" class="headerlink" title="RecordPageHandler"></a>RecordPageHandler</h2><p>管理一个 page 内记录的增删改查.</p>
+<h2 id="RowRecordPageHandler"><a href="#RowRecordPageHandler" class="headerlink" title="RowRecordPageHandler"></a>RowRecordPageHandler</h2><p>管理以行存存储的一个 page 内记录的增删改查.</p>
+<h2 id="HeapTableEngine"><a href="#HeapTableEngine" class="headerlink" title="HeapTableEngine"></a>HeapTableEngine</h2><p>为上层提供操作 Record 的接口, 底层利用 RecordFileHandler 和 RecordPageHandler 来进行实际的读写.</p>
+<h2 id="Tuple"><a href="#Tuple" class="headerlink" title="Tuple"></a>Tuple</h2><p>表示一行数据, 当返回客户端时使用.</p>
+<h1 id="索引"><a href="#索引" class="headerlink" title="索引"></a>索引</h1><p>数据库中的索引 (Index), 是一种特殊的数据结构, 目的是加速数据的查找. 索引可以快速定位到表中的某条记录, 而不必全表扫描.</p>
 <p>比如:</p>
 <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">FROM</span> employees <span class="hljs-keyword">WHERE</span> department <span class="hljs-operator">=</span> <span class="hljs-string">&#x27;IT&#x27;</span>;<br></code></pre></td></tr></table></figure>
 <ul>
