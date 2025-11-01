@@ -41,8 +41,9 @@
 <meta property="og:image" content="http://example.com/img/unix-book-format-print-lenmodifier-list.png">
 <meta property="og:image" content="http://example.com/img/unix-book-format-print-convtype-list.png">
 <meta property="og:image" content="http://example.com/img/unix-book-env-table-structure.png">
+<meta property="og:image" content="http://example.com/img/unix-book-c-program-memory-structure.png">
 <meta property="article:published_time" content="2025-09-13T13:06:04.000Z">
-<meta property="article:modified_time" content="2025-11-01T07:44:53.700Z">
+<meta property="article:modified_time" content="2025-11-01T08:27:34.930Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/unix-iso-c-defined-header-file.png">
@@ -254,7 +255,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          28k 字
+          29k 字
         
       </span>
     
@@ -265,7 +266,7 @@
         
         
         
-          231 分钟
+          239 分钟
         
       </span>
     
@@ -1197,10 +1198,42 @@
 <p>实际上, 也通常使用 <code>getenv</code> 和 <code>putenv</code> 来访问环境变量, 不直接通过 <code>environ</code> 变量.</p>
 <h2 id="C-程序的存储空间布局"><a href="#C-程序的存储空间布局" class="headerlink" title="C 程序的存储空间布局"></a>C 程序的存储空间布局</h2><p>C 程序由下面几部分组成:</p>
 <ul>
-<li><code>test</code> 段 (正文段). 包含需要由 CPU 执行的机器指令. 通常是只读共享的 (只有一个副本, 且防止其他程序意外修改)</li>
+<li><code>test</code> 段 (正文段, 放初始化全局变量). 包含需要由 CPU 执行的机器指令. 通常是只读共享的 (只有一个副本, 且防止其他程序意外修改)</li>
 <li><code>data</code> 段 (初始化数据段). 包含程序中明确赋初值的变量, 比如在 C 任何函数之外声明 <code>int maxcount = 99;</code>, 该变量会放在 <code>data</code> 段</li>
-<li><code>bss</code> 段 (未初始化数据段). 该名称来自早期汇编程序中的一个操作符 “block started by symbol”, 程序开始执行之前, 内核会将此段中的数据初始化为 <code>0</code> 或空指针. 在函数外声明 <code>long sum[1000];</code> 的变量会放在该段中</li>
+<li><code>bss</code> 段 (未初始化数据段, 放未初始化全局变量). 该名称来自早期汇编程序中的一个操作符 “block started by symbol”, 程序开始执行之前, 内核会将此段中的数据初始化为 <code>0</code> 或空指针. 在函数外声明 <code>long sum[1000];</code> 的变量会放在该段中</li>
+<li><code>stack</code> 段 (栈). 存放临时变量以及调用函数的上下文信息 (返回地址, 寄存器值)</li>
+<li><code>heap</code> 段 (堆). 通常在堆中进行动态存储分配</li>
 </ul>
+<p><img src="/../img/unix-book-c-program-memory-structure.png" srcset="/img/loading.gif" lazyload></p>
+<p>可执行文件中还包含有其他段, 如包含符号表的段, 调试信息的段等, 但这部分不装载进内存.</p>
+<p>需要注意, <code>bss</code> 段内的内容不会实际存放在磁盘中.</p>
+<p>可以用 <code>size</code> 命令来查看 <code>text</code>, <code>data</code>, <code>bss</code> 等各段的长度:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">$  /tmp size hello<br>   text    data     bss     dec     hex filename<br>   1476     584       8    2068     814 hello<br></code></pre></td></tr></table></figure>
+
+<h2 id="共享库"><a href="#共享库" class="headerlink" title="共享库"></a>共享库</h2><p>共享库可以使可执行文件中不再包含公用的库函数, 只需在所有进程都可引用的存储区中保存这种库例程的一个副本.</p>
+<p>当程序第一次执行或者第一次调用某个库函数时, 采用动态链接方法将程序与共享库函数相链接, 这样可以减少磁盘存储可执行文件的长度, 但会增加运行时开销. (也就是运行时, 再将对应库函数的机器指令放入程序的 <code>text</code> 段中, 而不是编译时直接放入)</p>
+<p>创建无共享库的一个例子:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">gcc -static hello1.c<br></code></pre></td></tr></table></figure>
+
+<p>默认是使用共享库的:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">gcc hello1.c<br></code></pre></td></tr></table></figure>
+
+<p>可以用 <code>size</code> 来对比大小.</p>
+<h2 id="存储空间分配"><a href="#存储空间分配" class="headerlink" title="存储空间分配"></a>存储空间分配</h2><p>3 个用于存储空间动态分配的函数:</p>
+<ol>
+<li><code>malloc</code>, 分配指定字节数的存储区. 但初始值不确定</li>
+<li><code>calloc</code>, 为指定长度的对象分配存储空间. 空间中每一位都初始化为 <code>0</code></li>
+<li><code>realloc</code>, 增加或减少以前分配区的长度. 当增加长度时, 可能需要将以前分配区的内容移到另一个足够大的区域, 以便在尾端提供增加的存储区, 而新增区域内的初始值则不确定</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdlib.h&gt;</span></span><br><span class="hljs-type">void</span> *<span class="hljs-title function_">malloc</span><span class="hljs-params">(<span class="hljs-type">size_t</span> size)</span>;<br><span class="hljs-type">void</span> *<span class="hljs-title function_">calloc</span><span class="hljs-params">(<span class="hljs-type">size_t</span> nobj, <span class="hljs-type">size_t</span> size)</span>;<br><span class="hljs-type">void</span> *<span class="hljs-title function_">realloc</span><span class="hljs-params">(<span class="hljs-type">void</span> *ptr, <span class="hljs-type">size_t</span> newsize)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回非空指针; 出错时返回 <code>NULL</code></li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">free</span><span class="hljs-params">(<span class="hljs-type">void</span> *ptr)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>free</code> 函数会释放 <code>ptr</code> 指向的存储空间. 被释放的空间通常被送入可用的存储池, 以便在调用上述分配函数时再分配</li>
+</ul>
+<p>大多数分配的存储空间会比要求的大一些, 这部分额外的空间会用于存储管理信息, 比如分配块的长度, 指向下一个分配块的指针等. 如果在一个以分配区的尾端或者起始位置之前进行写操作, 可能会破坏这些信息.</p>
 
                 
               </div>
