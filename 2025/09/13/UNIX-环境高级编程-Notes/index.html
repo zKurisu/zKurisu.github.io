@@ -40,8 +40,9 @@
 <meta property="og:image" content="http://example.com/img/unix-book-flags-list-table.png">
 <meta property="og:image" content="http://example.com/img/unix-book-format-print-lenmodifier-list.png">
 <meta property="og:image" content="http://example.com/img/unix-book-format-print-convtype-list.png">
+<meta property="og:image" content="http://example.com/img/unix-book-env-table-structure.png">
 <meta property="article:published_time" content="2025-09-13T13:06:04.000Z">
-<meta property="article:modified_time" content="2025-11-01T06:36:21.435Z">
+<meta property="article:modified_time" content="2025-11-01T07:44:53.700Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/unix-iso-c-defined-header-file.png">
@@ -253,7 +254,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          27k 字
+          28k 字
         
       </span>
     
@@ -264,7 +265,7 @@
         
         
         
-          227 分钟
+          231 分钟
         
       </span>
     
@@ -1186,6 +1187,20 @@
 <li>参数是一个函数地址, 该函数不需要接收任何参数, 也不期望返回值</li>
 </ul>
 <p>注意 <code>exit</code> 调用这些函数的顺序与登记的顺序相反, 若同一函数登记多次, 也会被调用多次.</p>
+<h2 id="环境表"><a href="#环境表" class="headerlink" title="环境表"></a>环境表</h2><p>每个程序都会接收一张环境表 (一个字符指针数组), 其中每个指针指向一个以 <code>null</code> 结束的 C 字符串的地址.</p>
+<p>全局变量 <code>environ</code> 包含这个指针数组的地址:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">extern</span> <span class="hljs-type">char</span> **environ;<br></code></pre></td></tr></table></figure>
+
+<p>假设环境中包含 5 个环境变量, 那么这个指针数组如下:</p>
+<p><img src="/../img/unix-book-env-table-structure.png" srcset="/img/loading.gif" lazyload></p>
+<p>这些字符串都是 <code>name=value</code> 这样的结构.</p>
+<p>实际上, 也通常使用 <code>getenv</code> 和 <code>putenv</code> 来访问环境变量, 不直接通过 <code>environ</code> 变量.</p>
+<h2 id="C-程序的存储空间布局"><a href="#C-程序的存储空间布局" class="headerlink" title="C 程序的存储空间布局"></a>C 程序的存储空间布局</h2><p>C 程序由下面几部分组成:</p>
+<ul>
+<li><code>test</code> 段 (正文段). 包含需要由 CPU 执行的机器指令. 通常是只读共享的 (只有一个副本, 且防止其他程序意外修改)</li>
+<li><code>data</code> 段 (初始化数据段). 包含程序中明确赋初值的变量, 比如在 C 任何函数之外声明 <code>int maxcount = 99;</code>, 该变量会放在 <code>data</code> 段</li>
+<li><code>bss</code> 段 (未初始化数据段). 该名称来自早期汇编程序中的一个操作符 “block started by symbol”, 程序开始执行之前, 内核会将此段中的数据初始化为 <code>0</code> 或空指针. 在函数外声明 <code>long sum[1000];</code> 的变量会放在该段中</li>
+</ul>
 
                 
               </div>
