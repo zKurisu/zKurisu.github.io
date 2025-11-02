@@ -43,8 +43,10 @@
 <meta property="og:image" content="http://example.com/img/unix-book-env-table-structure.png">
 <meta property="og:image" content="http://example.com/img/unix-book-c-program-memory-structure.png">
 <meta property="og:image" content="http://example.com/img/unix-book-single-unix-specification-env-var.png">
+<meta property="og:image" content="http://example.com/img/unix-book-stack-before-longjmp.png">
+<meta property="og:image" content="http://example.com/img/unix-book-stack-after-call-longjmp.png">
 <meta property="article:published_time" content="2025-09-13T13:06:04.000Z">
-<meta property="article:modified_time" content="2025-11-02T03:55:29.366Z">
+<meta property="article:modified_time" content="2025-11-02T04:50:12.884Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/unix-iso-c-defined-header-file.png">
@@ -267,7 +269,7 @@
         
         
         
-          255 分钟
+          262 分钟
         
       </span>
     
@@ -1284,10 +1286,39 @@
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;setjmp.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">setjmp</span><span class="hljs-params">(jmp_buf env)</span>;<br></code></pre></td></tr></table></figure>
 <ul>
 <li>直接调用返回 <code>0</code>; 从  <code>longjmp</code> 返回则为非 <code>0</code></li>
+<li>在希望返回的位置调用 <code>setjmp</code>. 其参数 <code>env</code> 是某种形式的数组, 存放在调用 <code>longjmp</code> 时能用来恢复栈状态的所有信息, 因为需要在另一个函数中引用 <code>env</code> 变量, 因此通常将 <code>env</code> 变量定义为全局变量.</li>
 </ul>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">longjmp</span><span class="hljs-params">(jmp_buf env, <span class="hljs-type">int</span> val)</span>;<br></code></pre></td></tr></table></figure>
-
-<p>在希望返回的位置调用 <code>setjmp</code>. 其参数 <code>env</code> 是某种形式的数组, 存放在调用 <code>longjmp</code> 时能用来恢复栈状态的所有信息, 因为需要在另一个函数中引用 <code>env</code> 变量, 因此通常将 <code>env</code> 变量定义为全局变量.</p>
+<ul>
+<li><code>env</code> 是 <code>setjmp</code> 处所用的值</li>
+<li><code>val</code> 将成为 <code>setjmp</code> 的返回值 (非 <code>0</code>), 可以用来判断是哪里调用的</li>
+</ul>
+<p>下面一个例子:</p>
+<ul>
+<li>假设执行 <code>main</code> 时调用了 <code>setjmp</code>, 其将所需信息记入 <code>jmpbuffer</code> 变量中并返回 <code>0</code></li>
+<li>之后调用 <code>do_line</code>, 它又调用 <code>cmd_add</code>, 假设此时遇到了错误, 在调用 <code>longjmp</code> 之前, 栈为:</li>
+</ul>
+<p><img src="/../img/unix-book-stack-before-longjmp.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>在 <code>cmd_add</code> 中调用 <code>longjmp</code> 之后, 会回到 <code>main</code> 出执行, 此时会抛弃 <code>cmd_add</code> 和 <code>do_line</code> 的栈帧:</li>
+</ul>
+<p><img src="/../img/unix-book-stack-after-call-longjmp.png" srcset="/img/loading.gif" lazyload></p>
+<p>对于 <code>main</code> 函数中 <code>setjmp</code> 之前声明的变量, 如果在内层函数调用中修改了, 不想回滚, 则需要声明为具有 <code>volatile</code> 属性. 声明为全局变量或静态变量的值在执行 <code>longjmp</code> 时保持不变.</p>
+<p>(这一小节需要时再看书)</p>
+<h2 id="函数-getrlimit-和-setrlimit"><a href="#函数-getrlimit-和-setrlimit" class="headerlink" title="函数 getrlimit 和 setrlimit"></a>函数 <code>getrlimit</code> 和 <code>setrlimit</code></h2><p>每个进程都有一组资源限制, 其中一些可以用 <code>getrlimit</code> 和 <code>setrlimit</code> 函数来查询和更改:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;sys/resource.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">getrlimit</span><span class="hljs-params">(<span class="hljs-type">int</span> resource, <span class="hljs-keyword">struct</span> rlimit *rlptr)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">setrlimit</span><span class="hljs-params">(<span class="hljs-type">int</span> resource, <span class="hljs-type">const</span> <span class="hljs-keyword">struct</span> rlimit *rlptr)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回 <code>0</code>, 出错时返回非 <code>0</code></li>
+</ul>
+<p>进程资源限制通常是在系统初始化时由 <code>0</code> 进程建立的, 然后由后续进程继承.</p>
+<p>在更改资源限制时, 需要遵循下列 3 条规则:</p>
+<ol>
+<li>任何一个进程都可将一个软限制值更改为小于或等于其硬限制值</li>
+<li>任何一个进程都可降低其硬限制值, 但它必须大于或等于其软限制值. 这种降低, 对普通用户而言是不可逆的</li>
+<li>只有超级用户进程可以提高硬限制值</li>
+</ol>
+<h1 id="进程控制"><a href="#进程控制" class="headerlink" title="进程控制"></a>进程控制</h1><h2 id="进程标识"><a href="#进程标识" class="headerlink" title="进程标识"></a>进程标识</h2><p>每个进程都有一个非负整型表示的唯一进程 ID. 该 ID 是唯一的, 也是可复用的. 当一个进程终止后, 该 ID 就成为复用的候选者.</p>
+<p>大多数 UNIX 系统实现延迟复用算法, 使得赋予新建进程的 ID 不同于最近终止进程所使用的 ID, 这防止新进程被误认为是使用同一 ID 的某个已终止的先前进程.</p>
 
                 
               </div>
