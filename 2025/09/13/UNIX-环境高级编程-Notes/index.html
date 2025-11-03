@@ -45,8 +45,9 @@
 <meta property="og:image" content="http://example.com/img/unix-book-single-unix-specification-env-var.png">
 <meta property="og:image" content="http://example.com/img/unix-book-stack-before-longjmp.png">
 <meta property="og:image" content="http://example.com/img/unix-book-stack-after-call-longjmp.png">
+<meta property="og:image" content="http://example.com/img/unix-book-fork-process-share-file-table.png">
 <meta property="article:published_time" content="2025-09-13T13:06:04.000Z">
-<meta property="article:modified_time" content="2025-11-03T04:12:47.174Z">
+<meta property="article:modified_time" content="2025-11-03T05:02:50.115Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/unix-iso-c-defined-header-file.png">
@@ -258,7 +259,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          32k 字
+          33k 字
         
       </span>
     
@@ -269,7 +270,7 @@
         
         
         
-          271 分钟
+          274 分钟
         
       </span>
     
@@ -1341,13 +1342,24 @@
 <li>子进程的返回值是 <code>0</code>, 因为一个进程只会有一个父进程, 可以用 <code>getppid()</code> 来获取其父进程 ID</li>
 <li>父进程的返回值是子进程的 PID, 因为一个进程可以创建多个子进程 (需要区分), 且没有函数可以直接获取所有子进程的进程 ID</li>
 </ul>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">pid_t</span> pid;<br><span class="hljs-keyword">if</span> ((pid = fork()) &gt; <span class="hljs-number">0</span>) &#123;<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">pid_t</span> pid;<br><span class="hljs-keyword">if</span> ((pid = fork()) &lt; <span class="hljs-number">0</span>) &#123;<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
 <ul>
 <li>这里相当于父子进程都会从 <code>fork()</code> 返回后开始运行, 都会经过这个判断语句</li>
 </ul>
 <p>子进程是父进程的副本, 也就是说, 会复制父进程的数据空间, 堆和栈. 但要注意, 会共享 <code>text</code> 段 (也就是代码部分).</p>
 <p>由于在 <code>fork</code> 之后通常会执行 <code>exec</code> (用新程序替代当前程序, 包括数据空间, 堆, 栈等), 因此很多实现不会执行复制父进程的数据段等的副本 (复制了就被替换了, 相当于浪费了). 而是采用写时复制的模式 (Copy-on-Write, COW)</p>
 <p>数据空间, 堆, 栈这些部分先共享, 内核将其访问权限改为只读, 当父进程和子进程中的任一个试图修改这个区域, 此时内核才会为这个区域制作一个副本.</p>
+<p>一般来说, <code>fork</code> 之后父子进程的执行顺序是不确定的, 取决于内核使用的调度算法. 若想实现同步, 则需要实现父子进程间的通信.</p>
+<p><code>fork</code> 失败的原因通常有两个:</p>
+<ol>
+<li>系统已经有太多的进程了</li>
+<li>实际用户 ID 的进程总数超过了系统限制</li>
+</ol>
+<p>操作系统通常会将 <code>fork</code> 之后执行 <code>exec</code> 组合成一个操作, 称为 <code>spawn</code>.</p>
+<h3 id="文件共享-1"><a href="#文件共享-1" class="headerlink" title="文件共享"></a>文件共享</h3><p><code>fork</code> 的一个特性是父进程的所有打开文件描述符都被复制到子进程中, 就好像对每个文件描述符执行了 <code>dup</code> 函数. 父进程和子进程的每个相同的文件描述符共享一个文件表项.</p>
+<p>一个进程默认打开的 3 个文件: 标准输入, 标准输出, 标准错误. 当它从 <code>fork</code> 返回时, 有:</p>
+<p><img src="/../img/unix-book-fork-process-share-file-table.png" srcset="/img/loading.gif" lazyload></p>
+<p>需要注意, 父子进程共享同一个文件偏移量, 这会导致父子进程写同一描述符指向的文件时, 会造成相互混合.</p>
 
                 
               </div>
