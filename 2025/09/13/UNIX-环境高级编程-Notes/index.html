@@ -46,8 +46,9 @@
 <meta property="og:image" content="http://example.com/img/unix-book-stack-before-longjmp.png">
 <meta property="og:image" content="http://example.com/img/unix-book-stack-after-call-longjmp.png">
 <meta property="og:image" content="http://example.com/img/unix-book-fork-process-share-file-table.png">
+<meta property="og:image" content="http://example.com/img/unix-book-macro-to-check-end-state-of-process.png">
 <meta property="article:published_time" content="2025-09-13T13:06:04.000Z">
-<meta property="article:modified_time" content="2025-11-03T05:02:50.115Z">
+<meta property="article:modified_time" content="2025-11-03T06:06:44.684Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/unix-iso-c-defined-header-file.png">
@@ -259,7 +260,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          33k 字
+          34k 字
         
       </span>
     
@@ -270,7 +271,7 @@
         
         
         
-          274 分钟
+          282 分钟
         
       </span>
     
@@ -1360,6 +1361,42 @@
 <p>一个进程默认打开的 3 个文件: 标准输入, 标准输出, 标准错误. 当它从 <code>fork</code> 返回时, 有:</p>
 <p><img src="/../img/unix-book-fork-process-share-file-table.png" srcset="/img/loading.gif" lazyload></p>
 <p>需要注意, 父子进程共享同一个文件偏移量, 这会导致父子进程写同一描述符指向的文件时, 会造成相互混合.</p>
+<h3 id="进程终止-1"><a href="#进程终止-1" class="headerlink" title="进程终止"></a>进程终止</h3><p>当子进程终止时, 父进程可以通过 <code>wait</code> 或 <code>waitpid</code> 函数来取得其终止状态.</p>
+<p>内核会为每个终止子进程保存一定量的信息, 所有当终止进程的父进程调用 <code>wait</code> 或 <code>waitpid</code> 时, 可以得到这些信息. 这信息至少包括: 进程 ID, 该进程的终止状态, 以及该进程使用的 CPU 时间总量. 之后内核会释放终止进程所使用的所有存储区, 关闭其所有打开的文件.</p>
+<p>这里的重点是,, 一个子进程终止时:</p>
+<ol>
+<li>进程的 PCB 和大部分资源会被回收</li>
+<li>但子进程的内存映像 (堆栈, 数据段等) 和退出状态信息, 不会马上释放, 需要等待父进程拉取后再释放</li>
+</ol>
+<p>如果在子进程终止前, 父进程已经终止了, 那么这些子进程的父进程会改变为 <code>init</code> 进程. 称这些进程由 <code>init</code> 进程收养.</p>
+<p>在 UNIX 术语中, 一个已经终止, 但是其父进程没有对其进行善后处理 (获取终止子进程的有关信息, 释放其占用的资源) 的进程, 被称为僵尸进程 (zombie).</p>
+<h2 id="函数-wait-和-waitpid"><a href="#函数-wait-和-waitpid" class="headerlink" title="函数 wait 和 waitpid"></a>函数 wait 和 waitpid</h2><p>当一个进程正常或异常终止时, 内核回向其父进程发送 <code>SIGCHLD</code> 信号 (异步事件), 此时可以选择提供信号处理函数, 但系统默认是忽略.</p>
+<p>当进程调用 <code>wait</code> 或 <code>waitpid</code> 时会发生:</p>
+<ul>
+<li>如果其所有子进程都还在运行, 则当前进程阻塞</li>
+<li>如果一个子进程已终止, 正在等待父进程获取其终止状态, 此时则能取得终止状态并返回</li>
+<li>如果没有任何子进程了, 则立即出错并返回</li>
+</ul>
+<p>两个函数的声明:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;sys/wait.h&gt;</span></span><br><br><span class="hljs-type">pid_t</span> <span class="hljs-title function_">wait</span><span class="hljs-params">(<span class="hljs-type">int</span> *statloc)</span>;<br><span class="hljs-type">pid_t</span> <span class="hljs-title function_">waitpid</span><span class="hljs-params">(<span class="hljs-type">pid_t</span> pid, <span class="hljs-type">int</span> *statloc, <span class="hljs-type">int</span> options)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>若成功, 返回进程 ID; 若出错, 返回 <code>0</code> 或 <code>-1</code></li>
+</ul>
+<p>两个函数的区别在于:</p>
+<ul>
+<li>在一个子进程终止前, <code>wait</code> 使调用者阻塞, 而 <code>waitpid</code> 可以通过 <code>options</code> 选择不阻塞</li>
+<li><code>waitpid</code> 并不等待在其调用之后的第一个终止的子进程, 二十有若干选项, 可以控制其等待的进程</li>
+</ul>
+<p>如果 <code>statloc</code> 是整型指针, 则用于存放终止状态, 如果是空指针, 则表示不关心终止状态.</p>
+<p>终止状态需要用 <code>&lt;sys/wait.h&gt;</code> 中的几个宏来查看:</p>
+<p><img src="/../img/unix-book-macro-to-check-end-state-of-process.png" srcset="/img/loading.gif" lazyload></p>
+<p><code>waitpid</code> 中的 <code>pid</code> 参数不同取值有不同含义:</p>
+<ul>
+<li><code>pid == -1</code>, 等待任一子进程, 此时等效于 <code>wait</code></li>
+<li><code>pid &gt; 0</code>, 等待进程 ID 与 pid 相等的子进程</li>
+<li><code>pid == 0</code>, 等待组 ID 与调用进程组 ID 的任一子进程</li>
+<li><code>pid &lt; -1</code>, 等待组 ID 等于 pid 绝对值的任一子进程</li>
+</ul>
 
                 
               </div>
