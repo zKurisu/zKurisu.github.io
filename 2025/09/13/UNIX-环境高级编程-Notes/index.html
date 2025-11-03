@@ -47,8 +47,9 @@
 <meta property="og:image" content="http://example.com/img/unix-book-stack-after-call-longjmp.png">
 <meta property="og:image" content="http://example.com/img/unix-book-fork-process-share-file-table.png">
 <meta property="og:image" content="http://example.com/img/unix-book-macro-to-check-end-state-of-process.png">
+<meta property="og:image" content="http://example.com/img/unix-book-exec-family-relationship.png">
 <meta property="article:published_time" content="2025-09-13T13:06:04.000Z">
-<meta property="article:modified_time" content="2025-11-03T06:55:20.552Z">
+<meta property="article:modified_time" content="2025-11-03T08:01:44.148Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/unix-iso-c-defined-header-file.png">
@@ -271,7 +272,7 @@
         
         
         
-          284 分钟
+          287 分钟
         
       </span>
     
@@ -1405,7 +1406,15 @@
 <li>这种形式也可以称轮训, 每隔 <code>1s</code> 中唤醒来进行条件测试, 其问题是浪费了 CPU 时间</li>
 </ul>
 <p>为了避免竞争条件和轮训, 需要有某种形式的进程间通信, 比如信号机制.</p>
-
+<h2 id="函数-exec"><a href="#函数-exec" class="headerlink" title="函数 exec"></a>函数 exec</h2><p>调用 <code>exec</code> 不会创建新进程, 因此前后的进程 ID 并未改变, 但是执行的程序会替换为新程序, 新程序会从其 <code>main</code> 函数开始执行.</p>
+<p><code>exec</code> 只是用磁盘上的一个新程序替换了当前进程的正文段, 数据段, 堆段和栈段.</p>
+<p>关于 <code>exec</code> 函数族, 具体可以看另一篇博客, 或者继续看书. 这里会额外记录一些关键信息.</p>
+<p>当 <code>execlp</code> 和 <code>execvp</code> 找到的可执行文件不是由 linker 产生的机器码可执行文件, 则会认为是一个 <code>shell</code> 脚本, 于是会尝试调用 <code>/bin/sh</code>, 并将该文件名作为输入.</p>
+<p>每个系统对参数表和环境表的总长度都有一个限制, 通常由 <code>ARG_MAX</code> 给出. 在 POSIX.1 系统中, 此值至少是 <code>4096</code> 字节.</p>
+<p>在很多 UNIX 实现中, 只有 <code>execve</code> 是内核的系统调用, 另外的都只是库函数, 最终都会调用该系统调用.</p>
+<p>这些 <code>exec</code> 函数之间的关系如下:</p>
+<p><img src="/../img/unix-book-exec-family-relationship.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="更换用户-ID-和更换组-ID"><a href="#更换用户-ID-和更换组-ID" class="headerlink" title="更换用户 ID 和更换组 ID"></a>更换用户 ID 和更换组 ID</h2>
                 
               </div>
             

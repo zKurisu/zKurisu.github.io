@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="函数指针Function pointer (函数指针), 就是一个指针, 但其不是指向普通的数据, 而是指向一个函数 (代码). 在 C 中, 函数需要借助函数指针在函数间作为参数传递, 可以用作回调函数机制以及运行时决定调用哪个函数. 假设一个普通函数: 123int add(int a, int b) &amp;#123;    return a + b;&amp;#125;  这个函数的类型是: 返回值 i">
+    <meta name="description" content="可变参数可变参数是指, 一个函数可以接受不定数量的参数, 比如 printf(): 12printf(&quot;Hello, %s!&quot;, &quot;world&quot;);           &#x2F;&#x2F; 2 个参数printf(&quot;Num: %d, Name: %s&quot;, 42, &quot;Alice&quot;); &#x2F;&#x2F; 3 个参数  C 语言提供了一个特殊的机制,">
 <meta property="og:type" content="article">
 <meta property="og:title" content="C-技巧积累">
 <meta property="og:url" content="http://example.com/2024/09/25/C-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="函数指针Function pointer (函数指针), 就是一个指针, 但其不是指向普通的数据, 而是指向一个函数 (代码). 在 C 中, 函数需要借助函数指针在函数间作为参数传递, 可以用作回调函数机制以及运行时决定调用哪个函数. 假设一个普通函数: 123int add(int a, int b) &amp;#123;    return a + b;&amp;#125;  这个函数的类型是: 返回值 i">
+<meta property="og:description" content="可变参数可变参数是指, 一个函数可以接受不定数量的参数, 比如 printf(): 12printf(&quot;Hello, %s!&quot;, &quot;world&quot;);           &#x2F;&#x2F; 2 个参数printf(&quot;Num: %d, Name: %s&quot;, 42, &quot;Alice&quot;); &#x2F;&#x2F; 3 个参数  C 语言提供了一个特殊的机制,">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2024-09-25T05:58:14.000Z">
-<meta property="article:modified_time" content="2025-11-01T06:16:16.828Z">
+<meta property="article:modified_time" content="2025-11-03T07:42:42.449Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          4.8k 字
+          5.9k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          41 分钟
+          49 分钟
         
       </span>
     
@@ -289,7 +289,27 @@
             
               <div class="markdown-body">
                 
-                <h1 id="函数指针"><a href="#函数指针" class="headerlink" title="函数指针"></a>函数指针</h1><p>Function pointer (函数指针), 就是一个指针, 但其不是指向普通的数据, 而是指向一个函数 (代码).</p>
+                <h1 id="可变参数"><a href="#可变参数" class="headerlink" title="可变参数"></a>可变参数</h1><p>可变参数是指, 一个函数可以接受不定数量的参数, 比如 <code>printf()</code>:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;Hello, %s!&quot;</span>, <span class="hljs-string">&quot;world&quot;</span>);           <span class="hljs-comment">// 2 个参数</span><br><span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;Num: %d, Name: %s&quot;</span>, <span class="hljs-number">42</span>, <span class="hljs-string">&quot;Alice&quot;</span>); <span class="hljs-comment">// 3 个参数</span><br></code></pre></td></tr></table></figure>
+
+<p>C 语言提供了一个特殊的机制, 来支持可变参数, 需要下面的头文件和宏的支持:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdarg.h&gt;</span></span><br></code></pre></td></tr></table></figure>
+
+<p>关键的宏有:</p>
+<ul>
+<li><code>va_list</code>, 用于定义一个变量, 来访问可变参数列表</li>
+<li><code>va_start(va_list, last_fixed_arg)</code>, 初始化一个可变参数列表, 告诉编译器从哪个固定参数之后开始是可变参数</li>
+<li><code>va_arg(va_list, type)</code>, 逐个获取可变参数的值, 需指定类型 (比如 <code>int</code>, <code>double</code>)</li>
+<li><code>va_end(va_list)</code>, 清理和结束可变参数的访问</li>
+</ul>
+<p>一个示例:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdarg.h&gt;</span></span><br><br><span class="hljs-type">void</span> <span class="hljs-title function_">my_print_ints</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *msg, ...)</span> &#123;<br>    va_list args;                <span class="hljs-comment">// 1. 定义一个 va_list 类型变量</span><br>    va_start(args, msg);         <span class="hljs-comment">// 2. 初始化，msg 是最后一个固定参数</span><br><br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%s&quot;</span>, msg);           <span class="hljs-comment">// 先打印固定部分，比如 &quot;Numbers:&quot;</span><br><br>    <span class="hljs-type">int</span> value;<br>    <span class="hljs-keyword">while</span> ((value = va_arg(args, <span class="hljs-type">int</span>)) != <span class="hljs-number">-1</span>) &#123;  <span class="hljs-comment">// 3. 逐个获取 int 参数</span><br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%d &quot;</span>, value);<br>    &#125;<br><br>    va_end(args);                <span class="hljs-comment">// 4. 清理</span><br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;\n&quot;</span>);<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span> &#123;<br>    my_print_ints(<span class="hljs-string">&quot;Numbers: &quot;</span>, <span class="hljs-number">10</span>, <span class="hljs-number">20</span>, <span class="hljs-number">30</span>, <span class="hljs-number">-1</span>);  <span class="hljs-comment">// -1 是我们约定的结束标记</span><br>    my_print_ints(<span class="hljs-string">&quot;More Numbers: &quot;</span>, <span class="hljs-number">7</span>, <span class="hljs-number">8</span>, <span class="hljs-number">9</span>, <span class="hljs-number">-1</span>);<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>需要注意, 可变参数必须放在函数的参数列表的最后:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// 正确 ✅</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">func</span><span class="hljs-params">(<span class="hljs-type">int</span> fixed, ...)</span>;<br><br><span class="hljs-comment">// 错误 ❌</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">func</span><span class="hljs-params">(..., <span class="hljs-type">int</span> fixed)</span>;  <span class="hljs-comment">// 编译错误</span><br></code></pre></td></tr></table></figure>
+
+<p>且函数至少要有一个固定参数.</p>
+<h1 id="函数指针"><a href="#函数指针" class="headerlink" title="函数指针"></a>函数指针</h1><p>Function pointer (函数指针), 就是一个指针, 但其不是指向普通的数据, 而是指向一个函数 (代码).</p>
 <p>在 C 中, 函数需要借助函数指针在函数间作为参数传递, 可以用作回调函数机制以及运行时决定调用哪个函数.</p>
 <p>假设一个普通函数:</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">add</span><span class="hljs-params">(<span class="hljs-type">int</span> a, <span class="hljs-type">int</span> b)</span> &#123;<br>    <span class="hljs-keyword">return</span> a + b;<br>&#125;<br></code></pre></td></tr></table></figure>
