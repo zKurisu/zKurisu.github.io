@@ -48,8 +48,9 @@
 <meta property="og:image" content="http://example.com/img/unix-book-fork-process-share-file-table.png">
 <meta property="og:image" content="http://example.com/img/unix-book-macro-to-check-end-state-of-process.png">
 <meta property="og:image" content="http://example.com/img/unix-book-exec-family-relationship.png">
+<meta property="og:image" content="http://example.com/img/unix-book-ways-to-set-uid.png">
 <meta property="article:published_time" content="2025-09-13T13:06:04.000Z">
-<meta property="article:modified_time" content="2025-11-03T08:01:44.148Z">
+<meta property="article:modified_time" content="2025-11-03T10:02:44.914Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/unix-iso-c-defined-header-file.png">
@@ -261,7 +262,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          34k 字
+          35k 字
         
       </span>
     
@@ -272,7 +273,7 @@
         
         
         
-          287 分钟
+          294 分钟
         
       </span>
     
@@ -1414,7 +1415,40 @@
 <p>在很多 UNIX 实现中, 只有 <code>execve</code> 是内核的系统调用, 另外的都只是库函数, 最终都会调用该系统调用.</p>
 <p>这些 <code>exec</code> 函数之间的关系如下:</p>
 <p><img src="/../img/unix-book-exec-family-relationship.png" srcset="/img/loading.gif" lazyload></p>
-<h2 id="更换用户-ID-和更换组-ID"><a href="#更换用户-ID-和更换组-ID" class="headerlink" title="更换用户 ID 和更换组 ID"></a>更换用户 ID 和更换组 ID</h2>
+<h2 id="更换用户-ID-和更换组-ID"><a href="#更换用户-ID-和更换组-ID" class="headerlink" title="更换用户 ID 和更换组 ID"></a>更换用户 ID 和更换组 ID</h2><p>在 UNIX 中, 权限是基于用户 ID 和组 ID 的. </p>
+<p>当程序需要增加权限, 或者需要访问当前并不允许访问的资源时, 此时需要更换自己的用户 ID 或组 ID, 以获得合适的权限或访问权限. 也可能是降低权限或阻止对某些资源的访问.</p>
+<p>可以用 <code>setuid</code> 来设置实际用户 ID 和有效用户 ID; 用 <code>setgid</code> 来设置实际组 ID 和有效组 ID:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">setuid</span><span class="hljs-params">(<span class="hljs-type">uid_t</span> uid)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">setgid</span><span class="hljs-params">(<span class="hljs-type">gid_t</span> gid)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回 <code>0</code>; 出错时返回 <code>-1</code></li>
+</ul>
+<p>有一些规则来判断谁能更改 ID.</p>
+<p>对于想修改用户 ID 的规则:</p>
+<ol>
+<li>如果进程具有超级用户权限, 则能成功将实际用户 ID, 有效用户 ID 以及保存的设置用户 ID 设置为 <code>uid</code></li>
+<li>若进程没有超级用户权限, 但是 <code>uid</code> 等于实际用户 ID 或保存的设置用户 ID, 则 <code>setuid</code> 则只将有效用户 ID 设置为 <code>uid</code>. 不更改实际用户 ID 和保存的设置用户 ID</li>
+<li>如果上面条件都不满足, 则设置 <code>errno</code> 为 <code>EPERM</code>, 并返回 <code>-1</code></li>
+</ol>
+<p>(这样看来, 其实只有 <code>root</code> 能自由更改 <code>uid</code>, 普通用户只能将其修改为程序文件所有者的 <code>uid</code>)</p>
+<p><img src="/../img/unix-book-ways-to-set-uid.png" srcset="/img/loading.gif" lazyload></p>
+<p><code>seteuid</code> 和 <code>setegid</code> 函数, 用于修改有效用户 ID 和有效组 ID:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">seteuid</span><span class="hljs-params">(<span class="hljs-type">uid_t</span> uid)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">setegid</span><span class="hljs-params">(<span class="hljs-type">gid_t</span> gid)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回 <code>0</code>; 出错时返回 <code>-1</code></li>
+</ul>
+<p>一个非特权用户可以将其有效用户 ID 设置为其实际用户 ID 或其保存的设置用户 ID. 对于一个特权用户则可将有效用户 ID 设置为 <code>uid</code>.</p>
+<p>组 ID 的规则类似.</p>
+<h2 id="解释器文件"><a href="#解释器文件" class="headerlink" title="解释器文件"></a>解释器文件</h2><p>解释器文件 (interpreter file), 就是所谓的脚本文件. 当今的 UNIX 系统都支持. 其仅仅是文本文件, 起始行的形式是:</p>
+<figure class="highlight d"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs d"><span class="hljs-meta">#! pathname [optional-argument]</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>感叹号和 <code>pathname</code> 之间的空格是可选的</li>
+<li><code>pathname</code> 通常是绝对路径名</li>
+</ul>
+<p>最常见的就是:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-meta">#! /bin/sh</span><br></code></pre></td></tr></table></figure>
+
+<p>很多系统对解释器文件的第一行有长度限制, 对于 linux 3.2.0, 该限制是 <code>128</code> 字节.</p>
+
                 
               </div>
             
