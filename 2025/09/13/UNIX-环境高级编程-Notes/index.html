@@ -56,8 +56,9 @@
 <meta property="og:image" content="http://example.com/img/unix-book-internet-login-telnet-example.png">
 <meta property="og:image" content="http://example.com/img/unix-book-internet-login-structure.png">
 <meta property="og:image" content="http://example.com/img/unix-book-session-example-structure.png">
+<meta property="og:image" content="http://example.com/img/unix-book-control-terminal-and-session.png">
 <meta property="article:published_time" content="2025-09-13T13:06:04.000Z">
-<meta property="article:modified_time" content="2025-11-04T03:35:52.195Z">
+<meta property="article:modified_time" content="2025-11-04T05:30:33.348Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/unix-iso-c-defined-header-file.png">
@@ -269,7 +270,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          39k 字
+          40k 字
         
       </span>
     
@@ -280,7 +281,7 @@
         
         
         
-          327 分钟
+          333 分钟
         
       </span>
     
@@ -1595,6 +1596,38 @@
 <p>一个进程只能为它自己或它的子进程设置进程组 ID, 在它的子进程调用了 <code>exec</code> 后, 它就不再更改该子进程的进程组 ID.</p>
 <h2 id="会话"><a href="#会话" class="headerlink" title="会话"></a>会话</h2><p>会话 (Session) 是一个或多个进程组的集合:</p>
 <p><img src="/../img/unix-book-session-example-structure.png" srcset="/img/loading.gif" lazyload></p>
+<p>通常几个进程会由 shell 管道编成一组, 比如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ proc1 | proc2 &amp;<br>$ proc3 | proc4 | proc5<br></code></pre></td></tr></table></figure>
+
+<p>进程可以调用 <code>setsid</code> 来建立一个新会话:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><span class="hljs-type">pid_t</span> <span class="hljs-title function_">setsid</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回进程组 ID; 出错时返回 <code>-1</code></li>
+</ul>
+<p>如果调用此函数的不是一个进程组组长, 则此函数会创建一个会话, 具体步骤为:</p>
+<ol>
+<li>该进程成为新会话的 “会话首进程 (session leader, 也就是指创建该会话的进程)” , 此时该进程是新会话中的唯一进程</li>
+<li>该进程成为一个新进程组组长进程. 进程组 ID 是调用进程的进程 ID</li>
+<li>切断该进程的控制终端</li>
+</ol>
+<p>如果该进程已经是一个进程组组长了, 则返回 <code>-1</code>.</p>
+<p>如果一个进程组组长想要成功调用该函数, 通常需要这样做, 加入现在的进程是 <code>P</code>:</p>
+<ol>
+<li>先 <code>fork</code>, 此时父进程 <code>P</code> 创建了一个子进程 <code>C</code>, 子进程 <code>C</code> 汇集成父进程的 PGID (进程组 ID), 但是子进程会有新的 <code>PID</code>, 由于此时 <code>PID != PGID</code>, 因此其不是进程组组长, 可以调用 <code>setsid()</code></li>
+<li>父进程退出, 子进程继续. 此时子进程成为孤儿进程并由 <code>init</code> 接管, 但注意此时子进程可以安全调用 <code>setsid()</code> 了</li>
+</ol>
+<p>可以将会话首进程 ID 视为会话 ID. 该 ID 可以用 <code>getsid</code> 函数获得:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><span class="hljs-type">pid_t</span> <span class="hljs-title function_">getsid</span><span class="hljs-params">(<span class="hljs-type">pid_t</span> pid)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回会话首进程的进程组 ID; 出错时返回 <code>-1</code></li>
+<li><code>pid</code> 是 <code>0</code> 时返回调用进程的会话 ID</li>
+</ul>
+<h2 id="控制终端"><a href="#控制终端" class="headerlink" title="控制终端"></a>控制终端</h2><p>一个会话可以有一个控制终端, 通常就是一个终端设备或伪终端设备.</p>
+<ul>
+<li>与控制终端建立连接的会话首进程被称为 “控制进程 (controlling process)”</li>
+<li>一个会话中的几个进程组可被分成一个 “前台进程组 (foregroud process group)” 以及一个或多个 “后台进程组 (background process group)”</li>
+</ul>
+<p><img src="/../img/unix-book-control-terminal-and-session.png" srcset="/img/loading.gif" lazyload></p>
 
                 
               </div>
