@@ -58,7 +58,7 @@
 <meta property="og:image" content="http://example.com/img/unix-book-session-example-structure.png">
 <meta property="og:image" content="http://example.com/img/unix-book-control-terminal-and-session.png">
 <meta property="article:published_time" content="2025-09-13T13:06:04.000Z">
-<meta property="article:modified_time" content="2025-11-04T11:19:10.578Z">
+<meta property="article:modified_time" content="2025-11-04T12:18:37.318Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/unix-iso-c-defined-header-file.png">
@@ -270,7 +270,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          40k 字
+          41k 字
         
       </span>
     
@@ -281,7 +281,7 @@
         
         
         
-          335 分钟
+          343 分钟
         
       </span>
     
@@ -1633,9 +1633,71 @@
 <ul>
 <li>与控制终端建立连接的会话首进程被称为 “控制进程 (controlling process)”</li>
 <li>一个会话中的几个进程组可被分成一个 “前台进程组 (foregroud process group)” 以及一个或多个 “后台进程组 (background process group)”</li>
+<li>一个会话如果有一个控制终端, 则它会有一个前台进程组, 其他进程组为后台进程组</li>
+<li>终端键入的中断信号, 退出信号都会发送至前台进程组的所有进程</li>
 </ul>
 <p><img src="/../img/unix-book-control-terminal-and-session.png" srcset="/img/loading.gif" lazyload></p>
-<h2 id="作业控制"><a href="#作业控制" class="headerlink" title="作业控制"></a>作业控制</h2><p>这一节, 以及 “Shell 执行顺序”, “函数 tcgetpgrp”, “孤儿进程组” 等, 都得见书.</p>
+<h2 id="函数-tcgetpgrp-tcsetpgrp-和-tcgetsid"><a href="#函数-tcgetpgrp-tcsetpgrp-和-tcgetsid" class="headerlink" title="函数 tcgetpgrp, tcsetpgrp 和 tcgetsid"></a>函数 tcgetpgrp, tcsetpgrp 和 tcgetsid</h2><p>由于控制终端发送的信号要传给前台进程组, 因此需要有种方法知道谁是前台进程组.</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><span class="hljs-type">pid_t</span> <span class="hljs-title function_">tcgetpgrp</span><span class="hljs-params">(<span class="hljs-type">int</span> fd)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回前台进程组 ID; 出错时返回 <code>-1</code></li>
+<li><code>fd</code> 与打开的终端相关联</li>
+<li><code>tc</code> 是 <code>terminal control</code> 的缩写, <code>pgrp</code> 是 <code>process group</code> 的缩写</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">tcsetpgrp</span><span class="hljs-params">(<span class="hljs-type">int</span> fd, <span class="hljs-type">pid_t</span> pgpid)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回 <code>0</code>; 出错时返回 <code>-1</code></li>
+<li>用于将 <code>fd</code> 对应的控制终端的前台进程组 ID 设置为 <code>pgpid</code></li>
+</ul>
+<p>同样可以用下面函数获取会话首进程的进程组 ID:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;termios.h&gt;</span></span><br><br><span class="hljs-type">pid_t</span> <span class="hljs-title function_">tcgetsid</span><span class="hljs-params">(<span class="hljs-type">int</span> fd)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回首进程的进程组 ID; 出错时返回 <code>-1</code></li>
+</ul>
+<h2 id="作业控制"><a href="#作业控制" class="headerlink" title="作业控制"></a>作业控制</h2><p>一个作业指几个进程的集合, 通常是一个进程管道, 比如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">cmd1 | cmd2 | cmd3<br></code></pre></td></tr></table></figure>
+<ul>
+<li>这里会创建 <code>3</code> 个独立的进程, <code>cmd1</code>, <code>cmd2</code> 和 <code>cmd3</code></li>
+<li>3 个进程通过管道 (pipe) 连接:<ul>
+<li><code>cmd1</code> 的 <code>stdout</code> 连接到管道的一端, <code>cmd2</code> 的 <code>stdin</code> 连接到管道的另一端</li>
+<li>以此类推, 这样各个进程见就能通信</li>
+</ul>
+</li>
+<li>注意 3 个进程是并发运行的, 只是会因为读数据而阻塞, 一个进程执行结束后会正常退出</li>
+<li>这 3 个进程通常会归于一个进程组, 便于统一管理</li>
+</ul>
+<p>作业控制指, 在运行多个作业时, 可以控制其:</p>
+<ul>
+<li>在前台运行 (能接收信号)</li>
+<li>在后台运行</li>
+<li>挂起 (<code>Ctrl+Z</code>)</li>
+<li>恢复, 终止等</li>
+</ul>
+<p>比如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ make -j 8 &amp;<br>$ perl long_time_job.pl &amp;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>这里在后台启动了两个作业</li>
+</ul>
+<p>每当启动一个后台作业, shell 都会赋予其一个作业标识符.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ ./long_sleep &amp;<br>[1] 87191<br>$ ./long_sleep &amp;<br>[2] 87201<br>$ ./long_sleep &amp;<br>[3] 87285<br>$ <span class="hljs-built_in">jobs</span><br>[1]    running    ./long_sleep<br>[2]  - running    ./long_sleep<br>[3]  + running    ./long_sleep<br></code></pre></td></tr></table></figure>
+
+<p>当作业完成时, 键入 “回车”, 会在前台打印提示符进行通知, 比如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">[1] + Done  ./long_sleep &amp;<br></code></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
                 
               </div>
