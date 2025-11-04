@@ -59,7 +59,7 @@
 <meta property="og:image" content="http://example.com/img/unix-book-control-terminal-and-session.png">
 <meta property="og:image" content="http://example.com/img/unix-book-conclusion-for-fg-and-bg-jobs.png">
 <meta property="article:published_time" content="2025-09-13T13:06:04.000Z">
-<meta property="article:modified_time" content="2025-11-04T13:27:20.414Z">
+<meta property="article:modified_time" content="2025-11-04T15:08:47.717Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/unix-iso-c-defined-header-file.png">
@@ -282,7 +282,7 @@
         
         
         
-          346 分钟
+          352 分钟
         
       </span>
     
@@ -1695,6 +1695,39 @@
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ <span class="hljs-built_in">cat</span> temp.foo &amp;<br>[1] 104487<br>hello world<br>[1]  + 104487 <span class="hljs-keyword">done</span>       <span class="hljs-built_in">cat</span> temp.foo<br>$ <span class="hljs-built_in">stty</span> tostop<br>$ <span class="hljs-built_in">cat</span> temp.foo &amp;<br>[1] 104692<br>[1]  + 104692 suspended (<span class="hljs-built_in">tty</span> output)  <span class="hljs-built_in">cat</span> temp.foo<br>$ <span class="hljs-built_in">fg</span><br>[1]  + 104692 continued  <span class="hljs-built_in">cat</span> temp.foo<br>hello world<br></code></pre></td></tr></table></figure>
 
 <p><img src="/../img/unix-book-conclusion-for-fg-and-bg-jobs.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="shell-执行程序"><a href="#shell-执行程序" class="headerlink" title="shell 执行程序"></a>shell 执行程序</h2><p>比如在 sh 上执行下面命令:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ ps -o pid,ppid,pgid,sid,<span class="hljs-built_in">comm</span> | <span class="hljs-built_in">cat</span><br></code></pre></td></tr></table></figure>
+
+<p>其输出可能是:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sh"><br>   PID    PPID    PGID     SID COMMAND<br> 85623   85622   85623   85623 zsh<br>166106   85623  166106   85623 ps<br>166107   85623  166106   85623 <span class="hljs-built_in">cat</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>可以看出, <code>sh</code> 会为管道的各部分 <code>fork</code> 一个副本, <code>ps</code> 和 <code>cat</code> 的父进程都是 <code>sh</code></li>
+</ul>
+<h2 id="孤儿进程组"><a href="#孤儿进程组" class="headerlink" title="孤儿进程组"></a>孤儿进程组</h2><p>一个父进程终止的进程称为孤儿进程 (orphan process).</p>
+<p>对于一个进程组中的每个成员, 如果其父进程都满足下面条件之一:</p>
+<ol>
+<li>已经退出</li>
+<li>不再是该会话的成员, 并且任何进程都不是会话首进程 (即失去了控制终端)</li>
+</ol>
+<p>那么则称一个进程组失去了能管理它的 “父进程”, 其就是一个孤儿进程组. 此时该进程组无法与终端联系.</p>
+<h1 id="信号-1"><a href="#信号-1" class="headerlink" title="信号"></a>信号</h1><p>信号是一种软件中断. 信号往往是异步事件 (一个会产生信号的事件对进程而言是随机的), 可以通过捕获信号来处理.</p>
+<h2 id="信号概念"><a href="#信号概念" class="headerlink" title="信号概念"></a>信号概念</h2><p>每个信号都有一个名字, 以 <code>SIG</code> 这 3 个字符开头. 比如 <code>SIGABRT</code>, <code>SIGALRM</code>.</p>
+<p>在头文件 <code>&lt;signal.h&gt;</code> 中, 信号名都被定义为正整数常量.</p>
+<p>注意不存在编号为 <code>0</code> 的信号, 这种信号称空信号, 有特殊的作用.</p>
+<p>产生信号的方式有:</p>
+<ul>
+<li>用户的按键触发</li>
+<li>硬件产生</li>
+<li>kill 函数</li>
+<li>kill 命令</li>
+<li>等</li>
+</ul>
+<p>当信号出现时, 可以告诉内核按照下面 3 中方式之一来处理:</p>
+<ol>
+<li>忽略此信号. 但是 <code>SIGKILL</code> 和 <code>SIGSTOP</code> 不可忽略</li>
+<li>捕捉信号. 通知内核在某种信号发生时, 调用一个用户函数</li>
+<li>执行系统默认动作. 每种信号都有一个系统默认动作</li>
+</ol>
 
                 
               </div>
