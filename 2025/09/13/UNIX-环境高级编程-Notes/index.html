@@ -50,8 +50,11 @@
 <meta property="og:image" content="http://example.com/img/unix-book-exec-family-relationship.png">
 <meta property="og:image" content="http://example.com/img/unix-book-ways-to-set-uid.png">
 <meta property="og:image" content="http://example.com/img/unix-book-system-function-imp-example.png">
+<meta property="og:image" content="http://example.com/img/unix-book-init-exec-getty-prog.png">
+<meta property="og:image" content="http://example.com/img/unix-book-terminal-login.png">
+<meta property="og:image" content="http://example.com/img/unix-book-user-login-to-shell-process.png">
 <meta property="article:published_time" content="2025-09-13T13:06:04.000Z">
-<meta property="article:modified_time" content="2025-11-03T12:21:39.783Z">
+<meta property="article:modified_time" content="2025-11-04T02:50:04.249Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/unix-iso-c-defined-header-file.png">
@@ -274,7 +277,7 @@
         
         
         
-          313 分钟
+          321 分钟
         
       </span>
     
@@ -1536,6 +1539,33 @@
 <ul>
 <li>注意该结构体中没有墙上时钟时间</li>
 </ul>
+<h1 id="进程关系"><a href="#进程关系" class="headerlink" title="进程关系"></a>进程关系</h1><h2 id="终端登录"><a href="#终端登录" class="headerlink" title="终端登录"></a>终端登录</h2><p>在系统启动后, <code>init</code> 进程会 <code>fork</code> 多次并 <code>exec</code> <code>getty</code> 程序:</p>
+<p><img src="/../img/unix-book-init-exec-getty-prog.png" srcset="/img/loading.gif" lazyload></p>
+<p>由于 <code>init</code> 进程具有超级用户特权, 因此这里的所有进程都还是有超级用户特权.</p>
+<p><code>getty</code> 会对终端设备调用 <code>open</code> 函数, 以读, 写方式打开终端设备 (比如 <code>/dev/tty1</code>, <code>/dev/ttyS0</code> 等).</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> fd = open(<span class="hljs-string">&quot;/dev/tty1&quot;</span>, O_RDWR);<br></code></pre></td></tr></table></figure>
+<p>(可能是这样的)</p>
+<p>设备打开后, 会将 <code>0</code> (stdin), <code>1</code> (stdout), <code>2</code> (stderr) 文件描述符设置到该设备. 比如:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c">dup2(fd, <span class="hljs-number">0</span>);  <span class="hljs-comment">// 让 stdin (0) 指向该终端设备</span><br>dup2(fd, <span class="hljs-number">1</span>);  <span class="hljs-comment">// 让 stdout (1) 指向该终端设备</span><br>dup2(fd, <span class="hljs-number">2</span>);  <span class="hljs-comment">// 让 stderr (2) 指向该终端设备</span><br></code></pre></td></tr></table></figure>
+
+<p>这样的话, 输入从终端设备获取, 输出也会显示到终端设备.</p>
+<p>之后 <code>getty</code> 会输出 <code>login:</code> 之类的信息, 等待用户键入用户名. 等用户输入后, <code>getty</code> 的工作就完成了.</p>
+<p>之后 <code>getty</code> 会 <code>exec</code> 另一个 <code>login</code> 程序, 方式类似于:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">execle(<span class="hljs-string">&quot;/bin/login&quot;</span>, <span class="hljs-string">&quot;login&quot;</span>, <span class="hljs-string">&quot;-p&quot;</span>, username, (<span class="hljs-type">char</span> *)<span class="hljs-number">0</span>, envp);<br></code></pre></td></tr></table></figure>
+
+<p><img src="/../img/unix-book-terminal-login.png" srcset="/img/loading.gif" lazyload></p>
+<p><code>login</code> 程序会处理多个工作:</p>
+<ul>
+<li>调用 <code>getpwnam</code> 取得对应用户的口令文件登录项</li>
+<li>调用 <code>getpass</code> 来显示 <code>Password:</code>, 等待用户键入口令</li>
+<li>调用 <code>crypt</code> 将用户键入的口令加密, 并与 shadow password file 中登录项的 <code>pw_passwd</code> 字段相比较</li>
+<li>如果口令不一致, <code>login</code> 会用参数 <code>1</code> 调用 <code>exit</code>. 父进程 (<code>init</code>) 了解到子进程终止后, 会再次调用 <code>fork</code>, 然后执行 <code>getty</code>, 重复上述过程</li>
+</ul>
+<p>这是传统的 UNIX 身份验证过程.</p>
+<p>现代 UNIX 系统可支持多种身份验证方法. 例如 Linux, Mac OX 等都支持 PAM (Pluggable Authentication Modules, 可插入的身份验证模块). 其允许管理人员配置使用哪种身份验证方法来访问那些使用 PAM 库编写的服务.</p>
+<p>使用 PAM 的优点是, 管理员可以基于本地的策略, 针对不同任务来配置不同的验证用户身份的方法.</p>
+<p>在用户身份验证成功后, <code>login</code> 还会完成切换工作目录, 更改终端所有权等工作 (具体见书).</p>
+<p><img src="/../img/unix-book-user-login-to-shell-process.png" srcset="/img/loading.gif" lazyload></p>
 
                 
               </div>
