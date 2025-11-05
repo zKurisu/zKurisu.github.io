@@ -58,8 +58,9 @@
 <meta property="og:image" content="http://example.com/img/unix-book-session-example-structure.png">
 <meta property="og:image" content="http://example.com/img/unix-book-control-terminal-and-session.png">
 <meta property="og:image" content="http://example.com/img/unix-book-conclusion-for-fg-and-bg-jobs.png">
+<meta property="og:image" content="http://example.com/img/unix-book-system-signal-table.png">
 <meta property="article:published_time" content="2025-09-13T13:06:04.000Z">
-<meta property="article:modified_time" content="2025-11-04T15:08:47.717Z">
+<meta property="article:modified_time" content="2025-11-05T02:25:47.897Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/unix-iso-c-defined-header-file.png">
@@ -271,7 +272,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          42k 字
+          44k 字
         
       </span>
     
@@ -282,7 +283,7 @@
         
         
         
-          352 分钟
+          364 分钟
         
       </span>
     
@@ -1728,6 +1729,34 @@
 <li>捕捉信号. 通知内核在某种信号发生时, 调用一个用户函数</li>
 <li>执行系统默认动作. 每种信号都有一个系统默认动作</li>
 </ol>
+<p><img src="/../img/unix-book-system-signal-table.png" srcset="/img/loading.gif" lazyload></p>
+<p>每个信号具体的含义可以见书或者手册.</p>
+<h2 id="函数-signal"><a href="#函数-signal" class="headerlink" title="函数 signal"></a>函数 signal</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;signal.h&gt;</span></span><br><br><span class="hljs-type">void</span> (*signal(<span class="hljs-type">int</span> signo, <span class="hljs-type">void</span> (*func)(<span class="hljs-type">int</span>)))(<span class="hljs-type">int</span>);<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回信号处理函数, 是一个 <code>void (*)(int)</code> 类型的函数指针; 出错时返回 <code>SIG_ERR</code></li>
+<li><code>signo</code> 是信号名, <code>void (*func)(int)</code> 是传入的函数指针</li>
+</ul>
+<p><code>func</code> 其实可以设置 3 种值:</p>
+<ul>
+<li><code>SIG_IGN</code> 常量 (IGNore), 表明忽略此信号</li>
+<li><code>SIG_DFL</code> 常量 (DeFauLt), 表示执行系统默认动作</li>
+<li>函数指针, 捕捉该信号</li>
+</ul>
+<p>在 <code>&lt;signal.h&gt;</code> 中能看到这些定义:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> SIG_ERR (void (*)())-1</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> SIG_DFL (void (*)())0</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> SIG_IGN (void (*)())1</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>(void (*)())</code> 是强制类型转换</li>
+<li>这里相当于对几个整型数做了强制类型转换</li>
+</ul>
+<p>示例:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;signal.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title function_">sig_user</span><span class="hljs-params">(<span class="hljs-type">int</span> signo)</span>;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> &#123;<br>    <span class="hljs-keyword">if</span> ((signal(SIGUSR1, sig_user)) == SIG_ERR) &#123;<br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;Fail to set signal handler for SIGUSR1...\n&quot;</span>);<br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;Suc to set signal handler for SIGUSR1...\n&quot;</span>);<br>    &#125;<br>    <span class="hljs-keyword">if</span> ((signal(SIGUSR2, sig_user)) == SIG_ERR) &#123;<br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;Fail to set signal handler for SIGUSR2...\n&quot;</span>);<br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>        <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;Suc to set signal handler for SIGUSR2...\n&quot;</span>);<br>    &#125;<br><br>    <span class="hljs-keyword">for</span> (;;)<br>        pause();<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br><br><span class="hljs-type">static</span> <span class="hljs-type">void</span><br><span class="hljs-title function_">sig_user</span><span class="hljs-params">(<span class="hljs-type">int</span> signo)</span> &#123;<br>    <span class="hljs-keyword">switch</span> (signo) &#123;<br>        <span class="hljs-keyword">case</span> SIGUSR1:<br>            <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;Catch SIGUSR1...\n&quot;</span>);<br>            <span class="hljs-keyword">break</span>;<br>        <span class="hljs-keyword">case</span> SIGUSR2:<br>            <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;Catch SIGUSR2...\n&quot;</span>);<br>            <span class="hljs-keyword">break</span>;<br>        <span class="hljs-keyword">default</span>:<br>            <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;Catch what?...\n&quot;</span>);<br>            ;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>测试:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ ps aux | grep u_signal | perl -anE <span class="hljs-string">&#x27;print $F[1] . &quot;\n&quot; if $. == 1&#x27;</span><br>237641<br>$ <span class="hljs-built_in">kill</span> -USR1 237641<br>$ <span class="hljs-built_in">kill</span> -USR2 237641<br></code></pre></td></tr></table></figure>
+
+<p>在作业控制中, 不让后台程序受信号影响, 就是设其忽略信号.</p>
+<p>当一个进程调用 <code>fork</code> 时, 其子进程会继承父进程的信号处理方式.</p>
+<h2 id="可重入函数"><a href="#可重入函数" class="headerlink" title="可重入函数"></a>可重入函数</h2><p>当进程捕捉到信号并对其进行处理时, 进程会中断当前正在执行的正常指令序列</p>
 
                 
               </div>
