@@ -61,7 +61,7 @@
 <meta property="og:image" content="http://example.com/img/unix-book-system-signal-table.png">
 <meta property="og:image" content="http://example.com/img/unix-book-reentrant-function-table-list.png">
 <meta property="article:published_time" content="2025-09-13T13:06:04.000Z">
-<meta property="article:modified_time" content="2025-11-05T03:11:53.569Z">
+<meta property="article:modified_time" content="2025-11-05T07:29:20.073Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/unix-iso-c-defined-header-file.png">
@@ -273,7 +273,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          45k 字
+          46k 字
         
       </span>
     
@@ -284,7 +284,7 @@
         
         
         
-          378 分钟
+          388 分钟
         
       </span>
     
@@ -1785,6 +1785,51 @@
 </ul>
 <p>在 <code>pending</code> 时可以改变对该信号的处理方式.</p>
 <p>每个进程都有一个信号屏蔽字 (signal mask), 它规定了当前要阻塞递送到该进程的信号集.</p>
+<h2 id="函数-kill-和-raise"><a href="#函数-kill-和-raise" class="headerlink" title="函数 kill 和 raise"></a>函数 kill 和 raise</h2><p><code>kill</code> 函数将信号发送给进程或进程组.</p>
+<p><code>raise</code> 函数允许进程向自身发送信号.</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;signal.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">kill</span><span class="hljs-params">(<span class="hljs-type">pid_t</span> pid, <span class="hljs-type">int</span> signo)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">raise</span><span class="hljs-params">(<span class="hljs-type">int</span> signo)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回 <code>0</code>; 出错时返回 <code>-1</code></li>
+</ul>
+<p>调用 <code>raise(signo)</code> 等价于 <code>kill(getpid(), signo)</code>.</p>
+<p><code>kill</code> 的 <code>pid</code> 参数有以下 4 种情况:</p>
+<ul>
+<li><code>pid &gt; 0</code>, 发送给进程 ID 为 <code>pid</code> 的进程</li>
+<li><code>pid == 0</code>, 发送给, 与发送进程属于同一进程组的所有进程. 需要保证发送进程具有权限向这些进程发送信号</li>
+<li><code>pid &lt; 0</code>, 发送给, 进程组 ID 等于 <code>pid</code> 绝对值的进程组. 发送进程需要有权限向其发送信号</li>
+<li><code>pid == -1</code>, 将信号发送给, 发送进程有权限向其发送信号的所有进程</li>
+</ul>
+<p>对于这里的权限问题:</p>
+<ul>
+<li>超级用户可将信号发送给任一进程</li>
+<li>对于非超级用户, 发送者的实际用户 ID 或有效用户 ID 必须等于接收者的实际用户 ID 或有效用户 ID</li>
+</ul>
+<p>权限测试有一个特例, 如果发送的信号是 <code>SIGCONT</code>, 则进程可将它发送给属于同一会话的任一其他进程.</p>
+<p>发送空信号, 一般用来进行权限检查:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> status = kill(pid, <span class="hljs-number">0</span>)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>如果目标进程不存在, 或没有权限, <code>kill</code> 会返回 <code>-1</code> 并设置 <code>errno</code></li>
+</ul>
+<h2 id="函数-alarm-和-pause"><a href="#函数-alarm-和-pause" class="headerlink" title="函数 alarm 和 pause"></a>函数 <code>alarm</code> 和 <code>pause</code></h2><p>使用 <code>alarm</code> 函数可以设置一个定时器, 在超时时产生 <code>SIGALRM</code> 信号. 如果忽略或不捕捉该信号, 默认的行为是终止调用该 <code>alarm</code> 函数的进程.</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> <span class="hljs-title function_">alarm</span><span class="hljs-params">(<span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> seconds)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>返回 <code>0</code> 或以前设置的闹钟时间的余留秒数</li>
+<li>设置的时间到达时, 由内核产生信号, 但由于进程调度延迟, 当进程得到控制从而能够处理该信号还需要一个时间间隔</li>
+<li>每个进程同一时刻只能有一个闹钟时间, 如果在一个 <code>alarm</code> 没有结束时再次调用, 则之前闹钟的余留值作为本次 <code>alarm</code> 函数的返回值</li>
+</ul>
+<p><code>pause</code> 函数使进程挂起, 直到捕捉到一个信号:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><span class="hljs-type">int</span> <span class="hljs-title function_">pause</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>返回 <code>-1</code>, <code>errno</code> 设置为 <code>EINTR</code></li>
+<li>只有在执行了一个信号处理程序并返回后, <code>pause</code> 才会返回</li>
+</ul>
+<h2 id="信号集"><a href="#信号集" class="headerlink" title="信号集"></a>信号集</h2><p>信号集 (signal set), 是一个表示多个信号的数据类型.</p>
+<p>POSIX.1 定义 <code>sigset_t</code> 来包含一个信号集, 还定义了 5 个处理信号集的函数:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;signal.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">sigemptyset</span><span class="hljs-params">(sigset *<span class="hljs-built_in">set</span>)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">sigfillset</span><span class="hljs-params">(<span class="hljs-type">sigset_t</span> *<span class="hljs-built_in">set</span>)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">sigaddset</span><span class="hljs-params">(<span class="hljs-type">sigset_t</span> *<span class="hljs-built_in">set</span>, <span class="hljs-type">int</span> signo)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">sigdelset</span><span class="hljs-params">(sigset *<span class="hljs-built_in">set</span>, <span class="hljs-type">int</span> signo)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回 <code>0</code>; 出错时返回 <code>-1</code></li>
+<li>所有应用在使用信号集之前, 需要调用一次 <code>sigemptyset</code> 或 <code>sigfillset</code> 来初始化</li>
+</ul>
 
                 
               </div>
