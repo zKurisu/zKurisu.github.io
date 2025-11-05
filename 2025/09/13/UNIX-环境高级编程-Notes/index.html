@@ -64,7 +64,7 @@
 <meta property="og:image" content="http://example.com/img/unix-book-thread-read-in-middle.png">
 <meta property="og:image" content="http://example.com/img/unix-book-thread-read-mem-sync-example.png">
 <meta property="article:published_time" content="2025-09-13T13:06:04.000Z">
-<meta property="article:modified_time" content="2025-11-05T11:08:18.181Z">
+<meta property="article:modified_time" content="2025-11-05T12:06:35.045Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/unix-iso-c-defined-header-file.png">
@@ -276,7 +276,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          52k 字
+          54k 字
         
       </span>
     
@@ -287,7 +287,7 @@
         
         
         
-          434 分钟
+          450 分钟
         
       </span>
     
@@ -2018,6 +2018,49 @@
 <li>读模式下加锁状态</li>
 <li>写模式下加锁状态</li>
 <li>不加锁状态</li>
+</ul>
+<p>一次只有一个线程可以占有写模式的读写锁, 但是多个线程可以同时占有读模式的读写锁.</p>
+<ul>
+<li>当读写锁是写加锁状态时, 所有试图对这个锁加锁的线程都会被阻塞</li>
+<li>当读写锁是读加锁状态时, 所有试图以读模式对这个锁加锁的线程都可以得到访问权, 但是任何希望以写模式对此锁进行加锁的线程都会阻塞, 直到所有的线程释放它们的读锁为止</li>
+</ul>
+<p>当读写锁处于读模式锁住的状态, 如果此时有一个线程试图以写模式获取锁时, 读写锁通常会阻塞随后的读模式锁. 这样可以避免读模式锁长期占用, 而等待的写模式锁请求一直得不到满足.</p>
+<p>读写锁也可以叫做共享互斥锁 (shared-exclusive lock), 因为在读模式锁住, 可以说是以共享模式锁住. 而在写模式锁住, 则称是互斥模式锁住.</p>
+<p>读写锁在使用之前必须先初始化, 在释放它们底层的内存之前必须销毁:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;pthread.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">pthread_rwlock_init</span><span class="hljs-params">(<span class="hljs-type">pthread_rwlock_t</span> *<span class="hljs-keyword">restrict</span> rwlock, <span class="hljs-type">const</span> <span class="hljs-type">pthread_rwlockattr_t</span> *<span class="hljs-keyword">restrict</span> attr)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">pthread_rwlock_destroy</span><span class="hljs-params">(<span class="hljs-type">pthread_rwlock_t</span> *rwlock)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回 <code>0</code>; 否则返回错误编号</li>
+</ul>
+<p>在读模式下锁定读写锁, 用 <code>pthread_rwlock_rdlock</code>; 在写模式下锁定读写锁, 用 <code>pthread_rwlock_wrlock</code>; 都用 <code>pthread_rwlock_unlock</code> 进行解锁:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;pthread.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">pthread_rwlock_rdlock</span><span class="hljs-params">(<span class="hljs-type">pthread_rwlock_t</span> *rwlock)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">pthread_rwlock_wrlock</span><span class="hljs-params">(<span class="hljs-type">pthread_rwlock_t</span> *rwlock)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">pthread_rwlock_unlock</span><span class="hljs-params">(<span class="hljs-type">pthread_rwlock_t</span> *rwlock)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回 <code>0</code>; 否则返回错误编号</li>
+</ul>
+<p>不阻塞加锁的版本:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;pthread.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">pthread_rwlock_tryrdlock</span><span class="hljs-params">(<span class="hljs-type">pthread_rwlock_t</span> *rwlock)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">pthread_rwlock_trywrlock</span><span class="hljs-params">(<span class="hljs-type">pthread_rwlock_t</span> *rwlock)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回 <code>0</code>; 否则返回错误编号</li>
+</ul>
+<h3 id="带有超时的读写锁"><a href="#带有超时的读写锁" class="headerlink" title="带有超时的读写锁"></a>带有超时的读写锁</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;pthread.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;time.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">pthread_rwlock_timedrdlock</span><span class="hljs-params">(<span class="hljs-type">pthread_rwlock_t</span> *<span class="hljs-keyword">restrict</span> rwlock, <span class="hljs-type">const</span> <span class="hljs-keyword">struct</span> timespec *<span class="hljs-keyword">restrict</span> tsptr)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">pthread_rwlock_timedwrlock</span><span class="hljs-params">(<span class="hljs-type">pthread_rwlock_t</span> *<span class="hljs-keyword">restrict</span> rwlock, <span class="hljs-type">const</span> <span class="hljs-keyword">struct</span> timespec *<span class="hljs-keyword">restrict</span> tsptr)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回 <code>0</code>; 否则返回错误编号</li>
+</ul>
+<h3 id="条件变量"><a href="#条件变量" class="headerlink" title="条件变量"></a>条件变量</h3><p>条件变量是另一个多线程下的同步机制. 条件变量与互斥量一起使用时, 允许线程以无竞争的方式等待特定的条件发生.</p>
+<p>条件变量本身由互斥量保护. 线程在改变条件状态之前必须先锁住互斥量.</p>
+<p>同样, 使用条件变量之前, 需要先初始化. 条件变量用 <code>pthread_cond_t</code> 数据类型表示, 有两种初始化方法:</p>
+<ul>
+<li>设置为 <code>PTHREAD_COND_INITIALIZER</code> 常量</li>
+<li>用 <code>pthread_cond_init</code> 初始化</li>
+</ul>
+<p>在释放条件变量底层的内存之前, 也需要先用 <code>pthread_cond_destroy</code> 函数来销毁:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;pthread.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">pthread_cond_init</span><span class="hljs-params">(<span class="hljs-type">pthread_cond_t</span> *<span class="hljs-keyword">restrict</span> cond, <span class="hljs-type">const</span> <span class="hljs-type">pthread_condattr_t</span> *<span class="hljs-keyword">restrict</span> attr)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">pthread_cond_destroy</span><span class="hljs-params">(<span class="hljs-type">pthread_cond_t</span> *cond)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回 <code>0</code>; 否则返回错误编号</li>
+</ul>
+<p>用 <code>pthread_cond_wait</code> 阻塞等待条件变量变为真, <code>pthread_cond_timedwait</code> 提供了超时时间, 如果在给定的时间内条件不能满足, 那么会生成一个返回错误码的变量:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;pthread.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">pthread_cond_wait</span><span class="hljs-params">(<span class="hljs-type">pthread_cond_t</span> *<span class="hljs-keyword">restrict</span> cond, <span class="hljs-type">pthread_mutex_t</span> *<span class="hljs-keyword">restrict</span> mutex)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">pthread_cond_timedwait</span><span class="hljs-params">(<span class="hljs-type">pthread_cond_t</span> *<span class="hljs-keyword">restrict</span> cond, <span class="hljs-type">pthread_mutex_t</span> *<span class="hljs-keyword">restrict</span> mutex, <span class="hljs-type">const</span> <span class="hljs-keyword">struct</span> timespec *<span class="hljs-keyword">restrict</span> tsptr)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回 <code>0</code>; 否则返回错误编号</li>
 </ul>
 
                 
