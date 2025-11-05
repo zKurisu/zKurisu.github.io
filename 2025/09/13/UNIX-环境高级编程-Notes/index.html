@@ -62,7 +62,7 @@
 <meta property="og:image" content="http://example.com/img/unix-book-reentrant-function-table-list.png">
 <meta property="og:image" content="http://example.com/img/unix-book-sigprocmask-how-table.png">
 <meta property="article:published_time" content="2025-09-13T13:06:04.000Z">
-<meta property="article:modified_time" content="2025-11-05T08:30:12.261Z">
+<meta property="article:modified_time" content="2025-11-05T09:30:01.983Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/unix-iso-c-defined-header-file.png">
@@ -274,7 +274,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          49k 字
+          50k 字
         
       </span>
     
@@ -285,7 +285,7 @@
         
         
         
-          405 分钟
+          420 分钟
         
       </span>
     
@@ -1899,6 +1899,70 @@
 <ul>
 <li>相等时返回非零数; 否则返回 <code>0</code></li>
 </ul>
+<p>线程可以通过调用 <code>pthread_self</code> 函数来获得自身的线程 ID:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;pthread.h&gt;</span></span><br><br><span class="hljs-type">pthread_t</span> <span class="hljs-title function_">pthread_self</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>返回线程的线程 ID</li>
+</ul>
+<h2 id="线程创建"><a href="#线程创建" class="headerlink" title="线程创建"></a>线程创建</h2><p>程序开始运行时, 是以单进程中的单个控制线程启动的, 此时与传统的进程并无区别.</p>
+<p>可以用 <code>pthread_create</code> 函数来创建线程:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;pthread.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">pthread_create</span><span class="hljs-params">(</span><br><span class="hljs-params">    <span class="hljs-type">pthread_t</span> *<span class="hljs-keyword">restrict</span> tidp,</span><br><span class="hljs-params">    <span class="hljs-type">const</span> <span class="hljs-type">pthread_attr_t</span> *<span class="hljs-keyword">restrict</span> attr,</span><br><span class="hljs-params">    <span class="hljs-type">void</span> *(*start_rtn)(<span class="hljs-type">void</span> *),</span><br><span class="hljs-params">    <span class="hljs-type">void</span> *<span class="hljs-keyword">restrict</span> arg</span><br><span class="hljs-params">)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回 <code>0</code>; 否则返回错误码</li>
+<li>新线程的 ID 保存在 <code>tidp</code> 指向的内存空间</li>
+<li><code>attr</code> 用于设置线程属性</li>
+<li>新创建的线程从 <code>start_rtn</code> 函数的地址开始运行</li>
+<li>如果 <code>start_rtn</code> 需要超过 1 个参数, 则放在 <code>arg</code> 结构体中</li>
+</ul>
+<p>线程创建并不能保证是哪个线程线运行, 是新创建的线程还是调用线程.</p>
+<p>新创建的线程可以访问进程的地址空间, 并且继承调用线程的浮点环境和信号屏蔽字, 但是挂起信号集会被清除.</p>
+<h2 id="线程终止"><a href="#线程终止" class="headerlink" title="线程终止"></a>线程终止</h2><p>如果进程中的任意线程调用了 <code>exit</code>, <code>_Exit</code> 或者 <code>_exit</code>, 那么整个进程都会被终止.</p>
+<p>线程可以有 3 中方式退出 (不终止整个进程的情况下停止该控制流):</p>
+<ol>
+<li>在 <code>start_rtn</code> 中用 <code>return</code> 返回</li>
+<li>被同一进程中的其他线程取消</li>
+<li>调用 <code>pthread_exit</code></li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;pthread.h&gt;</span></span><br><br><span class="hljs-type">void</span> <span class="hljs-title function_">pthread_exit</span><span class="hljs-params">(<span class="hljs-type">void</span> *rval_ptr)</span>;<br></code></pre></td></tr></table></figure>
+
+<p>进程中的其他线程可以通过 <code>pthread_join</code> 函数来访问这个 <code>rval_ptr</code> 指针:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;pthread.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">pthread_join</span><span class="hljs-params">(<span class="hljs-type">pthread_t</span> thread, <span class="hljs-type">void</span> **rval_ptr)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回 <code>0</code>; 否则返回错误编号</li>
+<li>调用线程会一直阻塞, 知道指定的线程调用 <code>pthread_exit</code> 或者返回或取消</li>
+<li>如果线程被取消, 那么 <code>rval_ptr</code> 指向的内存单元被设置为 <code>PTHREAD_CANCELED</code></li>
+</ul>
+<p>需要注意, <code>pthread_exit</code> 中的 <code>rval_ptr</code> 可以包含复杂的信息, 但要保证其他线程获取到这个值时其仍然有效, 比如在栈上分配可能会导致该栈已经弹出, 内存用作其他. 可以考虑使用全局变量或者在堆上分配.</p>
+<p>线程可以调用 <code>pthread_cancel</code> 来请求取消同一进程中的其他线程:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;pthread.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">pthread_cancel</span><span class="hljs-params">(<span class="hljs-type">pthread_t</span> tid)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回 <code>0</code>; 否则返回错误编号</li>
+<li>默认情况下, <code>tid</code> 对应的线程会表现得像调用了参数为 <code>PTHREAD_CANCELD</code> 的 <code>pthread_exit</code> 函数</li>
+<li>线程可以选择忽略取消或控制如何取消</li>
+<li>该函数也不会等待线程终止, 只是发出一个请求</li>
+</ul>
+<p>线程也可以设置退出时自动调用的函数, 类似 <code>atexit</code> 函数. 这些函数称线程清理处理程序, 同样可以建立多个, 处理函数会记录在栈中, 因此调用顺序与注册时相反:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;pthread.h&gt;</span></span><br><br><span class="hljs-type">void</span> <span class="hljs-title function_">pthread_cleanup_push</span><span class="hljs-params">(<span class="hljs-type">void</span> (*rtn)(<span class="hljs-type">void</span> *), <span class="hljs-type">void</span> *arg)</span>;<br><span class="hljs-type">void</span> <span class="hljs-title function_">pthread_cleanup_pop</span><span class="hljs-params">(<span class="hljs-type">int</span> execute)</span>;<br></code></pre></td></tr></table></figure>
+
+<p>下面几种情况会触发 cleanup 函数的调用:</p>
+<ul>
+<li>调用 <code>pthread_exit</code> 时</li>
+<li>响应取消时</li>
+<li>用非零的 <code>execute</code> 参数调用 <code>pthread_cleanup_pop</code> 时</li>
+</ul>
+<p><code>pthread_cleanup_pop</code> 会删除上次 <code>pthread_cleanup_push</code> 添加的一个清理处理程序, 当 <code>execute</code> 为 <code>0</code> 时, 删除时不会调用该清理处理程序.</p>
+<h2 id="线程同步"><a href="#线程同步" class="headerlink" title="线程同步"></a>线程同步</h2><p>当多个控制线程共享相同的内存时, 需要确保每个线程看到的数据视图是一致的.</p>
+<p>假设线程 A 要写一个变量, 但是写操作被分为多个存储周期:</p>
+<ol>
+<li>先读取 x 的当前值</li>
+<li>计算新值</li>
+<li>把新值写回 x 的内存, 但是 “写回操作” 并不是一下子完成的, 分为了多个存储周期, 比如先写低字节, 再写高字节等</li>
+</ol>
+<p>如果线程 B 在线程 A 写操作的中间时刻读取了这个变量 (比如只写了一半), 此时:</p>
+<ul>
+<li>B 读取到的值, 既不是线程 A 修改前的旧值, 也不是修改后的新值, 而是一个 “中间状态”, 这种值通常是无意义的, 不符合预期, 会导致程序逻辑错误</li>
+</ul>
+<p>为了解决这个问题, 可以使用锁, 同一时间只允许一个线程访问该变量.</p>
 
                 
               </div>
