@@ -24,7 +24,7 @@
 <meta property="og:description" content="介绍Inline 模块引入一种机制, 可以用其他语言编写 Perl subroutine. 比如: 1234567891011121314 use Inline C;print &quot;9 + 16 &#x3D; &quot;, add(9, 16), &quot;\n&quot;;print &quot;9 - 16 &#x3D; &quot;, subtract(9, 16), &quot;\n&quot;;">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-11-05T14:57:05.000Z">
-<meta property="article:modified_time" content="2025-11-05T14:58:15.107Z">
+<meta property="article:modified_time" content="2025-11-06T01:32:10.009Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          270 字
+          855 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          3 分钟
+          8 分钟
         
       </span>
     
@@ -291,6 +291,21 @@
                 
                 <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>Inline 模块引入一种机制, 可以用其他语言编写 Perl subroutine. 比如:</p>
 <figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs perl"> <span class="hljs-keyword">use</span> Inline C;<br><br><span class="hljs-keyword">print</span> <span class="hljs-string">&quot;9 + 16 = &quot;</span>, add(<span class="hljs-number">9</span>, <span class="hljs-number">16</span>), <span class="hljs-string">&quot;\n&quot;</span>;<br><span class="hljs-keyword">print</span> <span class="hljs-string">&quot;9 - 16 = &quot;</span>, subtract(<span class="hljs-number">9</span>, <span class="hljs-number">16</span>), <span class="hljs-string">&quot;\n&quot;</span>;<br><br>__END_<span class="hljs-number">_</span><br>__C_<span class="hljs-number">_</span><br><span class="hljs-keyword">int</span> add(<span class="hljs-keyword">int</span> <span class="hljs-keyword">x</span>, <span class="hljs-keyword">int</span> <span class="hljs-keyword">y</span>) &#123;<br>    <span class="hljs-keyword">return</span> <span class="hljs-keyword">x</span> + <span class="hljs-keyword">y</span>;<br>&#125;<br><br><span class="hljs-keyword">int</span> subtract(<span class="hljs-keyword">int</span> <span class="hljs-keyword">x</span>, <span class="hljs-keyword">int</span> <span class="hljs-keyword">y</span>) &#123;<br>    <span class="hljs-keyword">return</span> <span class="hljs-keyword">x</span> - <span class="hljs-keyword">y</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>(这些 <code>C</code> 代码会被自动编译和加载到 Perl 程序中.)</p>
+<p>使用 <code>Inline</code> 模块的最大原因是性能, 用其他底层语言加速 Perl 的计算, 另一个是复用其他语言的代码.</p>
+<p>Inline 模块能简化用 <code>XS</code> 或 <code>SWIG</code> 模块手动 glue code 的流程.</p>
+<p>更详细的文档可以看 <code>perldoc Inline</code> 以及这个目录下的子文档.</p>
+<p>下面的记录都基于 <code>perldoc Inline::C::Cookbook</code> 的内容.</p>
+<h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">cpanm Inline::C<br></code></pre></td></tr></table></figure>
+
+<h1 id="基本使用"><a href="#基本使用" class="headerlink" title="基本使用"></a>基本使用</h1><h2 id="Hello-World"><a href="#Hello-World" class="headerlink" title="Hello World"></a>Hello World</h2><figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> Inline <span class="hljs-string">C =&gt;</span> &lt;&lt;<span class="hljs-string">&#x27;...&#x27;</span>;<br>void greet() &#123;<br>    <span class="hljs-keyword">printf</span>(<span class="hljs-string">&quot;Hello World&quot;</span>);<br>&#125;<br>...<br><br>greet();<br></code></pre></td></tr></table></figure>
+
+<p>该写法等价于:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> Inline <span class="hljs-string">qw(C)</span>;<br><br>greet();<br>__END_<span class="hljs-number">_</span><br>__C_<span class="hljs-number">_</span><br>void greet() &#123;<br>    <span class="hljs-keyword">printf</span>(<span class="hljs-string">&quot;Hello World&quot;</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="字符串"><a href="#字符串" class="headerlink" title="字符串"></a>字符串</h2><p>Perl 中的字符串传入到 C 中是 <code>char *</code> 类型, 比如:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs perl"><span class="hljs-keyword">use</span> Inline <span class="hljs-string">qw(C)</span>;<br><br>greet(<span class="hljs-string">&quot;Orkarin&quot;</span>);<br>__END_<span class="hljs-number">_</span><br>__C_<span class="hljs-number">_</span><br>void greet(char *name) &#123;<br>    <span class="hljs-keyword">printf</span>(<span class="hljs-string">&quot;Hello %s!&quot;</span>, name);<br>&#125;<br></code></pre></td></tr></table></figure>
 
 
                 
