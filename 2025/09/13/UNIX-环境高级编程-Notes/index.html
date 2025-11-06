@@ -63,8 +63,10 @@
 <meta property="og:image" content="http://example.com/img/unix-book-sigprocmask-how-table.png">
 <meta property="og:image" content="http://example.com/img/unix-book-thread-read-in-middle.png">
 <meta property="og:image" content="http://example.com/img/unix-book-thread-read-mem-sync-example.png">
+<meta property="og:image" content="http://example.com/img/unix-book-process-pipe-and-fork.png">
+<meta property="og:image" content="http://example.com/img/unix-book-pipe-parent-to-child.png">
 <meta property="article:published_time" content="2025-09-13T13:06:04.000Z">
-<meta property="article:modified_time" content="2025-11-06T03:33:50.467Z">
+<meta property="article:modified_time" content="2025-11-06T14:11:11.160Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/unix-iso-c-defined-header-file.png">
@@ -276,7 +278,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          57k 字
+          58k 字
         
       </span>
     
@@ -287,7 +289,7 @@
         
         
         
-          477 分钟
+          483 分钟
         
       </span>
     
@@ -2128,6 +2130,27 @@
 <li>成功时返回 <code>0</code>; 出错时返回错误编号</li>
 <li>这个适用于希望改变默认的栈大小, 但不想自己分配的情况</li>
 </ul>
+<h1 id="进程间通信"><a href="#进程间通信" class="headerlink" title="进程间通信"></a>进程间通信</h1><h2 id="管道"><a href="#管道" class="headerlink" title="管道"></a>管道</h2><p>管道只能在具有公共祖先的两个进程之间使用. 通常, 一个管道由一个进程创建, 在进程调用 <code>fork</code> 之后, 这个管道就能在父进程和子进程之间使用了.</p>
+<p>最常见的就是 shell 中, shell 会为每一条命令单独创建一个进程, 然后用管道将前一条命令的标准输出与后一条命令的标准输入相连接.</p>
+<p>管道用 <code>pipe</code> 函数创建:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">pipe</span><span class="hljs-params">(<span class="hljs-type">int</span> fd[<span class="hljs-number">2</span>])</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回 <code>0</code>; 出错时返回 <code>-1</code></li>
+<li>参数 <code>fd</code> 中的两个文件描述符, <code>fd[0]</code> 为读而打开, <code>fd[1]</code> 为写而打开</li>
+<li><code>fd[1]</code> 的输出是 <code>fd[0]</code> 的输入</li>
+</ul>
+<p>通常, 进程先调用 <code>pipe</code>, 然后 <code>fork</code>, 此时父子进程都拥有一对 <code>fd</code>:</p>
+<p><img src="/../img/unix-book-process-pipe-and-fork.png" srcset="/img/loading.gif" lazyload></p>
+<p>如果想要父进程到子进程的管道, 则关闭父进程的读端 (<code>fd[0]</code>), 子进程关闭写端 (<code>fd[1]</code>):</p>
+<p><img src="/../img/unix-book-pipe-parent-to-child.png" srcset="/img/loading.gif" lazyload></p>
+<p>如果想要子进程到父进程的管道, 则父进程关闭写端 (<code>fd[1]</code>), 子进程关闭读端 (<code>fd[0]</code>).</p>
+<p>当管道的一端被关闭后, 有两条规则会起作用:</p>
+<ol>
+<li>当 “读 (read)” 一个写端已经被关闭的管道时, 在所有数据都被读取后, <code>read</code> 返回 <code>0</code>, 表示文件结束</li>
+<li>如果 “写 (write)”  一个读端已被关闭的管道, 则产生信号 <code>SIGPIPE</code>. 如果忽略该信号或者捕捉该信号并从其处理程序返回, 则 <code>write</code> 返回 <code>-1</code>, <code>errno</code> 设置为 <code>EPIPE</code></li>
+</ol>
+<p>在写管道时, 常量 <code>PIPE_BUF</code> 规定了内核的管道缓冲区大小. 如果对管道调用 <code>write</code>, 并且要求写的字节数小于等于 <code>PIPE_BUF</code>, 则此操作不会与其他进程对同一管道的 <code>write</code> 操作交叉进行.</p>
+<p>如果多个进程同时写一个管道, 而且要求写的字节数超过 <code>PIPE_BUF</code>, 那么所写的数据可能会与其他进程所写的数据相互交叉.</p>
 
                 
               </div>
