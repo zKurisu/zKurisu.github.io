@@ -64,7 +64,7 @@
 <meta property="og:image" content="http://example.com/img/unix-book-thread-read-in-middle.png">
 <meta property="og:image" content="http://example.com/img/unix-book-thread-read-mem-sync-example.png">
 <meta property="article:published_time" content="2025-09-13T13:06:04.000Z">
-<meta property="article:modified_time" content="2025-11-06T01:53:24.263Z">
+<meta property="article:modified_time" content="2025-11-06T03:33:50.467Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/unix-iso-c-defined-header-file.png">
@@ -276,7 +276,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          56k 字
+          57k 字
         
       </span>
     
@@ -287,7 +287,7 @@
         
         
         
-          465 分钟
+          477 分钟
         
       </span>
     
@@ -1953,6 +1953,11 @@
 <li>用非零的 <code>execute</code> 参数调用 <code>pthread_cleanup_pop</code> 时</li>
 </ul>
 <p><code>pthread_cleanup_pop</code> 会删除上次 <code>pthread_cleanup_push</code> 添加的一个清理处理程序, 当 <code>execute</code> 为 <code>0</code> 时, 删除时不会调用该清理处理程序.</p>
+<p>默认情况下, 线程的终止状态会保存直到对该线程调用 <code>pthread_join</code>. 如果对线程的终止状态不感兴趣, 可以让其处于分离状态. 如果线程已经被分离, 线程的底层存储资源可以在终止时立即被回收, 此时也不能用 <code>pthread_join</code> 函数来等待其终止状态:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;pthread.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">pthread_detach</span><span class="hljs-params">(<span class="hljs-type">pthread_t</span> tid)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回 <code>0</code>; 出错时返回错误编号</li>
+</ul>
 <h2 id="线程同步"><a href="#线程同步" class="headerlink" title="线程同步"></a>线程同步</h2><p>当多个控制线程共享相同的内存时, 需要确保每个线程看到的数据视图是一致的.</p>
 <p>假设线程 A 要写一个变量, 但是写操作被分为多个存储周期:</p>
 <ol>
@@ -2099,7 +2104,31 @@
 </ul>
 <p>线程在调用 <code>pthread_barrier_wait</code> 时, 如果 <code>count</code> 没有达到, 则会进入休眠. 如果该线程是最后一个调用 <code>pthread_barrier_wait</code> 的线程, 满足 <code>count</code> 的同时会唤醒所有线程.</p>
 <p>对于一个任意线程, 如果 <code>pthread_barrier_wait</code> 函数返回了 <code>PTHREAD_BARRIER_SERIAL_THREAD</code>. 那么剩下的线程看到的返回值都是 <code>0</code>. 这使得一个线程能够在其他线程完成的工作结果之上进行工作.</p>
-<h1 id="线程控制"><a href="#线程控制" class="headerlink" title="线程控制"></a>线程控制</h1><h2 id="线程属性"><a href="#线程属性" class="headerlink" title="线程属性"></a>线程属性</h2>
+<h1 id="线程控制"><a href="#线程控制" class="headerlink" title="线程控制"></a>线程控制</h1><h2 id="线程属性"><a href="#线程属性" class="headerlink" title="线程属性"></a>线程属性</h2><p>在使用 <code>pthread_create</code> 创建线程时, 如果传入的属性是 NULL 空指针, 表示使用默认的线程属性. 也可以用指向 <code>pthread_attr_t</code> 结构的指针, 来更改线程的默认属性.</p>
+<p>可以用 <code>pthread_attr_init</code> 来初始化 <code>pthread_attr_t</code> 结构, 此时该结构包含所有线程属性的默认值:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;pthread.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">pthread_attr_init</span><span class="hljs-params">(<span class="hljs-type">pthread_attr_t</span> *attr)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">pthread_attr_destroy</span><span class="hljs-params">(<span class="hljs-type">pthread_attr_t</span> *attr)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回 <code>0</code>; 出错时返回错误编号</li>
+<li>如果 <code>pthread_attr_t</code> 对象是动态分配的, 那么 <code>pthread_attr_destroy</code> 就会释放其空间, 除此之外, 其还会用无效的值初始化属性对让, 让 <code>pthread_create</code> 使用时返回错误码</li>
+</ul>
+<p>如果对线程的终止状态不感兴趣, 可以设置其 <code>detachstate</code> 属性, 让线程从一开始就处于 detach 状态: <code>PTHREAD_CREATE_DETACHED</code> (以分离状态启动线程), <code>PTHREAD_CREATE_JOINABLE</code> (正常启动线程):</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;pthread.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">pthread_attr_getdetachstate</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">pthread_attr_t</span> *<span class="hljs-keyword">restrict</span> attr, <span class="hljs-type">int</span> *detachstate)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">pthread_attr_setdetachstate</span><span class="hljs-params">(<span class="hljs-type">pthread_attr_t</span> *attr, <span class="hljs-type">int</span> *detachstate)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回 <code>0</code>; 出错时返回错误编号</li>
+</ul>
+<p>可以用 <code>pthread_attr_getstack</code> 和 <code>pthread_attr_setstack</code> 对线程栈属性进行管理:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;pthread.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">pthread_attr_getstack</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">pthread_attr_t</span> *<span class="hljs-keyword">restrict</span> attr,</span><br><span class="hljs-params">    <span class="hljs-type">void</span> **<span class="hljs-keyword">restrict</span> stackaddr,</span><br><span class="hljs-params">    <span class="hljs-type">size_t</span> *<span class="hljs-keyword">restrict</span> stacksize)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">pthread_attr_setstack</span><span class="hljs-params">(<span class="hljs-type">pthread_attr_t</span> *attr,</span><br><span class="hljs-params">    <span class="hljs-type">void</span> *stackaddr, <span class="hljs-type">size_t</span> stacksize)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回 <code>0</code>; 出错时返回错误编号</li>
+<li>这用来处理线程栈空间不够, 通过 <code>malloc</code> 或 <code>mmap</code> 重新分配栈空间的情况, <code>stackaddr</code> 是新的栈尾</li>
+</ul>
+<p>也可以读取和设置栈的大小:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;pthread.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">pthread_attr_getstacksize</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">pthread_attr_t</span> *<span class="hljs-keyword">restrict</span> attr, <span class="hljs-type">size_t</span> *<span class="hljs-keyword">restrict</span> stacksize)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">pthread_attr_getstacksize</span><span class="hljs-params">(<span class="hljs-type">pthread_attr_t</span> *attr, <span class="hljs-type">size_t</span> *stacksize)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回 <code>0</code>; 出错时返回错误编号</li>
+<li>这个适用于希望改变默认的栈大小, 但不想自己分配的情况</li>
+</ul>
+
                 
               </div>
             
