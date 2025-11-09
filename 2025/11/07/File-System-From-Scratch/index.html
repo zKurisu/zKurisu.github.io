@@ -24,7 +24,7 @@
 <meta property="og:description" content="学习自 Youtube Dr Jonas Birch TODO List需要完成:  fsformat  fsshow, 展示 filesystem 的信息  fsmount  fsunmount  fscreate, 创建 inode  fsdestroy, 移除 inode  fsloadinode, 从磁盘加载 inode  fssaveinode, 将 inode 保存到磁盘  fssta">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-11-07T01:40:58.000Z">
-<meta property="article:modified_time" content="2025-11-09T12:14:42.242Z">
+<meta property="article:modified_time" content="2025-11-09T13:03:59.337Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          443 字
+          1.2k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          4 分钟
+          11 分钟
         
       </span>
     
@@ -337,6 +337,34 @@
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> Magic1 (0xdd05)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> Magic2 (0xaa55)</span><br></code></pre></td></tr></table></figure>
 
 <p>Magic Number 常用来标识文件系统类型, 合法性, 数据块类型等, 在文件系统设计中非常重要. 其通常就是一个特殊的, 预定义的数值.</p>
+<p>Magic Number 通常被写入磁盘的 superblock, 文件头, inode, 数据块标记等位置. 便于操作系统或文件系统工具在读取磁盘数据时通过检查这些 magic number 来判断其是否是合法的文件系统, 这个块是不是 inode&#x2F;目录&#x2F;数据块 等.</p>
+<p>常见的 magic number:</p>
+<table>
+<thead>
+<tr>
+<th>系统&#x2F;文件格式</th>
+<th>Magic number</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FAT12&#x2F;FAT16</td>
+<td><code>0xAA55</code> (位于引导扇区结尾)</td>
+</tr>
+<tr>
+<td>ELF 可执行文件</td>
+<td><code>0x7F 45 4C 46</code></td>
+</tr>
+</tbody></table>
+<h1 id="文件系统参数"><a href="#文件系统参数" class="headerlink" title="文件系统参数"></a>文件系统参数</h1><p>比如:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> Inodesperblock  (16)    <span class="hljs-comment">// 一个磁盘块能存放多少 inode</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> PtrPerInode     (8)     <span class="hljs-comment">// 一个 inode 中能存放多少个指针 (比如指向数据块)</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> PtrPerBlock     (256)   <span class="hljs-comment">// 一个块中能存放多少指针</span></span><br></code></pre></td></tr></table></figure>
+
+<h1 id="文件系统元数据"><a href="#文件系统元数据" class="headerlink" title="文件系统元数据"></a>文件系统元数据</h1><p>比如:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">s_filesystem</span> &#123;</span><br>    int8 drive;        <span class="hljs-comment">// drive number, 用于标识底层存储设备</span><br>    disk *dd;          <span class="hljs-comment">// disk descriptor, 指向磁盘描述符, 用于底层磁盘读写操作</span><br>    <span class="hljs-type">bool</span> *bitmap;      <span class="hljs-comment">// block bitmap, 用于标识哪些数据块已被使用/空闲, 是管理文件系统空间的核心</span><br>    superblock metadata; <span class="hljs-comment">// 文件系统元数据, 包含文件系统核心元数据, 比如文件系统类型, 版本, inode 总数, 数据块总数, 空闲块/inode 信息等</span><br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<h1 id="错误编号"><a href="#错误编号" class="headerlink" title="错误编号"></a>错误编号</h1><p>如:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">enum</span> <span class="hljs-keyword">class</span> <span class="hljs-title">FS</span> &#123;</span><br>    ErrNoErr,<br>    ErrInit,<br>    ErrIO,<br>    ErrBadFD<br>&#125;<br></code></pre></td></tr></table></figure>
+<h1 id="Superblock"><a href="#Superblock" class="headerlink" title="Superblock"></a>Superblock</h1><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">s_superblock</span> &#123;</span><br>    int8 bootsector[<span class="hljs-number">500</span>];<br>    int16 _;<br>    int16 blocks;<br>    int16 inodeblocks;<br>    int16 inodes;<br>&#125;<br></code></pre></td></tr></table></figure>
+
 
                 
               </div>
