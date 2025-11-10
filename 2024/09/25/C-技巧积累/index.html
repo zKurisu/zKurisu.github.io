@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="在 define 中用括号包裹比如: 1#define Magick1 (0xdd05)  这会将 Magick1 替换为 0xdd05 好处在于能够避免运算符优先级问题, 确保这里是一个整体  比如: 1#define MagicValue 0x100 + 0x200  然后在代码里写: 1int result &#x3D; MagicValue * 2;  编译器会将其替换为: 1int result">
+    <meta name="description" content="查看 C 库某类型的手册比如 struct stat, 可以这样查看: 1man 3type stat   符号可见性在 C&#x2F;C++ 中, 当编译一个库时, 默认情况下:  所有函数和全局变量都有可能被外部看到, 其他模块可能通过符号链接到它们  对于库的作者, 可能只想暴露一小部分接口, 而隐藏内部实现. 为了控制哪些符号可以被 “外部” 看到, 引入了 “符号可见性 (Symbol">
 <meta property="og:type" content="article">
 <meta property="og:title" content="C-技巧积累">
 <meta property="og:url" content="http://example.com/2024/09/25/C-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="在 define 中用括号包裹比如: 1#define Magick1 (0xdd05)  这会将 Magick1 替换为 0xdd05 好处在于能够避免运算符优先级问题, 确保这里是一个整体  比如: 1#define MagicValue 0x100 + 0x200  然后在代码里写: 1int result &#x3D; MagicValue * 2;  编译器会将其替换为: 1int result">
+<meta property="og:description" content="查看 C 库某类型的手册比如 struct stat, 可以这样查看: 1man 3type stat   符号可见性在 C&#x2F;C++ 中, 当编译一个库时, 默认情况下:  所有函数和全局变量都有可能被外部看到, 其他模块可能通过符号链接到它们  对于库的作者, 可能只想暴露一小部分接口, 而隐藏内部实现. 为了控制哪些符号可以被 “外部” 看到, 引入了 “符号可见性 (Symbol">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2024-09-25T05:58:14.000Z">
-<meta property="article:modified_time" content="2025-11-09T12:12:59.365Z">
+<meta property="article:modified_time" content="2025-11-10T12:45:40.349Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          6.3k 字
+          7.5k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          53 分钟
+          63 分钟
         
       </span>
     
@@ -289,7 +289,34 @@
             
               <div class="markdown-body">
                 
-                <h1 id="在-define-中用括号包裹"><a href="#在-define-中用括号包裹" class="headerlink" title="在 define 中用括号包裹"></a>在 define 中用括号包裹</h1><p>比如:</p>
+                <h1 id="查看-C-库某类型的手册"><a href="#查看-C-库某类型的手册" class="headerlink" title="查看 C 库某类型的手册"></a>查看 C 库某类型的手册</h1><p>比如 <code>struct stat</code>, 可以这样查看:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">man 3type <span class="hljs-built_in">stat</span><br></code></pre></td></tr></table></figure>
+
+
+<h1 id="符号可见性"><a href="#符号可见性" class="headerlink" title="符号可见性"></a>符号可见性</h1><p>在 C&#x2F;C++ 中, 当编译一个库时, 默认情况下:</p>
+<ul>
+<li>所有函数和全局变量都有可能被外部看到, 其他模块可能通过符号链接到它们</li>
+</ul>
+<p>对于库的作者, 可能只想暴露一小部分接口, 而隐藏内部实现. 为了控制哪些符号可以被 “外部” 看到, 引入了 “符号可见性 (Symbol Visibility)” 的概念.</p>
+<p>GCC 和 Clang 提供了一个函数&#x2F;变量属性 (Attribute), 用于指定某个符号在编译后的二进制中是否对外部可见, 语法格式:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">__attribute__((visibility(<span class="hljs-string">&quot;value&quot;</span>)))<br></code></pre></td></tr></table></figure>
+<p><code>value</code> 可以是:</p>
+<ul>
+<li><code>default</code>, 默认可见性, 符号会被导出,外部可以链接到它</li>
+<li><code>hidden</code>, 隐藏符号, 外部无法看到该符号, 只能在模块内使用</li>
+</ul>
+<p>这个属性通常加在函数&#x2F;全局变量的声明&#x2F;定义之前, 如 :</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c">__attribute__((visibility(<span class="hljs-string">&quot;default&quot;</span>))) <span class="hljs-type">void</span> <span class="hljs-title function_">public_api_function</span><span class="hljs-params">()</span> &#123; ... &#125;<br><br>__attribute__((visibility(<span class="hljs-string">&quot;hidden&quot;</span>))) <span class="hljs-type">void</span> <span class="hljs-title function_">internal_helper_function</span><span class="hljs-params">()</span> &#123; ... &#125;<br></code></pre></td></tr></table></figure>
+
+<p>可以用宏定义来简化:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> public   __attribute__((visibility(<span class="hljs-string">&quot;default&quot;</span>)))</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> internal __attribute__((visibility(<span class="hljs-string">&quot;hidden&quot;</span>)))</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> private static</span><br><br>public <span class="hljs-type">void</span> <span class="hljs-title function_">foo</span><span class="hljs-params">()</span> &#123;  <span class="hljs-comment">// 等价于 __attribute__((visibility(&quot;default&quot;))) void foo()</span><br>    <span class="hljs-comment">// 这个函数会被导出，外部代码（如调用该库的程序）可以看到并调用它</span><br>&#125;<br><br>internal <span class="hljs-type">void</span> <span class="hljs-title function_">helper</span><span class="hljs-params">()</span> &#123;  <span class="hljs-comment">// 等价于 __attribute__((visibility(&quot;hidden&quot;))) void helper()</span><br>    <span class="hljs-comment">// 这个函数不会被导出到动态库的外部符号表，只能在本模块（本 .c 文件或本库内部）使用</span><br>&#125;<br><br>private <span class="hljs-type">int</span> counter;           <span class="hljs-comment">// 只能在当前 .c 文件中使用</span><br>private <span class="hljs-type">void</span> <span class="hljs-title function_">log_message</span><span class="hljs-params">()</span> &#123;   <span class="hljs-comment">// 只能在当前 .c 文件中调用</span><br>    <span class="hljs-comment">// ...</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>在编译时, 也需要加上一个选项, 告诉编译器要启用符号可见性功能, 对于 GCC&#x2F;Clang 而言, 加上:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">-fvisibility=hidden<br></code></pre></td></tr></table></figure>
+<ul>
+<li>默认所有符号都是 <code>hidden</code></li>
+</ul>
+<h1 id="在-define-中用括号包裹"><a href="#在-define-中用括号包裹" class="headerlink" title="在 define 中用括号包裹"></a>在 define 中用括号包裹</h1><p>比如:</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> Magick1 (0xdd05)</span><br></code></pre></td></tr></table></figure>
 <ul>
 <li>这会将 <code>Magick1</code> 替换为 <code>0xdd05</code></li>
