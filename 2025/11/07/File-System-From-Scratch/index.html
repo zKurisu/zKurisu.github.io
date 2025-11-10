@@ -24,7 +24,7 @@
 <meta property="og:description" content="学习自 Youtube Dr Jonas Birch TODO List需要完成:  fsformat  fsshow, 展示 filesystem 的信息  fsmount  fsunmount  fscreate, 创建 inode  fsdestroy, 移除 inode  fsloadinode, 从磁盘加载 inode  fssaveinode, 将 inode 保存到磁盘  fssta">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-11-07T01:40:58.000Z">
-<meta property="article:modified_time" content="2025-11-10T02:04:02.305Z">
+<meta property="article:modified_time" content="2025-11-10T03:03:44.251Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.8k 字
+          5k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          15 分钟
+          42 分钟
         
       </span>
     
@@ -378,8 +378,60 @@
 <li>块位图位置 (Block bitmap location), 指向记录哪些块已用的位图</li>
 <li>inode 位图位置 (Inode bitmap location), 指向记录哪些 inode 已用的位图</li>
 <li>inode 表位置 (Inode Table Location), inode 数据结构存放的起始位置</li>
-<li>文件系统状态 (Filesystem state)</li>
+<li>文件系统状态 (Filesystem state), 如 “clean” 或 “dirty”, 用于判断是否需要 fsck</li>
+<li>挂载次数&#x2F;最大挂载次数, 用于安全卸载和强制检查</li>
+<li>最近一次挂载时间&#x2F;写入时间, 用于日志, 审计等</li>
+<li>版本&#x2F;特性标志, 比如是否支持日志, 大文件, 扩展属性等</li>
 </ul>
+<p>另一个例子:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdint.h&gt;</span></span><br><br><span class="hljs-comment">// 简化版的 Superblock 结构体（类 ext2/ext3/ext4）</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">superblock</span> &#123;</span><br>    <span class="hljs-type">uint32_t</span> s_inodes_count;        <span class="hljs-comment">// inode 总数</span><br>    <span class="hljs-type">uint32_t</span> s_blocks_count;        <span class="hljs-comment">// 块总数</span><br>    <span class="hljs-type">uint32_t</span> s_free_blocks_count;   <span class="hljs-comment">// 空闲块数</span><br>    <span class="hljs-type">uint32_t</span> s_free_inodes_count;   <span class="hljs-comment">// 空闲 inode 数</span><br><br>    <span class="hljs-type">uint32_t</span> s_first_data_block;    <span class="hljs-comment">// 第一个数据块的索引（通常是 1，因为 0 是保留的）</span><br><br>    <span class="hljs-type">uint32_t</span> s_log_block_size;      <span class="hljs-comment">// 块大小的 log 值（实际块大小 = 1024 &lt;&lt; s_log_block_size）</span><br>    <span class="hljs-type">uint32_t</span> s_log_cluster_size;    <span class="hljs-comment">// （如果是集群/块组，如 ext4）</span><br><br>    <span class="hljs-type">uint32_t</span> s_blocks_per_group;    <span class="hljs-comment">// 每个块组包含多少块</span><br>    <span class="hljs-type">uint32_t</span> s_inodes_per_group;    <span class="hljs-comment">// 每个块组包含多少 inode</span><br><br>    <span class="hljs-type">uint32_t</span> s_mtime;               <span class="hljs-comment">// 文件系统最后挂载时间（Unix 时间戳）</span><br>    <span class="hljs-type">uint32_t</span> s_wtime;               <span class="hljs-comment">// 文件系统最后写入时间</span><br><br>    <span class="hljs-type">uint16_t</span> s_mnt_count;           <span class="hljs-comment">// 已挂载次数</span><br>    <span class="hljs-type">uint16_t</span> s_max_mnt_count;       <span class="hljs-comment">// 最大允许挂载次数，超过需 fsck</span><br><br>    <span class="hljs-type">uint16_t</span> s_magic;               <span class="hljs-comment">// 文件系统魔数，例如 ext2 是 0xEF53</span><br>    <span class="hljs-type">uint16_t</span> s_state;               <span class="hljs-comment">// 文件系统状态（如清洁/脏）</span><br><br>    <span class="hljs-type">uint16_t</span> s_errors;              <span class="hljs-comment">// 发生错误时的行为</span><br>    <span class="hljs-type">uint16_t</span> s_minor_rev_level;     <span class="hljs-comment">// 次要版本号</span><br><br>    <span class="hljs-type">uint32_t</span> s_lastcheck;           <span class="hljs-comment">// 上次检查时间</span><br>    <span class="hljs-type">uint32_t</span> s_checkinterval;       <span class="hljs-comment">// 多久需要强制检查</span><br><br>    <span class="hljs-type">uint32_t</span> s_creator_os;          <span class="hljs-comment">// 创建该文件系统的操作系统</span><br>    <span class="hljs-type">uint32_t</span> s_rev_level;           <span class="hljs-comment">// 版本级别</span><br><br>    <span class="hljs-type">uint16_t</span> s_def_resuid;          <span class="hljs-comment">// 默认保留文件的 UID</span><br>    <span class="hljs-type">uint16_t</span> s_def_resgid;          <span class="hljs-comment">// 默认保留文件的 GID</span><br><br>    <span class="hljs-comment">// 以下字段在 ext4 中更重要，比如：</span><br>    <span class="hljs-type">uint32_t</span> s_first_ino;           <span class="hljs-comment">// 第一个非保留的 inode 号（比如 11）</span><br>    <span class="hljs-type">uint16_t</span> s_inode_size;          <span class="hljs-comment">// 每个 inode 的大小（如 128 或 256 字节）</span><br>    <span class="hljs-type">uint16_t</span> s_block_group_nr;      <span class="hljs-comment">// 当前 superblock 所在的块组号</span><br><br>    <span class="hljs-type">uint32_t</span> s_feature_compat;      <span class="hljs-comment">// 兼容特性标志</span><br>    <span class="hljs-type">uint32_t</span> s_feature_incompat;    <span class="hljs-comment">// 不兼容特性标志</span><br>    <span class="hljs-type">uint32_t</span> s_feature_ro_compat;   <span class="hljs-comment">// 只读兼容特性标志</span><br><br>    <span class="hljs-type">uint8_t</span>  s_uuid[<span class="hljs-number">16</span>];            <span class="hljs-comment">// 文件系统唯一标识符（UUID）</span><br>    <span class="hljs-type">char</span>     s_volume_name[<span class="hljs-number">16</span>];     <span class="hljs-comment">// 卷标名称</span><br>    <span class="hljs-type">char</span>     s_last_mounted[<span class="hljs-number">64</span>];    <span class="hljs-comment">// 最后挂载的路径</span><br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<h1 id="Inode-结构"><a href="#Inode-结构" class="headerlink" title="Inode 结构"></a>Inode 结构</h1><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> int16 ptr;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">s_filename</span> &#123;</span><br>    int8 name[<span class="hljs-number">8</span>];   <span class="hljs-comment">// 文件名, 8 字节</span><br>    int8 ext[<span class="hljs-number">3</span>];    <span class="hljs-comment">// 扩展名, 3 字节 </span><br>&#125;;  <span class="hljs-comment">// 类似老式 FAT 文件系统的 8.3 格式</span><br><span class="hljs-keyword">typedef</span> s_filename filename;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">s_inode</span> &#123;</span><br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> &#123;</span><br>        int8 _:<span class="hljs-number">4</span>;     <span class="hljs-comment">// 未使用的 4 位, 用作保留位</span><br>        int8 type:<span class="hljs-number">3</span>;  <span class="hljs-comment">// 文件类型, 用 3 位表示 (比如普通文件, 目录等)</span><br>        <span class="hljs-type">bool</span> valid:<span class="hljs-number">1</span>; <span class="hljs-comment">// 是否有效, 1 bit 标志</span><br>    &#125; validtype;<br><br>    int16 size;       <span class="hljs-comment">// 文件大小, 16 位, 也就是最大 64KB</span><br>    filename name;    <span class="hljs-comment">// 文件名和扩展名</span><br>    ptr indirect;     <span class="hljs-comment">// 一级间接指针</span><br>    ptr indirect[PtrPerInode]; <span class="hljs-comment">// 多级间接指针数组</span><br>&#125;<br><br><span class="hljs-keyword">typedef</span> s_inode inode;<br></code></pre></td></tr></table></figure>
+
+<p>Inode (Index node, 索引节点), 是文件系统中用于描述一个文件或目录的元数据结构, 其通常不包含文件名本身, 但包含与该文件相关的几乎所有其他信息, 比如:</p>
+<ul>
+<li>文件类型, 是普通文件, 目录, 符号链接, 设备文件等</li>
+<li>权限信息, 用户&#x2F;组&#x2F;其他用户的读, 写, 执行权限</li>
+<li>所有者&#x2F;组, UID 和 GID</li>
+<li>文件大小, 文件占用的字节数</li>
+<li>时间戳, 包括创建时间 (ctime), 最后修改时间 (mtime), 最后访问时间 (atime)</li>
+<li>数据块指针, 指向文件内容实际存储在磁盘上哪些数据块的指针, 包括直接指针 (10~12 个), 一级间接指针, 二级, 三级间接指针等 (用于大文件)</li>
+<li>链接计数 (link count), 有多少个目录项 (硬链接) 指向该 inode</li>
+<li>状态信息, 比如是否被打开, 是否脏等</li>
+</ul>
+<p>文件系统通常用 “目录” 把文件名和 “inode” 编号关联起来:</p>
+<figure class="highlight livescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs livescript">文件名 (<span class="hljs-string">&quot;example.txt&quot;</span>) <br>     ↓<br>目录项 <span class="hljs-function"><span class="hljs-params">(Directory Entry)</span> --&gt;</span> 记录: 文件名 + inode号码 (比如 <span class="hljs-number">1234</span>)<br>     ↓<br>文件系统通过 inode号码 <span class="hljs-number">1234</span> 找到对应的 inode 结构<br>     ↓<br>inode 包含: 文件大小、权限、时间、数据块位置……<br>     ↓<br>通过 inode 中的数据块指针，找到文件的实际内容数据<br></code></pre></td></tr></table></figure>
+
+<h1 id="Block-结构"><a href="#Block-结构" class="headerlink" title="Block 结构"></a>Block 结构</h1><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">union</span> <span class="hljs-title">u_fsblock</span> &#123;</span><br>    superblock super;               <span class="hljs-comment">// 该 block 是一个超级块</span><br>    int8 data[Blocksize];           <span class="hljs-comment">// 该 block 是普通数据块, 内容是原始字节</span><br>    ptr pointers[PtrPerBlock];      <span class="hljs-comment">// 该 block 是指针块, 里面存了很多块指针</span><br>    inode inodes[InodesPerBlock];   <span class="hljs-comment">// 该 block 是 inode 块, 存了很多 inode, 用于紧凑存储 inode 信息</span><br>&#125;<br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">union</span> <span class="hljs-title">u_fsblock</span> <span class="hljs-title">fsblock</span>;</span><br></code></pre></td></tr></table></figure>
+<p><code>union</code> 是一种特殊的数据结构, 其所有成员共享同一块内存空间, 大小等于最大成员的大小. 同一时间只能使用其中一个成员, 但可以根据需要, 将同一个 block 解释为不同的逻辑结构.</p>
+<p>这里相当于 block 有多种类型, 可以是:</p>
+<ul>
+<li>超级块, 存放整个文件系统的元信息</li>
+<li>数据块, 存放文件的实际内容</li>
+<li>指针块, 存放指向其他数据块的指针</li>
+<li>inode 块, 将多个 inode 存放在一个块内</li>
+</ul>
+<h1 id="Formatting"><a href="#Formatting" class="headerlink" title="Formatting"></a>Formatting</h1><p>Formatting 指, 在存储设备上初始化并创建一套用于管理文件和数据的结构, 比如超级块, inode, 位图, 数据块等.</p>
+<p>比如一块空白硬盘, 本质上就是一大块二进制存储空间, 此时操作系统不能直接理解怎么存文件, 找文件等, 格式化的目的, 就是让操作系统知道:</p>
+<ul>
+<li>文件系统是什么类型</li>
+<li>哪里存放文件的元信息</li>
+<li>哪里存放文件的内容</li>
+<li>那些块是空闲的</li>
+<li>如何管理文件等</li>
+</ul>
+<p>具体需要做的通常有:</p>
+<ol>
+<li>创建超级块 (superblock)</li>
+<li>初始化 inode 表</li>
+<li>初始化数据块区域</li>
+<li>初始化 bitmap</li>
+<li>创建根目录</li>
+<li>设置文件系统类型和版本等等</li>
+</ol>
+<p>示例:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> int8 bootsector[<span class="hljs-number">500</span>];<br>filesystem *<span class="hljs-title function_">fsformat</span><span class="hljs-params">(disk*, bootsector*)</span><br></code></pre></td></tr></table></figure>
+
 
                 
               </div>
