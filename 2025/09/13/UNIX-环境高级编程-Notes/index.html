@@ -63,10 +63,18 @@
 <meta property="og:image" content="http://example.com/img/unix-book-sigprocmask-how-table.png">
 <meta property="og:image" content="http://example.com/img/unix-book-thread-read-in-middle.png">
 <meta property="og:image" content="http://example.com/img/unix-book-thread-read-mem-sync-example.png">
+<meta property="og:image" content="http://example.com/img/unix-book-telnet-read-and-write-two-example.png">
+<meta property="og:image" content="http://example.com/img/unix-book-fdset-structure-example.png">
+<meta property="og:image" content="http://example.com/img/unix-book-select-range-to-maxfdp.png">
+<meta property="og:image" content="http://example.com/img/unix-book-poll-events-and-revents-flag.png">
 <meta property="og:image" content="http://example.com/img/unix-book-process-pipe-and-fork.png">
 <meta property="og:image" content="http://example.com/img/unix-book-pipe-parent-to-child.png">
+<meta property="og:image" content="http://example.com/img/unix-book-popen-diff-type-example.png">
+<meta property="og:image" content="http://example.com/img/unix-book-tee-process-example.png">
+<meta property="og:image" content="http://example.com/img/unix-book-example-using-fifo-to-pass-data.png">
+<meta property="og:image" content="http://example.com/img/unix-book-unix-socket-pair-example.png">
 <meta property="article:published_time" content="2025-09-13T13:06:04.000Z">
-<meta property="article:modified_time" content="2025-11-06T14:11:11.160Z">
+<meta property="article:modified_time" content="2025-11-12T11:47:29.379Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/unix-iso-c-defined-header-file.png">
@@ -278,7 +286,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          58k 字
+          62k 字
         
       </span>
     
@@ -289,7 +297,7 @@
         
         
         
-          483 分钟
+          519 分钟
         
       </span>
     
@@ -2130,6 +2138,72 @@
 <li>成功时返回 <code>0</code>; 出错时返回错误编号</li>
 <li>这个适用于希望改变默认的栈大小, 但不想自己分配的情况</li>
 </ul>
+<h1 id="高级-I-x2F-O"><a href="#高级-I-x2F-O" class="headerlink" title="高级 I&#x2F;O"></a>高级 I&#x2F;O</h1><h2 id="I-x2F-O-多路转接"><a href="#I-x2F-O-多路转接" class="headerlink" title="I&#x2F;O 多路转接"></a>I&#x2F;O 多路转接</h2><h3 id="函数-select"><a href="#函数-select" class="headerlink" title="函数 select"></a>函数 select</h3><p>比如:</p>
+<p><img src="/../img/unix-book-telnet-read-and-write-two-example.png" srcset="/img/loading.gif" lazyload></p>
+<p><code>telnet</code> 程序有两个输入和两个输出, 如果用 <code>read</code> 则会阻塞一端导致另一端无法处理, 比如:</p>
+<ul>
+<li>假设 <code>telnet</code> 阻塞用户端的输入, 如果此时用户离开终端, 而 <code>telnetd</code> 又返回了结果, 那么 <code>telnetd</code> 的响应无法打印到用户终端上, 因为此时其还阻塞在获取用户的输入</li>
+</ul>
+<p>可以用 <code>select</code> 函数执行 I&#x2F;O 多路转接, 其告诉内核:</p>
+<ul>
+<li>所关心的描述符有哪些</li>
+<li>对于每个描述符所关心的条件</li>
+<li>愿意等待多长时间</li>
+</ul>
+<p>从 <code>select</code> 返回时, 内核会告诉我们:</p>
+<ul>
+<li>已准备好的描述符的总数量</li>
+<li>对于读, 写或异常这 3 个条件中的一个, 哪些描述符已经准备好了</li>
+</ul>
+<p>然后就能基于这个返回信息来调用相应的 I&#x2F;O 函数, 并确保不会阻塞:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;sys/select.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">select</span><span class="hljs-params">(<span class="hljs-type">int</span> maxfdp1, </span><br><span class="hljs-params">    fd_set *<span class="hljs-keyword">restrict</span> readfds,</span><br><span class="hljs-params">    fd_set *<span class="hljs-keyword">restrict</span> writefds,</span><br><span class="hljs-params">    fd_set *<span class="hljs-keyword">restrict</span> exceptfds,</span><br><span class="hljs-params">    <span class="hljs-keyword">struct</span> timeval *<span class="hljs-keyword">restrict</span> tvptr</span><br><span class="hljs-params">)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>返回值是准备就绪的描述符数目; 如果超时返回 <code>0</code>; 出错返回 <code>-1</code></li>
+<li><code>tvptr</code> 用于指定愿意等待的时间长度, 单位是秒和微妙</li>
+<li><code>readfds</code>, <code>writefds</code> 和 <code>exceptfds</code> 是指向描述符集的指针, 通常是一个很大的字节数组, 每一位代表一个描述符</li>
+</ul>
+<p><img src="/../img/unix-book-fdset-structure-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>判断一个描述符是否在描述符集中 (是否被设置):</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;sys/select.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">FD_ISSET</span><span class="hljs-params">(<span class="hljs-type">int</span> fd, fd_set *fdset)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>若在 <code>fd</code> 的描述符集中, 返回非 0 值; 否则, 返回 <code>0</code></li>
+</ul>
+<p>其他操作描述符集的函数 (或者宏):</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">FD_CLR</span><span class="hljs-params">(<span class="hljs-type">int</span> fd, fd_set *fdset)</span>;<br><span class="hljs-type">void</span> <span class="hljs-title function_">FD_SET</span><span class="hljs-params">(<span class="hljs-type">int</span> fd, fd_set *fdset)</span>;<br><span class="hljs-type">void</span> <span class="hljs-title function_">FD_ZERO</span><span class="hljs-params">(fd_set *fdset)</span>;<br></code></pre></td></tr></table></figure>
+
+<p>在声明了一个描述符集之后, 必须用 <code>FD_ZERO</code> 将这个描述符集置为 <code>0</code>, 然后进行设置:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c">fd_set rset;<br><span class="hljs-type">int</span> fd;<br>FD_ZERO(&amp;rset);<br>FD_SET(fd, &amp;rset);<br>FD_SET(STDIN_FILENO, &amp;rset);<br></code></pre></td></tr></table></figure>
+
+<p><code>select</code> 中间的 3 个参数中的任意一个 (或全部) 可以是空指针. 如果全部是空指针, 则 <code>select</code> 相当于一个定时器, 且比 <code>sleep</code> 更精确.</p>
+<p><code>maxfdp1</code> 是 “最大文件描述符编号值加 1”, 用于限定内核查找的范围.</p>
+<p>示例:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c">fd_set readset, writeset;<br><br>FD_ZERO(&amp;readset);<br>FD_ZERO(&amp;writeset);<br><br>FD_SET(<span class="hljs-number">0</span>, &amp;readset);<br>FD_SET(<span class="hljs-number">3</span>, &amp;readset);<br><br>FD_SET(<span class="hljs-number">1</span>, &amp;writeset);<br>FD_SET(<span class="hljs-number">2</span>, &amp;writeset);<br><br>select(<span class="hljs-number">4</span>, &amp;readset, &amp;writeset, <span class="hljs-literal">NULL</span>, <span class="hljs-literal">NULL</span>);<br></code></pre></td></tr></table></figure>
+
+<p>此时 <code>select</code> 只会查找 <code>set</code> 中的 <code>0, 1, 2, 3</code> 这几位:</p>
+<p><img src="/../img/unix-book-select-range-to-maxfdp.png" srcset="/img/loading.gif" lazyload></p>
+<p>一个描述符 “准备好” 的意思是:</p>
+<ul>
+<li>若对 <code>readfds</code> 中的一个描述符进行 <code>read</code> 操作不会阻塞, 则认为该描述符是准备好的</li>
+<li>若对 <code>writefds</code> 中的一个描述符进行 <code>write</code> 操作不会阻塞, 则认为该描述符是准备好的</li>
+<li>若对 <code>exceptfds</code> 中的一个描述符有一个未决的异常条件, 则认为该描述符是准备好的</li>
+<li>对于读, 写和异常条件, 普通文件的文件描述符总是返回准备好</li>
+</ul>
+<h3 id="函数-poll"><a href="#函数-poll" class="headerlink" title="函数 poll"></a>函数 poll</h3><p><code>poll</code> 类似于 <code>select</code>, 但是接口不同, 其可用于任何类型的文件描述符:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;poll.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">poll</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> pollfd fdarray[], <span class="hljs-type">nfds_t</span> nfds, <span class="hljs-type">int</span> timeout)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>返回准备就绪的描述符数目; 若超时返回 <code>0</code>; 出错返回 <code>-1</code></li>
+<li><code>pollfd</code> 结构的数组中, 每个元素结构如下:</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">pollfd</span> &#123;</span><br>    <span class="hljs-type">int</span> fd;<br>    <span class="hljs-type">short</span> events;   <span class="hljs-comment">/* events of interest on fd */</span><br>    <span class="hljs-type">short</span> revents;  <span class="hljs-comment">/* events that occurred on fd */</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>nfds</code> 指定 <code>fdarray</code> 中的元素数量</li>
+<li>数组内每个元素的 <code>events</code> 成员需要设置为下面值中的一个或几个, 老告诉内核关注描述符的哪些事件:</li>
+</ul>
+<p><img src="/../img/unix-book-poll-events-and-revents-flag.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li><code>revents</code> 在返回时由内核设置, 用于说明每个描述符发生了哪些事件</li>
+</ul>
+<p>当一个描述符被 <code>POLLHUP</code> 后, 就不能再写该描述符, 但仍可能从该描述符读取到数据.</p>
 <h1 id="进程间通信"><a href="#进程间通信" class="headerlink" title="进程间通信"></a>进程间通信</h1><h2 id="管道"><a href="#管道" class="headerlink" title="管道"></a>管道</h2><p>管道只能在具有公共祖先的两个进程之间使用. 通常, 一个管道由一个进程创建, 在进程调用 <code>fork</code> 之后, 这个管道就能在父进程和子进程之间使用了.</p>
 <p>最常见的就是 shell 中, shell 会为每一条命令单独创建一个进程, 然后用管道将前一条命令的标准输出与后一条命令的标准输入相连接.</p>
 <p>管道用 <code>pipe</code> 函数创建:</p>
@@ -2151,6 +2225,75 @@
 </ol>
 <p>在写管道时, 常量 <code>PIPE_BUF</code> 规定了内核的管道缓冲区大小. 如果对管道调用 <code>write</code>, 并且要求写的字节数小于等于 <code>PIPE_BUF</code>, 则此操作不会与其他进程对同一管道的 <code>write</code> 操作交叉进行.</p>
 <p>如果多个进程同时写一个管道, 而且要求写的字节数超过 <code>PIPE_BUF</code>, 那么所写的数据可能会与其他进程所写的数据相互交叉.</p>
+<h2 id="函数-popen-和-pclose"><a href="#函数-popen-和-pclose" class="headerlink" title="函数 popen 和 pclose"></a>函数 popen 和 pclose</h2><p><code>popen</code> 能: 创建一个管道, 然后 <code>fork</code> 一个子进程, 关闭一个未使用的管道端, 执行一个 shell 命令, 然后等待命令终止:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><br>FILE *<span class="hljs-title function_">popen</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *cmdstring, <span class="hljs-type">const</span> <span class="hljs-type">char</span> *type)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>若成功, 返回文件指针; 出错时返回 <code>NULL</code></li>
+<li><code>type</code> 是 <code>r</code>, 则将文件指针连接到 <code>cmdstring</code> 的标准输出; 如果是 <code>w</code>, 则将文件指针连接到 <code>cmdstring</code></li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">pclose</span><span class="hljs-params">(FILE *fp)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时, 返回 <code>cmdstring</code> 的终止状态; 出错时返回 <code>-1</code></li>
+<li><code>pclose</code> 会关闭这个文件流, 并调用 <code>waitpid</code> 等待子进程结束, 并获取退出状态</li>
+</ul>
+<p><img src="/../img/unix-book-popen-diff-type-example.png" srcset="/img/loading.gif" lazyload></p>
+<p><code>cmdstring</code> 会这样运行:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sh -c cmdstring<br></code></pre></td></tr></table></figure>
+
+<h2 id="FIFO"><a href="#FIFO" class="headerlink" title="FIFO"></a>FIFO</h2><p>FIFO 称命名管道. 未命名的管道只能在两个相关的进程之间使用, 而且这两个相关的进程还要有一个共同的创建了它们的祖先进程. 而使用 FIFO, 可以让不相关的进程交换数据.</p>
+<p>FIFO 本质上是一种文件类型, 可以通过 <code>stat</code> 结构的 <code>st_mode</code> 成员来判断其类型.</p>
+<p>创建 FIFO, 其路径名会存在于文件系统中:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;sys/stat.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">mkfifo</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *path, <span class="hljs-type">mode_t</span> mode)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">mkfifoat</span><span class="hljs-params">(<span class="hljs-type">int</span> fd, <span class="hljs-type">const</span> <span class="hljs-type">char</span> *path, <span class="hljs-type">mode_t</span> mode)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回 <code>0</code>; 出错时返回 <code>-1</code></li>
+<li><code>mode</code> 参数与 <code>open</code> 相同</li>
+</ul>
+<p>用 <code>mkfifo</code> 和 <code>mkfifoat</code> 创建 FIFO 之后, 需要用 <code>open</code> 来打开使用.</p>
+<p>当 <code>open</code> 一个 FIFO 时, 如果没有指定 <code>O_NONBLOCK</code> flag, 则:</p>
+<ul>
+<li>一个 <code>Read Only</code> 的 <code>open</code> 会阻塞, 直到某个进程为了 <code>write</code> 打开了这个 FIFO</li>
+<li>一个 <code>Write Only</code> 的 <code>open</code> 会阻塞, 直到某个进程为了 <code>read</code> 打开了这个 FIFO</li>
+</ul>
+<p>如果指定了 <code>O_NONBLOCK</code>, 则:</p>
+<ul>
+<li><code>Read Only</code> 的 <code>open</code> 会立即返回, 如果没有进程为了 <code>write</code> 打开一个 FIFO, 那么 <code>open</code> 将返回 <code>-1</code>, 且将 <code>errno</code> 设为 <code>ENXIO</code></li>
+</ul>
+<p>FIFO 有以下两种用途:</p>
+<ol>
+<li>shell 命令使用 FIFO 将数据从一条管道传送到另一条时, 无需创建中间临时文件</li>
+<li>客户进程-服务进程应用程序中, FIFO 用作汇聚点, 在客户进程和服务进程两者之间传递数据</li>
+</ol>
+<p>比如将一个输出重定向到另外两个进程:</p>
+<p><img src="/../img/unix-book-tee-process-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>如果 <code>prog3</code> 不与 <code>prog1</code> 和 <code>prog2</code> 在同一个进程组, 那么就不能用单纯的 <code>tee</code> 命令来输出, 需要配合 <code>fifo</code>:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ <span class="hljs-built_in">mkfifo</span> fifo1<br>$ prog3 &lt; fifo1 &amp; <span class="hljs-comment"># 后台运行</span><br>$ prog1 &lt; infile | <span class="hljs-built_in">tee</span> fifo1 | prog2<br></code></pre></td></tr></table></figure>
+
+<p><img src="/../img/unix-book-example-using-fifo-to-pass-data.png" srcset="/img/loading.gif" lazyload></p>
+<h1 id="高级进程间通信"><a href="#高级进程间通信" class="headerlink" title="高级进程间通信"></a>高级进程间通信</h1><h2 id="UNIX-域套接字"><a href="#UNIX-域套接字" class="headerlink" title="UNIX 域套接字"></a>UNIX 域套接字</h2><p>UNIX 域套接字可以让统一计算机系统上运行的两个进程之间传送打开的文件描述符. 其仅仅复制数据, 不执行协议处理, 不添加或删除网络报头等, 因此效率较高.</p>
+<p>UNIX 域套接字提供流和数据报两种接口. 其类似套接字和管道的混合:</p>
+<ul>
+<li><code>SOCK_STREAM</code>, 类似 TCP, 提供面向连接的, 可靠的, 双向的字节流通信</li>
+<li><code>SOCK_DGRAM</code>, 类似于 UDP, 提供无连接的, 不可靠的, 但保留消息边界的数据传输</li>
+</ul>
+<p>可以用 <code>socketpair</code> 函数来创建一对无命名的, 相互连接的 UNIX 域套接字:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;sys/socket.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">socketpair</span><span class="hljs-params">(<span class="hljs-type">int</span> domain, <span class="hljs-type">int</span> type, <span class="hljs-type">int</span> protocol, <span class="hljs-type">int</span> sockfd[<span class="hljs-number">2</span>])</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>成功时返回 <code>0</code>; 出错时返回 <code>-1</code></li>
+<li><code>sockfd[2]</code> 是一对相互连接的套接字, 从 <code>sockfd[0]</code> 写入的数据可以从 <code>sockfd[1]</code> 中读取</li>
+</ul>
+<p>一对相互连接的 UNIX 域套接字可以起到全双工管道的作用: 两端都对读写开放. 这种称 “fd 管道”:</p>
+<p><img src="/../img/unix-book-unix-socket-pair-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>比如:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;sys/socket.h&gt;</span></span><br><br><span class="hljs-type">int</span><br><span class="hljs-title function_">fd_pipe</span><span class="hljs-params">(<span class="hljs-type">int</span> fd[<span class="hljs-number">2</span>])</span><br>&#123;<br>    <span class="hljs-keyword">return</span> socketpair(AF_UNIX, SOCK_STREAM, <span class="hljs-number">0</span>, fd);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>命名 UNIX 域套接字的地址有 <code>sockaddr_un</code> 结构表示, 其定义在 <code>&lt;sys.un.h&gt;</code> 头文件中:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">sockaddr_un</span> &#123;</span><br>    <span class="hljs-type">sa_family_t</span> sun_family; <span class="hljs-comment">/* AF_UNIX */</span><br>    <span class="hljs-type">char</span> sun_path[<span class="hljs-number">108</span>];     <span class="hljs-comment">/* pathname */</span><br>&#125;;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>sun_path</code> 成员包含一个路径名. 将一个地址绑定到一个 UNIX 域套接字时, 系统会用该路径名创建一个 <code>S_IFSOCK</code> 类型的文件. 该文件仅用于向客户进程告示套接字名字, 无法被打开, 也不能用于应用程序的通信.</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;sys/socket.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;sys/un.h&gt;</span></span><br><br><span class="hljs-type">int</span><br><span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-type">int</span> fd, size;<br>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">sockaddr_un</span> <span class="hljs-title">un</span>;</span><br><br>    un.sun_family = AF_UNIX;<br>    <span class="hljs-built_in">strcpy</span>(un.sum_path, <span class="hljs-string">&quot;foo.socket&quot;</span>);<br>    <span class="hljs-keyword">if</span> ((fd = socket(AF_UNIX, SOCK_STREAM, <span class="hljs-number">0</span>)) &lt; <span class="hljs-number">0</span>)<br>        err_sys(<span class="hljs-string">&quot;socket failed&quot;</span>);<br>    size = offsetof(<span class="hljs-keyword">struct</span> sockaddr_un, sun_path) + <span class="hljs-built_in">strlen</span>(un.sun_path);<br>    <span class="hljs-keyword">if</span> (bind(fd, (<span class="hljs-keyword">struct</span> sockaddr *)&amp;un, size) &lt; <span class="hljs-number">0</span>)<br>        err_sys(<span class="hljs-string">&quot;bind failed&quot;</span>);<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;UNIX domain socket bound\n&quot;</span>);<br>    <span class="hljs-built_in">exit</span>(<span class="hljs-number">0</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
 
                 
               </div>

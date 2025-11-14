@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="为程序设置运行参数比如: 123gdb .&#x2F;bin&#x2F;observer(gdb) set args -P cli(gdb) run  set args 之后的内容会作为参数附加到运行程序后  也可以简写为: 1(gdb) run -P cli  重新开始调试运行 run 即可: 1(gdb) run  查看当前函数调用栈1(gdb) backtrace  或者简写为: 1(gdb) bt  其返回当">
+    <meta name="description" content="反汇编用 disassemble 命令 (或简写为 disas): 1(gdb) disas [funcname]  可以用起始地址和结束地址来反汇编任意内存区域的指令: 1(gdb) disassemble 0x400000 0x400050  反汇编当前函数: 1(gdb) disas     指定调试目标用 target 命令, 指定当前调试会话所连接的 “目标” 程序运行环境. 常用于需要">
 <meta property="og:type" content="article">
 <meta property="og:title" content="GDB-技巧积累">
 <meta property="og:url" content="http://example.com/2025/10/22/GDB-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="为程序设置运行参数比如: 123gdb .&#x2F;bin&#x2F;observer(gdb) set args -P cli(gdb) run  set args 之后的内容会作为参数附加到运行程序后  也可以简写为: 1(gdb) run -P cli  重新开始调试运行 run 即可: 1(gdb) run  查看当前函数调用栈1(gdb) backtrace  或者简写为: 1(gdb) bt  其返回当">
+<meta property="og:description" content="反汇编用 disassemble 命令 (或简写为 disas): 1(gdb) disas [funcname]  可以用起始地址和结束地址来反汇编任意内存区域的指令: 1(gdb) disassemble 0x400000 0x400050  反汇编当前函数: 1(gdb) disas     指定调试目标用 target 命令, 指定当前调试会话所连接的 “目标” 程序运行环境. 常用于需要">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-10-22T00:45:42.000Z">
-<meta property="article:modified_time" content="2025-10-23T11:55:49.394Z">
+<meta property="article:modified_time" content="2025-11-13T05:24:48.113Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.9k 字
+          2.6k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          17 分钟
+          22 分钟
         
       </span>
     
@@ -289,7 +289,49 @@
             
               <div class="markdown-body">
                 
-                <h1 id="为程序设置运行参数"><a href="#为程序设置运行参数" class="headerlink" title="为程序设置运行参数"></a>为程序设置运行参数</h1><p>比如:</p>
+                <h1 id="反汇编"><a href="#反汇编" class="headerlink" title="反汇编"></a>反汇编</h1><p>用 <code>disassemble</code> 命令 (或简写为 <code>disas</code>):</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">(gdb) disas [funcname]<br></code></pre></td></tr></table></figure>
+
+<p>可以用起始地址和结束地址来反汇编任意内存区域的指令:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">(gdb) disassemble 0x400000 0x400050<br></code></pre></td></tr></table></figure>
+
+<p>反汇编当前函数:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">(gdb) disas<br></code></pre></td></tr></table></figure>
+
+
+
+
+<h1 id="指定调试目标"><a href="#指定调试目标" class="headerlink" title="指定调试目标"></a>指定调试目标</h1><p>用 <code>target</code> 命令, 指定当前调试会话所连接的 “目标” 程序运行环境. 常用于需要调试远程机器上运行的程序, 或者虚拟平台中运行的程序.</p>
+<p>比如:</p>
+<ul>
+<li><code>target remote :1234</code>, 连接到本地的 <code>1234</code> 端口, 通常是一个 gdbserver 在监听</li>
+<li><code>target exec &lt;prog&gt;</code>, 直接指定一个可执行文件作为目标, 类似 <code>file</code></li>
+</ul>
+<p>先运行:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">gdbserver :1234 ./my_program<br></code></pre></td></tr></table></figure>
+<ul>
+<li>此时 <code>my_program</code> 在运行中, 通过端口 <code>1234</code> 开启一个 <code>gdbserver</code>, 等待 GDB 连接上来调试</li>
+</ul>
+<h1 id="加载程序符号信息"><a href="#加载程序符号信息" class="headerlink" title="加载程序符号信息"></a>加载程序符号信息</h1><p>在用 <code>-g</code> 选项编译程序后, 编译器会在生成的可执行文件或共享库中嵌入调试符号信息, 比如:</p>
+<ul>
+<li>函数名</li>
+<li>变量名</li>
+<li>源代码行号与机器指令地址的映射</li>
+<li>类型信息等</li>
+</ul>
+<p><code>symbol-file</code> 命令用来显示加载一个包含调试符号的可执行文件:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">(gdb) symbol-file my_program_with_symbols<br></code></pre></td></tr></table></figure>
+
+<p>其不会加载程序代码或数据本身, 只加载符号表.</p>
+<h1 id="定义命令"><a href="#定义命令" class="headerlink" title="定义命令"></a>定义命令</h1><p><code>define</code> 用于自定义一个新的 GDB 命令, 将一些重复的命令封装成一个简单的自定义函数:</p>
+<p>比如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">(gdb) define f<br>&gt;target <span class="hljs-built_in">exec</span> ./command.com<br>&gt;symbol-file ./command.com<br>&gt;end<br></code></pre></td></tr></table></figure>
+
+<p>查看和删除自定义命令:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">(gdb) show user<br></code></pre></td></tr></table></figure>
+
+
+<h1 id="为程序设置运行参数"><a href="#为程序设置运行参数" class="headerlink" title="为程序设置运行参数"></a>为程序设置运行参数</h1><p>比如:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">gdb ./bin/observer<br>(gdb) <span class="hljs-built_in">set</span> args -P cli<br>(gdb) run<br></code></pre></td></tr></table></figure>
 <ul>
 <li><code>set args</code> 之后的内容会作为参数附加到运行程序后</li>
