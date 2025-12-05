@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="特殊变量Makefile 中的特殊变量, 是由 Make 工具本身预定义的, 或者是在规则中自动根据规则内容填充的变量, 包括 3 类:  自动变量 (Automatic Variables), 引用当前规则中的目标, 依赖等 内置变量 (Built-in&#x2F;Implicit Variables), Make 预定义的常用变量, 如编译器, 编译选项等 其他常用特殊变量或环境变量  自动变">
+    <meta name="description" content="特殊目标在 makefile 中, .PHONY, .PRECIOUS 称为 “特殊目标 (Special Target)”. .PRECIOUSMake 会自动删除中间文件, 比如: 12345678# 依赖链final: intermediate@echo &quot;Building final from $&lt;&quot;cp $&lt; $@intermediate: source.">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Makefile-技巧积累">
 <meta property="og:url" content="http://example.com/2024/09/05/Makefile-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="特殊变量Makefile 中的特殊变量, 是由 Make 工具本身预定义的, 或者是在规则中自动根据规则内容填充的变量, 包括 3 类:  自动变量 (Automatic Variables), 引用当前规则中的目标, 依赖等 内置变量 (Built-in&#x2F;Implicit Variables), Make 预定义的常用变量, 如编译器, 编译选项等 其他常用特殊变量或环境变量  自动变">
+<meta property="og:description" content="特殊目标在 makefile 中, .PHONY, .PRECIOUS 称为 “特殊目标 (Special Target)”. .PRECIOUSMake 会自动删除中间文件, 比如: 12345678# 依赖链final: intermediate@echo &quot;Building final from $&lt;&quot;cp $&lt; $@intermediate: source.">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2024-09-05T05:53:51.000Z">
-<meta property="article:modified_time" content="2025-11-10T11:30:19.748Z">
+<meta property="article:modified_time" content="2025-12-03T03:11:36.339Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -235,7 +235,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.2k 字
+          6.9k 字
         
       </span>
     
@@ -246,7 +246,7 @@
         
         
         
-          19 分钟
+          58 分钟
         
       </span>
     
@@ -289,7 +289,219 @@
             
               <div class="markdown-body">
                 
-                <h1 id="特殊变量"><a href="#特殊变量" class="headerlink" title="特殊变量"></a>特殊变量</h1><p>Makefile 中的特殊变量, 是由 Make 工具本身预定义的, 或者是在规则中自动根据规则内容填充的变量, 包括 3 类:</p>
+                <h1 id="特殊目标"><a href="#特殊目标" class="headerlink" title="特殊目标"></a>特殊目标</h1><p>在 makefile 中, <code>.PHONY</code>, <code>.PRECIOUS</code> 称为 “特殊目标 (Special Target)”.</p>
+<h2 id="PRECIOUS"><a href="#PRECIOUS" class="headerlink" title=".PRECIOUS"></a>.PRECIOUS</h2><p>Make 会自动删除中间文件, 比如:</p>
+<figure class="highlight make"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs make"><span class="hljs-comment"># 依赖链</span><br><span class="hljs-section">final: intermediate</span><br>@echo <span class="hljs-string">&quot;Building final from <span class="hljs-variable">$&lt;</span>&quot;</span><br>cp <span class="hljs-variable">$&lt;</span> <span class="hljs-variable">$@</span><br><br><span class="hljs-section">intermediate: source.txt</span><br>@echo <span class="hljs-string">&quot;Building intermediate from <span class="hljs-variable">$&lt;</span>&quot;</span><br>cp <span class="hljs-variable">$&lt;</span> <span class="hljs-variable">$@</span><br></code></pre></td></tr></table></figure>
+
+<p>执行:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ make final<br>Building intermediate from source.txt<br>Building final from intermediate<br><span class="hljs-built_in">rm</span> intermediate    <span class="hljs-comment"># ← Make 自动删除中间文件！</span><br></code></pre></td></tr></table></figure>
+
+<p>Make 的逻辑是:</p>
+<ol>
+<li><code>final</code> 依赖 <code>intermediate</code></li>
+<li><code>intermediate</code> 不存在, 先构建它</li>
+<li>用 <code>intermediate</code> 构建 <code>final</code></li>
+<li><code>intermediate</code> 是中间产物, 需要删除</li>
+</ol>
+<p>而:</p>
+<figure class="highlight llvm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs llvm">.PREVIOUS: <span class="hljs-keyword">target</span><span class="hljs-number">1</span> <span class="hljs-keyword">target</span><span class="hljs-number">2</span><br></code></pre></td></tr></table></figure>
+
+<p>的作用是, 告诉 Make 不要删除这些中间文件.</p>
+<p>如果想保留所有中间文件:</p>
+<figure class="highlight asciidoc"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs asciidoc"><span class="hljs-title">.PRECIOUS: %</span><br></code></pre></td></tr></table></figure>
+
+<p>比如:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs bash">.PRECIOUS: build/my_%<br><br>cmd-ls: build/my_ls<br>    ./build/my_ls<br><br>build/my_ls: src/utils/ls.c $(LIB_OBJS)<br>    gcc $^ -o <span class="hljs-variable">$@</span><br></code></pre></td></tr></table></figure>
+
+<h1 id="调试技巧"><a href="#调试技巧" class="headerlink" title="调试技巧"></a>调试技巧</h1><figure class="highlight make"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs make"><span class="hljs-section">print-%:</span><br>    @echo &#x27;<span class="hljs-variable">$*</span>=$(<span class="hljs-variable">$*</span>)&#x27;<br>    @echo &#x27;  origin = <span class="hljs-variable">$(<span class="hljs-built_in">origin</span> <span class="hljs-variable">$*</span>)</span>&#x27;<br>    @echo &#x27;  flavor = <span class="hljs-variable">$(<span class="hljs-built_in">flavor</span> <span class="hljs-variable">$*</span>)</span>&#x27;<br>    @echo &#x27;  value  = $(<span class="hljs-variable">$*</span>)&#x27;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>print-%</code> 中的 <code>%</code> 是通配符, 可以匹配任何字符串, 比如:</li>
+</ul>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">make print-CFLAGS<br><span class="hljs-comment">#    ^^^^^^^^^^^</span><br><span class="hljs-comment">#    匹配模式 print-%</span><br><span class="hljs-comment">#         % = CFLAGS</span><br></code></pre></td></tr></table></figure>
+<p>提取到的值会存储在 <code>$*</code> 自动变量中.</p>
+<ul>
+<li><code>@echo &#39;$*=$($*)&#39;</code>, 这里的 <code>@</code> 用于抑制命令的回显, <code>$($*)</code> 用来展开 <code>$*</code> 对应的变量, 比如:</li>
+</ul>
+<figure class="highlight crystal"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs crystal"><span class="hljs-comment"># 假设 CFLAGS = -g -Wall</span><br>make print-CFLAGS<br><br><span class="hljs-comment"># 第一次展开</span><br><span class="hljs-variable">$*</span>         <span class="hljs-comment"># → CFLAGS</span><br><br><span class="hljs-comment"># 第二次展开</span><br><span class="hljs-variable">$(</span><span class="hljs-variable">$*</span>)      <span class="hljs-comment"># → $(CFLAGS) → -g -Wall</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><code>$(origin $*)</code> 用于打印变量的来源</li>
+<li><code>$(flavor $*)</code> 用于打印变量的类型</li>
+</ul>
+<h1 id="Order-Only-Prerequisits-语法"><a href="#Order-Only-Prerequisits-语法" class="headerlink" title="Order-Only Prerequisits 语法"></a>Order-Only Prerequisits 语法</h1><figure class="highlight make"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs make"><span class="hljs-section">targets: normal-prerequisites | order-only-prerequisites</span><br>    recipe<br></code></pre></td></tr></table></figure>
+
+<p>普通依赖和 Order-Only 依赖写法上的区别如下:</p>
+<figure class="highlight avrasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs avrasm"><span class="hljs-meta"># 普通依赖（| 左边）</span><br><span class="hljs-symbol">target:</span> dep1 dep2<br>    recipe<br><br><span class="hljs-meta"># Order-Only 依赖（| 右边）</span><br><span class="hljs-symbol">target:</span> dep1 | dep2<br>    recipe<br></code></pre></td></tr></table></figure>
+
+<p>行为上, 对于普通依赖:</p>
+<figure class="highlight make"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs make"><span class="hljs-variable">$(BUILD_DIR)</span>/disk.o: src/lib/disk.c <span class="hljs-variable">$(BUILD_DIR)</span><br>    <span class="hljs-variable">$(CC)</span> -c <span class="hljs-variable">$&lt;</span> -o <span class="hljs-variable">$@</span>j<br></code></pre></td></tr></table></figure>
+
+<p><code>Make</code> 的检查逻辑是:</p>
+<ol>
+<li><code>$(BUILD_DIR)</code> 必须存在</li>
+<li>如果 <code>src/lib/disk.c</code> 对比 <code>disk.o</code> 新, 则重新构建</li>
+<li>⚠️ 如果 <code>$(BUILD_DIR)</code> 比 <code>disk.o</code> 新, 则重新构建</li>
+</ol>
+<p>而对于 Order-Only 依赖:</p>
+<figure class="highlight make"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs make"><span class="hljs-variable">$(BUILD_DIR)</span>/disk.o: src/lib/disk.c | <span class="hljs-variable">$(BUILD_DIR)</span><br>    <span class="hljs-variable">$(CC)</span> -c <span class="hljs-variable">$&lt;</span> -o <span class="hljs-variable">$@</span><br></code></pre></td></tr></table></figure>
+
+<p><code>Make</code> 的检查逻辑是:</p>
+<ol>
+<li><code>$(BUILD_DIR)</code> 必须存在</li>
+<li>如果 <code>src/lib/disk.c</code> 对比 <code>disk.o</code> 新, 则重新构建</li>
+<li>⚠️ 忽略 <code>$(BUILD_DIR)</code> 的时间戳</li>
+</ol>
+<h1 id="静态模式语法"><a href="#静态模式语法" class="headerlink" title="静态模式语法"></a>静态模式语法</h1><p>用于展开成多条规则:</p>
+<figure class="highlight make"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs make"><span class="hljs-section">targets: target-pattern: prereq-patterns</span><br>    recipe<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>targets</code> 是目标列表</li>
+<li><code>target-pattern</code> 是目标模式, 对目标列表中的每个元素单独提取并展开成一条规则</li>
+<li><code>prereq-patterns</code> 是依赖模式</li>
+</ul>
+<p>比如:</p>
+<figure class="highlight make"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs make"><span class="hljs-variable">$(TEST_EXES)</span>: <span class="hljs-variable">$(BUILD_DIR)</span>/test_%: <span class="hljs-variable">$(TEST_DIR)</span>/%.c <span class="hljs-variable">$(LIB_OBJS)</span> | <span class="hljs-variable">$(BUILD_DIR)</span><br>    <span class="hljs-variable">$(CC)</span> <span class="hljs-variable">$(CFLAGS)</span> <span class="hljs-variable">$^</span> -o <span class="hljs-variable">$@</span> <span class="hljs-variable">$(LDFLAGS)</span><br></code></pre></td></tr></table></figure>
+
+<p>假如有这些测试文件:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">test</span>/check_chdir.c<br><span class="hljs-built_in">test</span>/check_file.c<br><span class="hljs-built_in">test</span>/check_path.c<br></code></pre></td></tr></table></figure>
+
+<p><code>$(TEST_EXES)</code> 会展开为:</p>
+<figure class="highlight make"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs make">TEST_EXES = build/test_check_chdir \<br>            build/test_check_file \<br>            build/test_check_path<br></code></pre></td></tr></table></figure>
+
+<p>对于每个目标, Make 会:</p>
+<ol>
+<li>从目标中提取 <code>%</code> 值 (stem)</li>
+<li>用提取的值替换依赖中的 <code>%</code></li>
+</ol>
+<p>比如:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_"># </span><span class="language-bash">目标: build/test_check_chdir</span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">                 ^^^^^^^^^^^</span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">模式: $(BUILD_DIR)/test_%</span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">                        ^</span><br><span class="hljs-meta prompt_">#</span><span class="language-bash"></span><br><span class="language-bash"><span class="hljs-comment"># 提取 stem = &quot;check_chdir&quot;</span></span><br></code></pre></td></tr></table></figure>
+
+<p>提取到 <code>stem = &quot;check_chdir&quot;</code> 后, 替换依赖中的 <code>%</code>:</p>
+<figure class="highlight mel"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs mel"># 依赖模式: $(TEST_DIR)/%.c $(LIB_OBJS)<br># 替换 %:   test/check_chdir.c $(LIB_OBJS)<br></code></pre></td></tr></table></figure>
+
+<p>最终, 这条静态模式规则会展开为多条独立的规则:</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs makefile"><span class="hljs-section">build/test_check_chdir: test/check_chdir.c <span class="hljs-variable">$(LIB_OBJS)</span> | build</span><br>    <span class="hljs-variable">$(CC)</span> <span class="hljs-variable">$(CFLAGS)</span> <span class="hljs-variable">$^</span> -o <span class="hljs-variable">$@</span> <span class="hljs-variable">$(LDFLAGS)</span><br><br><span class="hljs-section">build/test_check_file: test/check_file.c <span class="hljs-variable">$(LIB_OBJS)</span> | build</span><br>    <span class="hljs-variable">$(CC)</span> <span class="hljs-variable">$(CFLAGS)</span> <span class="hljs-variable">$^</span> -o <span class="hljs-variable">$@</span> <span class="hljs-variable">$(LDFLAGS)</span><br><br><span class="hljs-section">build/test_check_path: test/check_path.c <span class="hljs-variable">$(LIB_OBJS)</span> | build</span><br>    <span class="hljs-variable">$(CC)</span> <span class="hljs-variable">$(CFLAGS)</span> <span class="hljs-variable">$^</span> -o <span class="hljs-variable">$@</span> <span class="hljs-variable">$(LDFLAGS)</span><br></code></pre></td></tr></table></figure>
+
+
+
+
+<h1 id="内置函数"><a href="#内置函数" class="headerlink" title="内置函数"></a>内置函数</h1><p>比如 <code>$(wildcard ...)</code>, <code>$(patsubst ...)</code> 等都是 Makefile 的内置函数. 常见的如下列出.</p>
+<h2 id="wildcard"><a href="#wildcard" class="headerlink" title="wildcard"></a>wildcard</h2><p><code>wildcard</code> 用于模式匹配指定目录下的文件, 返回空格分隔的文件名列表. 其匹配语法如下:</p>
+<ul>
+<li><p><code>*</code> 匹配任意数量的字符:</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs makefile"><span class="hljs-comment"># 匹配所有 .c 文件</span><br>SRCS := <span class="hljs-variable">$(<span class="hljs-built_in">wildcard</span> *.c)</span><br><br><span class="hljs-comment"># 匹配所有以 &quot;test&quot; 开头的文件</span><br>TESTS := <span class="hljs-variable">$(<span class="hljs-built_in">wildcard</span> test*)</span><br><br><span class="hljs-comment"># 匹配所有以 &quot;.log&quot; 结尾的文件</span><br>LOGS := <span class="hljs-variable">$(<span class="hljs-built_in">wildcard</span> *.log)</span><br><br><span class="hljs-comment"># 匹配包含 &quot;config&quot; 的文件</span><br>CONFIGS := <span class="hljs-variable">$(<span class="hljs-built_in">wildcard</span> *config*)</span><br></code></pre></td></tr></table></figure>
+</li>
+<li><p><code>?</code> 匹配单个字符:</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs makefile"><span class="hljs-comment"># 匹配 file1.c, file2.c, fileA.c 等，但不匹配 file10.c</span><br>FILES := <span class="hljs-variable">$(<span class="hljs-built_in">wildcard</span> <span class="hljs-built_in">file</span>?.c)</span><br><br><span class="hljs-comment"># 匹配 a.c, b.c, c.c 等单个字母开头的 .c 文件</span><br>SINGLE := <span class="hljs-variable">$(<span class="hljs-built_in">wildcard</span> ?.c)</span><br></code></pre></td></tr></table></figure>
+</li>
+<li><p><code>[...]</code> 匹配指定字符:</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs makefile"><span class="hljs-comment"># 匹配 file1.c, file2.c, file3.c（仅数字）</span><br>NUMBERS := <span class="hljs-variable">$(<span class="hljs-built_in">wildcard</span> <span class="hljs-built_in">file</span>[123].c)</span><br><br><span class="hljs-comment"># 匹配 filea.c, fileb.c, filec.c（仅小写字母）</span><br>LOWER := <span class="hljs-variable">$(<span class="hljs-built_in">wildcard</span> <span class="hljs-built_in">file</span>[a-c].c)</span><br><br><span class="hljs-comment"># 匹配 fileA.c, fileB.c, fileC.c（仅大写字母）</span><br>UPPER := <span class="hljs-variable">$(<span class="hljs-built_in">wildcard</span> <span class="hljs-built_in">file</span>[A-C].c)</span><br><br><span class="hljs-comment"># 匹配 file1.c, file2.c, filea.c, fileb.c（数字或字母）</span><br>MIXED := <span class="hljs-variable">$(<span class="hljs-built_in">wildcard</span> <span class="hljs-built_in">file</span>[0-9a-z].c)</span><br><br><span class="hljs-comment"># 使用预定义字符类</span><br>DIGITS := <span class="hljs-variable">$(<span class="hljs-built_in">wildcard</span> <span class="hljs-built_in">file</span>[0-9].c)</span>      <span class="hljs-comment"># 数字</span><br>ALPHA := <span class="hljs-variable">$(<span class="hljs-built_in">wildcard</span> <span class="hljs-built_in">file</span>[a-zA-Z].c)</span>   <span class="hljs-comment"># 字母</span><br>ALNUM := <span class="hljs-variable">$(<span class="hljs-built_in">wildcard</span> <span class="hljs-built_in">file</span>[0-9a-zA-Z].c)</span> <span class="hljs-comment"># 字母数字</span><br></code></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="patsubst"><a href="#patsubst" class="headerlink" title="patsubst"></a>patsubst</h2><p><code>patsubst</code> 用于在字符串中进行模式替换. 语法如下:</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs makefile"><span class="hljs-comment"># 语法：$(patsubst pattern,replacement,text)</span><br>LIB_OBJS := <span class="hljs-variable">$(<span class="hljs-built_in">patsubst</span> <span class="hljs-variable">$(LIB_DIR)</span>/%.c,<span class="hljs-variable">$(BUILD_DIR)</span>/%.o,<span class="hljs-variable">$(LIB_SRCS)</span>)</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>%</code> 匹配任意非空字符串</li>
+</ul>
+<h2 id="foreach"><a href="#foreach" class="headerlink" title="foreach"></a>foreach</h2><p><code>foreach</code> 用于循环处理:</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs makefile"><span class="hljs-comment"># foreach - 循环处理</span><br>FILES := a.c b.c c.c<br>OBJS := <span class="hljs-variable">$(<span class="hljs-built_in">foreach</span> <span class="hljs-built_in">file</span>,<span class="hljs-variable">$(FILES)</span>,<span class="hljs-variable">$(BUILD_DIR)</span>/$(<span class="hljs-built_in">file</span>:.c=.o)</span>)<br><br><span class="hljs-comment"># call - 调用用户自定义函数</span><br><span class="hljs-comment"># origin - 查看变量来源</span><br><span class="hljs-comment"># value - 获取变量原始值（不展开）</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="origin"><a href="#origin" class="headerlink" title="origin"></a>origin</h2><p><code>origin</code> 函数用于返回变量来源:</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs reasonml"><span class="hljs-constructor">$(<span class="hljs-params">origin</span> <span class="hljs-params">variable</span>)</span><br></code></pre></td></tr></table></figure>
+
+<p>可能的返回值有:</p>
+<table>
+<thead>
+<tr>
+<th>返回值</th>
+<th>含义</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>undefined</code></td>
+<td>变量未定义</td>
+<td><code>$(origin NOTEXIST)</code></td>
+</tr>
+<tr>
+<td><code>default</code></td>
+<td><code>Make</code> 的内置默认值</td>
+<td><code>$(origin CC) → default</code> (如果未设置)</td>
+</tr>
+<tr>
+<td><code>environment</code></td>
+<td>来自环境变量</td>
+<td><code>export FOO=bar; make</code></td>
+</tr>
+<tr>
+<td><code>file</code></td>
+<td>在 <code>Makefile</code> 中定义</td>
+<td><code>CC := gcc</code></td>
+</tr>
+<tr>
+<td><code>command line</code></td>
+<td>通过命令行参数传入</td>
+<td><code>make CC=clang</code></td>
+</tr>
+<tr>
+<td><code>override</code></td>
+<td>使用 <code>override</code> 定义</td>
+<td><code>override CC = gcc</code></td>
+</tr>
+<tr>
+<td><code>automatic</code></td>
+<td>自动变量</td>
+<td><code>$@, $&lt;, $^</code> 等</td>
+</tr>
+</tbody></table>
+<p>比如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-comment"># Makefile 中: CC := gcc</span><br>make print-CC<br><span class="hljs-comment"># origin = file</span><br><br><span class="hljs-comment"># 命令行: make CC=clang print-CC</span><br><span class="hljs-comment"># origin = command line</span><br><br><span class="hljs-comment"># 环境变量: export CC=gcc; make print-CC</span><br><span class="hljs-comment"># origin = environment</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="flavor"><a href="#flavor" class="headerlink" title="flavor"></a>flavor</h2><p><code>flavor</code> 函数返回变量的类型:</p>
+<figure class="highlight make"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs make"><span class="hljs-variable">$(<span class="hljs-built_in">flavor</span> variable)</span><br></code></pre></td></tr></table></figure>
+
+<p>返回值可能是:</p>
+<table>
+<thead>
+<tr>
+<th>返回值</th>
+<th>赋值方式</th>
+<th>展开时机</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>simple</code></td>
+<td><code>:=</code> 或 <code>::=</code></td>
+<td>定义时立即展开</td>
+</tr>
+<tr>
+<td><code>recursive</code></td>
+<td><code>=</code></td>
+<td>使用时递归展开</td>
+</tr>
+<tr>
+<td><code>undefined</code></td>
+<td>未定义</td>
+<td><code>N/A</code></td>
+</tr>
+</tbody></table>
+<p>示例:</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs makefile"><span class="hljs-comment"># Simple 变量 (立即展开)</span><br>A := <span class="hljs-variable">$(<span class="hljs-built_in">wildcard</span> *.c)</span>    <span class="hljs-comment"># 立即执行 wildcard，保存结果</span><br>B := <span class="hljs-variable">$(A)</span>               <span class="hljs-comment"># B = A 的当前值</span><br><br><span class="hljs-comment"># Recursive 变量 (延迟展开)</span><br>C = <span class="hljs-variable">$(<span class="hljs-built_in">wildcard</span> *.c)</span>     <span class="hljs-comment"># 不执行，保存表达式</span><br>D = <span class="hljs-variable">$(C)</span>                <span class="hljs-comment"># D = $(C) = $(wildcard *.c)</span><br><br><span class="hljs-section">测试:</span><br>make print-A<br><span class="hljs-comment"># flavor = simple</span><br><br>make print-C<br><span class="hljs-comment"># flavor = recursive</span><br></code></pre></td></tr></table></figure>
+
+
+<h1 id="x3D-和-x3D-赋值"><a href="#x3D-和-x3D-赋值" class="headerlink" title=":&#x3D; 和 &#x3D; 赋值"></a>:&#x3D; 和 &#x3D; 赋值</h1><p><code>:=</code> 称 “立即展开 (immediate expansion)” 的赋值方式, 而 <code>=</code> 称 “递归展开” 的赋值. 核心区别是:</p>
+<ul>
+<li><code>:=</code> 会在定义时立即展开</li>
+<li><code>=</code> 会延迟展开, 每次使用时都会重新展开</li>
+</ul>
+<p>立即展开赋值的语法为:</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs makefile">VAR := value<br></code></pre></td></tr></table></figure>
+
+<p>示例:</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs makefile"><span class="hljs-comment"># 使用 =</span><br>X = hello<br>Y = <span class="hljs-variable">$(X)</span> world<br>X = hi<br><span class="hljs-comment"># 此时 Y 的值是 &quot;hi world&quot;</span><br><br><span class="hljs-comment"># 使用 :=</span><br>A := hello  <br>B := <span class="hljs-variable">$(A)</span> world<br>A := hi<br><span class="hljs-comment"># 此时 B 的值是 &quot;hello world&quot;（A的初始值）</span><br></code></pre></td></tr></table></figure>
+
+<p>使用 <code>=</code> 可能会导致无限递归, 比如:</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs makefile">CFLAGS = <span class="hljs-variable">$(CFLAGS)</span> -O2<br></code></pre></td></tr></table></figure>
+
+<h1 id="特殊变量"><a href="#特殊变量" class="headerlink" title="特殊变量"></a>特殊变量</h1><p>Makefile 中的特殊变量, 是由 Make 工具本身预定义的, 或者是在规则中自动根据规则内容填充的变量, 包括 3 类:</p>
 <ol>
 <li>自动变量 (Automatic Variables), 引用当前规则中的目标, 依赖等</li>
 <li>内置变量 (Built-in&#x2F;Implicit Variables), Make 预定义的常用变量, 如编译器, 编译选项等</li>
@@ -301,7 +513,7 @@
 <li><code>$^</code>, 所有的依赖文件名 (All Prerequisites), 以空格分隔, 且会去重. 比如 <code>foo.o: a.c b.c</code> 中的 <code>a.c b.c</code></li>
 <li><code>$+</code>, 所有的依赖文件名, 以空格分隔, 但不去重</li>
 <li><code>$?</code>, 比目标新的依赖文件</li>
-<li><code>$*</code>, 目标文件名中去除后缀的部分</li>
+<li><code>$*</code>, 目标文件名中通配符匹配的部分</li>
 </ul>
 <h2 id="内置变量"><a href="#内置变量" class="headerlink" title="内置变量"></a>内置变量</h2><p>通常用于指定编译器, 编译选项, 链接器等, 可以直接使用或者覆盖:</p>
 <table>
