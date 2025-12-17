@@ -19,11 +19,11 @@ class ze {
         /// By default, we don't have a complicated cache policy.
         cacheDirectory: ".cache/typst/fonts"
       }), w = u.withCache(g);
-      return function(m, C) {
+      return function(v, C) {
         const R = setTimeout(() => {
-          console.warn("font fetching is stucking:", m);
+          console.warn("font fetching is stucking:", v);
         }, 15e3);
-        return w(m, C).finally(() => {
+        return w(v, C).finally(() => {
           clearTimeout(R);
         });
       };
@@ -34,7 +34,7 @@ class ze {
           return;
         }
         if (typeof u == "object" && "info" in u) {
-          await t.add_lazy_font(u, "blob" in u ? u.blob : pe(u));
+          await t.add_lazy_font(u, "blob" in u ? u.blob : he(u));
           return;
         }
         return new Uint8Array(await (await i(u)).arrayBuffer());
@@ -50,11 +50,11 @@ class ze {
     return r.latelyBuild && r.latelyBuild(i), await e.build();
   }
 }
-async function be(n, t, e, r) {
+async function pe(n, t, e, r) {
   var i;
   return await t.init((i = n == null ? void 0 : n.getModule) == null ? void 0 : i.call(n)), await new ze().build(n, new e(), r);
 }
-function pe(n) {
+function he(n) {
   return () => {
     const t = new XMLHttpRequest();
     return t.overrideMimeType("text/plain; charset=x-user-defined"), t.open("GET", n.url, !1), t.send(null), t.status === 200 && (t.response instanceof String || typeof t.response == "string") ? Uint8Array.from(t.response, (e) => e.charCodeAt(0)) : new Uint8Array();
@@ -124,7 +124,7 @@ function Z(n, t) {
   };
   return r._preloadRemoteFontOptions = t, r._kind = "fontLoader", r;
 }
-function qt({ byFamily: n }) {
+function Ut({ byFamily: n }) {
   return async (t, { builder: e }) => {
     const r = performance.now();
     if ("queryLocalFonts" in window) {
@@ -171,7 +171,7 @@ function Ve(n) {
 }
 const I = Symbol.for("reflexo-obj");
 var Bt = /* @__PURE__ */ ((n) => (n[n.PIXEL_PER_PT = 3] = "PIXEL_PER_PT", n))(Bt || {});
-class he {
+class me {
   constructor(t, e, r) {
     p(this, "loadPageCount");
     p(this, "imageScaleFactor");
@@ -183,7 +183,7 @@ class he {
     p(this, "semanticLayerList");
     this.pageInfos = t, this.imageScaleFactor = r.pixelPerPt ?? Bt.PIXEL_PER_PT, e.innerHTML = "", e.style.width = "100%", this.container = e, this.canvasList = new Array(this.loadPageCount), this.textLayerList = new Array(this.loadPageCount), this.commonList = new Array(this.loadPageCount), this.textLayerParentList = new Array(this.loadPageCount), this.semanticLayerList = new Array(this.loadPageCount);
     const i = (o, s, u) => {
-      const d = Math.ceil(s.width) * this.imageScaleFactor, g = Math.ceil(s.height) * this.imageScaleFactor, w = this.canvasList[o] = document.createElement("canvas"), m = this.semanticLayerList[o] = document.createElement("div"), C = this.textLayerList[o] = document.createElement("div"), R = this.textLayerParentList[o] = document.createElement("div");
+      const d = Math.ceil(s.width) * this.imageScaleFactor, g = Math.ceil(s.height) * this.imageScaleFactor, w = this.canvasList[o] = document.createElement("canvas"), v = this.semanticLayerList[o] = document.createElement("div"), C = this.textLayerList[o] = document.createElement("div"), R = this.textLayerParentList[o] = document.createElement("div");
       if (w.getContext("2d")) {
         const D = document.createElement("div");
         w.width = d, w.height = g, D.appendChild(w), u.appendChild(D), D.style.position = "absolute";
@@ -191,7 +191,7 @@ class he {
       {
         R.appendChild(C), R.className = "typst-html-semantics";
         const D = e.offsetWidth, B = D / s.width;
-        R.style.width = `${D}px`, R.style.height = `${s.height * B}px`, R.style.setProperty("--data-text-width", `${B}px`), R.style.setProperty("--data-text-height", `${B}px`), u.classList.add("typst-page"), u.classList.add("canvas"), u.style.width = `${D}px`, u.style.height = `${g * B}px`, u.style.position = "relative", m.appendChild(R), u.appendChild(m);
+        R.style.width = `${D}px`, R.style.height = `${s.height * B}px`, R.style.setProperty("--data-text-width", `${B}px`), R.style.setProperty("--data-text-height", `${B}px`), u.classList.add("typst-page"), u.classList.add("canvas"), u.style.width = `${D}px`, u.style.height = `${g * B}px`, u.style.position = "relative", v.appendChild(R), u.appendChild(v);
       }
     };
     for (let o = 0; o < this.pageInfos.length; o++) {
@@ -218,7 +218,7 @@ const Ge = (n) => {
   let t = !1, e;
   return () => t ? e : (t = !0, e = n());
 };
-class me {
+class ye {
   constructor(t) {
     p(this, "wasmBin");
     p(this, "initOnce");
@@ -385,14 +385,14 @@ class zt {
           this.currentScaleRatio = t.filter((R) => R < this.currentScaleRatio).at(-1);
         } else
           return;
-        const g = this.currentScaleRatio / d, w = r.pageX * (g - 1), m = r.pageY * (g - 1);
+        const g = this.currentScaleRatio / d, w = r.pageX * (g - 1), v = r.pageY * (g - 1);
         Math.abs(this.currentScaleRatio - 1) < 1e-5 ? (this.hookedElem.classList.add("hide-scrollbar-x"), (i = this.hookedElem.parentElement) == null || i.classList.add("hide-scrollbar-x"), this.previewMode === 1 && (this.hookedElem.classList.add("hide-scrollbar-y"), (o = this.hookedElem.parentElement) == null || o.classList.add("hide-scrollbar-y"))) : (this.hookedElem.classList.remove("hide-scrollbar-x"), (s = this.hookedElem.parentElement) == null || s.classList.remove("hide-scrollbar-x"), this.previewMode === 1 && (this.hookedElem.classList.remove("hide-scrollbar-y"), (u = this.hookedElem.parentElement) == null || u.classList.remove("hide-scrollbar-y")));
         const C = this.hookedElem.firstElementChild;
         if (C) {
           const R = this.getSvgScaleRatio(), $ = Number.parseFloat(C.getAttribute("data-height")), D = Math.ceil($ * R);
           this.hookedElem.style.height = `${D * 2}px`;
         }
-        return window.scrollBy(w, m), this.addViewportChange(), !1;
+        return window.scrollBy(w, v), this.addViewportChange(), !1;
       }
     };
     this.renderMode !== "dom" && (typeof acquireVsCodeApi < "u" ? (window.addEventListener("wheel", e, {
@@ -634,15 +634,15 @@ function Ze(n) {
         if (d && !r.isCancelRequested() && g)
           return g();
       }, o = this.retrieveDOMPages().map((d) => {
-        const { innerWidth: g, innerHeight: w } = window, m = d.getBoundingClientRect();
+        const { innerWidth: g, innerHeight: w } = window, v = d.getBoundingClientRect();
         return {
-          inWindow: !(m.left > g || m.right < 0 || m.top > w || m.bottom < 0),
+          inWindow: !(v.left > g || v.right < 0 || v.top > w || v.bottom < 0),
           page: d
         };
       }), s = async (d) => {
         if (await Ye(), r.isCancelRequested())
           return;
-        const g = o[d].page, w = g.getBoundingClientRect(), m = this.getDomViewport(window, w), C = (z) => this.docKernel.need_repaint(d, m.x, m.y, m.width, m.height, z), R = (z) => this.docKernel.repaint(d, m.x, m.y, m.width, m.height, z), $ = (z) => {
+        const g = o[d].page, w = g.getBoundingClientRect(), v = this.getDomViewport(window, w), C = (z) => this.docKernel.need_repaint(d, v.x, v.y, v.width, v.height, z), R = (z) => this.docKernel.repaint(d, v.x, v.y, v.width, v.height, z), $ = (z) => {
           if (!r.isCancelRequested())
             return i(C(z), () => R(z));
         };
@@ -651,7 +651,7 @@ function Ze(n) {
           /* Layout */
         );
         const D = (w.width ? Number.parseFloat(g.getAttribute("data-width")) / w.width : 1) * this.domScale, B = (w.height ? Number.parseFloat(g.getAttribute("data-height")) / w.height : 1) * this.domScale;
-        m.x *= D, m.y *= B, m.y -= 100, m.width *= D, m.height *= B, m.height += 200, await $(
+        v.x *= D, v.y *= B, v.y -= 100, v.width *= D, v.height *= B, v.height += 200, await $(
           1
           /* Svg */
         ), await $(
@@ -691,8 +691,8 @@ class tr extends Xe(
   )
 ) {
 }
-var ge;
-let Et = (ge = I, class {
+var fe;
+let Et = (fe = I, class {
   /**
    * @internal
    */
@@ -700,7 +700,7 @@ let Et = (ge = I, class {
     /**
      * @internal
      */
-    p(this, ge);
+    p(this, fe);
     this.plugin = t, this[I] = e;
   }
   /**
@@ -860,8 +860,8 @@ let Et = (ge = I, class {
     });
   }
 });
-var fe;
-let er = (fe = I, class {
+var we;
+let er = (we = I, class {
   /**
    * @internal
    */
@@ -869,7 +869,7 @@ let er = (fe = I, class {
     /**
      * @internal
      */
-    p(this, fe);
+    p(this, we);
     /**
      * @internal
      */
@@ -899,8 +899,8 @@ let er = (fe = I, class {
       const d = u.canvas;
       let g = d.dataset.manageId, w = 2;
       g || (g = this.canvasCounter.toFixed(5), this.canvasCounter += 1, d.dataset.manageId = g, w = 1);
-      let m = e.get(g);
-      if (m && m[0] !== 0)
+      let v = e.get(g);
+      if (v && v[0] !== 0)
         throw new Error("cannot update a canvas for two times in batch");
       e.set(g, [w, { ...u }]);
     }
@@ -922,14 +922,14 @@ let er = (fe = I, class {
     return e;
   }
 });
-const rr = (n) => new me(async (t) => await n.default(t));
-function Ut() {
+const rr = (n) => new ye(async (t) => await n.default(t));
+function Nt() {
   return new nr();
 }
 async function Xr() {
-  return (await Promise.resolve().then(() => Re)).renderer_build_info();
+  return (await Promise.resolve().then(() => Ae)).renderer_build_info();
 }
-let Nt = !0;
+let Ht = !0;
 class nr {
   constructor() {
     p(this, "renderer");
@@ -937,9 +937,9 @@ class nr {
   }
   async init(t) {
     var r;
-    this.rendererJs = await (((r = t == null ? void 0 : t.getWrapper) == null ? void 0 : r.call(t)) || Promise.resolve().then(() => Re));
+    this.rendererJs = await (((r = t == null ? void 0 : t.getWrapper) == null ? void 0 : r.call(t)) || Promise.resolve().then(() => Ae));
     const e = this.rendererJs.TypstRendererBuilder;
-    this.renderer = await be(
+    this.renderer = await pe(
       t,
       rr(this.rendererJs),
       e,
@@ -959,7 +959,7 @@ class nr {
       throw new Error("pageOffset is required in reflexo v0.5.0");
     if (e.page_off = t.pageOffset, t.cacheKey !== void 0 && (e.cache_key = t.cacheKey), t.backgroundColor !== void 0 && (e.background_color = t.backgroundColor), t.pixelPerPt !== void 0 && (e.pixel_per_pt = t.pixelPerPt), t.dataSelection !== void 0) {
       let r = 0;
-      t.dataSelection.body ? r |= 1 : t.canvas && Nt && (Nt = !1, console.warn("dataSelection.body is not set but providing canvas for body")), (t.dataSelection.text || t.dataSelection.annotation) && console.error("dataSelection.text and dataSelection.annotation are deprecated"), t.dataSelection.semantics && (r |= 8), e.data_selection = r;
+      t.dataSelection.body ? r |= 1 : t.canvas && Ht && (Ht = !1, console.warn("dataSelection.body is not set but providing canvas for body")), (t.dataSelection.text || t.dataSelection.annotation) && console.error("dataSelection.text and dataSelection.annotation are deprecated"), t.dataSelection.semantics && (r |= 8), e.data_selection = r;
     }
     return e;
   }
@@ -991,7 +991,7 @@ class nr {
     });
   }
   async renderDisplayLayer(t, e, r) {
-    const o = t[I].pages_info.page_count, s = async (w, m) => {
+    const o = t[I].pages_info.page_count, s = async (w, v) => {
       const R = e[w].getContext("2d");
       if (!R)
         throw new Error("canvas context is null");
@@ -999,12 +999,12 @@ class nr {
         ...r,
         canvas: R,
         renderSession: t,
-        pageOffset: m
+        pageOffset: v
       });
     }, u = performance.now(), d = await (async () => {
       const w = [];
-      for (let m = 0; m < o; m++)
-        w.push(await this.inAnimationFrame(() => s(m, m)));
+      for (let v = 0; v < o; v++)
+        w.push(await this.inAnimationFrame(() => s(v, v)));
       return w;
     })(), g = performance.now();
     return console.log(`display layer used: render = ${(g - u).toFixed(1)}ms`), d;
@@ -1060,7 +1060,7 @@ class nr {
           "Invalid typst.backgroundColor color for matching ^#?[0-9a-f]{6}$ " + u
         );
       e.pixelPerPt = t.pixelPerPt ?? Bt.PIXEL_PER_PT, e.backgroundColor = u ?? "#ffffff";
-      const d = performance.now(), g = new he(
+      const d = performance.now(), g = new me(
         this.retrievePagesInfoFromSession(e),
         i,
         t
@@ -1153,8 +1153,8 @@ class nr {
     }
   }
 }
-var we;
-we = I;
+var le;
+le = I;
 class ir {
   /**
    * @internal
@@ -1163,7 +1163,7 @@ class ir {
     /**
      * @internal
      */
-    p(this, we);
+    p(this, le);
     this[I] = t;
   }
   /**
@@ -1188,11 +1188,11 @@ class ir {
 function or() {
   return new _r();
 }
-var le;
-le = I;
+var be;
+be = I;
 class sr {
   constructor(t) {
-    p(this, le);
+    p(this, be);
     this[I] = t;
   }
   /**
@@ -1245,8 +1245,8 @@ class sr {
     return this[I].get_artifact(1, tt(t == null ? void 0 : t.diagnostics)) || {};
   }
 }
-const ye = (n) => new me(async (t) => await n.default(t));
-function ve() {
+const ve = new ye(async (n) => await (await Promise.resolve().then(() => qt)).default(n));
+function Se() {
   return new vt();
 }
 class _r {
@@ -1255,8 +1255,8 @@ class _r {
     p(this, "fontBuilder");
   }
   async init(t) {
-    var e, r;
-    this.fontBuilderJs = await (((e = t == null ? void 0 : t.getWrapper) == null ? void 0 : e.call(t)) || Promise.resolve().then(() => Oe)), await ye(this.fontBuilderJs).init((r = t == null ? void 0 : t.getModule) == null ? void 0 : r.call(t)), this.fontBuilder = new this.fontBuilderJs.TypstFontResolverBuilder();
+    var e;
+    this.fontBuilderJs = await Promise.resolve().then(() => qt), await ve.init((e = t == null ? void 0 : t.getModule) == null ? void 0 : e.call(t)), this.fontBuilder = new this.fontBuilderJs.TypstFontResolverBuilder();
   }
   async getFontInfo(t) {
     return this.fontBuilder.get_font_info(t);
@@ -1278,26 +1278,25 @@ const kt = class kt {
     p(this, "compilerJs");
   }
   async init(t) {
-    var g;
-    this.compilerJs = await (((g = t == null ? void 0 : t.getWrapper) == null ? void 0 : g.call(t)) || Promise.resolve().then(() => Oe));
+    this.compilerJs = await Promise.resolve().then(() => qt);
     const e = this.compilerJs.TypstCompilerBuilder, r = { ...t || {} }, i = r.beforeBuild ?? (r.beforeBuild = []), o = i.some(
-      (w) => w._preloadRemoteFontOptions !== void 0
+      (g) => g._preloadRemoteFontOptions !== void 0
     ), s = i.some(
-      (w) => {
-        var m;
-        return ((m = w._preloadRemoteFontOptions) == null ? void 0 : m.assets) !== void 0;
+      (g) => {
+        var w;
+        return ((w = g._preloadRemoteFontOptions) == null ? void 0 : w.assets) !== void 0;
       }
     ), u = i.some(
-      (w) => {
-        var m;
-        return ((m = w._preloadRemoteFontOptions) == null ? void 0 : m.assets) === !1;
+      (g) => {
+        var w;
+        return ((w = g._preloadRemoteFontOptions) == null ? void 0 : w.assets) === !1;
       }
     );
-    if ((!o || !s && !u) && i.push(Z([], { assets: kt.defaultAssets })), !i.some((w) => w._kind === "fontLoader"))
+    if ((!o || !s && !u) && i.push(Z([], { assets: kt.defaultAssets })), !i.some((g) => g._kind === "fontLoader"))
       throw new Error(
         "TypstCompiler: no font loader found, please use font loaders, e.g. loadFonts or preloadSystemFonts"
       );
-    this.compiler = await be(t, ye(this.compilerJs), e, {});
+    this.compiler = await pe(t, ve, e, {});
   }
   setFonts(t) {
     this.compiler.set_fonts(t);
@@ -1307,7 +1306,7 @@ const kt = class kt {
       const r = this.compiler.snapshot(
         t.root,
         t.mainFilePath,
-        Ht(t.inputs)
+        Jt(t.inputs)
       );
       if ("incrementalServer" in t) {
         e(
@@ -1327,7 +1326,7 @@ const kt = class kt {
     const r = this.compiler.snapshot(
       t.root,
       t.mainFilePath,
-      Ht(t.inputs)
+      Jt(t.inputs)
     );
     let i = await e(new sr(r));
     return r.free(), i;
@@ -1389,8 +1388,8 @@ const kt = class kt {
 };
 p(kt, "defaultAssets", ["text"]);
 let vt = kt;
-ve._impl = vt;
-function Ht(n) {
+Se._impl = vt;
+function Jt(n) {
   return n ? Object.entries(n) : void 0;
 }
 function tt(n) {
@@ -1533,7 +1532,7 @@ class ur {
     const i = this.pullPackageData(t);
     if (!i)
       return;
-    const o = `/@memory/fetch/packages/preview/${t.namespace}/${t.name}/${t.version}`, s = [];
+    const o = `/@memory/fetch/packages/${t.namespace}/${t.name}/${t.version}`, s = [];
     e.untar(i, (d, g, w) => {
       s.push([o + "/" + d, g, new Date(w)]);
     });
@@ -1546,19 +1545,19 @@ class ur {
   }
 }
 typeof window < "u" && (window.TypstRenderModule = {
-  RenderView: he,
-  createTypstRenderer: Ut,
-  createTypstSvgRenderer: Ut,
+  RenderView: me,
+  createTypstRenderer: Nt,
+  createTypstSvgRenderer: Nt,
   preloadRemoteFonts: Z,
   loadFonts: Z,
-  preloadSystemFonts: qt
+  preloadSystemFonts: Ut
 }, window.TypstCompileModule = {
-  createTypstCompiler: ve,
+  createTypstCompiler: Se,
   createTypstFontBuilder: or,
   preloadRemoteFonts: Z,
   loadFonts: Z,
-  loadFontSync: pe,
-  preloadSystemFonts: qt,
+  loadFontSync: he,
+  preloadSystemFonts: Ut,
   FetchAccessModel: ar,
   MemoryAccessModel: cr,
   FetchPackageRegistry: ur,
@@ -1571,7 +1570,7 @@ function c(n) {
   return N[n];
 }
 let et = N.length;
-function v(n) {
+function y(n) {
   et === N.length && N.push(N.length + 1);
   const t = et;
   if (et = N[t], typeof et != "number") throw new Error("corrupt heap");
@@ -1581,7 +1580,7 @@ function k(n, t) {
   try {
     return n.apply(this, t);
   } catch (e) {
-    _.__wbindgen_export_0(v(e));
+    _.__wbindgen_export_0(y(e));
   }
 }
 function f(n, t) {
@@ -1660,7 +1659,7 @@ function L(n) {
   if (typeof n != "boolean")
     throw new Error(`expected a boolean argument, found ${typeof n}`);
 }
-function Jt(n, t) {
+function Vt(n, t) {
   return n = n >>> 0, rt().subarray(n / 1, n / 1 + t);
 }
 function fr(n) {
@@ -1714,7 +1713,7 @@ const St = typeof FinalizationRegistry > "u" ? { register: () => {
     _.__wbindgen_export_4.get(n.dtor)(n.a, n.b);
   }
 );
-function Vt(n, t, e, r) {
+function Gt(n, t, e, r) {
   const i = { a: n, b: t, cnt: 1, dtor: e }, o = (...s) => {
     i.cnt++;
     try {
@@ -1738,10 +1737,6 @@ function wr(n, t, e, r) {
   };
   return o.original = i, St.register(o, i, i), o;
 }
-function lr() {
-  const n = _.renderer_build_info();
-  return F(n);
-}
 function U(n, t) {
   if (!(n instanceof t))
     throw new Error(`expected instance of ${t.name}`);
@@ -1749,6 +1744,16 @@ function U(n, t) {
 function xt(n, t) {
   const e = t(n.length * 1, 1) >>> 0;
   return rt().set(n, e / 1), P = n.length, e;
+}
+function Xt(n, t) {
+  const e = t(n.length * 4, 4) >>> 0, r = h();
+  for (let i = 0; i < n.length; i++)
+    r.setUint32(e + 4 * i, y(n[i]), !0);
+  return P = n.length, e;
+}
+function lr() {
+  const n = _.renderer_build_info();
+  return F(n);
 }
 let gt = null;
 function br() {
@@ -1758,31 +1763,25 @@ function pr(n, t) {
   const e = t(n.length * 4, 4) >>> 0;
   return br().set(n, e / 4), P = n.length, e;
 }
-function Gt(n, t) {
-  const e = t(n.length * 4, 4) >>> 0, r = h();
-  for (let i = 0; i < n.length; i++)
-    r.setUint32(e + 4 * i, v(n[i]), !0);
-  return P = n.length, e;
+function hr(n, t) {
+  b(n), b(t), _.__wbindgen_export_5(n, t);
 }
-function hr(n, t, e) {
-  b(n), b(t), _.__wbindgen_export_5(n, t, v(e));
-}
-function mr(n, t) {
-  b(n), b(t), _.__wbindgen_export_6(n, t);
+function mr(n, t, e) {
+  b(n), b(t), _.__wbindgen_export_6(n, t, y(e));
 }
 function yr(n, t, e) {
-  b(n), b(t), _.__wbindgen_export_7(n, t, v(e));
+  b(n), b(t), _.__wbindgen_export_7(n, t, y(e));
 }
 function vr(n, t, e, r) {
-  b(n), b(t), _.__wbindgen_export_8(n, t, v(e), v(r));
+  b(n), b(t), _.__wbindgen_export_8(n, t, y(e), y(r));
 }
-const Xt = ["nonzero", "evenodd"], Kt = typeof FinalizationRegistry > "u" ? { register: () => {
+const Kt = ["nonzero", "evenodd"], Qt = typeof FinalizationRegistry > "u" ? { register: () => {
 }, unregister: () => {
 } } : new FinalizationRegistry((n) => _.__wbg_createsessionoptions_free(n >>> 0, 1));
 class It {
   __destroy_into_raw() {
     const t = this.__wbg_ptr;
-    return this.__wbg_ptr = 0, Kt.unregister(this), t;
+    return this.__wbg_ptr = 0, Qt.unregister(this), t;
   }
   free() {
     const t = this.__destroy_into_raw();
@@ -1790,7 +1789,7 @@ class It {
   }
   constructor() {
     const t = _.createsessionoptions_new();
-    return this.__wbg_ptr = t >>> 0, Kt.register(this, this.__wbg_ptr, this), this;
+    return this.__wbg_ptr = t >>> 0, Qt.register(this, this.__wbg_ptr, this), this;
   }
   /**
    * @param {string} format
@@ -1812,7 +1811,7 @@ class It {
   }
 }
 Symbol.dispose && (It.prototype[Symbol.dispose] = It.prototype.free);
-const Qt = typeof FinalizationRegistry > "u" ? { register: () => {
+const Yt = typeof FinalizationRegistry > "u" ? { register: () => {
 }, unregister: () => {
 } } : new FinalizationRegistry((n) => _.__wbg_incrdomdocclient_free(n >>> 0, 1));
 class it {
@@ -1822,11 +1821,11 @@ class it {
   static __wrap(t) {
     t = t >>> 0;
     const e = Object.create(it.prototype);
-    return e.__wbg_ptr = t, Qt.register(e, e.__wbg_ptr, e), e;
+    return e.__wbg_ptr = t, Yt.register(e, e.__wbg_ptr, e), e;
   }
   __destroy_into_raw() {
     const t = this.__wbg_ptr;
-    return this.__wbg_ptr = 0, Qt.unregister(this), t;
+    return this.__wbg_ptr = 0, Yt.unregister(this), t;
   }
   free() {
     const t = this.__destroy_into_raw();
@@ -1837,7 +1836,7 @@ class it {
    */
   bind_functions(t) {
     if (this.__wbg_ptr == 0) throw new Error("Attempt to use a moved value");
-    b(this.__wbg_ptr), _.incrdomdocclient_bind_functions(this.__wbg_ptr, v(t));
+    b(this.__wbg_ptr), _.incrdomdocclient_bind_functions(this.__wbg_ptr, y(t));
   }
   /**
    * Relayout the document in the given window.
@@ -1899,7 +1898,7 @@ class it {
   }
 }
 Symbol.dispose && (it.prototype[Symbol.dispose] = it.prototype.free);
-const Yt = typeof FinalizationRegistry > "u" ? { register: () => {
+const Zt = typeof FinalizationRegistry > "u" ? { register: () => {
 }, unregister: () => {
 } } : new FinalizationRegistry((n) => _.__wbg_pageinfo_free(n >>> 0, 1));
 class X {
@@ -1909,11 +1908,11 @@ class X {
   static __wrap(t) {
     t = t >>> 0;
     const e = Object.create(X.prototype);
-    return e.__wbg_ptr = t, Yt.register(e, e.__wbg_ptr, e), e;
+    return e.__wbg_ptr = t, Zt.register(e, e.__wbg_ptr, e), e;
   }
   __destroy_into_raw() {
     const t = this.__wbg_ptr;
-    return this.__wbg_ptr = 0, Yt.unregister(this), t;
+    return this.__wbg_ptr = 0, Zt.unregister(this), t;
   }
   free() {
     const t = this.__destroy_into_raw();
@@ -1942,7 +1941,7 @@ class X {
   }
 }
 Symbol.dispose && (X.prototype[Symbol.dispose] = X.prototype.free);
-const Zt = typeof FinalizationRegistry > "u" ? { register: () => {
+const te = typeof FinalizationRegistry > "u" ? { register: () => {
 }, unregister: () => {
 } } : new FinalizationRegistry((n) => _.__wbg_pagesinfo_free(n >>> 0, 1));
 class ot {
@@ -1952,11 +1951,11 @@ class ot {
   static __wrap(t) {
     t = t >>> 0;
     const e = Object.create(ot.prototype);
-    return e.__wbg_ptr = t, Zt.register(e, e.__wbg_ptr, e), e;
+    return e.__wbg_ptr = t, te.register(e, e.__wbg_ptr, e), e;
   }
   __destroy_into_raw() {
     const t = this.__wbg_ptr;
-    return this.__wbg_ptr = 0, Zt.unregister(this), t;
+    return this.__wbg_ptr = 0, te.unregister(this), t;
   }
   free() {
     const t = this.__destroy_into_raw();
@@ -2005,7 +2004,7 @@ class ot {
   }
 }
 Symbol.dispose && (ot.prototype[Symbol.dispose] = ot.prototype.free);
-const te = typeof FinalizationRegistry > "u" ? { register: () => {
+const ee = typeof FinalizationRegistry > "u" ? { register: () => {
 }, unregister: () => {
 } } : new FinalizationRegistry((n) => _.__wbg_renderpageimageoptions_free(n >>> 0, 1));
 class K {
@@ -2014,7 +2013,7 @@ class K {
   }
   __destroy_into_raw() {
     const t = this.__wbg_ptr;
-    return this.__wbg_ptr = 0, te.unregister(this), t;
+    return this.__wbg_ptr = 0, ee.unregister(this), t;
   }
   free() {
     const t = this.__destroy_into_raw();
@@ -2022,7 +2021,7 @@ class K {
   }
   constructor() {
     const t = _.renderpageimageoptions_new();
-    return this.__wbg_ptr = t >>> 0, te.register(this, this.__wbg_ptr, this), this;
+    return this.__wbg_ptr = t >>> 0, ee.register(this, this.__wbg_ptr, this), this;
   }
   /**
    * @returns {number | undefined}
@@ -2120,7 +2119,7 @@ class K {
   }
 }
 Symbol.dispose && (K.prototype[Symbol.dispose] = K.prototype.free);
-const ee = typeof FinalizationRegistry > "u" ? { register: () => {
+const re = typeof FinalizationRegistry > "u" ? { register: () => {
 }, unregister: () => {
 } } : new FinalizationRegistry((n) => _.__wbg_rendersession_free(n >>> 0, 1));
 class W {
@@ -2130,15 +2129,34 @@ class W {
   static __wrap(t) {
     t = t >>> 0;
     const e = Object.create(W.prototype);
-    return e.__wbg_ptr = t, ee.register(e, e.__wbg_ptr, e), e;
+    return e.__wbg_ptr = t, re.register(e, e.__wbg_ptr, e), e;
   }
   __destroy_into_raw() {
     const t = this.__wbg_ptr;
-    return this.__wbg_ptr = 0, ee.unregister(this), t;
+    return this.__wbg_ptr = 0, re.unregister(this), t;
   }
   free() {
     const t = this.__destroy_into_raw();
     _.__wbg_rendersession_free(t, 0);
+  }
+  /**
+   * @param {number} rect_lo_x
+   * @param {number} rect_lo_y
+   * @param {number} rect_hi_x
+   * @param {number} rect_hi_y
+   * @returns {string}
+   */
+  render_in_window(t, e, r, i) {
+    let o, s;
+    try {
+      if (this.__wbg_ptr == 0) throw new Error("Attempt to use a moved value");
+      const g = _.__wbindgen_add_to_stack_pointer(-16);
+      b(this.__wbg_ptr), _.rendersession_render_in_window(g, this.__wbg_ptr, t, e, r, i);
+      var u = h().getInt32(g + 0, !0), d = h().getInt32(g + 4, !0);
+      return o = u, s = d, E(u, d);
+    } finally {
+      _.__wbindgen_add_to_stack_pointer(16), _.__wbindgen_export_3(o, s, 1);
+    }
   }
   /**
    * @returns {number | undefined}
@@ -2223,34 +2241,15 @@ class W {
       _.__wbindgen_add_to_stack_pointer(16);
     }
   }
-  /**
-   * @param {number} rect_lo_x
-   * @param {number} rect_lo_y
-   * @param {number} rect_hi_x
-   * @param {number} rect_hi_y
-   * @returns {string}
-   */
-  render_in_window(t, e, r, i) {
-    let o, s;
-    try {
-      if (this.__wbg_ptr == 0) throw new Error("Attempt to use a moved value");
-      const g = _.__wbindgen_add_to_stack_pointer(-16);
-      b(this.__wbg_ptr), _.rendersession_render_in_window(g, this.__wbg_ptr, t, e, r, i);
-      var u = h().getInt32(g + 0, !0), d = h().getInt32(g + 4, !0);
-      return o = u, s = d, E(u, d);
-    } finally {
-      _.__wbindgen_add_to_stack_pointer(16), _.__wbindgen_export_3(o, s, 1);
-    }
-  }
 }
 Symbol.dispose && (W.prototype[Symbol.dispose] = W.prototype.free);
-const re = typeof FinalizationRegistry > "u" ? { register: () => {
+const ne = typeof FinalizationRegistry > "u" ? { register: () => {
 }, unregister: () => {
 } } : new FinalizationRegistry((n) => _.__wbg_rendersessionoptions_free(n >>> 0, 1));
 class Pt {
   __destroy_into_raw() {
     const t = this.__wbg_ptr;
-    return this.__wbg_ptr = 0, re.unregister(this), t;
+    return this.__wbg_ptr = 0, ne.unregister(this), t;
   }
   free() {
     const t = this.__destroy_into_raw();
@@ -2258,7 +2257,7 @@ class Pt {
   }
   constructor() {
     const t = _.rendersessionoptions_new();
-    return this.__wbg_ptr = t >>> 0, re.register(this, this.__wbg_ptr, this), this;
+    return this.__wbg_ptr = t >>> 0, ne.register(this, this.__wbg_ptr, this), this;
   }
   /**
    * @returns {number | undefined}
@@ -2342,6 +2341,121 @@ class st {
   free() {
     const t = this.__destroy_into_raw();
     _.__wbg_typstrenderer_free(t, 0);
+  }
+  /**
+   * @param {RenderSession} session
+   * @param {number} rect_lo_x
+   * @param {number} rect_lo_y
+   * @param {number} rect_hi_x
+   * @param {number} rect_hi_y
+   * @returns {string}
+   */
+  render_svg_diff(t, e, r, i, o) {
+    let s, u;
+    try {
+      if (this.__wbg_ptr == 0) throw new Error("Attempt to use a moved value");
+      const w = _.__wbindgen_add_to_stack_pointer(-16);
+      if (b(this.__wbg_ptr), U(t, W), t.__wbg_ptr === 0)
+        throw new Error("Attempt to use a moved value");
+      _.typstrenderer_render_svg_diff(w, this.__wbg_ptr, t.__wbg_ptr, e, r, i, o);
+      var d = h().getInt32(w + 0, !0), g = h().getInt32(w + 4, !0);
+      return s = d, u = g, E(d, g);
+    } finally {
+      _.__wbindgen_add_to_stack_pointer(16), _.__wbindgen_export_3(s, u, 1);
+    }
+  }
+  /**
+   * @param {RenderSession} session
+   * @param {number | null} [parts]
+   * @returns {string}
+   */
+  svg_data(t, e) {
+    let r, i;
+    try {
+      if (this.__wbg_ptr == 0) throw new Error("Attempt to use a moved value");
+      const v = _.__wbindgen_add_to_stack_pointer(-16);
+      if (b(this.__wbg_ptr), U(t, W), t.__wbg_ptr === 0)
+        throw new Error("Attempt to use a moved value");
+      M(e) || b(e), _.typstrenderer_svg_data(v, this.__wbg_ptr, t.__wbg_ptr, M(e) ? 4294967297 : e >>> 0);
+      var o = h().getInt32(v + 0, !0), s = h().getInt32(v + 4, !0), u = h().getInt32(v + 8, !0), d = h().getInt32(v + 12, !0), g = o, w = s;
+      if (d)
+        throw g = 0, w = 0, F(u);
+      return r = g, i = w, E(g, w);
+    } finally {
+      _.__wbindgen_add_to_stack_pointer(16), _.__wbindgen_export_3(r, i, 1);
+    }
+  }
+  /**
+   * @param {RenderSession} session
+   * @returns {Array<any> | undefined}
+   */
+  get_customs(t) {
+    if (this.__wbg_ptr == 0) throw new Error("Attempt to use a moved value");
+    if (b(this.__wbg_ptr), U(t, W), t.__wbg_ptr === 0)
+      throw new Error("Attempt to use a moved value");
+    const e = _.typstrenderer_get_customs(this.__wbg_ptr, t.__wbg_ptr);
+    return F(e);
+  }
+  /**
+   * @param {RenderSession} session
+   * @param {HTMLElement} root
+   * @returns {boolean}
+   */
+  render_svg(t, e) {
+    try {
+      if (this.__wbg_ptr == 0) throw new Error("Attempt to use a moved value");
+      const s = _.__wbindgen_add_to_stack_pointer(-16);
+      if (b(this.__wbg_ptr), U(t, W), t.__wbg_ptr === 0)
+        throw new Error("Attempt to use a moved value");
+      _.typstrenderer_render_svg(s, this.__wbg_ptr, t.__wbg_ptr, y(e));
+      var r = h().getInt32(s + 0, !0), i = h().getInt32(s + 4, !0), o = h().getInt32(s + 8, !0);
+      if (o)
+        throw F(i);
+      return r !== 0;
+    } finally {
+      _.__wbindgen_add_to_stack_pointer(16);
+    }
+  }
+  /**
+   * @param {any} _w
+   * @returns {Promise<TypstWorker>}
+   */
+  create_worker(t) {
+    if (this.__wbg_ptr == 0) throw new Error("Attempt to use a moved value");
+    b(this.__wbg_ptr);
+    const e = _.typstrenderer_create_worker(this.__wbg_ptr, y(t));
+    return F(e);
+  }
+  /**
+   * @returns {WorkerBridge}
+   */
+  create_worker_bridge() {
+    try {
+      if (this.__wbg_ptr == 0) throw new Error("Attempt to use a moved value");
+      const i = this.__destroy_into_raw(), o = _.__wbindgen_add_to_stack_pointer(-16);
+      b(i), _.typstrenderer_create_worker_bridge(o, i);
+      var t = h().getInt32(o + 0, !0), e = h().getInt32(o + 4, !0), r = h().getInt32(o + 8, !0);
+      if (r)
+        throw F(e);
+      return _t.__wrap(t);
+    } finally {
+      _.__wbindgen_add_to_stack_pointer(16);
+    }
+  }
+  /**
+   * @param {any} _v
+   */
+  load_glyph_pack(t) {
+    try {
+      if (this.__wbg_ptr == 0) throw new Error("Attempt to use a moved value");
+      const i = _.__wbindgen_add_to_stack_pointer(-16);
+      b(this.__wbg_ptr), _.typstrenderer_load_glyph_pack(i, this.__wbg_ptr, y(t));
+      var e = h().getInt32(i + 0, !0), r = h().getInt32(i + 4, !0);
+      if (r)
+        throw F(e);
+    } finally {
+      _.__wbindgen_add_to_stack_pointer(16);
+    }
   }
   constructor() {
     const t = _.typstrenderer_new();
@@ -2429,133 +2543,6 @@ class st {
     }
   }
   /**
-   * @param {any} _v
-   */
-  load_glyph_pack(t) {
-    try {
-      if (this.__wbg_ptr == 0) throw new Error("Attempt to use a moved value");
-      const i = _.__wbindgen_add_to_stack_pointer(-16);
-      b(this.__wbg_ptr), _.typstrenderer_load_glyph_pack(i, this.__wbg_ptr, v(t));
-      var e = h().getInt32(i + 0, !0), r = h().getInt32(i + 4, !0);
-      if (r)
-        throw F(e);
-    } finally {
-      _.__wbindgen_add_to_stack_pointer(16);
-    }
-  }
-  /**
-   * @param {RenderSession} session
-   * @param {number} rect_lo_x
-   * @param {number} rect_lo_y
-   * @param {number} rect_hi_x
-   * @param {number} rect_hi_y
-   * @returns {string}
-   */
-  render_svg_diff(t, e, r, i, o) {
-    let s, u;
-    try {
-      if (this.__wbg_ptr == 0) throw new Error("Attempt to use a moved value");
-      const w = _.__wbindgen_add_to_stack_pointer(-16);
-      if (b(this.__wbg_ptr), U(t, W), t.__wbg_ptr === 0)
-        throw new Error("Attempt to use a moved value");
-      _.typstrenderer_render_svg_diff(w, this.__wbg_ptr, t.__wbg_ptr, e, r, i, o);
-      var d = h().getInt32(w + 0, !0), g = h().getInt32(w + 4, !0);
-      return s = d, u = g, E(d, g);
-    } finally {
-      _.__wbindgen_add_to_stack_pointer(16), _.__wbindgen_export_3(s, u, 1);
-    }
-  }
-  /**
-   * @param {RenderSession} session
-   * @param {number | null} [parts]
-   * @returns {string}
-   */
-  svg_data(t, e) {
-    let r, i;
-    try {
-      if (this.__wbg_ptr == 0) throw new Error("Attempt to use a moved value");
-      const m = _.__wbindgen_add_to_stack_pointer(-16);
-      if (b(this.__wbg_ptr), U(t, W), t.__wbg_ptr === 0)
-        throw new Error("Attempt to use a moved value");
-      M(e) || b(e), _.typstrenderer_svg_data(m, this.__wbg_ptr, t.__wbg_ptr, M(e) ? 4294967297 : e >>> 0);
-      var o = h().getInt32(m + 0, !0), s = h().getInt32(m + 4, !0), u = h().getInt32(m + 8, !0), d = h().getInt32(m + 12, !0), g = o, w = s;
-      if (d)
-        throw g = 0, w = 0, F(u);
-      return r = g, i = w, E(g, w);
-    } finally {
-      _.__wbindgen_add_to_stack_pointer(16), _.__wbindgen_export_3(r, i, 1);
-    }
-  }
-  /**
-   * @param {RenderSession} session
-   * @returns {Array<any> | undefined}
-   */
-  get_customs(t) {
-    if (this.__wbg_ptr == 0) throw new Error("Attempt to use a moved value");
-    if (b(this.__wbg_ptr), U(t, W), t.__wbg_ptr === 0)
-      throw new Error("Attempt to use a moved value");
-    const e = _.typstrenderer_get_customs(this.__wbg_ptr, t.__wbg_ptr);
-    return F(e);
-  }
-  /**
-   * @param {RenderSession} session
-   * @param {HTMLElement} root
-   * @returns {boolean}
-   */
-  render_svg(t, e) {
-    try {
-      if (this.__wbg_ptr == 0) throw new Error("Attempt to use a moved value");
-      const s = _.__wbindgen_add_to_stack_pointer(-16);
-      if (b(this.__wbg_ptr), U(t, W), t.__wbg_ptr === 0)
-        throw new Error("Attempt to use a moved value");
-      _.typstrenderer_render_svg(s, this.__wbg_ptr, t.__wbg_ptr, v(e));
-      var r = h().getInt32(s + 0, !0), i = h().getInt32(s + 4, !0), o = h().getInt32(s + 8, !0);
-      if (o)
-        throw F(i);
-      return r !== 0;
-    } finally {
-      _.__wbindgen_add_to_stack_pointer(16);
-    }
-  }
-  /**
-   * @param {any} _w
-   * @returns {Promise<TypstWorker>}
-   */
-  create_worker(t) {
-    if (this.__wbg_ptr == 0) throw new Error("Attempt to use a moved value");
-    b(this.__wbg_ptr);
-    const e = _.typstrenderer_create_worker(this.__wbg_ptr, v(t));
-    return F(e);
-  }
-  /**
-   * @returns {WorkerBridge}
-   */
-  create_worker_bridge() {
-    try {
-      if (this.__wbg_ptr == 0) throw new Error("Attempt to use a moved value");
-      const i = this.__destroy_into_raw(), o = _.__wbindgen_add_to_stack_pointer(-16);
-      b(i), _.typstrenderer_create_worker_bridge(o, i);
-      var t = h().getInt32(o + 0, !0), e = h().getInt32(o + 4, !0), r = h().getInt32(o + 8, !0);
-      if (r)
-        throw F(e);
-      return _t.__wrap(t);
-    } finally {
-      _.__wbindgen_add_to_stack_pointer(16);
-    }
-  }
-  /**
-   * @param {RenderSession} ses
-   * @param {HTMLElement} elem
-   * @returns {Promise<IncrDomDocClient>}
-   */
-  mount_dom(t, e) {
-    if (this.__wbg_ptr == 0) throw new Error("Attempt to use a moved value");
-    if (b(this.__wbg_ptr), U(t, W), t.__wbg_ptr === 0)
-      throw new Error("Attempt to use a moved value");
-    const r = _.typstrenderer_mount_dom(this.__wbg_ptr, t.__wbg_ptr, v(e));
-    return F(r);
-  }
-  /**
    * @param {RenderSession} ses
    * @param {any} canvas
    * @param {RenderPageImageOptions | null} [options]
@@ -2571,18 +2558,30 @@ class st {
         throw new Error("Attempt to use a moved value");
       i = r.__destroy_into_raw();
     }
-    const o = _.typstrenderer_render_page_to_canvas(this.__wbg_ptr, t.__wbg_ptr, v(e), i);
+    const o = _.typstrenderer_render_page_to_canvas(this.__wbg_ptr, t.__wbg_ptr, y(e), i);
     return F(o);
+  }
+  /**
+   * @param {RenderSession} ses
+   * @param {HTMLElement} elem
+   * @returns {Promise<IncrDomDocClient>}
+   */
+  mount_dom(t, e) {
+    if (this.__wbg_ptr == 0) throw new Error("Attempt to use a moved value");
+    if (b(this.__wbg_ptr), U(t, W), t.__wbg_ptr === 0)
+      throw new Error("Attempt to use a moved value");
+    const r = _.typstrenderer_mount_dom(this.__wbg_ptr, t.__wbg_ptr, y(e));
+    return F(r);
   }
 }
 Symbol.dispose && (st.prototype[Symbol.dispose] = st.prototype.free);
-const ne = typeof FinalizationRegistry > "u" ? { register: () => {
+const ie = typeof FinalizationRegistry > "u" ? { register: () => {
 }, unregister: () => {
 } } : new FinalizationRegistry((n) => _.__wbg_typstrendererbuilder_free(n >>> 0, 1));
 class Tt {
   __destroy_into_raw() {
     const t = this.__wbg_ptr;
-    return this.__wbg_ptr = 0, ne.unregister(this), t;
+    return this.__wbg_ptr = 0, ie.unregister(this), t;
   }
   free() {
     const t = this.__destroy_into_raw();
@@ -2595,7 +2594,7 @@ class Tt {
       var t = h().getInt32(i + 0, !0), e = h().getInt32(i + 4, !0), r = h().getInt32(i + 8, !0);
       if (r)
         throw F(e);
-      return this.__wbg_ptr = t >>> 0, ne.register(this, this.__wbg_ptr, this), this;
+      return this.__wbg_ptr = t >>> 0, ie.register(this, this.__wbg_ptr, this), this;
     } finally {
       _.__wbindgen_add_to_stack_pointer(16);
     }
@@ -2617,7 +2616,7 @@ class Tt {
   add_glyph_pack(t) {
     if (this.__wbg_ptr == 0) throw new Error("Attempt to use a moved value");
     b(this.__wbg_ptr);
-    const e = _.typstrendererbuilder_add_glyph_pack(this.__wbg_ptr, v(t));
+    const e = _.typstrendererbuilder_add_glyph_pack(this.__wbg_ptr, y(t));
     return F(e);
   }
   /**
@@ -2627,7 +2626,7 @@ class Tt {
   add_raw_font(t) {
     if (this.__wbg_ptr == 0) throw new Error("Attempt to use a moved value");
     b(this.__wbg_ptr);
-    const e = _.typstrendererbuilder_add_raw_font(this.__wbg_ptr, v(t));
+    const e = _.typstrendererbuilder_add_raw_font(this.__wbg_ptr, y(t));
     return F(e);
   }
   /**
@@ -2638,7 +2637,7 @@ class Tt {
   add_lazy_font(t, e) {
     if (this.__wbg_ptr == 0) throw new Error("Attempt to use a moved value");
     b(this.__wbg_ptr);
-    const r = _.typstrendererbuilder_add_lazy_font(this.__wbg_ptr, v(t), v(e));
+    const r = _.typstrendererbuilder_add_lazy_font(this.__wbg_ptr, y(t), y(e));
     return F(r);
   }
 }
@@ -2669,7 +2668,7 @@ class Ot {
       const s = _.__wbindgen_add_to_stack_pointer(-16);
       b(this.__wbg_ptr);
       const u = j(t, _.__wbindgen_export_1, _.__wbindgen_export_2), d = P;
-      _.typstworker_manipulate_data(s, this.__wbg_ptr, u, d, v(e));
+      _.typstworker_manipulate_data(s, this.__wbg_ptr, u, d, y(e));
       var r = h().getInt32(s + 0, !0), i = h().getInt32(s + 4, !0), o = h().getInt32(s + 8, !0);
       if (o)
         throw F(i);
@@ -2698,8 +2697,8 @@ class Ot {
       if (this.__wbg_ptr == 0) throw new Error("Attempt to use a moved value");
       const u = _.__wbindgen_add_to_stack_pointer(-16);
       b(this.__wbg_ptr);
-      const d = xt(t, _.__wbindgen_export_1), g = P, w = Gt(e, _.__wbindgen_export_1), m = P, C = Gt(r, _.__wbindgen_export_1), R = P;
-      _.typstworker_render_canvas(u, this.__wbg_ptr, d, g, w, m, C, R);
+      const d = xt(t, _.__wbindgen_export_1), g = P, w = Xt(e, _.__wbindgen_export_1), v = P, C = Xt(r, _.__wbindgen_export_1), R = P;
+      _.typstworker_render_canvas(u, this.__wbg_ptr, d, g, w, v, C, R);
       var i = h().getInt32(u + 0, !0), o = h().getInt32(u + 4, !0), s = h().getInt32(u + 8, !0);
       if (s)
         throw F(o);
@@ -2710,7 +2709,7 @@ class Ot {
   }
 }
 Symbol.dispose && (Ot.prototype[Symbol.dispose] = Ot.prototype.free);
-const ie = typeof FinalizationRegistry > "u" ? { register: () => {
+const oe = typeof FinalizationRegistry > "u" ? { register: () => {
 }, unregister: () => {
 } } : new FinalizationRegistry((n) => _.__wbg_workerbridge_free(n >>> 0, 1));
 class _t {
@@ -2720,11 +2719,11 @@ class _t {
   static __wrap(t) {
     t = t >>> 0;
     const e = Object.create(_t.prototype);
-    return e.__wbg_ptr = t, ie.register(e, e.__wbg_ptr, e), e;
+    return e.__wbg_ptr = t, oe.register(e, e.__wbg_ptr, e), e;
   }
   __destroy_into_raw() {
     const t = this.__wbg_ptr;
-    return this.__wbg_ptr = 0, ie.unregister(this), t;
+    return this.__wbg_ptr = 0, oe.unregister(this), t;
   }
   free() {
     const t = this.__destroy_into_raw();
@@ -2751,32 +2750,32 @@ async function Ir(n, t) {
     return e instanceof WebAssembly.Instance ? { instance: e, module: n } : e;
   }
 }
-function Se() {
+function xe() {
   const n = {};
   return n.wbg = {}, n.wbg.__wbg_appendChild_87a6cc0aeb132c06 = function() {
     return k(function(t, e) {
       const r = c(t).appendChild(c(e));
-      return v(r);
+      return y(r);
     }, arguments);
   }, n.wbg.__wbg_call_13410aac570ffff7 = function() {
     return k(function(t, e) {
       const r = c(t).call(c(e));
-      return v(r);
+      return y(r);
     }, arguments);
   }, n.wbg.__wbg_call_641db1bb5db5a579 = function() {
     return k(function(t, e, r, i) {
       const o = c(t).call(c(e), c(r), c(i));
-      return v(o);
+      return y(o);
     }, arguments);
   }, n.wbg.__wbg_call_a5400b25a865cfd8 = function() {
     return k(function(t, e, r) {
       const i = c(t).call(c(e), c(r));
-      return v(i);
+      return y(i);
     }, arguments);
   }, n.wbg.__wbg_call_f1fd202ba222e0ec = function() {
     return k(function(t, e, r, i, o) {
       const s = c(t).call(c(e), c(r), c(i), c(o));
-      return v(s);
+      return y(s);
     }, arguments);
   }, n.wbg.__wbg_clearRect_448c93ecc652d129 = function() {
     return f(function(t, e, r, i, o) {
@@ -2798,27 +2797,27 @@ function Se() {
   }, n.wbg.__wbg_cloneNode_79d46b18d5619863 = function() {
     return k(function(t) {
       const e = c(t).cloneNode();
-      return v(e);
+      return y(e);
     }, arguments);
   }, n.wbg.__wbg_content_a26016a510c10d06 = function() {
     return f(function(t) {
       const e = c(t).content;
-      return v(e);
+      return y(e);
     }, arguments);
   }, n.wbg.__wbg_createElement_4909dfa2011f2abe = function() {
     return k(function(t, e, r) {
       const i = c(t).createElement(E(e, r));
-      return v(i);
+      return y(i);
     }, arguments);
   }, n.wbg.__wbg_createImageBitmap_d788b02f79d6bb1c = function() {
     return k(function(t, e) {
       const r = c(t).createImageBitmap(c(e));
-      return v(r);
+      return y(r);
     }, arguments);
   }, n.wbg.__wbg_createImageBitmap_f0017ef8064b2e1d = function() {
     return k(function(t, e) {
       const r = c(t).createImageBitmap(c(e));
-      return v(r);
+      return y(r);
     }, arguments);
   }, n.wbg.__wbg_createObjectURL_c80225986d2b928b = function() {
     return k(function(t, e) {
@@ -2828,7 +2827,7 @@ function Se() {
   }, n.wbg.__wbg_document_7d29d139bd619045 = function() {
     return f(function(t) {
       const e = c(t).document;
-      return M(e) ? 0 : v(e);
+      return M(e) ? 0 : y(e);
     }, arguments);
   }, n.wbg.__wbg_drawImage_0fcff80aa0873c4e = function() {
     return k(function(t, e, r, i) {
@@ -2881,11 +2880,11 @@ function Se() {
     }, arguments);
   }, n.wbg.__wbg_fill_3aba41a9072d4324 = function() {
     return f(function(t, e, r) {
-      c(t).fill(c(e), Xt[r]);
+      c(t).fill(c(e), Kt[r]);
     }, arguments);
   }, n.wbg.__wbg_fill_8fa14f899c13b2b8 = function() {
     return f(function(t, e, r) {
-      c(t).fill(c(e), Xt[r]);
+      c(t).fill(c(e), Kt[r]);
     }, arguments);
   }, n.wbg.__wbg_fill_a12dd0da87e4b294 = function() {
     return f(function(t, e) {
@@ -2894,12 +2893,12 @@ function Se() {
   }, n.wbg.__wbg_firstElementChild_27076cbfeed86254 = function() {
     return f(function(t) {
       const e = c(t).firstElementChild;
-      return M(e) ? 0 : v(e);
+      return M(e) ? 0 : y(e);
     }, arguments);
   }, n.wbg.__wbg_firstElementChild_d38fc714a20581dc = function() {
     return f(function(t) {
       const e = c(t).firstElementChild;
-      return M(e) ? 0 : v(e);
+      return M(e) ? 0 : y(e);
     }, arguments);
   }, n.wbg.__wbg_getAttribute_8bfaf67e99ed2ee3 = function() {
     return f(function(t, e, r, i) {
@@ -2910,17 +2909,17 @@ function Se() {
   }, n.wbg.__wbg_getContext_15e158d04230a6f6 = function() {
     return k(function(t, e, r) {
       const i = c(t).getContext(E(e, r));
-      return M(i) ? 0 : v(i);
+      return M(i) ? 0 : y(i);
     }, arguments);
   }, n.wbg.__wbg_getContext_8b08935510bf607c = function() {
     return k(function(t, e, r) {
       const i = c(t).getContext(E(e, r));
-      return M(i) ? 0 : v(i);
+      return M(i) ? 0 : y(i);
     }, arguments);
   }, n.wbg.__wbg_get_458e874b43b18b25 = function() {
     return k(function(t, e) {
       const r = Reflect.get(c(t), c(e));
-      return v(r);
+      return y(r);
     }, arguments);
   }, n.wbg.__wbg_globalCompositeOperation_a9343749f60fc3c3 = function() {
     return k(function(t, e) {
@@ -2940,7 +2939,7 @@ function Se() {
   }, n.wbg.__wbg_incrdomdocclient_new = function() {
     return f(function(t) {
       const e = it.__wrap(t);
-      return v(e);
+      return y(e);
     }, arguments);
   }, n.wbg.__wbg_instanceof_CanvasRenderingContext2d_8c616198ec03b12f = function() {
     return f(function(t) {
@@ -3099,7 +3098,7 @@ function Se() {
   }, n.wbg.__wbg_lastElementChild_7b35e6537e048254 = function() {
     return f(function(t) {
       const e = c(t).lastElementChild;
-      return M(e) ? 0 : v(e);
+      return M(e) ? 0 : y(e);
     }, arguments);
   }, n.wbg.__wbg_length_6bb7e81f9d7713e4 = function() {
     return f(function(t) {
@@ -3117,22 +3116,22 @@ function Se() {
   }, n.wbg.__wbg_measureText_ce63d5548118a11b = function() {
     return k(function(t, e, r) {
       const i = c(t).measureText(E(e, r));
-      return v(i);
+      return y(i);
     }, arguments);
   }, n.wbg.__wbg_new_19c25a3f2fa63a02 = function() {
     return f(function() {
       const t = new Object();
-      return v(t);
+      return y(t);
     }, arguments);
   }, n.wbg.__wbg_new_1b0539a012a993e2 = function() {
     return k(function() {
       const t = new Image();
-      return v(t);
+      return y(t);
     }, arguments);
   }, n.wbg.__wbg_new_1f3a344cf3123716 = function() {
     return f(function() {
       const t = new Array();
-      return v(t);
+      return y(t);
     }, arguments);
   }, n.wbg.__wbg_new_2e3c58a15f39f5f9 = function() {
     return f(function(t, e) {
@@ -3147,7 +3146,7 @@ function Se() {
           }
         };
         const o = new Promise(i);
-        return v(o);
+        return y(o);
       } finally {
         r.a = r.b = 0;
       }
@@ -3155,47 +3154,47 @@ function Se() {
   }, n.wbg.__wbg_new_8a6f238a6ece86ea = function() {
     return f(function() {
       const t = new Error();
-      return v(t);
+      return y(t);
     }, arguments);
   }, n.wbg.__wbg_new_da9dc54c5db29dfa = function() {
     return f(function(t, e) {
       const r = new Error(E(t, e));
-      return v(r);
+      return y(r);
     }, arguments);
   }, n.wbg.__wbg_new_dd6c7b0f98f05245 = function() {
     return k(function(t, e) {
       const r = new OffscreenCanvas(t >>> 0, e >>> 0);
-      return v(r);
+      return y(r);
     }, arguments);
   }, n.wbg.__wbg_newfromslice_074c56947bd43469 = function() {
     return f(function(t, e) {
-      const r = new Uint8Array(Jt(t, e));
-      return v(r);
+      const r = new Uint8Array(Vt(t, e));
+      return y(r);
     }, arguments);
   }, n.wbg.__wbg_newnoargs_254190557c45b4ec = function() {
     return f(function(t, e) {
       const r = new Function(E(t, e));
-      return v(r);
+      return y(r);
     }, arguments);
   }, n.wbg.__wbg_newwithlength_a167dcc7aaa3ba77 = function() {
     return f(function(t) {
       const e = new Uint8Array(t >>> 0);
-      return v(e);
+      return y(e);
     }, arguments);
   }, n.wbg.__wbg_newwithpathstring_0dbb2ef6187c1fee = function() {
     return k(function(t, e) {
       const r = new Path2D(E(t, e));
-      return v(r);
+      return y(r);
     }, arguments);
   }, n.wbg.__wbg_newwithu8arraysequenceandoptions_2df1a97d9f42efa4 = function() {
     return k(function(t, e) {
       const r = new Blob(c(t), c(e));
-      return v(r);
+      return y(r);
     }, arguments);
   }, n.wbg.__wbg_nextElementSibling_4b565fe9b7cdb849 = function() {
     return f(function(t) {
       const e = c(t).nextElementSibling;
-      return M(e) ? 0 : v(e);
+      return M(e) ? 0 : y(e);
     }, arguments);
   }, n.wbg.__wbg_push_330b2eb93e4e1212 = function() {
     return f(function(t, e) {
@@ -3217,7 +3216,7 @@ function Se() {
   }, n.wbg.__wbg_queueMicrotask_4488407636f5bf24 = function() {
     return f(function(t) {
       const e = c(t).queueMicrotask;
-      return v(e);
+      return y(e);
     }, arguments);
   }, n.wbg.__wbg_removeProperty_8912427f4d0f6361 = function() {
     return k(function(t, e, r, i) {
@@ -3240,7 +3239,7 @@ function Se() {
   }, n.wbg.__wbg_resolve_4055c623acdd6a1b = function() {
     return f(function(t) {
       const e = Promise.resolve(c(t));
-      return v(e);
+      return y(e);
     }, arguments);
   }, n.wbg.__wbg_restore_1367a274a3a9c52f = function() {
     return f(function(t) {
@@ -3288,7 +3287,7 @@ function Se() {
     }, arguments);
   }, n.wbg.__wbg_set_1353b2a5e96bc48c = function() {
     return f(function(t, e, r) {
-      c(t).set(Jt(e, r));
+      c(t).set(Vt(e, r));
     }, arguments);
   }, n.wbg.__wbg_set_453345bcda80b89a = function() {
     return k(function(t, e, r) {
@@ -3403,27 +3402,27 @@ function Se() {
   }, n.wbg.__wbg_static_accessor_GLOBAL_8921f820c2ce3f12 = function() {
     return f(function() {
       const t = typeof global > "u" ? null : global;
-      return M(t) ? 0 : v(t);
+      return M(t) ? 0 : y(t);
     }, arguments);
   }, n.wbg.__wbg_static_accessor_GLOBAL_THIS_f0a4409105898184 = function() {
     return f(function() {
       const t = typeof globalThis > "u" ? null : globalThis;
-      return M(t) ? 0 : v(t);
+      return M(t) ? 0 : y(t);
     }, arguments);
   }, n.wbg.__wbg_static_accessor_SELF_995b214ae681ff99 = function() {
     return f(function() {
       const t = typeof self > "u" ? null : self;
-      return M(t) ? 0 : v(t);
+      return M(t) ? 0 : y(t);
     }, arguments);
   }, n.wbg.__wbg_static_accessor_WINDOW_cde3890479c675ea = function() {
     return f(function() {
       const t = typeof window > "u" ? null : window;
-      return M(t) ? 0 : v(t);
+      return M(t) ? 0 : y(t);
     }, arguments);
   }, n.wbg.__wbg_stringify_b98c93d0a190446a = function() {
     return k(function(t) {
       const e = JSON.stringify(c(t));
-      return v(e);
+      return y(e);
     }, arguments);
   }, n.wbg.__wbg_stroke_1682cb55b83fabcd = function() {
     return f(function(t, e) {
@@ -3436,27 +3435,27 @@ function Se() {
   }, n.wbg.__wbg_style_32a3c8393b46a115 = function() {
     return f(function(t) {
       const e = c(t).style;
-      return v(e);
+      return y(e);
     }, arguments);
   }, n.wbg.__wbg_then_b33a773d723afa3e = function() {
     return f(function(t, e, r) {
       const i = c(t).then(c(e), c(r));
-      return v(i);
+      return y(i);
     }, arguments);
   }, n.wbg.__wbg_then_e22500defe16819f = function() {
     return f(function(t, e) {
       const r = c(t).then(c(e));
-      return v(r);
+      return y(r);
     }, arguments);
   }, n.wbg.__wbg_transferToImageBitmap_ebacbcba8c548fc6 = function() {
     return k(function(t) {
       const e = c(t).transferToImageBitmap();
-      return v(e);
+      return y(e);
     }, arguments);
   }, n.wbg.__wbg_typstrenderer_new = function() {
     return f(function(t) {
       const e = st.__wrap(t);
-      return v(e);
+      return y(e);
     }, arguments);
   }, n.wbg.__wbg_warn_e2ada06313f92f09 = function() {
     return f(function(t) {
@@ -3495,69 +3494,69 @@ function Se() {
       const e = c(t).width;
       return b(e), e;
     }, arguments);
+  }, n.wbg.__wbindgen_cast_1ce6cc8f8b1c187f = function() {
+    return f(function(t, e) {
+      const r = Gt(t, e, 450, yr);
+      return y(r);
+    }, arguments);
   }, n.wbg.__wbindgen_cast_2241b6af4c4b2941 = function() {
     return f(function(t, e) {
       const r = E(t, e);
-      return v(r);
+      return y(r);
     }, arguments);
-  }, n.wbg.__wbindgen_cast_86466341b6bc6242 = function() {
+  }, n.wbg.__wbindgen_cast_4d3bc2b370a03c03 = function() {
     return f(function(t, e) {
-      const r = Vt(t, e, 391, yr);
-      return v(r);
+      const r = wr(t, e, 469, mr);
+      return y(r);
     }, arguments);
-  }, n.wbg.__wbindgen_cast_b3a874c70d0fc95a = function() {
+  }, n.wbg.__wbindgen_cast_6101531195692140 = function() {
     return f(function(t, e) {
-      const r = Vt(t, e, 391, mr);
-      return v(r);
+      const r = Gt(t, e, 450, hr);
+      return y(r);
     }, arguments);
   }, n.wbg.__wbindgen_cast_d6cd19b81560fd6e = function() {
     return f(function(t) {
-      return v(t);
-    }, arguments);
-  }, n.wbg.__wbindgen_cast_f6a59d405c61762b = function() {
-    return f(function(t, e) {
-      const r = wr(t, e, 474, hr);
-      return v(r);
+      return y(t);
     }, arguments);
   }, n.wbg.__wbindgen_object_clone_ref = function(t) {
     const e = c(t);
-    return v(e);
+    return y(e);
   }, n.wbg.__wbindgen_object_drop_ref = function(t) {
     F(t);
   }, n;
 }
-function xe(n, t) {
-  return _ = n.exports, Ie.__wbindgen_wasm_module = t, V = null, gt = null, dt = null, _;
+function Ie(n, t) {
+  return _ = n.exports, ke.__wbindgen_wasm_module = t, V = null, gt = null, dt = null, _;
 }
 function kr(n) {
   if (_ !== void 0) return _;
   typeof n < "u" && (Object.getPrototypeOf(n) === Object.prototype ? { module: n } = n : console.warn("using deprecated parameters for `initSync()`; pass a single object instead"));
-  const t = Se();
+  const t = xe();
   n instanceof WebAssembly.Module || (n = new WebAssembly.Module(n));
   const e = new WebAssembly.Instance(n, t);
-  return xe(e, n);
+  return Ie(e, n);
 }
-async function Ie(n) {
+async function ke(n) {
   if (_ !== void 0) return _;
-  typeof n < "u" && (Object.getPrototypeOf(n) === Object.prototype ? { module_or_path: n } = n : console.warn("using deprecated parameters for the initialization function; pass a single object instead")), typeof n > "u" && (n = ke("typst_ts_renderer_bg.wasm", import.meta.url));
-  const t = Se();
+  typeof n < "u" && (Object.getPrototypeOf(n) === Object.prototype ? { module_or_path: n } = n : console.warn("using deprecated parameters for the initialization function; pass a single object instead")), typeof n > "u" && (n = Ee("typst_ts_renderer_bg.wasm", import.meta.url));
+  const t = xe();
   (typeof n == "string" || typeof Request == "function" && n instanceof Request || typeof URL == "function" && n instanceof URL) && (n = fetch(n));
   const { instance: e, module: r } = await Ir(await n, t);
-  return xe(e, r);
+  return Ie(e, r);
 }
-let ke = async function(n, t) {
+let Ee = async function(n, t) {
   throw new Error("Cannot import wasm module without importer: " + n + " " + t);
 };
-function Ee(n) {
-  ke = n;
+function Re(n) {
+  Ee = n;
 }
 let Er = async function(n, t) {
   const e = new Function("m", "return import(m)"), { readFileSync: r } = await e("fs"), i = new URL(n, t);
   return await r(i).buffer;
 };
 const Rr = typeof process < "u" && process.versions != null && process.versions.node != null;
-Rr && Ee(Er);
-const Re = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+Rr && Re(Er);
+const Ae = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
   CreateSessionOptions: It,
   IncrDomDocClient: it,
@@ -3570,10 +3569,10 @@ const Re = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   TypstRendererBuilder: Tt,
   TypstWorker: Ot,
   WorkerBridge: _t,
-  default: Ie,
+  default: ke,
   initSync: kr,
   renderer_build_info: lr,
-  setImportWasmModule: Ee
+  setImportWasmModule: Re
 }, Symbol.toStringTag, { value: "Module" }));
 let a, ft = null;
 function nt() {
@@ -3597,7 +3596,7 @@ function S(n) {
   const t = bt;
   return bt = H[t], H[t] = n, t;
 }
-function y(n) {
+function m(n) {
   return H[n];
 }
 function Y(n, t) {
@@ -3621,7 +3620,7 @@ function Pr(n) {
   n < 132 || (H[n] = bt, bt = n);
 }
 function x(n) {
-  const t = y(n);
+  const t = m(n);
   return Pr(n), t;
 }
 let A = 0;
@@ -3697,7 +3696,7 @@ function $t(n) {
   return n instanceof Error ? `${n.name}: ${n.message}
 ${n.stack}` : r;
 }
-const oe = typeof FinalizationRegistry > "u" ? { register: () => {
+const se = typeof FinalizationRegistry > "u" ? { register: () => {
 }, unregister: () => {
 } } : new FinalizationRegistry(
   (n) => {
@@ -3712,10 +3711,10 @@ function Tr(n, t, e, r) {
     try {
       return r(u, i.b, ...s);
     } finally {
-      --i.cnt === 0 ? (a.__wbindgen_export_4.get(i.dtor)(u, i.b), oe.unregister(i)) : i.a = u;
+      --i.cnt === 0 ? (a.__wbindgen_export_4.get(i.dtor)(u, i.b), se.unregister(i)) : i.a = u;
     }
   };
-  return o.original = i, oe.register(o, i, i), o;
+  return o.original = i, se.register(o, i, i), o;
 }
 function Or(n) {
   const t = a.get_font_info(S(n));
@@ -3725,7 +3724,7 @@ function Dt(n, t) {
   if (!(n instanceof t))
     throw new Error(`expected instance of ${t.name}`);
 }
-function Ae(n, t) {
+function Ce(n, t) {
   const e = t(n.length * 1, 1) >>> 0;
   return nt().set(n, e / 1), A = n.length, e;
 }
@@ -3748,18 +3747,18 @@ function $r(n, t, e) {
 function Dr(n, t, e, r) {
   a.__wbindgen_export_6(n, t, S(e), S(r));
 }
-const se = typeof FinalizationRegistry > "u" ? { register: () => {
+const _e = typeof FinalizationRegistry > "u" ? { register: () => {
 }, unregister: () => {
 } } : new FinalizationRegistry((n) => a.__wbg_incrserver_free(n >>> 0, 1));
 class J {
   static __wrap(t) {
     t = t >>> 0;
     const e = Object.create(J.prototype);
-    return e.__wbg_ptr = t, se.register(e, e.__wbg_ptr, e), e;
+    return e.__wbg_ptr = t, _e.register(e, e.__wbg_ptr, e), e;
   }
   __destroy_into_raw() {
     const t = this.__wbg_ptr;
-    return this.__wbg_ptr = 0, se.unregister(this), t;
+    return this.__wbg_ptr = 0, _e.unregister(this), t;
   }
   free() {
     const t = this.__destroy_into_raw();
@@ -3831,7 +3830,7 @@ class at {
    */
   untar(t, e) {
     try {
-      const o = a.__wbindgen_add_to_stack_pointer(-16), s = Ae(t, a.__wbindgen_export_2), u = A;
+      const o = a.__wbindgen_add_to_stack_pointer(-16), s = Ce(t, a.__wbindgen_export_2), u = A;
       a.proxycontext_untar(o, this.__wbg_ptr, s, u, S(e));
       var r = l().getInt32(o + 0, !0), i = l().getInt32(o + 4, !0);
       if (i)
@@ -3842,18 +3841,18 @@ class at {
   }
 }
 Symbol.dispose && (at.prototype[Symbol.dispose] = at.prototype.free);
-const _e = typeof FinalizationRegistry > "u" ? { register: () => {
+const ae = typeof FinalizationRegistry > "u" ? { register: () => {
 }, unregister: () => {
 } } : new FinalizationRegistry((n) => a.__wbg_typstcompileworld_free(n >>> 0, 1));
 class ct {
   static __wrap(t) {
     t = t >>> 0;
     const e = Object.create(ct.prototype);
-    return e.__wbg_ptr = t, _e.register(e, e.__wbg_ptr, e), e;
+    return e.__wbg_ptr = t, ae.register(e, e.__wbg_ptr, e), e;
   }
   __destroy_into_raw() {
     const t = this.__wbg_ptr;
-    return this.__wbg_ptr = 0, _e.unregister(this), t;
+    return this.__wbg_ptr = 0, ae.unregister(this), t;
   }
   free() {
     const t = this.__destroy_into_raw();
@@ -3922,8 +3921,8 @@ class ct {
       const $ = a.__wbindgen_add_to_stack_pointer(-16), D = T(e, a.__wbindgen_export_2, a.__wbindgen_export_3), B = A;
       var s = O(r) ? 0 : T(r, a.__wbindgen_export_2, a.__wbindgen_export_3), u = A;
       a.typstcompileworld_query($, this.__wbg_ptr, t, D, B, s, u);
-      var d = l().getInt32($ + 0, !0), g = l().getInt32($ + 4, !0), w = l().getInt32($ + 8, !0), m = l().getInt32($ + 12, !0), C = d, R = g;
-      if (m)
+      var d = l().getInt32($ + 0, !0), g = l().getInt32($ + 4, !0), w = l().getInt32($ + 8, !0), v = l().getInt32($ + 12, !0), C = d, R = g;
+      if (v)
         throw C = 0, R = 0, x(w);
       return i = C, o = R, q(C, R);
     } finally {
@@ -3949,18 +3948,18 @@ class ct {
   }
 }
 Symbol.dispose && (ct.prototype[Symbol.dispose] = ct.prototype.free);
-const ae = typeof FinalizationRegistry > "u" ? { register: () => {
+const ce = typeof FinalizationRegistry > "u" ? { register: () => {
 }, unregister: () => {
 } } : new FinalizationRegistry((n) => a.__wbg_typstcompiler_free(n >>> 0, 1));
 class ut {
   static __wrap(t) {
     t = t >>> 0;
     const e = Object.create(ut.prototype);
-    return e.__wbg_ptr = t, ae.register(e, e.__wbg_ptr, e), e;
+    return e.__wbg_ptr = t, ce.register(e, e.__wbg_ptr, e), e;
   }
   __destroy_into_raw() {
     const t = this.__wbg_ptr;
-    return this.__wbg_ptr = 0, ae.unregister(this), t;
+    return this.__wbg_ptr = 0, ce.unregister(this), t;
   }
   free() {
     const t = this.__destroy_into_raw();
@@ -4020,7 +4019,7 @@ class ut {
    * @returns {boolean}
    */
   map_shadow(t, e) {
-    const r = T(t, a.__wbindgen_export_2, a.__wbindgen_export_3), i = A, o = Ae(e, a.__wbindgen_export_2), s = A;
+    const r = T(t, a.__wbindgen_export_2, a.__wbindgen_export_3), i = A, o = Ce(e, a.__wbindgen_export_2), s = A;
     return a.typstcompiler_map_shadow(this.__wbg_ptr, r, i, o, s) !== 0;
   }
   /**
@@ -4054,8 +4053,8 @@ class ut {
   get_ast(t) {
     let e, r;
     try {
-      const w = a.__wbindgen_add_to_stack_pointer(-16), m = T(t, a.__wbindgen_export_2, a.__wbindgen_export_3), C = A;
-      a.typstcompiler_get_ast(w, this.__wbg_ptr, m, C);
+      const w = a.__wbindgen_add_to_stack_pointer(-16), v = T(t, a.__wbindgen_export_2, a.__wbindgen_export_3), C = A;
+      a.typstcompiler_get_ast(w, this.__wbg_ptr, v, C);
       var i = l().getInt32(w + 0, !0), o = l().getInt32(w + 4, !0), s = l().getInt32(w + 8, !0), u = l().getInt32(w + 12, !0), d = i, g = o;
       if (u)
         throw d = 0, g = 0, x(s);
@@ -4087,10 +4086,10 @@ class ut {
    */
   get_semantic_tokens(t, e, r) {
     try {
-      const m = a.__wbindgen_add_to_stack_pointer(-16), C = T(t, a.__wbindgen_export_2, a.__wbindgen_export_3), R = A;
+      const v = a.__wbindgen_add_to_stack_pointer(-16), C = T(t, a.__wbindgen_export_2, a.__wbindgen_export_3), R = A;
       var i = O(e) ? 0 : T(e, a.__wbindgen_export_2, a.__wbindgen_export_3), o = A, s = O(r) ? 0 : T(r, a.__wbindgen_export_2, a.__wbindgen_export_3), u = A;
-      a.typstcompiler_get_semantic_tokens(m, this.__wbg_ptr, C, R, i, o, s, u);
-      var d = l().getInt32(m + 0, !0), g = l().getInt32(m + 4, !0), w = l().getInt32(m + 8, !0);
+      a.typstcompiler_get_semantic_tokens(v, this.__wbg_ptr, C, R, i, o, s, u);
+      var d = l().getInt32(v + 0, !0), g = l().getInt32(v + 4, !0), w = l().getInt32(v + 8, !0);
       if (w)
         throw x(g);
       return x(d);
@@ -4109,9 +4108,9 @@ class ut {
       const R = a.__wbindgen_add_to_stack_pointer(-16);
       var i = O(t) ? 0 : T(t, a.__wbindgen_export_2, a.__wbindgen_export_3), o = A, s = O(e) ? 0 : T(e, a.__wbindgen_export_2, a.__wbindgen_export_3), u = A, d = O(r) ? 0 : ht(r, a.__wbindgen_export_2), g = A;
       a.typstcompiler_snapshot(R, this.__wbg_ptr, i, o, s, u, d, g);
-      var w = l().getInt32(R + 0, !0), m = l().getInt32(R + 4, !0), C = l().getInt32(R + 8, !0);
+      var w = l().getInt32(R + 0, !0), v = l().getInt32(R + 4, !0), C = l().getInt32(R + 8, !0);
       if (C)
-        throw x(m);
+        throw x(v);
       return ct.__wrap(w);
     } finally {
       a.__wbindgen_add_to_stack_pointer(16);
@@ -4147,8 +4146,8 @@ class ut {
       var o = O(t) ? 0 : T(t, a.__wbindgen_export_2, a.__wbindgen_export_3), s = A, u = O(e) ? 0 : ht(e, a.__wbindgen_export_2), d = A;
       const R = T(r, a.__wbindgen_export_2, a.__wbindgen_export_3), $ = A;
       a.typstcompiler_compile(C, this.__wbg_ptr, o, s, u, d, R, $, i);
-      var g = l().getInt32(C + 0, !0), w = l().getInt32(C + 4, !0), m = l().getInt32(C + 8, !0);
-      if (m)
+      var g = l().getInt32(C + 0, !0), w = l().getInt32(C + 4, !0), v = l().getInt32(C + 8, !0);
+      if (v)
         throw x(w);
       return x(g);
     } finally {
@@ -4170,7 +4169,7 @@ class ut {
       const De = T(r, a.__wbindgen_export_2, a.__wbindgen_export_3), je = A;
       var g = O(i) ? 0 : T(i, a.__wbindgen_export_2, a.__wbindgen_export_3), w = A;
       a.typstcompiler_query(z, this.__wbg_ptr, Le, $e, u, d, De, je, g, w);
-      var m = l().getInt32(z + 0, !0), C = l().getInt32(z + 4, !0), R = l().getInt32(z + 8, !0), $ = l().getInt32(z + 12, !0), D = m, B = C;
+      var v = l().getInt32(z + 0, !0), C = l().getInt32(z + 4, !0), R = l().getInt32(z + 8, !0), $ = l().getInt32(z + 12, !0), D = v, B = C;
       if ($)
         throw D = 0, B = 0, x(R);
       return o = D, s = B, q(D, B);
@@ -4202,9 +4201,9 @@ class ut {
    */
   incr_compile(t, e, r, i) {
     try {
-      const w = a.__wbindgen_add_to_stack_pointer(-16), m = T(t, a.__wbindgen_export_2, a.__wbindgen_export_3), C = A;
+      const w = a.__wbindgen_add_to_stack_pointer(-16), v = T(t, a.__wbindgen_export_2, a.__wbindgen_export_3), C = A;
       var o = O(e) ? 0 : ht(e, a.__wbindgen_export_2), s = A;
-      Dt(r, J), a.typstcompiler_incr_compile(w, this.__wbg_ptr, m, C, o, s, r.__wbg_ptr, i);
+      Dt(r, J), a.typstcompiler_incr_compile(w, this.__wbg_ptr, v, C, o, s, r.__wbg_ptr, i);
       var u = l().getInt32(w + 0, !0), d = l().getInt32(w + 4, !0), g = l().getInt32(w + 8, !0);
       if (g)
         throw x(d);
@@ -4215,13 +4214,13 @@ class ut {
   }
 }
 Symbol.dispose && (ut.prototype[Symbol.dispose] = ut.prototype.free);
-const ce = typeof FinalizationRegistry > "u" ? { register: () => {
+const ue = typeof FinalizationRegistry > "u" ? { register: () => {
 }, unregister: () => {
 } } : new FinalizationRegistry((n) => a.__wbg_typstcompilerbuilder_free(n >>> 0, 1));
 class jt {
   __destroy_into_raw() {
     const t = this.__wbg_ptr;
-    return this.__wbg_ptr = 0, ce.unregister(this), t;
+    return this.__wbg_ptr = 0, ue.unregister(this), t;
   }
   free() {
     const t = this.__destroy_into_raw();
@@ -4234,7 +4233,7 @@ class jt {
       var t = l().getInt32(i + 0, !0), e = l().getInt32(i + 4, !0), r = l().getInt32(i + 8, !0);
       if (r)
         throw x(e);
-      return this.__wbg_ptr = t >>> 0, ce.register(this, this.__wbg_ptr, this), this;
+      return this.__wbg_ptr = t >>> 0, ue.register(this, this.__wbg_ptr, this), this;
     } finally {
       a.__wbindgen_add_to_stack_pointer(16);
     }
@@ -4297,18 +4296,18 @@ class jt {
   }
 }
 Symbol.dispose && (jt.prototype[Symbol.dispose] = jt.prototype.free);
-const ue = typeof FinalizationRegistry > "u" ? { register: () => {
+const de = typeof FinalizationRegistry > "u" ? { register: () => {
 }, unregister: () => {
 } } : new FinalizationRegistry((n) => a.__wbg_typstfontresolver_free(n >>> 0, 1));
 class Q {
   static __wrap(t) {
     t = t >>> 0;
     const e = Object.create(Q.prototype);
-    return e.__wbg_ptr = t, ue.register(e, e.__wbg_ptr, e), e;
+    return e.__wbg_ptr = t, de.register(e, e.__wbg_ptr, e), e;
   }
   __destroy_into_raw() {
     const t = this.__wbg_ptr;
-    return this.__wbg_ptr = 0, ue.unregister(this), t;
+    return this.__wbg_ptr = 0, de.unregister(this), t;
   }
   free() {
     const t = this.__destroy_into_raw();
@@ -4316,13 +4315,13 @@ class Q {
   }
 }
 Symbol.dispose && (Q.prototype[Symbol.dispose] = Q.prototype.free);
-const de = typeof FinalizationRegistry > "u" ? { register: () => {
+const ge = typeof FinalizationRegistry > "u" ? { register: () => {
 }, unregister: () => {
 } } : new FinalizationRegistry((n) => a.__wbg_typstfontresolverbuilder_free(n >>> 0, 1));
 class Wt {
   __destroy_into_raw() {
     const t = this.__wbg_ptr;
-    return this.__wbg_ptr = 0, de.unregister(this), t;
+    return this.__wbg_ptr = 0, ge.unregister(this), t;
   }
   free() {
     const t = this.__destroy_into_raw();
@@ -4335,7 +4334,7 @@ class Wt {
       var t = l().getInt32(i + 0, !0), e = l().getInt32(i + 4, !0), r = l().getInt32(i + 8, !0);
       if (r)
         throw x(e);
-      return this.__wbg_ptr = t >>> 0, de.register(this, this.__wbg_ptr, this), this;
+      return this.__wbg_ptr = t >>> 0, ge.register(this, this.__wbg_ptr, this), this;
     } finally {
       a.__wbindgen_add_to_stack_pointer(16);
     }
@@ -4416,32 +4415,32 @@ async function Wr(n, t) {
     return e instanceof WebAssembly.Instance ? { instance: e, module: n } : e;
   }
 }
-function Ce() {
+function Fe() {
   const n = {};
   return n.wbg = {}, n.wbg.__wbg_Error_e17e777aac105295 = function(t, e) {
     const r = Error(q(t, e));
     return S(r);
   }, n.wbg.__wbg_Number_998bea33bd87c3e0 = function(t) {
-    return Number(y(t));
+    return Number(m(t));
   }, n.wbg.__wbg_call_13410aac570ffff7 = function() {
     return Y(function(t, e) {
-      const r = y(t).call(y(e));
+      const r = m(t).call(m(e));
       return S(r);
     }, arguments);
   }, n.wbg.__wbg_call_a5400b25a865cfd8 = function() {
     return Y(function(t, e, r) {
-      const i = y(t).call(y(e), y(r));
+      const i = m(t).call(m(e), m(r));
       return S(i);
     }, arguments);
   }, n.wbg.__wbg_call_f1fd202ba222e0ec = function() {
     return Y(function(t, e, r, i, o) {
-      const s = y(t).call(y(e), y(r), y(i), y(o));
+      const s = m(t).call(m(e), m(r), m(i), m(o));
       return S(s);
     }, arguments);
   }, n.wbg.__wbg_done_75ed0ee6dd243d9d = function(t) {
-    return y(t).done;
+    return m(t).done;
   }, n.wbg.__wbg_entries_2be2f15bd5554996 = function(t) {
-    const e = Object.entries(y(t));
+    const e = Object.entries(m(t));
     return S(e);
   }, n.wbg.__wbg_error_7534b8e9a36f1ab4 = function(t, e) {
     let r, i;
@@ -4451,26 +4450,26 @@ function Ce() {
       a.__wbindgen_export_1(r, i, 1);
     }
   }, n.wbg.__wbg_error_9eeaeffe2964d2ba = function(t, e, r) {
-    console.error(y(t), y(e), y(r));
+    console.error(m(t), m(e), m(r));
   }, n.wbg.__wbg_getTimezoneOffset_1e3ddc1382e7c8b0 = function(t) {
-    return y(t).getTimezoneOffset();
+    return m(t).getTimezoneOffset();
   }, n.wbg.__wbg_get_0da715ceaecea5c8 = function(t, e) {
-    const r = y(t)[e >>> 0];
+    const r = m(t)[e >>> 0];
     return S(r);
   }, n.wbg.__wbg_get_458e874b43b18b25 = function() {
     return Y(function(t, e) {
-      const r = Reflect.get(y(t), y(e));
+      const r = Reflect.get(m(t), m(e));
       return S(r);
     }, arguments);
   }, n.wbg.__wbg_getwithrefkey_1dc361bd10053bfe = function(t, e) {
-    const r = y(t)[y(e)];
+    const r = m(t)[m(e)];
     return S(r);
   }, n.wbg.__wbg_info_6cf68c1a86a92f6a = function(t) {
-    console.info(y(t));
+    console.info(m(t));
   }, n.wbg.__wbg_instanceof_ArrayBuffer_67f3012529f6a2dd = function(t) {
     let e;
     try {
-      e = y(t) instanceof ArrayBuffer;
+      e = m(t) instanceof ArrayBuffer;
     } catch {
       e = !1;
     }
@@ -4478,7 +4477,7 @@ function Ce() {
   }, n.wbg.__wbg_instanceof_Map_ebb01a5b6b5ffd0b = function(t) {
     let e;
     try {
-      e = y(t) instanceof Map;
+      e = m(t) instanceof Map;
     } catch {
       e = !1;
     }
@@ -4486,21 +4485,21 @@ function Ce() {
   }, n.wbg.__wbg_instanceof_Uint8Array_9a8378d955933db7 = function(t) {
     let e;
     try {
-      e = y(t) instanceof Uint8Array;
+      e = m(t) instanceof Uint8Array;
     } catch {
       e = !1;
     }
     return e;
   }, n.wbg.__wbg_isArray_030cce220591fb41 = function(t) {
-    return Array.isArray(y(t));
+    return Array.isArray(m(t));
   }, n.wbg.__wbg_isSafeInteger_1c0d1af5542e102a = function(t) {
-    return Number.isSafeInteger(y(t));
+    return Number.isSafeInteger(m(t));
   }, n.wbg.__wbg_iterator_f370b34483c71a1c = function() {
     return S(Symbol.iterator);
   }, n.wbg.__wbg_length_186546c51cd61acd = function(t) {
-    return y(t).length;
+    return m(t).length;
   }, n.wbg.__wbg_length_6bb7e81f9d7713e4 = function(t) {
-    return y(t).length;
+    return m(t).length;
   }, n.wbg.__wbg_new_19c25a3f2fa63a02 = function() {
     const t = new Object();
     return S(t);
@@ -4524,10 +4523,10 @@ function Ce() {
       r.a = r.b = 0;
     }
   }, n.wbg.__wbg_new_5a2ae4557f92b50e = function(t) {
-    const e = new Date(y(t));
+    const e = new Date(m(t));
     return S(e);
   }, n.wbg.__wbg_new_638ebfaedbf32a5e = function(t) {
-    const e = new Uint8Array(y(t));
+    const e = new Uint8Array(m(t));
     return S(e);
   }, n.wbg.__wbg_new_8a6f238a6ece86ea = function() {
     const t = new Error();
@@ -4548,40 +4547,40 @@ function Ce() {
     const o = new Function(q(t, e), q(r, i));
     return S(o);
   }, n.wbg.__wbg_next_5b3530e612fde77d = function(t) {
-    const e = y(t).next;
+    const e = m(t).next;
     return S(e);
   }, n.wbg.__wbg_next_692e82279131b03c = function() {
     return Y(function(t) {
-      const e = y(t).next();
+      const e = m(t).next();
       return S(e);
     }, arguments);
   }, n.wbg.__wbg_now_1e80617bcee43265 = function() {
     return Date.now();
   }, n.wbg.__wbg_prototypesetcall_3d4a26c1ed734349 = function(t, e, r) {
-    Uint8Array.prototype.set.call(Lt(t, e), y(r));
+    Uint8Array.prototype.set.call(Lt(t, e), m(r));
   }, n.wbg.__wbg_proxycontext_new = function(t) {
     const e = at.__wrap(t);
     return S(e);
   }, n.wbg.__wbg_push_330b2eb93e4e1212 = function(t, e) {
-    return y(t).push(y(e));
+    return m(t).push(m(e));
   }, n.wbg.__wbg_queueMicrotask_25d0739ac89e8c88 = function(t) {
-    queueMicrotask(y(t));
+    queueMicrotask(m(t));
   }, n.wbg.__wbg_queueMicrotask_4488407636f5bf24 = function(t) {
-    const e = y(t).queueMicrotask;
+    const e = m(t).queueMicrotask;
     return S(e);
   }, n.wbg.__wbg_resolve_4055c623acdd6a1b = function(t) {
-    const e = Promise.resolve(y(t));
+    const e = Promise.resolve(m(t));
     return S(e);
   }, n.wbg.__wbg_set_3f1d0b984ed272ed = function(t, e, r) {
-    y(t)[x(e)] = x(r);
+    m(t)[x(e)] = x(r);
   }, n.wbg.__wbg_set_453345bcda80b89a = function() {
     return Y(function(t, e, r) {
-      return Reflect.set(y(t), y(e), y(r));
+      return Reflect.set(m(t), m(e), m(r));
     }, arguments);
   }, n.wbg.__wbg_set_90f6c0f7bd8c0415 = function(t, e, r) {
-    y(t)[e >>> 0] = x(r);
+    m(t)[e >>> 0] = x(r);
   }, n.wbg.__wbg_stack_0ed75d68575b0f3c = function(t, e) {
-    const r = y(e).stack, i = T(r, a.__wbindgen_export_2, a.__wbindgen_export_3), o = A;
+    const r = m(e).stack, i = T(r, a.__wbindgen_export_2, a.__wbindgen_export_3), o = A;
     l().setInt32(t + 4, o, !0), l().setInt32(t + 0, i, !0);
   }, n.wbg.__wbg_static_accessor_GLOBAL_8921f820c2ce3f12 = function() {
     const t = typeof global > "u" ? null : global;
@@ -4596,7 +4595,7 @@ function Ce() {
     const t = typeof window > "u" ? null : window;
     return O(t) ? 0 : S(t);
   }, n.wbg.__wbg_then_e22500defe16819f = function(t, e) {
-    const r = y(t).then(y(e));
+    const r = m(t).then(m(e));
     return S(r);
   }, n.wbg.__wbg_typstcompiler_new = function(t) {
     const e = ut.__wrap(t);
@@ -4605,98 +4604,98 @@ function Ce() {
     const e = Q.__wrap(t);
     return S(e);
   }, n.wbg.__wbg_value_dd9372230531eade = function(t) {
-    const e = y(t).value;
+    const e = m(t).value;
     return S(e);
   }, n.wbg.__wbg_wbindgenbigintgetasi64_ac743ece6ab9bba1 = function(t, e) {
-    const r = y(e), i = typeof r == "bigint" ? r : void 0;
+    const r = m(e), i = typeof r == "bigint" ? r : void 0;
     l().setBigInt64(t + 8, O(i) ? BigInt(0) : i, !0), l().setInt32(t + 0, !O(i), !0);
   }, n.wbg.__wbg_wbindgenbooleanget_3fe6f642c7d97746 = function(t) {
-    const e = y(t), r = typeof e == "boolean" ? e : void 0;
+    const e = m(t), r = typeof e == "boolean" ? e : void 0;
     return O(r) ? 16777215 : r ? 1 : 0;
   }, n.wbg.__wbg_wbindgencbdrop_eb10308566512b88 = function(t) {
-    const e = y(t).original;
+    const e = m(t).original;
     return e.cnt-- == 1 ? (e.a = 0, !0) : !1;
   }, n.wbg.__wbg_wbindgendebugstring_99ef257a3ddda34d = function(t, e) {
-    const r = $t(y(e)), i = T(r, a.__wbindgen_export_2, a.__wbindgen_export_3), o = A;
+    const r = $t(m(e)), i = T(r, a.__wbindgen_export_2, a.__wbindgen_export_3), o = A;
     l().setInt32(t + 4, o, !0), l().setInt32(t + 0, i, !0);
   }, n.wbg.__wbg_wbindgenin_d7a1ee10933d2d55 = function(t, e) {
-    return y(t) in y(e);
+    return m(t) in m(e);
   }, n.wbg.__wbg_wbindgenisbigint_ecb90cc08a5a9154 = function(t) {
-    return typeof y(t) == "bigint";
+    return typeof m(t) == "bigint";
   }, n.wbg.__wbg_wbindgenisfunction_8cee7dce3725ae74 = function(t) {
-    return typeof y(t) == "function";
+    return typeof m(t) == "function";
   }, n.wbg.__wbg_wbindgenisobject_307a53c6bd97fbf8 = function(t) {
-    const e = y(t);
+    const e = m(t);
     return typeof e == "object" && e !== null;
   }, n.wbg.__wbg_wbindgenisstring_d4fa939789f003b0 = function(t) {
-    return typeof y(t) == "string";
+    return typeof m(t) == "string";
   }, n.wbg.__wbg_wbindgenisundefined_c4b71d073b92f3c5 = function(t) {
-    return y(t) === void 0;
+    return m(t) === void 0;
   }, n.wbg.__wbg_wbindgenjsvaleq_e6f2ad59ccae1b58 = function(t, e) {
-    return y(t) === y(e);
+    return m(t) === m(e);
   }, n.wbg.__wbg_wbindgenjsvallooseeq_9bec8c9be826bed1 = function(t, e) {
-    return y(t) == y(e);
+    return m(t) == m(e);
   }, n.wbg.__wbg_wbindgennumberget_f74b4c7525ac05cb = function(t, e) {
-    const r = y(e), i = typeof r == "number" ? r : void 0;
+    const r = m(e), i = typeof r == "number" ? r : void 0;
     l().setFloat64(t + 8, O(i) ? 0 : i, !0), l().setInt32(t + 0, !O(i), !0);
   }, n.wbg.__wbg_wbindgenstringget_0f16a6ddddef376f = function(t, e) {
-    const r = y(e), i = typeof r == "string" ? r : void 0;
+    const r = m(e), i = typeof r == "string" ? r : void 0;
     var o = O(i) ? 0 : T(i, a.__wbindgen_export_2, a.__wbindgen_export_3), s = A;
     l().setInt32(t + 4, s, !0), l().setInt32(t + 0, o, !0);
   }, n.wbg.__wbg_wbindgenthrow_451ec1a8469d7eb6 = function(t, e) {
     throw new Error(q(t, e));
-  }, n.wbg.__wbindgen_cast_18dd738794d8ed40 = function(t, e) {
-    const r = Tr(t, e, 238, $r);
-    return S(r);
   }, n.wbg.__wbindgen_cast_2241b6af4c4b2941 = function(t, e) {
     const r = q(t, e);
     return S(r);
   }, n.wbg.__wbindgen_cast_4625c577ab2ec9ee = function(t) {
     const e = BigInt.asUintN(64, t);
     return S(e);
+  }, n.wbg.__wbindgen_cast_87a9b1519f173414 = function(t, e) {
+    const r = Tr(t, e, 247, $r);
+    return S(r);
   }, n.wbg.__wbindgen_cast_9ae0607507abb057 = function(t) {
     return S(t);
   }, n.wbg.__wbindgen_cast_d6cd19b81560fd6e = function(t) {
     return S(t);
   }, n.wbg.__wbindgen_object_clone_ref = function(t) {
-    const e = y(t);
+    const e = m(t);
     return S(e);
   }, n.wbg.__wbindgen_object_drop_ref = function(t) {
     x(t);
   }, n;
 }
-function Fe(n, t) {
-  return a = n.exports, Me.__wbindgen_wasm_module = t, G = null, wt = null, ft = null, a;
+function Me(n, t) {
+  return a = n.exports, Pe.__wbindgen_wasm_module = t, G = null, wt = null, ft = null, a;
 }
 function Br(n) {
   if (a !== void 0) return a;
   typeof n < "u" && (Object.getPrototypeOf(n) === Object.prototype ? { module: n } = n : console.warn("using deprecated parameters for `initSync()`; pass a single object instead"));
-  const t = Ce();
+  const t = Fe();
   n instanceof WebAssembly.Module || (n = new WebAssembly.Module(n));
   const e = new WebAssembly.Instance(n, t);
-  return Fe(e, n);
+  return Me(e, n);
 }
-async function Me(n) {
+async function Pe(n) {
   if (a !== void 0) return a;
-  typeof n < "u" && (Object.getPrototypeOf(n) === Object.prototype ? { module_or_path: n } = n : console.warn("using deprecated parameters for the initialization function; pass a single object instead")), typeof n > "u" && (n = Pe("typst_ts_web_compiler_bg.wasm", import.meta.url));
-  const t = Ce();
+  typeof n < "u" && (Object.getPrototypeOf(n) === Object.prototype ? { module_or_path: n } = n : console.warn("using deprecated parameters for the initialization function; pass a single object instead")), typeof n > "u" && (n = Te("typst_ts_web_compiler_bg.wasm", import.meta.url));
+  const t = Fe();
   (typeof n == "string" || typeof Request == "function" && n instanceof Request || typeof URL == "function" && n instanceof URL) && (n = fetch(n));
   const { instance: e, module: r } = await Wr(await n, t);
-  return Fe(e, r);
+  return Me(e, r);
 }
-let Pe = async function(n, t) {
+let Te = async function(n, t) {
   throw new Error("Cannot import wasm module without importer: " + n + " " + t);
 };
-function Te(n) {
-  Pe = n;
+function Oe(n) {
+  Te = n;
 }
 let zr = async function(n, t) {
   const e = new Function("m", "return import(m)"), { readFileSync: r } = await e("fs"), i = new URL(n, t);
   return await r(i).buffer;
 };
 const qr = typeof process < "u" && process.versions != null && process.versions.node != null;
-qr && Te(zr);
-const Oe = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+qr && Oe(zr);
+const qt = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
   IncrServer: J,
   ProxyContext: at,
@@ -4705,18 +4704,18 @@ const Oe = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   TypstCompilerBuilder: jt,
   TypstFontResolver: Q,
   TypstFontResolverBuilder: Wt,
-  default: Me,
+  default: Pe,
   get_font_info: Or,
   initSync: Br,
-  setImportWasmModule: Te
+  setImportWasmModule: Oe
 }, Symbol.toStringTag, { value: "Module" }));
 export {
   ar as FetchAccessModel,
   ur as FetchPackageRegistry,
-  ve as createTypstCompiler,
-  Ut as createTypstRenderer,
+  Se as createTypstCompiler,
+  Nt as createTypstRenderer,
   Z as loadFonts,
   Nr as preloadRemoteFonts,
-  qt as preloadSystemFonts,
+  Ut as preloadSystemFonts,
   Xr as rendererBuildInfo
 };
