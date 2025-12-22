@@ -16,16 +16,16 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="为多级 enum 设置样式用 numbly 库: 123456#import &quot;@preview&#x2F;numbly:0.1.0&quot;: numbly#set enum(    full:true,     numbering: numbly(&quot;&amp;#123;1:I&amp;#125;.&quot;, &quot;&amp;#123;2:1.&amp;#125;&quot;, &quot;&amp;#123;3">
+    <meta name="description" content="set if 语法在满足某个条件时进行 set 设置: 1234#let is-dark-theme &#x3D; true#set rect(fill: black) if is-dark-theme#set text(fill: white) if is-dark-theme#rect([wink!])   纯函数特性纯函数 (Pure Function) 是函数式编程中的一个核心概念, 指: 对于相同">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Typst-技巧积累">
 <meta property="og:url" content="http://example.com/2024/05/01/Typst-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="为多级 enum 设置样式用 numbly 库: 123456#import &quot;@preview&#x2F;numbly:0.1.0&quot;: numbly#set enum(    full:true,     numbering: numbly(&quot;&amp;#123;1:I&amp;#125;.&quot;, &quot;&amp;#123;2:1.&amp;#125;&quot;, &quot;&amp;#123;3">
+<meta property="og:description" content="set if 语法在满足某个条件时进行 set 设置: 1234#let is-dark-theme &#x3D; true#set rect(fill: black) if is-dark-theme#set text(fill: white) if is-dark-theme#rect([wink!])   纯函数特性纯函数 (Pure Function) 是函数式编程中的一个核心概念, 指: 对于相同">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/typst-repr-function-example.png">
 <meta property="article:published_time" content="2024-05-01T01:50:52.000Z">
-<meta property="article:modified_time" content="2025-11-22T08:30:13.322Z">
+<meta property="article:modified_time" content="2025-12-21T06:35:25.688Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/typst-repr-function-example.png">
@@ -439,7 +439,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          11k 字
+          13k 字
         
       </span>
     
@@ -450,7 +450,7 @@ path.outline_glyph {
         
         
         
-          96 分钟
+          105 分钟
         
       </span>
     
@@ -493,14 +493,51 @@ path.outline_glyph {
             
               <div class="markdown-body">
                 
-                <h1 id="为多级-enum-设置样式"><a href="#为多级-enum-设置样式" class="headerlink" title="为多级 enum 设置样式"></a>为多级 enum 设置样式</h1><p>用 <code>numbly</code> 库:</p>
+                <h1 id="set-if-语法"><a href="#set-if-语法" class="headerlink" title="set if 语法"></a>set if 语法</h1><p>在满足某个条件时进行 <code>set</code> 设置:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs typst">#let is-dark-theme = true<br>#set rect(fill: black) if is-dark-theme<br>#set text(fill: white) if is-dark-theme<br>#rect([wink!])<br></code></pre></td></tr></table></figure>
+
+
+<h1 id="纯函数特性"><a href="#纯函数特性" class="headerlink" title="纯函数特性"></a>纯函数特性</h1><p>纯函数 (Pure Function) 是函数式编程中的一个核心概念, 指: 对于相同的输入, 总返回相同的输出, 并且在执行过程中没有任何副作用 (side effects).</p>
+<p>特点是:</p>
+<ul>
+<li>确定性, 函数内部不依赖外部状态 (比如全局变量, 时间, 随机数等)</li>
+<li>无副作用, 函数内部不能修改全局变量或外部状态, 不能修改传入的参数, 不执行 I&#x2F;O, 抛出异常等</li>
+</ul>
+<p>Typst 强制要求用户编写的所有函数都是纯函数.</p>
+<p>比如下面这种, 使用并修改全局变量的函数就会编译报错:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs typst">#let a = 1;<br>#let f() = (a += 1);<br>#f()<br></code></pre></td></tr></table></figure>
+
+<p>报错:</p>
+<figure class="highlight subunit"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs subunit"><span class="hljs-keyword">error: </span>variables from outside the function are read-only and cannot be modified<br></code></pre></td></tr></table></figure>
+
+<p>对于函数参数, Typst 采取写时复制, 如果想要修改外部变量, 可以通过返回值来更新:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs typst">#let a = (1, ); #a \ // 初始值<br>#let add-array(a) = &#123; a.push(2); a &#125;;<br>#(a = add-array(a)); #a \ // 返回值更新数组<br></code></pre></td></tr></table></figure>
+
+<h1 id="构造空数组和空字典"><a href="#构造空数组和空字典" class="headerlink" title="构造空数组和空字典"></a>构造空数组和空字典</h1><p>在 Typst 中, 数组和字典都用 <code>()</code> 包裹, 几个典型构造:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs typst">#() \ // 是空的数组<br>#(:) \ // 是空的字典<br>#(1) \ // 被括号包裹的整数1<br>#(()) \ // 被括号包裹的空数组<br>#((())) \ // 被括号包裹的被括号包裹的空数组<br>#(1,) \ // 是含有一个元素的数组<br></code></pre></td></tr></table></figure>
+
+
+<h1 id="数组展平示例"><a href="#数组展平示例" class="headerlink" title="数组展平示例"></a>数组展平示例</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs typst">#let matrix-fmt(..rows) = &#123;<br>    let data = rows.pos()<br>    table(<br>        columns: data.at(0).len(),<br>        ..data.flatten().map(it =&gt; [#it]) // 直接打平数组并包装内容<br>    )<br>&#125;<br><br>#matrix-fmt(<br>    (1, 2, 3),<br>    (4, 5, 6),<br>    (7, 8, 9)<br>)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>需要注意, <code>map(it =&gt; [#it])</code> 是必要的, 因为 table 的每一 cell 需要是 <code>content</code> 类型, 而非 <code>int</code></li>
+</ul>
+<h1 id="减法运算"><a href="#减法运算" class="headerlink" title="减法运算"></a>减法运算</h1><p>在 Typst 中减法需要写成:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs typst">#let result = 10 - 5<br></code></pre></td></tr></table></figure>
+
+<p>而不能写成:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs typst">#let result = 10-5<br></code></pre></td></tr></table></figure>
+<ul>
+<li>在 typst 的词法分析中, <code>10-5</code> 会被解析为一个标识符</li>
+</ul>
+<p>Typst 要求 “中缀运算符” 比如 <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code> 的左右都必须要有空白， 才能被识别为运算符.</p>
+<h1 id="为多级-enum-设置样式"><a href="#为多级-enum-设置样式" class="headerlink" title="为多级 enum 设置样式"></a>为多级 enum 设置样式</h1><p>用 <code>numbly</code> 库:</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs typst">#import &quot;@preview/numbly:0.1.0&quot;: numbly<br><br>#set enum(<br>    full:true, <br>    numbering: numbly(&quot;&#123;1:I&#125;.&quot;, &quot;&#123;2:1.&#125;&quot;, &quot;&#123;3:a&#125;)&quot;,&quot;(&#123;4&#125;)&quot; )<br>)<br></code></pre></td></tr></table></figure>
 <ul>
 <li><code>full: true</code> 的设置是必须的, 这样才能判别出层级关系</li>
 <li><code>numbly</code> 的第一个参数定义 <code>level 1</code> 的样式, 第二个参数定义 <code>level 2</code> 的样式, 以此类推</li>
 <li><code>&quot;&#123;1:I&#125;.&quot;</code>, 这里的 <code>1</code> 是一个标记, 需要时 <code>0-9</code> 的数字, <code>I</code> 和 <code>.</code> 都是样式具体内容</li>
 </ul>
-<h1 id="repr-函数"><a href="#repr-函数" class="headerlink" title="repr 函数"></a>repr 函数</h1><p><code>repr</code> 返回一个值的字符串表示, 该输出仅用于调试, 因为输出的内容可能不确定.</p>
+<h1 id="repr-函数"><a href="#repr-函数" class="headerlink" title="repr 函数"></a>repr 函数</h1><p><code>repr</code> 返回任意值的代码表示, 该输出仅用于调试, 因为输出的内容可能不确定.</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs typst">repr(any) -&gt; str<br></code></pre></td></tr></table></figure>
 
 <p>如:</p>
