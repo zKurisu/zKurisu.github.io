@@ -25,7 +25,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/haskell-install-lsp.png">
 <meta property="article:published_time" content="2025-12-22T13:17:09.000Z">
-<meta property="article:modified_time" content="2025-12-28T03:23:11.598Z">
+<meta property="article:modified_time" content="2025-12-28T13:51:04.497Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/haskell-install-lsp.png">
@@ -439,7 +439,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          18k 字
+          27k 字
         
       </span>
     
@@ -450,7 +450,7 @@ path.outline_glyph {
         
         
         
-          151 分钟
+          228 分钟
         
       </span>
     
@@ -1077,6 +1077,216 @@ path.outline_glyph {
 <p>由于它是个表达式, 因此能写在任意地方:</p>
 <figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">case</span> expression <span class="hljs-keyword">of</span> pattern -&gt; result  <br>                   pattern -&gt; result  <br>                   pattern -&gt; result  <br>                   ...<br></code></pre></td></tr></table></figure>
 
+<h1 id="Haskell-递归"><a href="#Haskell-递归" class="headerlink" title="Haskell 递归"></a>Haskell 递归</h1><p>递归就是指函数在定义或实现中调用自身的方式. 在数学定义中非常常见, 比如斐波那契数列, 其先定义了两个非递归的数 <code>F(0) = 0, F(1) = 1</code>, 表示数列前两个数为 <code>0</code> 和 <code>1</code>, 接着定义: <code>F(N) = F(N-1) + F(N-2)</code>, 表示斐波那契数是数列前两个数字之和.</p>
+<p>在递归定义中声明的非递归值也可以称作 “边界条件”, 便于停止递归.</p>
+<p>示例, 求一个列表内元素的最大值:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">maximum&#x27;</span> :: (<span class="hljs-type">Ord</span> a) =&gt; [a] -&gt; a<br><span class="hljs-title">maximum&#x27;</span> []  = error <span class="hljs-string">&quot;maximum of empty list&quot;</span><br><span class="hljs-title">maximum&#x27;</span> [x] = x<br><span class="hljs-title">maximum&#x27;</span> (x:xs) = max x (maximum&#x27; xs)<br></code></pre></td></tr></table></figure>
+
+<p>实现 <code>replicate</code> 函数, 取一个 <code>Integral</code> 值和一个元素做参数, 返回一个包含多个重复元素的 List, 如 <code>replicate 3 5</code> 返回 <code>[5,5,5]</code>:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">replicate&#x27;</span> :: (<span class="hljs-type">Num</span> i, <span class="hljs-type">Ord</span> i) =&gt; i -&gt; a -&gt; [a]   <br><span class="hljs-title">replicate&#x27;</span> n x   <br>    | n &lt;= <span class="hljs-number">0</span>    = []   <br>    | otherwise = x:replicate&#x27; (n-<span class="hljs-number">1</span>) x<br></code></pre></td></tr></table></figure>
+
+<p>实现 <code>take</code> 函数, 从 List 中取一定数量的元素, 如 <code>take 3 [5,4,3,2,1]</code> 得到 <code>[5,4,3]</code>. 若要取零或负数个的话就会得到一个空 List; 若从空 list 中取值, 也是得到空 List:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">take&#x27;</span> :: (<span class="hljs-type">Num</span> i, <span class="hljs-type">Ord</span> i) =&gt; i -&gt; [a] -&gt; [a]   <br><span class="hljs-title">take&#x27;</span> n _   <br>    | n&lt;=<span class="hljs-number">0</span>   = []   <br><span class="hljs-title">take&#x27;</span> _ []     = []   <br><span class="hljs-title">take&#x27;</span> n (x:xs) = x : take&#x27; (n-<span class="hljs-number">1</span>) xs<br></code></pre></td></tr></table></figure>
+
+<p>快速排序的实现示例, 边界条件是, 遇到空 list 则返回空 list. 算法定义: 选数组头部作为 pivot, 将整个数组分为两部分, 小于 pivot 的部分放在 pivot 之前, 大于 pivot 的部分放在 pivot 之后:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">quicksort</span> :: (<span class="hljs-type">Ord</span> a) =&gt; [a] -&gt; [a]   <br><span class="hljs-title">quicksort</span> [] = []   <br><span class="hljs-title">quicksort</span> (x:xs) =   <br>  <span class="hljs-keyword">let</span> smallerSorted = quicksort [a | a&lt;-xs, a&lt;=x]  <br>       biggerSorted = quicksort [a | a&lt;-xs, a &gt; x]   <br>  <span class="hljs-keyword">in</span> smallerSorted ++ [x] ++ biggerSorted<br></code></pre></td></tr></table></figure>
+<p>(注意这个并不是业界最优的 quicksort 实现方式)</p>
+<h1 id="Haskell-高阶函数"><a href="#Haskell-高阶函数" class="headerlink" title="Haskell 高阶函数"></a>Haskell 高阶函数</h1><p>Haskell 中的函数可以作为参数和返回值传递, 这样的函数被称为 “高阶函数”.</p>
+<h2 id="柯里函数"><a href="#柯里函数" class="headerlink" title="柯里函数"></a>柯里函数</h2><p>本质上, Haskell 的所有函数都只有一个参数. 所有多个参数的函数都是 “Curried function”.</p>
+<p>比如对于 <code>max 4 5</code>, Haskell 实际的计算过程是 (max 4) 5, <code>(max 4)</code> 会返回一个新函数, 这个新函数可以理解为:</p>
+<figure class="highlight llvm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs llvm">maxWith<span class="hljs-number">4</span> <span class="hljs-keyword">x</span> <span class="hljs-operator">=</span> if <span class="hljs-keyword">x</span> &gt; <span class="hljs-number">4</span> then <span class="hljs-keyword">x</span> else <span class="hljs-number">4</span><br></code></pre></td></tr></table></figure>
+
+<p>再把这个新函数应用到参数 <code>5</code>.</p>
+<p>下面两种写法是等价的:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">max</span> <span class="hljs-number">4</span> <span class="hljs-number">5</span><br>(max <span class="hljs-number">4</span>) <span class="hljs-number">5</span><br></code></pre></td></tr></table></figure>
+
+<p>从另一个角度来观察, 查看 <code>max</code> 函数的类型: <code>max :: (Ord a) =&gt; a -&gt; a -&gt; a</code>, 也可以写作: <code>max :: (Ord a) a -&gt; (a -&gt; a)</code>. 读作: <code>max</code> 取一个参数 <code>a</code>, 并返回一个函数, 这个函数取一个 <code>a</code> 类型的参数, 返回一个 <code>a</code>.</p>
+<p>这也是为什么 Haskell 用箭头来分隔参数和返回值.</p>
+<p>另一个例子:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">multThree</span> :: (<span class="hljs-type">Num</span> a) =&gt; a -&gt; a -&gt; a -&gt; a <br><span class="hljs-title">multThree</span> x y z = x * y * z<br></code></pre></td></tr></table></figure>
+
+<p>如果执行 <code>mulThree 3 5 9</code>, 其等价于 <code>((mulTree 3) 5) 9</code>. 执行流程如下:</p>
+<ol>
+<li>把参数 <code>3</code> 传给 <code>mulTree</code>, 返回一个新函数 <code>mulTreeWithThree x = 3 * x</code></li>
+<li>把参数 <code>5</code> 传给新函数, 返回一个新函数 <code>mulTreeWithFifteen x = 5 * mulTreeWithThree x</code>, 等价于 <code>mulTreeWithFifteen x = 5 * 3 * x</code></li>
+<li>把参数 <code>9</code> 传给 <code>mulTreeWithFifteen</code> 得到结果 <code>5 * 3 * 9</code></li>
+</ol>
+<p>Haskell 这种返回函数的方式, 可以很便利地创建新函数, 比如 <code>compare</code> 函数的类型为 <code>(Ord a) =&gt; a -&gt; a -&gt; Ordering</code>, 假如只传入一个参数 <code>100</code>, 有 <code>compare 100</code>, 此时仍然会返回一个函数, 类型是 <code>(Num a, Ord a) =&gt; a -&gt; Ordering</code>. 注意这里由于参数 <code>a</code> 是一个 <code>Num</code>, 所以多了一个类型约束.</p>
+<p>示例:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">compareWithHundred</span> :: (<span class="hljs-type">Num</span> a，<span class="hljs-type">Ord</span> a) =&gt; a -&gt; <span class="hljs-type">Ordering</span> <br><span class="hljs-title">compareWithHundred</span> x = compare <span class="hljs-number">100</span> x<br></code></pre></td></tr></table></figure>
+
+<p>等价于:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">compareWithHundred</span> :: (<span class="hljs-type">Num</span> a，<span class="hljs-type">Ord</span> a) =&gt; a -&gt; <span class="hljs-type">Ordering</span> <br><span class="hljs-title">compareWithHundred</span> = compare <span class="hljs-number">100</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>这种调用方式也称 “不全调用”</li>
+</ul>
+<p>也可以对中缀函数进行不全调用, 比如 <code>/</code> 的类型是: <code>(/) :: Fractional a =&gt; a -&gt; a -&gt; a</code>. 不全调用示例:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">divideByTen</span> :: (<span class="hljs-type">Floating</span> a) =&gt; a -&gt; a <br><span class="hljs-title">divideByTen</span> = (/<span class="hljs-number">10</span>)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>注意用括号括起来, 返回的函数接收的参数填补到缺失的那一端, 比如这里的分子</li>
+</ul>
+<p>调用 <code>divideByTen 200</code> 就是 <code>(/10) 200</code>, 等价于 <code>200 / 10</code>.</p>
+<p>检查字符是否为大写的函数:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">isUpperAlphanum</span> :: <span class="hljs-type">Char</span> -&gt; <span class="hljs-type">Bool</span> <br><span class="hljs-title">isUpperAlphanum</span> = (`elem` [&#x27;<span class="hljs-type">A&#x27;</span>..&#x27;<span class="hljs-type">Z&#x27;</span>])<br></code></pre></td></tr></table></figure>
+
+<p>取一个函数, 并调用两次的例子:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">applyTwice</span> :: (a -&gt; a) -&gt; a -&gt; a   <br><span class="hljs-title">applyTwice</span> f x = f (f x)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>这里 <code>(a -&gt; a)</code> 的括号并不是必须的, 只是便于观察, 这里表示一个函数, 接受一个 <code>a</code> 类型并返回一个 <code>a</code> 类型</li>
+</ul>
+<p>调用示例:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs sh">ghci&gt; applyTwice (+3) 10   <br>16   <br>ghci&gt; applyTwice (++ <span class="hljs-string">&quot; HAHA&quot;</span>) <span class="hljs-string">&quot;HEY&quot;</span>   <br><span class="hljs-string">&quot;HEY HAHA HAHA&quot;</span>   <br>ghci&gt; applyTwice (<span class="hljs-string">&quot;HAHA &quot;</span> ++) <span class="hljs-string">&quot;HEY&quot;</span>   <br><span class="hljs-string">&quot;HAHA HAHA HEY&quot;</span>   <br>ghci&gt; applyTwice (multThree 2 2) 9   <br>144   <br>ghci&gt; applyTwice (3:) [1]   <br>[3,3,1]<br></code></pre></td></tr></table></figure>
+
+<p>实现标准库的 <code>zipWith</code>, 其接受一个函数和两个 List, 让函数接受相对应的元素作为参数, 把两个 List 交到一起:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">zipWith&#x27;</span> :: (a -&gt; b -&gt; c) -&gt; [a] -&gt; [b] -&gt; [c]   <br><span class="hljs-title">zipWith&#x27;</span> _ [] _ = []   <br><span class="hljs-title">zipWith&#x27;</span> _ _ [] = []   <br><span class="hljs-title">zipWith&#x27;</span> f (x:xs) (y:ys) = f x y : zipWith&#x27; f xs ys<br></code></pre></td></tr></table></figure>
+
+<p>调用示例:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">ghci</span>&gt; zipWith&#x27; (+) [<span class="hljs-number">4</span>,<span class="hljs-number">2</span>,<span class="hljs-number">5</span>,<span class="hljs-number">6</span>] [<span class="hljs-number">2</span>,<span class="hljs-number">6</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>]   <br>[<span class="hljs-number">6</span>,<span class="hljs-number">8</span>,<span class="hljs-number">7</span>,<span class="hljs-number">9</span>]   <br><span class="hljs-title">ghci</span>&gt; zipWith&#x27; max [<span class="hljs-number">6</span>,<span class="hljs-number">3</span>,<span class="hljs-number">2</span>,<span class="hljs-number">1</span>] [<span class="hljs-number">7</span>,<span class="hljs-number">3</span>,<span class="hljs-number">1</span>,<span class="hljs-number">5</span>]   <br>[<span class="hljs-number">7</span>,<span class="hljs-number">3</span>,<span class="hljs-number">2</span>,<span class="hljs-number">5</span>]   <br><span class="hljs-title">ghci</span>&gt; zipWith&#x27; (++) [<span class="hljs-string">&quot;foo &quot;</span>，<span class="hljs-string">&quot;bar &quot;</span>，<span class="hljs-string">&quot;baz &quot;</span>] [<span class="hljs-string">&quot;fighters&quot;</span>，<span class="hljs-string">&quot;hoppers&quot;</span>，<span class="hljs-string">&quot;aldrin&quot;</span>]   <br>[<span class="hljs-string">&quot;foo fighters&quot;</span>,<span class="hljs-string">&quot;bar hoppers&quot;</span>,<span class="hljs-string">&quot;baz aldrin&quot;</span>]   <br><span class="hljs-title">ghci</span>&gt; zipWith&#x27; (*) (replicate <span class="hljs-number">5</span> <span class="hljs-number">2</span>) [<span class="hljs-number">1</span>..]   <br>[<span class="hljs-number">2</span>,<span class="hljs-number">4</span>,<span class="hljs-number">6</span>,<span class="hljs-number">8</span>,<span class="hljs-number">10</span>]   <br><span class="hljs-title">ghci</span>&gt; zipWith&#x27; (zipWith&#x27; (*)) [[<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>],[<span class="hljs-number">3</span>,<span class="hljs-number">5</span>,<span class="hljs-number">6</span>],[<span class="hljs-number">2</span>,<span class="hljs-number">3</span>,<span class="hljs-number">4</span>]] [[<span class="hljs-number">3</span>,<span class="hljs-number">2</span>,<span class="hljs-number">2</span>],[<span class="hljs-number">3</span>,<span class="hljs-number">4</span>,<span class="hljs-number">5</span>],[<span class="hljs-number">5</span>,<span class="hljs-number">4</span>,<span class="hljs-number">3</span>]]   <br>[[<span class="hljs-number">3</span>,<span class="hljs-number">4</span>,<span class="hljs-number">6</span>],[<span class="hljs-number">9</span>,<span class="hljs-number">20</span>,<span class="hljs-number">30</span>],[<span class="hljs-number">10</span>,<span class="hljs-number">12</span>,<span class="hljs-number">12</span>]]<br></code></pre></td></tr></table></figure>
+
+<p>实现标准库的 <code>flip</code> 函数, 取一个函数作为参数, 并返回一个相似的函数, 只是参数位置颠倒了:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">flip&#x27;</span> :: (a -&gt; b -&gt; c) -&gt; (b -&gt; a -&gt; c)<br><span class="hljs-title">flip&#x27;</span> f = g<br>    <span class="hljs-keyword">where</span> g x y = f y x<br></code></pre></td></tr></table></figure>
+
+<p>可以写成更简单的形式:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">flip&#x27;</span> :: (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c   <br><span class="hljs-title">flip&#x27;</span> f y x = f x y<br></code></pre></td></tr></table></figure>
+
+<h2 id="map-和-filter"><a href="#map-和-filter" class="headerlink" title="map 和 filter"></a>map 和 filter</h2><h3 id="map-函数"><a href="#map-函数" class="headerlink" title="map 函数"></a>map 函数</h3><p><code>map</code> 取一个函数和 <code>List</code> 做参数, 遍历该 <code>List</code> 的每个元素来调用该函数产生一个新的 <code>List</code>:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">map</span> :: (a -&gt; b) -&gt; [a] -&gt; [b]   <br><span class="hljs-title">map</span> _ [] = []   <br><span class="hljs-title">map</span> f (x:xs) = f x : map f xs<br></code></pre></td></tr></table></figure>
+
+<p>调用示例:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs sh">ghci&gt; map (+3) [1,5,3,1,6]   <br>[4,8,6,4,9]   <br>ghci&gt; map (++ <span class="hljs-string">&quot;!&quot;</span>) [<span class="hljs-string">&quot;BIFF&quot;</span>，<span class="hljs-string">&quot;BANG&quot;</span>，<span class="hljs-string">&quot;POW&quot;</span>]   <br>[<span class="hljs-string">&quot;BIFF!&quot;</span>,<span class="hljs-string">&quot;BANG!&quot;</span>,<span class="hljs-string">&quot;POW!&quot;</span>]   <br>ghci&gt; map (replicate 3) [3..6]   <br>[[3,3,3],[4,4,4],[5,5,5],[6,6,6]]   <br>ghci&gt; map (map (^2)) [[1,2],[3,4,5,6],[7,8]]   <br>[[1,4],[9,16,25,36],[49,64]]   <br>ghci&gt; map fst [(1,2),(3,5),(6,3),(2,6),(2,5)]   <br>[1,3,6,2,2]<br></code></pre></td></tr></table></figure>
+
+<p>这些调用其实都能用 list comprehension 来替代, 比如 <code>map (+3) [1,5,3,1,6]</code> 与 <code>[x+3 | x &lt;- [1,5,3,1,6]]</code> 完全等价.</p>
+<p>假如传递给 <code>map</code> 的是二元函数, 则每次计算都会得到一个一元函数, 比如 <code>map (*) [0..]</code> 的结果大概就是 <code>[(0*),(1*),(2*)..]</code>.</p>
+<h3 id="filter-函数"><a href="#filter-函数" class="headerlink" title="filter 函数"></a>filter 函数</h3><p><code>filter</code> 函数取一个布尔函数和一个 List, 返回该 List 中所有符合该布尔条件的元素:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">filter</span> :: (a -&gt; <span class="hljs-type">Bool</span>) -&gt; [a] -&gt; [a]   <br><span class="hljs-title">filter</span> _ [] = []   <br><span class="hljs-title">filter</span> p (x:xs)    <br>    | p x       = x : filter p xs   <br>    | otherwise = filter p xs<br></code></pre></td></tr></table></figure>
+
+<p>调用示例:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs sh">ghci&gt; filter (&gt;3) [1,5,3,2,1,6,4,3,2,1]   <br>[5,6,4]   <br>ghci&gt; filter (==3) [1,2,3,4,5]   <br>[3]   <br>ghci&gt; filter even [1..10]   <br>[2,4,6,8,10]   <br>ghci&gt; <span class="hljs-built_in">let</span> notNull x = not (null x) <span class="hljs-keyword">in</span> filter notNull [[1,2,3],[],[3,4,5],[2,2],[],[],[]]   <br>[[1,2,3],[3,4,5],[2,2]]   <br>ghci&gt; filter (`elem` [<span class="hljs-string">&#x27;a&#x27;</span>..<span class="hljs-string">&#x27;z&#x27;</span>]) <span class="hljs-string">&quot;u LaUgH aT mE BeCaUsE I aM diFfeRent&quot;</span>   <br><span class="hljs-string">&quot;uagameasadifeent&quot;</span>   <br>ghci&gt; filter (`elem` [<span class="hljs-string">&#x27;A&#x27;</span>..<span class="hljs-string">&#x27;Z&#x27;</span>]) <span class="hljs-string">&quot;i lauGh At You BecAuse u r aLL the Same&quot;</span>   <br><span class="hljs-string">&quot;GAYBALLS&quot;</span><br></code></pre></td></tr></table></figure>
+
+<p>这些同样可以用 list comprehension 来实现.</p>
+<p><code>takeWhile</code> 函数, 取一个限制条件和 List 作为参数, 从头开始遍历这一 List, 并回传符合限制条件的元素, 一旦遇到不符合条件的元素, 就停止, 比如取出 <code>&quot;elephants know how to party&quot;</code> 中的首个单词, 可以写:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">ghci&gt; takeWhile (/=<span class="hljs-string">&quot; &quot;</span>) <span class="hljs-string">&quot;elephants know how to party&quot;</span><br>elephants<br></code></pre></td></tr></table></figure>
+
+<h2 id="Lambda"><a href="#Lambda" class="headerlink" title="Lambda"></a>Lambda</h2><p><code>Lambda</code> 就是匿名函数, 语法为:</p>
+<figure class="highlight livescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs livescript"><span class="hljs-string">\args</span> -&gt; body<br></code></pre></td></tr></table></figure>
+<ul>
+<li>用 <code>\</code> 开头, 后面跟空格分隔的参数列表</li>
+<li><code>-&gt;</code> 之后是函数体</li>
+</ul>
+<p>比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">numLongChains</span> :: <span class="hljs-type">Int</span>  <br><span class="hljs-title">numLongChains</span> = length (filter (\xs -&gt; length xs &gt; <span class="hljs-number">15</span>) (map chain [<span class="hljs-number">1</span>..<span class="hljs-number">100</span>]))<br></code></pre></td></tr></table></figure>
+
+<p><code>Lambda</code> 是一个表达式, 因此可以任意传递, 这里 <code>(\xs -&gt; length xs &gt; 15)</code> 回传一个函数, 用来判断一个列表的长度是否大于 <code>15</code>.</p>
+<p>大多时候都是直接用 curried function 或不全调用, 而非 lambda, 比如 <code>map (+3) [1,6,3,2]</code> 与 <code>map (\x -&gt; x + 3) [1,6,3,2]</code> 是等价的.</p>
+<p>多个参数的 <code>lambda</code> 示例:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">ghci&gt; zipWith (\a b -&gt; (a * 30 + 3) / b) [5,4,3,2,1] [1,2,3,4,5]  <br>[153.0,61.5,31.0,15.75,6.6]<br></code></pre></td></tr></table></figure>
+
+<p>(一般情况下, <code>lambda</code> 函数都使用括号包裹的)</p>
+<p>由于柯里化, 下面两个函数是等价的:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">addThree</span> :: (<span class="hljs-type">Num</span> a) =&gt; a -&gt; a -&gt; a -&gt; a  <br><span class="hljs-title">addThree</span> x y z = x + y + z<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">addThree</span> :: (<span class="hljs-type">Num</span> a) =&gt; a -&gt; a -&gt; a -&gt; a  <br><span class="hljs-title">addThree</span> = \x -&gt; \y -&gt; \z -&gt; x + y + z<br></code></pre></td></tr></table></figure>
+
+<p>用 <code>lambda</code> 重写一个最易读的 <code>flip</code> 实现:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">flip</span> :: (a -&gt; b -&gt; c) -&gt; (b -&gt; a -&gt; c)<br><span class="hljs-title">flip</span> f = \x y -&gt; f y x<br></code></pre></td></tr></table></figure>
+
+<h2 id="关键字-fold"><a href="#关键字-fold" class="headerlink" title="关键字 fold"></a>关键字 fold</h2><p><code>fold</code> 函数用来将一个列表 (或其他递归数据结构) “压缩” 成一个单一的值, 其参数取:</p>
+<ul>
+<li>一个二元函数</li>
+<li>一个初始值 (累加值)</li>
+<li>一个需要折叠的 List</li>
+</ul>
+<p>二元函数的参数是累加值和 List 的首项, 并且返回新的累加值.</p>
+<p>所有遍历 List 中元素并据此返回一个值 (这个值也可以是 List) 的操作都可以交给 <code>fold</code> 来实现.</p>
+<h3 id="foldl"><a href="#foldl" class="headerlink" title="foldl"></a>foldl</h3><p><code>foldl</code> 函数 (fold left), 从 List 的左端开始折叠, 用初始值和 List 的头部调用二元函数, 得到一个新的累加值, 然后用新的累加值和 List 的下一个元素调用二元函数, 直到遍历整个 List. <code>foldl</code> 函数的类型为:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ghci&gt; :t foldl :: Foldable t =&gt; (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>t a</code> 可以是 List 等可折叠的数据结构</li>
+</ul>
+<p>用 <code>foldl</code> 来实现 <code>sum</code> 的示例:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">sum&#x27;&#x27;</span> :: (<span class="hljs-type">Num</span> a) =&gt; [a] -&gt; a<br><span class="hljs-title">sum&#x27;&#x27;</span> = foldl (+) <span class="hljs-number">0</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>这里借助了柯里化和部分调用, <code>foldl (+) 0</code> 会返回一个 <code>[a] -&gt; a</code> 类型的函数</li>
+</ul>
+<p>用 <code>foldl</code> 来实现 <code>elem</code> 的示例:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">elem&#x27;</span> :: (<span class="hljs-type">Eq</span> a) =&gt; a -&gt; [a] -&gt; <span class="hljs-type">Bool</span><br><span class="hljs-title">elem&#x27;</span> e xs = foldl (\acc x -&gt; acc || (x == e)) <span class="hljs-type">False</span> xs<br></code></pre></td></tr></table></figure>
+
+<p>用 <code>foldl</code> 来实现 <code>map</code> 的示例:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">map&#x27;</span> :: (a -&gt; b) -&gt; [a] -&gt; [b]  <br><span class="hljs-title">map&#x27;</span> f xs = foldl (\acc x -&gt; acc ++ [f x]) [] xs<br></code></pre></td></tr></table></figure>
+
+<h3 id="foldr"><a href="#foldr" class="headerlink" title="foldr"></a>foldr</h3><p><code>foldr</code> 函数 (fold right), 从 List 的右端开始折叠, 其余与 <code>foldl</code> 类似.</p>
+<p>用 <code>foldr</code> 实现 <code>map</code> 的示例:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">map&#x27;</span> :: (a -&gt; b) -&gt; [a] -&gt; [b]  <br><span class="hljs-title">map&#x27;</span> f xs = foldr (\x acc -&gt; f x : acc) [] xs<br></code></pre></td></tr></table></figure>
+
+<p>一个理解 <code>foldr</code> 操作的例子, 假设有二元函数 <code>f</code>, 起始值为 <code>z</code>, 从右折叠 <code>[3,4,5,6]</code>, 实际的执行就等价于:</p>
+<ul>
+<li><code>f 3 (f 4 (f 5 (f 6 z)))</code></li>
+</ul>
+<h3 id="foldl1-和-foldr1"><a href="#foldl1-和-foldr1" class="headerlink" title="foldl1 和 foldr1"></a>foldl1 和 foldr1</h3><p><code>foldl1</code> 和 <code>foldr1</code> 的行为与 <code>foldl</code> 和 <code>foldr</code> 类似, 只不过不需要提供初始值, 其假定 List 的首个 (或末尾) 元素作为起始值, 并从旁边的元素开始折叠.</p>
+<p>比如 <code>sum</code> 函数可以实现为:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">sum&#x27;</span> :: (<span class="hljs-type">Num</span> a) =&gt; [a] -&gt; a<br><span class="hljs-title">sum&#x27;</span> = foldl1 (+)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>但这个要求待折叠的 list 中至少要有一个元素, 不然会产生运行时错误</li>
+</ul>
+<p>用 <code>fold</code> 函数实现常见库函数的例子:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">maximum&#x27;</span> :: (<span class="hljs-type">Ord</span> a) =&gt; [a] -&gt; a  <br><span class="hljs-title">maximum&#x27;</span> = foldr1 (\x acc -&gt; <span class="hljs-keyword">if</span> x &gt; acc <span class="hljs-keyword">then</span> x <span class="hljs-keyword">else</span> acc)  <br><br><span class="hljs-title">reverse&#x27;</span> :: [a] -&gt; [a]  <br><span class="hljs-title">reverse&#x27;</span> = foldl (\acc x -&gt; x : acc) []  <br><br><span class="hljs-title">product&#x27;</span> :: (<span class="hljs-type">Num</span> a) =&gt; [a] -&gt; a  <br><span class="hljs-title">product&#x27;</span> = foldr1 (*)  <br><br><span class="hljs-title">filter&#x27;</span> :: (a -&gt; <span class="hljs-type">Bool</span>) -&gt; [a] -&gt; [a]  <br><span class="hljs-title">filter&#x27;</span> p = foldr (\x acc -&gt; <span class="hljs-keyword">if</span> p x <span class="hljs-keyword">then</span> x : acc <span class="hljs-keyword">else</span> acc) []  <br><br><span class="hljs-title">head&#x27;</span> :: [a] -&gt; a  <br><span class="hljs-title">head&#x27;</span> = foldr1 (\x _ -&gt; x)  <br><br><span class="hljs-title">last&#x27;</span> :: [a] -&gt; a  <br><span class="hljs-title">last&#x27;</span> = foldl1 (\_ x -&gt; x)<br></code></pre></td></tr></table></figure>
+
+<h3 id="scanl-scanr-scanl1-和-scanr1"><a href="#scanl-scanr-scanl1-和-scanr1" class="headerlink" title="scanl, scanr, scanl1 和 scanr1"></a>scanl, scanr, scanl1 和 scanr1</h3><p><code>scanl</code> 和 <code>scanr</code> 与 <code>foldl</code> 和 <code>foldr</code> 类似, 只不过它们会记录下累加值的所有状态到一个 List:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">ghci</span>&gt; scanl (+) <span class="hljs-number">0</span> [<span class="hljs-number">3</span>,<span class="hljs-number">5</span>,<span class="hljs-number">2</span>,<span class="hljs-number">1</span>]  <br>[<span class="hljs-number">0</span>,<span class="hljs-number">3</span>,<span class="hljs-number">8</span>,<span class="hljs-number">10</span>,<span class="hljs-number">11</span>]  <br><span class="hljs-title">ghci</span>&gt; scanr (+) <span class="hljs-number">0</span> [<span class="hljs-number">3</span>,<span class="hljs-number">5</span>,<span class="hljs-number">2</span>,<span class="hljs-number">1</span>]  <br>[<span class="hljs-number">11</span>,<span class="hljs-number">8</span>,<span class="hljs-number">3</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>]  <br><span class="hljs-title">ghci</span>&gt; scanl1 (\acc x -&gt; <span class="hljs-keyword">if</span> x &gt; acc <span class="hljs-keyword">then</span> x <span class="hljs-keyword">else</span> acc) [<span class="hljs-number">3</span>,<span class="hljs-number">4</span>,<span class="hljs-number">5</span>,<span class="hljs-number">3</span>,<span class="hljs-number">7</span>,<span class="hljs-number">9</span>,<span class="hljs-number">2</span>,<span class="hljs-number">1</span>]  <br>[<span class="hljs-number">3</span>,<span class="hljs-number">4</span>,<span class="hljs-number">5</span>,<span class="hljs-number">5</span>,<span class="hljs-number">7</span>,<span class="hljs-number">9</span>,<span class="hljs-number">9</span>,<span class="hljs-number">9</span>]  <br><span class="hljs-title">ghci</span>&gt; scanl (flip (:)) [] [<span class="hljs-number">3</span>,<span class="hljs-number">2</span>,<span class="hljs-number">1</span>]  <br>[[],[<span class="hljs-number">3</span>],[<span class="hljs-number">2</span>,<span class="hljs-number">3</span>],[<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>]]<br></code></pre></td></tr></table></figure>
+
+<h2 id="有-的函数调用"><a href="#有-的函数调用" class="headerlink" title="有 $ 的函数调用"></a>有 $ 的函数调用</h2><p><code>$</code> 函数, 称作函数调用符:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell">($) :: (a -&gt; b) -&gt; a -&gt; b  <br><span class="hljs-title">f</span> $ x = f x<br></code></pre></td></tr></table></figure>
+
+<p>普通的函数调用符有最高的优先级, 而 <code>$</code> 的优先级最低.</p>
+<p>用空格的函数调用符是左结合的, 如 <code>f a b c</code> 与 <code>((f a) b) c</code> 等价.</p>
+<p>而 <code>$</code> 是右结合的, 可以用来较少代码中的括号数量, 比如有表达式: <code>sum (map sqrt [1..130])</code></p>
+<p>用 <code>$</code> 可以改写为: <code>sum $ map sqrt [1..130]</code>.</p>
+<p>另一个例子, 可以把 <code>sqrt (3 + 4 + 9)</code> 改写为 <code>sqrt $ 3 + 4 + 9</code>.</p>
+<p>除了减少括号外, <code>$</code> 还可以把数据当作函数来使用, 如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">ghci&gt; map ($ 3) [(4+),(10*),(^2),sqrt]  <br>[7.0,30.0,9.0,1.7320508075688772]<br></code></pre></td></tr></table></figure>
+
+<h2 id="函数组合"><a href="#函数组合" class="headerlink" title="函数组合"></a>函数组合</h2><p>函数组合 (复合函数), 在数学上可以这样定义: 给定两个函数:</p>
+<ul>
+<li>$f: B \rightarrow C$</li>
+<li>$g: A \rightarrow B$</li>
+</ul>
+<p>它们的组合是一个新函数, 记为:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>(f \odot g) (x) &#x3D; f(g(x))<br>\end{aligned}<br>}<br>$$<br>(先应用 <code>g</code>, 再把结果传给 <code>f</code>)</p>
+<p>在 Haskell 中, 利用 <code>.</code> 函数来进行函数组合, <code>.</code> 函数的定义为:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell">(.) :: (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c  <br><span class="hljs-title">f</span> . g = \x -&gt; f (g x)<br></code></pre></td></tr></table></figure>
+
+<p>需要注意这里的类型声明:</p>
+<ul>
+<li><code>f</code> 的类型是 <code>b -&gt; c</code></li>
+<li><code>g</code> 的类型是 <code>a -&gt; b</code></li>
+</ul>
+<p><code>f</code> 的输入参数必须与 <code>g</code> 的返回类型相同. 所得到的组合函数的输入类型与 <code>g</code> 相同, 输出类型与 <code>f</code> 相同.</p>
+<p>函数组合的主要作用就是生成新函数, 比如要将一个数字 List 全部转换为负数, 可以考虑先取绝对值, 然后全部取负数:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">ghci&gt; map (\x -&gt; negate (abs x)) [5,-3,-6,7,-3,2,-19,24]  <br>[-5,-3,-6,-7,-3,-2,-19,-24]<br></code></pre></td></tr></table></figure>
+
+<p>可以用函数组合改写为:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">ghci&gt; map (negate . abs) [5,-3,-6,7,-3,2,-19,24]  <br>[-5,-3,-6,-7,-3,-2,-19,-24]<br></code></pre></td></tr></table></figure>
+
+<p>又比如组合多个函数, <code>f (g (z x))</code> 与 <code>(f . g . z) x</code> 等价, 因此有:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">ghci&gt; map (\xs -&gt; negate (<span class="hljs-built_in">sum</span> (<span class="hljs-built_in">tail</span> xs))) [[1..5],[3..6],[1..7]]  <br>[-14,-15,-27]<br></code></pre></td></tr></table></figure>
+
+<p>改为:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">ghci&gt; map (negate . <span class="hljs-built_in">sum</span> . <span class="hljs-built_in">tail</span>) [[1..5],[3..6],[1..7]]  <br>[-14,-15,-27]<br></code></pre></td></tr></table></figure>
+
+<p>如果包含多个参数的函数, 则可以用不全调用使得每个函数都只剩下一个参数, 比如 <code>sum (replicate 5 (max 6 8))</code> 可以重写为 <code>(sum . replicate 5 . max 6) 8</code>.</p>
+<p>如果想去掉括号, 通常在最接近参数的函数之后加上 <code>$</code> 即可, 比如 <code>replicate 100 (product (map (*3) (zipWith max [1,2,3,4,5] [4,5,6,7,8])))</code> 可以重写为: <code>replicate 100 . product . map (*3) . zipWith max [1,2,3,4,5] $ [4,5,6,7,8]</code>.</p>
+<p>函数组合还用于定义 point free style 的函数, 如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">sum&#x27;</span> :: (<span class="hljs-type">Num</span> a) =&gt; [a] -&gt; a     <br><span class="hljs-title">sum&#x27;</span> xs = foldl (+) <span class="hljs-number">0</span> xs<br></code></pre></td></tr></table></figure>
+<p>等号两端都有个 <code>xs</code>, 由于 currying, 可以省掉两端的 <code>xs</code>, 因为 <code>foldl (+) 0</code> 会返回一个取一个 List 作为参数的函数, 因此可以改为为:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">sum&#x27;</span> :: (<span class="hljs-type">Num</span> a) =&gt; [a] -&gt; a     <br><span class="hljs-title">sum&#x27;</span> = foldl (+) <span class="hljs-number">0</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>这就是 point free style</li>
+</ul>
+<p>对于下面的函数, 则不能直接去掉两端的 <code>x</code>:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">fn</span> x = ceiling (negate (tan (cos (max <span class="hljs-number">50</span> x))))<br></code></pre></td></tr></table></figure>
+
+<p>此时可以借助函数组合, 重写为:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">fn</span> = ceiling . negate . tan . cos . max <span class="hljs-number">50</span><br></code></pre></td></tr></table></figure>
 
 
                 
