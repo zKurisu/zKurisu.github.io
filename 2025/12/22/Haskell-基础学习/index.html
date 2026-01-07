@@ -25,7 +25,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/haskell-install-lsp.png">
 <meta property="article:published_time" content="2025-12-22T13:17:09.000Z">
-<meta property="article:modified_time" content="2026-01-05T13:42:53.881Z">
+<meta property="article:modified_time" content="2026-01-06T03:17:24.154Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/haskell-install-lsp.png">
@@ -439,7 +439,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          84k 字
+          86k 字
         
       </span>
     
@@ -450,7 +450,7 @@ path.outline_glyph {
         
         
         
-          698 分钟
+          716 分钟
         
       </span>
     
@@ -2400,7 +2400,50 @@ path.outline_glyph {
 
 <p>Left identity 和 right identity 描述的都是 <code>return</code> 的行为.</p>
 <h3 id="Associativity"><a href="#Associativity" class="headerlink" title="Associativity"></a>Associativity</h3><p>用 <code>&gt;&gt;=</code> 把一串 monadic function 串在一起时, 它们的先后顺序不应该影响结果: <code>(m &gt;&gt;= f) &gt;&gt;= g</code> 与 <code>m &gt;&gt;= (\x -&gt; f x &gt;&gt;= g)</code> 是相等的.</p>
-<h2 id="Writer-Monad"><a href="#Writer-Monad" class="headerlink" title="Writer Monad"></a>Writer Monad</h2><p><code>Writer Monad</code> 是一种在计算过程中累积额外信息 (log) 的机制.</p>
+<h2 id="Writer-Monad"><a href="#Writer-Monad" class="headerlink" title="Writer Monad"></a>Writer Monad</h2><p><code>Writer Monad</code> 是一种在计算过程中累积额外信息 (log) 的机制. 定义在 <code>Control.Monad.Writer</code> 模块中:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">newtype</span> <span class="hljs-type">Writer</span> w a = <span class="hljs-type">Writer</span> &#123; <span class="hljs-title">runWriter</span> :: (<span class="hljs-title">a</span>, <span class="hljs-title">w</span>) &#125;</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>a</code> 是任意类型, 表示包含的值</li>
+<li><code>w</code> 表示附加信息</li>
+</ul>
+<p>其 <code>Monad</code> instance 的定义如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">instance</span> (<span class="hljs-type">Monoid</span> <span class="hljs-title">w</span>) =&gt; <span class="hljs-type">Monad</span> (<span class="hljs-type">Writer</span> <span class="hljs-title">w</span>) <span class="hljs-keyword">where</span></span><br>    return x = <span class="hljs-type">Writer</span> (x, mempty)<br>    (<span class="hljs-type">Writer</span> (x,v)) &gt;&gt;= f = <span class="hljs-keyword">let</span> (<span class="hljs-type">Writer</span> (y, v&#x27;)) = f x <span class="hljs-keyword">in</span> <span class="hljs-type">Writer</span> (y, v `mappend` v&#x27;)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>注意 <code>w</code> 是 <code>Monoid</code> 的 instance</li>
+</ul>
+<p>测试:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sh">ghci&gt; runWriter (<span class="hljs-built_in">return</span> 3 :: Writer String Int)  <br>(3,<span class="hljs-string">&quot;&quot;</span>)  <br>ghci&gt; runWriter (<span class="hljs-built_in">return</span> 3 :: Writer (Sum Int) Int)  <br>(3,Sum &#123;getSum = 0&#125;)  <br>ghci&gt; runWriter (<span class="hljs-built_in">return</span> 3 :: Writer (Product Int) Int)  <br>(3,Product &#123;getProduct = 1&#125;)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>由于 <code>Writer</code> 并没有定义成 <code>Show</code> 的 instance, 因此需要用 <code>runWriter</code> 将其转换为普通的 <code>tuple</code></li>
+</ul>
+<p>示例:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-keyword">import</span> Control.Monad.Writer  <br><br><span class="hljs-title">logNumber</span> :: <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Writer</span> [<span class="hljs-type">String</span>] <span class="hljs-type">Int</span>  <br><span class="hljs-title">logNumber</span> x = <span class="hljs-type">Writer</span> (x, [<span class="hljs-string">&quot;Got number: &quot;</span> ++ show x])  <br><br><span class="hljs-title">multWithLog</span> :: <span class="hljs-type">Writer</span> [<span class="hljs-type">String</span>] <span class="hljs-type">Int</span>  <br><span class="hljs-title">multWithLog</span> = <span class="hljs-keyword">do</span>  <br>    a &lt;- logNumber <span class="hljs-number">3</span>  <br>    b &lt;- logNumber <span class="hljs-number">5</span>  <br>    return (a*b)<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">ghci&gt; runWriter multWithLog  <br>(15,[<span class="hljs-string">&quot;Got number: 3&quot;</span>,<span class="hljs-string">&quot;Got number: 5&quot;</span>])<br></code></pre></td></tr></table></figure>
+
+<h3 id="Adding-logging-to-programs"><a href="#Adding-logging-to-programs" class="headerlink" title="Adding logging to programs"></a>Adding logging to programs</h3><p>Haskell 提供了 <code>gcd</code> 函数 (greatest common divisor), 这里实现一个具有 <code>log</code> 功能的 <code>gcd</code>:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">gcd&#x27;</span> :: <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Int</span>  <br><span class="hljs-title">gcd&#x27;</span> a b   <br>    | b == <span class="hljs-number">0</span>    = a  <br>    | otherwise = gcd&#x27; b (a `mod` b)<br></code></pre></td></tr></table></figure>
+
+<p>添加有 log 的版本:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-keyword">import</span> Control.Monad.Writer  <br><br><span class="hljs-title">gcd&#x27;</span> :: <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Writer</span> [<span class="hljs-type">String</span>] <span class="hljs-type">Int</span>  <br><span class="hljs-title">gcd&#x27;</span> a b  <br>  | b == <span class="hljs-number">0</span> = <span class="hljs-keyword">do</span>  <br>      tell [<span class="hljs-string">&quot;Finished with &quot;</span> ++ show a]  <br>      return a  <br>  | otherwise = <span class="hljs-keyword">do</span>  <br>      tell [show a ++ <span class="hljs-string">&quot; mod &quot;</span> ++ show b ++ <span class="hljs-string">&quot; = &quot;</span> ++ show (a `mod` b)]  <br>      gcd&#x27; b (a `mod` b)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>tell</code> 实现了 <code>MonadWriter</code> typeclass, 能接受一个 monoid value, 并放入 <code>()</code> 中形成一个 <code>Writer</code></li>
+</ul>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sh">ghci&gt; mapM_ putStrLn $ snd $ runWriter (gcd<span class="hljs-string">&#x27; 8 3)  </span><br><span class="hljs-string">8 mod 3 = 2  </span><br><span class="hljs-string">3 mod 2 = 1  </span><br><span class="hljs-string">2 mod 1 = 0  </span><br><span class="hljs-string">Finished with 1</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="Reader-Monad"><a href="#Reader-Monad" class="headerlink" title="Reader Monad"></a>Reader Monad</h2><p>Reader Monad 指, 把函数视为具有 <code>context</code> 的值.</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-keyword">import</span> Control.Monad.Instances  <br><br><span class="hljs-title">addStuff</span> :: <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Int</span>  <br><span class="hljs-title">addStuff</span> = <span class="hljs-keyword">do</span>  <br>  a &lt;- (*<span class="hljs-number">2</span>)  <br>  b &lt;- (+<span class="hljs-number">10</span>)  <br>  return (a+b)<br></code></pre></td></tr></table></figure>
+
+<h2 id="State-Monad"><a href="#State-Monad" class="headerlink" title="State Monad"></a>State Monad</h2><p>由于 Haskell 的纯粹性, 其无法改变全局状态, 这让 Haskell 在一些依赖状态变化等领域上难以应用.</p>
+<p>State Monad 特性就是让 Haskell 更容易地处理状态性问题, 并且让其他部分保持纯粹性. 其定义在 <code>Control.Monad.State</code> 模块中:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">newtype</span> <span class="hljs-type">State</span> s a = <span class="hljs-type">State</span> &#123; <span class="hljs-title">runState</span> :: <span class="hljs-title">s</span> -&gt; (<span class="hljs-title">a</span>,<span class="hljs-title">s</span>) &#125;</span><br></code></pre></td></tr></table></figure>
+<p>一个 <code>State s a</code> 代表的是一个改变状态的操作, 其操作的状态为类型 <code>s</code>, 而产生的结果是 <code>a</code>.</p>
+<p>定义为 <code>Monad</code> 的 instance 如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">instance</span> <span class="hljs-type">Monad</span> (<span class="hljs-type">State</span> <span class="hljs-title">s</span>) <span class="hljs-keyword">where</span></span>  <br>    return x = <span class="hljs-type">State</span> $ \s -&gt; (x,s)  <br>    (<span class="hljs-type">State</span> h) &gt;&gt;= f = <span class="hljs-type">State</span> $ \s -&gt; <span class="hljs-keyword">let</span> (a, newState) = h s  <br>                                        (<span class="hljs-type">State</span> g) = f a  <br>                                    <span class="hljs-keyword">in</span>  g newState<br></code></pre></td></tr></table></figure>
+
+<h2 id="Error-Monad"><a href="#Error-Monad" class="headerlink" title="Error Monad"></a>Error Monad</h2><p>定义在 <code>Control.Monad.Error</code> 中有:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">instance</span> (<span class="hljs-type">Error</span> <span class="hljs-title">e</span>) =&gt; <span class="hljs-type">Monad</span> (<span class="hljs-type">Either</span> <span class="hljs-title">e</span>) <span class="hljs-keyword">where</span></span>  <br>    return x = <span class="hljs-type">Right</span> x   <br>    <span class="hljs-type">Right</span> x &gt;&gt;= f = f x  <br>    <span class="hljs-type">Left</span> err &gt;&gt;= f = <span class="hljs-type">Left</span> err  <br>    fail msg = <span class="hljs-type">Left</span> (strMsg msg)<br></code></pre></td></tr></table></figure>
+
 
                 
               </div>
