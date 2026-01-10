@@ -1,0 +1,1134 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/wallhaven-j5kjgy_1920x1080.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Jie">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="FunctorFunctor typeclass 描述了 “可以映射的结构”, 可以在某种上下文中应用函数, 并且保持上下文的结构不变. Haskell 定义12class Functor f where    fmap :: (a -&gt; b) -&gt; f a -&gt; f b  f a 是某种上下文中的值 a a -&gt; b 是一个普通的函数 fmap 将普通函数 lift 到上">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Haskell-常见-typeclass-对应的操作含义">
+<meta property="og:url" content="http://example.com/2026/01/08/Haskell-%E5%B8%B8%E8%A7%81-typeclass-%E5%AF%B9%E5%BA%94%E7%9A%84%E6%93%8D%E4%BD%9C%E5%90%AB%E4%B9%89/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="FunctorFunctor typeclass 描述了 “可以映射的结构”, 可以在某种上下文中应用函数, 并且保持上下文的结构不变. Haskell 定义12class Functor f where    fmap :: (a -&gt; b) -&gt; f a -&gt; f b  f a 是某种上下文中的值 a a -&gt; b 是一个普通的函数 fmap 将普通函数 lift 到上">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-01-08T10:13:54.000Z">
+<meta property="article:modified_time" content="2026-01-10T12:29:28.969Z">
+<meta property="article:author" content="Jie">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>Haskell-常见-typeclass-对应的操作含义 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<!-- hexo injector head_end start --><style>.typst-app {
+  margin: 0;
+  --typst-dom-scale: 1;
+  /* --typst-dom-scale: 1.5; */
+  margin: 5px;
+}
+
+.typst-dom-page {
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  --data-text-width: calc(1px * var(--typst-dom-scale));
+  --data-text-height: calc(1px * var(--typst-dom-scale));
+}
+
+.typst-back-canvas {
+  position: absolute;
+  z-index: -1;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  pointer-events: none;
+}
+
+.typst-svg-page {
+  position: absolute;
+  z-index: 0;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+}
+
+.typst-html-semantics {
+  position: absolute;
+  z-index: 2;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  color: transparent;
+  font-family: monospace;
+  white-space: pre;
+  opacity: 0.62;
+}
+
+.typst-html-semantics span {
+  color: transparent;
+  font-family: monospace;
+  transform-origin: left top;
+  position: absolute;
+  display: inline-block;
+  left: 0;
+  top: 0;
+}
+
+.typst-content-hint {
+  position: absolute;
+  display: inline-block;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.typst-html-semantics a {
+  position: absolute;
+  display: inline-block;
+}
+
+/* set transparent itself */
+.typst-content-group {
+  pointer-events: visible;
+}
+
+.typst-html-semantics span::-moz-selection {
+  color: transparent;
+  background: #7db9de;
+}
+
+.typst-html-semantics span::selection {
+  color: transparent;
+  background: #7db9de;
+}
+
+.typst-html-semantics *::-moz-selection {
+  color: transparent;
+  background: transparent;
+}
+
+.typst-html-semantics *::selection {
+  color: transparent;
+  background: transparent;
+}
+
+.typst-content-fallback {
+  color: transparent;
+  background: transparent;
+}
+
+.pseudo-link,
+.typst-text {
+  pointer-events: none;
+}
+
+.tsel span,
+.tsel {
+  left: 0;
+  position: fixed;
+  text-align: justify;
+  white-space: pre;
+  width: 100%;
+  height: 100%;
+  text-align-last: justify;
+  color: transparent;
+}
+.tsel span::-moz-selection,
+.tsel::-moz-selection {
+  color: transparent;
+  background: #7db9dea0;
+}
+.tsel span::selection,
+.tsel::selection {
+  color: transparent;
+  background: #7db9dea0;
+}
+.pseudo-link {
+  fill: transparent;
+  cursor: pointer;
+  pointer-events: all;
+}
+svg {
+  fill: none;
+}
+
+.outline_glyph path,
+path.outline_glyph {
+  fill: var(--glyph_fill);
+  stroke: var(--glyph_stroke);
+}
+
+.outline_glyph path,
+path.outline_glyph {
+  transition: 0.2s fill stroke;
+}
+.hover .typst-text {
+  --glyph_fill: #66bab7;
+  --glyph_stroke: #66bab7;
+}
+
+.typst-jump-ripple,
+.typst-debug-react-ripple {
+  width: 0;
+  height: 0;
+  background-color: transparent;
+  position: absolute;
+  border-radius: 50%;
+}
+.typst-jump-ripple {
+  border: 1px solid #66bab7;
+}
+.typst-debug-react-ripple {
+  border: 1px solid #cb1b45;
+}
+@keyframes typst-jump-ripple-effect {
+  to {
+    width: 10vw;
+    height: 10vw;
+    opacity: 0.01;
+    margin: -5vw;
+  }
+}
+@keyframes typst-debug-react-ripple-effect {
+  to {
+    width: 3vw;
+    height: 3vw;
+    opacity: 0.01;
+    margin: -1.5vw;
+  }
+}
+</style>
+<script>/// https://segmentfault.com/a/1190000016574288
+(function () {
+  var ie = !!(window.attachEvent && !window.opera);
+  var wk = /webkit\/(\d+)/i.test(navigator.userAgent) && RegExp.$1 < 525;
+  var fn = [];
+  var run = function () {
+    for (var i = 0; i < fn.length; i++) fn[i]();
+  };
+  var d = document;
+  d.ready = function (f) {
+    if (!ie && !wk && d.addEventListener) return d.addEventListener('DOMContentLoaded', f, false);
+    if (fn.push(f) > 1) return;
+    if (ie)
+      (function () {
+        try {
+          d.documentElement.doScroll('left');
+          run();
+        } catch (err) {
+          setTimeout(arguments.callee, 0);
+        }
+      })();
+    else if (wk)
+      var t = setInterval(function () {
+        if (/^(loaded|complete)$/.test(d.readyState)) clearInterval(t), run();
+      }, 0);
+  };
+})();
+</script>
+<script type="module" src="/typst/typst-main.js"></script><script src="/typst/svg-utils.js"></script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Jie</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/SteinsGate_all.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Haskell-常见-typeclass-对应的操作含义"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-01-08 18:13" pubdate>
+          2026年1月8日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          14k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          115 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">Haskell-常见-typeclass-对应的操作含义</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="Functor"><a href="#Functor" class="headerlink" title="Functor"></a>Functor</h1><p><code>Functor</code> typeclass 描述了 “可以映射的结构”, 可以在某种上下文中应用函数, 并且保持上下文的结构不变.</p>
+<h2 id="Haskell-定义"><a href="#Haskell-定义" class="headerlink" title="Haskell 定义"></a>Haskell 定义</h2><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-type">Functor</span> f <span class="hljs-keyword">where</span></span><br>    fmap :: (a -&gt; b) -&gt; f a -&gt; f b<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>f a</code> 是某种上下文中的值 <code>a</code></li>
+<li><code>a -&gt; b</code> 是一个普通的函数</li>
+<li><code>fmap</code> 将普通函数 lift 到上下文中进行应用</li>
+</ul>
+<p>如果我们只给 <code>fmap</code> 提供一个函数 <code>a -&gt; b</code>, 相当于返回了另一个 <code>f a -&gt; f b</code> 的函数. 相当于 <code>fmap</code> 把函数从 “普通世界” lift 到了 “上下文世界”.</p>
+<p>也可以另外理解为, <code>f a</code> 是一个盒子, <code>fmap</code> 的作用就是:</p>
+<ol>
+<li>打开盒子</li>
+<li>取出里面的值 <code>a</code></li>
+<li>对值应用函数 <code>(a -&gt; b)</code></li>
+<li>把结果 <code>b</code> 放回同一个盒子里</li>
+</ol>
+<p>在范畴论 (category theory) 中, functor 是两个 category 之间的映射, 满足:</p>
+<ol>
+<li>映射对象: 将一个 category 的对象映射到另一个 category</li>
+<li>映射 morphism: 将 morphism 映射到 morphism</li>
+<li>保持结构: 保持复合和单位</li>
+</ol>
+<h2 id="Functor-定律"><a href="#Functor-定律" class="headerlink" title="Functor 定律"></a>Functor 定律</h2><p>任何合法的 Functor instance 必须满足两个定律:</p>
+<ul>
+<li><p>恒等率: <code>fmap id = id</code>. 对任何 Functor 应用 <code>id</code> 函数, 结果不变</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">fmap</span> id [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>]  = id [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>]<br>= [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>]        = [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>]<br></code></pre></td></tr></table></figure>
+</li>
+<li><p>复合率: <code>fmap (g . f) = fmap g . fmap f</code>. 先复合函数再 <code>fmap</code>, 等价于分别 <code>fmap</code> 再复合.</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">fmap</span> ((*<span class="hljs-number">2</span>) . (+<span class="hljs-number">1</span>)) [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>]<br>= fmap (\x -&gt; (x + <span class="hljs-number">1</span>) * <span class="hljs-number">2</span>) [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>]<br>= [<span class="hljs-number">4</span>, <span class="hljs-number">6</span>, <span class="hljs-number">8</span>]<br><br>(fmap (*<span class="hljs-number">2</span>) . fmap (+<span class="hljs-number">1</span>)) [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>]<br>= fmap (*<span class="hljs-number">2</span>) (fmap (+<span class="hljs-number">1</span>) [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>])<br>= fmap (*<span class="hljs-number">2</span>) [<span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>]<br>= [<span class="hljs-number">4</span>, <span class="hljs-number">6</span>, <span class="hljs-number">8</span>]<br></code></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="常见的-Functor-instance"><a href="#常见的-Functor-instance" class="headerlink" title="常见的 Functor instance"></a>常见的 Functor instance</h2><h3 id="Maybe"><a href="#Maybe" class="headerlink" title="Maybe"></a>Maybe</h3><p><code>Maybe</code> Functor 实现了将函数 lift 到可能失败的上下文中, 意思是这个函数能处理 <code>Maybe</code> 包裹的值.</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">instance</span> <span class="hljs-type">Functor</span> <span class="hljs-type">Maybe</span> <span class="hljs-keyword">where</span></span><br>  fmap _ <span class="hljs-type">Nothing</span>  = <span class="hljs-type">Nothing</span><br>  fmap f (<span class="hljs-type">Just</span> x) = <span class="hljs-type">Just</span> (f x)<br></code></pre></td></tr></table></figure>
+
+<p>比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">fmap</span> (+<span class="hljs-number">1</span>) :: <span class="hljs-type">Maybe</span> <span class="hljs-type">Integer</span> -&gt; <span class="hljs-type">Maybe</span> <span class="hljs-type">Integer</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>假如 <code>(+1)</code> 是 <code>Integer -&gt; Integer</code></li>
+<li>那么 <code>fmap (+1)</code> 就将其 lift 到了 <code>Maybe Integer -&gt; Maybe Integer</code> 中</li>
+</ul>
+<p>示例:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">safeDivide</span> :: <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Maybe</span> <span class="hljs-type">Int</span><br><span class="hljs-title">safeDivide</span> _ <span class="hljs-number">0</span> = <span class="hljs-type">Nothing</span><br><span class="hljs-title">safeDivide</span> x y = <span class="hljs-type">Just</span> (x `div` y)<br><br><span class="hljs-title">result</span> :: <span class="hljs-type">Maybe</span> <span class="hljs-type">Int</span><br><span class="hljs-title">result</span> = fmap (*<span class="hljs-number">2</span>) (safeDivide <span class="hljs-number">10</span> <span class="hljs-number">2</span>)<br>= <span class="hljs-type">Just</span> <span class="hljs-number">10</span><br><br><span class="hljs-title">result2</span> :: <span class="hljs-type">Maybe</span> <span class="hljs-type">Int</span><br><span class="hljs-title">result2</span> = fmap (*<span class="hljs-number">2</span>) (safeDivide <span class="hljs-number">10</span> <span class="hljs-number">0</span>)<br>= <span class="hljs-type">Nothing</span><br></code></pre></td></tr></table></figure>
+
+<h3 id=""><a href="#" class="headerlink" title="[]"></a>[]</h3><p><code>[]</code> Functor 实现了将函数 lift 到非确定性的上下文中, 意思是函数能处理 <code>[]</code> 包裹的值.</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">instance</span> <span class="hljs-type">Functor</span> [] <span class="hljs-keyword">where</span></span><br>  fmap = map<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">fmap</span> (+<span class="hljs-number">1</span>) [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>]<br>= [<span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>]<br><br><span class="hljs-title">fmap</span> length [<span class="hljs-string">&quot;hello&quot;</span>, <span class="hljs-string">&quot;world&quot;</span>]<br>= [<span class="hljs-number">5</span>, <span class="hljs-number">5</span>]<br></code></pre></td></tr></table></figure>
+
+<p>示例:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-comment">-- 对所有可能结果应用函数</span><br><span class="hljs-title">paths</span> :: [<span class="hljs-type">Int</span>]  <span class="hljs-comment">-- 所有可能的路径长度</span><br><span class="hljs-title">paths</span> = [<span class="hljs-number">10</span>, <span class="hljs-number">15</span>, <span class="hljs-number">20</span>]<br><br><span class="hljs-comment">-- 计算每个路径的时间</span><br><span class="hljs-title">times</span> :: [<span class="hljs-type">Int</span>]<br><span class="hljs-title">times</span> = fmap (\len -&gt; len * <span class="hljs-number">2</span>) paths<br>= [<span class="hljs-number">20</span>, <span class="hljs-number">30</span>, <span class="hljs-number">40</span>]<br></code></pre></td></tr></table></figure>
+
+<h3 id="IO"><a href="#IO" class="headerlink" title="IO"></a>IO</h3><p><code>IO</code> Functor 实现了将函数 lift 到带有副作用的上下文中, 意思是函数能处理 <code>IO</code> 包裹的值.</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">instance</span> <span class="hljs-type">Functor</span> <span class="hljs-type">IO</span> <span class="hljs-keyword">where</span></span><br>  fmap f action = <span class="hljs-keyword">do</span><br>    x &lt;- action<br>    return (f x)<br></code></pre></td></tr></table></figure>
+
+<p>示例:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-comment">-- 读取数字并加倍</span><br><span class="hljs-title">readAndDouble</span> :: <span class="hljs-type">IO</span> <span class="hljs-type">Int</span><br><span class="hljs-title">readAndDouble</span> = fmap (*<span class="hljs-number">2</span>) (readLn :: <span class="hljs-type">IO</span> <span class="hljs-type">Int</span>)<br>应用示例：<br><span class="hljs-comment">-- 组合多个 IO 操作</span><br><span class="hljs-title">main</span> :: <span class="hljs-type">IO</span> ()<br><span class="hljs-title">main</span> = <span class="hljs-keyword">do</span><br>    <span class="hljs-comment">-- 读取文件并计算行数</span><br>    lineCount &lt;- fmap length (readFile <span class="hljs-string">&quot;data.txt&quot;</span>)<br>    print lineCount<br>    <br>    <span class="hljs-comment">-- 读取并转换输入</span><br>    doubled &lt;- fmap (*<span class="hljs-number">2</span>) (readLn :: <span class="hljs-type">IO</span> <span class="hljs-type">Int</span>)<br>    print doubled<br></code></pre></td></tr></table></figure>
+
+<h3 id="gt-r"><a href="#gt-r" class="headerlink" title="(-&gt;) r"></a>(-&gt;) r</h3><p><code>(-&gt;) r</code> 将函数 lift 到函数上下文中.</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">instance</span> <span class="hljs-type">Functor</span> ((-&gt;) r) <span class="hljs-keyword">where</span></span><br>  fmap f g = f . g<br></code></pre></td></tr></table></figure>
+
+<p>示例:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">fmap</span> (+<span class="hljs-number">1</span>) (*<span class="hljs-number">3</span>)<br>= (+<span class="hljs-number">1</span>) . (*<span class="hljs-number">3</span>)<br>= \x -&gt; (x * <span class="hljs-number">3</span>) + <span class="hljs-number">1</span><br><br><span class="hljs-comment">-- 使用</span><br><span class="hljs-title">result</span> :: <span class="hljs-type">Int</span><br><span class="hljs-title">result</span> = fmap (+<span class="hljs-number">1</span>) (*<span class="hljs-number">3</span>) <span class="hljs-number">5</span><br>= <span class="hljs-number">16</span><br><br><span class="hljs-comment">-- 构建函数链</span><br><span class="hljs-title">process</span> :: <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Int</span><br><span class="hljs-title">process</span> = fmap (+<span class="hljs-number">1</span>) (fmap (*<span class="hljs-number">2</span>) (fmap (^<span class="hljs-number">2</span>) id))<br>= (+<span class="hljs-number">1</span>) . (*<span class="hljs-number">2</span>) . (^<span class="hljs-number">2</span>) . id<br><br><span class="hljs-comment">-- 使用</span><br><span class="hljs-title">result</span> :: <span class="hljs-type">Int</span><br><span class="hljs-title">result</span> = process <span class="hljs-number">3</span><br>= <span class="hljs-number">3</span>^<span class="hljs-number">2</span> * <span class="hljs-number">2</span> + <span class="hljs-number">1</span> = <span class="hljs-number">19</span><br></code></pre></td></tr></table></figure>
+
+<h1 id="Applicative"><a href="#Applicative" class="headerlink" title="Applicative"></a>Applicative</h1><p>Applicative 描述了 “可以应用函数的上下文”, 函数是在上下文中执行的.</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-type">Functor</span> f =&gt; <span class="hljs-type">Applicative</span> f <span class="hljs-keyword">where</span></span><br>  pure  :: a -&gt; f a<br>  (&lt;*&gt;) :: f (a -&gt; b) -&gt; f a -&gt; f b<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>pure</code> 将普通值 lift 到上下文中</li>
+<li><code>&lt;*&gt;</code> 将上下文中的函数应用到上下文中的值上, 相当于在 <code>f</code> 上下文内, 把 <code>a -&gt; b</code> 函数应用到了 <code>a</code> 上</li>
+</ul>
+<p>注意 <code>f</code> 需要先实现为 <code>Functor</code> 的 instance:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-comment">-- Functor: 只有单个函数</span><br><span class="hljs-title">fmap</span> :: (a -&gt; b) -&gt; f a -&gt; f b<br><br><span class="hljs-comment">-- Applicative: 函数也在上下文中</span><br>(&lt;*&gt;) :: f (a -&gt; b) -&gt; f a -&gt; f b<br></code></pre></td></tr></table></figure>
+
+<h2 id="为什么需要-Applicative"><a href="#为什么需要-Applicative" class="headerlink" title="为什么需要 Applicative"></a>为什么需要 Applicative</h2><p>比如下面情况:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-comment">-- Functor 无法处理</span><br><span class="hljs-title">maybeFunc</span> :: <span class="hljs-type">Maybe</span> (<span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Int</span>)<br><span class="hljs-title">maybeValue</span> :: <span class="hljs-type">Maybe</span> <span class="hljs-type">Int</span><br><br><span class="hljs-comment">-- Functor 不行！</span><br><span class="hljs-title">fmap</span> maybeFunc maybeValue  <span class="hljs-comment">-- 类型错误</span><br><br><span class="hljs-comment">-- Applicative 可以！</span><br><span class="hljs-title">maybeFunc</span> &lt;*&gt; maybeValue  <span class="hljs-comment">-- ✓</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="pure"><a href="#pure" class="headerlink" title="pure"></a>pure</h2><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">pure</span> :: a -&gt; f a<br></code></pre></td></tr></table></figure>
+<p><code>pure</code> 将一个值 lift 到上下文中.</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-comment">-- Maybe</span><br><span class="hljs-title">pure</span> <span class="hljs-number">5</span> :: <span class="hljs-type">Maybe</span> <span class="hljs-type">Int</span><br>= <span class="hljs-type">Just</span> <span class="hljs-number">5</span><br><span class="hljs-comment">-- []</span><br><span class="hljs-title">pure</span> <span class="hljs-number">5</span> :: [<span class="hljs-type">Int</span>]<br>= [<span class="hljs-number">5</span>]<br><span class="hljs-comment">-- IO</span><br><span class="hljs-title">pure</span> <span class="hljs-number">5</span> :: <span class="hljs-type">IO</span> <span class="hljs-type">Int</span><br>= return <span class="hljs-number">5</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="lt-gt"><a href="#lt-gt" class="headerlink" title="&lt;*&gt;"></a><code>&lt;*&gt;</code></h2><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell">(&lt;*&gt;) :: f (a -&gt; b) -&gt; f a -&gt; f b<br></code></pre></td></tr></table></figure>
+
+<p><code>&lt;*&gt;</code> 在上下文中应用函数, 结果仍然是包裹在上下文中的.</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-comment">-- Maybe</span><br><span class="hljs-type">Just</span> (+<span class="hljs-number">1</span>) &lt;*&gt; <span class="hljs-type">Just</span> <span class="hljs-number">5</span><br>= <span class="hljs-type">Just</span> <span class="hljs-number">6</span><br><br><span class="hljs-type">Nothing</span> &lt;*&gt; <span class="hljs-type">Just</span> <span class="hljs-number">5</span><br>= <span class="hljs-type">Nothing</span><br><br><span class="hljs-type">Just</span> (+<span class="hljs-number">1</span>) &lt;*&gt; <span class="hljs-type">Nothing</span><br>= <span class="hljs-type">Nothing</span><br><br><span class="hljs-comment">-- []</span><br>[(+<span class="hljs-number">1</span>), (*<span class="hljs-number">2</span>)] &lt;*&gt; [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>]<br>= [<span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">2</span>, <span class="hljs-number">4</span>, <span class="hljs-number">6</span>]  <span class="hljs-comment">-- 笛卡尔积</span><br><br><span class="hljs-comment">-- IO</span><br><span class="hljs-title">readInt</span> :: <span class="hljs-type">IO</span> <span class="hljs-type">Int</span><br><span class="hljs-title">readInt</span> = readLn<br><br><span class="hljs-title">applyDouble</span> :: <span class="hljs-type">IO</span> <span class="hljs-type">Int</span><br><span class="hljs-title">applyDouble</span> = fmap (*<span class="hljs-number">2</span>) readInt  <span class="hljs-comment">-- Functor 方式</span><br><span class="hljs-title">applyDouble&#x27;</span> = pure (*<span class="hljs-number">2</span>) &lt;*&gt; readInt  <span class="hljs-comment">-- Applicative 方式</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="Applicative-定律"><a href="#Applicative-定律" class="headerlink" title="Applicative 定律"></a>Applicative 定律</h2><p>任何合法的 Applicative instance 都必须满足下面的定律:</p>
+<ol>
+<li>恒等律, 在上下文中应用 <code>id</code> 函数, 值不变</li>
+</ol>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">pure</span> id &lt;*&gt; v == v<br><br><span class="hljs-title">pure</span> id &lt;*&gt; <span class="hljs-type">Just</span> <span class="hljs-number">5</span><br>= <span class="hljs-type">Just</span> id &lt;*&gt; <span class="hljs-type">Just</span> <span class="hljs-number">5</span><br>= <span class="hljs-type">Just</span> <span class="hljs-number">5</span>  ✓<br></code></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>同态律, 两个 <code>pure</code> 值的结合等价于直接结合后用 <code>pure</code> 包裹</li>
+</ol>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">pure</span> f &lt;*&gt; pure x = pure (f x)<br><br><span class="hljs-title">pure</span> (*<span class="hljs-number">2</span>) &lt;*&gt; pure <span class="hljs-number">5</span><br>= <span class="hljs-type">Just</span> (*<span class="hljs-number">2</span>) &lt;*&gt; <span class="hljs-type">Just</span> <span class="hljs-number">5</span><br>= <span class="hljs-type">Just</span> <span class="hljs-number">10</span><br>= pure ((*<span class="hljs-number">2</span>) <span class="hljs-number">5</span>)<br>= pure <span class="hljs-number">10</span>  ✓<br></code></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>交换律, 上下文中的函数和纯值可以交换顺序</li>
+</ol>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">u</span> &lt;*&gt; pure y = pure ($ y) &lt;*&gt; u<br><br><span class="hljs-type">Just</span> (*<span class="hljs-number">2</span>) &lt;*&gt; pure <span class="hljs-number">5</span><br>= <span class="hljs-type">Just</span> (*<span class="hljs-number">2</span>) &lt;*&gt; <span class="hljs-type">Just</span> <span class="hljs-number">5</span><br>= <span class="hljs-type">Just</span> <span class="hljs-number">10</span><br><br><span class="hljs-title">pure</span> ($ <span class="hljs-number">5</span>) &lt;*&gt; <span class="hljs-type">Just</span> (*<span class="hljs-number">2</span>)<br>= <span class="hljs-type">Just</span> ($ <span class="hljs-number">5</span>) &lt;*&gt; <span class="hljs-type">Just</span> (*<span class="hljs-number">2</span>)<br>= <span class="hljs-type">Just</span> (<span class="hljs-number">5</span> * <span class="hljs-number">2</span>)<br>= <span class="hljs-type">Just</span> <span class="hljs-number">10</span>  ✓<br></code></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>复合律, 函数的组合在上下文中保持</li>
+</ol>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">pure</span> (.) &lt;*&gt; u &lt;*&gt; v &lt;*&gt; w = u &lt;*&gt; (v &lt;*&gt; w)<br></code></pre></td></tr></table></figure>
+
+<ol start="5">
+<li>同构律, <code>fmap</code> 可以通过 <code>pure</code> 和 <code>&lt;*&gt;</code> 实现</li>
+</ol>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">fmap</span> f x = pure f &lt;*&gt; x<br></code></pre></td></tr></table></figure>
+
+<h2 id="常见的-Applicative-instance"><a href="#常见的-Applicative-instance" class="headerlink" title="常见的 Applicative instance"></a>常见的 Applicative instance</h2><h3 id="Maybe-1"><a href="#Maybe-1" class="headerlink" title="Maybe"></a>Maybe</h3><p><code>Maybe</code> Applicative 让函数在 “可能失败的上下文” 中运行.</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">instance</span> <span class="hljs-type">Applicative</span> <span class="hljs-type">Maybe</span> <span class="hljs-keyword">where</span></span><br>  pure = <span class="hljs-type">Just</span><br>  <span class="hljs-type">Nothing</span> &lt;*&gt; _ = <span class="hljs-type">Nothing</span><br>  (<span class="hljs-type">Just</span> f) &lt;*&gt; something = fmap f something<br></code></pre></td></tr></table></figure>
+
+<p>示例:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-type">Just</span> (+<span class="hljs-number">1</span>) &lt;*&gt; <span class="hljs-type">Just</span> <span class="hljs-number">5</span><br>= <span class="hljs-type">Just</span> <span class="hljs-number">6</span><br><br><span class="hljs-type">Nothing</span> &lt;*&gt; <span class="hljs-type">Just</span> <span class="hljs-number">5</span><br>= <span class="hljs-type">Nothing</span><br><br><span class="hljs-type">Just</span> (+<span class="hljs-number">1</span>) &lt;*&gt; <span class="hljs-type">Nothing</span><br>= <span class="hljs-type">Nothing</span><br><br><span class="hljs-comment">-- 组合多个 Maybe</span><br><span class="hljs-type">Just</span> (+) &lt;*&gt; <span class="hljs-type">Just</span> <span class="hljs-number">3</span> &lt;*&gt; <span class="hljs-type">Just</span> <span class="hljs-number">4</span><br>= <span class="hljs-type">Just</span> <span class="hljs-number">7</span><br><br><span class="hljs-type">Just</span> (+) &lt;*&gt; <span class="hljs-type">Just</span> <span class="hljs-number">3</span> &lt;*&gt; <span class="hljs-type">Nothing</span><br>= <span class="hljs-type">Nothing</span><br><br><span class="hljs-comment">-- 多个可能失败的计算组合</span><br><span class="hljs-title">safeDiv</span> :: <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Maybe</span> <span class="hljs-type">Int</span><br><span class="hljs-title">safeDiv</span> _ <span class="hljs-number">0</span> = <span class="hljs-type">Nothing</span><br><br><span class="hljs-title">safeDiv</span> x y = <span class="hljs-type">Just</span> (x `div` y)<br><span class="hljs-title">safeAdd</span> :: <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Maybe</span> <span class="hljs-type">Int</span><br><span class="hljs-title">safeAdd</span> x y = <span class="hljs-type">Just</span> (x + y)<br><br><span class="hljs-title">calculate</span> :: <span class="hljs-type">Maybe</span> <span class="hljs-type">Int</span><br><span class="hljs-title">calculate</span> = (+) &lt;$&gt; safeDiv <span class="hljs-number">10</span> <span class="hljs-number">2</span> &lt;*&gt; safeAdd <span class="hljs-number">3</span> <span class="hljs-number">4</span><br>= (+) &lt;$&gt; <span class="hljs-type">Just</span> <span class="hljs-number">5</span> &lt;*&gt; <span class="hljs-type">Just</span> <span class="hljs-number">7</span><br>= <span class="hljs-type">Just</span> <span class="hljs-number">12</span><br><br><span class="hljs-title">calculate&#x27;</span> :: <span class="hljs-type">Maybe</span> <span class="hljs-type">Int</span><br><span class="hljs-title">calculate&#x27;</span> = (+) &lt;$&gt; safeDiv <span class="hljs-number">10</span> <span class="hljs-number">0</span> &lt;*&gt; safeAdd <span class="hljs-number">3</span> <span class="hljs-number">4</span><br>= (+) &lt;$&gt; <span class="hljs-type">Nothing</span> &lt;*&gt; <span class="hljs-type">Just</span> <span class="hljs-number">7</span><br>= <span class="hljs-type">Nothing</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="-1"><a href="#-1" class="headerlink" title="[]"></a>[]</h3><p><code>[]</code> Applicative 让函数在 “非确定性上下文” 中运行.</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">instance</span> <span class="hljs-type">Applicative</span> [] <span class="hljs-keyword">where</span></span><br>  pure x = [x]<br>  fs &lt;*&gt; xs = [f x | f &lt;- fs, x &lt;- xs]  <span class="hljs-comment">-- 笛卡尔积</span><br></code></pre></td></tr></table></figure>
+
+<p>示例:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs haskell">[(+<span class="hljs-number">1</span>), (*<span class="hljs-number">2</span>)] &lt;*&gt; [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>]<br>= [<span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">2</span>, <span class="hljs-number">4</span>, <span class="hljs-number">6</span>]<br><br><span class="hljs-comment">-- 组合多个列表</span><br>[(+), (*)] &lt;*&gt; [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>] &lt;*&gt; [<span class="hljs-number">3</span>, <span class="hljs-number">4</span>]<br>= [<span class="hljs-number">4</span>, <span class="hljs-number">5</span>, <span class="hljs-number">5</span>, <span class="hljs-number">6</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">6</span>, <span class="hljs-number">8</span>]<br><br><span class="hljs-comment">-- 生成所有可能的组合</span><br><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Color</span> = <span class="hljs-type">Red</span> | <span class="hljs-type">Blue</span> | <span class="hljs-type">Green</span></span><br><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Shape</span> = <span class="hljs-type">Circle</span> | <span class="hljs-type">Square</span> | <span class="hljs-type">Triangle</span></span><br><br><span class="hljs-comment">-- 生成所有形状-颜色组合</span><br><span class="hljs-title">combinations</span> :: [(<span class="hljs-type">Shape</span>, <span class="hljs-type">Color</span>)]<br><span class="hljs-title">combinations</span> = (,) &lt;$&gt; [<span class="hljs-type">Circle</span>, <span class="hljs-type">Square</span>, <span class="hljs-type">Triangle</span>] &lt;*&gt; [<span class="hljs-type">Red</span>, <span class="hljs-type">Blue</span>, <span class="hljs-type">Green</span>]<br>= [(<span class="hljs-type">Circle</span>, <span class="hljs-type">Red</span>), (<span class="hljs-type">Circle</span>, <span class="hljs-type">Blue</span>), (<span class="hljs-type">Circle</span>, <span class="hljs-type">Green</span>),<br>   (<span class="hljs-type">Square</span>, <span class="hljs-type">Red</span>), (<span class="hljs-type">Square</span>, <span class="hljs-type">Blue</span>), (<span class="hljs-type">Square</span>, <span class="hljs-type">Green</span>),<br>   (<span class="hljs-type">Triangle</span>, <span class="hljs-type">Red</span>), (<span class="hljs-type">Triangle</span>, <span class="hljs-type">Blue</span>), (<span class="hljs-type">Triangle</span>, <span class="hljs-type">Green</span>)]<br><br><span class="hljs-comment">-- 生成所有可能的路径</span><br><span class="hljs-title">paths</span> :: <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Int</span> -&gt; [[<span class="hljs-type">Int</span>]]<br><span class="hljs-title">paths</span> start end = <br>    (\a b c -&gt; [start, a, b, c, end]) &lt;$&gt; <br>    [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>] &lt;*&gt; [<span class="hljs-number">3</span>, <span class="hljs-number">4</span>] &lt;*&gt; [<span class="hljs-number">5</span>, <span class="hljs-number">6</span>]<br></code></pre></td></tr></table></figure>
+
+<h3 id="IO-1"><a href="#IO-1" class="headerlink" title="IO"></a>IO</h3><p><code>IO</code> Applicative 让函数在 “带有副作用的上下文” 中运行.</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">instance</span> <span class="hljs-type">Applicative</span> <span class="hljs-type">IO</span> <span class="hljs-keyword">where</span></span><br>  pure = return<br>  (&lt;*&gt;) = ap  <span class="hljs-comment">-- 使用 Monad 的 ap 操作</span><br></code></pre></td></tr></table></figure>
+
+<p>示例:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-comment">-- 读取多个输入</span><br><span class="hljs-title">readAndAdd</span> :: <span class="hljs-type">IO</span> <span class="hljs-type">Int</span><br><span class="hljs-title">readAndAdd</span> = (+) &lt;$&gt; readLn &lt;*&gt; readLn<br><br><span class="hljs-comment">-- 使用 Applicative 风格</span><br><span class="hljs-title">readAndAdd&#x27;</span> :: <span class="hljs-type">IO</span> <span class="hljs-type">Int</span><br><span class="hljs-title">readAndAdd&#x27;</span> = pure (+) &lt;*&gt; readLn &lt;*&gt; readLn<br><br><span class="hljs-comment">-- 更复杂的例子</span><br><span class="hljs-class"><span class="hljs-keyword">type</span> <span class="hljs-type">Name</span> = <span class="hljs-type">String</span></span><br><span class="hljs-class"><span class="hljs-keyword">type</span> <span class="hljs-type">Age</span> = <span class="hljs-type">Int</span></span><br><span class="hljs-class"><span class="hljs-keyword">type</span> <span class="hljs-type">City</span> = <span class="hljs-type">String</span></span><br><span class="hljs-title">readPerson</span> :: <span class="hljs-type">IO</span> (<span class="hljs-type">Name</span>, <span class="hljs-type">Age</span>, <span class="hljs-type">City</span>)<br><span class="hljs-title">readPerson</span> = (,,) &lt;$&gt; getLine &lt;*&gt; readLn &lt;*&gt; getLine<br><br><span class="hljs-comment">-- 组合多个 IO 操作</span><br><span class="hljs-title">prompt</span> :: <span class="hljs-type">String</span> -&gt; <span class="hljs-type">IO</span> <span class="hljs-type">String</span><br><span class="hljs-title">prompt</span> text = putStr text &gt;&gt; getLine<br><span class="hljs-title">readConfig</span> :: <span class="hljs-type">IO</span> (<span class="hljs-type">String</span>, <span class="hljs-type">Int</span>)<br><span class="hljs-title">readConfig</span> = (,) &lt;$&gt; prompt <span class="hljs-string">&quot;Host: &quot;</span> &lt;*&gt; <br>                 (read &lt;$&gt; prompt <span class="hljs-string">&quot;Port: &quot;</span>)<br><br><span class="hljs-comment">-- 等价于</span><br><span class="hljs-title">readConfig&#x27;</span> :: <span class="hljs-type">IO</span> (<span class="hljs-type">String</span>, <span class="hljs-type">Int</span>)<br><span class="hljs-title">readConfig&#x27;</span> = <span class="hljs-keyword">do</span><br>    host &lt;- prompt <span class="hljs-string">&quot;Host: &quot;</span><br>    port &lt;- read &lt;$&gt; prompt <span class="hljs-string">&quot;Port: &quot;</span><br>    return (host, port)<br></code></pre></td></tr></table></figure>
+
+<h3 id="gt-r-1"><a href="#gt-r-1" class="headerlink" title="(-&gt;) r"></a>(-&gt;) r</h3><p><code>(-&gt;) r</code> Application 让函数在 “函数上下文” 中运行, 实际上就是进行函数的组合.</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">instance</span> <span class="hljs-type">Applicative</span> ((-&gt;) r) <span class="hljs-keyword">where</span></span><br>  pure x = \_ -&gt; x<br>  f &lt;*&gt; g = \x -&gt; f x (g x)<br></code></pre></td></tr></table></figure>
+
+<p>示例:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-comment">-- 动态构造函数</span><br><span class="hljs-title">process</span> :: <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Int</span><br><span class="hljs-title">process</span> = (+) &lt;$&gt; (*<span class="hljs-number">2</span>) &lt;*&gt; (^<span class="hljs-number">2</span>)<br><br><span class="hljs-comment">-- 使用</span><br><span class="hljs-title">result</span> :: [<span class="hljs-type">Int</span>]<br><span class="hljs-title">result</span> = map process [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">5</span>]<br>= [<span class="hljs-number">3</span>, <span class="hljs-number">8</span>, <span class="hljs-number">15</span>, <span class="hljs-number">24</span>, <span class="hljs-number">35</span>]<br></code></pre></td></tr></table></figure>
+
+<h1 id="Monoid"><a href="#Monoid" class="headerlink" title="Monoid"></a>Monoid</h1><h1 id="Monad"><a href="#Monad" class="headerlink" title="Monad"></a>Monad</h1><p><code>Monad</code> 描述了带上下文的计算是如何组合的. 需要注意, 两个计算组合之后仍然是一个带上下文的计算.</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-comment">-- 普通值</span><br><span class="hljs-number">5</span> :: <span class="hljs-type">Int</span><br><br><span class="hljs-comment">-- 带上下文的值</span><br><span class="hljs-type">Just</span> <span class="hljs-number">5</span> :: <span class="hljs-type">Maybe</span> <span class="hljs-type">Int</span>     <span class="hljs-comment">-- 上下文：可能失败</span><br>[<span class="hljs-number">5</span>] :: [<span class="hljs-type">Int</span>]            <span class="hljs-comment">-- 上下文：多个结果</span><br><span class="hljs-title">putStrLn</span> <span class="hljs-string">&quot;hi&quot;</span> :: <span class="hljs-type">IO</span> ()  <span class="hljs-comment">-- 上下文：IO 副作用</span><br></code></pre></td></tr></table></figure>
+
+<p>核心问题是如何组合这些带上下文的计算:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-comment">-- 问题：如何链式调用？</span><br><span class="hljs-title">half</span> :: <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Maybe</span> <span class="hljs-type">Int</span><br><span class="hljs-title">half</span> x = <span class="hljs-keyword">if</span> even x <span class="hljs-keyword">then</span> <span class="hljs-type">Just</span> (x `div` <span class="hljs-number">2</span>) <span class="hljs-keyword">else</span> <span class="hljs-type">Nothing</span><br><br><span class="hljs-comment">-- 想要：5 -&gt; half -&gt; half -&gt; half</span><br><span class="hljs-comment">-- 但是：</span><br><span class="hljs-title">half</span> <span class="hljs-number">5</span>          <span class="hljs-comment">-- Nothing（5 是奇数）</span><br><br><span class="hljs-comment">-- 如果成功了呢？</span><br><span class="hljs-title">half</span> <span class="hljs-number">8</span>          <span class="hljs-comment">-- Just 4</span><br><span class="hljs-title">half</span> (<span class="hljs-type">Just</span> <span class="hljs-number">4</span>)   <span class="hljs-comment">-- ❌ 类型错误！half 期望 Int，不是 Maybe Int</span><br></code></pre></td></tr></table></figure>
+
+<p><code>Monad</code> typeclass 的定义如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-type">Applicative</span> m =&gt; <span class="hljs-type">Monad</span> m <span class="hljs-keyword">where</span></span><br>    <span class="hljs-comment">-- 核心方法1：return（将普通值放入上下文）</span><br>    return :: a -&gt; m a<br><br>    <span class="hljs-comment">-- 核心方法2：&gt;&gt;= (bind，组合计算)</span><br>    (&gt;&gt;=) :: m a -&gt; (a -&gt; m b) -&gt; m b<br><br>    <span class="hljs-comment">-- 辅助方法：&gt;&gt; (序列化，忽略第一个结果)</span><br>    (&gt;&gt;) :: m a -&gt; m b -&gt; m b<br>    ma &gt;&gt; mb = ma &gt;&gt;= \_ -&gt; mb<br><br>    <span class="hljs-comment">-- 失败处理（已过时，不常用）</span><br>    fail :: <span class="hljs-type">String</span> -&gt; m a<br></code></pre></td></tr></table></figure>
+
+<p><code>return</code> 函数的作用是把 “普通值” 带入 Monad 上下文中:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">return</span> :: a -&gt; m a<br><span class="hljs-comment">--        ↑     ↑</span><br><span class="hljs-comment">--        |     包装后的值</span><br><span class="hljs-comment">--        普通值</span><br><br><span class="hljs-comment">-- 例子</span><br><span class="hljs-title">return</span> <span class="hljs-number">5</span> :: <span class="hljs-type">Maybe</span> <span class="hljs-type">Int</span>      <span class="hljs-comment">-- Just 5</span><br><span class="hljs-title">return</span> <span class="hljs-number">5</span> :: [<span class="hljs-type">Int</span>]          <span class="hljs-comment">-- [5]</span><br><span class="hljs-title">return</span> <span class="hljs-number">5</span> :: <span class="hljs-type">IO</span> <span class="hljs-type">Int</span>         <span class="hljs-comment">-- IO 动作，返回 5</span><br></code></pre></td></tr></table></figure>
+
+<p><code>&gt;&gt;=</code> (bind) 用来组合计算:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs haskell">(&gt;&gt;=) :: m a -&gt; (a -&gt; m b) -&gt; m b<br><span class="hljs-comment">--       ↑       ↑             ↑</span><br><span class="hljs-comment">--       |       |             最终结果</span><br><span class="hljs-comment">--       |       函数：从 a 产生新上下文</span><br><span class="hljs-comment">--       初始的上下文</span><br><br><span class="hljs-comment">-- 读作：&quot;bind&quot;</span><br><span class="hljs-comment">-- 符号记忆：&gt;&gt;= 看起来像&quot;管道&quot;</span><br></code></pre></td></tr></table></figure>
+<p>作用是:</p>
+<ol>
+<li>从 <code>m a</code> 中提取 <code>a</code></li>
+<li>传给函数 <code>(a -&gt; m b)</code></li>
+<li>得到新的上下文 <code>m b</code></li>
+</ol>
+<h2 id="以-Maybe-为例"><a href="#以-Maybe-为例" class="headerlink" title="以 Maybe 为例"></a>以 Maybe 为例</h2><p><code>Maybe</code> 是 <code>Monad</code> 的 instance:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">instance</span> <span class="hljs-type">Monad</span> <span class="hljs-type">Maybe</span> <span class="hljs-keyword">where</span></span><br>    <span class="hljs-comment">-- return：包装值</span><br>    return x = <span class="hljs-type">Just</span> x<br><br>    <span class="hljs-comment">-- &gt;&gt;=：组合计算</span><br>    <span class="hljs-type">Nothing</span> &gt;&gt;= f = <span class="hljs-type">Nothing</span>      <span class="hljs-comment">-- 失败传播</span><br>    (<span class="hljs-type">Just</span> x) &gt;&gt;= f = f x         <span class="hljs-comment">-- 成功则继续</span><br></code></pre></td></tr></table></figure>
+
+<p>示例:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-comment">-- 定义：只能除偶数</span><br><span class="hljs-title">half</span> :: <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Maybe</span> <span class="hljs-type">Int</span><br><span class="hljs-title">half</span> x = <span class="hljs-keyword">if</span> even x <span class="hljs-keyword">then</span> <span class="hljs-type">Just</span> (x `div` <span class="hljs-number">2</span>) <span class="hljs-keyword">else</span> <span class="hljs-type">Nothing</span><br><br><span class="hljs-comment">-- ❌ 手动处理每一步</span><br><span class="hljs-title">halfThreeTimes</span> :: <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Maybe</span> <span class="hljs-type">Int</span><br><span class="hljs-title">halfThreeTimes</span> x =<br>    <span class="hljs-keyword">case</span> half x <span class="hljs-keyword">of</span><br>        <span class="hljs-type">Nothing</span> -&gt; <span class="hljs-type">Nothing</span><br>        <span class="hljs-type">Just</span> y -&gt; <span class="hljs-keyword">case</span> half y <span class="hljs-keyword">of</span><br>            <span class="hljs-type">Nothing</span> -&gt; <span class="hljs-type">Nothing</span><br>            <span class="hljs-type">Just</span> z -&gt; <span class="hljs-keyword">case</span> half z <span class="hljs-keyword">of</span><br>                <span class="hljs-type">Nothing</span> -&gt; <span class="hljs-type">Nothing</span><br>                <span class="hljs-type">Just</span> w -&gt; <span class="hljs-type">Just</span> w<br><br><span class="hljs-comment">-- ✅ 使用 Monad</span><br><span class="hljs-title">halfThreeTimes&#x27;</span> :: <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Maybe</span> <span class="hljs-type">Int</span><br><span class="hljs-title">halfThreeTimes&#x27;</span> x = return x &gt;&gt;= half &gt;&gt;= half &gt;&gt;= half<br><br><span class="hljs-comment">-- 或者更简洁</span><br><span class="hljs-title">halfThreeTimes&#x27;&#x27;</span> = half &gt;=&gt; half &gt;=&gt; half<br><span class="hljs-comment">-- &gt;=&gt; 是 Kleisli 组合</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="do-语法糖"><a href="#do-语法糖" class="headerlink" title="do 语法糖"></a>do 语法糖</h2><p><code>do</code> 是 <code>&gt;&gt;=</code> 的语法糖, 主要用于需要记录中间计算状态的时候, 能让代码更易读:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-comment">-- 使用 &gt;&gt;=</span><br><span class="hljs-title">result</span> = <span class="hljs-type">Just</span> <span class="hljs-number">8</span> &gt;&gt;= \x -&gt;<br>         half x &gt;&gt;= \y -&gt;<br>         half y &gt;&gt;= \z -&gt;<br>         return (x, y, z)<br><br><span class="hljs-comment">-- 使用 do 记法（等价）</span><br><span class="hljs-title">result</span> = <span class="hljs-keyword">do</span><br>    x &lt;- <span class="hljs-type">Just</span> <span class="hljs-number">8</span>    <span class="hljs-comment">-- 提取值</span><br>    y &lt;- half x<br>    z &lt;- half y<br>    return (x, y, z)<br></code></pre></td></tr></table></figure>
+
+<p><code>do</code> 能够简化的操作对应如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-comment">-- 规则1：提取值</span><br><span class="hljs-title">do</span><br>    x &lt;- action<br>    rest<br><span class="hljs-comment">-- 转换为：</span><br><span class="hljs-title">action</span> &gt;&gt;= \x -&gt; <span class="hljs-keyword">do</span> rest<br><br><span class="hljs-comment">-- 规则2：忽略结果</span><br><span class="hljs-title">do</span><br>    action<br>    rest<br><span class="hljs-comment">-- 转换为：</span><br><span class="hljs-title">action</span> &gt;&gt; <span class="hljs-keyword">do</span> rest<br><br><span class="hljs-comment">-- 规则3：最后一行</span><br><span class="hljs-title">do</span><br>    action<br><span class="hljs-comment">-- 就是：</span><br><span class="hljs-title">action</span><br><br><span class="hljs-comment">-- 规则4：let 绑定</span><br><span class="hljs-title">do</span><br>    <span class="hljs-keyword">let</span> x = expr<br>    rest<br><span class="hljs-comment">-- 转换为：</span><br><span class="hljs-title">let</span> x = expr <span class="hljs-keyword">in</span> <span class="hljs-keyword">do</span> rest<br></code></pre></td></tr></table></figure>
+
+<p><code>do</code> 最终都会转化为 <code>&gt;&gt;</code> 或 <code>&gt;&gt;=</code> 的组合:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-comment">-- do 语法</span><br><span class="hljs-title">example</span> :: <span class="hljs-type">Maybe</span> <span class="hljs-type">Int</span><br><span class="hljs-title">example</span> = <span class="hljs-keyword">do</span><br>    x &lt;- <span class="hljs-type">Just</span> <span class="hljs-number">10</span><br>    y &lt;- half x<br>    z &lt;- half y<br>    return (x + y + z)<br><br><span class="hljs-comment">-- 展开为（步骤1）</span><br><span class="hljs-title">example</span> = <span class="hljs-type">Just</span> <span class="hljs-number">10</span> &gt;&gt;= \x -&gt; <span class="hljs-keyword">do</span><br>    y &lt;- half x<br>    z &lt;- half y<br>    return (x + y + z)<br><br><span class="hljs-comment">-- 展开为（步骤2）</span><br><span class="hljs-title">example</span> = <span class="hljs-type">Just</span> <span class="hljs-number">10</span> &gt;&gt;= \x -&gt;<br>          half x &gt;&gt;= \y -&gt; <span class="hljs-keyword">do</span><br>    z &lt;- half y<br>    return (x + y + z)<br><br><span class="hljs-comment">-- 展开为（步骤3）</span><br><span class="hljs-title">example</span> = <span class="hljs-type">Just</span> <span class="hljs-number">10</span> &gt;&gt;= \x -&gt;<br>          half x &gt;&gt;= \y -&gt;<br>          half y &gt;&gt;= \z -&gt; <span class="hljs-keyword">do</span><br>    return (x + y + z)<br><br><span class="hljs-comment">-- 展开为（最终）</span><br><span class="hljs-title">example</span> = <span class="hljs-type">Just</span> <span class="hljs-number">10</span> &gt;&gt;= \x -&gt;<br>          half x &gt;&gt;= \y -&gt;<br>          half y &gt;&gt;= \z -&gt;<br>          return (x + y + z)<br></code></pre></td></tr></table></figure>
+
+<h2 id="常见的-Monad"><a href="#常见的-Monad" class="headerlink" title="常见的 Monad"></a>常见的 Monad</h2><h3 id="Maybe-Monad"><a href="#Maybe-Monad" class="headerlink" title="Maybe Monad"></a>Maybe Monad</h3><p><code>Maybe Monad</code> 描述 “组合可能会失败的计算”. 上下文是 “可能会失败”:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">instance</span> <span class="hljs-type">Monad</span> <span class="hljs-type">Maybe</span> <span class="hljs-keyword">where</span></span><br>    return = <span class="hljs-type">Just</span><br>    <span class="hljs-type">Nothing</span> &gt;&gt;= f = <span class="hljs-type">Nothing</span><br>    (<span class="hljs-type">Just</span> x) &gt;&gt;= f = f x<br><br><span class="hljs-comment">-- 用途：处理可能失败的计算</span><br><span class="hljs-title">safeDivide</span> :: <span class="hljs-type">Double</span> -&gt; <span class="hljs-type">Double</span> -&gt; <span class="hljs-type">Maybe</span> <span class="hljs-type">Double</span><br><span class="hljs-title">safeDivide</span> _ <span class="hljs-number">0</span> = <span class="hljs-type">Nothing</span><br><span class="hljs-title">safeDivide</span> x y = <span class="hljs-type">Just</span> (x / y)<br><br><span class="hljs-title">calculate</span> :: <span class="hljs-type">Maybe</span> <span class="hljs-type">Double</span><br><span class="hljs-title">calculate</span> = <span class="hljs-keyword">do</span><br>    a &lt;- safeDivide <span class="hljs-number">10</span> <span class="hljs-number">2</span>    <span class="hljs-comment">-- Just 5.0</span><br>    b &lt;- safeDivide a <span class="hljs-number">5</span>     <span class="hljs-comment">-- Just 1.0</span><br>    c &lt;- safeDivide <span class="hljs-number">20</span> b    <span class="hljs-comment">-- Just 20.0</span><br>    return c<br><span class="hljs-comment">-- 结果：Just 20.0</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="List-Monad"><a href="#List-Monad" class="headerlink" title="List Monad"></a>List Monad</h3><p><code>List Monad</code> 描述 “组合非确定性的计算”.</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">instance</span> <span class="hljs-type">Monad</span> [] <span class="hljs-keyword">where</span></span><br>    return x = [x]<br>    xs &gt;&gt;= f = concat (map f xs)<br>    <span class="hljs-comment">-- 或：xs &gt;&gt;= f = [y | x &lt;- xs, y &lt;- f x]</span><br><br><span class="hljs-comment">-- 用途：产生多个结果</span><br><span class="hljs-title">example</span> :: [<span class="hljs-type">Int</span>]<br><span class="hljs-title">example</span> = <span class="hljs-keyword">do</span><br>    x &lt;- [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>]<br>    y &lt;- [<span class="hljs-number">10</span>, <span class="hljs-number">20</span>]<br>    return (x + y)<br><span class="hljs-comment">-- 结果：[11, 21, 12, 22, 13, 23]</span><br><br><span class="hljs-comment">-- 展开</span><br><span class="hljs-comment">-- [1,2,3] &gt;&gt;= \x -&gt; [10,20] &gt;&gt;= \y -&gt; return (x + y)</span><br><span class="hljs-comment">-- = concat [f 1, f 2, f 3]  其中 f x = [10,20] &gt;&gt;= \y -&gt; [x+y]</span><br><span class="hljs-comment">-- = concat [[11,21], [12,22], [13,23]]</span><br><span class="hljs-comment">-- = [11,21,12,22,13,23]</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="IO-Monad"><a href="#IO-Monad" class="headerlink" title="IO Monad"></a>IO Monad</h3><p><code>IO Monad</code> 描述 “组合带有副作用的计算”.</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">instance</span> <span class="hljs-type">Monad</span> <span class="hljs-type">IO</span> <span class="hljs-keyword">where</span></span><br>    return x = <span class="hljs-comment">-- 创建不执行任何 IO 的动作</span><br>    (&gt;&gt;=) = <span class="hljs-comment">-- 组合 IO 动作</span><br><br><span class="hljs-comment">-- 用途：处理输入输出</span><br><span class="hljs-title">greeting</span> :: <span class="hljs-type">IO</span> ()<br><span class="hljs-title">greeting</span> = <span class="hljs-keyword">do</span><br>    putStrLn <span class="hljs-string">&quot;What&#x27;s your name?&quot;</span><br>    name &lt;- getLine           <span class="hljs-comment">-- 提取用户输入</span><br>    putStrLn (<span class="hljs-string">&quot;Hello, &quot;</span> ++ name ++ <span class="hljs-string">&quot;!&quot;</span>)<br><br><span class="hljs-comment">-- 不能&quot;逃离&quot; IO</span><br><span class="hljs-comment">-- ❌ 无法写：extractString :: IO String -&gt; String</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="Either-Monad"><a href="#Either-Monad" class="headerlink" title="Either Monad"></a>Either Monad</h3><p><code>Either Monad</code> 描述 “组合携带错误信息的计算”.</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">instance</span> <span class="hljs-type">Monad</span> (<span class="hljs-type">Either</span> <span class="hljs-title">e</span>) <span class="hljs-keyword">where</span></span><br>    return = <span class="hljs-type">Right</span><br>    (<span class="hljs-type">Left</span> e) &gt;&gt;= f = <span class="hljs-type">Left</span> e<br>    (<span class="hljs-type">Right</span> x) &gt;&gt;= f = f x<br><br><span class="hljs-comment">-- 用途：错误处理</span><br><span class="hljs-class"><span class="hljs-keyword">type</span> <span class="hljs-type">Error</span> = <span class="hljs-type">String</span></span><br><br><span class="hljs-title">validate</span> :: <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Either</span> <span class="hljs-type">Error</span> <span class="hljs-type">Int</span><br><span class="hljs-title">validate</span> x<br>    | x &lt; <span class="hljs-number">0</span> = <span class="hljs-type">Left</span> <span class="hljs-string">&quot;Negative number&quot;</span><br>    | x &gt; <span class="hljs-number">100</span> = <span class="hljs-type">Left</span> <span class="hljs-string">&quot;Too large&quot;</span><br>    | otherwise = <span class="hljs-type">Right</span> x<br><br><span class="hljs-title">process</span> :: <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Either</span> <span class="hljs-type">Error</span> <span class="hljs-type">String</span><br><span class="hljs-title">process</span> input = <span class="hljs-keyword">do</span><br>    validated &lt;- validate input<br>    <span class="hljs-keyword">let</span> doubled = validated * <span class="hljs-number">2</span><br>    result &lt;- validate doubled<br>    return (<span class="hljs-string">&quot;Result: &quot;</span> ++ show result)<br><br><span class="hljs-comment">-- 测试</span><br><span class="hljs-title">test1</span> = process <span class="hljs-number">30</span>   <span class="hljs-comment">-- Right &quot;Result: 60&quot;</span><br><span class="hljs-title">test2</span> = process <span class="hljs-number">60</span>   <span class="hljs-comment">-- Left &quot;Too large&quot;（60*2 = 120）</span><br><span class="hljs-title">test3</span> = process (-<span class="hljs-number">5</span>) <span class="hljs-comment">-- Left &quot;Negative number&quot;</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="State-Monad"><a href="#State-Monad" class="headerlink" title="State Monad"></a>State Monad</h3><p><code>State Monad</code> 描述 “组合带状态传递的计算”.</p>
+<p>因为 Haskell 中 “纯函数没有状态”:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-comment">-- 纯函数：相同输入总是产生相同输出</span><br><span class="hljs-title">add</span> :: <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Int</span><br><span class="hljs-title">add</span> x y = x + y<br><br><span class="hljs-title">add</span> <span class="hljs-number">2</span> <span class="hljs-number">3</span>  <span class="hljs-comment">-- 永远是 5</span><br><span class="hljs-title">add</span> <span class="hljs-number">2</span> <span class="hljs-number">3</span>  <span class="hljs-comment">-- 还是 5，不会改变</span><br><br><span class="hljs-comment">-- ❌ 无法这样写（没有可变变量）</span><br><span class="hljs-comment">-- counter = 0</span><br><span class="hljs-comment">-- increment() &#123; counter = counter + 1; return counter &#125;</span><br></code></pre></td></tr></table></figure>
+<p>状态可以理解为一种记录, 函数通过当前状态可以得到一个当前值</p>
+<p>传统的方法是显示传递状态:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-comment">-- 手动传递状态</span><br><span class="hljs-class"><span class="hljs-keyword">type</span> <span class="hljs-type">Counter</span> = <span class="hljs-type">Int</span></span><br><br><span class="hljs-title">increment</span> :: <span class="hljs-type">Counter</span> -&gt; (<span class="hljs-type">Int</span>, <span class="hljs-type">Counter</span>)<br><span class="hljs-title">increment</span> count = (count, count + <span class="hljs-number">1</span>)<br><span class="hljs-comment">--                  ↑      ↑</span><br><span class="hljs-comment">--                  返回值  新状态</span><br><br><span class="hljs-comment">-- 使用</span><br>(result1, state1) = increment <span class="hljs-number">0</span>      <span class="hljs-comment">-- (0, 1)</span><br>(result2, state2) = increment state1 <span class="hljs-comment">-- (1, 2)</span><br>(result3, state3) = increment state2 <span class="hljs-comment">-- (2, 3)</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>这里通过 <code>0</code> (初始状态), 能得到值 <code>result1</code>. <code>state1</code> 是下一个状态</li>
+<li>这里通过 <code>state1</code>, 能得到值 <code>result2</code>. <code>state2</code> 是下一个状态</li>
+<li>这里通过 <code>state2</code>, 能得到值 <code>result3</code>. <code>state3</code> 是下一个状态</li>
+</ul>
+<p>这样手动传递状态会比较繁琐. 上述过程的本质就是, 有一个函数, 接受一个状态, 返回这个状态的值以及下一个状态.</p>
+<p>这个过程可以封装在 <code>State</code> 类型中, 核心思想是让它封装一个函数, 描述状态切换的计算过程:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">newtype</span> <span class="hljs-type">State</span> s a = <span class="hljs-type">State</span> &#123; <span class="hljs-title">runState</span> :: <span class="hljs-title">s</span> -&gt; (<span class="hljs-title">a</span>, <span class="hljs-title">s</span>) &#125;</span><br><span class="hljs-comment">--                  ↑       ↑          ↑      ↑   ↑</span><br><span class="hljs-comment">--                  |       |          |      |   新状态</span><br><span class="hljs-comment">--                  |       |          |      返回值</span><br><span class="hljs-comment">--                  |       |          旧状态</span><br><span class="hljs-comment">--                  |       提取函数的方法</span><br><span class="hljs-comment">--                  构造器</span><br><br><span class="hljs-comment">-- 类型参数</span><br><span class="hljs-comment">-- s = 状态的类型（State type）</span><br><span class="hljs-comment">-- a = 返回值的类型（value type）</span><br><br><span class="hljs-comment">-- State s a 就是：</span><br><span class="hljs-comment">-- &quot;一个接受旧状态 s，返回 (值 a, 新状态 s) 的函数&quot;</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>a</code> 是想要传递给外界的信息, <code>s</code> 才是我们想要保留的东西.</li>
+</ul>
+<p>对应的 <code>Monad</code> instance 定义如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">instance</span> <span class="hljs-type">Monad</span> (<span class="hljs-type">State</span> <span class="hljs-title">s</span>) <span class="hljs-keyword">where</span></span><br>    <span class="hljs-comment">-- return：包装一个值，不改变状态</span><br>    return x = <span class="hljs-type">State</span> $ \s -&gt; (x, s)<br>    <span class="hljs-comment">--                  ↑     ↑  ↑</span><br>    <span class="hljs-comment">--                  |     |  状态不变</span><br>    <span class="hljs-comment">--                  |     返回 x</span><br>    <span class="hljs-comment">--                  接受状态</span><br>    <br>    <span class="hljs-comment">-- (&gt;&gt;=) :: (s -&gt; (a,s))      -&gt;</span><br>    <span class="hljs-comment">--          (a -&gt; s -&gt; (b,s)) -&gt;</span><br>    <span class="hljs-comment">--          (s -&gt; (b,s))</span><br>    (<span class="hljs-type">State</span> h) &gt;&gt;= f = <span class="hljs-type">State</span> $ \s -&gt;      <span class="hljs-comment">-- &gt;&gt;= 同样返回一个计算</span><br>        <span class="hljs-keyword">let</span> (a, newState) = h s          <span class="hljs-comment">-- 1. 运行第一个计算</span><br>            (<span class="hljs-type">State</span> g) = f a              <span class="hljs-comment">-- 2. 用结果生成第二个计算</span><br>        <span class="hljs-keyword">in</span> g newState                    <span class="hljs-comment">-- 3. 用新状态运行第二个计算</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>h s</code> 是执行一个计算</li>
+<li><code>f a</code> 是把 <code>a</code> 放入另一个计算中.</li>
+<li><code>g newState</code> 是运行整个计算</li>
+<li>这里的目的其实就是简化 <code>newState</code> 这个东西的传递</li>
+<li><code>f</code> 声明为 <code>a -&gt; s -&gt; (b, s)</code> 主要是方便结果的传递, 上一个 <code>state</code> 的结果需要传递进下一个 state 中</li>
+<li><code>f</code> 需要描述如何把 <code>a</code> 加入到组合的计算中</li>
+</ul>
+<h3 id="Reader-Monad"><a href="#Reader-Monad" class="headerlink" title="Reader Monad"></a>Reader Monad</h3><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">newtype</span> <span class="hljs-type">Reader</span> r a = <span class="hljs-type">Reader</span> &#123; <span class="hljs-title">runReader</span> :: <span class="hljs-title">r</span> -&gt; <span class="hljs-title">a</span> &#125;</span><br><span class="hljs-class"></span><br><span class="hljs-class"><span class="hljs-keyword">instance</span> <span class="hljs-type">Monad</span> (<span class="hljs-type">Reader</span> <span class="hljs-title">r</span>) <span class="hljs-keyword">where</span></span><br>    return x = <span class="hljs-type">Reader</span> $ \_ -&gt; x<br>    (<span class="hljs-type">Reader</span> h) &gt;&gt;= f = <span class="hljs-type">Reader</span> $ \r -&gt;<br>        <span class="hljs-keyword">let</span> a = h r<br>            (<span class="hljs-type">Reader</span> g) = f a<br>        <span class="hljs-keyword">in</span> g r<br><br><span class="hljs-comment">-- 用途：共享只读环境</span><br><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Config</span> = <span class="hljs-type">Config</span> &#123; <span class="hljs-title">apiKey</span> :: <span class="hljs-type">String</span>, <span class="hljs-title">timeout</span> :: <span class="hljs-type">Int</span> &#125;</span><br><br><span class="hljs-title">fetchData</span> :: <span class="hljs-type">Reader</span> <span class="hljs-type">Config</span> <span class="hljs-type">String</span><br><span class="hljs-title">fetchData</span> = <span class="hljs-keyword">do</span><br>    config &lt;- ask  <span class="hljs-comment">-- 获取环境</span><br>    return (<span class="hljs-string">&quot;Using key: &quot;</span> ++ apiKey config)<br><br><span class="hljs-comment">-- 运行</span><br><span class="hljs-title">result</span> = runReader fetchData (<span class="hljs-type">Config</span> <span class="hljs-string">&quot;secret123&quot;</span> <span class="hljs-number">30</span>)<br><span class="hljs-comment">-- &quot;Using key: secret123&quot;</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="Writer-Monad"><a href="#Writer-Monad" class="headerlink" title="Writer Monad"></a>Writer Monad</h3><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">newtype</span> <span class="hljs-type">Writer</span> w a = <span class="hljs-type">Writer</span> &#123; <span class="hljs-title">runWriter</span> :: (<span class="hljs-title">a</span>, <span class="hljs-title">w</span>) &#125;</span><br><span class="hljs-class"></span><br><span class="hljs-class"><span class="hljs-keyword">instance</span> <span class="hljs-type">Monoid</span> w =&gt; <span class="hljs-type">Monad</span> (<span class="hljs-type">Writer</span> <span class="hljs-title">w</span>) <span class="hljs-keyword">where</span></span><br>    return x = <span class="hljs-type">Writer</span> (x, mempty)<br>    (<span class="hljs-type">Writer</span> (x, log1)) &gt;&gt;= f =<br>        <span class="hljs-keyword">let</span> <span class="hljs-type">Writer</span> (y, log2) = f x<br>        <span class="hljs-keyword">in</span> <span class="hljs-type">Writer</span> (y, log1 &lt;&gt; log2)<br><br><span class="hljs-comment">-- 用途：累积日志</span><br><span class="hljs-title">calculate</span> :: <span class="hljs-type">Writer</span> [<span class="hljs-type">String</span>] <span class="hljs-type">Int</span><br><span class="hljs-title">calculate</span> = <span class="hljs-keyword">do</span><br>    tell [<span class="hljs-string">&quot;Starting calculation&quot;</span>]<br>    <span class="hljs-keyword">let</span> x = <span class="hljs-number">10</span><br>    tell [<span class="hljs-string">&quot;Computed x = &quot;</span> ++ show x]<br>    <span class="hljs-keyword">let</span> y = <span class="hljs-number">20</span><br>    tell [<span class="hljs-string">&quot;Computed y = &quot;</span> ++ show y]<br>    return (x + y)<br><br><span class="hljs-comment">-- 运行</span><br><span class="hljs-title">result</span> = runWriter calculate<br><span class="hljs-comment">-- (30, [&quot;Starting calculation&quot;, &quot;Computed x = 10&quot;, &quot;Computed y = 20&quot;])</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="Monad-的类型层级"><a href="#Monad-的类型层级" class="headerlink" title="Monad 的类型层级"></a>Monad 的类型层级</h2><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-comment">-- Functor</span><br><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-type">Functor</span> f <span class="hljs-keyword">where</span></span><br>    fmap :: (a -&gt; b) -&gt; f a -&gt; f b<br><br><span class="hljs-comment">-- Applicative</span><br><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-type">Functor</span> f =&gt; <span class="hljs-type">Applicative</span> f <span class="hljs-keyword">where</span></span><br>    pure :: a -&gt; f a<br>    (&lt;*&gt;) :: f (a -&gt; b) -&gt; f a -&gt; f b<br><br><span class="hljs-comment">-- Monad</span><br><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-type">Applicative</span> m =&gt; <span class="hljs-type">Monad</span> m <span class="hljs-keyword">where</span></span><br>    return :: a -&gt; m a<br>    (&gt;&gt;=) :: m a -&gt; (a -&gt; m b) -&gt; m b<br><br>关系：<br><br><span class="hljs-type">Functor</span> → <span class="hljs-type">Applicative</span> → <span class="hljs-type">Monad</span><br>  ↑           ↑            ↑<br>  |           |            最强大（可以依赖前面的值）<br>  |           可以组合独立的效果<br>  可以映射函数<br><br>能力对比<br><br><span class="hljs-comment">-- Functor：映射纯函数</span><br><span class="hljs-title">fmap</span> (+<span class="hljs-number">1</span>) (<span class="hljs-type">Just</span> <span class="hljs-number">5</span>)  <span class="hljs-comment">-- Just 6</span><br><br><span class="hljs-comment">-- Applicative：组合独立的效果</span><br>(+) &lt;$&gt; <span class="hljs-type">Just</span> <span class="hljs-number">3</span> &lt;*&gt; <span class="hljs-type">Just</span> <span class="hljs-number">5</span>  <span class="hljs-comment">-- Just 8</span><br><br><span class="hljs-comment">-- Monad：依赖前面的结果</span><br><span class="hljs-type">Just</span> <span class="hljs-number">8</span> &gt;&gt;= \x -&gt; <span class="hljs-keyword">if</span> even x <span class="hljs-keyword">then</span> <span class="hljs-type">Just</span> (x `div` <span class="hljs-number">2</span>) <span class="hljs-keyword">else</span> <span class="hljs-type">Nothing</span><br><span class="hljs-comment">-- Just 4（可以根据 x 的值决定下一步）</span><br></code></pre></td></tr></table></figure>
+
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Haskell/" class="category-chain-item">Haskell</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Haskell-常见-typeclass-对应的操作含义</div>
+      <div>http://example.com/2026/01/08/Haskell-常见-typeclass-对应的操作含义/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Jie</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年1月8日</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>许可协议</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2026/01/08/Haskell-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/" title="Haskell-技巧积累">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Haskell-技巧积累</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/01/08/Hoogle-%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8/" title="Hoogle-基本使用">
+                        <span class="hidden-mobile">Hoogle-基本使用</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zKurisu/comments-utterances');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Jie</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Orkarin</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.1/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

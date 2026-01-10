@@ -24,7 +24,7 @@
 <meta property="og:description" content="Xmonad github 仓库Xmonad 官方网站 介绍Xmonad 是 Haskell 编写的窗口管理器. 该 blog 会说明 Xmonad 的安装, 配置以及基本使用. 具体内容编写会在我学完一轮 Haskell 之后开始, 并且从 Dwm 切换到 Xmonad 上. 安装依赖在 Archlinux 上需要安装这些依赖: 12345sudo pacman -S \ git \ xorg-">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-01-05T15:22:07.000Z">
-<meta property="article:modified_time" content="2026-01-06T13:15:19.373Z">
+<meta property="article:modified_time" content="2026-01-10T10:08:15.287Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -437,7 +437,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.3k 字
+          3.8k 字
         
       </span>
     
@@ -448,7 +448,7 @@ path.outline_glyph {
         
         
         
-          20 分钟
+          32 分钟
         
       </span>
     
@@ -496,6 +496,13 @@ path.outline_glyph {
 <p>该 blog 会说明 Xmonad 的安装, 配置以及基本使用. 具体内容编写会在我学完一轮 Haskell 之后开始, 并且从 Dwm 切换到 Xmonad 上.</p>
 <h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><h2 id="依赖"><a href="#依赖" class="headerlink" title="依赖"></a>依赖</h2><p>在 Archlinux 上需要安装这些依赖:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo pacman -S \<br> git \<br> xorg-server xorg-apps xorg-xinit xorg-xmessage \<br> libx11 libxft libxinerama libxrandr libxss \<br> pkgconf<br></code></pre></td></tr></table></figure>
+
+<p>实际上还需要安装基本软件, 比如 <code>xterm</code>, <code>dmenu</code>, 以及字体, 不然会有类似错误:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ dmenu<br>error, cannot load font from name: <span class="hljs-string">&#x27;monospace:size=10&#x27;</span><br>no fonts could be loaded<br></code></pre></td></tr></table></figure>
+
+<p>安装:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo pacman -S xterm dmenu ttf-freefont<br></code></pre></td></tr></table></figure>
+
 
 <h2 id="基本配置"><a href="#基本配置" class="headerlink" title="基本配置"></a>基本配置</h2><p>Xmonad 的配置文件会放在 <code>$XDG_CONFIG_HOME</code> 指定的目录下, 一般是 <code>~/.config</code>:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">mkdir</span> -p ~/.config/xmonad &amp;&amp; <span class="hljs-built_in">cd</span> ~/.config/xmonad<br></code></pre></td></tr></table></figure>
@@ -550,8 +557,10 @@ path.outline_glyph {
 <li><code>mod-shift-q</code> 退出 <code>xmonad</code></li>
 <li><code>mod-p</code> 打开 <code>dmenu</code></li>
 <li><code>mod-1</code> 到 <code>mod-9</code> 切换 work space</li>
+<li><code>mod-q</code>, 重新加载配置文件</li>
 </ul>
-<h1 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h1><h2 id="状态栏"><a href="#状态栏" class="headerlink" title="状态栏"></a>状态栏</h2><p>先安装 <code>xmobar</code>:</p>
+<h1 id="Xmobar"><a href="#Xmobar" class="headerlink" title="Xmobar"></a>Xmobar</h1><p>Xmobar 是 Xmonad 的状态栏.</p>
+<p>安装 <code>xmobar</code>:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">stack install xmobar<br></code></pre></td></tr></table></figure>
 
 <p>或者用包管理器安装, 在 Archlinux 上为:</p>
@@ -561,6 +570,46 @@ path.outline_glyph {
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">xmobar /path/to/config &amp;<br><span class="hljs-comment"># 或直接</span><br>xmobar &amp;<br></code></pre></td></tr></table></figure>
 
 <p>默认读取的配置文件位置是: <code>~/.config/xmobar/xmobarrc</code> 或者 <code>~/.xmobarrc</code>.</p>
+<h1 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h1><p>Xmonad 的配置文件是用 Haskell 编写的, 文件的查找顺序是:</p>
+<ul>
+<li><code>$XDG_CONFIG_HOME/xmonad</code>, 通常是 <code>~/.config/xmonad</code></li>
+<li><code>~/.xmonad</code></li>
+<li><code>$XMONAD_CONFIG_DIR</code></li>
+</ul>
+<p>这里用 <code>~/.config/xmonad</code> 为例子. 在其下创建 <code>xmonad.hs</code> 文件, 先导入一些重要模块:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-comment">-- ~/.config/xmonad/xmonad.hs</span><br><br><span class="hljs-keyword">import</span> XMonad<br><br><span class="hljs-keyword">import</span> XMonad.Util.EZConfig<br></code></pre></td></tr></table></figure>
+<ul>
+<li>这里导出了这些模块的全部函数</li>
+</ul>
+<p>最简单的配置如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">main</span> :: <span class="hljs-type">IO</span> ()<br><span class="hljs-title">main</span> = xmonad def<br></code></pre></td></tr></table></figure>
+
+<p><code>xmonad</code> 是 XMonad 的主运行函数, 函数签名如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">xmonad</span> :: (<span class="hljs-type">LayoutClass</span> l <span class="hljs-type">Window</span>, <span class="hljs-type">Read</span> (l <span class="hljs-type">Window</span>)) <br>       =&gt; <span class="hljs-type">XConfig</span> l -&gt; <span class="hljs-type">IO</span> ()<br></code></pre></td></tr></table></figure>
+
+<p>其接收一个 <code>XConfig l</code> 类型的配置, 然后会启动窗口管理器.</p>
+<p><code>def</code> 是 <code>Data.Default</code> 中定义的多态函数:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">def</span> :: <span class="hljs-type">Default</span> a =&gt; a<br></code></pre></td></tr></table></figure>
+
+<p>修改了配置文件之后, 可以按 <code>M-q</code> 重新编译, 或者运行:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">xmonad --recompile<br></code></pre></td></tr></table></figure>
+
+<p>如果出现错误, 会弹出 <code>xmessage</code> window, 如果没有任何事, 说明成功编译.</p>
+<h2 id="键位映射"><a href="#键位映射" class="headerlink" title="键位映射"></a>键位映射</h2><p>比如将 Modify key 从 <code>Alt</code> 映射到 <code>Super</code>:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">main</span> :: <span class="hljs-type">IO</span> ()<br><span class="hljs-title">main</span> = xmonad $ def &#123;<br>        modMask = mod4Mask <span class="hljs-comment">-- Rebind Mod to the Super key</span><br>    &#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>&#123;&#125;</code> 是 record 定义语法</li>
+</ul>
+<p>添加其他键位需要用到 <code>XMonad.Util.EZConfig</code> 模块中的 <code>additionalKeysP</code> 函数:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">main</span> :: <span class="hljs-type">IO</span> ()<br><span class="hljs-title">main</span> = xmonad $ def &#123;<br>        modMask = mod4Mask  <span class="hljs-comment">-- Rebind Mod to the Super key</span><br>    &#125;<br>    `additionalKeysP` [<br>          (<span class="hljs-string">&quot;M-S-z&quot;</span>, spawn <span class="hljs-string">&quot;xscreensaver-command -lock&quot;</span>)<br>        , (<span class="hljs-string">&quot;M-C-s&quot;</span>, unGrab *&gt; spawn <span class="hljs-string">&quot;scrot -s&quot;</span>        )<br>        , (<span class="hljs-string">&quot;M-f&quot;</span>  , spawn <span class="hljs-string">&quot;firefox&quot;</span>                   )<br>    ]<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>M</code> 一般指代 Modify key, <code>S</code> 指代 Shift, <code>C</code> 指代 Control, <code>A</code> 指代 Alt</li>
+<li><code>additionalKeysP</code> 的函数签名大致为 <code>additionalKeysP :: XConfig l -&gt; [(String, X ())] -&gt; XConfig l</code></li>
+<li><code>X ()</code> 是一个动作, <code>X</code> 是 XMonad 的状态 monad</li>
+<li><code>spawn &quot;command&quot;</code> 会启动一个程序</li>
+<li><code>unGrab :: X ()</code> 指代释放键盘时的那个瞬间</li>
+<li><code>*&gt;</code> 是来自 <code>Applicative</code> typeclass 的一个操作符, 表示先执行左边, 再执行右边, 返回右边结果. <code>(*&gt;) :: Applicative f =&gt; f a -&gt; f b -&gt; f b</code></li>
+</ul>
 
                 
               </div>
