@@ -25,7 +25,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/haskell-install-lsp.png">
 <meta property="article:published_time" content="2025-12-22T13:17:09.000Z">
-<meta property="article:modified_time" content="2026-01-06T03:17:24.154Z">
+<meta property="article:modified_time" content="2026-01-12T10:26:34.684Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/haskell-install-lsp.png">
@@ -450,7 +450,7 @@ path.outline_glyph {
         
         
         
-          716 分钟
+          721 分钟
         
       </span>
     
@@ -721,6 +721,50 @@ path.outline_glyph {
 <!-- ``` -->
 <!---->
 
+<h2 id="Church-encoding"><a href="#Church-encoding" class="headerlink" title="Church encoding"></a>Church encoding</h2><p>Church encoding 并没有在书上列出, 我只是补充在这里.</p>
+<p>Church encoding 是一种在纯 lambda 演算法 (pure lambda calculus) 中表示数据和操作的方法, 由逻辑学家 Alonzo Church 在 1930 年代提出.</p>
+<p>核心思想是: 数据即行为. 不用内置数据 (如整数, 布尔值), 而是用函数来表示数据, 该函数描述了 “如何使用这个数据”.</p>
+<p>比如用 Church encoding 表示 booleans:</p>
+<figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs livecodeserver"><span class="hljs-literal">true</span>  = λ<span class="hljs-keyword">a</span>. λb. <span class="hljs-keyword">a</span>    <span class="hljs-comment">-- 选择第一个参数</span><br><span class="hljs-literal">false</span> = λ<span class="hljs-keyword">a</span>. λb. b    <span class="hljs-comment">-- 选择第二个参数</span><br></code></pre></td></tr></table></figure>
+
+<p>Church encoding 表示自然数, 将自然数 <code>n</code> 编码为: 将一个函数应用 <code>n</code> 次:</p>
+<figure class="highlight llvm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs llvm"><span class="hljs-number">0</span> <span class="hljs-operator">=</span> λf. λ<span class="hljs-keyword">x</span>. <span class="hljs-keyword">x</span><br><span class="hljs-number">1</span> <span class="hljs-operator">=</span> λf. λ<span class="hljs-keyword">x</span>. f <span class="hljs-keyword">x</span><br><span class="hljs-number">2</span> <span class="hljs-operator">=</span> λf. λ<span class="hljs-keyword">x</span>. f (f <span class="hljs-keyword">x</span>)<br><span class="hljs-number">3</span> <span class="hljs-operator">=</span> λf. λ<span class="hljs-keyword">x</span>. f (f (f <span class="hljs-keyword">x</span>))<br>...<br>n <span class="hljs-operator">=</span> λf. λ<span class="hljs-keyword">x</span>. fⁿ <span class="hljs-keyword">x</span>   -- f 复合 n 次作用于 <span class="hljs-keyword">x</span><br></code></pre></td></tr></table></figure>
+
+<p>Church pair:</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs stylus">pair = λ<span class="hljs-selector-tag">a</span>. λ<span class="hljs-selector-tag">b</span>. λf. f <span class="hljs-selector-tag">a</span> <span class="hljs-selector-tag">b</span>     -- 把 <span class="hljs-selector-tag">a</span>, <span class="hljs-selector-tag">b</span> 交给 f 处理<br><br>fst = λ<span class="hljs-selector-tag">p</span>. <span class="hljs-selector-tag">p</span> (λ<span class="hljs-selector-tag">a</span>. λ<span class="hljs-selector-tag">b</span>. a)      -- 传入 <span class="hljs-string">&quot;取左&quot;</span> 的函数<br>snd = λ<span class="hljs-selector-tag">p</span>. <span class="hljs-selector-tag">p</span> (λ<span class="hljs-selector-tag">a</span>. λ<span class="hljs-selector-tag">b</span>. b)      -- 传入 <span class="hljs-string">&quot;取右&quot;</span> 的函数<br></code></pre></td></tr></table></figure>
+
+<p>Church list, 如 <code>[a, b, c]</code> 被编码为其右折叠:</p>
+<figure class="highlight llvm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs llvm">list <span class="hljs-operator">=</span> λ<span class="hljs-keyword">c</span>. λn. <span class="hljs-keyword">c</span> a (<span class="hljs-keyword">c</span> b (<span class="hljs-keyword">c</span> <span class="hljs-keyword">c</span> n))<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>c</code> 相当于是 <code>cons</code> 操作</li>
+<li><code>n</code> 相当于是空列表 <code>nil</code></li>
+</ul>
+<p>这等价于: <code>foldr c n [a, b, c]</code>.</p>
+<p>Church 把数据类型编码为一种操作的表示:</p>
+<table>
+<thead>
+<tr>
+<th>数据类型</th>
+<th>Church 编码的本质</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>布尔值</td>
+<td>选择器（选左 or 选右）</td>
+</tr>
+<tr>
+<td>自然数</td>
+<td>迭代器（重复应用函数 n 次）</td>
+</tr>
+<tr>
+<td>对（Pair）</td>
+<td>消息处理器（接收一个处理函数）</td>
+</tr>
+<tr>
+<td>列表</td>
+<td>折叠器（fold）</td>
+</tr>
+</tbody></table>
 <h1 id="逻辑运算"><a href="#逻辑运算" class="headerlink" title="逻辑运算"></a>逻辑运算</h1><p>如下:</p>
 <ul>
 <li><code>&amp;&amp;</code> 表示 “与”</li>
