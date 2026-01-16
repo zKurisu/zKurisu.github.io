@@ -25,7 +25,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/monoid-hom-set-example.png">
 <meta property="article:published_time" content="2026-01-14T12:37:44.000Z">
-<meta property="article:modified_time" content="2026-01-15T08:31:27.829Z">
+<meta property="article:modified_time" content="2026-01-16T03:24:44.505Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/monoid-hom-set-example.png">
@@ -439,7 +439,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          7.5k 字
+          9.7k 字
         
       </span>
     
@@ -450,7 +450,7 @@ path.outline_glyph {
         
         
         
-          63 分钟
+          81 分钟
         
       </span>
     
@@ -726,6 +726,79 @@ path.outline_glyph {
 <p><code>*</code> 是一个容器, 它想表达的是: Monoid 的本质不在于容器包含什么元素, 而是这些元素之间是如何通过 composition 相互作用的.</p>
 <p><img src="/../img/monoid-hom-set-example.png" srcset="/img/loading.gif" lazyload></p>
 <p>这里对象一直没有改变, 毕竟只有一个对象, 每个 arrow 都是指向自己.</p>
+<h1 id="4-Kleisli-Categories"><a href="#4-Kleisli-Categories" class="headerlink" title="4 Kleisli Categories"></a>4 Kleisli Categories</h1><h2 id="4-1-The-Writer-Category"><a href="#4-1-The-Writer-Category" class="headerlink" title="4.1 The Writer Category"></a>4.1 The Writer Category</h2><p>Writer Category 中:</p>
+<ul>
+<li>Objects 是 types</li>
+<li>Arrows 是 functions</li>
+</ul>
+<p>在 Haskell 中, <code>Writer</code> 类型可以定义如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">type</span> <span class="hljs-type">Writer</span> a = (<span class="hljs-title">a</span>, <span class="hljs-type">String</span>)</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>类型变量 <code>a</code> 用作 arrow (function) 的参数, 而 <code>String</code> 用作 log</li>
+</ul>
+<p>这里 arrow 的类型签名是:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">a</span> -&gt; <span class="hljs-type">Writer</span> b<br></code></pre></td></tr></table></figure>
+
+<p>为了方便 arrow 的 composition, 定义这样一个中缀运算符 <code>&gt;=&gt;</code> 可以读作 “fish”:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs haskell">(&gt;=&gt;) :: (a -&gt; <span class="hljs-type">Writer</span> b) -&gt; (b -&gt; <span class="hljs-type">Writer</span> c) -&gt; (a -&gt; <span class="hljs-type">Writer</span> c)<br><span class="hljs-title">m1</span> &gt;=&gt; m2 = \x -&gt;<br>    <span class="hljs-keyword">let</span> (y, s1) = m1 x<br>        (z, s2) = m2 y<br>    <span class="hljs-keyword">in</span> (z, s1 ++ s2)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>输入两个函数, 函数签名分别是 <code>a -&gt; Writer b</code> 和 <code>b -&gt; Writer c</code></li>
+<li>返回一个函数, 函数签名是 <code>a -&gt; Writer c</code></li>
+<li>返回的函数计算逻辑是: 先将参数传递给第一个函数, 在将返回值的第一个元素传递给第二个函数, 最后返回第二个函数返回值的第一个元素, 以及两个函数返回值第二个元素的拼接值 (最好直接看实现, 这里说得有点绕)</li>
+</ul>
+<p>定义一个 identity arrow, 约定俗成命名为 <code>return</code>:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">return</span> :: a -&gt; <span class="hljs-type">Writer</span> a<br><span class="hljs-title">return</span> x = (x, <span class="hljs-string">&quot;&quot;</span>)<br></code></pre></td></tr></table></figure>
+
+<p>一个组合示例:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">upCase</span> :: <span class="hljs-type">String</span> -&gt; <span class="hljs-type">Writer</span> <span class="hljs-type">String</span><br><span class="hljs-title">upCase</span> s = (map toUpper s, <span class="hljs-string">&quot;upCase &quot;</span>)<br><br><span class="hljs-title">toWords</span> :: <span class="hljs-type">String</span> -&gt; <span class="hljs-type">Writer</span> [<span class="hljs-type">String</span>]<br><span class="hljs-title">toWords</span> s = (words s, <span class="hljs-string">&quot; toWords&quot;</span>)<br><br><span class="hljs-title">process</span> :: <span class="hljs-type">String</span> -&gt; <span class="hljs-type">Writer</span> [<span class="hljs-type">String</span>]<br><span class="hljs-title">process</span> = upCase &gt;=&gt; toWorlds<br></code></pre></td></tr></table></figure>
+
+<h2 id="4-3-Kleisli-Categories"><a href="#4-3-Kleisli-Categories" class="headerlink" title="4.3 Kleisli Categories"></a>4.3 Kleisli Categories</h2><p>Kleisli category 是一种基于 monad 的 category:</p>
+<ul>
+<li>Objects 是 types</li>
+<li>Arrows 不是普通的函数 <code>a -&gt; b</code>, 而是 <code>a -&gt; m b</code>, <code>m b</code> 是一个 monad, 表示 <code>b</code> 被某种上下文包裹</li>
+</ul>
+<p>普通函数可以直接用 <code>.</code> 进行组合, 比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">f</span> :: a -&gt; b<br><br><span class="hljs-title">g</span> :: b -&gt; c<br><br><span class="hljs-title">g</span> . f :: a -&gt; c<br></code></pre></td></tr></table></figure>
+
+<p>而 kleisli arrows 不能直接组合, 需要定义 <code>&gt;=&gt;</code> 函数来描述如何进行组合:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">f</span> :: a -&gt; <span class="hljs-type">Maybe</span> b<br><br><span class="hljs-title">g</span> :: b -&gt; <span class="hljs-type">Maybe</span> c<br><br><span class="hljs-comment">-- 不能直接写成下面, 因为类型不匹配</span><br><span class="hljs-title">g</span> . f :: a -&gt; <span class="hljs-type">Maybe</span> c<br><br><span class="hljs-comment">-- 而是要先定义 &gt;=&gt; 描述如何组合的, &gt;=&gt; 还负责解开 monad</span><br>(&gt;=&gt;) :: (a -&gt; m b) -&gt; (b -&gt; m c) -&gt; (a -&gt; m c)<br><br><span class="hljs-title">g</span> &gt;=&gt; f :: a -&gt; <span class="hljs-type">Maybe</span><br></code></pre></td></tr></table></figure>
+
+<p>对于普通的 category, 其 identity arrow 为:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">id</span> :: a -&gt; a<br></code></pre></td></tr></table></figure>
+
+<p>而 kleisli 中 identity arrow 需要定义为:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">return</span> :: a -&gt; m a<br><span class="hljs-comment">-- 或者</span><br><span class="hljs-title">pure</span> :: a -&gt; m a<br><br><span class="hljs-comment">-- 满足</span><br><span class="hljs-title">f</span> &gt;=&gt; return = f<br><span class="hljs-title">return</span> &gt;=&gt; f = f<br></code></pre></td></tr></table></figure>
+
+<h2 id="4-4-Challenge"><a href="#4-4-Challenge" class="headerlink" title="4.4 Challenge"></a>4.4 Challenge</h2><p>如果一个函数不能对所有输入都输出结果, 则称为 partial function, 比如 <code>head</code> 函数:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">head</span> :: [a] -&gt; a<br><span class="hljs-title">head</span> (x:_) = x<br><span class="hljs-comment">-- head [] 会报错（或未定义）</span><br></code></pre></td></tr></table></figure>
+
+<p>这里为 partial function 构建一个 kleisli category.</p>
+<p>在 Haskell 中, 可以通过返回 <code>Maybe a</code> 来让其 “全函数化”:</p>
+<ul>
+<li><code>Just x</code> 表示有定义的输入输出 (表示成功)</li>
+<li><code>Nothing</code> 表示未定义的输入输出 (如除零, 负数开方等)</li>
+</ul>
+<p>定义一个 identity arrow:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">kleisliIdentity</span> :: a -&gt; <span class="hljs-type">Maybe</span> a<br><span class="hljs-title">kleisliIdentity</span> x = <span class="hljs-type">Just</span> x<br></code></pre></td></tr></table></figure>
+
+<p>定义 <code>&gt;=&gt;</code> 用于 arrow composition:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs haskell">(&gt;=&gt;) :: (a -&gt; <span class="hljs-type">Maybe</span> b) -&gt; (b -&gt; <span class="hljs-type">Maybe</span> c) -&gt; (a -&gt; <span class="hljs-type">Maybe</span> c)<br><span class="hljs-title">g</span> &gt;=&gt; f = \x -&gt;<br>    <span class="hljs-keyword">case</span> f x <span class="hljs-keyword">of</span><br>        <span class="hljs-type">Nothing</span> -&gt; <span class="hljs-type">Nothing</span><br>        <span class="hljs-type">Just</span> y  -&gt; g y<br></code></pre></td></tr></table></figure>
+
+<p>实现两个函数来进行 compose:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-comment">-- 取倒数, 0 没有倒数</span><br><span class="hljs-title">safeReciprocal</span> :: <span class="hljs-type">Double</span> -&gt; <span class="hljs-type">Maybe</span> <span class="hljs-type">Double</span><br><span class="hljs-title">safeReciprocal</span> x<br>    | x == <span class="hljs-number">0</span>    = <span class="hljs-type">Nothing</span><br>    | otherwise = <span class="hljs-type">Just</span> (<span class="hljs-number">1</span> / x)<br><br><span class="hljs-comment">-- 开方, 负数不能开方</span><br><span class="hljs-title">safeRoot</span> :: <span class="hljs-type">Double</span> -&gt; <span class="hljs-type">Maybe</span> <span class="hljs-type">Double</span><br><span class="hljs-title">safeRoot</span> x<br>    | x &lt; <span class="hljs-number">0</span>     = <span class="hljs-type">Nothing</span><br>    | otherwise = <span class="hljs-type">Just</span> (sqrt x)<br></code></pre></td></tr></table></figure>
+
+<p>假如我们要计算 $\sqrt{1&#x2F;x}$, 需要先求倒数, 再开方:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">safeRootReciprocal</span> :: <span class="hljs-type">Double</span> -&gt; <span class="hljs-type">Maybe</span> <span class="hljs-type">Double</span><br><span class="hljs-title">safeRootReciprocal</span> = safeRoot &gt;=&gt; safeReciprocal<br></code></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+
 
                 
               </div>
