@@ -24,7 +24,7 @@
 <meta property="og:description" content="FunctorFunctor typeclass 描述了 “可以映射的结构”, 可以在某种上下文中应用函数, 并且保持上下文的结构不变. Haskell 定义12class Functor f where    fmap :: (a -&gt; b) -&gt; f a -&gt; f b  f a 是某种上下文中的值 a a -&gt; b 是一个普通的函数 fmap 将普通函数 lift 到上">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-01-08T10:13:54.000Z">
-<meta property="article:modified_time" content="2026-01-10T12:29:28.969Z">
+<meta property="article:modified_time" content="2026-01-20T05:12:41.379Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -437,7 +437,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          14k 字
+          15k 字
         
       </span>
     
@@ -448,7 +448,7 @@ path.outline_glyph {
         
         
         
-          115 分钟
+          123 分钟
         
       </span>
     
@@ -702,6 +702,34 @@ path.outline_glyph {
 <h3 id="Writer-Monad"><a href="#Writer-Monad" class="headerlink" title="Writer Monad"></a>Writer Monad</h3><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">newtype</span> <span class="hljs-type">Writer</span> w a = <span class="hljs-type">Writer</span> &#123; <span class="hljs-title">runWriter</span> :: (<span class="hljs-title">a</span>, <span class="hljs-title">w</span>) &#125;</span><br><span class="hljs-class"></span><br><span class="hljs-class"><span class="hljs-keyword">instance</span> <span class="hljs-type">Monoid</span> w =&gt; <span class="hljs-type">Monad</span> (<span class="hljs-type">Writer</span> <span class="hljs-title">w</span>) <span class="hljs-keyword">where</span></span><br>    return x = <span class="hljs-type">Writer</span> (x, mempty)<br>    (<span class="hljs-type">Writer</span> (x, log1)) &gt;&gt;= f =<br>        <span class="hljs-keyword">let</span> <span class="hljs-type">Writer</span> (y, log2) = f x<br>        <span class="hljs-keyword">in</span> <span class="hljs-type">Writer</span> (y, log1 &lt;&gt; log2)<br><br><span class="hljs-comment">-- 用途：累积日志</span><br><span class="hljs-title">calculate</span> :: <span class="hljs-type">Writer</span> [<span class="hljs-type">String</span>] <span class="hljs-type">Int</span><br><span class="hljs-title">calculate</span> = <span class="hljs-keyword">do</span><br>    tell [<span class="hljs-string">&quot;Starting calculation&quot;</span>]<br>    <span class="hljs-keyword">let</span> x = <span class="hljs-number">10</span><br>    tell [<span class="hljs-string">&quot;Computed x = &quot;</span> ++ show x]<br>    <span class="hljs-keyword">let</span> y = <span class="hljs-number">20</span><br>    tell [<span class="hljs-string">&quot;Computed y = &quot;</span> ++ show y]<br>    return (x + y)<br><br><span class="hljs-comment">-- 运行</span><br><span class="hljs-title">result</span> = runWriter calculate<br><span class="hljs-comment">-- (30, [&quot;Starting calculation&quot;, &quot;Computed x = 10&quot;, &quot;Computed y = 20&quot;])</span><br></code></pre></td></tr></table></figure>
 
 <h2 id="Monad-的类型层级"><a href="#Monad-的类型层级" class="headerlink" title="Monad 的类型层级"></a>Monad 的类型层级</h2><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-comment">-- Functor</span><br><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-type">Functor</span> f <span class="hljs-keyword">where</span></span><br>    fmap :: (a -&gt; b) -&gt; f a -&gt; f b<br><br><span class="hljs-comment">-- Applicative</span><br><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-type">Functor</span> f =&gt; <span class="hljs-type">Applicative</span> f <span class="hljs-keyword">where</span></span><br>    pure :: a -&gt; f a<br>    (&lt;*&gt;) :: f (a -&gt; b) -&gt; f a -&gt; f b<br><br><span class="hljs-comment">-- Monad</span><br><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-type">Applicative</span> m =&gt; <span class="hljs-type">Monad</span> m <span class="hljs-keyword">where</span></span><br>    return :: a -&gt; m a<br>    (&gt;&gt;=) :: m a -&gt; (a -&gt; m b) -&gt; m b<br><br>关系：<br><br><span class="hljs-type">Functor</span> → <span class="hljs-type">Applicative</span> → <span class="hljs-type">Monad</span><br>  ↑           ↑            ↑<br>  |           |            最强大（可以依赖前面的值）<br>  |           可以组合独立的效果<br>  可以映射函数<br><br>能力对比<br><br><span class="hljs-comment">-- Functor：映射纯函数</span><br><span class="hljs-title">fmap</span> (+<span class="hljs-number">1</span>) (<span class="hljs-type">Just</span> <span class="hljs-number">5</span>)  <span class="hljs-comment">-- Just 6</span><br><br><span class="hljs-comment">-- Applicative：组合独立的效果</span><br>(+) &lt;$&gt; <span class="hljs-type">Just</span> <span class="hljs-number">3</span> &lt;*&gt; <span class="hljs-type">Just</span> <span class="hljs-number">5</span>  <span class="hljs-comment">-- Just 8</span><br><br><span class="hljs-comment">-- Monad：依赖前面的结果</span><br><span class="hljs-type">Just</span> <span class="hljs-number">8</span> &gt;&gt;= \x -&gt; <span class="hljs-keyword">if</span> even x <span class="hljs-keyword">then</span> <span class="hljs-type">Just</span> (x `div` <span class="hljs-number">2</span>) <span class="hljs-keyword">else</span> <span class="hljs-type">Nothing</span><br><span class="hljs-comment">-- Just 4（可以根据 x 的值决定下一步）</span><br></code></pre></td></tr></table></figure>
+
+<h1 id="Foldable"><a href="#Foldable" class="headerlink" title="Foldable"></a>Foldable</h1><p><code>Foldable</code> typeclass 抽象了对容器进行 “折叠” 操作的能力. 定义如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-type">Foldable</span> t <span class="hljs-keyword">where</span></span><br>    foldMap :: <span class="hljs-type">Monoid</span> m =&gt; (a -&gt; m) -&gt; t a -&gt; m<br>    foldr   :: (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>t</code> 是一个类型构造子, 接受一个类型参数</li>
+<li><code>foldMap</code> 将每个元素通过 <code>a -&gt; m</code> 映射为 monoid, 然后用 <code>mappend</code> 合并</li>
+<li><code>foldr</code> 是右折叠</li>
+</ul>
+<p>两个函数只用实现一个, 另一个会自动推导出. 通常实现 <code>foldMap</code> 更简单, 因为很多哦结构天然适合 <code>monoid</code> 映射.</p>
+<h2 id="常见的-Foldable-instance"><a href="#常见的-Foldable-instance" class="headerlink" title="常见的 Foldable instance"></a>常见的 Foldable instance</h2><h3 id="-2"><a href="#-2" class="headerlink" title="[]"></a>[]</h3><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">instance</span> <span class="hljs-type">Foldable</span> [] <span class="hljs-keyword">where</span></span><br>    foldMap f = foldr (mappend . f) mempty<br>    foldr     = <span class="hljs-type">Prelude</span>.foldr<br></code></pre></td></tr></table></figure>
+
+<h3 id="Maybe-2"><a href="#Maybe-2" class="headerlink" title="Maybe"></a>Maybe</h3><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">instance</span> <span class="hljs-type">Foldable</span> <span class="hljs-type">Maybe</span> <span class="hljs-keyword">where</span></span><br>    foldMap f <span class="hljs-type">Nothing</span>  = mempty<br>    foldMap f (<span class="hljs-type">Just</span> x) = f x<br>    foldr _ z <span class="hljs-type">Nothing</span>  = z<br>    foldr f z (<span class="hljs-type">Just</span> x) = f x z<br></code></pre></td></tr></table></figure>
+
+<h2 id="一些函数签名"><a href="#一些函数签名" class="headerlink" title="一些函数签名"></a>一些函数签名</h2><h3 id="maximum"><a href="#maximum" class="headerlink" title="maximum"></a>maximum</h3><p>比如 <code>maximum</code> 的函数签名, 你可能以为是:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">maximum</span> :: (<span class="hljs-type">Ord</span> a) =&gt; [a] -&gt; a<br></code></pre></td></tr></table></figure>
+
+<p>实际上定义为:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">maximum</span> :: (<span class="hljs-type">Foldable</span> t) =&gt; t a -&gt; a<br></code></pre></td></tr></table></figure>
+
+<p>因为 <code>[a]</code> 只适用于列表, 但是许多非列表的结构也需要 “取最大值” 操作, 比如:</p>
+<ul>
+<li><code>Maybe a</code>, 如果是 <code>Just x</code>, 最大值就是 <code>x</code>; 如果是 <code>Nothing</code>, 应该报错</li>
+<li><code>Set a</code>, 集合的最大值</li>
+<li><code>Map k a</code>, 如果只关注 <code>a</code> 的最大值</li>
+<li>自定义的 <code>Tree a</code>, 树中所有节点的最大值</li>
+</ul>
+<p>如果为每一个类型都单独编写 <code>maximum</code> 会比较重复, 定义为 <code>Foldable</code> 的 instance 则可以直接利用 <code>foldMap</code> 或者 <code>foldr</code> 得到:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-type">Foldable</span> t <span class="hljs-keyword">where</span></span><br>    <span class="hljs-comment">-- ...</span><br>    maximum :: <span class="hljs-keyword">forall</span> a . <span class="hljs-type">Ord</span> a =&gt; t a -&gt; a<br>    maximum = fromJust . getMax . foldMap (<span class="hljs-type">Max</span> . <span class="hljs-type">Just</span>)<br>    <span class="hljs-comment">-- 实际实现更复杂，需要处理空容器错误</span><br></code></pre></td></tr></table></figure>
 
 
                 

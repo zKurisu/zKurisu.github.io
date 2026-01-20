@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="介绍该 Blog 是阅读 “Algorithm design with Haskell” 一书的笔记, 该书用函数式编程的思想进行算法设计, 并选用 Haskell 作为示例语言.">
+    <meta name="description" content="介绍该 Blog 是阅读 “Algorithm design with Haskell” 一书的笔记, 该书用函数式编程的思想进行算法设计, 并选用 Haskell 作为示例语言. 1 Functional programming1.4 Fusionfoldr fusion law 是函数式编程中一个重要的优化法则. Fusion 的目标是把两个操作合并成一个, 避免中间数据结构的创建, 比如:">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Algorithm-design-with-Haskell-Notes">
 <meta property="og:url" content="http://example.com/2026/01/16/Algorithm-design-with-Haskell-Notes/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="介绍该 Blog 是阅读 “Algorithm design with Haskell” 一书的笔记, 该书用函数式编程的思想进行算法设计, 并选用 Haskell 作为示例语言.">
+<meta property="og:description" content="介绍该 Blog 是阅读 “Algorithm design with Haskell” 一书的笔记, 该书用函数式编程的思想进行算法设计, 并选用 Haskell 作为示例语言. 1 Functional programming1.4 Fusionfoldr fusion law 是函数式编程中一个重要的优化法则. Fusion 的目标是把两个操作合并成一个, 避免中间数据结构的创建, 比如:">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-01-16T03:26:02.000Z">
-<meta property="article:modified_time" content="2026-01-16T03:27:17.590Z">
+<meta property="article:modified_time" content="2026-01-20T06:40:05.971Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -437,7 +437,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          79 字
+          3.4k 字
         
       </span>
     
@@ -448,7 +448,7 @@ path.outline_glyph {
         
         
         
-          1 分钟
+          29 分钟
         
       </span>
     
@@ -492,6 +492,146 @@ path.outline_glyph {
               <div class="markdown-body">
                 
                 <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>该 Blog 是阅读 “Algorithm design with Haskell” 一书的笔记, 该书用函数式编程的思想进行算法设计, 并选用 Haskell 作为示例语言.</p>
+<h1 id="1-Functional-programming"><a href="#1-Functional-programming" class="headerlink" title="1 Functional programming"></a>1 Functional programming</h1><h2 id="1-4-Fusion"><a href="#1-4-Fusion" class="headerlink" title="1.4 Fusion"></a>1.4 Fusion</h2><p><code>foldr</code> fusion law 是函数式编程中一个重要的优化法则. Fusion 的目标是把两个操作合并成一个, 避免中间数据结构的创建, 比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">map</span> (+<span class="hljs-number">1</span>) . filter even   <span class="hljs-comment">-- 先过滤，生成中间列表，再 map</span><br></code></pre></td></tr></table></figure>
+
+<p>理想情况是一步完成, 而不产生中间列表.</p>
+<p>如果对于有限列表 <code>xs</code>, 满足:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">h</span> (f x y) = g x (h y)    <span class="hljs-comment">-- 这叫“融合条件”（fusion condition）</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>对任意 <code>x</code> 和 <code>y</code>, 先用 <code>f</code> 组合 <code>x</code> 和 <code>y</code>, 再用 <code>h</code> 处理</li>
+<li>等价于先用 <code>h</code> 处理 <code>y</code>, 再用新的组合函数 <code>g</code> 来组合 <code>x</code> 和 <code>h y</code></li>
+</ul>
+<p>那么就有:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">h</span> (foldr f e xs) = foldr g (h e) xs<br></code></pre></td></tr></table></figure>
+<ul>
+<li>左边 <code>h (foldr f e xs)</code> 先把 <code>xs</code> 折叠成一个值, 然后对这个最终结果应用函数 <code>h</code></li>
+<li>右边直接用一个新的折叠函数 <code>g</code> 和新初始值 <code>h e</code> 来折叠 <code>xs</code>, 保证结果和左边一样</li>
+<li>区别在于右边不需要先生成 <code>foldr f e xs</code> 的中间结果, 而是直接折叠 <code>h</code> 的应用效果</li>
+</ul>
+<p>可以用数学归纳法证明:</p>
+<ul>
+<li>基础情况: <code>xs = []</code></li>
+</ul>
+<p>左边有:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">h</span> (foldr f e []) = h e<br></code></pre></td></tr></table></figure>
+
+<p>右边有:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">foldr</span> g (h e) [] = h e<br></code></pre></td></tr></table></figure>
+
+<p>此时两边相等.</p>
+<ul>
+<li>归纳步骤</li>
+</ul>
+<p>假设对某个列表 <code>xs</code>, 等式成立, 即:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">h</span> (foldr f e xs) = foldr g (h e) xs   <span class="hljs-comment">-- ✅ 假设成立</span><br></code></pre></td></tr></table></figure>
+
+<p>需要证明对列表 <code>x:xs</code>, 等式也成立, 即:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">h</span> (foldr f e (x:xs)) = foldr g (h e) (x:xs)<br></code></pre></td></tr></table></figure>
+
+<p>展开左边有:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-comment">-- 内部 foldr f e (x:xs) = f x (foldr f e xs)</span><br><span class="hljs-title">h</span> (f x (foldr f e xs))<br></code></pre></td></tr></table></figure>
+
+<p>应用融合条件 <code>h (f a b) = g a (h b)</code>, 这里 <code>a = x, b = foldr f e xs</code>, 有:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">h</span> (f x (foldr f e xs)) = g x (h (foldr f e xs)) = g x (foldr g (h e) xs)<br></code></pre></td></tr></table></figure>
+
+<p>展开右边有:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">foldr</span> g (h e) (x:xs) = g x (foldr g (h e) xs)   <span class="hljs-comment">-- 根据 foldr 定义</span><br></code></pre></td></tr></table></figure>
+
+<p>此时同样左边等于右边.</p>
+<p>因此可以用归纳法证出, 对所有有限列表 <code>xs</code> 都有:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">h</span> (foldr f e xs) = foldr g (h e) xs<br></code></pre></td></tr></table></figure>
+
+<p>比如 <code>map f . foldr (:) [] = foldr (\x acc -&gt; f x : acc) []</code>, 可以将 <code>map f</code> 融合进 <code>foldr</code> 中.</p>
+<p>又比如 <code>foldr f e (xs ++ ys) = foldr f (foldr f e ys) xs</code>. 这里减少了 <code>xs ++ ys</code> 产生的中间列表.</p>
+<p><code>foldr fusion law</code> 想表达的是, 如果 <code>h</code> 像 <code>foldr</code> 一样通过累积得到值, 那么可以把 <code>h</code> 的累积过程直接放在 <code>foldr</code> 中进行, 避免构造中间结果.</p>
+<p>有一些操作不太明显, 也能进行融合, 比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">sum</span> (filter even [<span class="hljs-number">1</span>..n])<br></code></pre></td></tr></table></figure>
+
+<p>其中 <code>sum</code> 和 <code>filter</code> 函数都可以改写:</p>
+<ul>
+<li><code>sum = foldr (+) 0</code></li>
+<li><code>filter p = foldr (\x acc -&gt; if p x then x:acc else acc) []</code></li>
+</ul>
+<p>所以原式子相当于:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">sum</span> (filter even xs) = foldr (+) <span class="hljs-number">0</span> (foldr (\x acc -&gt; <span class="hljs-keyword">if</span> even x <span class="hljs-keyword">then</span> x:acc <span class="hljs-keyword">else</span> acc) [] xs)<br></code></pre></td></tr></table></figure>
+
+<p>这就相当于上述 <code>h (foldr f e xs)</code> 的形式, <code>h</code> 是外部的 <code>foldr</code>, 符合条件, 也是积累值, 因此可以改写为:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">sum</span> (filter even xs) = foldr g <span class="hljs-number">0</span> xs<br>  <span class="hljs-keyword">where</span> g x s = <span class="hljs-keyword">if</span> even x <span class="hljs-keyword">then</span> x + s <span class="hljs-keyword">else</span> s<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>h e</code> 就是 <code>foldr (+) 0 []</code> 结果是 <code>0</code></li>
+</ul>
+<p>更多例子, 消除下面函数的中间列表:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">foldr</span> f e (xs ++ ys)<br></code></pre></td></tr></table></figure>
+
+<p><code>xs ++ ys</code> 可以写成 <code>foldr (\x acc -&gt; x:ys) ys xs</code>, 即可以把上式写为:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">foldr</span> f e (foldr (\x acc -&gt; x:ys) ys xs)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>h = foldr f e</code></li>
+<li><code>h e = foldr f e ys</code></li>
+</ul>
+<p>应用 <code>foldr fusion law</code> 可以得到:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">foldr</span> f e (xs ++ ys) = foldr g (foldr f e ys) xs<br>    <span class="hljs-keyword">where</span> g x acc = f x acc<br></code></pre></td></tr></table></figure>
+
+<p>字面上理解就是, 原式子先拼接 <code>xs</code> 和 <code>ys</code> 为一个大列表, 然后进行 <code>fold</code>, 而 fusion 之后的式子, 直接将 fold 之后的 <code>ys</code> 作为累积值的初始值, 然后再对 <code>xs</code> 进行 fold.</p>
+<p>再有一个例子:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">foldr</span> f e . concat<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>concat</code> 会返回一个临时列表, 而这里需要消除</li>
+</ul>
+<p><code>concat</code> 可以写成 <code>foldr (\xs acc -&gt; xs ++ acc) [] xss</code>, 因此上式可以写为 (这里补上了输入):</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">foldr</span> f e (foldr (\xs acc -&gt; xs ++ acc) [] xss)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>h = foldr f e</code></li>
+<li><code>h e = foldr f e [] = e</code></li>
+</ul>
+<p>应用 <code>foldr fusion law</code> 可以写为:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">foldr</span> f e . concat xss = foldr g e xss<br>    <span class="hljs-keyword">where</span> g xs acc = foldr f acc xs<br></code></pre></td></tr></table></figure>
+
+<p>感觉这种写法会让可读性很低.</p>
+<h2 id="1-5-Accumulating-and-tupling"><a href="#1-5-Accumulating-and-tupling" class="headerlink" title="1.5 Accumulating and tupling"></a>1.5 Accumulating and tupling</h2><p>Tupling 本质上也是 memorization, 持久化感兴趣的值.</p>
+<p>比如我们想设计 <code>collapse</code> 函数, 其拼接 <code>xss</code> 的最短前缀, 使得到的列表的和为正数:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">collapse</span> [[<span class="hljs-number">1</span>], [−<span class="hljs-number">3</span>], [<span class="hljs-number">2</span>, <span class="hljs-number">4</span>]]     = [<span class="hljs-number">1</span>]<br><span class="hljs-title">collapse</span> [[−<span class="hljs-number">2</span>, <span class="hljs-number">1</span>], [−<span class="hljs-number">3</span>], [<span class="hljs-number">2</span>, <span class="hljs-number">4</span>]] = [−<span class="hljs-number">2</span>, <span class="hljs-number">1</span>, −<span class="hljs-number">3</span>, <span class="hljs-number">2</span>, <span class="hljs-number">4</span>]<br><span class="hljs-title">collapse</span> [[−<span class="hljs-number">2</span>, <span class="hljs-number">1</span>], [<span class="hljs-number">3</span>], [<span class="hljs-number">2</span>, <span class="hljs-number">4</span>]]  = [−<span class="hljs-number">2</span>, <span class="hljs-number">1</span>, <span class="hljs-number">3</span>]<br></code></pre></td></tr></table></figure>
+
+<p>可以这样实现:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">collapse</span> :: [[<span class="hljs-type">Int</span>]] → [<span class="hljs-type">Int</span>]<br><span class="hljs-title">collapse</span> xss = help [] xss<br><br><span class="hljs-title">help</span> xs xss = <span class="hljs-keyword">if</span> sum xs &gt; <span class="hljs-number">0</span> || null xss <br>                <span class="hljs-keyword">then</span> xs<br>                <span class="hljs-keyword">else</span> help (xs ++ head xss) (tail xss)<br></code></pre></td></tr></table></figure>
+<p>这里有几个问题:</p>
+<ol>
+<li>每次都需要计算 <code>sum xs</code>, 比如 xss 是 <code>[[−2, 1], [−3], [2, 4]]</code>:<br> a. 一开始是计算 <code>sum [] = 0</code>, 不为正数, 追加 <code>[-2, 1]</code><br> b. 接着计算 <code>sum [-2, 1] = -1</code>, 不为正数, 追加 <code>[-3]</code><br> c. 然后计算 <code>sum [-2, 1, -3] = -4</code>, 不为正数, 追加 <code>[2, 4]</code><br> d. 最后计算 <code>sum [-2, 1, -3, 2, 4] = 2</code>, 为正数, 结束<br> e. 这里比如 <code>[-2, 1]</code> 的部分就被计算了 3 次</li>
+<li><code>xs ++ head xss</code> 的展开式比较低效, 如 <code>(([] ++ [−2, 1]) ++ [−3]) ++ [2, 4]</code></li>
+</ol>
+<p>可以优化为:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">collapse</span> xss = (help (<span class="hljs-number">0</span>, id) (labelsum xss)) []<br><br><span class="hljs-title">help</span> (s, f) xss = <br>    <span class="hljs-keyword">if</span> s &gt; <span class="hljs-number">0</span> || null xss <br>        <span class="hljs-keyword">then</span> f <br>        <span class="hljs-keyword">else</span> help (s + t, f . (xs++)) (tail xss)<br>    <span class="hljs-keyword">where</span> (t, xs) = head xss<br><br><span class="hljs-title">labelsum</span> xss = zip (map sum xss) xss<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>labelsum</code> 将 <code>[-2, 1]</code> 变为 <code>(-1, [-2, 1])</code>, 将每个列表的 <code>sum</code> 保存起来</li>
+<li><code>f . (xs ++)</code> 最终会得到一个函数链: <code>f . (xs1++) . (xs2++) . (xs3++) . ...</code></li>
+</ul>
+<h2 id="Exercise"><a href="#Exercise" class="headerlink" title="Exercise"></a>Exercise</h2><p>这里有几个算法的常见实现.</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-comment">-- 将元素 x 插入到列表 ys 的所有可能位置, 返回所有结果组成的列表</span><br><span class="hljs-title">inserts</span> :: a -&gt; [a] -&gt; [[a]]<br><span class="hljs-title">inserts</span> x [] = [[x]]<br><span class="hljs-title">inserts</span> x (y:ys) = x:y:ys : map (y:) (inserts x ys)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>列表 ys 的所有可能位置无非就是, 以 <code>[a,b,c]</code> 为例:<ul>
+<li><code>[_,a,b,c]</code></li>
+<li><code>[a,_,b,c]</code></li>
+<li><code>[a,b,_,c]</code></li>
+<li><code>[a,b,c,_]</code></li>
+</ul>
+</li>
+<li><code>x:y:ys</code> 把 <code>x</code> 插入到最前面</li>
+<li><code>inserts x ys</code> 得到 <code>x</code> 插入到 <code>ys</code> 中的所有结果</li>
+<li><code>map (y:)</code> 将列表恢复到正确的结构, 因为 <code>y</code> 需要在 <code>ys</code> 之前</li>
+</ul>
+<p><code>perms</code> 生成一个列表的所有 permutations:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">perms</span> :: [a] -&gt; [[a]]<br><span class="hljs-title">perms</span> [] = [[]]<br><span class="hljs-title">perms</span> (x:xs) = [ zs | ys &lt;- perms xs, zs &lt;- inserts x ys ]<br></code></pre></td></tr></table></figure>
+<p>这里用的是分治的思想:</p>
+<ul>
+<li>要得到 <code>[x1, x2, ..., xn]</code> 的所有排列</li>
+<li>先得到 <code>[x2, , ..., xn]</code> 的所有排列</li>
+<li>然后将 <code>x1</code> 插入到每个排列的每一个可能的位置</li>
+</ul>
+<p>这个 list comprehension 应该这样翻译:</p>
+<ul>
+<li>对于 <code>xs</code> 的每一个排列 <code>ys</code> (<code>ys &lt;- perms xs</code>), 把 <code>x</code> 插入到 <code>ys</code> 的每一个可能位置, 得到所有新列表 <code>zs</code> (<code>zs &lt;- inserts x ys</code>), 收集所有这样的 <code>zs</code>, 就构成了 <code>(x:xs)</code> 的全部排列.</li>
+</ul>
 
                 
               </div>
