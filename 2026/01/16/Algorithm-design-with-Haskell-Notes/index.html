@@ -24,7 +24,7 @@
 <meta property="og:description" content="介绍该 Blog 是阅读 “Algorithm design with Haskell” 一书的笔记, 该书用函数式编程的思想进行算法设计, 并选用 Haskell 作为示例语言. 1 Functional programming1.4 Fusionfoldr fusion law 是函数式编程中一个重要的优化法则. Fusion 的目标是把两个操作合并成一个, 避免中间数据结构的创建, 比如:">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-01-16T03:26:02.000Z">
-<meta property="article:modified_time" content="2026-01-20T06:40:05.971Z">
+<meta property="article:modified_time" content="2026-01-21T02:43:48.850Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -437,7 +437,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3.4k 字
+          7.3k 字
         
       </span>
     
@@ -448,7 +448,7 @@ path.outline_glyph {
         
         
         
-          29 分钟
+          61 分钟
         
       </span>
     
@@ -632,6 +632,96 @@ path.outline_glyph {
 <ul>
 <li>对于 <code>xs</code> 的每一个排列 <code>ys</code> (<code>ys &lt;- perms xs</code>), 把 <code>x</code> 插入到 <code>ys</code> 的每一个可能位置, 得到所有新列表 <code>zs</code> (<code>zs &lt;- inserts x ys</code>), 收集所有这样的 <code>zs</code>, 就构成了 <code>(x:xs)</code> 的全部排列.</li>
 </ul>
+<h1 id="2-Timing"><a href="#2-Timing" class="headerlink" title="2 Timing"></a>2 Timing</h1><h2 id="2-2-Estimating-running-times"><a href="#2-2-Estimating-running-times" class="headerlink" title="2.2 Estimating running times"></a>2.2 Estimating running times</h2><p>Haskell 对表达式求值时会将其 reducing to normal form, 因此可以用 reduction steps 来衡量 running times.</p>
+<p>因为并不是所有 reduction steps 都消耗相同的时间, 比如复杂表达式中找到下一个 reducible expression 并规约可能会花更多时间, 因此用 reduction steps 来衡量不是那么 faithful.</p>
+<p>另一个可选方法是用程序开始到结束之间 elapsed time 来衡量.</p>
+<p>因为 lazy evaluation 的 reduction steps 不会超过 eager evaluation, 所以通常程序在 eager evaluation 的运行时间 upper bound 也可以看作是 lazy evaluation 的上界.</p>
+<p>估计 recursive function 的 reduction steps 时, 需要找到 <code>recurrence relation (递推关系)</code>: 其描述了一个递归函数的运行时间是如何依赖于更小规模子问题的运行时间的. 解 recurrence relation 的意思是找到其 closed form, 比如:</p>
+<ul>
+<li>Recurrence form: $T(n) &#x3D; T(n-1) + 1, T(0) &#x3D; 1$, 此时需要展开才能知道 $T(100)$</li>
+<li>Closed form: $T(n) &#x3D; n + 1$, 此时直接代入 $n &#x3D; 100$ 就能得到 $T(100) &#x3D; 101$</li>
+</ul>
+<p>求解 recurrence relation 的常见方法有:</p>
+<ul>
+<li>Iteration, 迭代展开, 反复代入递推式以达到基础情况</li>
+<li>Master Theorem (主定理), 通常用于分治算法比如 $T(n) &#x3D; aT(n&#x2F;b) + f(n)$</li>
+<li>代入法 (Substitution), 猜一个解, 然后用数学归纳法证明</li>
+</ul>
+<p>比如用迭代法解下面 recurrence relation:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>T(n) &#x3D; nT(n-1) + \Theta (n)<br>\end{aligned}<br>}<br>$$</p>
+<p>推导解:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>T(n) &amp;&#x3D; cn + n T (n-1) \newline~ \newline<br>&amp;&#x3D; cn + n(c(n-1) + (n-1) T(n-2))<br>&amp;&#x3D; cn + cn(n-1) + cn(n-1)(n-2) + …<br>\end{aligned}<br>}<br>$$<br>这里把 $\Theta (n)$ 替换为 $cn$, 用具体的函数替换渐进符号来简化求解过程. 因为 $\Theta(n)$ 是一个集合, 表示 “所有与 n 同阶的函数”, 比如 $3n + 2, 0.5n, 100n - logn$, 需要具体的函数才能进行代数计算.</p>
+<p>有:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>T(n) &#x3D; c \sum_{k&#x3D;1}^n \frac{n!}{(n-k)!} &#x3D; \Theta (n!)<br>\end{aligned}<br>}<br>$$</p>
+<h2 id="2-4-Amortised-running-times"><a href="#2-4-Amortised-running-times" class="headerlink" title="2.4 Amortised running times"></a>2.4 Amortised running times</h2><p>对于某些数据结构而言, 操作序列的总时间复杂度可能会远低于 “单次最坏情况 x 操作次数”, 下面是两个例子.</p>
+<p><code>build</code> 函数用于过滤输入列表, 其定义如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">build</span> :: (a -&gt; a -&gt; <span class="hljs-type">Bool</span>) -&gt; [a] -&gt; [a]<br><span class="hljs-title">build</span> p = foldr insert []<br>  <span class="hljs-keyword">where</span><br>    insert x xs = x : dropWhile (p x) xs<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>build</code> 会挨个处理输入列表并添加到输出列表中, 每次插入时, 会删除输出列表中符合 <code>p x y</code> 的元素 (<code>x</code> 是当前要插入的元素, <code>y</code> 是遍历的输出列表中的元素)</li>
+<li>单次最坏时间就是 <code>insert</code> 的成本, 由于 <code>dropWhile</code> 可能会遍历整个列表, 因此是 $O(n)$. 此时总的时间复杂度计算是: $B(n+1) &#x3D; B(n) + O(n)$, 得到 $B(n) &#x3D; O(n^2)$</li>
+<li>但实际上, <code>dropWhile</code> 最多删除 <code>n</code> 个元素, 因为<code>dropWhile</code> 进行遍历时, <code>p x y</code> 为 <code>True</code> 的会被删除, 为 <code>False</code> 时停止遍历, 因此最多只会遍历完输入列表, 长度为 <code>n</code></li>
+<li>因此 <code>insert</code> 操作的平均成本是 $O(1)$, 此时时间复杂度是: $O(n)$, 远小于之前的 $O(n^2)$</li>
+</ul>
+<p>又比如 <code>bits</code> 函数, 用于生成一个二进制整数的位序列:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">bits</span> :: <span class="hljs-type">Int</span> -&gt; [[<span class="hljs-type">Bit</span>]]<br><span class="hljs-title">bits</span> n = take n (iterate inc [])<br>  <span class="hljs-keyword">where</span><br>    inc []     = [<span class="hljs-number">1</span>]<br>    inc (<span class="hljs-number">0</span>:bs) = <span class="hljs-number">1</span>:bs<br>    inc (<span class="hljs-number">1</span>:bs) = <span class="hljs-number">0</span>:inc bs<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>inc</code> 函数用于递增一个二进制整数, 每次递增操作的成本在最坏情况下是 $O(k)$, 其中 $k$ 是二进制数的长度. 比如 <code>1110</code> (例子中左边是低位, 向右边递增), <code>inc</code> 一次的结果是 <code>0001</code>, 遍历了每一位. 此时总的时间复杂度是 $O(n^2)$</li>
+<li>但实际上, 每次递增平均下来只会改变一个比特位, 比如:<ul>
+<li>初始: <code>[]</code></li>
+<li><code>inc</code> 1次: <code>[1]</code>, 改变1位</li>
+<li><code>inc</code> 2次: <code>[0,1]</code>, 改变2位</li>
+<li><code>inc</code> 3次: <code>[1,1]</code>, 改变1位</li>
+<li><code>inc</code> 4次: <code>[0,0,1]</code>, 改变3位</li>
+<li><code>inc</code> 5次: <code>[1,0,1]</code>, 改变1位</li>
+<li><code>inc</code> 6次: <code>[0,1,1]</code>, 改变2位</li>
+<li><code>inc</code> 7次: <code>[1,1,1]</code>, 改变1位</li>
+<li><code>inc</code> 8次: <code>[0,0,0,1]</code>, 改变4位</li>
+<li><code>inc</code> 9次: <code>[1,0,0,1]</code>, 改变1位</li>
+<li><code>inc</code> 10次: <code>[0,1,0,1]</code>, 改变2位</li>
+<li><code>inc</code> 11次: <code>[1,1,0,1]</code>, 改变1位</li>
+<li><code>inc</code> 12次: <code>[0,0,1,1]</code>, 改变3位</li>
+<li><code>inc</code> 13次: <code>[1,0,1,1]</code>, 改变1位</li>
+<li><code>inc</code> 14次: <code>[0,1,1,1]</code>, 改变2位</li>
+</ul>
+</li>
+<li>可以看到规律:<ul>
+<li>每隔2次, 就会只改变 1 位</li>
+<li>每隔4次, 就会只改变 2 位</li>
+<li>每隔8次, 就会只改变 3 位</li>
+<li>总的更新次数假设是 <code>n</code>, 那么会有 $\frac{n}{2}$ 改变 <code>1</code> 位, 有 $\frac{n}{4}$ 改变 <code>2</code> 位, 以此类推</li>
+</ul>
+</li>
+<li>总的时间复杂度是: $ \frac{n}{2} + \frac{2n}{4} + \frac{3n}{8} +… &#x3D; O(n)$, 也是低于之前计算的 $O(n^2)$</li>
+</ul>
+<p>Amortised cost 就是计算每次操作的成本, 比如 <code>insert</code> 和 <code>inc</code> 都是 $O(1)$ (最坏都是 $O(n)$).</p>
+<p>这里引入 potential method 来计算, 假设数据结构在第 <code>i</code> 次操作前的状态为 $x_i$, 操作后的状态为 $x_{i+1}$, 有:</p>
+<ul>
+<li>Actual cost: $C(x_i)$, 表示执行该操作的真实时间开销</li>
+<li>Potential function: $S(x) \ge 0$, 表示状态 $x$ 所 “存储” 的能量 (或预付成本, 感觉像累积成本)</li>
+<li>Amortised cost 定义为: $A(x_i) &#x3D; C(x_i) + S(x_{i+1} - S(x_i)$</li>
+</ul>
+<p>可以这样理解:</p>
+<ul>
+<li>如果操作之后有 $S(x_{i+1}) &gt; S(x_i)$, 即势能增加, 两者相减得到一个正数, 因此 $A(x_i) &gt; C(x_i)$</li>
+<li>如果操作之后有 $S(x_{i+1}) &lt; S(x_i)$, 即势能减小, 两者相减得到一个负数, 因此 $A(x_i) &lt; C(x_i)$</li>
+</ul>
+<p>这样就能判断 Amortised cost 与每次操作的实际 cost 的关系. 对上述式子进行移项有: $C(x_i) &#x3D; A(x_i) + S(x_i) - S(x_{i+1})$, 可以求 <code>n</code> 次操作之和:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\sum_{i&#x3D;0}^{n-1} C(x_i) &amp;&#x3D; \sum_{i&#x3D;0}^{n-1}[A(x_i) + S(x_i) - S(x_{i+1})] \newline~ \newline<br>&amp;&#x3D; \sum_{i&#x3D;0}^{n-1} A(x_i) + (S(x_0) - S(x_1) + S(x_1) - S(x_2) + … + s_(x_{n-1}) - S(x_n)) \newline~ \newline<br>&amp;&#x3D; \sum_{i&#x3D;0}^{n-1} A(x_i) + S(x_0) - S(x_n)<br>\end{aligned}<br>}<br>$$</p>
+<p>如果能设计出势能函数 <code>S</code> 满足:</p>
+<ul>
+<li>初始状态无势能: $S(x_0) &#x3D; 0$</li>
+<li>势能永不为负: $S(x_n) \ge 0$</li>
+</ul>
+<p>那么就能得到:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\sum C(x_i) \le \sum A(x_i)<br>\end{aligned}<br>}<br>$$</p>
+<p>就可以用总的 amortised cost 来表示整个操作序列的时间成本了.</p>
+<p>比如对于之前的 <code>build</code> 函数, 可以定义势能函数为: <code>S(xs) = length xs</code>.</p>
+<p>对于每次 <code>insert</code>, 其 actual cost 等于 <code>p</code> 的调用次数加上 <code>cons</code> 操作数:</p>
+<ul>
+<li>假设 <code>dropWhile</code> 删除了 <code>d</code> 个元素, 则 <code>p</code> 会被调用 <code>d+1</code> 次</li>
+<li>由于是 <code>x : ...</code>, 因此 <code>cons</code> 只用操作一个元素</li>
+<li>总的代价是: $C &#x3D; (d+1) + 1 &#x3D; d + 2$</li>
+</ul>
+<p>势能的变化可以计算为: $S(newxs) - S(xs) &#x3D; [1 + (len xs - d)] - len xs &#x3D; 1 - d$ (这里的 <code>1 + (len xs -d)</code> 中, <code>1</code> 是新插入的元素 <code>x</code>, <code>len xs - d</code> 是删除了 <code>d</code> 个元素之后的长度).</p>
+<p>因此有:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>C &#x3D; d + 2 &#x3D; 3 + (d - 1) &#x3D; A + S(x_i) - S(x_{i+1}) \newline~ \newline<br>A &#x3D; 3 &#x3D; O(1)<br>\end{aligned}<br>}<br>$$</p>
+<p>总代价: $\le 3n &#x3D; O(n)$.</p>
 
                 
               </div>
