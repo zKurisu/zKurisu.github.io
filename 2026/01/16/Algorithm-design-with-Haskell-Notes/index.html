@@ -23,10 +23,12 @@
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="介绍该 Blog 是阅读 “Algorithm design with Haskell” 一书的笔记, 该书用函数式编程的思想进行算法设计, 并选用 Haskell 作为示例语言. 1 Functional programming1.4 Fusionfoldr fusion law 是函数式编程中一个重要的优化法则. Fusion 的目标是把两个操作合并成一个, 避免中间数据结构的创建, 比如:">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/perfect-binary-tree-example.png">
 <meta property="article:published_time" content="2026-01-16T03:26:02.000Z">
-<meta property="article:modified_time" content="2026-01-21T12:22:15.727Z">
+<meta property="article:modified_time" content="2026-01-22T13:21:23.892Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/perfect-binary-tree-example.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -437,7 +439,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          12k 字
+          19k 字
         
       </span>
     
@@ -448,7 +450,7 @@ path.outline_glyph {
         
         
         
-          104 分钟
+          162 分钟
         
       </span>
     
@@ -817,9 +819,150 @@ path.outline_glyph {
 <p>此时向任意位置添加元素也只会消耗 $O(log n)$ steps, 该操作在 standard lists 上要耗费 $O(n)$ steps.</p>
 <p>构建 random-access list 需要先构建其他两个数据结构, 一个是 binary tree:</p>
 <figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Tree</span> a = <span class="hljs-type">Leaf</span> a | <span class="hljs-type">Node</span> (<span class="hljs-type">Tree</span> <span class="hljs-title">a</span>) (<span class="hljs-type">Tree</span> <span class="hljs-title">a</span>)</span><br></code></pre></td></tr></table></figure>
+<p>一个 <code>Tree</code> 可以是一个 <code>Leaf</code> 包裹一个值, 又或者是一个 <code>Node</code> 包含两棵 subtrees.</p>
+<p><code>Tree</code> 的 size 是其 leaves 的数量, 可以定义为:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">size</span> :: <span class="hljs-type">Tree</span> a -&gt; <span class="hljs-type">Int</span><br><span class="hljs-title">size</span> (<span class="hljs-type">Leaf</span> x)     = <span class="hljs-number">1</span><br><span class="hljs-title">size</span> (<span class="hljs-type">Node</span> t1 t2) = size t2 + size t2<br></code></pre></td></tr></table></figure>
 
+<p>由于很多时候都需要用到 Tree 的 size 信息, 因此可以直接加入到定义中:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Tree</span> a = <span class="hljs-type">Leaf</span> a | <span class="hljs-type">Node</span> <span class="hljs-type">Nat</span> (<span class="hljs-type">Tree</span> <span class="hljs-title">a</span>) (<span class="hljs-type">Tree</span> <span class="hljs-title">a</span>)</span><br></code></pre></td></tr></table></figure>
+<p>(<code>Nat</code> 是自己定义的 <code>Int</code> 的别名, 语义是自然数)</p>
+<p>此时 <code>size</code> 可以这样定义:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">size</span> :: <span class="hljs-type">Tree</span> a -&gt; <span class="hljs-type">Nat</span><br><span class="hljs-title">size</span> (<span class="hljs-type">Leaf</span> x)     = <span class="hljs-number">1</span><br><span class="hljs-title">size</span> (<span class="hljs-type">Node</span> n _ _) = n<br></code></pre></td></tr></table></figure>
 
-<h2 id="3-3-Arrays"><a href="#3-3-Arrays" class="headerlink" title="3.3 Arrays"></a>3.3 Arrays</h2>
+<p>编写一个 <code>node</code> 函数, 利用两棵子树构建一个新树:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">node</span> :: <span class="hljs-type">Tree</span> a -&gt; <span class="hljs-type">Tree</span> a -&gt; <span class="hljs-type">Tree</span> a<br><span class="hljs-title">node</span> t1 t2 = <span class="hljs-type">Node</span> (size t1 + size t2) t1 t2<br></code></pre></td></tr></table></figure>
+
+<p>通常情况下, binary tree 有任意的 size 和形状, 但这里只考虑 perfect binary tree, 即所有 <code>leaves</code> 在同一 depth (每一层填满了才开始下一层), 比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">t</span> = <span class="hljs-type">Node</span> <span class="hljs-number">4</span> (<span class="hljs-type">Node</span> <span class="hljs-number">2</span> (<span class="hljs-type">Leaf</span> &#x27;a&#x27;) (<span class="hljs-type">Leaf</span> &#x27;b&#x27;)) (<span class="hljs-type">Node</span> <span class="hljs-number">2</span> (<span class="hljs-type">Leaf</span> &#x27;c&#x27;) (<span class="hljs-type">Leaf</span> &#x27;d&#x27;))<br></code></pre></td></tr></table></figure>
+<ul>
+<li>这棵树的 <code>size</code> 为 4</li>
+<li>所有 perfect binary tree 的 size 都是 $2^p, p \ge 0$</li>
+</ul>
+<p>另一个数据结构是 perfect binary tree 组成的序列:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Digit</span> a = <span class="hljs-type">Zero</span> | <span class="hljs-type">One</span> (<span class="hljs-type">Tree</span> <span class="hljs-title">a</span>)</span><br></code></pre></td></tr></table></figure>
+
+<p>将列表通过二进制的方法进行编码, 比如列表 <code>[&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;d&quot;, &quot;e&quot;, &quot;f&quot;]</code>, 长度为 <code>6</code>, 写成二进制是 <code>110</code>, 这里用逆序, 即写为 <code>011</code>:</p>
+<ul>
+<li><code>0</code> 对应 <code>Zero</code>, 只是一个占位符</li>
+<li><code>1</code> 对应 <code>One (Tree a)</code>, 包裹一棵树, 如果这个 <code>1</code> 对应十进制的 <code>2</code>, 那么这棵树的大小是 <code>2</code>, 表示顺序存储列表中的两个元素; 如果这个 <code>1</code> 对应十进制的 <code>4</code>, 那么这棵树的大小是 <code>4</code>, 也用来顺序存储列表中的 <code>4</code> 个元素</li>
+</ul>
+<p>因此上述列表可以编码成:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell">[<span class="hljs-type">Zero</span>, <span class="hljs-type">One</span> (<span class="hljs-type">Node</span> <span class="hljs-number">2</span> (<span class="hljs-type">Leaf</span> &#x27;a&#x27;) (<span class="hljs-type">Leaf</span> &#x27;b&#x27;)), <span class="hljs-type">One</span> (<span class="hljs-type">Node</span> <span class="hljs-number">4</span> (<span class="hljs-type">Node</span> <span class="hljs-number">2</span> (<span class="hljs-type">Leaf</span> &#x27;c&#x27;) (<span class="hljs-type">Leaf</span> &#x27;d&#x27;)) (<span class="hljs-type">Node</span> <span class="hljs-number">2</span> (<span class="hljs-type">Leaf</span> &#x27;e&#x27;) (<span class="hljs-type">Leaf</span> &#x27;f&#x27;)))]<br></code></pre></td></tr></table></figure>
+
+<p>另一个例子, 对于 <code>5</code> 元素的列表, 其长度对应的逆序二进制是 <code>101</code>, 编码成:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell">[<span class="hljs-type">One</span> (<span class="hljs-type">Leaf</span> &#x27;a&#x27;), <span class="hljs-type">Zero</span>, <span class="hljs-type">One</span> (<span class="hljs-type">Node</span> <span class="hljs-number">4</span> (<span class="hljs-type">Node</span> <span class="hljs-number">2</span> (<span class="hljs-type">Leaf</span> &#x27;b&#x27;) (<span class="hljs-type">Leaf</span> &#x27;c&#x27;)) (<span class="hljs-type">Node</span> <span class="hljs-number">2</span> (<span class="hljs-type">Leaf</span> &#x27;d&#x27;) (<span class="hljs-type">Leaf</span> &#x27;e&#x27;)))]<br></code></pre></td></tr></table></figure>
+
+<p>有了 <code>Tree</code> 和 <code>Digit</code> 这两个数据结构之后, 就能定义 random access list 为:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">type</span> <span class="hljs-type">RAList</span> a = [<span class="hljs-type">Digit</span> a]</span><br></code></pre></td></tr></table></figure>
+
+<p><code>fromRA</code> 和 <code>fromT</code> 实现如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">fromRA</span> :: <span class="hljs-type">RAList</span> a -&gt; [a]<br><span class="hljs-title">fromRA</span> = concatMap from<br>    <span class="hljs-keyword">where</span> from <span class="hljs-type">Zero</span>    = []<br>          from (<span class="hljs-type">One</span> t) = fromT t<br><br><span class="hljs-title">fromT</span> :: <span class="hljs-type">Tree</span> a -&gt; [a]<br><span class="hljs-title">fromT</span> (<span class="hljs-type">Leaf</span> x)       = [x]<br><span class="hljs-title">fromT</span> (<span class="hljs-type">Node</span> _ t1 t2) = fromT t1 ++ fromT t2<br></code></pre></td></tr></table></figure>
+
+<p>这里 <code>fromT</code> 的时间复杂度可以估算如下:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>T(p) &amp;&#x3D; 2T(p-1) + \Theta(2^{p-1}) \newline~ \newline<br>&amp;&#x3D; 2(2T(p-2) + \Theta(2^{p-2})) + \Theta(2^{p-1}) \newline~ \newline<br>&amp;&#x3D; 2(2T(p-2)) + 2 \cdot \Theta(2^{p-1}) \newline~ \newline<br>&amp;&#x3D; …<br>&amp;&#x3D; p \cdot \Theta(2^{p-1})<br>\end{aligned}<br>}<br>$$</p>
+<p>有一种更高效的实现:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">fromTs</span> :: [<span class="hljs-type">Tree</span> a] -&gt; [a]<br><span class="hljs-title">fromTs</span> []                = []<br><span class="hljs-title">fromTs</span> (<span class="hljs-type">Leaf</span> x:ts)       = x:fromTs ts<br><span class="hljs-title">fromTs</span> (<span class="hljs-type">Node</span> _ t1 t2:ts) = fromTs (t1:t2:ts)<br></code></pre></td></tr></table></figure>
+<p>此时时间复杂度是 $\Theta(2^p)$ (每个元素只合并一次).</p>
+<p><code>fetchRA</code> 和 <code>fetchT</code> 实现如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">fetchRA</span> :: <span class="hljs-type">Nat</span> -&gt; <span class="hljs-type">RAList</span> a -&gt; a<br><span class="hljs-title">fetchRA</span> k []         = error <span class="hljs-string">&quot;fetchRA: index too large&quot;</span><br><span class="hljs-title">fetchRA</span> k (<span class="hljs-type">Zero</span>:xs)  = fetchRA k xs<br><span class="hljs-title">fetchRA</span> k (<span class="hljs-type">One</span> t:xs) = <br>    <span class="hljs-keyword">if</span> k &lt; size t<br>        <span class="hljs-keyword">then</span> fetchT k t<br>        <span class="hljs-keyword">else</span> fetchRA (k - size t) xs<br><br><span class="hljs-title">fetchT</span> :: <span class="hljs-type">Nat</span> -&gt; <span class="hljs-type">Tree</span> a -&gt; a<br><span class="hljs-title">fetchT</span> <span class="hljs-number">0</span> (<span class="hljs-type">Leaf</span> x) = x<br><span class="hljs-title">fetchT</span> k (<span class="hljs-type">Node</span> n t1 t2) =<br>    <span class="hljs-keyword">if</span> k &lt; m<br>        <span class="hljs-keyword">then</span> fetchT k t1<br>        <span class="hljs-keyword">else</span> fetchT (k - m) t2<br>    <span class="hljs-keyword">where</span> m = n `div` <span class="hljs-number">2</span><br></code></pre></td></tr></table></figure>
+<p><code>fetchT</code> 利用 perfect binary tree 的性质, 通过递归和二分法来定位目标元素, 时间复杂度是 $O(log n)$:</p>
+<ul>
+<li>基础情况是叶子节点, 查询抵达到叶子节点时, 意味着来到了目标位置, 此时 <code>k=0</code> 并返回包裹的元素</li>
+<li>递归情况, 对于非叶子节点, 需要通过 <code>k</code> 来二分查找:<ul>
+<li>中间值计算是 <code>m = n / 2</code>, <code>n</code> 是树的 size</li>
+<li>如果 $k &lt; m$, 则访问左子树 $t1$, 因为左子树元素的排列顺序与该树是一致的, 因此不需要更改 <code>k</code> 值 </li>
+<li>如果 $k \ge m$, 则访问右子树 $t1$, 且更新 <code>k</code> 为 <code>k-m</code>, 因为右子树元素的排列顺序与原树差了 <code>m</code><br>(假如一棵树存储 <code>[&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;d&quot;]</code>, 那么左子树存储的是 <code>[&quot;a&quot;, &quot;b&quot;]</code>, 右子树存储的是 <code>[&quot;c&quot;, &quot;d&quot;]</code>. <code>k=0</code> 对应 Tree 的第一个元素 <code>&quot;a&quot;</code>, 同时也是左子树的第一个元素 <code>&quot;a&quot;</code>; <code>k=1</code> 对应 Tree 的第二个元素 <code>&quot;b&quot;</code>, 同时也是左子树的第二个元素 <code>&quot;b&quot;</code>; <code>k=2</code> 对应 Tree 的第三个元素, 同时也是右子树的第一个元素 <code>&quot;c&quot;</code>, <code>k=2-2=0</code>; <code>k=3</code> 对应 Tree 的第四个元素, 同时也是右子树的第二个元素 <code>&quot;d&quot;</code>, <code>k=3-2=1</code>)</li>
+</ul>
+</li>
+</ul>
+<p><code>fetchRA</code> 的思路是: 遍历 <code>RAList</code> 的每一个 <code>Digit</code>, 跳过占位的 <code>Zero</code>, 在 <code>One t</code> 中判断索引是否落在当前树 <code>t</code> 的范围内, 如果是则调用 <code>fetchT</code> 查找, 否则扣减索引继续遍历, 整体的时间复杂度还是 $O(log n)$. 其满足:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">fetch</span> k . fromRA = fetchRA k<br></code></pre></td></tr></table></figure>
+
+<p>另外的常见操作实现如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">nullRA</span> :: <span class="hljs-type">RAList</span> a -&gt; <span class="hljs-type">Bool</span><br><span class="hljs-title">nullRA</span> [] = <span class="hljs-type">True</span><br><span class="hljs-title">nullRA</span> _  = <span class="hljs-type">False</span><br><br><span class="hljs-title">nilRA</span> :: <span class="hljs-type">RAList</span> a<br><span class="hljs-title">nilRA</span> = []<br><br><span class="hljs-title">consRA</span> :: a -&gt; <span class="hljs-type">RAList</span> a -&gt; <span class="hljs-type">RAList</span> a<br><span class="hljs-title">consRA</span> x xs = consT (<span class="hljs-type">Leaf</span> x) xs<br><br><span class="hljs-title">consT</span> :: <span class="hljs-type">Tree</span> a -&gt; <span class="hljs-type">RAList</span> a -&gt; <span class="hljs-type">RAList</span> a<br><span class="hljs-title">consT</span> t1 []          = [<span class="hljs-type">One</span> t1]<br><span class="hljs-title">consT</span> t1 (<span class="hljs-type">Zero</span>:xs)   = <span class="hljs-type">One</span> t1:xs<br><span class="hljs-title">consT</span> t1 (<span class="hljs-type">One</span> t2:xs) = <span class="hljs-type">Zero</span>:consT (node t1 t2) xs<br><br><span class="hljs-title">unconsRA</span> :: <span class="hljs-type">RAList</span> a -&gt; (a, <span class="hljs-type">RAList</span> a)<br><span class="hljs-title">unconsRA</span> xs = (x,ys) <span class="hljs-keyword">where</span> (<span class="hljs-type">Leaf</span> x,ys) = unconsT xs<br><br><span class="hljs-title">unconsT</span> :: <span class="hljs-type">RAList</span> a -&gt; (<span class="hljs-type">Tree</span> a, <span class="hljs-type">RAList</span> a)<br><span class="hljs-title">unconsT</span> (<span class="hljs-type">One</span> t:xs) = <span class="hljs-keyword">if</span> null xs <span class="hljs-keyword">then</span> (t,[]) <span class="hljs-keyword">else</span> (t,<span class="hljs-type">Zero</span>:xs)<br><span class="hljs-title">unconsT</span> (<span class="hljs-type">Zero</span>:xs)  = (t1, <span class="hljs-type">One</span> t2:ys) <span class="hljs-keyword">where</span> (<span class="hljs-type">Node</span> _ t t2, ys) = unconsT xs<br></code></pre></td></tr></table></figure>
+
+<p><code>consRA</code> 的操作类似于 <code>inc</code>, 而 <code>unconsRA</code> 的操作类似于 <code>dec</code>:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">inc</span> []     = [<span class="hljs-number">1</span>]<br><span class="hljs-title">inc</span> (<span class="hljs-number">0</span>:bs) = <span class="hljs-number">1</span>:bs<br><span class="hljs-title">inc</span> (<span class="hljs-number">1</span>:bs) = <span class="hljs-number">0</span>:inc bs<br><br><span class="hljs-title">dec</span> [<span class="hljs-number">1</span>]    = []<br><span class="hljs-title">dec</span> (<span class="hljs-number">1</span>:ds) = <span class="hljs-number">0</span>:ds<br><span class="hljs-title">dec</span> (<span class="hljs-number">0</span>:ds) = <span class="hljs-number">1</span>:dec ds<br></code></pre></td></tr></table></figure>
+
+<p><code>toRA</code>, 将一个普通列表转为 <code>RAList</code>:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">toRA</span> :: [a] -&gt; <span class="hljs-type">RAList</span><br><span class="hljs-title">toRA</span> = foldr consRA nilRA<br></code></pre></td></tr></table></figure>
+
+<p><code>updateRA</code>, 更新指定位置的值:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">updateRA</span> :: <span class="hljs-type">Nat</span> -&gt; a -&gt; <span class="hljs-type">RAList</span> a -&gt; <span class="hljs-type">RAList</span> a<br><span class="hljs-title">updateRA</span> k _ []        = error <span class="hljs-string">&quot;updateRA: index too large&quot;</span><br><span class="hljs-title">updateRA</span> k v (<span class="hljs-type">Zero</span>:xs) = <span class="hljs-type">Zero</span>:update k v xs<br><span class="hljs-title">updateRA</span> k v (<span class="hljs-type">One</span> t:xs)  =<br>    <span class="hljs-keyword">if</span> k &lt; size t<br>        <span class="hljs-keyword">then</span> <span class="hljs-type">One</span> (updateT k v t):xs<br>        <span class="hljs-keyword">else</span> <span class="hljs-type">One</span> t:update (k - size t) v xs<br><br><span class="hljs-title">updateT</span> :: <span class="hljs-type">Nat</span> -&gt; a -&gt; <span class="hljs-type">Tree</span> a -&gt; <span class="hljs-type">Tree</span> a<br><span class="hljs-title">updateT</span> <span class="hljs-number">0</span> v (<span class="hljs-type">Leaf</span> x)       = <span class="hljs-type">Leaf</span> v<br><span class="hljs-title">updateT</span> k v (<span class="hljs-type">Node</span> n t1 t2) =<br>    <span class="hljs-keyword">if</span> k &lt; m<br>        <span class="hljs-keyword">then</span> <span class="hljs-type">Node</span> (updateT k v t1) t2<br>        <span class="hljs-keyword">else</span> <span class="hljs-type">Node</span> t1 (updateT (k-m) v t2)<br>    <span class="hljs-keyword">where</span> m = n `div` <span class="hljs-number">2</span><br></code></pre></td></tr></table></figure>
+
+<p>这里定义 <code>//</code> 函数, 用来更新一组值, 参数中的列表元素是 <code>(k, v)</code>, <code>k</code> 是 <code>index</code>, 而 <code>v</code> 是更新后的值:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell">(//) :: <span class="hljs-type">RAList</span> a -&gt; [(<span class="hljs-type">Nat</span>, a)] -&gt; <span class="hljs-type">RAList</span> a<br><span class="hljs-title">xs</span> // kxs = foldl (flip (uncurry updateRA)) xs kxs<br></code></pre></td></tr></table></figure>
+
+<p>实现 <code>headRA</code> 和 <code>tailRA</code> 如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">headRA</span> :: <span class="hljs-type">RAList</span> a -&gt; a<br><span class="hljs-title">headRA</span> xs = fst (unconsRA xs)<br><br><span class="hljs-title">tailRA</span> :: <span class="hljs-type">RAList</span> a -&gt; a<br><span class="hljs-title">tailRA</span> xs = snd (uncons xs)<br></code></pre></td></tr></table></figure>
+
+<h3 id="为什么这样设计"><a href="#为什么这样设计" class="headerlink" title="为什么这样设计"></a>为什么这样设计</h3><p>这部分并不是书中的内容, 而是单独查阅的. 解释下为什么 <code>RAList</code> 这样设计:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Tree</span> a   = <span class="hljs-type">Leaf</span> a | <span class="hljs-type">Node</span> <span class="hljs-type">Nat</span> (<span class="hljs-type">Tree</span> <span class="hljs-title">a</span>) (<span class="hljs-type">Tree</span> <span class="hljs-title">a</span>)</span><br><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Digit</span> a  = <span class="hljs-type">Zero</span> | <span class="hljs-type">One</span> (<span class="hljs-type">Tree</span> <span class="hljs-title">a</span>)</span><br><span class="hljs-class"><span class="hljs-keyword">type</span> <span class="hljs-type">RAList</span> a = [<span class="hljs-type">Digit</span> a]</span><br></code></pre></td></tr></table></figure>
+
+<p>为什么不直接用 <code>Tree</code> 结构来模拟呢? <code>Tree</code> 能实现高效访问, 但没法高效更新和存储. 由于完美二叉树的大小只可能是 $2^p, p \ge 0$, 即 $1, 2, 4, 8, 16, 32…$, 如下:</p>
+<p><img src="/../img/perfect-binary-tree-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>(只有叶子节点存储实际数据)</p>
+<ul>
+<li>比如列表只有 5 个元素, 若用单一树存储, 必须用大小为 <code>8</code> 的树 (因为需要是 perfect binary tree), 此时会浪费 3 个空位</li>
+<li>当插入第六个元素时, 仍然在 <code>8</code> 的范围内; 但插入 <code>9</code> 个元素时, 需要把整棵树 <code>8</code> 节点的树拆成两棵 <code>4</code> 节点的树, 再合并成一棵 <code>16</code> 节点的树, 此时整个树的结构需要重构, 时间复杂度从 $O(logn)$ 退化为 $O(n)$</li>
+</ul>
+<p>二进制编码设计的好处在于, 把列表长度按二进制分解, 每一位对应一棵完美二叉树 (<code>One t</code> 表示 “这一位有树”, <code>Zero</code> 表示 “这一位无树”), 这样的设计解决了单一 <code>Tree</code> 的所有问题:</p>
+<ol>
+<li>能够适配任意长度的列表. 任意自然数都能表示成二进制, 而每一位二进制对应一棵 “大小为 $2^p$” 的完美二叉树.</li>
+<li>更新操作 (插入&#x2F;删除) 的 “进位&#x2F;错位” 逻辑, 保证高效. 这里 <code>RAList</code> 的插入&#x2F;删除和二进制加法&#x2F;减法的进位&#x2F;借位完全一致, 只需要操作 “最低位” 的树, 无需重构整个结构</li>
+<li>保证随机访问为 $O(logn)$ 的时间复杂度</li>
+</ol>
+<h2 id="3-3-Arrays"><a href="#3-3-Arrays" class="headerlink" title="3.3 Arrays"></a>3.3 Arrays</h2><p>Functional algorithms 和 procedural algorithms 的一大区别在于, 前者通常用 lists 装载信息而后者常用 array.</p>
+<p>对于 procedural programming 而言, 更新数组是 destructive 的操作, 即对应 index 处的值会改变, 旧值会丢失.</p>
+<p>而对于 functional programming, 数据结构都是持久化的, 每次更改都会创建原始数据结构的 copy, 旧值仍然存在. 更改数据结构的全部值或者只更改一个值, 都只会 copy 一次.</p>
+<p>Haskell 的 <code>Data.Array</code> 模块包含了很多 array 操作和类型.</p>
+<p>类型 <code>Array i e</code> 表示 index 类型是 <code>i</code>, 元素类型是 <code>e</code> 的 array 类型.</p>
+<p>可以用 <code>array</code> 函数来构建一个 array:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">array</span> :: <span class="hljs-type">Ix</span> i =&gt; (i,i) -&gt; [(i,e)] -&gt; <span class="hljs-type">Array</span> i e<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>Ix</code> typeclass 限制了什么类型可以作为 index, 通常是 integer 或者 character 这种可以转换为连续值的类型</li>
+<li><code>(i,i)</code> 是 index 的上下限</li>
+<li><code>[(i,e)]</code> 是一组 association list, <code>i</code> 是 index, <code>e</code> 是 element</li>
+<li>构建 array 的时间复杂度是 $O(n)$, <code>n</code> 是 association list 的长度</li>
+</ul>
+<p>一个 <code>array</code> 构建函数的变种是 <code>listArray</code>, 只需要提供一个普通 List 即可:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">listArray</span> :: <span class="hljs-type">Ix</span> i =&gt; (i,i) -&gt; [e] -&gt; <span class="hljs-type">Array</span> i e<br><span class="hljs-title">listArray</span> (l,r) xs = array (l,r) (zip [l..r] xs)<br></code></pre></td></tr></table></figure>
+
+<p>还有一个构建方法是用 <code>accumArray</code> 函数:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">accumArray</span> :: <span class="hljs-type">Ix</span> i =&gt; (e -&gt; v -&gt; e) -&gt; e -&gt; (i,i) -&gt; [(i,v)] -&gt; <span class="hljs-type">Array</span> i e<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>(e -&gt; v -&gt; e)</code> 是一个 “累积函数”, 用来把旧值 <code>e</code> 和新值 <code>v</code> 合并成新的 <code>e</code>, 如果关联列表中出现了重复索引就会调用</li>
+<li><code>e</code> 是数组的初始值, 所有没有在关联列表中出现的索引都会用它填充</li>
+</ul>
+<p><code>accumArray</code> 函数的好处有两个:</p>
+<ul>
+<li>自动填充初始值: 不需要手动为每个索引制定初始值, 未出现在关联列表中的索引会自动用 <code>e</code> 填充</li>
+<li>处理重复索引: 当关联列表中有重复索引时, 累积函数 <code>(e -&gt; v -&gt; e)</code> 会把旧值和新值合并, 避免冲突</li>
+</ul>
+<p>其实现逻辑可以简化为:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">accumArray</span> f e (l,r) ivs = <br>    array (l,r) [(j,foldl f e [v | (i, v) &lt;- ivs, i == j]) | j &lt;- [l..r]]<br></code></pre></td></tr></table></figure>
+
+<p>使用示例如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">accumArray</span> (+) <span class="hljs-number">0</span> (<span class="hljs-number">1</span>,<span class="hljs-number">3</span>) [(<span class="hljs-number">1</span>,<span class="hljs-number">20</span>), (<span class="hljs-number">2</span>,<span class="hljs-number">30</span>), (<span class="hljs-number">1</span>,<span class="hljs-number">40</span>), (<span class="hljs-number">2</span>,<span class="hljs-number">50</span>)]<br>    = array (<span class="hljs-number">1</span>,<span class="hljs-number">3</span>) [(<span class="hljs-number">1</span>,<span class="hljs-number">60</span>), (<span class="hljs-number">2</span>,<span class="hljs-number">80</span>), (<span class="hljs-number">3</span>,<span class="hljs-number">0</span>)]<br><span class="hljs-title">accumArray</span> (ﬂip (:)) [ ] (&#x27;<span class="hljs-type">A&#x27;</span>, &#x27;<span class="hljs-type">C&#x27;</span>) [(&#x27;<span class="hljs-type">A&#x27;</span>, <span class="hljs-string">&quot;Apple&quot;</span>), (&#x27;<span class="hljs-type">A&#x27;</span>, <span class="hljs-string">&quot;Apricot&quot;</span>)]<br>    = array (&#x27;<span class="hljs-type">A&#x27;</span>, &#x27;<span class="hljs-type">C&#x27;</span>) [(&#x27;<span class="hljs-type">A&#x27;</span>, [<span class="hljs-string">&quot;Apricot&quot;</span>, <span class="hljs-string">&quot;Apple&quot;</span>]), (&#x27;<span class="hljs-type">B&#x27;</span>, [ ]), (&#x27;<span class="hljs-type">C&#x27;</span>, [ ])]<br></code></pre></td></tr></table></figure>
+
+<p>另外一个应用, 假如有一组 natural numbers, 范围是 <code>(0,m)</code> 中, 可以按下面方式排序, 时间复杂度是 $\Theta(m + n)$:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">sort</span> :: <span class="hljs-type">Nat</span> -&gt; [<span class="hljs-type">Nat</span>] -&gt; [<span class="hljs-type">Nat</span>]<br><span class="hljs-title">sort</span> m xs = concatMap copy (assocs a)<br>    <span class="hljs-keyword">where</span> a = accumArray (+) <span class="hljs-number">0</span> (<span class="hljs-number">0</span>,m) (zip xs (repeat <span class="hljs-number">1</span>))<br>          copy (x,k) = replicate k x<br></code></pre></td></tr></table></figure>
+
+<p><code>assocs :: Array i e -&gt; [(i,e)]</code> 从一个 <code>Array</code> 返回关系列表, 并且按照 <code>index</code> 排序.</p>
+<p><code>elems</code> 函数可以取出 <code>Array</code> 中所有元素:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">elems</span> :: <span class="hljs-type">Ix</span> i =&gt; <span class="hljs-type">Array</span> i e -&gt; [e]<br><span class="hljs-title">elems</span> = map snd . assocs<br></code></pre></td></tr></table></figure>
+
+<p><code>!</code> 函数能用于在常数时间内找到对应元素:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">assocs</span> xa = [(i,xa ! i) | i &lt;- range (bounds xa)]<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>range :: Ix a =&gt; (a, a) -&gt; [a]</code> 函数返回 lower bound 到 upper bound 的列表</li>
+<li><code>assocs</code> 时间复杂度是 $O(n)$, <code>n</code> 是 <code>Array</code> 的大小</li>
+</ul>
+<p><code>//</code> 函数用于更新 <code>Array</code> 元素, 但需要耗费 $O(n)$ 时间, <code>n</code> 是 <code>Array</code> 的大小:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell">(//) :: <span class="hljs-type">Ix</span> i =&gt; <span class="hljs-type">Array</span> i e -&gt; [(i,e)] -&gt; <span class="hljs-type">Array</span> i e<br></code></pre></td></tr></table></figure>
+<ul>
+<li>用一组 association list 更新整个 array</li>
+</ul>
+
                 
               </div>
             
