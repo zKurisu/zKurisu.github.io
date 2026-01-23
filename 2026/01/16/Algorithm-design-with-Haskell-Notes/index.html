@@ -25,7 +25,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/perfect-binary-tree-example.png">
 <meta property="article:published_time" content="2026-01-16T03:26:02.000Z">
-<meta property="article:modified_time" content="2026-01-22T13:21:23.892Z">
+<meta property="article:modified_time" content="2026-01-23T09:32:31.329Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/perfect-binary-tree-example.png">
@@ -439,7 +439,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          19k 字
+          23k 字
         
       </span>
     
@@ -450,7 +450,7 @@ path.outline_glyph {
         
         
         
-          162 分钟
+          190 分钟
         
       </span>
     
@@ -962,7 +962,71 @@ path.outline_glyph {
 <ul>
 <li>用一组 association list 更新整个 array</li>
 </ul>
+<p><code>Data.Array</code> 中的 <code>accum</code> 函数可以将 <code>[(i,v)]</code> 中与 Array index 相同的元素, 利用函数累积值后更新:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">accum</span> :: <span class="hljs-type">Ix</span> i =&gt; (e -&gt; v -&gt; e) -&gt; <span class="hljs-type">Array</span> i e -&gt; [(i,v)] -&gt; <span class="hljs-type">Array</span> i e<br></code></pre></td></tr></table></figure>
 
+<p>比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">let</span> arr    = array (<span class="hljs-number">0</span>,<span class="hljs-number">2</span>) [(<span class="hljs-number">0</span>,<span class="hljs-number">0</span>), (<span class="hljs-number">1</span>,<span class="hljs-number">10</span>), (<span class="hljs-number">2</span>,<span class="hljs-number">20</span>)]<br>    newArr = accum (+) arr [(<span class="hljs-number">0</span>,<span class="hljs-number">0</span>), (<span class="hljs-number">1</span>,-<span class="hljs-number">10</span>), (<span class="hljs-number">2</span>,-<span class="hljs-number">20</span>)]<br><span class="hljs-title">in</span>  newArr <span class="hljs-comment">-- 所有 element 为 0</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h3><p>这部分也是自己查阅的, 不是书中的内容.</p>
+<p><code>Data.Array</code> 中提供的类型和接口一般用在 “需要高效随机访问, 固定大小&#x2F;固定索引范围, 元素类型统一” 的场景中.</p>
+<p><code>Data.Array</code> 通过索引访问元素的时间复杂度是 $O(1)$, 远优于标准 List 的 $O(n)$.</p>
+<p>由于 <code>Data.Array</code> 提供 <code>//</code> 进行批量更新, 因此也适用于对数组进行整体更新的场景.</p>
+<p>如果需要动态增删元素, 频繁插入删除, 则应该考虑其他数据结构.</p>
+<h1 id="Divide-and-Conquer"><a href="#Divide-and-Conquer" class="headerlink" title="Divide and Conquer"></a>Divide and Conquer</h1><p>接下来的几个章节都属于 Divide and Conquer (也可以翻译成 divide and rule), 其核心思想是, 给定一个问题, 如果其足够小, 则直接对其求解; 否则将其拆为子问题并分别求解, 最后合并子问题的解得到原始问题的解.</p>
+<p>这一般要求, 子问题和原问题需要用相同的 strategy 来求解, 子问题仅仅是处理原问题的更小规模的输入. 这样的特征也天然适合递归求解.</p>
+<p>Functional algorithm 都非常依赖 recursion, 这些都可以被看作是 divide-and-conquer algorithm. 比如把一个输入 size 为 <code>n &gt; 0</code> 的问题分解为 size 为 <code>n - 1</code> 和另一个 size 为 <code>1</code> 的子问题: <code>foldr</code> 就是这种处理思路, 逐个处理 List 里的元素, 并将结果合并.</p>
+<p>Devide-and-conquer algorithm 通常含有两个特征:</p>
+<ol>
+<li>subproblem 的输入规模与原问题的输入规模呈比例, 比如是 $\frac{n}{4}$ (子问题的输入规模是原问题的四分之一), 又比如 $\frac{n}{2}$ (子问题的输入规模是原问题的二分之一). 通常分解出的多个 subproblems 的输入规模是一样的, 比如一个 size 为 <code>n</code> 的问题分解为两个 subproblems, 那么各输入规模都是 $\frac{n}{2}$ (当然也存在 subproblems 之间输入规模不同的)</li>
+<li>subproblems 之间的求解是相互独立的, 不存在重叠 (如果有重叠那就是 dynamic programming 问题了). 正因为相互独立, divide and conquer 也多用于 parallelism 场景中</li>
+</ol>
+<h1 id="4-Binary-Search"><a href="#4-Binary-Search" class="headerlink" title="4 Binary Search"></a>4 Binary Search</h1><p>Binary Search 是最简单的一类 divide and conquer 算法. 其将一个 search problem 拆为两个 subproblems, 每个的输入规模是原始问题的一半.</p>
+<p>本章会把 binary search 封装为 binary search tree 这一数据结构.</p>
+<h2 id="4-1-A-one-dimensional-search-problem"><a href="#4-1-A-one-dimensional-search-problem" class="headerlink" title="4.1 A one-dimensional search problem"></a>4.1 A one-dimensional search problem</h2><p>第一个问题描述如下:</p>
+<ul>
+<li>给定一个严格递增的函数 <code>f: N -&gt; N</code>, 即对于任意自然数 $x &lt; y$, 都满足 $f(x) &lt; f(y)$. 该函数还满足 $f (x+1) &gt; x$</li>
+<li>目标是找到一个自然数 <code>x</code>, 使得 $f(x) &#x3D; t$ (<code>t</code> 是给定的目标值)</li>
+</ul>
+<p>假设存在 $f(x) &#x3D; t$, 那么可以用 $f(x) &gt; x-1$ 得到:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>t &gt; x - 1 \newline~ \newline<br>t + 1 &gt; x<br>\end{aligned}<br>}<br>$$</p>
+<p>由于 <code>x</code>, <code>t</code> 都是自然数, 因此可以写成 $t \ge x$. 比如 <code>t = 5</code>:</p>
+<ul>
+<li>对于 $5 + 1 &gt; x$, <code>x</code> 最大取 <code>5</code></li>
+<li>对于 $5 \ge x$, <code>x</code> 最大也取 <code>5</code></li>
+</ul>
+<p>由此可以得到 <code>x</code> 的取值范围是 $0 \le x \le t$, Haskell 实现如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">search</span> :: (<span class="hljs-type">Nat</span> -&gt; <span class="hljs-type">Nat</span>) -&gt; <span class="hljs-type">Nat</span> -&gt; [<span class="hljs-type">Nat</span>]<br><span class="hljs-title">search</span> f t = [x | x &lt;- [<span class="hljs-number">0</span>..t], f x == t]<br></code></pre></td></tr></table></figure>
+<ul>
+<li>结果只能是 empty list 或者是 singleton list</li>
+</ul>
+<p>这种每次查找一个元素的方法称为 linear search, 时间复杂度与 <code>t</code> 呈正比.</p>
+<p>可以重新实现为下面二分形式:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">search</span> :: (<span class="hljs-type">Nat</span> -&gt; <span class="hljs-type">Nat</span>) -&gt; <span class="hljs-type">Nat</span> -&gt; [<span class="hljs-type">Nat</span>]<br><span class="hljs-title">search</span> f t = seek (<span class="hljs-number">0</span>,t)<br>    <span class="hljs-keyword">where</span> seek (a,b) | a &gt; b     = []<br>                     | t &lt; f m   = seek (a,m-<span class="hljs-number">1</span>)<br>                     | t == f m  = [m]<br>                     | otherwise = seek (m+<span class="hljs-number">1</span>,b)<br>                     <span class="hljs-keyword">where</span> m = choose (a,b)<br>                           choose (a,b) = (a+b) `div` <span class="hljs-number">2</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>a &gt; b</code>, <code>a</code> 是下限, <code>b</code> 是上限, 只会有 $a \le b$, 因此这种情况找不到解</li>
+<li><code>t &lt; f m</code>, 可以由 <code>m &lt; f (m+1), m-1 &lt; f m</code>, 得到 $t \le m-1$, 再结合下限 <code>a</code>, 有 $a \le t \le m - 1$</li>
+<li><code>t == f m</code> 就是目标情况</li>
+<li><code>otherwise</code> 表明 <code>t</code> 可能在剩下的区间内, 即 $m+1 \le t \le b$</li>
+<li>其时间复杂度是 $O(logn)$</li>
+</ul>
+<p>这个实现的问题在于 <code>(0,t)</code> 这个范围太大了, 对于一些函数, 比如 $f &#x3D; 2^n$, 目标 <code>t = 1024</code> 时, <code>m = 512</code>, 则需要计算 $2^{512}$, 这是个很大的数, 会导致溢出.</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">ghci</span>&gt; search&#x27; (<span class="hljs-number">2</span>^) <span class="hljs-number">4</span><br><span class="hljs-type">Just</span> <span class="hljs-number">2</span><br><span class="hljs-title">ghci</span>&gt; search&#x27; (<span class="hljs-number">2</span>^) <span class="hljs-number">8</span><br><span class="hljs-type">Just</span> <span class="hljs-number">3</span><br><span class="hljs-title">ghci</span>&gt; search&#x27; (<span class="hljs-number">2</span>^) <span class="hljs-number">16</span><br><span class="hljs-type">Just</span> <span class="hljs-number">4</span><br><span class="hljs-title">ghci</span>&gt; search&#x27; (<span class="hljs-number">2</span>^) <span class="hljs-number">1024</span><br><span class="hljs-type">Nothing</span><br></code></pre></td></tr></table></figure>
+
+<p>可以一开始就找到这个范围, 满足: $f(a) &lt; t \le f(b)$, 即 $f(a) &lt; f(x) \le f(b)$, 此时有 $a &lt; x \le b$. 可以这样实现, 这里的思路是翻倍找区间, 注意这里找到的区间是左开右闭的:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">bound</span> :: (<span class="hljs-type">Nat</span> -&gt; <span class="hljs-type">Nat</span>) -&gt; <span class="hljs-type">Nat</span> -&gt; (<span class="hljs-type">Nat</span>, <span class="hljs-type">Int</span>)<br><span class="hljs-title">bound</span> f t = <span class="hljs-keyword">if</span> t &lt;= f <span class="hljs-number">0</span> <span class="hljs-keyword">then</span> (-<span class="hljs-number">1</span>,<span class="hljs-number">0</span>) <span class="hljs-keyword">else</span> (b `div` <span class="hljs-number">2</span>,b)<br>    <span class="hljs-keyword">where</span> b = until done (*<span class="hljs-number">2</span>) <span class="hljs-number">1</span><br>          done b = t &lt;= f b<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>t &lt;= f 0</code>, 说明 <code>t</code> 是负数, 该情况需要特殊处理, 即返回 <code>(-1,0)</code></li>
+<li>注意 <code>util done (x2) 1</code> 这部分, 上限按 <code>2</code> 的倍数增长, 直到找到一个比 <code>t</code> 大的值</li>
+<li>返回的区间是 <code>(b/2, b)</code>, 且这一定是左开右闭的: 如果左边是闭合, 说明 <code>t &lt;= f (b/2)</code> 是满足的, 如果是这样的话, <code>done b = t &lt;= f b</code> 在 <code>b/2</code> 时就会返回 <code>True</code>, <code>until</code> 就会停止了, 没有停止说明此时 <code>t &gt; f (b/2)</code></li>
+</ul>
+<p>假设经过 <code>p+1</code> 次计算找到了范围, 则有 $f(2^{p-1}) &lt; t \le f(2^p)$, 即 $2^{p-1} &lt; x \le 2^{p}$, 找到满足 $t \le f(x)$ 的最小值, 如果 <code>t == smallest</code>, 则说明存在, 否则不存在, 可以这样实现:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">search</span> :: (<span class="hljs-type">Nat</span> -&gt; <span class="hljs-type">Nat</span>) -&gt; <span class="hljs-type">Nat</span> -&gt; [<span class="hljs-type">Nat</span>]<br><span class="hljs-title">search</span> f t = <span class="hljs-keyword">if</span> f x == t<br>                <span class="hljs-keyword">then</span> [x]<br>                <span class="hljs-keyword">else</span> []<br>            <span class="hljs-keyword">where</span> x = smallest (bound f t) f t<br><br><span class="hljs-title">smallest</span> :: (<span class="hljs-type">Nat</span>, <span class="hljs-type">Int</span>) -&gt; (<span class="hljs-type">Nat</span> -&gt; <span class="hljs-type">Nat</span>) -&gt; <span class="hljs-type">Nat</span> -&gt; <span class="hljs-type">Nat</span><br><span class="hljs-title">smallest</span> (a,b) f t <br>    | a + <span class="hljs-number">1</span> == b = b<br>    | t &lt;= f m = smallest (a,m) f t<br>    | otherwise = smallest (m,b) f t<br>    <span class="hljs-keyword">where</span> m = (a + b) div <span class="hljs-number">2</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>调用 <code>smallest</code> 函数有一个假设 $f(a) &lt; t \le f(b)$, 也就是说这个区间内是一定有解的</li>
+<li><code>a + 1 == b</code> 表明此时缩减到了最小的区间, 因为这里的递归条件是左开右闭的 (前面说的假设), <code>a</code> 这个端点值无法使用, 此时只能返回 <code>b</code> (因为一定有解, 这肯定是满足条件的)</li>
+</ul>
+<h2 id="4-2-A-two-dimensional-search-problem"><a href="#4-2-A-two-dimensional-search-problem" class="headerlink" title="4.2 A two-dimensional search problem"></a>4.2 A two-dimensional search problem</h2>
                 
               </div>
             
