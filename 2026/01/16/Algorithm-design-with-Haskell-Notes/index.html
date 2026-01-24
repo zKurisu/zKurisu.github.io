@@ -28,8 +28,20 @@
 <meta property="og:image" content="http://example.com/img/haskell-two-dimensional-search-example2.png">
 <meta property="og:image" content="http://example.com/img/haskell-two-dimensional-search-example3.png">
 <meta property="og:image" content="http://example.com/img/haskell-saddleback-search-algorithm-optimise.png">
+<meta property="og:image" content="http://example.com/img/haskell-saddleback-search-algorithm-optimise.png">
+<meta property="og:image" content="http://example.com/img/haskell-cut-horizontally-two-dimension.png">
+<meta property="og:image" content="http://example.com/img/haskell-row-and-column-matrix-example.png">
+<meta property="og:image" content="http://example.com/img/haskell-two-dimensional-search-only-two-rect.png">
+<meta property="og:image" content="http://example.com/img/haskell-two-dimensional-search-rect-example2.png">
+<meta property="og:image" content="http://example.com/img/haskell-two-dimensional-search-rect-example3.png">
+<meta property="og:image" content="http://example.com/img/haskell-two-dimensional-binary-search-example.png">
+<meta property="og:image" content="http://example.com/img/haskell-binary-tree-each-layer-one-node.png">
+<meta property="og:image" content="http://example.com/img/haskell-binary-search-tree-full.png">
+<meta property="og:image" content="http://example.com/img/haskell-binary-tree-righti-rotation-example.png">
+<meta property="og:image" content="http://example.com/img/haskell-binary-tree-righti-rotation-example.png">
+<meta property="og:image" content="http://example.com/img/haskell-binary-search-tree-left-rotation.png">
 <meta property="article:published_time" content="2026-01-16T03:26:02.000Z">
-<meta property="article:modified_time" content="2026-01-23T12:56:37.651Z">
+<meta property="article:modified_time" content="2026-01-24T09:31:45.096Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/perfect-binary-tree-example.png">
@@ -443,7 +455,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          25k 字
+          33k 字
         
       </span>
     
@@ -454,7 +466,7 @@ path.outline_glyph {
         
         
         
-          205 分钟
+          273 分钟
         
       </span>
     
@@ -1042,7 +1054,7 @@ path.outline_glyph {
 <ul>
 <li>这种方法的时间复杂度是 $\Theta (t^2)$, <code>t</code> 是目标值</li>
 </ul>
-<p>下面是一个稍微改进的版本, 时间复杂度还是 $\Theta (t^2)$, 只不过会先得到满足条件的解, 在 <code>head</code>, <code>take</code> 等函数取值时, 能利用惰性求值减少一些遍历过程, 查找从左上角开始, 而非左下角:</p>
+<h3 id="优化常规解法"><a href="#优化常规解法" class="headerlink" title="优化常规解法"></a>优化常规解法</h3><p>下面是一个稍微改进的版本, 时间复杂度还是 $\Theta (t^2)$, 只不过会先得到满足条件的解, 在 <code>head</code>, <code>take</code> 等函数取值时, 能利用惰性求值减少一些遍历过程, 查找从左上角开始, 而非左下角:</p>
 <figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">search</span> f t = [ (x,y) | x &lt;- [<span class="hljs-number">0</span>..t], y &lt;- [t..<span class="hljs-number">0</span>], f (x,y) == t]<br></code></pre></td></tr></table></figure>
 
 <p>假如要应用 binary search 来优化, 首先应该把 <code>boundary</code> 信息加入到函数中, 可以定义一个辅助函数 <code>searchln</code> (ln 是 linear 的缩写), 有 <code>search f t = searchln (0,t)</code>:</p>
@@ -1075,7 +1087,228 @@ path.outline_glyph {
 </ul>
 <p><img src="/../img/haskell-saddleback-search-algorithm-optimise.png" srcset="/img/loading.gif" lazyload></p>
 <p>此时只用搜索白色部分, 阴影部分可以 skip.</p>
-<p>从 <code>(0, p)</code> 和 <code>(q, 0)</code> 开始搜索. 时间复杂度是 $\Theta(log t) + \Theta(p+q)$.</p>
+<p>从 <code>(0, p)</code> 和 <code>(q, 0)</code> 开始搜索. 时间复杂度是 $\Theta(log t) + \Theta(p+q)$. $\Theta(p+q)$ 是找到这两个点的 steps, $\Theta(log t)$ 是 saddleback search 运行的 steps.</p>
+<h3 id="divide-and-conquer-解法"><a href="#divide-and-conquer-解法" class="headerlink" title="divide and conquer 解法"></a>divide and conquer 解法</h3><p>也可以用 divide and conquer 方法从 grid 中找到满足条件的解, 需要先找到 <code>grid</code> 的中点, 模拟 binary search 在 two-dimension 中进行求解.</p>
+<ul>
+<li>假设左上角的点是 <code>(x1, y1)</code></li>
+<li>右下角的点是 <code>(x2, y2)</code></li>
+<li>中点应该是 $x &#x3D; \lfloor (x1 + x2) &#x2F; 2 \rfloor$, $y &#x3D; \lfloor (y1 + y2) &#x2F; 2 \rfloor$ (注意是向下取整, 整数除法会丢弃小数)</li>
+</ul>
+<p><img src="/../img/haskell-saddleback-search-algorithm-optimise.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>假如在中点有 $f (x,y) &#x3D; z &lt; t$, 需要增大 <code>z</code>, 因此考虑 <code>x+1</code>, 或者 <code>y+1</code>, 或者 <code>(x+1, y+1)</code>, 此时可以丢弃 “左下角” 的白色矩形部分了, 因为这部分都比中点小.</li>
+<li>假如在中点有 $f (x,y) &#x3D; z &gt; t$, 需要减小 <code>z</code>, 此时考虑 <code>x-1</code>, 或者 <code>y-1</code>, 或者 <code>(x-1, y-1)</code>, 因此可以丢弃 “右上角” 的矩形部分, 因为这部分的点都比中点大</li>
+</ul>
+<p>丢弃掉一个矩形后, 剩下的 <code>L</code> 型可以拆分为两个矩形, 假设原本矩形长宽是 <code>(m, n)</code>:</p>
+<ul>
+<li>上图是水平切割, 得到上边一个 <code>(m, n/2)</code> 的矩形和下边一个 <code>(m/2, n/2)</code> 的矩形</li>
+<li>如果是垂直切割, 会得到左边一个 <code>(m/2, n)</code> 的矩形和右边一个 <code>(m/2, n/2)</code> 的矩形</li>
+</ul>
+<p><img src="/../img/haskell-cut-horizontally-two-dimension.png" srcset="/img/loading.gif" lazyload></p>
+<p>然后可以用相同的策略在两个小矩形中 search. 这里先找到递推关系, 然后计算下时间复杂度, 看是否比之前的算法更快.</p>
+<p>考虑原矩阵为 <code>m x n</code> 大小 (注意和之前的坐标 m, n 有所不同, 前面横坐标是 m, 可以理解为 m 列, 但这里 <code>m x n</code>, <code>m</code> 描述的是行数, <code>n</code> 描述的才是列数), 用 $T(m, n)$ 表示最坏情况下找到目标时调用 <code>f</code> 的次数:</p>
+<ul>
+<li>假如 <code>m=0, n=0</code>, 由于没有元素可以查找, 因此 $T(m,n) &#x3D; 0$</li>
+<li>假如 <code>m=1</code> 或者 <code>n=1</code>, 此时退化为 one-dimension 的 binary search, 有:<ul>
+<li>$T(1, n)$, 表示 <code>1</code> 行, <code>n</code> 列</li>
+<li>$T(m, 1)$, 表示 <code>m</code> 行, <code>1</code> 列</li>
+</ul>
+</li>
+</ul>
+<p><img src="/../img/haskell-row-and-column-matrix-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>T(1, n) &#x3D; 1 + T(1, n&#x2F;2) \newline~ \newline<br>T(m, 1) &#x3D; 1 + T(m&#x2F;2, 1)<br>\end{aligned}<br>}<br>$$</p>
+<p>当 $m \ge 2, n \ge 2$ 时, 基于之前的找中点策略, 至少能够丢掉一个 $m&#x2F;2 x n&#x2F;2$ 的矩形, 假如此时做了 horizontal cut, 得到的两个矩形是:</p>
+<ul>
+<li>上方的 $m&#x2F;2 x n$</li>
+<li>下方的 $m&#x2F;2 x n&#x2F;2$</li>
+<li>此时递推关系为:</li>
+</ul>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>T(m,n) &#x3D; 1 + T(m&#x2F;2,n) + T(m&#x2F;2, n&#x2F;2)<br>\end{aligned}<br>}<br>$$</p>
+<p><code>1</code> 是找到中点之后进行判断 <code>f(x,y)</code> 与 <code>t</code> 的大小关系时, 调用了一次 <code>f</code>. $T(m&#x2F;2, n)$ 表示上方的矩形调用 <code>f</code> 的 steps, $T(m&#x2F;2, n&#x2F;2)$ 是下方矩形调用 <code>f</code> 的 steps.</p>
+<p>同理, 如果做 vertical cut, 得到的两个矩形是:</p>
+<ul>
+<li>左侧的 $m x n&#x2F;2$</li>
+<li>右侧的 $m&#x2F;2 x n&#x2F;2$</li>
+<li>此时的递推关系是:</li>
+</ul>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>T(m,n) &#x3D; 1 + T(m,n&#x2F;2) + T(m&#x2F;2,n&#x2F;2)<br>\end{aligned}<br>}<br>$$</p>
+<p>通常来说, 分割策略为:</p>
+<ul>
+<li>如果 $m \le n$, 则进行 horizontal cut</li>
+<li>如果 $m &gt; n$, 则进行 vertical cut</li>
+</ul>
+<p>解上述递推关系时, 需要一些技巧:</p>
+<ul>
+<li>假设 <code>m</code> 和 <code>n</code> 都是 <code>2</code> 的幂. 即 $m &#x3D; 2^i, n &#x3D; 2^j$</li>
+<li>定义 $U(i, j) &#x3D; T(2^i, 2^j)$, 这里我们用 $i \le j$, 即做 horizontal cut 为例子, 得到</li>
+</ul>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>U(0,j) &#x3D; j<br>U(i+1, j+1) &#x3D; 1 + U(i,j) + U(i,j+1)<br>\end{aligned}<br>}<br>$$</p>
+<p>具体求解比较繁琐 (书上以来就是假设解是多少), 这里直接给出, 可以求的 $T(m,n)$ 为 $O(n log (2m&#x2F;\sqrt{n}))$. 当 <code>m, n</code> 中其中一个远小于另一个时, 运行速度会比 saddleback search 的 $O(m+n)$ 要快.</p>
+<p>上述查找还能继续优化, 假设矩形左上角是 <code>(x1, y1)</code>, 右下角是 <code>(x2, y2)</code>, 那么矩形的大小可以表示为 <code>(y1-y2) x (x2-x1)</code>, 假设这里是 $y1-y2 \le x2-x1$, 即列数多于行数. 查找策略是:</p>
+<ul>
+<li>先找到中间行 $r &#x3D; \lfloor (y1+y2) &#x2F; 2 \rfloor$</li>
+<li>然后对这一行的 <code>x</code> 进行二分查找 <code>x = smallest (x1 - 1, x2) (\x -&gt; f (x, r)) t</code></li>
+<li>如果不存在这样的 <code>x</code>, 满足 $t \le f (x, r)$, 则一路查找到底, 也就是说最终会有 <code>x = x2</code></li>
+</ul>
+<p>之后拿返回的 <code>x</code> 和中间行来判断与 <code>t</code> 的关系:</p>
+<ul>
+<li>假如 $f (x, r) &gt; t$, 需要减小 <code>(x,r)</code>, 这里是排除法的思想, 右上角的矩阵是从 <code>(x+1, r+1)</code> 开始, 都会变大, 一定不包含 <code>t</code>. 由于还有 $f (x-1, r) &lt; t$ (因为前面找到的 <code>x</code> 就是最小满足 $f(x,r) &gt; t$ 的, 再小就不满足了), 需要增大 $f (x-1, r)$, 而 $f (x-1, r)$ 是左下矩阵的最大值, 因此也排除掉. 则接下来查找这两个 rectangles: <code>((x1, y1), (x-1, r+1))</code> 和 <code>((x, r-1), (x2, y2))</code> (正确性可以由之前排除法的方式推测)</li>
+</ul>
+<p><img src="/../img/haskell-two-dimensional-search-only-two-rect.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>假如 $f (x, r) &#x3D;&#x3D; t$, 则接下来查找 <code>((x1, y1), (x - 1, r + 1))</code> 和 <code>((x + 1, r - 1), (x2, y2))</code></li>
+</ul>
+<p><img src="/../img/haskell-two-dimensional-search-rect-example2.png" srcset="/img/loading.gif" lazyload></p>
+<p>(左上角的部分和之前是一样的, 右下角的矩形不同)</p>
+<ul>
+<li>假如 $f (x, r) &lt; t$, 则接下来只需要查找 <code>((x1, r-1), (x2, y2))</code></li>
+</ul>
+<p><img src="/../img/haskell-two-dimensional-search-rect-example3.png" srcset="/img/loading.gif" lazyload></p>
+<p>(整个下面部分矩形)</p>
+<p>该算法实现如下:</p>
+<p><img src="/../img/haskell-two-dimensional-binary-search-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>(这个方法感觉写起来相当麻烦)</p>
+<h2 id="4-3-Binary-search-trees"><a href="#4-3-Binary-search-trees" class="headerlink" title="4.3 Binary search trees"></a>4.3 Binary search trees</h2><p>Binary search tree 内部用 binary search 的规则来组织数据, 以实现高效的查找, 插入和删除操作. 其基础类型可以定义如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Tree</span> a = <span class="hljs-type">Null</span> | <span class="hljs-type">Node</span> (<span class="hljs-type">Tree</span> <span class="hljs-title">a</span>) a (<span class="hljs-type">Tree</span>)</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>一个树可以是 <code>Null</code>, 空树</li>
+<li>也可以是一个 <code>Node</code>, 包含一棵左子树, 一个 node value, 和一棵右子树</li>
+</ul>
+<p>(注意区分之前用来构造 random-access list 所用的 tree)</p>
+<p>树的 size 是其包含的 label (Node value) 的数量:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">size</span> :: <span class="hljs-type">Tree</span> a -&gt; <span class="hljs-type">Nat</span><br><span class="hljs-title">size</span> <span class="hljs-type">Null</span>         = <span class="hljs-number">0</span><br><span class="hljs-title">size</span> (<span class="hljs-type">Node</span> l x r) = <span class="hljs-number">1</span> + size l + size r<br></code></pre></td></tr></table></figure>
+
+<p>树的 value 是所有 node value 组成的 list:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">flatten</span> :: <span class="hljs-type">Tree</span> a -&gt; [a]<br><span class="hljs-title">flatten</span> <span class="hljs-type">Null</span>         = []<br><span class="hljs-title">flatten</span> (<span class="hljs-type">Node</span> l x r) = flatten l ++ [x] ++ flatten r<br></code></pre></td></tr></table></figure>
+<p>(这个需要优化)</p>
+<p>对于 binary search tree 而言, 这里 <code>flatten</code> 得到的 list 需要是单调递增的 (in strictly increasing order). 并且对于每一个 Tree, 其 label 必须大于所有左子树中的 label, 小于右子树中的 label.</p>
+<p>除了上述 binary search tree 的定义外, 还有一些变种:</p>
+<ul>
+<li>允许有重复的 labels, 此时 <code>flatten</code> 得到的 list 只要是 nondecreasing order 即可</li>
+<li>label 是 <code>record</code> (键值对), <code>flatten</code> 得到的 list 按照 <code>key</code> 的 increasing order</li>
+</ul>
+<p>下面是 label 为 record 时的 search 示例:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">search</span> :: <span class="hljs-type">Ord</span> k =&gt; (a -&gt; k) -&gt; k -&gt; <span class="hljs-type">Tree</span> a -&gt; <span class="hljs-type">Maybe</span> a<br><span class="hljs-title">search</span> key k <span class="hljs-type">Null</span> = <span class="hljs-type">Nothing</span><br><span class="hljs-title">search</span> key k (<span class="hljs-type">Node</span> l x r)<br>    | key x &lt; k  = search key k r<br>    | key x == k = <span class="hljs-type">Just</span> x<br>    | key x &gt; k  = search key k l<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>key</code> 是一个函数, 接受一个 record, 返回其 key</li>
+<li>最坏情况下, 查找所用 step 为 height of the tree</li>
+</ul>
+<p>树的 height (高度, 深度, 也就是层数) 可以这样求得:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">height</span> :: <span class="hljs-type">Tree</span> a -&gt; <span class="hljs-type">Nat</span><br><span class="hljs-title">height</span> <span class="hljs-type">Null</span> = <span class="hljs-number">0</span><br><span class="hljs-title">height</span> (<span class="hljs-type">Node</span> l _ r) = <span class="hljs-number">1</span> + max (height l) (height r)<br></code></pre></td></tr></table></figure>
+
+<p>Binary Tree 的 size 和 height 之间满足下面关系:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>h \le n &lt; 2^h \newline~ \newline<br>h \ge \lceil log(n+1) \rceil<br>\end{aligned}<br>}<br>$$</p>
+<p>下面是例子:</p>
+<ul>
+<li>最小的情况是, 每一层只有一个 Node label, 此时 <code>n = h</code>:</li>
+</ul>
+<p><img src="/../img/haskell-binary-tree-each-layer-one-node.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>最大的情况是, 每一层都填满, 此时 <code>n = 2^h - 1</code></li>
+</ul>
+<p><img src="/../img/haskell-binary-search-tree-full.png" srcset="/img/loading.gif" lazyload></p>
+<p>当 binary tree 的任意一个节点的左子树和右子树的高度相差不超过 <code>1</code> 时, 则称其为 balanced.</p>
+<p>下面用一组离散的值来构建一棵 balanced binary search tree:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">mktree</span> :: <span class="hljs-type">Ord</span> a =&gt; [a] -&gt; <span class="hljs-type">Tree</span> a<br><span class="hljs-title">mktree</span> [] = <span class="hljs-type">Null</span><br><span class="hljs-title">mktree</span> (x:xs) = <span class="hljs-type">Node</span> (mktree ys) x (mktree zs)<br>        <span class="hljs-keyword">where</span> (ys, zs) = partition (&lt;x) xs<br><br><span class="hljs-title">partition</span> :: (a -&gt; <span class="hljs-type">Bool</span>) -&gt; [a] -&gt; [a]<br><span class="hljs-title">partition</span> p xs = (filter p xs, filter (not . p) xs)<br></code></pre></td></tr></table></figure>
+<p>这种构造方法不太高效:</p>
+<ul>
+<li>最好的情况下: 每次 <code>partition</code> 刚好将长度为 <code>n</code> 的 List 分为两个长度为 <code>n/2</code> 的部分, 有 $T(n+1) &#x3D; 2T(n&#x2F;2) + \Theta(n)$, 解为 $T(n) &#x3D; \Theta(n logn)$</li>
+<li>最坏的情况下: 每次 <code>partition</code> 得到一个长度为 <code>n</code> 和一个长度为 <code>0</code> 的 List, 有 $T(n+1) &#x3D; T(n) + \Theta (n)$, 解为 $T(n+1) &#x3D; \Theta (n^2)$</li>
+</ul>
+<p>一个更高效的实现是, 将树的高度信息加入定义中:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Tree</span> a = <span class="hljs-type">Null</span> | <span class="hljs-type">Node</span> <span class="hljs-type">Nat</span> (<span class="hljs-type">Tree</span> <span class="hljs-title">a</span>) a (<span class="hljs-type">Tree</span> <span class="hljs-title">a</span>)</span><br></code></pre></td></tr></table></figure>
+
+<p>下面会利用节点的插入来构建 binary tree, 插入元素 <code>x</code> 时需要注意:</p>
+<ul>
+<li>如果 <code>x</code> 已存在, 则直接丢弃</li>
+<li>如果 <code>x</code> 不存在, 则插入到左子树或右子树</li>
+</ul>
+<p>如果直接用普通的 <code>node</code> 构造函数来拼接左右子树, 树可能不再 balance, 因此考虑设计一个更 “聪敏” 的构造函数 <code>balance</code>, 其不仅要完成节点的拼接, 还要恢复树的平衡性, 同时维护每个节点的高度信息.</p>
+<p>这里需要了解几个观察来帮助实现:</p>
+<ul>
+<li>单次插入最多让树的 height 增加 <code>1</code>. 在实现 <code>balance</code> 时, 可以先假设左右子树本身已经是平衡的, 此时插入后高度差不超过 <code>2</code></li>
+<li>基于高度差不超过 <code>2</code>, 考虑三种情况:<ul>
+<li>左右子树高度差 $\le 1$, 此时可以直接用 <code>node</code> 拼接, 无需额外平衡</li>
+<li>左子树比右子树高 <code>2</code></li>
+<li>右子树比左子树高 <code>2</code> (与上一种情况是镜像处理, 因此只用分析一种)</li>
+</ul>
+</li>
+</ul>
+<p>这里分析 “左子树比右子树高 2” 的情况, 可以记为:</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs arduino">height l = height r + <span class="hljs-number">2</span><br></code></pre></td></tr></table></figure>
+
+<p>知道左子树 <code>l</code> 比右子树 <code>r</code> 高 <code>2</code>, 此时还需要分析左子树 <code>l</code> 自身的左右子树 (<code>ll</code> 和 <code>rl</code>) 哪个更高:</p>
+<ul>
+<li><code>ll</code> 更高: $height\ rl \ge height\ ll$</li>
+<li><code>rl</code> 更高: $height\ ll &lt; height\ rl$ (与前一种情况对称)</li>
+</ul>
+<p>由于 <code>l</code> 本身是 balanced, 因此下面关系式是满足的:</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs arduino">height l = height ll + <span class="hljs-number">1</span><br>height r = height l - <span class="hljs-number">2</span> <br>         = height ll - <span class="hljs-number">1</span><br>         &lt;= height rl<br>         &lt;= height ll<br></code></pre></td></tr></table></figure>
+
+<h3 id="Right-rotation"><a href="#Right-rotation" class="headerlink" title="Right rotation"></a>Right rotation</h3><p>当 $height\ rl \ge height\ ll$ 时, 可以通过 right rotation 这个操作来重新分配高度, 让整棵树重新平衡:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">balance</span> :: <span class="hljs-type">Tree</span> a -&gt; a -&gt; <span class="hljs-type">Tree</span> a -&gt; <span class="hljs-type">Tree</span> a<br><span class="hljs-title">balance</span> l x r = rotr (node l x r)<br><br><span class="hljs-title">rotr</span> :: <span class="hljs-type">Tree</span> a -&gt; <span class="hljs-type">Tree</span> a<br><span class="hljs-title">rotr</span> (<span class="hljs-type">Node</span> _ (<span class="hljs-type">Node</span> _ ll y rl) x r) = node ll y (node rl x r)<br></code></pre></td></tr></table></figure>
+<p>(需要注意这里的 <code>balance</code> 定义是不完整的, 这里暂时没有写出比较 <code>x</code> 和 <code>y</code> 的过程, 后续完整定义会区分, <code>rotr</code> 是一个独立的动作)</p>
+<p><img src="/../img/haskell-binary-tree-righti-rotation-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>这里只考虑单纯的让 Tree right rotate, 需要明确一开始 <code>x</code> 和 <code>y</code> 的关系:</p>
+<ul>
+<li><code>y</code> 是 <code>x</code> 的左子树, 意味着 $y \le x$</li>
+<li><code>r</code> 是 <code>x</code> 的右子树, 意味着 $r \ge x$</li>
+</ul>
+<p>Right rotation 的第一步是 <code>y</code> 成为新的根节点, <code>x</code> 成为其右子树.</p>
+<p>此时需要考虑第二步, <code>y</code> 原本的右子树 <code>rl</code> 放在哪里? 由于下面关系:</p>
+<figure class="highlight llvm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs llvm">y &lt; rl &lt; <span class="hljs-keyword">x</span> &lt; r<br></code></pre></td></tr></table></figure>
+
+<p>如果要保留这个关系, 那么 <code>rl</code> 只能成为 <code>x</code> 的左子树.</p>
+<p>Right rotation 之后的树以 <code>y</code> 为 root, 此时要验证整棵树树否是 balanced, 就是递归验证 <code>y</code> 的两棵子树是否是 balanced, 即:</p>
+<figure class="highlight crmsh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs crmsh">abs (height ll - height (<span class="hljs-keyword">node</span> <span class="hljs-title">rl</span> x r)) <span class="hljs-tag">&lt;= 1</span><br></code></pre></td></tr></table></figure>
+
+<p>证明如下:</p>
+<ul>
+<li>根据 <code>height</code> 的定义, 树的 height 等于其左右子树高度最大值加一, 因此: <code>height (node rl x r) = max (height rl) (height r) + 1</code></li>
+<li>已知 $height\ r \le height\ rl$ 以及 $height\ ll - 1 \le height\ rl \le height\ ll$ (后者说明 <code>ll</code> 和 <code>rl</code> 的 height 相差 <code>1</code> 以内)</li>
+</ul>
+<figure class="highlight excel"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs excel">   <span class="hljs-built_in">abs</span> (height ll - height (node rl x r))<br>=  <span class="hljs-built_in">abs</span> (height ll - <span class="hljs-built_in">max</span> (height rl) (height r) - <span class="hljs-number">1</span>)<br>=  <span class="hljs-built_in">abs</span> (height ll - height rl - <span class="hljs-number">1</span>)<br>&lt;= <span class="hljs-number">1</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="Left-rotation"><a href="#Left-rotation" class="headerlink" title="Left rotation"></a>Left rotation</h3><p>Left rotation 与 right rotation 是镜像操作, 因此, 下图从右边到左边就是:<br><img src="/../img/haskell-binary-tree-righti-rotation-example.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>将 <code>x</code> 上提, <code>y</code> 变成 <code>x</code> 的左子树, 此时可以根据这个关系: <code>ll &lt; y &lt; rl &lt; x</code>, 将 <code>x</code> 原来的左子树变为 <code>y</code> 的右子树</li>
+</ul>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">rotl</span> (<span class="hljs-type">Node</span> ll y (<span class="hljs-type">Node</span> lrl z rrl)) = node (node ll y lrl) z rrl<br></code></pre></td></tr></table></figure>
+
+<p>若考虑 $height\ ll &lt; height\ rl$ 的情况, 由于 <code>l</code> 是 balanced, 能得到:</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs arduino">height ll + <span class="hljs-number">1</span> = height rl<br></code></pre></td></tr></table></figure>
+<p>(<code>ll</code> 和 <code>rl</code> 的 height 要么相等要么相差 <code>1</code>, 由于有关系 <code>height ll &lt; height rl</code>, 因此得到这个等式)</p>
+<p>下面关系式也能满足:</p>
+<figure class="highlight maxima"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs maxima"><span class="hljs-built_in">height</span> l = <span class="hljs-built_in">height</span> r + <span class="hljs-number">2</span><br><span class="hljs-built_in">height</span> l = <span class="hljs-built_in">height</span> rl + <span class="hljs-number">1</span><br><br><span class="hljs-built_in">height</span> r = <span class="hljs-built_in">height</span> l - <span class="hljs-number">2</span><br>         = <span class="hljs-built_in">height</span> rl - <span class="hljs-number">1</span><br>         = <span class="hljs-built_in">height</span> ll<br>         = <span class="hljs-built_in">max</span> (<span class="hljs-built_in">height</span> lrl) (<span class="hljs-built_in">height</span> rrl)<br></code></pre></td></tr></table></figure>
+
+<p>此时通过先对 <code>l</code> (下图中的 <code>y</code>) 进行 left rotation, 再对整体 (下图中的 <code>x</code>) right rotation 操作来重新分配高度, 让整棵树重新平衡:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">balance</span> l x r = rotr (node (rotl l) x r)<br></code></pre></td></tr></table></figure>
+
+<p><img src="/../img/haskell-binary-search-tree-left-rotation.png" srcset="/img/loading.gif" lazyload></p>
+<p>此时需要证明新的树 <code>z</code> 是 balanced, 即证明:</p>
+<figure class="highlight crmsh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs crmsh">abs (height (<span class="hljs-keyword">node</span> <span class="hljs-title">ll</span> y lrl) - height (<span class="hljs-keyword">node</span> <span class="hljs-title">rrl</span> x r)) <span class="hljs-tag">&lt;= 1</span><br></code></pre></td></tr></table></figure>
+
+<p>证明如下:</p>
+<figure class="highlight excel"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs excel">  <span class="hljs-built_in">abs</span> (height (node ll y lrl) - height (node rrl x r))<br>= <span class="hljs-built_in">abs</span> (<span class="hljs-built_in">max</span> (height ll) (height lrl) - <span class="hljs-built_in">max</span> (height rrl) (height r))<br>= <span class="hljs-built_in">abs</span> (<span class="hljs-built_in">max</span> (height ll) (height lrl) - height r)<br>= <span class="hljs-built_in">abs</span> (height ll - height r)<br>= <span class="hljs-number">0</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="Balance"><a href="#Balance" class="headerlink" title="Balance"></a>Balance</h3><p>下面是 <code>balance</code> 的完整定义:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">bias</span> :: <span class="hljs-type">Tree</span> a -&gt; <span class="hljs-type">Int</span><br><span class="hljs-title">bias</span> (<span class="hljs-type">Node</span> _ l x r) = height l - height r<br><br><span class="hljs-title">balance</span> :: <span class="hljs-type">Tree</span> a -&gt; a -&gt; <span class="hljs-type">Tree</span> -&gt; <span class="hljs-type">Tree</span> a<br><span class="hljs-title">balance</span> t1 x t2<br>    | abs (h1 - h2) &lt;= <span class="hljs-number">1</span> = node t1 x t2<br>    | h1 == h2 + <span class="hljs-number">2</span>       = rotateR t1 x t2<br>    | h2 == h1 + <span class="hljs-number">2</span>       = rotateL t1 x t2<br>    <span class="hljs-keyword">where</span> h1 = height t1<br>          h2 = height t2<br>          rotateR t1 x t2 = <span class="hljs-keyword">if</span> <span class="hljs-number">0</span> &lt;= bias t1 <br>                                <span class="hljs-keyword">then</span> rotr (node t1 x t2)<br>                                <span class="hljs-keyword">else</span> rotr (node (rotl t1) x t2)<br>          rotateL t1 x t2 = <span class="hljs-keyword">if</span> bias t2 &lt;= <span class="hljs-number">0</span><br>                                <span class="hljs-keyword">then</span> rotl (node t1 x t2)<br>                                <span class="hljs-keyword">else</span> rotl (node t1 x (rotr t2))<br></code></pre></td></tr></table></figure>
+
+<p>因此可以这样构建:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">height</span> :: <span class="hljs-type">Tree</span> a -&gt; <span class="hljs-type">Nat</span><br><span class="hljs-title">height</span> <span class="hljs-type">Null</span>         = <span class="hljs-number">0</span><br><span class="hljs-title">height</span> <span class="hljs-type">Node</span> h _ _ _ = h<br><br><span class="hljs-title">node</span> :: <span class="hljs-type">Tree</span> a -&gt; a -&gt; <span class="hljs-type">Tree</span> a -&gt; <span class="hljs-type">Tree</span> a<br><span class="hljs-title">node</span> l x r = <span class="hljs-type">Node</span> h l x r<br>    <span class="hljs-keyword">where</span> h = <span class="hljs-number">1</span> + max (height l) (height r)<br><br><span class="hljs-title">mktree</span> :: <span class="hljs-type">Ord</span> a =&gt; [a] -&gt; <span class="hljs-type">Tree</span> a<br><span class="hljs-title">mktree</span> = foldr insert <span class="hljs-type">Null</span><br><br><span class="hljs-title">insert</span> :: a -&gt; <span class="hljs-type">Tree</span> a -&gt; <span class="hljs-type">Tree</span> a<br><span class="hljs-title">insert</span> x <span class="hljs-type">Null</span> = node <span class="hljs-type">Null</span> x <span class="hljs-type">Null</span><br><span class="hljs-title">insert</span> x (<span class="hljs-type">Node</span> h l y r)<br>    | x &lt; y  = balance (insert x l) y r<br>    | x == y = <span class="hljs-type">Node</span> h l y r<br>    | y &lt; x  = balance l y (insert x r)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>x &lt; y</code>, 需要把 <code>x</code> 插入到当前节点的左边, 插入之后需要 <code>balance</code></li>
+<li><code>x == y</code>, 此时不需要进行插入, 因此返回当前节点</li>
+<li><code>y &lt; x</code>, 需要把节点插入到当前节点的右边, 插入后也要 <code>balance</code></li>
+</ul>
+<h3 id="gbalance"><a href="#gbalance" class="headerlink" title="gbalance"></a>gbalance</h3><p>上述 <code>balance</code> 函数无法处理高度差超过 <code>2</code> 的两棵树的情况, 因此下面设计一个 <code>gbalance</code> 函数, 能够处理任意高度差的两棵树的平衡.</p>
+<ul>
+<li>假设有两棵 balanced binary search tree <code>t1</code> 和 <code>t2</code></li>
+<li>假设第一棵树 <code>t1</code> 的高度 <code>h1</code> 比第二棵树 <code>t2</code> 的高度 <code>h2</code> 大 <code>2</code> 以上, 即 $h1 &gt; h2 + 2$.</li>
+</ul>
+<p>一定能在 <code>t1</code> 的右子树链 (right spine) 上找到一个子树 <code>r</code>, 使得:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>0 \le height\ r - height\ t2 \le 1<br>\end{aligned}<br>}<br>$$</p>
+<p>因为 <code>t1</code> 的高度比 <code>t2</code> 至少大 <code>2</code>, 用 <code>r</code> 表示 <code>t1</code> 的右子树, <code>rr</code> 表示 <code>t1</code> 的右子树的右子树, 以此类推, 可以有下面关系:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>height\ t1 - 2 &amp;&gt; height\ t2 \newline~ \newline<br>height\ t1 &amp;&#x3D; height\ r + 1 \newline~ \newline<br>height\ r - 1 &amp;&gt; height\ t2 \newline~ \newline<br>height\ rr &amp;&gt; height\ t2 \newline~ \newline<br>…<br>\end{aligned}<br>}<br>$$</p>
+<p>有:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">balanceR</span> :: <span class="hljs-type">Set</span> a -&gt; a -&gt; <span class="hljs-type">Set</span> a -&gt; <span class="hljs-type">Set</span> a<br><span class="hljs-title">balanceR</span> (<span class="hljs-type">Node</span> _ l y r) x t2 = <span class="hljs-keyword">if</span> height r &gt;= height t2 + <span class="hljs-number">2</span><br>                               <span class="hljs-keyword">then</span> balance l y (balanceR r x t2)<br>                               <span class="hljs-keyword">else</span> balance l y (node r x t2)<br><br><span class="hljs-title">gbalance</span> :: <span class="hljs-type">Set</span> a -&gt; a -&gt; <span class="hljs-type">Set</span> a -&gt; <span class="hljs-type">Set</span> a<br><span class="hljs-title">gbalance</span> t1 x t2<br>    | abs (h1 - h2) &lt;= <span class="hljs-number">2</span> = balance  t1 x t2<br>    | h1 &gt; h2 + <span class="hljs-number">2</span>        = balanceR t1 x t2<br>    | h1 + <span class="hljs-number">2</span> &lt; h2        = balanceL t1 x t2<br>    <span class="hljs-keyword">where</span> h1 = height t1<br>          h2 = height t2<br></code></pre></td></tr></table></figure>
 
                 
               </div>
@@ -1156,6 +1389,12 @@ path.outline_glyph {
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2026/01/24/Hello-Algo-Notes/" title="Hello-Algo-Notes">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Hello-Algo-Notes</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">
