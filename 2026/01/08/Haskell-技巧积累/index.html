@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="Recursive and Inductive definition所有的 Inductive definition 都是递归的, 但并非所有 recursive definition 都是归纳的. Recursive definition 定义为: 一个函数在定义中直接或间接地调用自身, 目的是将大问题分解为小问题, 但不保证终止, 比如: 123456factorial 0 &#x3D; 1factor">
+    <meta name="description" content="unfoldr 函数foldr 是消耗一个列表, 而 unfoldr 是生成一个列表, 两者的函数签名对比如下: 123foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; [a] -&gt; bunfoldr :: (b -&gt; Maybe (a, b)) -&gt; b -&gt; [a]  (b -&gt; Maybe (a. b)) 是生成函数 b 是种">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Haskell-技巧积累">
 <meta property="og:url" content="http://example.com/2026/01/08/Haskell-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="Recursive and Inductive definition所有的 Inductive definition 都是递归的, 但并非所有 recursive definition 都是归纳的. Recursive definition 定义为: 一个函数在定义中直接或间接地调用自身, 目的是将大问题分解为小问题, 但不保证终止, 比如: 123456factorial 0 &#x3D; 1factor">
+<meta property="og:description" content="unfoldr 函数foldr 是消耗一个列表, 而 unfoldr 是生成一个列表, 两者的函数签名对比如下: 123foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; [a] -&gt; bunfoldr :: (b -&gt; Maybe (a, b)) -&gt; b -&gt; [a]  (b -&gt; Maybe (a. b)) 是生成函数 b 是种">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-01-08T12:44:15.000Z">
-<meta property="article:modified_time" content="2026-01-17T06:17:36.793Z">
+<meta property="article:modified_time" content="2026-02-08T13:35:31.661Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -437,7 +437,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          5.4k 字
+          6.1k 字
         
       </span>
     
@@ -448,7 +448,7 @@ path.outline_glyph {
         
         
         
-          46 分钟
+          52 分钟
         
       </span>
     
@@ -491,7 +491,23 @@ path.outline_glyph {
             
               <div class="markdown-body">
                 
-                <h1 id="Recursive-and-Inductive-definition"><a href="#Recursive-and-Inductive-definition" class="headerlink" title="Recursive and Inductive definition"></a>Recursive and Inductive definition</h1><p>所有的 Inductive definition 都是递归的, 但并非所有 recursive definition 都是归纳的.</p>
+                <h1 id="unfoldr-函数"><a href="#unfoldr-函数" class="headerlink" title="unfoldr 函数"></a>unfoldr 函数</h1><p><code>foldr</code> 是消耗一个列表, 而 <code>unfoldr</code> 是生成一个列表, 两者的函数签名对比如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">foldr</span> :: (a -&gt; b -&gt; b) -&gt; b -&gt; [a] -&gt; b<br><br><span class="hljs-title">unfoldr</span> :: (b -&gt; <span class="hljs-type">Maybe</span> (a, b)) -&gt; b -&gt; [a]<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>(b -&gt; Maybe (a. b))</code> 是生成函数</li>
+<li><code>b</code> 是种子值</li>
+</ul>
+<p>相当于从种子 <code>b</code> 生成列表 <code>[a]</code>.</p>
+<p><code>unfoldr</code> 在 <code>Data.List</code> 中的实现如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">unfoldr</span> :: (b -&gt; <span class="hljs-type">Maybe</span> (a, b)) -&gt; b -&gt; [a]<br><span class="hljs-title">unfoldr</span> f b = <span class="hljs-keyword">case</span> f b <span class="hljs-keyword">of</span><br>  <span class="hljs-type">Nothing</span>      -&gt; []<br>  <span class="hljs-type">Just</span> (a, b&#x27;) -&gt; a : unfoldr f b&#x27;<br></code></pre></td></tr></table></figure>
+
+<p>下面有几个示例.</p>
+<h2 id="生成斐波那契数列"><a href="#生成斐波那契数列" class="headerlink" title="生成斐波那契数列"></a>生成斐波那契数列</h2><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">fib</span> :: <span class="hljs-type">Int</span> -&gt; [<span class="hljs-type">Int</span>]<br><span class="hljs-title">fib</span> n = unfoldr fib&#x27; (n, (<span class="hljs-number">0</span>, <span class="hljs-number">1</span>))<br>  <span class="hljs-keyword">where</span><br>    fib&#x27; :: (<span class="hljs-type">Int</span>, (<span class="hljs-type">Int</span>, <span class="hljs-type">Int</span>)) -&gt; <span class="hljs-type">Maybe</span> (<span class="hljs-type">Int</span>, (<span class="hljs-type">Int</span>, (<span class="hljs-type">Int</span>, <span class="hljs-type">Int</span>)))<br>    fib&#x27; (n, (a, b))<br>      | n &lt;= <span class="hljs-number">0</span> = <span class="hljs-type">Nothing</span><br>      | otherwise = <span class="hljs-type">Just</span> (a, (n-<span class="hljs-number">1</span>, (b, a+b)))<br></code></pre></td></tr></table></figure>
+
+<h2 id="将堆转为列表"><a href="#将堆转为列表" class="headerlink" title="将堆转为列表"></a>将堆转为列表</h2><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">popMin</span> :: <span class="hljs-type">Ord</span> a =&gt; <span class="hljs-type">LeftistHeap</span> a -&gt; <span class="hljs-type">Maybe</span> (a, <span class="hljs-type">LeftistHeap</span> a)<br><span class="hljs-title">popMin</span> <span class="hljs-type">Empty</span> = <span class="hljs-type">Nothing</span><br><span class="hljs-title">popMin</span> (<span class="hljs-type">Node</span> _ x left right) = <span class="hljs-type">Just</span> (x, merge left right)<br><br><span class="hljs-title">toList</span> :: <span class="hljs-type">Ord</span> a =&gt; <span class="hljs-type">LeftistHeap</span> a -&gt; [a]<br><span class="hljs-title">toList</span> = unfoldr popMin<br></code></pre></td></tr></table></figure>
+
+
+<h1 id="Recursive-and-Inductive-definition"><a href="#Recursive-and-Inductive-definition" class="headerlink" title="Recursive and Inductive definition"></a>Recursive and Inductive definition</h1><p>所有的 Inductive definition 都是递归的, 但并非所有 recursive definition 都是归纳的.</p>
 <p>Recursive definition 定义为: 一个函数在定义中直接或间接地调用自身, 目的是将大问题分解为小问题, 但不保证终止, 比如:</p>
 <figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">factorial</span> <span class="hljs-number">0</span> = <span class="hljs-number">1</span><br><span class="hljs-title">factorial</span> n = n * factorial (n - <span class="hljs-number">1</span>)   <span class="hljs-comment">-- 递归调用 factorial (n-1)</span><br><br><span class="hljs-title">ack</span> <span class="hljs-number">0</span> n = n + <span class="hljs-number">1</span><br><span class="hljs-title">ack</span> m <span class="hljs-number">0</span> = ack (m - <span class="hljs-number">1</span>) <span class="hljs-number">1</span><br><span class="hljs-title">ack</span> m n = ack (m - <span class="hljs-number">1</span>) (ack m (n - <span class="hljs-number">1</span>))  <span class="hljs-comment">-- 阿克曼函数，递归但非结构递归</span><br></code></pre></td></tr></table></figure>
 <ul>
