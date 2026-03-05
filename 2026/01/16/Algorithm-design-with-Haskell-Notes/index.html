@@ -40,8 +40,12 @@
 <meta property="og:image" content="http://example.com/img/haskell-binary-tree-righti-rotation-example.png">
 <meta property="og:image" content="http://example.com/img/haskell-binary-tree-righti-rotation-example.png">
 <meta property="og:image" content="http://example.com/img/haskell-binary-search-tree-left-rotation.png">
+<meta property="og:image" content="http://example.com/img/deleteMin-function-example.jpg">
+<meta property="og:image" content="http://example.com/img/algo-in-haskell-pieces-example1.png">
+<meta property="og:image" content="http://example.com/img/algo-in-haskell-pieces-example2.png">
+<meta property="og:image" content="http://example.com/img/algo-in-haskell-pieces-example3.png">
 <meta property="article:published_time" content="2026-01-16T03:26:02.000Z">
-<meta property="article:modified_time" content="2026-02-11T14:34:05.253Z">
+<meta property="article:modified_time" content="2026-03-05T02:49:46.519Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/perfect-binary-tree-example.png">
@@ -455,7 +459,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          33k 字
+          48k 字
         
       </span>
     
@@ -466,7 +470,7 @@ path.outline_glyph {
         
         
         
-          273 分钟
+          401 分钟
         
       </span>
     
@@ -521,6 +525,7 @@ path.outline_glyph {
 <li>对任意 <code>x</code> 和 <code>y</code>, 先用 <code>f</code> 组合 <code>x</code> 和 <code>y</code>, 再用 <code>h</code> 处理</li>
 <li>等价于先用 <code>h</code> 处理 <code>y</code>, 再用新的组合函数 <code>g</code> 来组合 <code>x</code> 和 <code>h y</code></li>
 </ul>
+<p>简单来说, <code>h</code> 这个函数原本是作用在最终的累积值上的, 而这个累积值是一个列表. 优化思路就是让 <code>h</code> 先作用在初始的累积值上, 然后用另一个函数 <code>g</code> 达到让 <code>h</code> 作用在最终累积值上一样的效果.</p>
 <p>那么就有:</p>
 <figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">h</span> (foldr f e xs) = foldr g (h e) xs<br></code></pre></td></tr></table></figure>
 <ul>
@@ -1042,7 +1047,10 @@ path.outline_glyph {
 <ul>
 <li>调用 <code>smallest</code> 函数有一个假设 $f(a) &lt; t \le f(b)$, 也就是说这个区间内是一定有解的</li>
 <li><code>a + 1 == b</code> 表明此时缩减到了最小的区间, 因为这里的递归条件是左开右闭的 (前面说的假设), <code>a</code> 这个端点值无法使用, 此时只能返回 <code>b</code> (因为一定有解, 这肯定是满足条件的)</li>
+<li>注意, <code>smallest</code> 每次调用都会执行 $log(b-a)$ 次来锁定一个解, 不会提前终止</li>
+<li>如果范围内没有解, 那么返回值会是最接近的且比解大的值, 除非所有值都小于解. 因为解总是在 <code>a~b</code> 之间, 而最终会取上界返回</li>
 </ul>
+<p>这种二分的含义时, 每次减少一半输入, 最终一定会只剩下一个输入, 判定该输入是否是合法解就行: 如果合法, 就是要找的解; 如果不合法, 则无解.</p>
 <h2 id="4-2-A-two-dimensional-search-problem"><a href="#4-2-A-two-dimensional-search-problem" class="headerlink" title="4.2 A two-dimensional search problem"></a>4.2 A two-dimensional search problem</h2><p>第二个示例问题是:</p>
 <ul>
 <li>给定一个函数 <code>f :: [(Nat, Nat)] -&gt; Nat -&gt; [(Nat, Nat)]</code>, 输入关联列表, 返回满足 <code>f(x,y) = t</code> 的关联列表. <code>(x,y)</code> 是一个坐标, <code>f(x,y)</code> 对应坐标的值</li>
@@ -1057,10 +1065,14 @@ path.outline_glyph {
 </ul>
 <h3 id="优化常规解法"><a href="#优化常规解法" class="headerlink" title="优化常规解法"></a>优化常规解法</h3><p>下面是一个稍微改进的版本, 时间复杂度还是 $\Theta (t^2)$, 只不过会先得到满足条件的解, 在 <code>head</code>, <code>take</code> 等函数取值时, 能利用惰性求值减少一些遍历过程, 查找从左上角开始, 而非左下角:</p>
 <figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">search</span> f t = [ (x,y) | x &lt;- [<span class="hljs-number">0</span>..t], y &lt;- [t..<span class="hljs-number">0</span>], f (x,y) == t]<br></code></pre></td></tr></table></figure>
-
-<p>假如要应用 binary search 来优化, 首先应该把 <code>boundary</code> 信息加入到函数中, 可以定义一个辅助函数 <code>searchln</code> (ln 是 linear 的缩写), 有 <code>search f t = searchln (0,t)</code>:</p>
+<ul>
+<li>这个主要是借助了单调性, 从左上角开始查找, <code>y</code> 方向上的值是最大的, 比如在 <code>y==10</code> 的位置找到了解, 那么同一列中 <code>y &lt;- [0..9]</code> 部分肯定不会有解了</li>
+</ul>
+<p>一个优化方法是跳过部分一定不会有解的搜索空间, 可以定义一个辅助函数 <code>searchln</code> (ln 是 linear 的缩写), 有 <code>search f t = searchln (0,t)</code>, 表示从 <code>(0,t)</code> 这个点开始进行线性查找, 假设 <code>(a,b)</code> 是左上角的点, 因此可以这样定义:</p>
 <figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">searchln</span> (a,b) f t = [ (x,y) | x &lt;- [a..t], y &lt;- [b..<span class="hljs-number">0</span>], t == f (x,y) ]<br></code></pre></td></tr></table></figure>
-
+<ul>
+<li>对于左上角的点而言, <code>a</code> 是横坐标最小值, 而 <code>b</code> 是纵坐标最大值</li>
+</ul>
 <p>完整的定义为:</p>
 <figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">search</span> f t = searchln (<span class="hljs-number">0</span>,t)<br>    <span class="hljs-keyword">where</span> searchln (x,y) | x &gt; t || y &lt; <span class="hljs-number">0</span> = [] <span class="hljs-comment">-- x 不能大于 t, y 不能小于 0</span><br>                         | z &lt; t          = searchln (x+<span class="hljs-number">1</span>, y)<br>                         | z == t         = (x,y):searchln (x+<span class="hljs-number">1</span>, y-<span class="hljs-number">1</span>)<br>                         | z &gt; t          = searchln (x,y-<span class="hljs-number">1</span>)<br>                         <span class="hljs-keyword">where</span> z = f (x,y)<br></code></pre></td></tr></table></figure>
 <ul>
@@ -1088,7 +1100,7 @@ path.outline_glyph {
 </ul>
 <p><img src="/../img/haskell-saddleback-search-algorithm-optimise.png" srcset="/img/loading.gif" lazyload></p>
 <p>此时只用搜索白色部分, 阴影部分可以 skip.</p>
-<p>从 <code>(0, p)</code> 和 <code>(q, 0)</code> 开始搜索. 时间复杂度是 $\Theta(log t) + \Theta(p+q)$. $\Theta(p+q)$ 是找到这两个点的 steps, $\Theta(log t)$ 是 saddleback search 运行的 steps.</p>
+<p>从 <code>(0, p)</code> 开始搜索, 到 <code>(q, 0)</code> 结束搜索. 时间复杂度是 $\Theta(log t) + \Theta(p+q)$. $\Theta(p+q)$ 是找到这两个点的 steps, $\Theta(log t)$ 是 saddleback search 运行的 steps.</p>
 <h3 id="divide-and-conquer-解法"><a href="#divide-and-conquer-解法" class="headerlink" title="divide and conquer 解法"></a>divide and conquer 解法</h3><p>也可以用 divide and conquer 方法从 grid 中找到满足条件的解, 需要先找到 <code>grid</code> 的中点, 模拟 binary search 在 two-dimension 中进行求解.</p>
 <ul>
 <li>假设左上角的点是 <code>(x1, y1)</code></li>
@@ -1181,7 +1193,7 @@ path.outline_glyph {
 
 <p>树的 value 是所有 node value 组成的 list:</p>
 <figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">flatten</span> :: <span class="hljs-type">Tree</span> a -&gt; [a]<br><span class="hljs-title">flatten</span> <span class="hljs-type">Null</span>         = []<br><span class="hljs-title">flatten</span> (<span class="hljs-type">Node</span> l x r) = flatten l ++ [x] ++ flatten r<br></code></pre></td></tr></table></figure>
-<p>(这个需要优化)</p>
+<p>(这个需要优化, 书中把作为了一个练习, 更好的方式是用 accumulating parameter)</p>
 <p>对于 binary search tree 而言, 这里 <code>flatten</code> 得到的 list 需要是单调递增的 (in strictly increasing order). 并且对于每一个 Tree, 其 label 必须大于所有左子树中的 label, 小于右子树中的 label.</p>
 <p>除了上述 binary search tree 的定义外, 还有一些变种:</p>
 <ul>
@@ -1192,9 +1204,10 @@ path.outline_glyph {
 <figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">search</span> :: <span class="hljs-type">Ord</span> k =&gt; (a -&gt; k) -&gt; k -&gt; <span class="hljs-type">Tree</span> a -&gt; <span class="hljs-type">Maybe</span> a<br><span class="hljs-title">search</span> key k <span class="hljs-type">Null</span> = <span class="hljs-type">Nothing</span><br><span class="hljs-title">search</span> key k (<span class="hljs-type">Node</span> l x r)<br>    | key x &lt; k  = search key k r<br>    | key x == k = <span class="hljs-type">Just</span> x<br>    | key x &gt; k  = search key k l<br></code></pre></td></tr></table></figure>
 <ul>
 <li><code>key</code> 是一个函数, 接受一个 record, 返回其 key</li>
-<li>最坏情况下, 查找所用 step 为 height of the tree</li>
+<li><code>record</code> 从 <code>Tree</code> 中取得</li>
+<li>最坏情况下, 查找所用 step 为 height of the tree (毕竟每次查找相当于往下走一层)</li>
 </ul>
-<p>树的 height (高度, 深度, 也就是层数) 可以这样求得:</p>
+<p>树的 height (高度, 也就是根节点到叶节点的最远距离) 可以这样求得:</p>
 <figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">height</span> :: <span class="hljs-type">Tree</span> a -&gt; <span class="hljs-type">Nat</span><br><span class="hljs-title">height</span> <span class="hljs-type">Null</span> = <span class="hljs-number">0</span><br><span class="hljs-title">height</span> (<span class="hljs-type">Node</span> l _ r) = <span class="hljs-number">1</span> + max (height l) (height r)<br></code></pre></td></tr></table></figure>
 
 <p>Binary Tree 的 size 和 height 之间满足下面关系:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>h \le n &lt; 2^h \newline~ \newline<br>h \ge \lceil log(n+1) \rceil<br>\end{aligned}<br>}<br>$$</p>
@@ -1207,7 +1220,37 @@ path.outline_glyph {
 <li>最大的情况是, 每一层都填满, 此时 <code>n = 2^h - 1</code></li>
 </ul>
 <p><img src="/../img/haskell-binary-search-tree-full.png" srcset="/img/loading.gif" lazyload></p>
+<p>对 $n \le 2^h - 1$ 求 <code>log</code>:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>n \le 2^h - 1 \newline~ \newline<br>n + 1 \le 2^h \newline~ \newline<br>log_2 (n+1) \le h<br>\end{aligned}<br>}<br>$$</p>
+<p>这个就是 <code>h</code> 的下限值与节点数 <code>n</code> 的关系.</p>
 <p>当 binary tree 的任意一个节点的左子树和右子树的高度相差不超过 <code>1</code> 时, 则称其为 balanced.</p>
+<p>对于一个 balanced binary tree, 其 height 往往很小, 满足下面式子:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>h \le 1.4404 log(n+1) + \Theta (1)<br>\end{aligned}<br>}<br>$$</p>
+<p>定义树的 balance 性质, 就是为了描述一种 height 很小的树.</p>
+<p>证明上述公式的思路很巧妙, 用数学归纳法推导出的. 用反向定义进行逻辑转换:</p>
+<ul>
+<li>直接问题: 给定节点数 <code>n</code>, 求最大高度 $H(n)$</li>
+<li>反向问题: 给定高度 <code>h</code>, 求最少节点数 $S(h)$</li>
+<li>逻辑转换的思路: <ul>
+<li>如果节点数量为 <code>n</code> 的树最大高度为 $H(n)$, 将这个高度代入 <code>S(..)</code>, 得 $S(H(n))$, 表示到达高度 $H(n)$ 所需的最小节点数. 根据这个最小就有: $S(H(n)) \le n$</li>
+</ul>
+</li>
+</ul>
+<p>得到这个不等式的好处在于, 只要知道了 $S(h)$ 的表达式, 就可以用 $S(h)$ 的反函数 $S^{-1}(h)$ 来推出 $H(n)$ 的不等式了: $H(n) \le S^{-1}(n)$.</p>
+<p>为了让树的 height 最大, 并且满足 AVL 平衡的特性, 则结构必须为:</p>
+<ul>
+<li>一个子树高度为 <code>h - 1</code> (h 是父节点的 height)</li>
+<li>另一个子树高度为 <code>h - 2</code></li>
+</ul>
+<p>这就形成了一个递推公式:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>S(h) &#x3D; S(h - 1) + S(h - 2) + 1<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>求高度为 h 的父树所需的最小节点数, 等价于求高度分别为 <code>h - 1</code> 和 <code>h - 2</code> 的子树之和, 再加上一个父节点</li>
+</ul>
+<p>这个公式与 Fibonacci 非常相似, 可以推出下面式子:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>S(h) &#x3D; fib(h + 2) - 1<br>\end{aligned}<br>}<br>$$<br>(可以验证)</p>
+<p>之后会利用 Fibonacci 的通项公式来求解 (这部分知道就行).</p>
+<p>上述部分都是为了说明一件事: AVL 树的 height 很小.</p>
 <p>下面用一组离散的值来构建一棵 balanced binary search tree:</p>
 <figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">mktree</span> :: <span class="hljs-type">Ord</span> a =&gt; [a] -&gt; <span class="hljs-type">Tree</span> a<br><span class="hljs-title">mktree</span> [] = <span class="hljs-type">Null</span><br><span class="hljs-title">mktree</span> (x:xs) = <span class="hljs-type">Node</span> (mktree ys) x (mktree zs)<br>        <span class="hljs-keyword">where</span> (ys, zs) = partition (&lt;x) xs<br><br><span class="hljs-title">partition</span> :: (a -&gt; <span class="hljs-type">Bool</span>) -&gt; [a] -&gt; [a]<br><span class="hljs-title">partition</span> p xs = (filter p xs, filter (not . p) xs)<br></code></pre></td></tr></table></figure>
 <p>这种构造方法不太高效:</p>
@@ -1218,17 +1261,27 @@ path.outline_glyph {
 <p>一个更高效的实现是, 将树的高度信息加入定义中:</p>
 <figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Tree</span> a = <span class="hljs-type">Null</span> | <span class="hljs-type">Node</span> <span class="hljs-type">Nat</span> (<span class="hljs-type">Tree</span> <span class="hljs-title">a</span>) a (<span class="hljs-type">Tree</span> <span class="hljs-title">a</span>)</span><br></code></pre></td></tr></table></figure>
 
-<p>下面会利用节点的插入来构建 binary tree, 插入元素 <code>x</code> 时需要注意:</p>
+<p>获取高度的函数变为:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">height</span> :: <span class="hljs-type">Tree</span> a -&gt; <span class="hljs-type">Nat</span><br><span class="hljs-title">height</span> <span class="hljs-type">Null</span>           = <span class="hljs-number">0</span><br><span class="hljs-title">height</span> (<span class="hljs-type">Node</span> h _ _ _) = h<br></code></pre></td></tr></table></figure>
+
+<p>直接利用两个子树和节点值来构造一个 node 可以这样实现:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">node</span> :: <span class="hljs-type">Tree</span> a -&gt; a -&gt; <span class="hljs-type">Tree</span> a -&gt; <span class="hljs-type">Tree</span> a<br><span class="hljs-title">node</span> l x r = <span class="hljs-type">Node</span> h l x r<br>    <span class="hljs-keyword">where</span> h = <span class="hljs-number">1</span> + max (height l) (height r)<br></code></pre></td></tr></table></figure>
+
+<p>接下来, 从 List 构造一棵 binary search tree 可以这样实现:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">mktree</span> :: <span class="hljs-type">Ord</span> a =&gt; [a] -&gt; <span class="hljs-type">Tree</span> a<br><span class="hljs-title">mktree</span> = foldr insert <span class="hljs-type">Null</span><br><br><span class="hljs-title">insert</span> :: a -&gt; <span class="hljs-type">Tree</span> a -&gt; <span class="hljs-type">Tree</span> a<br><span class="hljs-title">insert</span> x <span class="hljs-type">Null</span> = <span class="hljs-type">Node</span> <span class="hljs-number">1</span> <span class="hljs-type">Null</span> x <span class="hljs-type">Null</span><br><span class="hljs-title">insert</span> x (<span class="hljs-type">Node</span> h l y r)<br>    | x &lt; y  = balance (insert x l) y r<br>    | x == y = <span class="hljs-type">Node</span> h l y r<br>    | x &gt; y  = balance l y (insert x r)<br></code></pre></td></tr></table></figure>
+
+
+<p>这里利用节点的插入来构建 binary tree, 插入元素 <code>x</code> 时需要注意:</p>
 <ul>
 <li>如果 <code>x</code> 已存在, 则直接丢弃</li>
 <li>如果 <code>x</code> 不存在, 则插入到左子树或右子树</li>
 </ul>
-<p>如果直接用普通的 <code>node</code> 构造函数来拼接左右子树, 树可能不再 balance, 因此考虑设计一个更 “聪敏” 的构造函数 <code>balance</code>, 其不仅要完成节点的拼接, 还要恢复树的平衡性, 同时维护每个节点的高度信息.</p>
+<p>如果直接用普通的 <code>node</code> 构造函数来拼接左右子树, 树可能不再 balance, 因此考虑设计一个更 “聪明” 的构造函数 <code>balance</code>, 其不仅要完成节点的拼接, 还要恢复树的平衡性, 同时维护每个节点的高度信息.</p>
 <p>这里需要了解几个观察来帮助实现:</p>
 <ul>
 <li>单次插入最多让树的 height 增加 <code>1</code>. 在实现 <code>balance</code> 时, 可以先假设左右子树本身已经是平衡的, 此时插入后高度差不超过 <code>2</code></li>
 <li>基于高度差不超过 <code>2</code>, 考虑三种情况:<ul>
-<li>左右子树高度差 $\le 1$, 此时可以直接用 <code>node</code> 拼接, 无需额外平衡</li>
+<li>左右子树高度差 $\le 1$, 即插入后仍然是 balanced 的, 此时可以直接用 <code>node</code> 拼接成新树, 无需额外平衡</li>
 <li>左子树比右子树高 <code>2</code></li>
 <li>右子树比左子树高 <code>2</code> (与上一种情况是镜像处理, 因此只用分析一种)</li>
 </ul>
@@ -1237,15 +1290,15 @@ path.outline_glyph {
 <p>这里分析 “左子树比右子树高 2” 的情况, 可以记为:</p>
 <figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs arduino">height l = height r + <span class="hljs-number">2</span><br></code></pre></td></tr></table></figure>
 
-<p>知道左子树 <code>l</code> 比右子树 <code>r</code> 高 <code>2</code>, 此时还需要分析左子树 <code>l</code> 自身的左右子树 (<code>ll</code> 和 <code>rl</code>) 哪个更高:</p>
+<p>知道左子树 <code>l</code> 比右子树 <code>r</code> 高 <code>2</code>, 此时还需要分情况分析左子树 <code>l</code> 自身的左右子树 (<code>ll</code> 和 <code>rl</code>) 哪个更高:</p>
 <ul>
-<li><code>ll</code> 更高: $height\ rl \ge height\ ll$</li>
-<li><code>rl</code> 更高: $height\ ll &lt; height\ rl$ (与前一种情况对称)</li>
+<li><code>ll</code> 更高: $height\ rl \le height\ ll$</li>
+<li><code>rl</code> 更高: $height\ rl \ge height\ ll$ (与前一种情况对称)</li>
 </ul>
-<p>由于 <code>l</code> 本身是 balanced, 因此下面关系式是满足的:</p>
-<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs arduino">height l = height ll + <span class="hljs-number">1</span><br>height r = height l - <span class="hljs-number">2</span> <br>         = height ll - <span class="hljs-number">1</span><br>         &lt;= height rl<br>         &lt;= height ll<br></code></pre></td></tr></table></figure>
+<p>这里从 <code>ll</code> 更高的角度来分析 (<code>rl</code> 更高的角度和这个情况的分析是一致的), 由于 <code>l</code> 本身是 balanced, 因此下面关系式是满足的:</p>
+<figure class="highlight maxima"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs maxima"><span class="hljs-built_in">height</span> l = <span class="hljs-built_in">height</span> ll + <span class="hljs-number">1</span> <br><br>(就是 <span class="hljs-built_in">max</span> (<span class="hljs-built_in">height</span> ll) (<span class="hljs-built_in">height</span> lr) + <span class="hljs-number">1</span>, 由于已知 ll 更高, 因此省略了 <span class="hljs-built_in">max</span> 过程)<br><br><span class="hljs-built_in">height</span> r = <span class="hljs-built_in">height</span> l - <span class="hljs-number">2</span>  (一开始的前提条件就是 l 比 r 高 <span class="hljs-number">2</span>)<br>         = <span class="hljs-built_in">height</span> ll - <span class="hljs-number">1</span> (代入上面的式子)<br>         &lt;= <span class="hljs-built_in">height</span> rl (ll 的高度最大就比 rl 高 <span class="hljs-number">1</span>, 此时减去 <span class="hljs-number">1</span>, 因此再怎么也不会超过 rl 的高度了)<br>         &lt;= <span class="hljs-built_in">height</span> ll<br></code></pre></td></tr></table></figure>
 
-<h3 id="Right-rotation"><a href="#Right-rotation" class="headerlink" title="Right rotation"></a>Right rotation</h3><p>当 $height\ rl \ge height\ ll$ 时, 可以通过 right rotation 这个操作来重新分配高度, 让整棵树重新平衡:</p>
+<h3 id="Right-rotation"><a href="#Right-rotation" class="headerlink" title="Right rotation"></a>Right rotation</h3><p>当 $height\ rl \le height\ ll$ 时, 可以通过 right rotation 这个操作来重新分配高度, 让整棵树重新平衡:</p>
 <figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">balance</span> :: <span class="hljs-type">Tree</span> a -&gt; a -&gt; <span class="hljs-type">Tree</span> a -&gt; <span class="hljs-type">Tree</span> a<br><span class="hljs-title">balance</span> l x r = rotr (node l x r)<br><br><span class="hljs-title">rotr</span> :: <span class="hljs-type">Tree</span> a -&gt; <span class="hljs-type">Tree</span> a<br><span class="hljs-title">rotr</span> (<span class="hljs-type">Node</span> _ (<span class="hljs-type">Node</span> _ ll y rl) x r) = node ll y (node rl x r)<br></code></pre></td></tr></table></figure>
 <p>(需要注意这里的 <code>balance</code> 定义是不完整的, 这里暂时没有写出比较 <code>x</code> 和 <code>y</code> 的过程, 后续完整定义会区分, <code>rotr</code> 是一个独立的动作)</p>
 <p><img src="/../img/haskell-binary-tree-righti-rotation-example.png" srcset="/img/loading.gif" lazyload></p>
@@ -1275,6 +1328,7 @@ path.outline_glyph {
 </ul>
 <figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">rotl</span> (<span class="hljs-type">Node</span> ll y (<span class="hljs-type">Node</span> lrl z rrl)) = node (node ll y lrl) z rrl<br></code></pre></td></tr></table></figure>
 
+<p>上面只是说明 left rotate 是一个怎样的操作, 下面是具体的情况.</p>
 <p>若考虑 $height\ ll &lt; height\ rl$ 的情况, 由于 <code>l</code> 是 balanced, 能得到:</p>
 <figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs arduino">height ll + <span class="hljs-number">1</span> = height rl<br></code></pre></td></tr></table></figure>
 <p>(<code>ll</code> 和 <code>rl</code> 的 height 要么相等要么相差 <code>1</code>, 由于有关系 <code>height ll &lt; height rl</code>, 因此得到这个等式)</p>
@@ -1291,6 +1345,16 @@ path.outline_glyph {
 <p>证明如下:</p>
 <figure class="highlight excel"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs excel">  <span class="hljs-built_in">abs</span> (height (node ll y lrl) - height (node rrl x r))<br>= <span class="hljs-built_in">abs</span> (<span class="hljs-built_in">max</span> (height ll) (height lrl) - <span class="hljs-built_in">max</span> (height rrl) (height r))<br>= <span class="hljs-built_in">abs</span> (<span class="hljs-built_in">max</span> (height ll) (height lrl) - height r)<br>= <span class="hljs-built_in">abs</span> (height ll - height r)<br>= <span class="hljs-number">0</span><br></code></pre></td></tr></table></figure>
 
+<p>至此已经考虑了两种情况:</p>
+<ul>
+<li>只 right rotate</li>
+<li>先 left rotate, 再 right rotate</li>
+</ul>
+<p>还有两种情况的发生条件与之前相反:</p>
+<ul>
+<li>只 left rotate</li>
+<li>先 right rotate 在 left rotate</li>
+</ul>
 <h3 id="Balance"><a href="#Balance" class="headerlink" title="Balance"></a>Balance</h3><p>下面是 <code>balance</code> 的完整定义:</p>
 <figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">bias</span> :: <span class="hljs-type">Tree</span> a -&gt; <span class="hljs-type">Int</span><br><span class="hljs-title">bias</span> (<span class="hljs-type">Node</span> _ l x r) = height l - height r<br><br><span class="hljs-title">balance</span> :: <span class="hljs-type">Tree</span> a -&gt; a -&gt; <span class="hljs-type">Tree</span> -&gt; <span class="hljs-type">Tree</span> a<br><span class="hljs-title">balance</span> t1 x t2<br>    | abs (h1 - h2) &lt;= <span class="hljs-number">1</span> = node t1 x t2<br>    | h1 == h2 + <span class="hljs-number">2</span>       = rotateR t1 x t2<br>    | h2 == h1 + <span class="hljs-number">2</span>       = rotateL t1 x t2<br>    <span class="hljs-keyword">where</span> h1 = height t1<br>          h2 = height t2<br>          rotateR t1 x t2 = <span class="hljs-keyword">if</span> <span class="hljs-number">0</span> &lt;= bias t1 <br>                                <span class="hljs-keyword">then</span> rotr (node t1 x t2)<br>                                <span class="hljs-keyword">else</span> rotr (node (rotl t1) x t2)<br>          rotateL t1 x t2 = <span class="hljs-keyword">if</span> bias t2 &lt;= <span class="hljs-number">0</span><br>                                <span class="hljs-keyword">then</span> rotl (node t1 x t2)<br>                                <span class="hljs-keyword">else</span> rotl (node t1 x (rotr t2))<br></code></pre></td></tr></table></figure>
 
@@ -1301,15 +1365,286 @@ path.outline_glyph {
 <li><code>x == y</code>, 此时不需要进行插入, 因此返回当前节点</li>
 <li><code>y &lt; x</code>, 需要把节点插入到当前节点的右边, 插入后也要 <code>balance</code></li>
 </ul>
-<h3 id="gbalance"><a href="#gbalance" class="headerlink" title="gbalance"></a>gbalance</h3><p>上述 <code>balance</code> 函数无法处理高度差超过 <code>2</code> 的两棵树的情况, 因此下面设计一个 <code>gbalance</code> 函数, 能够处理任意高度差的两棵树的平衡.</p>
+<h3 id="gbalance"><a href="#gbalance" class="headerlink" title="gbalance"></a>gbalance</h3><p>上述 <code>balance</code> 函数无法处理高度差超过 <code>2</code> 的两棵树的情况, 因为其默认插入前的树就是 balaced. 因此下面设计一个 <code>gbalance</code> 函数, 能够处理任意高度差的两棵树的平衡, <code>gbalance t1 x t2</code> 返回一个平衡好的树:</p>
 <ul>
 <li>假设有两棵 balanced binary search tree <code>t1</code> 和 <code>t2</code></li>
 <li>假设第一棵树 <code>t1</code> 的高度 <code>h1</code> 比第二棵树 <code>t2</code> 的高度 <code>h2</code> 大 <code>2</code> 以上, 即 $h1 &gt; h2 + 2$.</li>
 </ul>
-<p>一定能在 <code>t1</code> 的右子树链 (right spine) 上找到一个子树 <code>r</code>, 使得:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>0 \le height\ r - height\ t2 \le 1<br>\end{aligned}<br>}<br>$$</p>
-<p>因为 <code>t1</code> 的高度比 <code>t2</code> 至少大 <code>2</code>, 用 <code>r</code> 表示 <code>t1</code> 的右子树, <code>rr</code> 表示 <code>t1</code> 的右子树的右子树, 以此类推, 可以有下面关系:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>height\ t1 - 2 &amp;&gt; height\ t2 \newline~ \newline<br>height\ t1 &amp;&#x3D; height\ r + 1 \newline~ \newline<br>height\ r - 1 &amp;&gt; height\ t2 \newline~ \newline<br>height\ rr &amp;&gt; height\ t2 \newline~ \newline<br>…<br>\end{aligned}<br>}<br>$$</p>
-<p>有:</p>
-<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">balanceR</span> :: <span class="hljs-type">Set</span> a -&gt; a -&gt; <span class="hljs-type">Set</span> a -&gt; <span class="hljs-type">Set</span> a<br><span class="hljs-title">balanceR</span> (<span class="hljs-type">Node</span> _ l y r) x t2 = <span class="hljs-keyword">if</span> height r &gt;= height t2 + <span class="hljs-number">2</span><br>                               <span class="hljs-keyword">then</span> balance l y (balanceR r x t2)<br>                               <span class="hljs-keyword">else</span> balance l y (node r x t2)<br><br><span class="hljs-title">gbalance</span> :: <span class="hljs-type">Set</span> a -&gt; a -&gt; <span class="hljs-type">Set</span> a -&gt; <span class="hljs-type">Set</span> a<br><span class="hljs-title">gbalance</span> t1 x t2<br>    | abs (h1 - h2) &lt;= <span class="hljs-number">2</span> = balance  t1 x t2<br>    | h1 &gt; h2 + <span class="hljs-number">2</span>        = balanceR t1 x t2<br>    | h1 + <span class="hljs-number">2</span> &lt; h2        = balanceL t1 x t2<br>    <span class="hljs-keyword">where</span> h1 = height t1<br>          h2 = height t2<br></code></pre></td></tr></table></figure>
+<p>一定能在 <code>t1</code> 的右子树链 (right spine) 上找到一个子树 <code>r</code>, 使得 (如果说从 left spine 找也是一样的证明过程):<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>0 \le height\ r - height\ t2 \le 1<br>\end{aligned}<br>}<br>$$<br>(也就是说这两棵树如果是某个节点的左右子树则是平衡的)</p>
+<p>因为 <code>t1</code> 的高度比 <code>t2</code> 至少大 <code>2</code>, 用 <code>r</code> 表示 <code>t1</code> 的右子树, <code>rr</code> 表示 <code>t1</code> 的右子树的右子树, 以此类推, 可以有下面关系:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>height\ t1 - 2 &amp;\ge height\ t2 \newline~ \newline<br>height\ t1 &amp;&#x3D; height\ r + 1 \newline~ \newline<br>height\ r - 1 &amp;\ge height\ t2 \newline~ \newline<br>height\ rr &amp;\ge height\ t2 \newline~ \newline<br>…<br>\end{aligned}<br>}<br>$$<br>(这里说明为什么能找到)</p>
+<p>假设 <code>l</code> 是 <code>r</code> 的左兄弟, 由于原本 <code>t1</code> 就是 balanced, 因此有:</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs arduino"><span class="hljs-built_in">abs</span> (height l - height r) &lt;= <span class="hljs-number">1</span><br></code></pre></td></tr></table></figure>
+
+<p>而 <code>node r x t2</code> 的高度是 <code>height r + 1</code> (之前的前提条件就是 r 的 height 比 t2 高), 则有:</p>
+<figure class="highlight crmsh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs crmsh">abs (height l - height (<span class="hljs-keyword">node</span> <span class="hljs-title">r</span> x t2)) <span class="hljs-tag">&lt;= 2</span><br></code></pre></td></tr></table></figure>
+
+<p>此时就能用 <code>balance</code> 来处理 <code>l</code> 和 <code>node r x t2</code> 这两棵树了, 这里用 <code>balanceR</code> 来模拟上述整个过程:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">balanceR</span> :: <span class="hljs-type">Set</span> a -&gt; a -&gt; <span class="hljs-type">Set</span> a -&gt; <span class="hljs-type">Set</span> a<br><span class="hljs-title">balanceR</span> (<span class="hljs-type">Node</span> _ l y r) x t2 = <span class="hljs-keyword">if</span> height r &gt;= height t2 + <span class="hljs-number">2</span><br>                               <span class="hljs-keyword">then</span> balance l y (balanceR r x t2)<br>                               <span class="hljs-keyword">else</span> balance l y (node r x t2)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>if height r &gt;= height t2 + 2</code>, 并表示这个 <code>r</code> 与 <code>t2</code> 还不是 balanced, 需要继续往右边找</li>
+<li>找到满足条件的 <code>r</code> 则直接用 <code>balance</code> 处理</li>
+</ul>
+<p>如果有 <code>height t2 &gt; height t1 + 2</code>, 那么就能对应写出 <code>balanceL</code> 函数. 可以知道, <code>balanceR t1 x t2</code> 的时间复杂度是 <code>O(h1 - h2)</code>. 同样 <code>balanceL t1 x t2</code> 的时间复杂度是 <code>O(h2 - h1)</code>.</p>
+<p>此时完整的 <code>gbalance</code> 就可以定义如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">gbalance</span> :: <span class="hljs-type">Set</span> a -&gt; a -&gt; <span class="hljs-type">Set</span> a -&gt; <span class="hljs-type">Set</span> a<br><span class="hljs-title">gbalance</span> t1 x t2<br>    | abs (h1 - h2) &lt;= <span class="hljs-number">2</span> = balance  t1 x t2<br>    | h1 &gt; h2 + <span class="hljs-number">2</span>        = balanceR t1 x t2<br>    | h1 + <span class="hljs-number">2</span> &lt; h2        = balanceL t1 x t2<br>    <span class="hljs-keyword">where</span> h1 = height t1<br>          h2 = height t2<br></code></pre></td></tr></table></figure>
+
+<p>感觉思路就是将一棵树沿另一棵树的左子树&#x2F;右子树进行合并.</p>
+<h2 id="4-4-Dynamic-sets"><a href="#4-4-Dynamic-sets" class="headerlink" title="4.4 Dynamic sets"></a>4.4 Dynamic sets</h2><p>能够随时间 grow or shrink 的 sets 称为 dynamic sets. 常见的操作有:</p>
+<ul>
+<li>Membership test, 判断一个元素是否在 set 中</li>
+<li>Adding a value to a set</li>
+<li>Deleting an element from a set</li>
+<li>Union of two sets</li>
+<li>Split a set into two sets, 一个包含小于等于某个值的元素, 另一个包含大于某个值的元素</li>
+</ul>
+<p>下面用 balanced binary search tree 来表示 Set, 进而实现上述操作:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">type</span> <span class="hljs-type">Set</span> a = <span class="hljs-type">Tree</span> a</span><br></code></pre></td></tr></table></figure>
+
+<p>Membership test 和之前实现的 <code>search</code> 函数类似, 如果找得到则返回 <code>True</code>, 找不到则返回 <code>False</code>:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">member</span> :: <span class="hljs-type">Ord</span> a =&gt; a -&gt; <span class="hljs-type">Set</span> a -&gt; <span class="hljs-type">Bool</span><br><span class="hljs-title">member</span> x <span class="hljs-type">Null</span> = <span class="hljs-type">False</span><br><span class="hljs-title">member</span> x (<span class="hljs-type">Node</span> _ l y r)<br>    | x &gt; y  = member x r<br>    | x == y = <span class="hljs-type">True</span><br>    | x &lt; y  = member x l<br></code></pre></td></tr></table></figure>
+
+<p>Insertion 操作就是之前实现的 <code>insert</code>:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">insert</span> :: <span class="hljs-type">Ord</span> a =&gt; a -&gt; <span class="hljs-type">Set</span> a -&gt; <span class="hljs-type">Set</span> a<br><span class="hljs-title">insert</span> x <span class="hljs-type">Null</span> = node <span class="hljs-type">Null</span> x <span class="hljs-type">Null</span><br><span class="hljs-title">insert</span> x (<span class="hljs-type">Node</span> h l y r)<br>    | x &gt; y  = balance l y (insert x r)<br>    | x == y = <span class="hljs-type">Node</span> h l y r<br>    | x &lt; y  = balance (insert x l) y r<br></code></pre></td></tr></table></figure>
+
+<p>Delete 实现如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">delete</span> :: <span class="hljs-type">Ord</span> a =&gt; a -&gt; <span class="hljs-type">Set</span> a -&gt; <span class="hljs-type">Set</span> a<br><span class="hljs-title">delete</span> x <span class="hljs-type">Null</span> = <span class="hljs-type">Null</span><br><span class="hljs-title">delete</span> x (<span class="hljs-type">Node</span> h l y r)<br>    | x &lt; y  = balance (delete x l) y r<br>    | x == y = combine l r<br>    | x &gt; y  = balance l y (delete x r)<br></code></pre></td></tr></table></figure>
+
+<p>由于 deleting 操作最多只会让 height 减少 <code>1</code>, 因此 <code>balance</code> 也适用于这里的平衡恢复.</p>
+<p><code>combine</code> 操作用于拼接两棵树, 且仅适用于两个 height differ 小于等于 1 的 balanced tree, 对于 <code>combine l r</code>:</p>
+<ul>
+<li>如果 <code>l</code>&#x2F;<code>r</code> 中一个为 Null, 则直接返回另一棵树</li>
+<li>如果 <code>l</code> 和 <code>r</code> 都不为 Null, 则可以考虑两种拼接方法:<ul>
+<li>从一棵树的最小值开始拼接</li>
+<li>从一棵树的最大值开始拼接</li>
+</ul>
+</li>
+</ul>
+<p>这里用从最小值开始拼接做例子:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">deleteMin</span> :: <span class="hljs-type">Ord</span> a =&gt; <span class="hljs-type">Set</span> a -&gt; (a, <span class="hljs-type">Set</span> a)<br><span class="hljs-title">deleteMin</span> (<span class="hljs-type">Node</span> _ <span class="hljs-type">Null</span> x r) = (x, r)<br><span class="hljs-title">deleteMin</span> (<span class="hljs-type">Node</span> _ l x r) = (y, balance t x r)<br>    <span class="hljs-keyword">where</span> (y, t) = deleteMin l<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>deleteMin</code> 返回一棵树的最小值以及除去这个最小值之后的树</li>
+<li>递归的基础条件就是左子树为空, 此时当前树的值就是最小值, 剩下的右子树返回后会作为新的左子树</li>
+</ul>
+<p><img src="/../img/deleteMin-function-example.jpg" srcset="/img/loading.gif" lazyload></p>
+<p>然后 <code>combine</code> 可以实现为:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">combine</span> :: <span class="hljs-type">Ord</span> a =&gt; <span class="hljs-type">Set</span> a -&gt; <span class="hljs-type">Set</span> a -&gt; <span class="hljs-type">Set</span> a<br><span class="hljs-title">combine</span> l <span class="hljs-type">Null</span> = l<br><span class="hljs-title">combine</span> <span class="hljs-type">Null</span> r = r<br><span class="hljs-title">combine</span> l r = balance l x t<br>    <span class="hljs-keyword">where</span> (x, t) = deleteMin r<br></code></pre></td></tr></table></figure>
+
+<p>如果要让 <code>combine</code> 能作用于任意两个 <code>Set</code>, 将 <code>balance</code> 替换为 <code>gbalance</code> 即可.</p>
+<p><code>split</code> 函数签名如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">split</span> :: <span class="hljs-type">Ord</span> a =&gt; a -&gt; <span class="hljs-type">Set</span> a -&gt; (<span class="hljs-type">Set</span> a, <span class="hljs-type">Set</span> a)<br></code></pre></td></tr></table></figure>
+<p>对于 <code>split x t</code>:</p>
+<ul>
+<li>返回的第一个 <code>Set</code> 中, 所有元素都 $\le x$</li>
+<li>返回的第二个 <code>Set</code> 中, 所有元素都 $&gt; x$</li>
+</ul>
+<p>需要先将 tree 拆分为 pieces, 然后 sew the pieces together 得到一个 pair:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">split</span> x t = sew (pieces x t)<br></code></pre></td></tr></table></figure>
+
+<p>一个 piece 表示树缺少某一棵子树后的部分:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Piece</span> a = <span class="hljs-type">LP</span> (<span class="hljs-type">Set</span> <span class="hljs-title">a</span>) a | <span class="hljs-type">RP</span> a (<span class="hljs-type">Set</span> <span class="hljs-title">a</span>)</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>Left piece 定义为 <code>LP (Set a) a</code>, 缺少右子树</li>
+<li>Right piece 定义为 <code>RP a (Set a)</code>, 缺少左子树</li>
+</ul>
+<p><code>pieces</code> 函数定义如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">pieces</span> :: <span class="hljs-type">Ord</span> a =&gt; a -&gt; <span class="hljs-type">Set</span> a -&gt; [<span class="hljs-type">Piece</span> a]<br><span class="hljs-title">pieces</span> x t = addPiece t []<br>    <span class="hljs-keyword">where</span> addPiece <span class="hljs-type">Null</span> ps = ps<br>          addPiece (<span class="hljs-type">Node</span> _ l y r) ps<br>            | x &lt; y  = addPiece l (<span class="hljs-type">RP</span> y r:ps)<br>            | x &gt;= y = addPiece r (<span class="hljs-type">LP</span> l y:ps)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>其实就是把一棵树切分为两个部分, 一部分大于 <code>x</code>, 一部分小于 <code>x</code></li>
+<li><code>x &lt; y  = addPiece l (RP y r:ps)</code> 这里, <code>y</code> 更大, 那么 <code>y</code> 的右子树肯定也会大于 <code>x</code>, 更大的那个 Piece 用作 right piece, 因此将 <code>RP y r</code> 加入到累积值中, 需要对 <code>l</code> 继续进行判断切分</li>
+<li><code>x &gt;= y = addPiece r (LP l y:ps)</code> 这里, <code>y</code> 更小, 那么 <code>y</code> 的左子树肯定也会小于 <code>x</code>, 这部分用作 left piece, 将 <code>LP y l</code> 加入到累积值中, 此时又接着判断 <code>r</code></li>
+</ul>
+<p>比如 <code>pieces 9 t</code>, <code>t</code> 的结构如下所示:</p>
+<p><img src="/../img/algo-in-haskell-pieces-example1.png" srcset="/img/loading.gif" lazyload></p>
+<p>得到 3 个 pieces:</p>
+<p><img src="/../img/algo-in-haskell-pieces-example2.png" srcset="/img/loading.gif" lazyload></p>
+<p>然后将这些 pieces 进行 sew 和 balance:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">sew</span> :: [<span class="hljs-type">Piece</span> a] -&gt; (<span class="hljs-type">Set</span> a, <span class="hljs-type">Set</span> a)<br><span class="hljs-title">sew</span> = foldl step (<span class="hljs-type">Null</span>, <span class="hljs-type">Null</span>)<br>    <span class="hljs-keyword">where</span> step (t1, t2) (<span class="hljs-type">LP</span> t x) = (gbalance t x t1, t2)<br>          step (t1, t2) (<span class="hljs-type">RP</span> x t) = (t1, gbalance t2 x t)<br></code></pre></td></tr></table></figure>
+<p>思路是:</p>
+<ul>
+<li>如果是 <code>LP</code>, 则拼接到第一个 set, 由于 <code>LP</code> 比 <code>x</code> 小, 因此是 <code>gbalance t x t1</code>, 放在 <code>gbalance</code> 的左边</li>
+<li>如果是 <code>RP</code>, 则拼接到第二个 set, 由于 <code>RP</code> 比 <code>x</code> 大, 因此是 <code>gbalance t2 x t</code></li>
+</ul>
+<p><img src="/../img/algo-in-haskell-pieces-example3.png" srcset="/img/loading.gif" lazyload></p>
+<p>对于 <code>split</code> 操作, 时间复杂度是 $O(h)$, 其中 <code>h = height t</code>.</p>
+<h2 id="Exercise-1"><a href="#Exercise-1" class="headerlink" title="Exercise"></a>Exercise</h2><h3 id="exe4-1"><a href="#exe4-1" class="headerlink" title="exe4.1"></a>exe4.1</h3><p>该题先证明了在 $a + 1 &lt; b$, 且 $a,b$ 是整数时, 有:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>a &lt; (a + b)\ div\ 2 &lt; b<br>\end{aligned}<br>}<br>$$</p>
+<p>这个主要是用在 binary search 中, 需要判定中间值是否落在范围内时. 当 $a + 1 &lt; b$ 时, 还能落在范围内, 当 $a + 1 &gt;&#x3D; b$ 时, 就应该结束搜索了.</p>
+<p>使用 rule of floor 来证明, 对于一个整数 n 和实数 r, 有: $n \le \lfloor r \rfloor \leftrightarrow n \le r$.</p>
+<p>用反证的思路:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>a &lt; (a + b)\ div\ 2 &lt; b \newline~ \newline<br>利用 div 的定义得到: \newline~ \newline<br>a &lt; \lfloor (a + b) &#x2F; 2 \rfloor &lt; b \newline~ \newline<br>根据算术性质的: \newline~ \newline<br>a + 1 \le \lfloor (a + b) &#x2F; 2 \rfloor &lt; b \newline~ \newline<br>利用 floor\ rule 有: \newline~ \newline<br>a + 1 \le (a + b) &#x2F; 2 &lt; b \newline~ \newline<br>a + 1 &lt; b<br>\end{aligned}<br>}<br>$$</p>
+<p>之后用 rule of celings 证明, 对于整数 <code>n</code> 和 <code>h</code>, 有 $n &lt; 2^h$, 那么就有:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\lceil log (n + 1) \rceil \le h<br>\end{aligned}<br>}<br>$$</p>
+<p>这个用来说明二叉树节点数量和 height 的关系, 有 $n \le 2^h - 1$, 即 $n &lt; 2^h$, 能推出 $h$ 的下限.</p>
+<h1 id="5-Sorting"><a href="#5-Sorting" class="headerlink" title="5 Sorting"></a>5 Sorting</h1><p>通常要求一个 sorting algorithm 满足下面特征:</p>
+<ul>
+<li>Fast, 运行速度快</li>
+<li>Smooth, 输入越大, 越能体现速度快</li>
+<li>Stable, 在不同输入下时间复杂度一致</li>
+<li>Compact, 占用较少空间</li>
+</ul>
+<h2 id="5-1-Quicksort"><a href="#5-1-Quicksort" class="headerlink" title="5.1 Quicksort"></a>5.1 Quicksort</h2><p>Quicksort 可以用之前的二叉搜索树来引入:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Tree</span> a = <span class="hljs-type">Null</span> | <span class="hljs-type">Node</span> (<span class="hljs-type">Tree</span> <span class="hljs-title">a</span>) a (<span class="hljs-type">Tree</span> <span class="hljs-title">a</span>)</span><br><br><span class="hljs-title">mktree</span> :: <span class="hljs-type">Ord</span> a =&gt; [a] -&gt; <span class="hljs-type">Tree</span> a<br><span class="hljs-title">mktree</span> [] = <span class="hljs-type">Null</span><br><span class="hljs-title">mktree</span> (x:xs) = <span class="hljs-type">Node</span> (mktree ys) x (mktree zs)<br>  <span class="hljs-keyword">where</span> (ys, zs) = partition (&lt;x) xs<br><br><span class="hljs-title">flatten</span> :: <span class="hljs-type">Tree</span> a -&gt; [a]<br><span class="hljs-title">flatten</span> <span class="hljs-type">Null</span> = []<br><span class="hljs-title">flatten</span> (<span class="hljs-type">Node</span> l x r) = flatten l ++ [x] ++ flatten r<br><br><span class="hljs-title">qsort</span> :: <span class="hljs-type">Ord</span> a =&gt; [a] -&gt; [a]<br><span class="hljs-title">qsort</span> = flatten . mktree<br></code></pre></td></tr></table></figure>
+
+<p>最简单的 qsort 可以这样实现:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">partition</span> :: (a -&gt; <span class="hljs-type">Bool</span>) -&gt; [a] -&gt; ([a], [a])<br><span class="hljs-title">partition</span> p xs = foldr step ([], []) xs<br>  <span class="hljs-keyword">where</span> step x (ys, zs) = <span class="hljs-keyword">if</span> p x <span class="hljs-keyword">then</span> (x:ys, zs) <span class="hljs-keyword">else</span> (ys, x:zs)<br><br><span class="hljs-title">qsort</span> :: <span class="hljs-type">Ord</span> a =&gt; [a] -&gt; [a]<br><span class="hljs-title">qsort</span> (x:xs) = qsort ys ++ [x] ++ qsort zs<br>  <span class="hljs-keyword">where</span> (ys, zs) = partition (&lt;x) xs<br></code></pre></td></tr></table></figure>
+
+<p>但该实现仅仅是 stable, 其他的 fast, smooth, compact 都无法满足. 比如当输入已经排序好时, 时间复杂度是 $O(n^2)$. 这是 pivot 值的选择导致的, pivort 会影响拆分后的两个子列表的大小, 如果每次都能对半拆分, 时间复杂度就接近 $O(nlogn)$ (只拆了 $logn$ 次), 如果每次拆分都是 <code>0</code> 和 <code>n</code>, 那么时间复杂度就是 $O(n^2)$ (毕竟要拆 n 次了).</p>
+<p>一个更好的 pivort 选择是取 median element (平均值).</p>
+<p>可以看出, Quicksort 是一种 divide-and-conquer 算法, 在 dividing 部分 (找 pivort, 并 partition) 工作量较大, 而在 combining 部分很简单, 只需要做拼接.</p>
+<p>由于对于 functional programming 而言, 有其他更适合的 sorting algorithm, 并且 inplace 的实现不太适合这里, 因此书中没有给出更高效的版本.</p>
+<h2 id="5-2-Mergesort"><a href="#5-2-Mergesort" class="headerlink" title="5.2 Mergesort"></a>5.2 Mergesort</h2><p>Mergesort 也是 divide-and-conquer 的思路, 但是实现难度与 quicksort 相反, 在 dividing 部分很简单, 而在 combining 部分复杂.</p>
+<p>同样用 Tree 引入, 但这个 Tree 的定义和之前的略有不同:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Tree</span> a = <span class="hljs-type">Null</span> | <span class="hljs-type">Leaf</span> a | <span class="hljs-type">Node</span> (<span class="hljs-type">Tree</span> <span class="hljs-title">a</span>) (<span class="hljs-type">Tree</span> <span class="hljs-title">a</span>)</span><br></code></pre></td></tr></table></figure>
+
+<p>构建 Tree 的时候可以不用考虑 order 和形状, 排序是在 <code>flatten</code> 过程完成.</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">flatten</span> :: <span class="hljs-type">Ord</span> a =&gt; <span class="hljs-type">Tree</span> a -&gt; [a]<br><span class="hljs-title">flatten</span> <span class="hljs-type">Null</span>     = []<br><span class="hljs-title">flatten</span> (<span class="hljs-type">Leaf</span> x) = [x]<br><span class="hljs-title">flatten</span> (<span class="hljs-type">Node</span> t1 t2) = merge (flatten t1) (flatten t2)<br></code></pre></td></tr></table></figure>
+
+<p><code>merge</code> 函数用来排序两个列表:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">merge</span> :: <span class="hljs-type">Ord</span> a =&gt; [a] -&gt; [a] -&gt; [a]<br><span class="hljs-title">merge</span> [] ys = ys<br><span class="hljs-title">merge</span> xs [] = xs<br><span class="hljs-title">merge</span> (x:xs) (y:ys)<br>  | x &lt;= y    = x:merge xs (y:ys)<br>  | otherwise = y:merge (x:xs) ys<br></code></pre></td></tr></table></figure>
+<p><code>merge</code> 两个长度分别为 <code>m</code> 和 <code>n</code> 的 list 需要进行 <code>m + n</code> 次比较.</p>
+<p><code>flatten</code> 的操作次数取决于 <code>Leaf</code> 的数量, 假如每棵树有两个子树, 且 <code>size</code> 各一半, 那么可以得到递推关系:</p>
+<figure class="highlight excel"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs excel"><span class="hljs-built_in">T</span>(<span class="hljs-built_in">n</span>) = <span class="hljs-number">2</span><span class="hljs-built_in">T</span>(<span class="hljs-built_in">n</span>/<span class="hljs-number">2</span>) + <span class="hljs-built_in">n</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>这样理解, 一开始 <code>flatten (Node t1 t2)</code>, 需要处理 <code>n</code> 个 Leaf, 操作数是 <code>T(n)</code></li>
+<li>等式右侧 <code>merge (flatten t1) (flatten t2)</code>, <code>flatten t1</code> 需要处理 <code>n/2</code> 个 Leaf, 操作数是 <code>T(n/2)</code>; <code>flatten t2</code> 也需要处理 <code>n/2</code> 个 Leaf, 操作数是 <code>T(n/2)</code>; 两个 <code>flatten</code> 执行结束后, <code>merge</code> 需要进行 <code>n/2 + n/2</code> 的比较操作. 因此得到上面递推关系</li>
+</ul>
+<p>最终能得到时间复杂度是 $\Theta (nlogn)$. 前提是我们能构建出左右子树大小差不多的树, 也就是 size-balanced tree (左右子树的 size 相差不超过 <code>1</code>), 就能快速 <code>flatten</code> 得到排序后的列表.</p>
+<p>下面是一种基于 divide-and-conquer 的构建 size-balanced tree 的方法:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">mktree</span> :: [a] -&gt; <span class="hljs-type">Tree</span> a<br><span class="hljs-title">mktree</span> []  = <span class="hljs-type">Null</span><br><span class="hljs-title">mktree</span> [x] = <span class="hljs-type">Leaf</span> x<br><span class="hljs-title">mktree</span> xs  = <span class="hljs-type">Node</span> (mktree ys) (mktree zs) <span class="hljs-keyword">where</span> (ys, zs) = halve xs<br><br><span class="hljs-title">halve</span> :: [a] -&gt; ([a], [a])<br><span class="hljs-title">halve</span> = foldr op ([ ], [ ]) <span class="hljs-keyword">where</span> op x (ys, zs) = (zs, x : ys)<br></code></pre></td></tr></table></figure>
+<p>这个 <code>halve</code> 感觉比较巧妙, 相当于每次 <code>step</code> 处理时, <code>ys</code> 和 <code>zs</code> 都会调换一次位置, 确保每次 <code>step</code> 给不同的列表添加元素. 虽然这不是顺序拆分, 但是只遍历了 list 一次. 比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">halve</span> [<span class="hljs-number">1</span> . . <span class="hljs-number">9</span>] = ([<span class="hljs-number">2</span>, <span class="hljs-number">4</span>, <span class="hljs-number">6</span>, <span class="hljs-number">8</span>], [<span class="hljs-number">1</span>, <span class="hljs-number">3</span>, <span class="hljs-number">5</span>, <span class="hljs-number">7</span>, <span class="hljs-number">9</span>])<br></code></pre></td></tr></table></figure>
+
+<p><code>mktree</code> 的时间复杂度也是 <code>O(nlogn)</code>, 但其保证了 <code>Tree</code> 的 size-balanced 性质.</p>
+<p>此时 mergesort 可以直接定义为:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">msort</span> :: <span class="hljs-type">Ord</span> a =&gt; [a] -&gt; [a]<br><span class="hljs-title">msort</span> = flatten . mktree<br></code></pre></td></tr></table></figure>
+
+<p>如果把两个函数展开, 也就是消除 Tree 的部分, 可以得到实现为:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">msort&#x27;</span> :: <span class="hljs-type">Ord</span> a =&gt; [a] -&gt; [a]<br><span class="hljs-title">msort&#x27;</span> [] = []<br><span class="hljs-title">msort&#x27;</span> [x] = [x]<br><span class="hljs-title">msort&#x27;</span> xs = merge (msort&#x27; ys) (msort&#x27; zs)<br>  <span class="hljs-keyword">where</span> (ys, zs) = halve xs<br></code></pre></td></tr></table></figure>
+
+<p>时间复杂度是 <code>O(nlogn)</code>, 且满足 fast 和 stable.</p>
+<p>上面过程的 <code>mktree</code> 可以优化到线性时间, 需要借助 tupling technique, 不再频繁进行 <code>halve</code> 操作:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">mktree&#x27;</span> :: [a] -&gt; <span class="hljs-type">Tree</span> a<br><span class="hljs-title">mktree&#x27;</span> xs = fst (mkpair (length xs) xs)<br><br><span class="hljs-title">mkpair</span> :: <span class="hljs-type">Int</span> -&gt; [a] -&gt; (<span class="hljs-type">Tree</span> a, [a])<br><span class="hljs-title">mkpair</span> <span class="hljs-number">0</span> xs = (<span class="hljs-type">Null</span>, xs)<br><span class="hljs-title">mkpair</span> <span class="hljs-number">1</span> xs = (<span class="hljs-type">Leaf</span> (head xs), tail xs)<br><span class="hljs-title">mkpair</span> n xs = (<span class="hljs-type">Node</span> t1 t2, zs)<br>  <span class="hljs-keyword">where</span> (t1, ys) = mkpair m xs<br>        (t2, zs) = mkpair (n - m) ys<br>        m        = n `div` <span class="hljs-number">2</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>mkpair</code> 函数接受两个参数, 表示, 用列表的前 <code>n</code> 个元素来构建 <code>Tree</code>, 返回构建好的 Tree 和列表剩余元素</li>
+<li><code>mkpair</code> 的函数体可以这样解读:<ul>
+<li>使用 <code>0</code> 个列表元素时, 只能构建 <code>Null</code> 空树, 返回整个列表</li>
+<li>使用 <code>1</code> 个列表元素时, 只能构建 <code>Leaf</code>, 返回剩下列表</li>
+<li>使用 <code>n</code> (大于 <code>1</code> 个) 元素时, 可以构建 <code>Node</code>. 为了构建 size-balanced tree, 才进行 <code>where</code> 部分这样的构建方式. 将 <code>n</code> 拆为两份, <code>ys</code> 是 <code>xs</code> 的去除前 <code>m</code> 个元素后剩下的列表, <code>zs</code> 是 <code>ys</code> 去除 <code>n-m</code> 个元素后剩下的列表</li>
+</ul>
+</li>
+<li><code>mkpair</code> 能在 <code>O(n)</code> 时间内构建树, 且能够保证 size-balanced 的性质</li>
+</ul>
+<p>下面还有一种在线性时间构建 Tree 的方法, 不使用 divide-and-conquer 而是 bottom-up 的思路:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">mktree&#x27;&#x27;</span> :: [a] -&gt; <span class="hljs-type">Tree</span> a<br><span class="hljs-title">mktree&#x27;&#x27;</span> [] = <span class="hljs-type">Null</span><br><span class="hljs-title">mktree&#x27;&#x27;</span> xs = unwrap (until single (pairWith <span class="hljs-type">Node</span>) (map <span class="hljs-type">Leaf</span> xs))<br><br><span class="hljs-title">pairWith</span> :: (a -&gt; a -&gt; a) -&gt; [a] -&gt; [a]<br><span class="hljs-title">pairWith</span> f []  = []<br><span class="hljs-title">pairWith</span> f [x] = [x]<br><span class="hljs-title">pairWith</span> f (x:y:xs) = f x y:pairWith f xs<br><br><span class="hljs-title">single</span> :: [a] -&gt; <span class="hljs-type">Bool</span><br><span class="hljs-title">single</span> [x] = <span class="hljs-type">True</span><br><span class="hljs-title">single</span> _   = <span class="hljs-type">False</span><br><br><span class="hljs-title">unwrap</span> :: [a] -&gt; a<br><span class="hljs-title">unwrap</span> [x] = x<br><span class="hljs-title">unwrap</span>  _  = error <span class="hljs-string">&quot;unwrap only support singleton list&quot;</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>pairWith</code> 这个函数名, <code>pair</code> 表示一次处理两个 <code>Leaf</code>, <code>With</code> 表示需要提供一个函数来处理这些 <code>Leaf</code></li>
+<li><code>until</code> 会重复运行 <code>pairWith Node</code>, 假如一开始有 <code>n</code> 个 <code>Leaf</code> (<code>Tree</code>)<ul>
+<li>运行一次会得到 <code>n/2</code> 个 <code>Tree</code></li>
+<li>再运行一次会变为 <code>n/4</code> 个 <code>Tree</code></li>
+<li>再运行一次会变为 <code>n/8</code> 个 <code>Tree</code></li>
+<li>直到变成一棵树</li>
+</ul>
+</li>
+</ul>
+<p>这种构建方式的递归关系如下:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>T(n) &#x3D; T(n&#x2F;2) + \Theta (n)<br>\end{aligned}<br>}<br>$$</p>
+<p>将上述 <code>msort = flatten . mktree</code> 去掉 Tree 的相关内容 <code>msort</code> 还可以这样定义:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">msort&#x27;&#x27;</span> [] = []<br><span class="hljs-title">msort&#x27;&#x27;</span> xs = unwrap (until single (pairWith merge) (map wrap xs))<br></code></pre></td></tr></table></figure>
+<ul>
+<li>这种实现称 bottom-up mergesort (或 straight mergesort)</li>
+<li><code>map wrap xs</code>, 将列表中所有元素都转换为 <code>singleton</code></li>
+<li><code>pairWith merge</code> 将子列表两个两个进行合并 (merge 会进行排序)</li>
+<li><code>until single</code>, 在合并为一个列表时结束</li>
+<li>时间复杂度仍然是 $\Theta (nlogn)$</li>
+</ul>
+<p>对初始的列表, 可以不用将每个元素转换为 singleton (<code>map wrap xs</code>), 而是直接将其拆为一组 nondecreasing values:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">msort&#x27;&#x27;&#x27;</span> [] = []<br><span class="hljs-title">msort&#x27;&#x27;&#x27;</span> xs = unwrap (until single (pairWith merge) (runs xs))<br><br><span class="hljs-title">runs</span> :: <span class="hljs-type">Ord</span> a =&gt; [a] -&gt; [[a]]<br><span class="hljs-title">runs</span> = foldr op []<br>  <span class="hljs-keyword">where</span> op x []   = [[x]]<br>        op x ((y:xs):xss) | x &lt;= y = (x:y:xs):xss<br>                          | otherwise = [x]:(y:xs):xss<br></code></pre></td></tr></table></figure>
+<ul>
+<li>这种实现称 smooth mergesort, 如果输入列表已经排序, 那么会被直接返回. 因为如果输入有序, 那么 <code>runs xs</code> 会直接返回 <code>xs</code>, 此时输入到 <code>pairWith merge</code> 也会直接返回; 如果输入无序, <code>runs xs</code> 会返回多个子列表, 每个列表都是 nondecreasing 的</li>
+<li>下面是 <code>runs</code> 的一个运行示例:<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs lua">ghci&gt; runs [<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>,<span class="hljs-number">4</span>,<span class="hljs-number">5</span>]<br><span class="hljs-string">[[1,2,3,4,5]]</span><br>ghci&gt; runs [<span class="hljs-number">3</span>,<span class="hljs-number">1</span>,<span class="hljs-number">4</span>,<span class="hljs-number">2</span>,<span class="hljs-number">5</span>]<br><span class="hljs-string">[[3],[1,4],[2,5]]</span><br></code></pre></td></tr></table></figure></li>
+<li><code>runs</code> 的执行思路是这样的: 从右往左处理输入列表, 先将最右侧元素添加到 <code>acc</code> 中, 即 <code>[[x]]</code>; 取下一个元素, 取 <code>acc</code> 中第一个列表中的第一个元素 (默认 <code>acc</code> 中的列表都是 nondecreasing 的), 如果 <code>x &lt;= y</code>, 则将新元素添加到子列表中; 如果 <code>x &gt; y</code>, 则构建一个新的子列表</li>
+</ul>
+<p>这里解释下 <code>runs</code> 的一般含义, 以及说明下 <code>sort</code> 标准库中对 <code>runs</code> 的实现. <code>run</code> 通常指满足特定条件 (比如递增, 递减, 相同值等) 的连续子序列. <code>runs</code> 则是将输入拆分为一组 <code>run</code>.</p>
+<p>比如 <code>run</code> 表示连续的相同的段, <code>runs</code> 表示列表中所有连续相同的段:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">runs</span> :: <span class="hljs-type">Ord</span> a =&gt; [a] -&gt; [[a]]<br><span class="hljs-title">runs</span> xs = foldr step [] xs<br>  <span class="hljs-keyword">where</span> step x [] = [[x]]<br>        step x ((y:xs):xss) | x == y    = (x:y:xs):xss<br>                            | otherwise = [x]:(y:xs):xss<br></code></pre></td></tr></table></figure>
+
+<p>示例:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">ghci&gt; runs [1,1,2,2,3,3,4,5,6,6]<br>[[1,1],[2,2],[3,3],[4],[5],[6,6]]<br>ghci&gt;<br></code></pre></td></tr></table></figure>
+
+<p>又比如 <code>run</code> 表示单调递增的段:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">runs&#x27;</span> :: <span class="hljs-type">Ord</span> a =&gt; [a] -&gt; [[a]]<br><span class="hljs-title">runs&#x27;</span> xs = foldr step [] xs<br>  <span class="hljs-keyword">where</span> step x [] = [[x]]<br>        step x ((y:xs):xss) | x &lt;= y    = (x:y:xs):xss<br>                            | otherwise = [x]:(y:xs):xss<br></code></pre></td></tr></table></figure>
+
+<p>示例:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">ghci&gt; runs<span class="hljs-string">&#x27; [1,2,3,1,4,5]</span><br><span class="hljs-string">[[1,2,3],[1,4,5]]</span><br><span class="hljs-string">ghci&gt; </span><br></code></pre></td></tr></table></figure>
+
+<p>有比如通用的 <code>runs</code>, 用一个谓词函数来指示关系:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">runs</span> :: (a -&gt; a -&gt; <span class="hljs-type">Bool</span>) -&gt; [a] -&gt; [[a]]<br><span class="hljs-title">runs</span> p xs = foldr step [] xs<br>  <span class="hljs-keyword">where</span> step x [] = [[x]]<br>        step x ((y:xs):xss) | x `p` y   = (x:y:xs):xss<br>                            | otherwise = [x]:(y:xs):xss<br><br><span class="hljs-title">runs&#x27;</span> :: <span class="hljs-type">Ord</span> a =&gt; [a] -&gt; [[a]]<br><span class="hljs-title">runs&#x27;</span>  = runs (&lt;)<br><br><span class="hljs-title">runs&#x27;</span> :: <span class="hljs-type">Ord</span> a =&gt; [a] -&gt; [[a]]<br><span class="hljs-title">runs&#x27;&#x27;</span> = runs (==)<br></code></pre></td></tr></table></figure>
+
+<p>示例:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">ghci&gt; runs (&lt;) [1,2,3,1,4,5]<br>[[1,2,3],[1,4,5]]<br>ghci&gt; runs (==) [1,1,2,2,3,3,4,5,6,6]<br>[[1,1],[2,2],[3,3],[4],[5],[6,6]]<br></code></pre></td></tr></table></figure>
+
+<p>书中说, <code>Data.List</code> 模块中的 <code>sort</code> 函数是用 mergesort 实现的, 其中的 <code>runs</code> 实现如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">runs</span> [x] = [[x]]<br><span class="hljs-title">runs</span> (x:y:xs)<br>  | x &lt;= y    = upruns y (x:) xs<br>  | otherwise = dnruns y [x] xs<br><br><span class="hljs-title">upruns</span> x f [] = [f [x]]<br><span class="hljs-title">upruns</span> x f (y:ys)<br>  | x &lt;= y    = upruns y (f . (x:)) ys<br>  | otherwise = f [x]:runs (y:ys)<br><br><span class="hljs-title">dnruns</span> x xs [] = [x:xs]<br><span class="hljs-title">dnruns</span> x xs (y:ys)<br>  | x &gt; y     = dnruns y (x:xs) ys<br>  | otherwise = (x:xs):runs (y:ys)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>upruns</code> 是 “Upward Runs” 或 “Increasing Runs”, 用来找递增的 <code>run</code></li>
+<li><code>dnruns</code> 是 “Downward Runs” 或 “Decreasing Runs”, 用来找递减的 <code>run</code>, 并且调换成递增序列</li>
+<li><code>upruns</code> 的第一个参数表示当前遇到的最大值, 便于用来找递增序列: 下一个元素大于这个参数, 则更新最大值并继续找; 小于这个参数, 则记录并中止</li>
+<li><code>dnruns</code> 的第一个参数表示当前遇到的最小值, 也用来找递减序列: 下一个元素小于这个参数, 则更新最小值并继续找; 大于这个参数, 则记录并中止</li>
+<li><code>upruns</code> 和 <code>dnruns</code> 的第二个参数都是累积值:<ul>
+<li><code>upruns</code> 的 <code>f</code>, 累积出来是 <code>(x1:) . (x2:) . (x3:)</code> 这种</li>
+<li><code>dnruns</code> 的 <code>xs</code>, 累积出来是 <code>[x1,x2,x3]</code> 这种</li>
+</ul>
+</li>
+<li><code>runs</code> 的处理逻辑是: 如果列表只有一个元素, 则包裹为 <code>[[x]]</code>; 如果有两个及以上元素, 先取两个, 如果两者是递增关系, 则交给 <code>upruns</code> 继续往后找; 如果是递减关系, 则交给 <code>dnruns</code> 往后找</li>
+</ul>
+<p>示例:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">ghci&gt; runs [1,1,2,2,3,3,4,5,4,3,2]<br>[[1,1,2,2,3,3,4,5],[2,3,4]]<br></code></pre></td></tr></table></figure>
+
+<h2 id="5-3-Heapsort"><a href="#5-3-Heapsort" class="headerlink" title="5.3 Heapsort"></a>5.3 Heapsort</h2><p>Heapsort 需要借助 Heap 这个数据结构, Heap 本质上也是一种 binary tree, 只是满足一些特征:</p>
+<ul>
+<li>Min Heap, 根节点包含的值是树中最小的值</li>
+<li>Max Heap, 根节点包含的值是树中最大的值</li>
+</ul>
+<p>Heapsort 其实就是把 Heap flatten 开的过程, 如 (以 Min Heap 为例):</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Tree</span> a = <span class="hljs-type">Null</span> | <span class="hljs-type">Node</span> a (<span class="hljs-type">Tree</span> <span class="hljs-title">a</span>) (<span class="hljs-type">Tree</span> <span class="hljs-title">a</span>)</span><br><br><span class="hljs-title">flatten</span> :: <span class="hljs-type">Ord</span> a =&gt; <span class="hljs-type">Tree</span> a -&gt; [a]<br><span class="hljs-title">flatten</span> <span class="hljs-type">Null</span> = []<br><span class="hljs-title">flatten</span> (<span class="hljs-type">Node</span> x l r) = x:merge (flatten l) (flatten r)<br><br><span class="hljs-title">merge</span> :: <span class="hljs-type">Ord</span> a =&gt; [a] -&gt; [a] -&gt; [a]<br><span class="hljs-title">merge</span> [] ys = ys<br><span class="hljs-title">merge</span> xs [] = xs<br><span class="hljs-title">merge</span> (x:xs) (y:ys)<br>  | x &lt;= y    = x:merge xs (y:ys)<br>  | otherwise = y:merge (x:xs) ys<br></code></pre></td></tr></table></figure>
+<ul>
+<li>每次取根节点, 就能得到 nondecreasing order list. 时间复杂度是 $\Theta (nlogn)$</li>
+</ul>
+<p>在 $O(nlogn)$ 时间内构建一个 size-balanced Heap 的思路如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">mktree</span> :: <span class="hljs-type">Ord</span> a =&gt; [a] -&gt; <span class="hljs-type">Tree</span> a<br><span class="hljs-title">mktree</span> []  = <span class="hljs-type">Null</span><br><span class="hljs-title">mktree</span> xs  = <span class="hljs-type">Node</span> m (mktree ys) (mktree zs)<br>  <span class="hljs-keyword">where</span> (m, ys, zs) = findMin xs<br><br><span class="hljs-title">findMin</span> :: <span class="hljs-type">Ord</span> a =&gt; [a] -&gt; (a, [a], [a])<br><span class="hljs-title">findMin</span> [] = error <span class="hljs-string">&quot;findMin: can not find in empty list&quot;</span><br><span class="hljs-title">findMin</span> [x] = (x,[],[])<br><span class="hljs-title">findMin</span> (x:xs) = foldr step (x, [], []) xs<br>  <span class="hljs-keyword">where</span><br>    step x (m, ys, zs)<br>      | x &lt;= m = (x, m:zs, ys)<br>      | otherwise = (m, x:zs, ys)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>findMin</code> 运行一次需要 $O(n)$, <code>mktree</code> 最多调用 $O(logn)$ 次, 因为 <code>findMin</code> 会把剩下元素拆分为均匀的两半, 相当于每次 <code>mktree</code> 的输入规模减半</li>
+</ul>
+<p>也可以先在 $O(n)$ 时间内构建一棵树, 之后再调整树中节点的位置以符合 Heap 的性质, 方法与 mergesort 中使用的 <code>mkpair</code> 类似:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">mkpair</span> :: <span class="hljs-type">Int</span> -&gt; [a] -&gt; (<span class="hljs-type">Tree</span> a, [a])<br><span class="hljs-title">mkpair</span> <span class="hljs-number">0</span> xs = (<span class="hljs-type">Null</span>, xs)<br><span class="hljs-title">mkpair</span> n (x:xs) = (<span class="hljs-type">Node</span> x l r, zs)<br>  <span class="hljs-keyword">where</span> (l, ys) = mkpair m xs<br>        (r, zs) = mkpair (n-<span class="hljs-number">1</span>-m) ys<br>        m = (n-<span class="hljs-number">1</span>) `div` <span class="hljs-number">2</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>之所以是 <code>n-1-m</code>, 先减的 <code>1</code> 是 <code>(x:xs)</code> 这里取出了一个元素</li>
+</ul>
+<p>每次调用 <code>mkpair</code>, 只会从 <code>xs</code> 中取出一个元素进行处理, <code>Node</code> 操作和 <code>div 2</code> 操作都是常数时间 $O(1)$, 其中递归了两次, 每次的操作数是原来的一半, 因此可以得到递推关系:</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs reasonml"><span class="hljs-constructor">T(<span class="hljs-params">n</span>)</span> = <span class="hljs-constructor">T(<span class="hljs-params">n</span><span class="hljs-operator">/</span>2)</span> + <span class="hljs-constructor">T(<span class="hljs-params">n</span><span class="hljs-operator">/</span>2)</span> + <span class="hljs-constructor">O(1)</span><br><span class="hljs-constructor">T(<span class="hljs-params">n</span>)</span> = <span class="hljs-number">2</span><span class="hljs-constructor">T(<span class="hljs-params">n</span><span class="hljs-operator">/</span>2)</span> + <span class="hljs-constructor">O(1)</span><br>     = <span class="hljs-number">2</span>(<span class="hljs-number">2</span><span class="hljs-constructor">T(<span class="hljs-params">n</span><span class="hljs-operator">/</span>4)</span> + <span class="hljs-constructor">O(1)</span>) + <span class="hljs-constructor">O(1)</span><span class="hljs-operator"></span><br><span class="hljs-operator">     ...</span><br><span class="hljs-operator">     </span>= <span class="hljs-constructor">O(1)</span> + <span class="hljs-number">2</span><span class="hljs-constructor">O(1)</span> + <span class="hljs-number">4</span><span class="hljs-constructor">O(1)</span> +<span class="hljs-operator"> ... </span>+ n<span class="hljs-constructor">O(1)</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>为什么最后是加到 <code>O(n)</code>, 从 <code>2T(n/2)</code> 来看, <code>n/2</code> 最多进行 $logn$ 次, 也就是说外面的 <code>2</code> 倍数也最多有 $logn$ 个, 即 $2^(log_2n) &#x3D; n$</li>
+</ul>
+<p>之后实现 <code>heapify</code> 函数, 判断 <code>tree</code> 是否满足 <code>heap</code> 的性质, <code>siftDown</code> 具体调整 <code>tree</code> 来满足 <code>heap</code> 性质:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">heapify</span> :: <span class="hljs-type">Ord</span> a =&gt; <span class="hljs-type">Tree</span> a -&gt; <span class="hljs-type">Tree</span> a<br><span class="hljs-title">heapify</span> <span class="hljs-type">Null</span> = <span class="hljs-type">Null</span><br><span class="hljs-title">heapify</span> (<span class="hljs-type">Node</span> x u v) = siftDown x (heapify u) (heapify v)<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">siftDown</span> :: <span class="hljs-type">Ord</span> a =&gt; a -&gt; <span class="hljs-type">Tree</span> a -&gt; <span class="hljs-type">Tree</span> a -&gt; <span class="hljs-type">Tree</span> a<br><span class="hljs-title">siftDown</span> x <span class="hljs-type">Null</span> <span class="hljs-type">Null</span> = <span class="hljs-type">Node</span> x <span class="hljs-type">Null</span> <span class="hljs-type">Null</span><br><span class="hljs-title">siftDown</span> x (<span class="hljs-type">Node</span> y u v) <span class="hljs-type">Null</span><br>  | x &lt;= y    = <span class="hljs-type">Node</span> x (<span class="hljs-type">Node</span> y u v) <span class="hljs-type">Null</span><br>  | otherwise = <span class="hljs-type">Node</span> y (siftDown x u v) <span class="hljs-type">Null</span><br><span class="hljs-title">siftDown</span> x <span class="hljs-type">Null</span> (<span class="hljs-type">Node</span> y u v)<br>  | x &lt;= y    = <span class="hljs-type">Node</span> x <span class="hljs-type">Null</span> (<span class="hljs-type">Node</span> y u v)<br>  | otherwise = <span class="hljs-type">Node</span> y (siftDown x u v) <span class="hljs-type">Null</span><br><span class="hljs-title">siftDown</span> x (<span class="hljs-type">Node</span> y ul ur) (<span class="hljs-type">Node</span> z vl vr)<br>  | x &lt;= min y z = <span class="hljs-type">Node</span> x (<span class="hljs-type">Node</span> y ul ur) (<span class="hljs-type">Node</span> z vl vr)<br>  | y &lt;= min x z = <span class="hljs-type">Node</span> y (siftDown x ul ur) (<span class="hljs-type">Node</span> z vl vr)<br>  | z &lt;= min x y = <span class="hljs-type">Node</span> z (<span class="hljs-type">Node</span> y ul ur) (siftDown x vl vr)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>这里用 <code>siftDown x (Node y u v) Null</code> 来说明, 都认定 <code>Node y u v</code> 是满足 Heap 特性的:<ul>
+<li>如果 <code>x</code> 更小, 那么直接构建 Tree, <code>x</code> 作为 Node value</li>
+<li>如果 <code>y</code> 更小, 那么需要交换 <code>x</code> 和 <code>y</code> 的位置. 虽然 <code>Node y u v</code> 是满足 Heap 特性的, 但是 <code>Node x u v</code> 不一定满足, 因为 <code>x</code> 比 <code>y</code> 大, 此时 <code>u</code> 和 <code>v</code> 中可能有更小的, 因此需要继续 <code>siftDown x u v</code> 处理</li>
+</ul>
+</li>
+</ul>
+<p><code>siftDown</code> 的调用次数与 height 有关, 毕竟 <code>siftDown x u v</code>, 相当于每次处理一层. 由于递归作用于每个子树, 假设一开始树高为 <code>h</code>, 那么子树高度为 <code>h-1</code> (最坏情况下两个都是这么高), 下一层子树高度为 <code>h-2</code>, 可以得到:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>h + 2(h-1) + 4(h-2) + … + 2^(h-1) &#x3D; \sum_{k&#x3D;1}^{h} 2^{h-k} k &#x3D; 2^h \sum_{k&#x3D;1}^h k&#x2F;2^k &lt; 2^{h+1}<br>\end{aligned}<br>}<br>$$<br>由于一棵 size-balanced tree 的高度最高为 $\Theta(logn)$, 因此 $2^{h+1} &#x3D; 2^{logn + 1}$, 相当于就是 $\Theta(n)$.</p>
+<p>此时 heapsort 可以定义如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">hsort</span> :: <span class="hljs-type">Ord</span> a =&gt; [a] -&gt; [a]<br><span class="hljs-title">hsort</span> = flatten . heapify . mktree<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>mktree</code> 和 <code>heapify</code> 的时间复杂度是 $\Theta(n)$</li>
+<li><code>flatten</code> 的时间复杂度是 $\Theta(nlogn)$</li>
+<li><code>hsort</code> 的时间复杂度是 $\Theta(nlogn)$</li>
+</ul>
+<h2 id="5-4-Bucketsort-and-Radixsort"><a href="#5-4-Bucketsort-and-Radixsort" class="headerlink" title="5.4 Bucketsort and Radixsort"></a>5.4 Bucketsort and Radixsort</h2><p>Bucketsort 和 Radixsort 是与前面的 qsort, mergesort, heapsort 思路完全不同的方法. 它们不需要类型元素的比较, 即不需要 <code>sort :: Ord a =&gt; [a] -&gt; [a]</code> 这种声明. 它们主要借助数据结构的排序性质.</p>
+<p>在某些场景下, 基于比较的方法效率会比较低, 比如将 mergesort 用在排序一组单词上时:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">type</span> <span class="hljs-type">Word</span> = [<span class="hljs-type">Char</span>]</span><br><span class="hljs-title">sortWords</span> :: [<span class="hljs-type">Word</span>] -&gt; [<span class="hljs-type">Word</span>]<br><span class="hljs-title">sortWords</span> = msort<br></code></pre></td></tr></table></figure>
+<p>假如每个 <code>Word</code> 的最大长度是 <code>k</code>, 那么比较两个 <code>Word</code> 会进行 $\Theta(k)$ 次比较, <code>sortWord</code> 的总时间复杂度会是 $O(knlogn)$, 而使用 Bucketsort 和 Radixsort 能将其降低到 $O(kn)$.</p>
 
                 
               </div>

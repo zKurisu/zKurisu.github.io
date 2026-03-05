@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="读取 stdin 输入示例: 12345678910use std::io;fn main() &amp;#123;    let mut input &#x3D; String::new();    io::stdin()        .read_line(&amp;mut input)        .expect(&quot;Failed to read line&quot;);    let n: i32">
+    <meta name="description" content="Fat PointerFat Pointer (胖指针) 区别于普通 thin pointer:  Thin Pointer 只包含一个内存地址 Fat Pointer 除了包含内存地址, 还额外携带了一份元数据  之所以称为 “Fat”, 是因为在 64 位系统上, 普通指针占 8 字节, 而胖指针占 16 字节 (8+8), 占用的空间更大. Fat Pointer 主要用来解决 DST (D">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Rust-技巧积累">
 <meta property="og:url" content="http://example.com/2025/09/16/Rust-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="读取 stdin 输入示例: 12345678910use std::io;fn main() &amp;#123;    let mut input &#x3D; String::new();    io::stdin()        .read_line(&amp;mut input)        .expect(&quot;Failed to read line&quot;);    let n: i32">
+<meta property="og:description" content="Fat PointerFat Pointer (胖指针) 区别于普通 thin pointer:  Thin Pointer 只包含一个内存地址 Fat Pointer 除了包含内存地址, 还额外携带了一份元数据  之所以称为 “Fat”, 是因为在 64 位系统上, 普通指针占 8 字节, 而胖指针占 16 字节 (8+8), 占用的空间更大. Fat Pointer 主要用来解决 DST (D">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-09-16T13:15:22.000Z">
-<meta property="article:modified_time" content="2025-10-14T08:15:33.502Z">
+<meta property="article:modified_time" content="2026-03-04T10:53:00.921Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -437,7 +437,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          27k 字
+          30k 字
         
       </span>
     
@@ -448,7 +448,7 @@ path.outline_glyph {
         
         
         
-          224 分钟
+          252 分钟
         
       </span>
     
@@ -491,7 +491,134 @@ path.outline_glyph {
             
               <div class="markdown-body">
                 
-                <h1 id="读取-stdin-输入"><a href="#读取-stdin-输入" class="headerlink" title="读取 stdin 输入"></a>读取 stdin 输入</h1><p>示例:</p>
+                <h1 id="Fat-Pointer"><a href="#Fat-Pointer" class="headerlink" title="Fat Pointer"></a>Fat Pointer</h1><p>Fat Pointer (胖指针) 区别于普通 thin pointer:</p>
+<ul>
+<li>Thin Pointer 只包含一个内存地址</li>
+<li>Fat Pointer 除了包含内存地址, 还额外携带了一份元数据</li>
+</ul>
+<p>之所以称为 “Fat”, 是因为在 64 位系统上, 普通指针占 8 字节, 而胖指针占 16 字节 (<code>8+8</code>), 占用的空间更大.</p>
+<p>Fat Pointer 主要用来解决 DST (Dynamically Sized Type, 动态大小类型) 在编译期大小不确定的问题, 比如 <code>[i32]</code> 切片, 从类型上不知道大小, 编译器就没办法在栈上给它们分配空间.</p>
+<p>DST 的大小实际上是知道的, 只是无法从类型上获取, 因此在编译期无法通过类型获取大小. 如果把这个具体的大小存到指针的部分空间里, 通过让指针的大小确定, 并且让 DST 的大小可以在运行时得到, 来解决这个问题.</p>
+<p>Thin Pointer 与 Fat Pointer 的区分标准就是: 指向的类型在编译时大小是否确定, 如下面示例:</p>
+<table>
+<thead>
+<tr>
+<th>引用示例</th>
+<th>指向的类型</th>
+<th>类型是否 Sized</th>
+<th>指针类型</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>&amp;i32</code></td>
+<td><code>i32</code></td>
+<td>是</td>
+<td>Thin Pointer</td>
+</tr>
+<tr>
+<td><code>&amp;[i32; 4]</code></td>
+<td><code>[i32; 4]</code></td>
+<td>是 (固定长度数组)</td>
+<td>Thin Pointer</td>
+</tr>
+<tr>
+<td><code>&amp;[i32]</code></td>
+<td><code>[i32]</code></td>
+<td>否 (切片)</td>
+<td>Fat Pointer</td>
+</tr>
+<tr>
+<td><code>&amp;str</code></td>
+<td><code>str</code></td>
+<td>否 (字符串切片)</td>
+<td>Fat Pointer</td>
+</tr>
+<tr>
+<td><code>&amp;dyn MyTrait</code></td>
+<td><code>dyn MyTrait</code></td>
+<td>否 (特征对象)</td>
+<td>Fat Pointer</td>
+</tr>
+</tbody></table>
+<h1 id="大小确定性"><a href="#大小确定性" class="headerlink" title="大小确定性"></a>大小确定性</h1><p>在 Rust 中, 编译器必须在编译时知道一个变量占用多少内存空间. 下面例子会报错:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">arr</span>: [<span class="hljs-type">i32</span>; <span class="hljs-number">4</span>] = [<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>,<span class="hljs-number">4</span>];<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Arr: &#123;:?&#125;&quot;</span>, arr[<span class="hljs-number">1</span>..<span class="hljs-number">3</span>]);<br>&#125;<br></code></pre></td></tr></table></figure>
+<p><code>arr[1..3]</code> 是 slice 类型, 其代表内存中一段连续的, 但 “长度未知” (着重注意这个特征) 的数据, 因为这种类型称为 DST (Dynamically Sized Type, 动态大小类型), <code>arr[1..3]</code> 返回的类型是 <code>[i32]</code>, 而不是 <code>[i32;3]</code>, 因此无法从类型获取大小信息.</p>
+<p>直接给变量赋值 slice 也不能通过编译, 比如:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">arr</span>: [<span class="hljs-type">i32</span>; <span class="hljs-number">4</span>] = [<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>,<span class="hljs-number">4</span>];<br><span class="hljs-keyword">let</span> <span class="hljs-variable">slice</span> = arr[<span class="hljs-number">1</span>..<span class="hljs-number">3</span>];<br></code></pre></td></tr></table></figure>
+
+<p>报错如下:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">3 |     <span class="hljs-built_in">let</span> slice = arr[1..3];<br>  |         ^^^^^ doesn<span class="hljs-string">&#x27;t have a size known at compile-time</span><br></code></pre></td></tr></table></figure>
+
+<p>写成下面形式则可以通过编译:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">arr</span>: [<span class="hljs-type">i32</span>; <span class="hljs-number">4</span>] = [<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>,<span class="hljs-number">4</span>];<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Arr: &#123;:?&#125;&quot;</span>, &amp;arr[<span class="hljs-number">1</span>..<span class="hljs-number">3</span>]);<br>&#125;<br></code></pre></td></tr></table></figure>
+<p><code>&amp;arr[1..3]</code> 的类型是 <code>&amp;[i32]</code>, 虽然其指向的数据大小不确定, 但 “指针” 本身的大小是固定且已知的, 因此不会出现 “doesn’t have a size known at compile-time” 的报错. </p>
+<p>而且, Rust 这里的指针称为 “Fat Pointer”, 其包含两部分内容:</p>
+<ul>
+<li>Pointer, 指向对象的起始内存地址</li>
+<li>Length, 指向对象的长度</li>
+</ul>
+<p>因此在运行时, 可以通过这个指针获取对应的长度信息.</p>
+<p>下面例子也是一个典型的大小不确定问题:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">s</span>: <span class="hljs-type">str</span> = <span class="hljs-string">&quot;Hello&quot;</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>str</code> 也是 DST 类型, 本质是 <code>[u8]</code>, 表示字符数组的切片</li>
+</ul>
+<p>下面定义才正确:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">s</span>: &amp;<span class="hljs-type">str</span> = <span class="hljs-string">&quot;Hello&quot;</span>;<br></code></pre></td></tr></table></figure>
+
+
+<h1 id="格式化输出"><a href="#格式化输出" class="headerlink" title="格式化输出"></a>格式化输出</h1><p>Rust 中与格式化相关的宏主要定义在 <code>std::fmt</code> 模块中, 主要需要了解 “格式化字符串”, “格式字符” 两个东西. 比如:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Hello, &#123;&#125;!&quot;</span>, <span class="hljs-string">&quot;world&quot;</span>);<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>println!</code> 的第一个参数 <code>&quot;Hello, &#123;&#125;!&quot;</code> 就是格式化字符串</li>
+<li>第二个参数开始, 如这里的 <code>&quot;world&quot;</code> 就是普通的参数, 会替换到格式化字符串中</li>
+</ul>
+<p><code>&#123;&#125;</code> 称为占位符, 最终会被替换为格式化后的参数, 有 3 种参数替换方式:</p>
+<ol>
+<li>默认顺序, 直接用 <code>&#123;&#125;</code>, 比如:<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Here we have &#123;&#125;, &#123;&#125;, &#123;&#125; and &#123;&#125;&quot;</span>, <span class="hljs-string">&quot;apple&quot;</span>, <span class="hljs-string">&quot;banana&quot;</span>, <span class="hljs-string">&quot;orange&quot;</span>, <span class="hljs-string">&quot;watermelon&quot;</span>);<br></code></pre></td></tr></table></figure></li>
+</ol>
+<p>这种情况下, 参数是按顺序填入 <code>&#123;&#125;</code> 中, 需要个数匹配才行.</p>
+<ol start="2">
+<li>位置索引顺序, 用 <code>&#123;0&#125;</code>, <code>&#123;1&#125;</code> 等, 比如:<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Here we have &#123;3&#125;, &#123;2&#125;, &#123;1&#125; and &#123;0&#125;&quot;</span>, <span class="hljs-string">&quot;apple&quot;</span>, <span class="hljs-string">&quot;banana&quot;</span>, <span class="hljs-string">&quot;orange&quot;</span>, <span class="hljs-string">&quot;watermelon&quot;</span>);<br></code></pre></td></tr></table></figure></li>
+</ol>
+<p>“apple” 的索引是 <code>0</code>, “banana” 是 <code>1</code>, 以此类推, 索引可以重复使用.</p>
+<ol start="3">
+<li>命名参数, 如 <code>&#123;name&#125;</code>, <code>&#123;age&#125;</code> 等:<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;name&#125; is &#123;age&#125; years old.&quot;</span>, name = <span class="hljs-string">&quot;Bob&quot;</span>, age = <span class="hljs-number">25</span>);<br></code></pre></td></tr></table></figure></li>
+</ol>
+<p>或者直接用外部的变量名.</p>
+<p>具体怎样格式化, 通过在 <code>&#123;&#125;</code> 中指定 “格式化字符” 来说明, <code>:xxx</code> 用来指定调用某个 trait 中实现的函数, 如:</p>
+<ul>
+<li><code>&#123;&#125;</code>, 调用 <code>Display</code> trait 中实现的函数, 用户友好的输出文本</li>
+<li><code>&#123;:?&#125;</code>, 调用 <code>Debug</code> trait 中实现的函数</li>
+<li><code>&#123;:#?&#125;</code>, 美化的多行 Debug 输出 (后面这几个不晓得有没有对应的 <code>trait</code>)</li>
+<li><code>&#123;:o&#125;</code>, 八进制</li>
+<li><code>&#123;:x&#125;</code>, 十六进制</li>
+<li><code>&#123;:b&#125;</code>, 二进制</li>
+<li><code>&#123;:p&#125;</code>, 指针地址</li>
+<li><code>&#123;:e&#125;</code>, 科学记数法</li>
+</ul>
+<p>比如:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">num</span> = <span class="hljs-number">42</span>;<br><span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;dec: &#123;&#125;&quot;</span>, num);   <span class="hljs-comment">// 42</span><br><span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;hex: &#123;:x&#125;&quot;</span>, num); <span class="hljs-comment">// 2a</span><br><span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;bin: &#123;:b&#125;&quot;</span>, num); <span class="hljs-comment">// 101010</span><br></code></pre></td></tr></table></figure>
+
+<p><code>:xxx</code> 中的 <code>xxx</code> 还可以是格式控制参数:</p>
+<figure class="highlight prolog"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs prolog">:[[fill]align][sign][<span class="hljs-string">&#x27;#&#x27;</span>][<span class="hljs-string">&#x27;0&#x27;</span>][width][<span class="hljs-string">&#x27;.&#x27;</span> precision][type]<br></code></pre></td></tr></table></figure>
+
+<p><code>align</code> 有 3 种:</p>
+<ul>
+<li><code>&lt;</code>, 表示左对齐 (默认)</li>
+<li><code>&gt;</code>, 表示右对齐</li>
+<li><code>^</code>, 表示居中对齐</li>
+<li><code>&lt;</code>, <code>&gt;</code>, <code>^</code> 等之前可以写用来填充的字符, 比如:</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;:&gt;10&#125;&quot;</span>, <span class="hljs-string">&quot;hello&quot;</span>);      <span class="hljs-comment">// &quot;     hello&quot;</span><br><span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;:*&lt;10&#125;&quot;</span>, <span class="hljs-string">&quot;hi&quot;</span>);        <span class="hljs-comment">// &quot;hi********&quot;</span><br><span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;:^10&#125;&quot;</span>, <span class="hljs-string">&quot;hey&quot;</span>);        <span class="hljs-comment">// &quot;   hey    &quot;</span><br></code></pre></td></tr></table></figure>
+<p>这里的 <code>10</code> 是格式后的宽度, 即 <code>width</code> 部分.</p>
+<p><code>sign</code> 可以是 <code>+</code>, 强制显示正数的 <code>+</code> 号:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;:+&#125;&quot;</span>, <span class="hljs-number">5</span>); <span class="hljs-comment">// &quot;+5&quot;</span><br></code></pre></td></tr></table></figure>
+
+<p><code>#</code> 用来切换显示格式, 比如前面提到的二进制, 八进制等:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;:#x&#125;&quot;</span>, <span class="hljs-number">255</span>); <span class="hljs-comment">// &quot;0xff&quot;</span><br></code></pre></td></tr></table></figure>
+
+<h1 id="读取-stdin-输入"><a href="#读取-stdin-输入" class="headerlink" title="读取 stdin 输入"></a>读取 stdin 输入</h1><p>示例:</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::io;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">input</span> = <span class="hljs-type">String</span>::<span class="hljs-title function_ invoke__">new</span>();<br>    io::<span class="hljs-title function_ invoke__">stdin</span>()<br>        .<span class="hljs-title function_ invoke__">read_line</span>(&amp;<span class="hljs-keyword">mut</span> input)<br>        .<span class="hljs-title function_ invoke__">expect</span>(<span class="hljs-string">&quot;Failed to read line&quot;</span>);<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">n</span>: <span class="hljs-type">i32</span> = input.<span class="hljs-title function_ invoke__">trim</span>().<span class="hljs-title function_ invoke__">parse</span>().<span class="hljs-title function_ invoke__">unwrap</span>();<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;&#125;&quot;</span>, n);<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <h2 id="核心模块"><a href="#核心模块" class="headerlink" title="核心模块"></a>核心模块</h2><p>使用标准库中的 <code>io</code> 模块:</p>
