@@ -44,8 +44,10 @@
 <meta property="og:image" content="http://example.com/img/algo-in-haskell-pieces-example1.png">
 <meta property="og:image" content="http://example.com/img/algo-in-haskell-pieces-example2.png">
 <meta property="og:image" content="http://example.com/img/algo-in-haskell-pieces-example3.png">
+<meta property="og:image" content="http://example.com/img/selection-foldr1-example.png">
+<meta property="og:image" content="http://example.com/img/select-algorithm-divide-and-conquer-example.png">
 <meta property="article:published_time" content="2026-01-16T03:26:02.000Z">
-<meta property="article:modified_time" content="2026-03-05T02:49:46.519Z">
+<meta property="article:modified_time" content="2026-03-10T11:31:38.620Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/perfect-binary-tree-example.png">
@@ -459,7 +461,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          48k 字
+          60k 字
         
       </span>
     
@@ -470,7 +472,7 @@ path.outline_glyph {
         
         
         
-          401 分钟
+          502 分钟
         
       </span>
     
@@ -949,7 +951,7 @@ path.outline_glyph {
 <p>一个 <code>array</code> 构建函数的变种是 <code>listArray</code>, 只需要提供一个普通 List 即可:</p>
 <figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">listArray</span> :: <span class="hljs-type">Ix</span> i =&gt; (i,i) -&gt; [e] -&gt; <span class="hljs-type">Array</span> i e<br><span class="hljs-title">listArray</span> (l,r) xs = array (l,r) (zip [l..r] xs)<br></code></pre></td></tr></table></figure>
 
-<p>还有一个构建方法是用 <code>accumArray</code> 函数:</p>
+<p>还有一个构建方法是用 <code>accumArray</code> 函数, 其在 <code>array</code> 构造函数的基础上增加了两个参数, 一个用来处理重复值, 一个处理初始值:</p>
 <figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">accumArray</span> :: <span class="hljs-type">Ix</span> i =&gt; (e -&gt; v -&gt; e) -&gt; e -&gt; (i,i) -&gt; [(i,v)] -&gt; <span class="hljs-type">Array</span> i e<br></code></pre></td></tr></table></figure>
 <ul>
 <li><code>(e -&gt; v -&gt; e)</code> 是一个 “累积函数”, 用来把旧值 <code>e</code> 和新值 <code>v</code> 合并成新的 <code>e</code>, 如果关联列表中出现了重复索引就会调用</li>
@@ -1486,9 +1488,9 @@ path.outline_glyph {
 <p>最简单的 qsort 可以这样实现:</p>
 <figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">partition</span> :: (a -&gt; <span class="hljs-type">Bool</span>) -&gt; [a] -&gt; ([a], [a])<br><span class="hljs-title">partition</span> p xs = foldr step ([], []) xs<br>  <span class="hljs-keyword">where</span> step x (ys, zs) = <span class="hljs-keyword">if</span> p x <span class="hljs-keyword">then</span> (x:ys, zs) <span class="hljs-keyword">else</span> (ys, x:zs)<br><br><span class="hljs-title">qsort</span> :: <span class="hljs-type">Ord</span> a =&gt; [a] -&gt; [a]<br><span class="hljs-title">qsort</span> (x:xs) = qsort ys ++ [x] ++ qsort zs<br>  <span class="hljs-keyword">where</span> (ys, zs) = partition (&lt;x) xs<br></code></pre></td></tr></table></figure>
 
-<p>但该实现仅仅是 stable, 其他的 fast, smooth, compact 都无法满足. 比如当输入已经排序好时, 时间复杂度是 $O(n^2)$. 这是 pivot 值的选择导致的, pivort 会影响拆分后的两个子列表的大小, 如果每次都能对半拆分, 时间复杂度就接近 $O(nlogn)$ (只拆了 $logn$ 次), 如果每次拆分都是 <code>0</code> 和 <code>n</code>, 那么时间复杂度就是 $O(n^2)$ (毕竟要拆 n 次了).</p>
-<p>一个更好的 pivort 选择是取 median element (平均值).</p>
-<p>可以看出, Quicksort 是一种 divide-and-conquer 算法, 在 dividing 部分 (找 pivort, 并 partition) 工作量较大, 而在 combining 部分很简单, 只需要做拼接.</p>
+<p>但该实现仅仅是 stable, 其他的 fast, smooth, compact 都无法满足. 比如当输入已经排序好时, 时间复杂度是 $O(n^2)$. 这是 pivot 值的选择导致的, pivot 会影响拆分后的两个子列表的大小, 如果每次都能对半拆分, 时间复杂度就接近 $O(nlogn)$ (只拆了 $logn$ 次), 如果每次拆分都是 <code>0</code> 和 <code>n</code>, 那么时间复杂度就是 $O(n^2)$ (毕竟要拆 n 次了).</p>
+<p>一个更好的 pivot 选择是取 median element (平均值).</p>
+<p>可以看出, Quicksort 是一种 divide-and-conquer 算法, 在 dividing 部分 (找 pivot, 并 partition) 工作量较大, 而在 combining 部分很简单, 只需要做拼接.</p>
 <p>由于对于 functional programming 而言, 有其他更适合的 sorting algorithm, 并且 inplace 的实现不太适合这里, 因此书中没有给出更高效的版本.</p>
 <h2 id="5-2-Mergesort"><a href="#5-2-Mergesort" class="headerlink" title="5.2 Mergesort"></a>5.2 Mergesort</h2><p>Mergesort 也是 divide-and-conquer 的思路, 但是实现难度与 quicksort 相反, 在 dividing 部分很简单, 而在 combining 部分复杂.</p>
 <p>同样用 Tree 引入, 但这个 Tree 的定义和之前的略有不同:</p>
@@ -1645,6 +1647,268 @@ path.outline_glyph {
 <p>在某些场景下, 基于比较的方法效率会比较低, 比如将 mergesort 用在排序一组单词上时:</p>
 <figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">type</span> <span class="hljs-type">Word</span> = [<span class="hljs-type">Char</span>]</span><br><span class="hljs-title">sortWords</span> :: [<span class="hljs-type">Word</span>] -&gt; [<span class="hljs-type">Word</span>]<br><span class="hljs-title">sortWords</span> = msort<br></code></pre></td></tr></table></figure>
 <p>假如每个 <code>Word</code> 的最大长度是 <code>k</code>, 那么比较两个 <code>Word</code> 会进行 $\Theta(k)$ 次比较, <code>sortWord</code> 的总时间复杂度会是 $O(knlogn)$, 而使用 Bucketsort 和 Radixsort 能将其降低到 $O(kn)$.</p>
+<p>处理方式是, 把 <code>Word</code> 中的每个字符都当作一个字段, 表示 <code>Word</code> 的特征, 每个字段独立比较. 比如 <code>Hello</code> 拆为 <code>H</code>, <code>e</code>, <code>l</code>, <code>l</code>, <code>o</code> 这 5 个字段, 这些字段分别用一个函数提取出来, 这个提取函数称为 discriminators.</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">ordered</span> :: <span class="hljs-type">Ord</span> b =&gt; [a -&gt; b] -&gt; a -&gt; a -&gt; <span class="hljs-type">Bool</span><br><span class="hljs-title">ordered</span> [] x y = <span class="hljs-type">True</span><br><span class="hljs-title">ordered</span> (d:ds) x y = (d x &lt; d y) || ((d x == d y) &amp;&amp; ordered ds x s)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>[a -&gt; b]</code> 表示 discriminators, 一个 discriminator 会从 <code>a</code> 中提取出一个字段值 <code>b</code></li>
+<li><code>d x &lt; d y</code> 如果为 <code>True</code>, 说明这个字段就能区分出 <code>order</code> 了, 直接结束, 返回 <code>True</code>; 如果为 <code>False</code>, 说明该字段不足以区分, 则进行右边判定: 如果 <code>d x == d y</code>, 该字段相同, 比较下一个字段; 如果 <code>d x /= d y</code>, 再结合 <code>d x &lt; d y</code>, 说明 <code>d x &gt; d y</code>, 也能得出 <code>order</code></li>
+</ul>
+<p>同样可以把这些 fields 用 Tree 组织起来, 只不过这里的不再是二叉树, 而是称为 rose tree:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Tree</span> a = <span class="hljs-type">Leaf</span> a | <span class="hljs-type">Node</span> [<span class="hljs-type">Tree</span> a]</span><br></code></pre></td></tr></table></figure>
+
+<p>Rose tree 表示一个 Leaf 包裹一个值, 或者是一个 Node 包含任意个数的 Tree.</p>
+<p>可以这样构建:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">mktree</span> :: (<span class="hljs-type">Bounded</span> b, <span class="hljs-type">Enum</span> b, <span class="hljs-type">Ord</span> b) =&gt; [a -&gt; b] -&gt; [a] -&gt; <span class="hljs-type">Tree</span> [a]<br><span class="hljs-title">mktree</span> [] xs = <span class="hljs-type">Leaf</span> xs<br><span class="hljs-title">mktree</span> (d:ds) xs = <span class="hljs-type">Node</span> (map (mktree ds) (ptn d xs))<br><br><span class="hljs-title">ptn</span> :: (<span class="hljs-type">Bounded</span> b, <span class="hljs-type">Enum</span> b, <span class="hljs-type">Ord</span> b) =&gt; (a -&gt; b) -&gt; [a] -&gt; [[a]]<br><span class="hljs-title">ptn</span> d xs = [filter (\x -&gt; d x == m) xs | m &lt;- rng]<br>  <span class="hljs-keyword">where</span> rng = [minBound..maxBound]<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>ptn</code> (partition), 利用 discriminator 将一个列表划分到一组 buckets 中</li>
+<li><code>mktree</code> 的逻辑是, 先用 <code>ptn d xs</code> 得到一组 <code>buckets</code> (<code>[[a]]</code>), 之后对每个 bucket 执行 <code>mktree ds xs</code></li>
+<li><code>rng</code> (range), 表示 <code>b</code> 所有可能的取值范围. <code>m &lt;- rng</code> 遍历所有的 <code>b</code> 值, <code>d x == m</code> 则划分到一个 bucket 中. 对应到 word 比较的场景, <code>b</code> 就是一个 <code>char</code>, 一个 bucket 中是该位置上 <code>char</code> 相同的 words</li>
+<li>由于遍历 <code>b</code> 值的时候就是从小往大遍历的, 已经是有序的, 因此构建出来的 <code>buckets</code> 位置也是有序的, 比如: <code>hello</code>, <code>hi</code>, <code>world</code> 三个执行一次 <code>ptn</code>, <code>d</code> 为取第一个位置的元素, 那么会得到两个 buckets: <code>hello, hi</code> 和 <code>world</code>, 注意在字母表中, <code>h</code> 在 <code>w</code> 之前, 因此 <code>h</code> 所在的 bucket 也在 <code>w</code> 所在 bucket 之前</li>
+</ul>
+<p>这里的 <code>ptn</code> 定义比较低效, 因为 <code>minBound..maxBound</code> 的范围可能会很大, 而且每次处理一个 <code>m</code> 值就要遍历一次 <code>xs</code>. 后面会给出更高效的实现.</p>
+<p>之后可以 <code>flatten</code> 这个 <code>Tree</code>, 并定义为 <code>bucketsort</code>:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">flatten</span> :: <span class="hljs-type">Tree</span> [a] -&gt; [a]<br><span class="hljs-title">flatten</span> (<span class="hljs-type">Leaf</span> xs) = xs<br><span class="hljs-title">flatten</span> (<span class="hljs-type">Node</span> ts) = concatMap flatten ts<br><br><span class="hljs-title">bsort</span> ds xs = flatten (mktree ds xs)<br></code></pre></td></tr></table></figure>
+
+<p>常规的 bucketsort 其实不需要借助 Tree, 下面把 Tree 相关的内容消除掉:</p>
+<figure class="highlight asciidoc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs asciidoc"><span class="hljs-code">    bsort (d:ds) xs</span><br><span class="hljs-section">=  &#123; definition of bsort &#125;</span><br><span class="hljs-code">    flatten (mktree (d:ds) xs)</span><br><span class="hljs-section">=  &#123; definition of mktree &#125;</span><br><span class="hljs-code">    flatten (Node (map (mktree ds) (ptn d xs))) -- Flatten 一棵大树</span><br><span class="hljs-section">=  &#123; definition of flatten &#125;</span><br><span class="hljs-code">    concatMap (flatten . mktree ds) (ptn d xs)  -- 将所有子树 flatten 后拼接</span><br><span class="hljs-section">=  &#123; definition of bsort &#125;</span><br><span class="hljs-code">    concatMap (bsort ds) (ptn d xs) -- 分 bucket 之后, 对每个 bucket 应用剩下的 discriminators</span><br></code></pre></td></tr></table></figure>
+
+<p>因此可以直接写为:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">bsort</span> [] xs     = xs<br><span class="hljs-title">bsort</span> (d:ds) xs = concatMap (bsort ds) (ptn d xs)<br></code></pre></td></tr></table></figure>
+
+<p>其实还可以继续转化:</p>
+<figure class="highlight excel"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs excel">    concatMap (bsort ds) (ptn d xs)<br>=  &#123; map (bsort ds) (ptn d xs) = ptn d (bsort ds xs) &#125; -- 先应用 b 来分 buckets, 再应用 bs, 等价于先应用 bs 在应用 b<br>    <span class="hljs-built_in">concat</span> (ptn d (bsort ds xs))<br></code></pre></td></tr></table></figure>
+
+<p>Radixsort (基数排序, 核心思想是按照每一位来排序) 可以给出如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">rsort</span> :: (<span class="hljs-type">Bounded</span> b, <span class="hljs-type">Enum</span> b, <span class="hljs-type">Ord</span> b) =&gt; [a -&gt; b] -&gt; [a] -&gt; [a]<br><span class="hljs-title">rsort</span> [] xs = xs<br><span class="hljs-title">rsort</span> (d:ds) xs = concat (ptn d (rsort ds xs))<br></code></pre></td></tr></table></figure>
+<ul>
+<li>先对 <code>d</code> 取出的那一位排序, 然后递归剩下的位</li>
+</ul>
+<p>这里给出更高效的 <code>ptn</code> 实现, 核心思想是, 不遍历所有取值, 而是把范围限定在已出现的值内. 这里有两个假设:</p>
+<ul>
+<li>所有 fields 的范围一致</li>
+<li>field elements 可以作为 array indices, 即 <code>Ix</code> typeclass 的 instance</li>
+</ul>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">ptn</span> :: <span class="hljs-type">Ix</span> b =&gt; (b, b) -&gt; (a -&gt; b) -&gt; [a] -&gt; [[a]]<br><span class="hljs-title">ptn</span> (l, u) d xs = elems xa<br>  <span class="hljs-keyword">where</span> xa = accumArray snoc [] (l,u) (zip (map d xs) xs)<br>        snoc xs x = xs ++ [x]<br></code></pre></td></tr></table></figure>
+<ul>
+<li>注意这里的 <code>snoc</code> 并不是线性操作, 最坏时间复杂度是 $\Theta (n^2) &#x3D; 1 + 2 + 3 + … + n &#x3D; \frac{n(1+n)}{2}$. 一个解决办法是使用 symmetric lists; 另一个解决办法是将元素按反向方向插入, 然后再获取 array elements 时反转</li>
+</ul>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">ptn</span> (l,y) d xs = map reverse (elems xa)<br>  <span class="hljs-keyword">where</span> xa = accumArray (flip (:)) [] (l,u) (zip (map d xs) xs)<br><br><span class="hljs-title">rsort</span> :: <span class="hljs-type">Ix</span> b =&gt; (b, b) -&gt; [a -&gt; b] -&gt; [a] -&gt; [a]<br><span class="hljs-title">rsort</span> bb [] xs = xs<br><span class="hljs-title">rsort</span> bb (d:ds) xs = concat (ptn bb d (rsort bb ds xs))<br></code></pre></td></tr></table></figure>
+<ul>
+<li>注意 <code>accumArray</code> 累积的顺序是从 <code>l</code> (小) 到 <code>u</code> (大), 但由于 <code>:</code> 操作是插入到头部, 因此小的元素最终会被挤到末尾, 因此需要 <code>reverse</code> 操作恢复顺序</li>
+<li><code>rsort</code> 的实现与之前的区别在于增加了 <code>(b, b)</code> 的 boundary 参数, 处理逻辑还是先处理 <code>d</code> 对应的 <code>field</code>, 然后是递归处理剩下的</li>
+<li>这里每次调用 <code>ptn</code> 的时间复杂度是 $\Theta(n)$, 因此如果有 <code>k</code> 个 discriminators, 则 <code>rsort</code> 的时间复杂度是 $\Theta (kn)$</li>
+<li><code>ptn</code> 的整个逻辑是将 <code>xs</code> 按照 <code>d</code> 取出的位的大小进行分组:<ul>
+<li><code>map d xs</code> 是取出 <code>xs</code> 中各元素 <code>d</code> 对应的 field, 构成一个列表</li>
+<li><code>zip (map d xs) xs</code>, 构成一个关联列表, 键是 <code>d</code> 对应的 <code>field</code>, 值是原始元素. 也就是按 <code>field</code> 索引</li>
+<li><code>(flip (:))</code>, 因为 <code>f</code> 的调用是 <code>f odd dup</code>, <code>odd</code> 是 <code>[]</code>, 因此需要 <code>flip</code>, 目的是让相同 <code>field</code> 的在一个列表中</li>
+<li><code>elems xa</code> 取出所有的列表, 这些列表的相对位置是按照 <code>l</code> 到 <code>u</code> 的顺序排序的</li>
+</ul>
+</li>
+</ul>
+<p>下面是 <code>rsort</code> 的一个示例:</p>
+<ul>
+<li>输入是 digits 组成的非空列表, digit 是指自然数经 <code>show</code> 处理后的字符串. 每个 <code>digit</code> 会用 <code>pad</code> 函数用 <code>0</code> 填充到相同长度, 此时 <code>dicriminator</code> 函数可以定义如下:</li>
+</ul>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">discs</span> :: [<span class="hljs-type">Nat</span>] -&gt; [<span class="hljs-type">Nat</span> -&gt; <span class="hljs-type">Char</span>]<br><span class="hljs-title">discs</span> xs = [\x -&gt; pad k (show x) !! i | i &lt;- [<span class="hljs-number">0</span>..k-<span class="hljs-number">1</span>]]<br>  <span class="hljs-keyword">where</span> k = maximum (map (length . show) xs)<br><br><span class="hljs-title">pad</span> k xs = replicate (k - length xs) &#x27;<span class="hljs-number">0</span>&#x27; ++ xs<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>discs</code> 函数用来构建一组 discriminators:<ul>
+<li><code>k</code> 用来找到输入 <code>digits</code> 中最长的长度</li>
+<li><code>i &lt;- [0..k-1]</code> 表示要创建 <code>k</code> 个 discriminators</li>
+<li><code>pad k (show x)</code> 先将 <code>x</code> 扩展到 <code>k</code> 位</li>
+<li><code>!! i</code> 再取出对应的位</li>
+</ul>
+</li>
+</ul>
+<p>然后 <code>irsort</code> 可以定义为:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">irsort</span> :: [<span class="hljs-type">Nat</span>] -&gt; [<span class="hljs-type">Nat</span>]<br><span class="hljs-title">irsort</span> xs = rsort (&#x27;<span class="hljs-number">0</span>&#x27;, &#x27;<span class="hljs-number">9</span>&#x27;) (discs xs) xs<br></code></pre></td></tr></table></figure>
+
+<h2 id="5-5-Sorting-sums"><a href="#5-5-Sorting-sums" class="headerlink" title="5.5 Sorting sums"></a>5.5 Sorting sums</h2><p>Sorting sums 问题是这样的, 假如 <code>A</code> 是一个可比较的元素类型, <code>+</code> 是二元运算函数, 那么有:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">sortsums</span> :: [<span class="hljs-type">A</span>] -&gt; [<span class="hljs-type">A</span>] -&gt; [<span class="hljs-type">A</span>]<br><span class="hljs-title">sortsums</span> xs ys = sort [x+y | x &lt;- xs, y &lt;- ys]<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>sortsums</code> 为 <code>xs</code>, <code>ys</code> 中元素的所有组合的 <code>+</code> 运算结果进行排序</li>
+<li>假设 <code>xs</code> 和 <code>ys</code> 的长度都为 <code>n</code>, 那么 <code>sort</code> 处理的列表长度为 $n^2$ (<code>xs</code> 和 <code>ys</code> 的元素的所有组合有这么多种), 总的排序时间复杂度就是 $n^2 log (n^2) &#x3D; 2n^2log(n) &#x3D; \Omega(n^2 logn)$. 这里还没考虑 <code>+</code> 的运算复杂度</li>
+</ul>
+<p>之后书中引入了 <code>Abelian group</code> 这个概念, 因此这里我查了一些内容补充到这里.</p>
+<p><code>Group</code> (群), 是一个代数结构. 其描述了一个集合及其上的一种运算, 这个运算需要满足四个核心性质 (通常称为 “群的公理”).</p>
+<p>Group 严格定义为: 一个非空集合 <code>G</code> 和一个定义在 <code>G</code> 上的二元运算 $\cdot$, 如果满足下面四条公理, 则称 $(G, \cdot)$ 构成一个 group:</p>
+<ol>
+<li>封闭性: 对于 <code>G</code> 中的任意两个元素 <code>a</code> 和 <code>b</code>, 运算结果 $a \cdot b$ 也一定属于 <code>G</code></li>
+<li>结合性: 对于 <code>G</code> 中任意三个元素 <code>a,b,c</code>, 有 $(a \cdot b) \cdot c &#x3D; a \cdot (b \cdot c)$. 意味着运算的次序不影响结果</li>
+<li>单位元存在性: <code>G</code> 中存在一个唯一的特殊元素 <code>e</code>, 使得对于 <code>G</code> 中的任意元素 <code>a</code>, 都有 $a \cdot e &#x3D; e \cdot a &#x3D; a$. 元素 <code>e</code> 称为单位元</li>
+<li>逆元存在性: 对于 <code>G</code> 中任意元素 <code>a</code>, 都存在 <code>G</code> 中一个元素 <code>b</code>, 使得 $a \cdot b &#x3D; b \cdot a &#x3D; e$. 元素 <code>b</code> 称为 <code>a</code> 的逆元, 通常记为 $a^{-1}$</li>
+</ol>
+<p>Abelian group 是指, <code>Group</code> 还额外满足交换律, 即 $a, b \in G$, 有 $a \cdot b &#x3D; b \cdot a$.</p>
+<p>其他几个可能遇到的术语:</p>
+<ul>
+<li>Goup 的 rank, 指 Group 中元素的个数. 如果有限, 则称为有限群; 如果无限, 则称为无限群</li>
+<li>子群, 如果群 G 的一个子集 H 在相同的运算下也构成一个群, 则 H 称为 G 的子群</li>
+</ul>
+<p>回到书中的例子, 假设 $(A, +)$ 构成一个 Abelian group, 则有下面性质:</p>
+<ul>
+<li><code>+</code> 满足 associative 和 commutative, 有 identity element 写作 <code>0</code>, 有获取逆元的操作 <code>negate</code> 满足 <code>x + negate x = 0</code></li>
+</ul>
+<p>这一节剩下内容先跳过, 因为似乎还没有能把 <code>sortsums</code> 问题的复杂度降低到 $O(n^2logn)$ 的方法.</p>
+<p>Sorting sums 是 Open Problems Project 中的 Problem 41, 可以自行查阅.</p>
+<h2 id="Exercise-2"><a href="#Exercise-2" class="headerlink" title="Exercise"></a>Exercise</h2><p>这个章节中描述的 sorting algorithm 都可以用 Tree 的角度来描述, 有下面四种 Tree structure:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Tree</span> a = <span class="hljs-type">Null</span> | <span class="hljs-type">Leaf</span> a | <span class="hljs-type">Node</span> (<span class="hljs-type">Tree</span> <span class="hljs-title">a</span>) (<span class="hljs-type">Tree</span> <span class="hljs-title">a</span>) <span class="hljs-comment">-- Mergesort</span></span><br><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Tree</span> a = <span class="hljs-type">Null</span> | <span class="hljs-type">Node</span> a (<span class="hljs-type">Tree</span> <span class="hljs-title">a</span>) (<span class="hljs-type">Tree</span> <span class="hljs-title">a</span>) <span class="hljs-comment">-- Heapsort</span></span><br><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Tree</span> a = <span class="hljs-type">Null</span> | <span class="hljs-type">Node</span> (<span class="hljs-type">Tree</span> <span class="hljs-title">a</span>) a (<span class="hljs-type">Tree</span> <span class="hljs-title">a</span>) <span class="hljs-comment">-- Quicksort</span></span><br><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Tree</span> a = <span class="hljs-type">Leaf</span> a | <span class="hljs-type">Node</span> [<span class="hljs-type">Tree</span> a] <span class="hljs-comment">-- Bucketsort</span></span><br></code></pre></td></tr></table></figure>
+
+<h3 id="exe5-3"><a href="#exe5-3" class="headerlink" title="exe5.3"></a>exe5.3</h3><p>我们知道:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">qsort</span> = flatten . mktree<br></code></pre></td></tr></table></figure>
+
+<p>如果 <code>flatten</code> 和 <code>mktree</code> 的定义如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">flatten</span> :: <span class="hljs-type">Tree</span> a -&gt; [a]<br><span class="hljs-title">flatten</span> <span class="hljs-type">Null</span> = []<br><span class="hljs-title">flatten</span> (<span class="hljs-type">Node</span> l x r) = flatten l ++ [x] ++ flatten r<br><br><span class="hljs-title">mktree</span> :: [a] -&gt; <span class="hljs-type">Tree</span> a<br><span class="hljs-title">mktree</span> [] = <span class="hljs-type">Null</span><br><span class="hljs-title">mktree</span> (x:xs) = <span class="hljs-type">Node</span> (mktree ys) x (mktree zs)<br>  <span class="hljs-keyword">where</span> (ys, zs) = partition (&lt;x) xs<br></code></pre></td></tr></table></figure>
+
+<p>那么 <code>qsort</code> 将 Tree 的部分展开可以写为:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">qsort</span> [] = []<br><span class="hljs-title">qsort</span> (x:xs) = qsort ys ++ [x] ++ qsort zs<br>  <span class="hljs-keyword">where</span> (ys, zs) = partition (&lt;x) xs<br></code></pre></td></tr></table></figure>
+
+<p>如果 <code>flatten</code> 的定义用更高效的定义方式:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">flatten</span> t = go t []<br>  <span class="hljs-keyword">where</span> go <span class="hljs-type">Null</span> acc = acc<br>        go (<span class="hljs-type">Node</span> l x r) = go l (x:go r acc)<br></code></pre></td></tr></table></figure>
+
+<p>可以有:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">qcat</span> xs ys = go (mktree xs) ys<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>qcat</code> 将 <code>xs</code> 有序排在 <code>ys</code> 之前</li>
+</ul>
+<p>那么 <code>qsort</code> 可以展开为:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">qsort</span> xs = qcat xs []<br>  <span class="hljs-keyword">where</span> qcat [] ys = []<br>        qcat (x:xs) ys = qcat us (x:qcat vs ys)<br>            <span class="hljs-keyword">where</span> (us,vs) = partition (&lt;x) xs<br></code></pre></td></tr></table></figure>
+
+<h2 id="exe5-6"><a href="#exe5-6" class="headerlink" title="exe5.6"></a>exe5.6</h2><p>用 space efficient 的累积方法来实现 <code>qsort</code>:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">qsort</span> [] = []<br><span class="hljs-title">qsort</span> (x:xs) = go xs [] []<br>  <span class="hljs-keyword">where</span> go [] us vs = qsort us ++ [x] ++ qsort vs<br>        go (y:xs) us vs<br>          | x &lt;= y    = go xs us (y:vs)<br>          | otherwise = go xs (y:us) vs<br></code></pre></td></tr></table></figure>
+<ul>
+<li>最后 <code>3</code> 行其实就是 <code>partition</code> 的过程</li>
+</ul>
+<h2 id="exe5-9"><a href="#exe5-9" class="headerlink" title="exe5.9"></a>exe5.9</h2><p><code>until</code> 的 fusion law 如下所示:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl">f . (<span class="hljs-keyword">until</span> p g) = <span class="hljs-keyword">until</span> <span class="hljs-string">q (h . f)</span><br></code></pre></td></tr></table></figure>
+
+<p>并且:</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs perl">如果 f . g = h . f<br>那么 p <span class="hljs-keyword">x</span> = <span class="hljs-string">q (f x)</span> <span class="hljs-keyword">for</span> all <span class="hljs-keyword">x</span><br></code></pre></td></tr></table></figure>
+
+<p>(例子见书)</p>
+<h2 id="exe5-10"><a href="#exe5-10" class="headerlink" title="exe5.10"></a>exe5.10</h2><p>下面两个式子都描述 <code>reverse</code>:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">flip</span> (foldl (\f x -&gt; (x:) . f) id) []<br><span class="hljs-title">flip</span> (foldr (\x f -&gt; f . (x:)) id) []<br></code></pre></td></tr></table></figure>
+
+<h2 id="Left"><a href="#Left" class="headerlink" title="Left"></a>Left</h2><p>exe5.11 到最后的题目还没做, 以后补上.</p>
+<h1 id="6-Selection"><a href="#6-Selection" class="headerlink" title="6 Selection"></a>6 Selection</h1><p>这章描述了四种 divide-and-conquer 可以很好处理的 selection 场景. 最基础的例子是: 从一个 set 中选出 kth smallest element. 也会考虑从 union of two sets 中找到 kth smallest element, 并且判断这个 element 不在给定的某集合中.</p>
+<p>这些场景的解法还取决于:</p>
+<ul>
+<li>是否在 list 中</li>
+<li>是否允许 duplicates</li>
+<li>是否在 array 中</li>
+<li>是否在 tree 中</li>
+</ul>
+<h2 id="6-1-Minimum-and-Maximum"><a href="#6-1-Minimum-and-Maximum" class="headerlink" title="6.1 Minimum and Maximum"></a>6.1 Minimum and Maximum</h2><p>从一个 finite nonempty list 中找出最大值和最小值的标准定义如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">minimum</span>,maximum :: <span class="hljs-type">Ord</span> a =&gt; [a] -&gt; a<br><span class="hljs-title">minimum</span> = foldr1 min<br><span class="hljs-title">minimum</span> = foldr1 max<br><br><span class="hljs-title">foldr1</span>,foldl1 :: (a -&gt; a -&gt; a) -&gt; [a] -&gt; a<br><span class="hljs-title">foldr1</span> f [x] = x<br><span class="hljs-title">foldr1</span> f (x:xs) = f x (foldr1 f xs)<br><span class="hljs-title">foldl1</span> f (x:xs) = foldl f x xs<br></code></pre></td></tr></table></figure>
+<p><code>foldr1</code> 和 <code>foldl1</code> 都是 <code>Prelude</code> 中有定义的函数, 其会自动取一个初始值. <code>foldr1</code> 取 list 末尾作为初始值; <code>foldl1</code> 取 list 头部作为初始值</p>
+<p>比如:</p>
+<p><img src="/../img/selection-foldr1-example.png" srcset="/img/loading.gif" lazyload></p>
+<p><code>minimum</code> 和 <code>maximum</code> 操作都会进行 <code>n-1</code> 次 comparisons, 这也是最少的比较次数了. 如果要同时得到 minimum 和 maximum elements, 则最快也要 <code>2n-2</code> 次 comparisons.</p>
+<p>可以结合 tupling law 和 foldr 来简化实现:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell">(foldr f1 e1 xs, foldr f2 e2 xs) = foldr f (e1, e2) xs<br>                                     <span class="hljs-keyword">where</span> f x (y,z) = (f1 x y, f2 x z)<br></code></pre></td></tr></table></figure>
+
+<p>比如下面的定义:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">minmax</span> :: <span class="hljs-type">Ord</span> a =&gt; [a] -&gt; (a, a)<br><span class="hljs-title">minmax</span> (x:xs) = foldr step (x,x) xs <br>  <span class="hljs-keyword">where</span> step x (y, z) = (min x y, max x z)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>这里每个 <code>x</code> 对应两次 comparisons</li>
+</ul>
+<p>可以通过一个 fact: 当前的最小值肯定不会 greater than 当前的最大值, 来简化比较次数:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">minmax</span> :: <span class="hljs-type">Ord</span> a =&gt; [a] -&gt; (a, a)<br><span class="hljs-title">minmax</span> (x:xs) = foldr step (x,x) xs<br>  <span class="hljs-keyword">where</span> step x (y, z)<br>          | x &lt; y = (x, z)<br>          | x &gt; z = (y, x)<br>          | otherwise = (y, z)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>如果 <code>x</code> 是最小值, 那么一定不会比 <code>z</code> 更大了, 所以可以提前结束</li>
+<li>这种解法每个 <code>x</code> 只经历了一次 comparison. 最坏情况还是会有 <code>2n - 2</code> 次 comparisons (比如 <code>xs</code> 包含的都是相同值); 但最好情况只会进行 <code>n - 1</code> 次 comparisons</li>
+</ul>
+<p>同样可以用 divide-and-conquer 的思路来实现:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">minmax</span> [x]   = (x,x)<br><span class="hljs-title">minmax</span> [x,y] = <span class="hljs-keyword">if</span> x &lt;= y <span class="hljs-keyword">then</span> (x, y) <span class="hljs-keyword">else</span> (y, x)<br><span class="hljs-title">minmax</span> xs    = (min a1 a2, max b1 b2)<br>  <span class="hljs-keyword">where</span> (a1, b1) = minmax ys<br>        (a2, b2) = minmax zs<br>        (ys, zs) = halve xs<br></code></pre></td></tr></table></figure>
+<ul>
+<li>当 list 只有一个元素时, 不需要进行比较, 返回 <code>(x,x)</code></li>
+<li>当 list 有两个元素时, 仅进行一次比较</li>
+<li>剩下的就是递归处理</li>
+<li><code>where</code> 部分是 <code>divide</code>, 而 <code>(min a1 a2, max b1 b2)</code> 则是 <code>combine</code></li>
+</ul>
+<p>时间复杂度的计算如下:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>C(1) &#x3D; 0 \newline~ \newline<br>C(2) &#x3D; 1 \newline~ \newline<br>C(n) &#x3D; C(\lfloor n&#x2F;2 \rfloor) + C(\lceil n&#x2F;2 \rceil) + 2<br>\end{aligned}<br>}<br>$$</p>
+<p>解出来是 $C(n) &#x3D; 3n&#x2F;2 - 2$ (书中说不好解, 因此也没有给步骤), 相比于 <code>2n - 2</code>, 减少了 <code>1/4</code> 的 comparisons.</p>
+<p>用 <code>bottom-up</code> 的思维进行 divide-and-conquer 实现还能更高效:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">minmax</span> = unwrap . until single (pairWith op) . mkPairs<br>  <span class="hljs-keyword">where</span> op (a1, b1) (a2, b2) = (min a1 a2, max b1 b2)<br><br><span class="hljs-title">pairWith</span> :: (a -&gt; a -&gt; a) -&gt; [a] -&gt; [a]<br><span class="hljs-title">pairWith</span> f [] = []<br><span class="hljs-title">pairWith</span> f [] = [x]<br><span class="hljs-title">pairWith</span> f (x:y:xs) = f x y:pairWith f xs<br><br><span class="hljs-title">mkPairs</span> :: <span class="hljs-type">Ord</span> a =&gt; [a] -&gt; [(a,a)]<br><span class="hljs-title">mkPairs</span> []  = []<br><span class="hljs-title">mkPairs</span> [x] = [(x,x)]<br><span class="hljs-title">mkPairs</span> (x:y:xs) = <span class="hljs-keyword">if</span> x &lt;= y <span class="hljs-keyword">then</span> (x,y):mkPairs xs <span class="hljs-keyword">else</span> (y,x):mkPairs xs<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>mkPairs</code> 函数把一个普通 list 拆为二元组的 list, 且每个二元组都是左边元素小于右边元素</li>
+<li><code>pairWith</code>, 将 <code>f</code> 应用到没两个参数上, 然后构成 list</li>
+</ul>
+<p>时间复杂度计算如下:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>C(1) &amp;&#x3D; 0 \newline~ \newline<br>C(1) &amp;&#x3D; 1 \newline~ \newline<br>C(n) &amp;&#x3D; \lfloor n&#x2F;2 \rfloor + D(\lceil n&#x2F;2 \rceil) \newline~ \newline<br>D(1) &amp;&#x3D; 0 \newline~ \newline<br>D(n) &amp;&#x3D; 2 \lfloor n&#x2F;2 \rfloor + D(\lceil n&#x2F;2 \rceil)<br>\end{aligned}<br>}<br>$$</p>
+<p>解出来 $D(n) &#x3D; 2(n-2)$, $C(n) &#x3D; n + \lceil n&#x2F;2 \rceil - 2$. 最坏比较次数优于 <code>2n - 2</code>. 但通常不用这种实现方式, 其常数项比较大.</p>
+<h2 id="6-2-Selection-from-one-set"><a href="#6-2-Selection-from-one-set" class="headerlink" title="6.2 Selection from one set"></a>6.2 Selection from one set</h2><p>本节要讨论的问题是: 如何在乱序的数组中, 以最快的速度找到 “第 k 小的元素”, 即 select 问题.</p>
+<p>对于有 n 个元素的 set 而言, 如果一个元素是 kth smallest element 意味着有 $k - 1$ 个元素比它更小 (毕竟排到了第 k 小, 那前面肯定有第 $1, 2, 3, …, k-1$ 小的元素), 整体来说, 集合中 1st smallest 的元素就是最小的元素, 而 nth smallest 的元素就是最大的元素.</p>
+<p>这里引入 median (中位数), 其本质是将集合对半分开, 但根据集合大小 n 是奇数还是偶数, 情况会有所不同.</p>
+<p>如果 n 为 odd, 这个集合的 median m (中位数) 能够将剩下元素分为大小相同的两部分, 即这个 median m 需要: 比集合中 $\lfloor n&#x2F;2 \rfloor$ 个元素大, 比 $\lfloor n&#x2F;2 \rfloor$ 个元素小. 比如集合有 5 个数, $\lfloor 5&#x2F;2 \rfloor &#x3D; 2$, 中位数左边 2 个, 右边两个.</p>
+<p>如果 n 为 even, 没有一个元素能作为 “正中间”, 按理说是中间两个元素都可以, 这里选择中间两个元素中较小的一个, 因此是 lower median m, 满足: 比 $\lfloor n&#x2F;2 \rfloor - 1$ 个元素大, 比 $\lfloor n&#x2F;2 \rfloor$ 个元素小. 比如集合有 4 个元素, $\lfloor 4&#x2F;2 \rfloor &#x3D; 2$, lower median 左边有 1 个点, 右边有 2 个点.</p>
+<p>无论 n 是 odd 还是 even, 都可以用一个通用公式表示 median 满足的性质:</p>
+<ul>
+<li>比它小的元素个数为: $\lfloor (n+1) &#x2F; 2 \rfloor - 1$</li>
+<li>比它大的元素个数为: $\lceil (n+1) &#x2F; 2 \rceil - 1$<br>(证明怎么得来的不清楚, 但是符合之前的 cases, 可以证明正确性)</li>
+</ul>
+<p>如果一个 set 用没有重复值的 list 表示, 其 kth smallest element 的索引实际是 $k - 1$:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">select</span> :: <span class="hljs-type">Ord</span> a =&gt; <span class="hljs-type">Nat</span> -&gt; [a] -&gt; a<br><span class="hljs-title">select</span> k xs = (sort xs) !! (k-<span class="hljs-number">1</span>)<br></code></pre></td></tr></table></figure>
+
+<p>中位数 median 可以定义如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">median</span> xs = select k xs <span class="hljs-keyword">where</span> k = (length xs + <span class="hljs-number">1</span>) `div` <span class="hljs-number">2</span><br></code></pre></td></tr></table></figure>
+
+<p>对于 select 问题, 上述是最朴素的解法, 先将 <code>xs</code> 排好序, 然后直接取第 k 个位置, 这样的时间复杂度取决于排序算法, 通常是 $O(n logn)$, 这个时间可以作为 select 问题的上界.</p>
+<p>对于更快的解法, 无论是什么, 都要至少把整个数组看一遍, 才能确定谁是第 k 小, 因此, 这个问题的运行时间下界是 $\Omega(n)$.</p>
+<p>这里的疑问就是, 有没有一个算法能在 $O(n)$ 时间内找出谁是第 k 小, 而不需要进行完整的排序.</p>
+<p>有一个算法引入 divide and conquer 思想达到了这个效果.</p>
+<p>需要先将之前的 <code>sort</code> 替换为下面的 <code>qsort</code> 实现:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">qsort</span> [] = []<br><span class="hljs-title">qsort</span> xs = qsort us ++ vs ++ qsort ws<br>  <span class="hljs-keyword">where</span> (us, vs, ws) = partition3 (pivot xs) xs<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>pivot</code> 从列表中找到合适的 pivot 值</li>
+<li><code>partition3</code> 将一个列表拆为 3 份, 小于 pivot 的, 等于 pivot 的, 大于 pivot 的. 这种实现便于处理有重复元素的情况</li>
+</ul>
+<p>用 divide-and-conquer 思路加快的原理如下 (只是描述过程):</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs haskell">(xs ++ ys) !! k = <span class="hljs-keyword">if</span> k &lt; n<br>                    <span class="hljs-keyword">then</span> xs !! k<br>                    <span class="hljs-keyword">else</span> ys !! (k - n)<br>  <span class="hljs-keyword">where</span> n = length xs<br></code></pre></td></tr></table></figure>
+<ul>
+<li>如果只考虑取元素, 这里还没有引入排序, <code>k</code> 比 <code>xs</code> 的长度小, 那么只需要从 <code>xs</code> 中取就行, 不需要管 <code>ys</code></li>
+</ul>
+<p>加入 <code>qsort</code> 的 <code>partition</code> 特性, 可以结合上述到 <code>select</code> 中如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">select</span> :: <span class="hljs-type">Ord</span> a =&gt; <span class="hljs-type">Nat</span> -&gt; [a] -&gt; a<br><span class="hljs-title">select</span> k xs<br>  | k &lt;= m     = select k us<br>  | k &lt;= m + n = vs !! (k - m - <span class="hljs-number">1</span>)<br>  | k &gt;  m + n = select (k - m - n) ws<br>  <span class="hljs-keyword">where</span> (us, vs, ws) = partition3 (pivot xs) xs<br>        (m, n) = (length us, length vs)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>partition3</code> 分成的 3 部分, 虽然没有进行细致排序, 但是这 3 部分是有顺序关系的, 剩下的就是锁定在那一个部分中</li>
+<li>之所以对 <code>vs</code> 直接取 <code>!!</code> 而不是 <code>select</code>, 是因为 <code>vs</code> 中的元素都一样 (与 pivot 相等的元素列表), 因此随便取都行实际上</li>
+<li>这里借鉴的就是 <code>qsort</code> 思想, 先分区, 然后判断是哪个区中, 再进行定位</li>
+</ul>
+<p>这里分析下时间复杂度, 假设 $T(n)$ 是 <code>select</code> 作用到长度为 n 的列表上的时间. <code>partition3</code> 将列表分为 3 部分, 第一部分和最后部分的长度最大为 $(n-1)&#x2F;2$ (中间部分的长度至少是 1, 也就相当于是 median 中位数), 因此有:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>T(n) \le T((n-1)&#x2F;2) + \Theta(n)<br>\end{aligned}<br>}<br>$$</p>
+<p>解出来有 $T(n) &#x3D; O(n)$.</p>
+<p>如果 <code>partition3</code> 返回的列表非常不均衡, 最坏情况会变为:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>T(n) &#x3D; T(n - 1) + \Theta(n)<br>\end{aligned}<br>}<br>$$</p>
+<p>解出来有 $T(n) &#x3D; \Theta (n^2)$.</p>
+<p>如果 <code>partition</code> 用 list 的 median 作为 pivot, 就能保证 equal split 且运行时间是线性时间.</p>
+<p>用一个函数 <code>group</code> 将 list 拆为固定大小的几个子 list:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">group</span> :: <span class="hljs-type">Nat</span> -&gt; [a] -&gt; [[a]]<br><span class="hljs-title">group</span> n [] = []<br><span class="hljs-title">group</span> n xs = ys:group n zs <br>  <span class="hljs-keyword">where</span> (ys, zs) = splitAt n xs<br></code></pre></td></tr></table></figure>
+<ul>
+<li>比如 <code>group 5 [1..12] = [[1..5], [6..10], [11,1]]</code>, 一共有 $\lceil n&#x2F;5 \rceil$ 个 groups, 运行时间为 $O(n)$</li>
+</ul>
+<p>之后找到每个 group 的 median 值, 具体来说就是先排序, 然后取中间元素. <code>medians</code> 会得到一组 median 值:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">medians</span> = map (middle . sort) . group <span class="hljs-number">5</span><br>  <span class="hljs-keyword">where</span> middle xs = xs !! ((length xs + <span class="hljs-number">1</span>) `div` <span class="hljs-number">2</span> - <span class="hljs-number">1</span>)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>比如 <code>medians [1..12] = [3,8,11]</code></li>
+<li>为每个 group 排序消耗常数时间, 由于有 $\lceil n&#x2F;5 \rceil$ 个 group, 因此时间复杂度总体是 $O(n)$ ($C \cdot \lceil n&#x2F;5 \rceil$ 也是线性时间).</li>
+</ul>
+<p>之后取这一组 <code>medians</code> 中的 <code>median</code> 值作为 pivot:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">pivot</span> :: <span class="hljs-type">Ord</span> a =&gt; [a] -&gt; a<br><span class="hljs-title">pivot</span> [x] = x<br><span class="hljs-title">pivot</span> xs = median (medians xs)<br>  <span class="hljs-keyword">where</span> median xs = select ((length xs + <span class="hljs-number">1</span>) `div` <span class="hljs-number">2</span>) xs<br></code></pre></td></tr></table></figure>
+<ul>
+<li>从 medians 中找到 <code>median</code> 的时间是 $T(\lceil n&#x2F;5 \rceil) + \Theta(n)$, 毕竟 <code>median</code> 处理的列表长度是 $\lceil n&#x2F;5 \rceil$, $\Theta(n)$ 是运行 <code>select</code> 的时间</li>
+</ul>
+<p>这里再把 <code>select</code> 算法抄一遍:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">select</span> :: <span class="hljs-type">Ord</span> a =&gt; <span class="hljs-type">Nat</span> -&gt; [a] -&gt; a<br><span class="hljs-title">select</span> k xs<br>  | k &lt;= m     = select k us<br>  | k &lt;= m + n = vs !! (k - m - <span class="hljs-number">1</span>)<br>  | k &gt;  m + n = select (k - m - n) ws<br>  <span class="hljs-keyword">where</span> (us, vs, ws) = partition3 (pivot xs) xs<br>        (m, n) = (length us, length vs)<br></code></pre></td></tr></table></figure>
+
+<p>后面会证明, 每次调用 <code>select</code>, <code>xs</code> 的长度会变为之前 <code>xs</code> 的 $7&#x2F;10$, 也就是说, 每次数据规模变为 $7n&#x2F;10$.</p>
+<p>下面是一个例子, 列表长度为 <code>28</code>, 用 <code>group 5</code> 将其每 5 个组成一列, 每列都排序好:</p>
+<p><img src="/../img/select-algorithm-divide-and-conquer-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>(这个图是理解为什么速度快的重点)</p>
+<ul>
+<li>从这个图中的视角来看, 选的 median 是 <code>29</code>, 一定比 median 小的数是左下角的矩形, 剩下的元素可能比 median 大. 左下角矩形元素个数计算如下:</li>
+</ul>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>3 \lfloor (\lceil n&#x2F;5 \rceil + 1)&#x2F;2 \rfloor - 1 \ge 3n &#x2F; 10<br>\end{aligned}<br>}<br>$$</p>
+<p>因此剩下元素最多时 $7n&#x2F;10$, 最坏情况下 <code>select</code> 一直在这部分递归调用, 忽略 floors 和 ceilings 的细节, 总的运行时间如下:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>T(n) \le T(n&#x2F;5) + T(7n&#x2F;10) + cn<br>\end{aligned}<br>}<br>$$</p>
+<p>之后推出能在 linear time 运行的过程没太看懂.</p>
 
                 
               </div>

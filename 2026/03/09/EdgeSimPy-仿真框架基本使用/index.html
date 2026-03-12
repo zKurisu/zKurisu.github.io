@@ -1,0 +1,1179 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/wallhaven-j5kjgy_1920x1080.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Jie">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="EdgeSimPy TutorialEdgeSimPy Github Repo 介绍EdgeSimPy 是一个基于 Python 的 Edge Computing simulator, 其抽象出 edge servers, network devices, applications 等组件来便于使用, 还提供有内置的 user mobility, application composition,">
+<meta property="og:type" content="article">
+<meta property="og:title" content="EdgeSimPy-仿真框架基本使用">
+<meta property="og:url" content="http://example.com/2026/03/09/EdgeSimPy-%E4%BB%BF%E7%9C%9F%E6%A1%86%E6%9E%B6%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="EdgeSimPy TutorialEdgeSimPy Github Repo 介绍EdgeSimPy 是一个基于 Python 的 Edge Computing simulator, 其抽象出 edge servers, network devices, applications 等组件来便于使用, 还提供有内置的 user mobility, application composition,">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/edgesimpy_scenario.png">
+<meta property="article:published_time" content="2026-03-09T06:57:44.000Z">
+<meta property="article:modified_time" content="2026-03-12T04:42:14.458Z">
+<meta property="article:author" content="Jie">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/edgesimpy_scenario.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>EdgeSimPy-仿真框架基本使用 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<!-- hexo injector head_end start --><style>.typst-app {
+  margin: 0;
+  --typst-dom-scale: 1;
+  /* --typst-dom-scale: 1.5; */
+  margin: 5px;
+}
+
+.typst-dom-page {
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  --data-text-width: calc(1px * var(--typst-dom-scale));
+  --data-text-height: calc(1px * var(--typst-dom-scale));
+}
+
+.typst-back-canvas {
+  position: absolute;
+  z-index: -1;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  pointer-events: none;
+}
+
+.typst-svg-page {
+  position: absolute;
+  z-index: 0;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+}
+
+.typst-html-semantics {
+  position: absolute;
+  z-index: 2;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  color: transparent;
+  font-family: monospace;
+  white-space: pre;
+  opacity: 0.62;
+}
+
+.typst-html-semantics span {
+  color: transparent;
+  font-family: monospace;
+  transform-origin: left top;
+  position: absolute;
+  display: inline-block;
+  left: 0;
+  top: 0;
+}
+
+.typst-content-hint {
+  position: absolute;
+  display: inline-block;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.typst-html-semantics a {
+  position: absolute;
+  display: inline-block;
+}
+
+/* set transparent itself */
+.typst-content-group {
+  pointer-events: visible;
+}
+
+.typst-html-semantics span::-moz-selection {
+  color: transparent;
+  background: #7db9de;
+}
+
+.typst-html-semantics span::selection {
+  color: transparent;
+  background: #7db9de;
+}
+
+.typst-html-semantics *::-moz-selection {
+  color: transparent;
+  background: transparent;
+}
+
+.typst-html-semantics *::selection {
+  color: transparent;
+  background: transparent;
+}
+
+.typst-content-fallback {
+  color: transparent;
+  background: transparent;
+}
+
+.pseudo-link,
+.typst-text {
+  pointer-events: none;
+}
+
+.tsel span,
+.tsel {
+  left: 0;
+  position: fixed;
+  text-align: justify;
+  white-space: pre;
+  width: 100%;
+  height: 100%;
+  text-align-last: justify;
+  color: transparent;
+}
+.tsel span::-moz-selection,
+.tsel::-moz-selection {
+  color: transparent;
+  background: #7db9dea0;
+}
+.tsel span::selection,
+.tsel::selection {
+  color: transparent;
+  background: #7db9dea0;
+}
+.pseudo-link {
+  fill: transparent;
+  cursor: pointer;
+  pointer-events: all;
+}
+svg {
+  fill: none;
+}
+
+.outline_glyph path,
+path.outline_glyph {
+  fill: var(--glyph_fill);
+  stroke: var(--glyph_stroke);
+}
+
+.outline_glyph path,
+path.outline_glyph {
+  transition: 0.2s fill stroke;
+}
+.hover .typst-text {
+  --glyph_fill: #66bab7;
+  --glyph_stroke: #66bab7;
+}
+
+.typst-jump-ripple,
+.typst-debug-react-ripple {
+  width: 0;
+  height: 0;
+  background-color: transparent;
+  position: absolute;
+  border-radius: 50%;
+}
+.typst-jump-ripple {
+  border: 1px solid #66bab7;
+}
+.typst-debug-react-ripple {
+  border: 1px solid #cb1b45;
+}
+@keyframes typst-jump-ripple-effect {
+  to {
+    width: 10vw;
+    height: 10vw;
+    opacity: 0.01;
+    margin: -5vw;
+  }
+}
+@keyframes typst-debug-react-ripple-effect {
+  to {
+    width: 3vw;
+    height: 3vw;
+    opacity: 0.01;
+    margin: -1.5vw;
+  }
+}
+</style>
+<script>/// https://segmentfault.com/a/1190000016574288
+(function () {
+  var ie = !!(window.attachEvent && !window.opera);
+  var wk = /webkit\/(\d+)/i.test(navigator.userAgent) && RegExp.$1 < 525;
+  var fn = [];
+  var run = function () {
+    for (var i = 0; i < fn.length; i++) fn[i]();
+  };
+  var d = document;
+  d.ready = function (f) {
+    if (!ie && !wk && d.addEventListener) return d.addEventListener('DOMContentLoaded', f, false);
+    if (fn.push(f) > 1) return;
+    if (ie)
+      (function () {
+        try {
+          d.documentElement.doScroll('left');
+          run();
+        } catch (err) {
+          setTimeout(arguments.callee, 0);
+        }
+      })();
+    else if (wk)
+      var t = setInterval(function () {
+        if (/^(loaded|complete)$/.test(d.readyState)) clearInterval(t), run();
+      }, 0);
+  };
+})();
+</script>
+<script type="module" src="/typst/typst-main.js"></script><script src="/typst/svg-utils.js"></script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Jie</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/SteinsGate_all.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="EdgeSimPy-仿真框架基本使用"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-03-09 14:57" pubdate>
+          2026年3月9日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          29k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          244 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">EdgeSimPy-仿真框架基本使用</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p><a target="_blank" rel="noopener" href="https://github.com/EdgeSimPy/edgesimpy-tutorials">EdgeSimPy Tutorial</a><br><a target="_blank" rel="noopener" href="https://github.com/EdgeSimPy/EdgeSimPy">EdgeSimPy Github Repo</a></p>
+<h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>EdgeSimPy 是一个基于 Python 的 Edge Computing simulator, 其抽象出 edge servers, network devices, applications 等组件来便于使用, 还提供有内置的 user mobility, application composition, power consumption 等仿真模型.</p>
+<h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><p>需要 Python 3.7.1 及以上版本:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">pip install git+https://github.com/EdgeSimPy/EdgeSimPy.git<br></code></pre></td></tr></table></figure>
+
+<h1 id="Tutorial"><a href="#Tutorial" class="headerlink" title="Tutorial"></a>Tutorial</h1><p>拉取 tutorial 代码:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">git <span class="hljs-built_in">clone</span> https://github.com/EdgeSimPy/edgesimpy-tutorials.git<br></code></pre></td></tr></table></figure>
+
+<p>一共提供有 7 份代码, 阅读顺序是:</p>
+<ul>
+<li>Loading datasets</li>
+<li>Manipulating components</li>
+<li>Monitoring simulation</li>
+<li>Creating a placement algorithm</li>
+<li>Creating a migrationi algorithm</li>
+<li>Automating experiments</li>
+<li>Using built-in and custom system models</li>
+</ul>
+<h1 id="基本使用"><a href="#基本使用" class="headerlink" title="基本使用"></a>基本使用</h1><p>通常需要加载下面模块:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># Importing EdgeSimPy components and its built-in libraries (NetworkX and MessagePack)</span><br><span class="hljs-keyword">from</span> edge_sim_py <span class="hljs-keyword">import</span> *<br><span class="hljs-keyword">import</span> networkx <span class="hljs-keyword">as</span> nx<br><span class="hljs-keyword">import</span> msgpack<br><br><span class="hljs-comment"># Importing Matplotlib, Pandas, and NumPy for logs parsing and visualization</span><br><span class="hljs-keyword">import</span> matplotlib.pyplot <span class="hljs-keyword">as</span> plt<br><span class="hljs-keyword">import</span> pandas <span class="hljs-keyword">as</span> pd<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br></code></pre></td></tr></table></figure>
+
+<h2 id="加载外部数据集"><a href="#加载外部数据集" class="headerlink" title="加载外部数据集"></a>加载外部数据集</h2><p>外部数据集是指不在本地的, 需要从网络获取的数据集:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># Creating a Simulator object</span><br>simulator = Simulator()<br><br><span class="hljs-comment"># Loading the dataset file from the external JSON file</span><br>simulator.initialize(input_file=<span class="hljs-string">&quot;https://raw.githubusercontent.com/EdgeSimPy/edgesimpy-tutorials/master/datasets/sample_dataset1.json&quot;</span>)<br><br><span class="hljs-comment"># Displaying some of the objects loaded from the dataset</span><br><span class="hljs-keyword">for</span> user <span class="hljs-keyword">in</span> User.<span class="hljs-built_in">all</span>():<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;<span class="hljs-subst">&#123;user&#125;</span>. Coordinates: <span class="hljs-subst">&#123;user.coordinates&#125;</span>&quot;</span>)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>Simulator</code> 对象用来控制整个仿真</li>
+<li><code>initialize</code> 方法用于初始化, 用 <code>input_file</code> 来指定输入文件, 也就是 dataset, 定义有整个仿真的组成</li>
+</ul>
+<h2 id="加载本地数据集"><a href="#加载本地数据集" class="headerlink" title="加载本地数据集"></a>加载本地数据集</h2><p>把提供给 <code>input_file</code> 的参数改成本地路径即可:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># Creating a Simulator object</span><br>simulator = Simulator()<br><br><span class="hljs-comment"># Loading the dataset from the local &quot;dataset.json&quot; file</span><br>simulator.initialize(input_file=<span class="hljs-string">&quot;dataset.json&quot;</span>)<br><br><span class="hljs-comment"># Displaying some of the objects loaded from the dataset</span><br><span class="hljs-keyword">for</span> edge_server <span class="hljs-keyword">in</span> EdgeServer.<span class="hljs-built_in">all</span>():<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;<span class="hljs-subst">&#123;edge_server&#125;</span>. CPU Capacity: <span class="hljs-subst">&#123;edge_server.cpu&#125;</span> cores&quot;</span>)<br></code></pre></td></tr></table></figure>
+
+<h2 id="从-Python-Dict-加载数据"><a href="#从-Python-Dict-加载数据" class="headerlink" title="从 Python Dict 加载数据"></a>从 Python Dict 加载数据</h2><p>如果数据手动写成 Python Dictionaries, 直接把字典传给 <code>input_file</code> 即可:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># Creating a Python dictionary representing a sample dataset with a couple of users</span><br>my_simplified_dataset = &#123;<br>    <span class="hljs-string">&quot;User&quot;</span>: [<br>        &#123;<br>            <span class="hljs-string">&quot;attributes&quot;</span>: &#123;<br>                <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-number">1</span>,<br>                <span class="hljs-string">&quot;coordinates&quot;</span>: [<br>                    <span class="hljs-number">1</span>,<br>                    <span class="hljs-number">1</span><br>                ]<br>            &#125;,<br>            <span class="hljs-string">&quot;relationships&quot;</span>: &#123;&#125;<br>        &#125;,<br>        &#123;<br>            <span class="hljs-string">&quot;attributes&quot;</span>: &#123;<br>                <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-number">2</span>,<br>                <span class="hljs-string">&quot;coordinates&quot;</span>: [<br>                    <span class="hljs-number">3</span>,<br>                    <span class="hljs-number">3</span><br>                ]<br>            &#125;,<br>            <span class="hljs-string">&quot;relationships&quot;</span>: &#123;&#125;<br>        &#125;,<br>        &#123;<br>            <span class="hljs-string">&quot;attributes&quot;</span>: &#123;<br>                <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-number">3</span>,<br>                <span class="hljs-string">&quot;coordinates&quot;</span>: [<br>                    <span class="hljs-number">5</span>,<br>                    <span class="hljs-number">1</span><br>                ]<br>            &#125;,<br>            <span class="hljs-string">&quot;relationships&quot;</span>: &#123;&#125;<br>        &#125;,<br>        &#123;<br>            <span class="hljs-string">&quot;attributes&quot;</span>: &#123;<br>                <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-number">4</span>,<br>                <span class="hljs-string">&quot;coordinates&quot;</span>: [<br>                    <span class="hljs-number">0</span>,<br>                    <span class="hljs-number">0</span><br>                ]<br>            &#125;,<br>            <span class="hljs-string">&quot;relationships&quot;</span>: &#123;&#125;<br>        &#125;<br>    ]<br>&#125;<br><br><span class="hljs-comment"># Creating a Simulator object</span><br>simulator = Simulator()<br><br><span class="hljs-comment"># Loading the dataset from the dictionary &quot;my_simplified_dataset&quot;</span><br>simulator.initialize(input_file=my_simplified_dataset)<br><br><span class="hljs-comment"># Displaying the objects loaded from the dataset</span><br><span class="hljs-keyword">for</span> user <span class="hljs-keyword">in</span> User.<span class="hljs-built_in">all</span>():<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;<span class="hljs-subst">&#123;user&#125;</span>. Coordinates: <span class="hljs-subst">&#123;user.coordinates&#125;</span>&quot;</span>)<br></code></pre></td></tr></table></figure>
+
+<p><code>input_file</code> 中的第一层 <code>Key</code> 不能随便设置, 需要是对应 component 的 Class 名, 内部会有检查.</p>
+<h2 id="ComponentManager"><a href="#ComponentManager" class="headerlink" title="ComponentManager"></a>ComponentManager</h2><p>默认情况下, <code>edge_sim_py</code> 中定义的所有 classes 都表示 Edge environment 中的一个组件元素. 这些 <code>classes</code> 都继承自 <code>ComponentManager</code>.</p>
+<p><code>ComponentManager</code> 提供有一系列有用的 method, 比如:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># Creating a Simulator object</span><br>simulator = Simulator(<br>    tick_duration=<span class="hljs-number">1</span>,<br>    tick_unit=<span class="hljs-string">&quot;seconds&quot;</span>,<br>    stopping_criterion=<span class="hljs-keyword">lambda</span> model: <span class="hljs-number">1</span>,<br>)<br><br><span class="hljs-comment"># Loading a sample dataset from GitHub</span><br>simulator.initialize(input_file=<span class="hljs-string">&quot;https://raw.githubusercontent.com/EdgeSimPy/edgesimpy-tutorials/master/datasets/sample_dataset1.json&quot;</span>)<br></code></pre></td></tr></table></figure>
+
+<p>这里先初始化一个 <code>simulator</code>, <code>Simulator</code> class 也继承了 <code>ComponentManager</code>.</p>
+<ul>
+<li><code>all()</code> 方法用来列出 component (一个 class) 包含的所有 instances (已创建的所有 instances), 比如:</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs python">all_users = User.<span class="hljs-built_in">all</span>()<br><br><span class="hljs-keyword">for</span> user <span class="hljs-keyword">in</span> all_users:<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot; <span class="hljs-subst">&#123;user&#125;</span>&quot;</span>)<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><code>first()</code> 和 <code>last()</code> 方法分别用来获取第一个和最后一个 instance:</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs python">first_user = User.first()<br>last_user  = User.last()<br><br><span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;First user: <span class="hljs-subst">&#123;first_user&#125;</span>&quot;</span>)<br><span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;Last user: <span class="hljs-subst">&#123;last_user&#125;</span>&quot;</span>)<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><code>count()</code> 方法统计该 components 创建了多少个 instance:</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs python">number_of_edge_servers = EdgeServer.count()<br><br><span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;There are <span class="hljs-subst">&#123;number_of_edge_servers&#125;</span> edge servers within the infrastructure&quot;</span>)<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><code>find_by_id()</code> 方法用 ID 来查找某个 instance:</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs python">network_switch_3 = NetworkSwitch.find_by_id(<span class="hljs-number">3</span>)<br><br><span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;Network Switch with ID 3: <span class="hljs-subst">&#123;network_switch_3&#125;</span>&quot;</span>)<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><code>find_by()</code> 用指定 attribute name 来查找 instance:</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs python">base_station_at_2_0 = BaseStation.find_by(attribute_name=<span class="hljs-string">&quot;coordinates&quot;</span>, attribute_value=[<span class="hljs-number">2</span>, <span class="hljs-number">0</span>])<br><br><span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;Base Station located in coordinates [2,0]: <span class="hljs-subst">&#123;base_station_at_2_0&#125;</span>&quot;</span>)<br></code></pre></td></tr></table></figure>
+
+<h2 id="自定义-Helper-Methods"><a href="#自定义-Helper-Methods" class="headerlink" title="自定义 Helper Methods"></a>自定义 Helper Methods</h2><p>可以自己添加 methods 到 ComponentManager 类中, 比如用指定 <code>attribute</code> 对 class 中的 components 进行排序, 实现如下:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">sorted_by</span>(<span class="hljs-params">cls, attribute: <span class="hljs-built_in">str</span>, order: <span class="hljs-built_in">str</span> = <span class="hljs-string">&quot;ascending&quot;</span></span>) -&gt; <span class="hljs-built_in">list</span>:<br>    <span class="hljs-string">&quot;&quot;&quot;Returns the list of created objects of a given class sorted by a given attribute.</span><br><span class="hljs-string"></span><br><span class="hljs-string">    Args:</span><br><span class="hljs-string">        attribute (str): Attribute that will be used to sort the class instances.</span><br><span class="hljs-string">        order (str): Sorting order. Valid values are &quot;ascending&quot; or &quot;descending&quot;. Defaults to &quot;ascending&quot;.</span><br><span class="hljs-string"></span><br><span class="hljs-string">    Returns:</span><br><span class="hljs-string">        instances (list): Sorted list of objects from a given class.</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br>    <span class="hljs-comment"># Gathering the list of class instances</span><br>    instances = cls._instances<br><br>    <span class="hljs-comment"># Checking if all the instances have the passed attribute and if the instance attributes are comparable</span><br>    comparable_instance_pairs = <span class="hljs-number">0</span><br>    <span class="hljs-keyword">for</span> index <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-built_in">len</span>(instances) - <span class="hljs-number">1</span>):<br>        <span class="hljs-comment"># Gathering a pair of instances (i.e., &quot;a&quot; and &quot;b&quot;) from the given class</span><br>        a = instances[index]<br>        b = instances[index + <span class="hljs-number">1</span>]<br><br>        <span class="hljs-comment"># Checking if instances &quot;a&quot; and &quot;b&quot; have the passed attribute. If &quot;a&quot; or &quot;b&quot; don&#x27;t have the passed attribute, we</span><br>        <span class="hljs-comment"># break the outer for loop as the comparison will not work. In that case, the exception down below will be triggered</span><br>        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> <span class="hljs-built_in">hasattr</span>(a, attribute) <span class="hljs-keyword">or</span> <span class="hljs-keyword">not</span> <span class="hljs-built_in">hasattr</span>(b, attribute):<br>            <span class="hljs-keyword">break</span><br><br>        <span class="hljs-comment"># If the break was not triggered, &quot;a&quot; and &quot;b&quot; have the passed attribute.</span><br>        <span class="hljs-comment"># Then, we must check if the attribute values are comparable</span><br>        a_attr = <span class="hljs-built_in">getattr</span>(a, attribute)<br>        b_attr = <span class="hljs-built_in">getattr</span>(b, attribute)<br>        <span class="hljs-keyword">if</span> (a_attr).__eq__(b_attr) != <span class="hljs-literal">NotImplemented</span> <span class="hljs-keyword">or</span> (b_attr).__eq__(a_attr) != <span class="hljs-literal">NotImplemented</span>:<br>            comparable_instance_pairs += <span class="hljs-number">1</span><br><br>    <span class="hljs-comment"># If all instances have the passed attribute and the attribute values are comparable, sorts the list of class instances</span><br>    <span class="hljs-keyword">if</span> comparable_instance_pairs == <span class="hljs-built_in">len</span>(instances) - <span class="hljs-number">1</span>:<br>        instances = <span class="hljs-built_in">sorted</span>(<br>            instances,<br>            key=<span class="hljs-keyword">lambda</span> instance: <span class="hljs-built_in">getattr</span>(instance, attribute),<br>            reverse=order == <span class="hljs-string">&quot;descending&quot;</span>,<br>        )<br>    <span class="hljs-keyword">else</span>:<br>        msg = <span class="hljs-string">f&quot;Error. Make sure all instances of <span class="hljs-subst">&#123;cls.__name__&#125;</span> have the <span class="hljs-subst">&#123;attribute&#125;</span> attribute with comparable values.&quot;</span><br>        <span class="hljs-keyword">raise</span> Exception(msg)<br><br>    <span class="hljs-keyword">return</span> instances<br></code></pre></td></tr></table></figure>
+
+<p>添加方式如下:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">ComponentManager.sorted_by = <span class="hljs-built_in">classmethod</span>(sorted_by)<br></code></pre></td></tr></table></figure>
+
+<p>之后继承了 <code>ComponentManager</code> 的 classes 就都能使用这个方法了:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># Creating a Simulator object</span><br>simulator = Simulator(<br>    tick_duration=<span class="hljs-number">1</span>,<br>    tick_unit=<span class="hljs-string">&quot;seconds&quot;</span>,<br>    stopping_criterion=<span class="hljs-keyword">lambda</span> model: <span class="hljs-number">1</span>,<br>)<br><br><span class="hljs-comment"># Loading a sample dataset from GitHub</span><br>simulator.initialize(input_file=<span class="hljs-string">&quot;https://raw.githubusercontent.com/EdgeSimPy/edgesimpy-tutorials/master/datasets/sample_dataset1.json&quot;</span>)<br><br><span class="hljs-comment"># Sorting the list of edge servers with our new &quot;sorted_by&quot; method</span><br>edge_servers = EdgeServer.sorted_by(attribute=<span class="hljs-string">&quot;id&quot;</span>, order=<span class="hljs-string">&quot;descending&quot;</span>)<br><span class="hljs-keyword">for</span> edge_server <span class="hljs-keyword">in</span> edge_servers:<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;<span class="hljs-subst">&#123;edge_server&#125;</span>&quot;</span>)<br></code></pre></td></tr></table></figure>
+
+<h2 id="Monitoring"><a href="#Monitoring" class="headerlink" title="Monitoring"></a>Monitoring</h2><p>EdgeSimPy 的 monitoring mechanism 能收集大量关于 simulated entities 的信息, 在每个 time step 都有记录.</p>
+<p>EdgeSimPy 的 monitoring data 用 MessagePack 格式 (一种 serialization format, binary file) 来保存. 可以将其再转换为 Python dictionaries 和 Pandas data frames 等.</p>
+<p>EdgeSimPy 默认会间隔一个 interval 写入日志到磁盘中, 而不是每个 time step 都会写入 (都会在内存中进行记录, 只是还没持久化写入), 这个 interval 可以用 <code>Simulator</code> 类的 <code>dump_interval</code> 属性来设置, 比如 <code>dump_interval=10</code>, 表示每 10 个 time steps 写入一次. 如果不想持久化, 可以设置为 <code>dump_interval=float(&quot;inf&quot;)</code>.</p>
+<p>EdgeSimPy 会自动创建名为 <code>logs</code> 的 dictionary 来保存日志信息.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># Creating a Simulator object</span><br>simulator = Simulator(<br>    dump_interval=<span class="hljs-number">5</span>,<br>    tick_duration=<span class="hljs-number">1</span>,<br>    tick_unit=<span class="hljs-string">&quot;seconds&quot;</span>,<br>    stopping_criterion=stopping_criterion,<br>    resource_management_algorithm=my_algorithm,<br>)<br><br><span class="hljs-comment"># Loading a sample dataset from GitHub</span><br>simulator.initialize(input_file=<span class="hljs-string">&quot;https://raw.githubusercontent.com/EdgeSimPy/edgesimpy-tutorials/master/datasets/sample_dataset2.json&quot;</span>)<br><br><span class="hljs-comment"># Executing the simulation</span><br>simulator.run_model()<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>dump_interval = 5</code>, 定义保存 log 的间隙是 5 个 time steps</li>
+<li><code>tick_duration = 1</code>, 一个时间步的长度是 1 份单位时间</li>
+<li><code>tick_unit = &quot;seconds</code>, 时间步的单位是秒</li>
+<li><code>stopping_criterion</code>, 指定一个 Boolean function, 返回 True 时结束模拟, 示例程序如下:</li>
+<li><code>run_model</code> 方法表示开始 simulation 过程</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">stopping_criterion</span>(<span class="hljs-params">model: <span class="hljs-built_in">object</span></span>):<br>    <span class="hljs-comment"># Defining a variable that will help us to count the number of services successfully provisioned within the infrastructure</span><br>    provisioned_services = <span class="hljs-number">0</span><br>    <br>    <span class="hljs-comment"># Iterating over the list of services to count the number of services provisioned within the infrastructure</span><br>    <span class="hljs-keyword">for</span> service <span class="hljs-keyword">in</span> Service.<span class="hljs-built_in">all</span>():<br><br>        <span class="hljs-comment"># Initially, services are not hosted by any server (i.e., their &quot;server&quot; attribute is None).</span><br>        <span class="hljs-comment"># Once that value changes, we know that it has been successfully provisioned inside an edge server.</span><br>        <span class="hljs-keyword">if</span> service.server != <span class="hljs-literal">None</span>:<br>            provisioned_services += <span class="hljs-number">1</span><br>    <br>    <span class="hljs-comment"># As EdgeSimPy will halt the simulation whenever this function returns True, its output will be a boolean expression</span><br>    <span class="hljs-comment"># that checks if the number of provisioned services equals to the number of services spawned in our simulation</span><br>    <span class="hljs-keyword">return</span> provisioned_services == Service.count()<br></code></pre></td></tr></table></figure>
+<p>这里的逻辑是, 判断有多少 services 是已经被分配资源的, 如果所有 services 都被分配了资源, 则会返回 <code>True</code>, 同时模拟停止.</p>
+<ul>
+<li><code>resource_management_algorithm</code>, 指定自定义的资源分配 function, 示例程序如下:</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">my_algorithm</span>(<span class="hljs-params">parameters</span>):<br>    <span class="hljs-comment"># We can always call the &#x27;all()&#x27; method to get a list with all created instances of a given class</span><br>    <span class="hljs-keyword">for</span> service <span class="hljs-keyword">in</span> Service.<span class="hljs-built_in">all</span>():<br>        <span class="hljs-comment"># We don&#x27;t want to migrate services are are already being migrated</span><br>        <span class="hljs-keyword">if</span> service.server == <span class="hljs-literal">None</span> <span class="hljs-keyword">and</span> <span class="hljs-keyword">not</span> service.being_provisioned:<br><br>            <span class="hljs-comment"># Let&#x27;s iterate over the list of edge servers to find a suitable host for our service</span><br>            <span class="hljs-keyword">for</span> edge_server <span class="hljs-keyword">in</span> EdgeServer.<span class="hljs-built_in">all</span>():<br><br>                <span class="hljs-comment"># We must check if the edge server has enough resources to host the service</span><br>                <span class="hljs-keyword">if</span> edge_server.has_capacity_to_host(service=service):<br><br>                    <span class="hljs-comment"># Start provisioning the service in the edge server</span><br>                    service.provision(target_server=edge_server)<br><br>                    <span class="hljs-comment"># After start migrating the service we can move on to the next service</span><br>                    <span class="hljs-keyword">break</span><br></code></pre></td></tr></table></figure>
+<p>主要逻辑是: 遍历所有 services, 找到没有被分配资源的 (没有绑定到一个 server, 没有设置 <code>being_provisioned</code> 属性), 之后遍历 <code>edge_servers</code>, 找到资源足够的就进行分配.</p>
+<h2 id="Checking-Logs"><a href="#Checking-Logs" class="headerlink" title="Checking Logs"></a>Checking Logs</h2><p>有两种方法访问日志信息:</p>
+<ul>
+<li><p>直接访问变量中的键值对. 如下示例, 可以从 <code>Simulator</code> instance 的 <code>agent_metrics</code> attribute 中访问:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">simulator.agent_metrics[<span class="hljs-string">&quot;User&quot;</span>]<br></code></pre></td></tr></table></figure>
+</li>
+<li><p>访问保存在 disk 中的日志文件. 比如读取文件并保存在 pandas frame 中:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># Gathering the list of msgpack files in the current directory</span><br>logs_directory = <span class="hljs-string">f&quot;<span class="hljs-subst">&#123;os.getcwd()&#125;</span>/logs&quot;</span><br>dataset_files = [file <span class="hljs-keyword">for</span> file <span class="hljs-keyword">in</span> os.listdir(logs_directory) <span class="hljs-keyword">if</span> <span class="hljs-string">&quot;.msgpack&quot;</span> <span class="hljs-keyword">in</span> file]<br><br><span class="hljs-comment"># Reading msgpack files found</span><br>datasets = &#123;&#125;<br><span class="hljs-keyword">for</span> file <span class="hljs-keyword">in</span> dataset_files:<br>    <span class="hljs-keyword">with</span> <span class="hljs-built_in">open</span>(<span class="hljs-string">f&quot;logs/<span class="hljs-subst">&#123;file&#125;</span>&quot;</span>, <span class="hljs-string">&quot;rb&quot;</span>) <span class="hljs-keyword">as</span> data_file:<br>        datasets[file.replace(<span class="hljs-string">&quot;.msgpack&quot;</span>, <span class="hljs-string">&quot;&quot;</span>)] = pd.DataFrame(msgpack.unpackb(data_file.read(), strict_map_key=<span class="hljs-literal">False</span>))<br><br><span class="hljs-built_in">print</span>(datasets[<span class="hljs-string">&quot;EdgeServer&quot;</span>])<br><br><span class="hljs-comment"># Defining the data frame columns that will be exhibited</span><br>properties = [<span class="hljs-string">&#x27;Coordinates&#x27;</span>, <span class="hljs-string">&#x27;CPU Demand&#x27;</span>, <span class="hljs-string">&#x27;RAM Demand&#x27;</span>, <span class="hljs-string">&#x27;Disk Demand&#x27;</span>, <span class="hljs-string">&#x27;Services&#x27;</span>]<br>columns = [<span class="hljs-string">&#x27;Time Step&#x27;</span>, <span class="hljs-string">&#x27;Instance ID&#x27;</span>] + properties<br><br>dataframe = datasets[<span class="hljs-string">&quot;EdgeServer&quot;</span>].<span class="hljs-built_in">filter</span>(items=columns)<br><span class="hljs-built_in">print</span>(dataframe)<br></code></pre></td></tr></table></figure></li>
+</ul>
+<p>需要注意, 每次 EdgeSimPy dump 日志到 disk 之后, 都会重置 <code>logs</code> 变量, 已减少内存消耗. 如果想让日志完整留在内存中, 通常设置 <code>dump_interval=float(&quot;inf&quot;)</code>.</p>
+<h2 id="Monitoring-Custom-Metrics"><a href="#Monitoring-Custom-Metrics" class="headerlink" title="Monitoring Custom Metrics"></a>Monitoring Custom Metrics</h2><p>每个 EdgeSimPy 都有 <code>collect</code> method, 可以通过对 entity 设置该方法, 来自定义 metrics.</p>
+<p>如果自定义 metrics 需要多个 entity 的信息, 则为 <code>Simulator</code> 设置 <code>collect</code> 方法.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">custom_collect_method</span>(<span class="hljs-params">self</span>) -&gt; <span class="hljs-built_in">dict</span>:<br>    temperature = random.randint(<span class="hljs-number">10</span>, <span class="hljs-number">50</span>)  <span class="hljs-comment"># Generating a random integer between 10 and 50 representing the switch&#x27;s temperature</span><br>    metrics = &#123;<br>        <span class="hljs-string">&quot;Instance ID&quot;</span>: self.<span class="hljs-built_in">id</span>,<br>        <span class="hljs-string">&quot;Power Consumption&quot;</span>: self.get_power_consumption(),<br>        <span class="hljs-string">&quot;Temperature&quot;</span>: temperature,<br>    &#125;<br>    <span class="hljs-keyword">return</span> metrics<br><br><span class="hljs-comment"># Overriding the NetworkSwitch&#x27;s collect() method</span><br>NetworkSwitch.collect = custom_collect_method<br></code></pre></td></tr></table></figure>
+<ul>
+<li>自定义的 <code>collect</code> 方法需要返回 <code>dict</code></li>
+</ul>
+<h2 id="Creating-a-Placement-Algorithm"><a href="#Creating-a-Placement-Algorithm" class="headerlink" title="Creating a Placement Algorithm"></a>Creating a Placement Algorithm</h2><p>Placement Algorithm 用来描述资源的分配逻辑, 比如一个 service 需要资源时, 是由离得最近的 edge server 提供, 还是资源最充足的 edge server 提供.</p>
+<p>下面示例实现了 First-Fit heuristic 的思想, 即遍历可用服务器时, 哪一个先可用就用哪个 (之前一个示例里用的就是下面例子):</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">my_algorithm</span>(<span class="hljs-params">parameters</span>):<br>    <span class="hljs-comment"># We can always call the &#x27;all()&#x27; method to get a list with all created instances of a given class</span><br>    <span class="hljs-keyword">for</span> service <span class="hljs-keyword">in</span> Service.<span class="hljs-built_in">all</span>():<br>        <span class="hljs-comment"># We don&#x27;t want to migrate services are are already being migrated</span><br>        <span class="hljs-keyword">if</span> service.server == <span class="hljs-literal">None</span> <span class="hljs-keyword">and</span> <span class="hljs-keyword">not</span> service.being_provisioned:<br><br>            <span class="hljs-comment"># Let&#x27;s iterate over the list of edge servers to find a suitable host for our service</span><br>            <span class="hljs-keyword">for</span> edge_server <span class="hljs-keyword">in</span> EdgeServer.<span class="hljs-built_in">all</span>():<br>                <br>                <span class="hljs-comment"># We must check if the edge server has enough resources to host the service</span><br>                <span class="hljs-keyword">if</span> edge_server.has_capacity_to_host(service=service):<br>                    <br>                    <span class="hljs-comment"># Start provisioning the service in the edge server</span><br>                    service.provision(target_server=edge_server)<br>                    <br>                    <span class="hljs-comment"># After start migrating the service we can move on to the next service</span><br>                    <span class="hljs-keyword">break</span><br></code></pre></td></tr></table></figure>
+
+<p>此时的暂停条件就是所有 services 都被分配了资源:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">stopping_criterion</span>(<span class="hljs-params">model: <span class="hljs-built_in">object</span></span>):<br>    <span class="hljs-comment"># Defining a variable that will help us to count the number of services successfully provisioned within the infrastructure</span><br>    provisioned_services = <span class="hljs-number">0</span><br>    <br>    <span class="hljs-comment"># Iterating over the list of services to count the number of services provisioned within the infrastructure</span><br>    <span class="hljs-keyword">for</span> service <span class="hljs-keyword">in</span> Service.<span class="hljs-built_in">all</span>():<br><br>        <span class="hljs-comment"># Initially, services are not hosted by any server (i.e., their &quot;server&quot; attribute is None).</span><br>        <span class="hljs-comment"># Once that value changes, we know that it has been successfully provisioned inside an edge server.</span><br>        <span class="hljs-keyword">if</span> service.server != <span class="hljs-literal">None</span>:<br>            provisioned_services += <span class="hljs-number">1</span><br>    <br>    <span class="hljs-comment"># As EdgeSimPy will halt the simulation whenever this function returns True, its output will be a boolean expression</span><br>    <span class="hljs-comment"># that checks if the number of provisioned services equals to the number of services spawned in our simulation</span><br>    <span class="hljs-keyword">return</span> provisioned_services == Service.count()<br></code></pre></td></tr></table></figure>
+
+<h2 id="Creating-a-Migration-Algorithm"><a href="#Creating-a-Migration-Algorithm" class="headerlink" title="Creating a Migration Algorithm"></a>Creating a Migration Algorithm</h2><p>Migration algorithm 是一种将正在运行的任务从一个节点移动到另一个节点的策略.</p>
+<p>下面是一个示例, 实现了 Worst-Fit heuristic, 即哪个 edge server 的资源最多, 就先用其为 service 提供资源:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">my_algorithm</span>(<span class="hljs-params">parameters</span>):<br>    <span class="hljs-comment"># Let&#x27;s iterate over the list of services using the &#x27;all()&#x27; helper method</span><br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;\n\n&quot;</span>)<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;==== TIME STEP <span class="hljs-subst">&#123;parameters[<span class="hljs-string">&#x27;current_step&#x27;</span>]&#125;</span> ====&quot;</span>)<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;---- EDGE SERVERS ----&quot;</span>)<br>    <span class="hljs-keyword">for</span> server <span class="hljs-keyword">in</span> EdgeServer.<span class="hljs-built_in">all</span>():<br>        server_metadata = &#123;<br>            <span class="hljs-string">&quot;server&quot;</span>: server,<br>            <span class="hljs-string">&quot;capacity&quot;</span>: [server.cpu, server.memory, server.disk],<br>            <span class="hljs-string">&quot;demand&quot;</span>: [server.cpu_demand, server.memory_demand, server.disk_demand],<br>            <span class="hljs-string">&quot;container_layers&quot;</span>: [layer.<span class="hljs-built_in">id</span> <span class="hljs-keyword">for</span> layer <span class="hljs-keyword">in</span> server.container_layers],<br>            <span class="hljs-string">&quot;services&quot;</span>: [service <span class="hljs-keyword">for</span> service <span class="hljs-keyword">in</span> server.services],<br>        &#125;<br>        <span class="hljs-built_in">print</span>(server_metadata)<br><br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;&quot;</span>)<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;---- SERVICES ----&quot;</span>)<br>    <span class="hljs-keyword">for</span> service <span class="hljs-keyword">in</span> Service.<span class="hljs-built_in">all</span>():<br>        service_image = ContainerImage.find_by(attribute_name=<span class="hljs-string">&quot;digest&quot;</span>, attribute_value=service.image_digest)<br>        service_layers = [ContainerLayer.find_by(attribute_name=<span class="hljs-string">&quot;digest&quot;</span>, attribute_value=layer).<span class="hljs-built_in">id</span> <span class="hljs-keyword">for</span> layer <span class="hljs-keyword">in</span> service_image.layers_digests]<br><br>        service_metadata = &#123;<br>            <span class="hljs-string">&quot;service&quot;</span>: service,<br>            <span class="hljs-string">&quot;requirements&quot;</span>: [service.cpu_demand, service.memory_demand],<br>            <span class="hljs-string">&quot;layers&quot;</span>: service_layers,<br>            <span class="hljs-string">&quot;server&quot;</span>: service.server,<br>            <span class="hljs-string">&quot;available&quot;</span>: service._available,<br>            <span class="hljs-string">&quot;being_provisioned&quot;</span>: service.being_provisioned,<br>        &#125;<br>        <span class="hljs-built_in">print</span>(service_metadata)<br><br>    <span class="hljs-comment"># We don&#x27;t want to migrate services are are already being migrated. As we want to avoid excessive migrations, we are going to</span><br>    <span class="hljs-comment"># define a cool down period for services that have been migrated. For simplicity, we are going to set the cool down period as</span><br>    <span class="hljs-comment"># 10 time steps. To get such information, we are going to access the service&#x27;s last migration time step and compare it with</span><br>    <span class="hljs-comment"># the current time step. If the difference between the current time step and the last migration time step is less than 10,</span><br>    <span class="hljs-comment"># we are going to skip the service.</span><br>    COOLDOWN_STEPS = <span class="hljs-number">10</span><br><br>    <span class="hljs-keyword">for</span> service <span class="hljs-keyword">in</span> Service.<span class="hljs-built_in">all</span>():<br>        <span class="hljs-comment"># Gathering the current time step and the last migration time step of the service</span><br>        current_step = parameters[<span class="hljs-string">&quot;current_step&quot;</span>]<br>        <br>        <span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(service._Service__migrations) &gt; <span class="hljs-number">0</span> <span class="hljs-keyword">and</span> service._Service__migrations[-<span class="hljs-number">1</span>][<span class="hljs-string">&quot;end&quot;</span>] <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>:<br>            last_migration_ended_at = service._Service__migrations[-<span class="hljs-number">1</span>][<span class="hljs-string">&quot;end&quot;</span>]<br>        <span class="hljs-keyword">else</span>:<br>            last_migration_ended_at = <span class="hljs-literal">None</span><br><br>        <span class="hljs-comment"># Checking if the service is not being provisioned and if the cool down period has being reached</span><br>        service_has_not_been_migrated_yet = <span class="hljs-built_in">len</span>(service._Service__migrations) == <span class="hljs-number">0</span><br>        service_not_being_provisioned = service.being_provisioned <span class="hljs-keyword">is</span> <span class="hljs-literal">False</span><br>        cooldown_has_been_reached = last_migration_ended_at <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span> <span class="hljs-keyword">and</span> current_step - last_migration_ended_at &gt;= COOLDOWN_STEPS<br><br>        <span class="hljs-keyword">if</span> service_has_not_been_migrated_yet <span class="hljs-keyword">or</span> service_not_being_provisioned <span class="hljs-keyword">and</span> cooldown_has_been_reached:<br>            <span class="hljs-comment"># We need to sort edge servers based on amount of free resources they have. To do so, we are going to use Python&#x27;s</span><br>            <span class="hljs-comment"># &quot;sorted&quot; method (you can learn more about &quot;sorted()&quot; in this link: https://docs.python.org/3/howto/sorting.html).</span><br>            <span class="hljs-comment"># The capacity of edge servers is modeled in three layers (CPU, memory, and disk). For simplicity, we are going to</span><br>            <span class="hljs-comment"># use only the CPU layer to sort edge servers. We calculate the free CPU resources of each edge server by subtracting</span><br>            <span class="hljs-comment"># the CPU demand of the services hosted in the edge server from the total CPU capacity of the edge server. We then</span><br>            <span class="hljs-comment"># sort edge servers based on their free CPU resources. To do so, we use the &quot;sorted&quot; method and set the &quot;key&quot; attribute</span><br>            <span class="hljs-comment"># as a lambda function that calculates the free CPU resources of edge servers. We set the &quot;reverse&quot; attribute as &quot;True&quot;</span><br>            <span class="hljs-comment"># as we want to sort edge servers by their free CPU resources in descending order.</span><br>            edge_servers = <span class="hljs-built_in">sorted</span>(<br>                EdgeServer.<span class="hljs-built_in">all</span>(),<br>                key=<span class="hljs-keyword">lambda</span> s: s.cpu - s.cpu_demand,<br>                reverse=<span class="hljs-literal">True</span>,<br>            )<br><br>            <span class="hljs-keyword">for</span> edge_server <span class="hljs-keyword">in</span> edge_servers:<br>                <span class="hljs-comment"># Checking if the edge server has resources to host the service</span><br>                <span class="hljs-keyword">if</span> edge_server.has_capacity_to_host(service=service):<br>                    <span class="hljs-comment"># We just need to migrate the service if it&#x27;s not already in the least occupied edge server</span><br>                    <span class="hljs-keyword">if</span> service.server != edge_server:<br>                        <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;\t\t[STEP <span class="hljs-subst">&#123;parameters[<span class="hljs-string">&#x27;current_step&#x27;</span>]&#125;</span>] Migrating <span class="hljs-subst">&#123;service&#125;</span> From <span class="hljs-subst">&#123;service.server&#125;</span> to <span class="hljs-subst">&#123;edge_server&#125;</span>&quot;</span>)<br><br>                        service.provision(target_server=edge_server)<br><br>                        <span class="hljs-comment"># After start migrating the service we can move on to the next service</span><br>                        <span class="hljs-keyword">break</span><br></code></pre></td></tr></table></figure>
+<p>这部分代码, 先打印出 <code>edge_server</code> 和 <code>service</code> 的信息. 后面的逻辑是, 已经 migrated 的 services 不会在 cool down period (冷却时间) 内再迁移 (避免连续多次迁移). 迁移的逻辑就是, 先用 <code>cpu</code> 可用量对 edge servers 进行排序, 然后遍历 <code>edge_servers</code>, 看谁先满足资源提供.</p>
+<p>此时的停止逻辑是, 看运行的时间是否到达一定数额:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">stopping_criterion</span>(<span class="hljs-params">model: <span class="hljs-built_in">object</span></span>):    <br>    <span class="hljs-comment"># As EdgeSimPy will halt the simulation whenever this function returns True,</span><br>    <span class="hljs-comment"># its output will be a boolean expression that checks if the current time step is 600</span><br>    <span class="hljs-keyword">return</span> model.schedule.steps == <span class="hljs-number">600</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="Automating-Experiments"><a href="#Automating-Experiments" class="headerlink" title="Automating Experiments"></a>Automating Experiments</h2><p>通常 resource management algorithm 需要设置几个超参数, 这里讲如何自动进行 simulation 已找到最优的超参数. EdgeSimPy 并没有提供自动化框架, 其实就是自己遍历来找.</p>
+<p>假设使用的 resource management algorithm 是 First-Fit 的逻辑, 停止条件是所有 services 都被分配了资源:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">my_algorithm</span>(<span class="hljs-params">parameters</span>):<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;parameters: <span class="hljs-subst">&#123;parameters&#125;</span>&quot;</span>)<br>    <span class="hljs-comment"># We can always call the &#x27;all()&#x27; method to get a list with all created instances of a given class</span><br>    <span class="hljs-keyword">for</span> service <span class="hljs-keyword">in</span> Service.<span class="hljs-built_in">all</span>():<br>        <span class="hljs-comment"># We don&#x27;t want to migrate services are are already being migrated</span><br>        <span class="hljs-keyword">if</span> service.server == <span class="hljs-literal">None</span> <span class="hljs-keyword">and</span> <span class="hljs-keyword">not</span> service.being_provisioned:<br><br>            <span class="hljs-comment"># Let&#x27;s iterate over the list of edge servers to find a suitable host for our service</span><br>            <span class="hljs-keyword">for</span> edge_server <span class="hljs-keyword">in</span> EdgeServer.<span class="hljs-built_in">all</span>():<br><br>                <span class="hljs-comment"># We must check if the edge server has enough resources to host the service</span><br>                <span class="hljs-keyword">if</span> edge_server.has_capacity_to_host(service=service):<br><br>                    <span class="hljs-comment"># Start provisioning the service in the edge server</span><br>                    service.provision(target_server=edge_server)<br><br>                    <span class="hljs-comment"># After start migrating the service we can move on to the next service</span><br>                    <span class="hljs-keyword">break</span><br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">stopping_criterion</span>(<span class="hljs-params">model: <span class="hljs-built_in">object</span></span>):<br>    <span class="hljs-comment"># Defining a variable that will help us to count the number of services successfully provisioned within the infrastructure</span><br>    provisioned_services = <span class="hljs-number">0</span><br>    <br>    <span class="hljs-comment"># Iterating over the list of services to count the number of services provisioned within the infrastructure</span><br>    <span class="hljs-keyword">for</span> service <span class="hljs-keyword">in</span> Service.<span class="hljs-built_in">all</span>():<br><br>        <span class="hljs-comment"># Initially, services are not hosted by any server (i.e., their &quot;server&quot; attribute is None).</span><br>        <span class="hljs-comment"># Once that value changes, we know that it has been successfully provisioned inside an edge server.</span><br>        <span class="hljs-keyword">if</span> service.server != <span class="hljs-literal">None</span>:<br>            provisioned_services += <span class="hljs-number">1</span><br>    <br>    <span class="hljs-comment"># As EdgeSimPy will halt the simulation whenever this function returns True, its output will be a boolean expression</span><br>    <span class="hljs-comment"># that checks if the number of provisioned services equals to the number of services spawned in our simulation</span><br>    <span class="hljs-keyword">return</span> provisioned_services == Service.count()<br></code></pre></td></tr></table></figure>
+
+<p>假设 <code>parameters</code> 中有两个键值对可用, 分别是 <code>a</code> 和 <code>b</code>. 又假如 <code>a</code> 和 <code>b</code> 的所有取值定义如下:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs python">parameters = &#123;<br>    <span class="hljs-string">&quot;a&quot;</span>: [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>],<br>    <span class="hljs-string">&quot;b&quot;</span>: [<span class="hljs-number">100</span>, <span class="hljs-number">200</span>, <span class="hljs-number">3</span>],<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>接下来要做的就是遍历 <code>a</code> 和 <code>b</code> 的所有组合方案, 然后分析各自的结果:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">for</span> combination <span class="hljs-keyword">in</span> itertools.product(*parameters.values()):<br>    specification = &#123;&#125;<br>    specification_name = <span class="hljs-string">&#x27;&#x27;</span><br>    <span class="hljs-keyword">for</span> parameter_id, parameter_value <span class="hljs-keyword">in</span> <span class="hljs-built_in">enumerate</span>(combination):<br>        parameter_name = <span class="hljs-built_in">list</span>(parameters.keys())[parameter_id]<br>        <br>        <span class="hljs-comment"># Formatting the logs directory name according to the current specification&#x27;s parameters</span><br>        specification_name += <span class="hljs-string">f&quot;;<span class="hljs-subst">&#123;parameter_name&#125;</span>=<span class="hljs-subst">&#123;parameter_value&#125;</span>&quot;</span> <span class="hljs-keyword">if</span> parameter_id <span class="hljs-keyword">else</span> <span class="hljs-string">f&quot;<span class="hljs-subst">&#123;parameter_name&#125;</span>=<span class="hljs-subst">&#123;parameter_value&#125;</span>&quot;</span><br><br>        <span class="hljs-comment"># Building a dictionary from the current specification</span><br>        specification[parameter_name] = parameter_value<br>    <br>    <span class="hljs-comment"># Creating a Simulator object with the current parameters specification and its logs directory</span><br>    simulator = Simulator(<br>        dump_interval=<span class="hljs-number">5</span>,<br>        tick_duration=<span class="hljs-number">1</span>,<br>        tick_unit=<span class="hljs-string">&quot;seconds&quot;</span>,<br>        stopping_criterion=stopping_criterion,<br>        resource_management_algorithm=my_algorithm,<br>        resource_management_algorithm_parameters=specification,<br>        logs_directory=specification_name<br>    )<br><br>    <span class="hljs-comment"># Loading a sample dataset from GitHub</span><br>    simulator.initialize(input_file=<span class="hljs-string">&quot;https://raw.githubusercontent.com/EdgeSimPy/edgesimpy-tutorials/master/datasets/sample_dataset2.json&quot;</span>)<br><br>    <span class="hljs-comment"># Executing the simulation</span><br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;==== Running Simulation with Specification: <span class="hljs-subst">&#123;specification&#125;</span> ====&quot;</span>)<br>    simulator.run_model()<br></code></pre></td></tr></table></figure>
+
+<h2 id="Custom-mobility-model"><a href="#Custom-mobility-model" class="headerlink" title="Custom mobility model"></a>Custom mobility model</h2><p>EdgeSimPy 仿真中, 与 datasets 关联的最基础的组件是 map model, 其封装了 coordinates system 便于其他 entities (比如 base stations, edge servers, users) 使用. Map model 通常不会影响其他的 system model 比如 power consumption model, 但对于 custom mobility models 就很重要.</p>
+<p>EdgeSimPy 的 map model 基于 Aral et al. 的理论, 其会将一个 map 拆分为一个个 haxagonal cells. 在 EdgeSimPy 中可以用 <code>hexagonal_grid</code> 函数来创建一组 hexagonal cell, 对应一组自动生成的坐标. 比如:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">map_coordinates = hexagonal_grid(x_size=<span class="hljs-number">3</span>, y_size=<span class="hljs-number">3</span>)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>x_size</code> 和 <code>y_size</code> 指定了 map 的大小, map 上每一个位置就是一个 hexagonal cell</li>
+<li><code>map_coordinates</code> 是一个 list, 其元素是包含两个坐标值的 list</li>
+</ul>
+<p>有了 coordinates set 之后, 就可以开始创建 base stations. EdgeSimPy 默认的 hexagonal map 假设每个坐标上都有一个 base station, base station 之上可以连接 edge server, network switch 等 (一个 base station 可以与多个 entities 相连).</p>
+<p>每个 hexagonal cell 中至少要有一个 base station 和一个 network switch. 所有 base stations 之间是连接的, 形成一个 wired network infrastructure.</p>
+<p>下面是一个示例, 有:</p>
+<p><img src="/../img/edgesimpy_scenario.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>6 个 hexagonal cells (包含 6 个 base stations 和 6 个 network switches)</li>
+<li>9 个 network links (用 <code>L1-L9</code> 表示)</li>
+<li>3 个 edge servers (用 <code>ES1-ES3</code> 表示)</li>
+<li>2 个用户, 各自使用一个 application:<ul>
+<li>user 1 的 application 由一个 service 组成</li>
+<li>user 2 的 application 由两个相互依赖的 services 组成</li>
+</ul>
+</li>
+</ul>
+<p>下面是利用 <code>map_coordinates</code>, 为每个 coordinates 创建一个 <code>base_station</code> 并连接一个 <code>network_switch</code> 的例子:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">for</span> coordinates <span class="hljs-keyword">in</span> map_coordinates:<br>    <span class="hljs-comment"># Creating the base station object</span><br>    base_station = BaseStation()<br>    base_station.wireless_delay = <span class="hljs-number">0</span><br>    base_station.coordinates = coordinates<br><br>    <span class="hljs-comment"># Creating network switch object using the &quot;sample_switch()&quot; generator</span><br>    network_switch = sample_switch()<br>    base_station._connect_to_network_switch(network_switch=network_switch)<br></code></pre></td></tr></table></figure>
+
+<p>这样每个坐标就是连通的, 可以通信.</p>
+<p>可以用 <code>EdgeSimPy</code> 的 helper function 来生成常见的网络拓扑结构, 如:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs python">partially_connected_hexagonal_mesh(<br>    network_nodes=NetworkSwitch.<span class="hljs-built_in">all</span>(),<br>    link_specifications=[<br>        &#123;<span class="hljs-string">&quot;number_of_objects&quot;</span>: <span class="hljs-number">16</span>, <span class="hljs-string">&quot;delay&quot;</span>: <span class="hljs-number">1</span>, <span class="hljs-string">&quot;bandwidth&quot;</span>: <span class="hljs-number">10</span>&#125;,<br>    ],<br>)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>该函数会自动根据 <code>switches</code> 的个数来生成 links</li>
+<li><code>link_specifications</code> 具体描述网络的性质:<ul>
+<li><code>delay</code>, 指定 network link 的传输延迟</li>
+<li><code>bandwidth</code>, 指定 network link 的带宽</li>
+<li><code>number_of_objects</code>, 描述拓扑中有多少 links 需要赋予上述的 <code>delay</code> 和 <code>bandwidth</code> 特性</li>
+</ul>
+</li>
+</ul>
+<p>另一个示例来说明 <code>number_of_objects</code> 的设置:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs python">link_specifications = [<br>    &#123;<br>        <span class="hljs-string">&quot;number_of_objects&quot;</span>: <span class="hljs-number">2</span>,  <span class="hljs-comment"># 3条链路中的2条将采用此规格</span><br>        <span class="hljs-string">&quot;delay&quot;</span>: <span class="hljs-number">0.001</span>, <span class="hljs-comment"># 1ms</span><br>        <span class="hljs-string">&quot;bandwidth&quot;</span>: <span class="hljs-number">10</span>  <span class="hljs-comment"># 10Gbps</span><br>    &#125;,<br>    &#123;<br>        <span class="hljs-string">&quot;number_of_objects&quot;</span>: <span class="hljs-number">1</span>,  <span class="hljs-comment"># 3条链路中的最后1条将采用此规格</span><br>        <span class="hljs-string">&quot;delay&quot;</span>: <span class="hljs-number">0.005</span>, <span class="hljs-comment"># 5ms</span><br>        <span class="hljs-string">&quot;bandwidth&quot;</span>: <span class="hljs-number">1</span>   <span class="hljs-comment"># 1Gbps</span><br>    &#125;<br>]<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>number_of_objects</code> 的总和必须等于自动生成的 links 数量</li>
+</ul>
+<h2 id="Creating-Edge-Servers"><a href="#Creating-Edge-Servers" class="headerlink" title="Creating Edge Servers"></a>Creating Edge Servers</h2><p>这里会创建两个 edge servers 作为示例, 分别用不同的 power consumption models:</p>
+<ul>
+<li><code>LinearPowerModel</code></li>
+<li>custom power consumption model</li>
+</ul>
+<p>每个 Power model 都会有 <code>get_power_consumption(cls, device)</code> 这个方法:</p>
+<ul>
+<li><code>cls</code> 参数是自动传入的</li>
+<li><code>device</code> 是我们指定的, 想要获取哪个设备的能量消耗</li>
+</ul>
+<p>Edge server 中有两个 attributes 用来支持 power consumption model:</p>
+<ul>
+<li><code>power_model</code>, 指定一个 class 作为 power model</li>
+<li><code>power_model_parameters</code>, 一个 dictionary, 包含 power model 用于计算 power consumption 所需的参数</li>
+</ul>
+<p>对于 <code>LinearPowerModel</code> 而言, 构建 <code>power_model_parameters</code> 需要指定两个参数:</p>
+<ul>
+<li><code>max_power_consumption</code>, 当 device 全功率运行时的 power consumption</li>
+<li><code>static_power_percentage</code>, 当 device 静息运行时, 其消耗的功率是 <code>max_power_consumption</code> 的多少比值</li>
+</ul>
+<p>具体示例:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs python">edge_server = EdgeServer()<br><br><span class="hljs-comment"># Computational capacity (CPU in cores, RAM memory in megabytes, and disk in megabytes)</span><br>edge_server.cpu = <span class="hljs-number">10</span><br>edge_server.memory = <span class="hljs-number">4096</span><br>edge_server.disk = <span class="hljs-number">102400</span><br><br><span class="hljs-comment"># Power-related attributes</span><br>edge_server.power_model_parameters = &#123;<br>    <span class="hljs-string">&quot;max_power_consumption&quot;</span>: <span class="hljs-number">110</span>,<br>    <span class="hljs-string">&quot;static_power_percentage&quot;</span>: <span class="hljs-number">0.1</span>,<br>&#125;<br><br><span class="hljs-comment"># Specifying the edge server&#x27;s power model</span><br>edge_server.power_model = LinearServerPowerModel<br><br><span class="hljs-comment"># Connecting the edge server to a random base station with no attached edge server</span><br>base_stations_without_servers = [base_station <span class="hljs-keyword">for</span> base_station <span class="hljs-keyword">in</span> BaseStation.<span class="hljs-built_in">all</span>() <span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(base_station.edge_servers) == <span class="hljs-number">0</span>]<br>base_station = random.choice(base_stations_without_servers)<br>base_station._connect_to_edge_server(edge_server=edge_server)<br></code></pre></td></tr></table></figure>
+<p>逻辑是, 先创建 edge server, 然后从 base stations 中找到还没有与 edge server 连接的一个, 将两者连接.</p>
+<h2 id="Custom-power-consumption-model"><a href="#Custom-power-consumption-model" class="headerlink" title="Custom power consumption model"></a>Custom power consumption model</h2><p>假设自定义的 power model 类名是 <code>MyCustomPowerModel</code>, 为简单起见, 这里的能量消耗策略是: edge server’s demand 乘以一个常数 alpha, 这个常数通过 <code>power_model_parameters</code> 来传递:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">MyCustomPowerModel</span>:<br><span class="hljs-meta">    @classmethod</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">get_power_consumption</span>(<span class="hljs-params">cls, device: <span class="hljs-built_in">object</span></span>):<br>        <span class="hljs-comment"># Please notice that this sample code could be replaced by any other routine</span><br>        power_consumption = device.cpu_demand * device.power_model_parameters[<span class="hljs-string">&quot;alpha&quot;</span>]<br><br>        <span class="hljs-comment"># It&#x27;s important to always return the calculated device&#x27;s power consumption</span><br>        <span class="hljs-keyword">return</span> power_consumption<br></code></pre></td></tr></table></figure>
+
+<p>使用示例:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs python">edge_server = EdgeServer()<br><br><span class="hljs-comment"># Computational capacity (CPU in cores, RAM memory in megabytes, and disk in megabytes)</span><br>edge_server.cpu = <span class="hljs-number">10</span><br>edge_server.memory = <span class="hljs-number">4096</span><br>edge_server.disk = <span class="hljs-number">102400</span><br><br><span class="hljs-comment"># Power-related attributes</span><br>edge_server.power_model_parameters = &#123;<br>    <span class="hljs-string">&quot;alpha&quot;</span>: <span class="hljs-number">2</span>,<br>&#125;<br><br><span class="hljs-comment"># Specifying the edge server&#x27;s power model</span><br>edge_server.power_model = MyCustomPowerModel<br><br><span class="hljs-comment"># Connecting the edge server to a random base station with no attached edge server</span><br>base_stations_without_servers = [base_station <span class="hljs-keyword">for</span> base_station <span class="hljs-keyword">in</span> BaseStation.<span class="hljs-built_in">all</span>() <span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(base_station.edge_servers) == <span class="hljs-number">0</span>]<br>base_station = random.choice(base_stations_without_servers)<br>base_station._connect_to_edge_server(edge_server=edge_server)<br></code></pre></td></tr></table></figure>
+
+<h2 id="Creating-Users"><a href="#Creating-Users" class="headerlink" title="Creating Users"></a>Creating Users</h2><p>User entity 是 EdgeSimPy 中扩展性最强的组件, 可以用 built-in 或者 custom models 来描述 user access patterns 和 mobility.</p>
+<p>User 类有两个 attributes 与 mobility models 相关:</p>
+<ul>
+<li><code>mobility_model</code>, 指定一个 mobility model function (注意是函数而不是提供一个类)</li>
+<li><code>mobility_model_parameters</code>, 也是一个 dictionary, 包含 <code>mobility_model</code> 需要使用的参数</li>
+</ul>
+<p>下面给两个示例:</p>
+<ul>
+<li>一个用 <code>Pathway</code> 这个 built-in mobility model</li>
+<li>另一个用 custom mobility model</li>
+</ul>
+<p>第一个 User 构建如下:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs python">user = User()<br>user.mobility_model = pathway<br>user._set_initial_position(coordinates=random.choice(map_coordinates))<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>_set_initial_position</code> 方法设置用户的初始坐标</li>
+</ul>
+<p>定义一个 custom mobility model (也就是一个函数) 如下:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">my_custom_mobility_model</span>(<span class="hljs-params">user: <span class="hljs-built_in">object</span></span>):<br>    <span class="hljs-comment"># Gathering the user&#x27;s mobility model parameters. If no parameter was specified, set &quot;beta&quot; as 1</span><br>    <span class="hljs-keyword">if</span> <span class="hljs-built_in">hasattr</span>(user, <span class="hljs-string">&#x27;mobility_model_parameters&#x27;</span>) <span class="hljs-keyword">and</span> <span class="hljs-string">&quot;beta&quot;</span> <span class="hljs-keyword">in</span> user.mobility_model_parameters:<br>        parameters = user.mobility_model_parameters<br>    <span class="hljs-keyword">else</span>:<br>        parameters = &#123;<span class="hljs-string">&quot;beta&quot;</span>: <span class="hljs-number">1</span>&#125;<br><br>    <span class="hljs-comment"># Moving the user to random coordinates. We find the set of coordinates</span><br>    <span class="hljs-comment"># through base stations, as base stations are the entities responsible</span><br>    <span class="hljs-comment"># for providing wireless connectivity for users, being present in all</span><br>    <span class="hljs-comment"># map coordinates. Thus, let&#x27;s find a random base station</span><br>    random_base_station = user.base_station<br>    <span class="hljs-keyword">while</span> random_base_station == user.base_station:<br>        random_base_station = random.choice(BaseStation.<span class="hljs-built_in">all</span>())<br>    <br>    <span class="hljs-comment"># Setting the user&#x27;s coordinates trace to the random base station position and</span><br>    <span class="hljs-comment"># instructing EdgeSimPy that the user will stay in that position for &quot;beta&quot; time steps</span><br>    new_coordinates = [random_base_station.coordinates <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(parameters[<span class="hljs-string">&quot;beta&quot;</span>])]<br>    user.coordinates_trace.extend(new_coordinates)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>通过 <code>user.coordinates_trace.extend</code> 方法来修改坐标位置</li>
+</ul>
+<p>创建和绑定:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs python">user = User()<br>user.mobility_model = my_custom_mobility_model<br>user.mobility_model_parameters = &#123;<span class="hljs-string">&quot;beta&quot;</span>: <span class="hljs-number">3</span>&#125;<br>user._set_initial_position(coordinates=random.choice(map_coordinates), number_of_replicates=user.mobility_model_parameters[<span class="hljs-string">&quot;beta&quot;</span>])<br></code></pre></td></tr></table></figure>
+
+<h2 id="Visualizing-the-Dataset"><a href="#Visualizing-the-Dataset" class="headerlink" title="Visualizing the Dataset"></a>Visualizing the Dataset</h2><p>在创建一个 dataset (描述有哪些 entity, 之间是如何连接的, entity 应用了哪些模型等) 之后, 可以用 <code>NetworkX</code> 来画出 network infrastructure, 并 highlight 部分自己想看到的内容, 比如:</p>
+<ul>
+<li>让与 users 相连的 switches 画出来更大 (相比于没有连接 users 的 switches)</li>
+<li>让连接了 edge servers 的 switches 画为红色, 其余的是黑色</li>
+</ul>
+<p>可以这样写:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># Customizing network visualization</span><br>positions = &#123;&#125;<br>labels = &#123;&#125;<br>sizes = []<br>colors = []<br><span class="hljs-keyword">for</span> node <span class="hljs-keyword">in</span> Topology.first().nodes():<br>    positions[node] = node.coordinates<br>    labels[node] = <span class="hljs-string">f&quot;ID: <span class="hljs-subst">&#123;node.<span class="hljs-built_in">id</span>&#125;</span>\n<span class="hljs-subst">&#123;node.coordinates&#125;</span>&quot;</span><br>    <br>    <span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(node.base_station.users) &gt; <span class="hljs-number">0</span>:<br>        sizes.append(<span class="hljs-number">3500</span>)<br>    <span class="hljs-keyword">else</span>:<br>        sizes.append(<span class="hljs-number">1000</span>)<br>    <br>    <span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(node.base_station.edge_servers) &gt; <span class="hljs-number">0</span>:<br>        colors.append(<span class="hljs-string">&quot;red&quot;</span>)<br>    <span class="hljs-keyword">else</span>:<br>        colors.append(<span class="hljs-string">&quot;black&quot;</span>)<br><br><span class="hljs-comment"># Drawing the network topology</span><br>nx.draw(<br>    Topology.first(),<br>    pos=positions,<br>    node_color=colors,<br>    node_size=sizes,<br>    labels=labels,<br>    font_size=<span class="hljs-number">7</span>,<br>    font_weight=<span class="hljs-string">&quot;bold&quot;</span>,<br>    font_color=<span class="hljs-string">&quot;whitesmoke&quot;</span>,<br>)<br></code></pre></td></tr></table></figure>
+<p>代码逻辑是:</p>
+<ul>
+<li>通过 <code>Topology.first().nodes()</code> 获取所有节点 (所有 base stations)</li>
+<li>用 <code>positions[node]</code> 来保存所有坐标信息</li>
+<li>用 <code>labels[node]</code> 保存要显示在图上的描述信息</li>
+<li><code>node.base_station.users</code> 能获取与该 base station 相连的用户数, 如果 <code>&gt; 0</code>, 表明与用户相连, 则对应的 <code>size</code> 信息就更大</li>
+<li><code>node.base_station.edge_servers</code> 能获取与该 base station 相连的 edge server 数, 如果 <code>&gt; 0</code>, 表明与 edge server 相连, 则添加 <code>red</code> 颜色信息</li>
+<li>调用 <code>nx.draw</code> 来手动绘制</li>
+</ul>
+<h2 id="Exporting-the-Dataset"><a href="#Exporting-the-Dataset" class="headerlink" title="Exporting the Dataset"></a>Exporting the Dataset</h2><p>可以用 <code>ComponentManager</code> 的 helper method 将一个 Dataset 导出为 JSON.</p>
+<p>EdgeSimPy 允许为 simulated entities 自定义 attributes.</p>
+<p>在导出之前, 需要重载 entity class 的 <code>_to_dict()</code> 方法, 来描述如何序列化 Objects 到 JSON. 之后才能借助 <code>ComponentManager</code> 来导出.</p>
+<p>通常将 entity attributes 分为两类:</p>
+<ul>
+<li><code>attributes</code>: 指不涉及其他 simulated entities 的 attributes</li>
+<li><code>relationships</code>: 指涉及其他 simulated entities 的 attributes</li>
+</ul>
+<p>比如为 <code>EdgeServer</code> 重载 <code>_to_dict()</code> 方法:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">EdgeServer</span>(ComponentManager, Agent):<br>    <br>    ...<br>    <br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">_to_dict</span>(<span class="hljs-params">self</span>) -&gt; <span class="hljs-built_in">dict</span>:<br>        access_patterns = &#123;&#125;<br>        <span class="hljs-keyword">for</span> app_id, access_pattern <span class="hljs-keyword">in</span> self.access_patterns.items():<br>            access_patterns[app_id] = &#123;<span class="hljs-string">&quot;class&quot;</span>: access_pattern.__class__.__name__, <span class="hljs-string">&quot;id&quot;</span>: access_pattern.<span class="hljs-built_in">id</span>&#125;<br><br>        dictionary = &#123;<br>            <span class="hljs-string">&quot;attributes&quot;</span>: &#123;<br>                <span class="hljs-string">&quot;id&quot;</span>: self.<span class="hljs-built_in">id</span>,<br>                <span class="hljs-string">&quot;coordinates&quot;</span>: self.coordinates,<br>                <span class="hljs-string">&quot;delays&quot;</span>: copy.deepcopy(self.delays),<br>            &#125;,<br>            <span class="hljs-string">&quot;relationships&quot;</span>: &#123;<br>                <span class="hljs-string">&quot;mobility_model&quot;</span>: self.mobility_model.__name__,<br>                <span class="hljs-string">&quot;base_station&quot;</span>: &#123;<span class="hljs-string">&quot;class&quot;</span>: <span class="hljs-built_in">type</span>(self.base_station).__name__, <span class="hljs-string">&quot;id&quot;</span>: self.base_station.<span class="hljs-built_in">id</span>&#125;,<br>                <span class="hljs-string">&quot;applications&quot;</span>: [&#123;<span class="hljs-string">&quot;class&quot;</span>: <span class="hljs-built_in">type</span>(app).__name__, <span class="hljs-string">&quot;id&quot;</span>: app.<span class="hljs-built_in">id</span>&#125; <span class="hljs-keyword">for</span> app <span class="hljs-keyword">in</span> self.applications],<br>            &#125;,<br>        &#125;<br>        <span class="hljs-keyword">return</span> dictionary<br></code></pre></td></tr></table></figure>
+
+<p>之后进行导出:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">dataset = ComponentManager.export_scenario(save_to_file=<span class="hljs-literal">True</span>, file_name=<span class="hljs-string">&quot;sample_dataset&quot;</span>)<br></code></pre></td></tr></table></figure>
+
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Python/" class="category-chain-item">Python</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>EdgeSimPy-仿真框架基本使用</div>
+      <div>http://example.com/2026/03/09/EdgeSimPy-仿真框架基本使用/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Jie</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年3月9日</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>许可协议</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2026/03/09/%E5%9B%BE%E8%AE%BA%E5%8F%8A%E5%85%B6%E5%BA%94%E7%94%A8-Notes/" title="图论及其应用-Notes">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">图论及其应用-Notes</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/03/06/rCore-Tutorial-%E7%AC%94%E8%AE%B0%E5%8F%8A%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9F%A5%E8%AF%86/" title="rCore-Tutorial-笔记及操作系统知识">
+                        <span class="hidden-mobile">rCore-Tutorial-笔记及操作系统知识</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zKurisu/comments-utterances');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Jie</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Orkarin</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.1/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
