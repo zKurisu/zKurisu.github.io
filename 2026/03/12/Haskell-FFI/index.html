@@ -24,7 +24,7 @@
 <meta property="og:description" content="介绍FFI, Foreign Function Interface, 是一种编程语言各自实现的机制, 用于让一种语言调用另一种语言编写的函数或库. 它不是由一个单一组织制定的协议 (比如 ISO 或 IEEE 标准), 而是一个通用的概念和技术. Haskell 的 FFI 相关内容都在 Foreign 以及其子模块中, 后面会说明一些常用的部分. StorableStorable typecla">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-03-12T09:11:05.000Z">
-<meta property="article:modified_time" content="2026-03-19T03:47:14.537Z">
+<meta property="article:modified_time" content="2026-03-21T02:11:53.374Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -437,7 +437,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          7.2k 字
+          10k 字
         
       </span>
     
@@ -448,7 +448,7 @@ path.outline_glyph {
         
         
         
-          60 分钟
+          87 分钟
         
       </span>
     
@@ -661,6 +661,104 @@ path.outline_glyph {
 <p>此时可以这样用:</p>
 <figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-comment">-- 导入 C 函数</span><br><span class="hljs-keyword">foreign</span> <span class="hljs-keyword">import</span> <span class="hljs-keyword">ccall</span> <span class="hljs-string">&quot;stdio.h fopen&quot;</span> <br>  c_fopen :: <span class="hljs-type">CString</span> -&gt; <span class="hljs-type">CString</span> -&gt; <span class="hljs-type">IO</span> <span class="hljs-type">FileHandle</span><br><br><span class="hljs-comment">-- 这里的 FileHandle 就像是一个“黑盒”</span><br><span class="hljs-title">openMyFile</span> :: <span class="hljs-type">FilePath</span> -&gt; <span class="hljs-type">IO</span> <span class="hljs-type">FileHandle</span><br><span class="hljs-title">openMyFile</span> path = withCString path $ \c_path -&gt;<br>  withCString <span class="hljs-string">&quot;r&quot;</span> $ \c_mode -&gt;<br>    c_fopen c_path c_mode<br></code></pre></td></tr></table></figure>
 
+<h1 id="hsc2hs"><a href="#hsc2hs" class="headerlink" title="hsc2hs"></a>hsc2hs</h1><p>从 <code>C</code> 头文件中引入一个宏, 最简单的例子就是启用 <code>CPP</code> (C PreProcessor) 语言选项, 手动在 Haskell 文件中用 <code>#define</code> 进行声明:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-meta">&#123;-# LANGUAGE CPP #-&#125;</span><br><br><span class="hljs-meta">#define N 16</span><br><br><span class="hljs-title">main</span> = print [<span class="hljs-number">1</span>..<span class="hljs-type">N</span>]<br></code></pre></td></tr></table></figure>
+
+<p>但这种方式有几种缺点:</p>
+<ul>
+<li>在 Haskell 文件中硬编码. 如果是从 <code>termios.h</code> 等头文件中引入, 能够获取系统定义的真实值</li>
+<li>如果手动 <code>#define</code> 了一个错误的值, <code>FFI</code> 调用也能编译通过, 但会产生不可预知的行为</li>
+<li>类型安全缺失. C 宏只是简单的文本替换, 这里的 N 的类型其实是模糊的, 对于简单运算 Haskell 类型系统能推理出, 但是涉及复杂运算时容易在调用时发生类型不匹配</li>
+</ul>
+<p>更好的方法是使用 GHC 自带的 <code>hsc2hs</code> 工具, 其作用是:</p>
+<ul>
+<li>提供了一套方便的语法, 能在 Haskell 中安全包含 C 绑定的信息</li>
+<li>处理 C 头文件, 避免混乱</li>
+</ul>
+<p>先编写一个 almost-Haskell 的 <code>.hsc</code> 文件, 通过嵌入一些特殊语法, 指示 <code>hsc2hs</code> 将 C headers 的信息替换进来.</p>
+<p><code>hsc2hs</code> 不会直接输出 Haskell file, 而是先创建一个包含头文件的 C program, 编译运行后, 由该程序生成 Haskell code.</p>
+<h2 id="常见选项"><a href="#常见选项" class="headerlink" title="常见选项"></a>常见选项</h2><p><code>hsc2hs</code> 的常见选项如下:</p>
+<ul>
+<li><code>-o FILE</code> 或 <code>--output=FILE</code>, 指定输出的 Haskell file 名称</li>
+<li><code>-c PROG</code> 或 <code>--cc=PROG</code>, 指定 C compiler, 默认是 <code>ghc</code></li>
+<li><code>-l PROG</code> 或 <code>--ld=PROG</code>, 指定 linker, 默认是 <code>gcc</code></li>
+<li><code>-I DIR</code>, 指定头文件查找路径, 会传递给 C compiler</li>
+<li><code>-i FILE</code> 或 <code>--include=FILE</code>, 手动指定要包含的头文件</li>
+<li><code>-t FILE</code> 或 <code>--template=FILE</code>, 读取 template file</li>
+</ul>
+<h2 id="嵌入语法"><a href="#嵌入语法" class="headerlink" title="嵌入语法"></a>嵌入语法</h2><p>所有的特殊处理语法都是 <code>#</code> 开头, 因此如果想输出一个 literal <code>#</code>, 需要写成 <code>##</code>. 当然如果是在字符串中则还是写成 <code>#</code> 就行.</p>
+<p><code>#</code> 之后可以跟任意数量的 <code>spaces</code> 和 <code>tabs</code>, 然后接 keyword 以及其 arguments 来描述具体做什么处理. <code>arguments</code> 之间用 commas 分隔, 且不需要写在括号中.</p>
+<p><code>#&#123;stuff&#125;</code> 等价于 <code>#stuff</code> 的写法. 前者能够 self-delimited, 因此可以不用放在行尾或括号中.</p>
+<p><code>#stuff</code>, <code>#&#123;stuff&#125;</code> 可以整体放在一对 <code>()</code>, <code>[]</code>, <code>&#123;&#125;</code>, <code>&#39;&#39;</code>, <code>&quot;&quot;</code>, <code>/**/</code> 中, 以进行单行划分等.</p>
+<p>下面分别说明一些关键字.</p>
+<h3 id="包含头文件"><a href="#包含头文件" class="headerlink" title="包含头文件"></a>包含头文件</h3><p>指定要包含的头文件, 默认会包含 <code>&lt;HsFFI.h&gt;</code>, 示例:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-meta">#include &lt;file.h&gt;</span><br><span class="hljs-meta">#include &quot;file.h&quot;</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="手动宏定义"><a href="#手动宏定义" class="headerlink" title="手动宏定义"></a>手动宏定义</h3><p>下面指令的行为与 C 语言中的预处理器一致:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-meta">#define name</span><br><span class="hljs-meta">#define name value</span><br><span class="hljs-meta">#undef  name</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="计算-C-expression"><a href="#计算-C-expression" class="headerlink" title="计算 C expression"></a>计算 C expression</h3><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-meta">#const C_expression</span><br></code></pre></td></tr></table></figure>
+
+<p>上述会被替换为 <code>C_expression</code> 的结果. 比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">hello</span> :: <span class="hljs-type">Int</span><br><span class="hljs-title">hello</span> = #const <span class="hljs-number">1</span>+<span class="hljs-number">1</span><br></code></pre></td></tr></table></figure>
+
+<p>经 <code>hsc2hs</code> 处理后会变为:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">hello</span> :: <span class="hljs-type">Int</span><br><span class="hljs-title">hello</span> = <span class="hljs-number">2</span><br></code></pre></td></tr></table></figure>
+
+<p>通常用 <code>#const</code> 来处理头文件中的宏常量, 比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">lfEcho</span> :: <span class="hljs-type">Int</span><br><span class="hljs-title">lfEcho</span> = #const <span class="hljs-type">ECHO</span><br></code></pre></td></tr></table></figure>
+
+<p>处理后得到:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">lfEcho</span> :: <span class="hljs-type">Int</span><br><span class="hljs-title">lfEcho</span> = <span class="hljs-number">8</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="解引用-C-struct-的指定-field"><a href="#解引用-C-struct-的指定-field" class="headerlink" title="解引用 C struct 的指定 field"></a>解引用 C struct 的指定 field</h3><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-meta">#peek struct_type, field</span><br></code></pre></td></tr></table></figure>
+<p>上述会被替换为一个类型签名为 <code>Storable b =&gt; Ptr a -&gt; IO b</code> 的函数, 实际上就是, 接收一个指针为参数, 在 <code>IO b</code> 内用 <code>peekByteOff</code> 跳转到对应偏移量取值 (最便利的点就是自动计算偏移量). </p>
+<p>比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">peekLFlags</span> :: <span class="hljs-type">Termios</span> -&gt; <span class="hljs-type">IO</span> <span class="hljs-type">LocalFlags</span><br><span class="hljs-title">peekLFlags</span> (<span class="hljs-type">Termios</span> ptr) = <span class="hljs-keyword">do</span><br>  f &lt;- #&#123;peek struct termios, c_lflag&#125; ptr<br>  return (<span class="hljs-type">LF</span> f)<br></code></pre></td></tr></table></figure>
+
+<p>处理后变为:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">peekLFlags</span> :: <span class="hljs-type">Termios</span> -&gt; <span class="hljs-type">IO</span> <span class="hljs-type">LocalFlags</span><br><span class="hljs-title">peekLFlags</span> (<span class="hljs-type">Termios</span> ptr) = <span class="hljs-keyword">do</span><br>  f &lt;- (\hsc_ptr -&gt; peekByteOff hsc_ptr <span class="hljs-number">12</span>) ptr<br>  return (<span class="hljs-type">LF</span> f)<br></code></pre></td></tr></table></figure>
+
+<h3 id="修改-C-struct-的指定-field"><a href="#修改-C-struct-的指定-field" class="headerlink" title="修改 C struct 的指定 field"></a>修改 C struct 的指定 field</h3><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-meta">#poke struct_type, field</span><br></code></pre></td></tr></table></figure>
+<p>上述会生成一个函数签名为 <code>Storable b =&gt; Ptr a -&gt; b -&gt; IO ()</code> 的函数. <code>Ptr a</code> 是要处理的结构体指针, <code>b</code> 是要替换的字段新值, <code>IO ()</code> 是具体的计算过程.</p>
+<p>比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">pokeLFlags</span> :: <span class="hljs-type">Termios</span> -&gt; <span class="hljs-type">LocalFlags</span> -&gt; <span class="hljs-type">Termios</span><br><span class="hljs-title">pokeLFlags</span> (<span class="hljs-type">Termios</span> ptr) (<span class="hljs-type">LF</span> f) = #&#123;poke struct termios, c_lflags&#125; ptr f<br></code></pre></td></tr></table></figure>
+
+<p>处理后变为:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">pokeLFlags</span> :: <span class="hljs-type">Termios</span> -&gt; <span class="hljs-type">LocalFlags</span> -&gt; <span class="hljs-type">IO</span> ()<br><span class="hljs-title">pokeLFlags</span> (<span class="hljs-type">Termios</span> ptr) (<span class="hljs-type">LF</span> f) = (\hsc_ptr -&gt; pokeByteOff hsc_ptr <span class="hljs-number">12</span>) ptr f<br></code></pre></td></tr></table></figure>
+
+<h3 id="获取字段结构体的指针"><a href="#获取字段结构体的指针" class="headerlink" title="获取字段结构体的指针"></a>获取字段结构体的指针</h3><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-meta">#ptr struct_type, field</span><br></code></pre></td></tr></table></figure>
+<p>上述会生成一个函数, 签名为 <code>Ptr a -&gt; Ptr b</code>.</p>
+<h3 id="计算-C-struct-字段偏移量"><a href="#计算-C-struct-字段偏移量" class="headerlink" title="计算 C struct 字段偏移量"></a>计算 C struct 字段偏移量</h3><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-meta">#offset struct_type, field</span><br></code></pre></td></tr></table></figure>
+
+<p>比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">lflagsOffset</span> :: <span class="hljs-type">Int</span><br><span class="hljs-title">lflagsOffset</span> = #&#123;offset struct termios, c_lflag&#125;<br></code></pre></td></tr></table></figure>
+
+<p>处理后变为:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">lflagsOffset</span> :: <span class="hljs-type">Int</span><br><span class="hljs-title">lflagsOffset</span> = (<span class="hljs-number">12</span>)<br></code></pre></td></tr></table></figure>
+
+<h3 id="计算-C-struct-大小"><a href="#计算-C-struct-大小" class="headerlink" title="计算 C struct 大小"></a>计算 C struct 大小</h3><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-meta">#size struct_type</span><br></code></pre></td></tr></table></figure>
+
+<p>比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">termiosSize</span> :: <span class="hljs-type">Int</span><br><span class="hljs-title">termiosSize</span> = #&#123;size struct termios&#125;<br></code></pre></td></tr></table></figure>
+
+<p>处理后变为:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">termiosSize</span> :: <span class="hljs-type">Int</span><br><span class="hljs-title">termiosSize</span> = (<span class="hljs-number">60</span>)<br></code></pre></td></tr></table></figure>
+
+<h3 id="批量处理-C-definitions"><a href="#批量处理-C-definitions" class="headerlink" title="批量处理 C definitions"></a>批量处理 C definitions</h3><p>比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">caseless</span>       :: <span class="hljs-type">PCREOption</span><br><span class="hljs-title">caseless</span>       = <span class="hljs-type">PCREOption</span> #const <span class="hljs-type">PCRE_CASELESS</span><br><br><span class="hljs-title">dollar_endonly</span> :: <span class="hljs-type">PCREOption</span><br><span class="hljs-title">dollar_endonly</span> = <span class="hljs-type">PCREOption</span> #const <span class="hljs-type">PCRE_DOLLAR_ENDONLY</span><br><br><span class="hljs-title">dotall</span>         :: <span class="hljs-type">PCREOption</span><br><span class="hljs-title">dotall</span>         = <span class="hljs-type">PCREOption</span> #const <span class="hljs-type">PCRE_DOTALL</span><br></code></pre></td></tr></table></figure>
+
+<p>可以简写成:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-meta">#&#123;enum PCREOption, PCREOption</span><br>  , caseless             = <span class="hljs-type">PCRE_CASELESS</span><br>  , dollar_endonly       = <span class="hljs-type">PCRE_DOLLAR_ENDONLY</span><br>  , dotall               = <span class="hljs-type">PCRE_DOTALL</span><br>  &#125;<br></code></pre></td></tr></table></figure>
+<p><code>#enum</code> 的参数分成 3 部分来看:</p>
+<ul>
+<li>第一个参数表明将 C defines 看作是哪个 Haskell 类型, 这里是 <code>PCREOption</code></li>
+<li>第二个参数表明用哪个 <code>constructor</code>, 这里是 <code>PCREOption</code></li>
+<li>剩下的部分, 等号左边会被视为 Haskell 变量名; 右边是 C Preprocessor 能够处理的 C defines 名称</li>
+</ul>
+<h2 id="自定义-constructs"><a href="#自定义-constructs" class="headerlink" title="自定义 constructs"></a>自定义 constructs</h2><p><code>constructs</code> 就是之前提到的嵌入语法. <code>#const</code>, <code>#type</code>, <code>#peek</code>, <code>#poke</code>, <code>#ptr</code> 都不是编码到 <code>hsc2hs</code> 中的, 而是定义在一个 C template 文件中, 然后 include 进来: <code>template-hsc.h</code>. 也可以自己编写 template 文件, 自定义一些 constructors.</p>
+<p><code>constructors</code> 可以是 macro 或 function, 需要以 <code>hsc_</code> 开头, 具体如何做可以对比 <code>template-hsc.h</code> 文件来看.</p>
+<p>也可以直接在 <code>.hsc</code> source 文件中定义宏来处理.</p>
 <h1 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h1><p>下面是一个创建 <code>Storable</code> 的 instance, 并分配内存并打印数据结构的示例:</p>
 <figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-keyword">module</span> Main (<span class="hljs-title">main</span>) <span class="hljs-keyword">where</span><br><br><span class="hljs-keyword">import</span> Foreign.Storable<br><span class="hljs-keyword">import</span> Foreign.Marshal.Alloc<br><span class="hljs-keyword">import</span> Foreign.C.Types<br><span class="hljs-keyword">import</span> Foreign.Ptr<br><br><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Point</span> = <span class="hljs-type">Point</span> </span><br>  &#123; <br>    x :: <span class="hljs-type">CFloat</span>,<br>    y :: <span class="hljs-type">CFloat</span><br>  &#125; <span class="hljs-keyword">deriving</span> (<span class="hljs-type">Show</span>)<br><span class="hljs-class"></span><br><span class="hljs-class"><span class="hljs-keyword">instance</span> <span class="hljs-type">Storable</span> <span class="hljs-type">Point</span> <span class="hljs-keyword">where</span></span><br>  sizeOf :: <span class="hljs-type">Point</span> -&gt; <span class="hljs-type">Int</span><br>  sizeOf pt = <span class="hljs-number">2</span> * sizeOf (undefined :: <span class="hljs-type">CFloat</span>)<br><br>  alignment :: <span class="hljs-type">Point</span> -&gt; <span class="hljs-type">Int</span><br>  alignment pt = alignment (undefined :: <span class="hljs-type">CFloat</span>)<br><br>  peek :: <span class="hljs-type">Ptr</span> <span class="hljs-type">Point</span> -&gt; <span class="hljs-type">IO</span> <span class="hljs-type">Point</span><br>  peek pt = <br>    peek (castPtr pt) &gt;&gt;= \x -&gt;<br>    peek (castPtr $ pt `plusPtr` sizeOf (undefined :: <span class="hljs-type">CFloat</span>)) &gt;&gt;= \y -&gt;<br>    return <span class="hljs-type">Point</span> &#123; x, y &#125;<br><br>  poke :: <span class="hljs-type">Ptr</span> <span class="hljs-type">Point</span> -&gt; <span class="hljs-type">Point</span> -&gt; <span class="hljs-type">IO</span> ()<br>  poke ptr (<span class="hljs-type">Point</span> x y) = <br>    poke (castPtr ptr) x &gt;&gt;<br>    poke (castPtr $ ptr `plusPtr` sizeOf (undefined :: <span class="hljs-type">CFloat</span>)) y<br><br><span class="hljs-title">main</span> :: <span class="hljs-type">IO</span> ()<br><span class="hljs-title">main</span> = <br>  malloc &gt;&gt;= \cpoint -&gt;<br>  poke cpoint (<span class="hljs-type">Point</span> <span class="hljs-number">10</span> <span class="hljs-number">20</span>) &gt;&gt;<br>  peek cpoint &gt;&gt;= \hpoint -&gt;<br>  print hpoint &gt;&gt;<br>  free cpoint<br></code></pre></td></tr></table></figure>
 

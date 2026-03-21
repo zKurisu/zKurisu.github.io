@@ -24,7 +24,7 @@
 <meta property="og:description" content="介绍termios 是 POSIX 标准里定义的一套终端 I&#x2F;O 接口, 在类 Unix 系统的头文件 &lt;termios.h&gt; 中实现. 其可以用来读取和修改终端设备的属性, 从而控制终端的输入输出行为. termios 结构体&lt;termios.h&gt; 中定义的函数大多需要传入一个指向 termios structure 的 pointer, 该结构体至少需要包含下">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-03-19T07:18:26.000Z">
-<meta property="article:modified_time" content="2026-03-19T09:02:48.986Z">
+<meta property="article:modified_time" content="2026-03-20T07:47:18.095Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -437,7 +437,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          4.2k 字
+          4.8k 字
         
       </span>
     
@@ -448,7 +448,7 @@ path.outline_glyph {
         
         
         
-          36 分钟
+          41 分钟
         
       </span>
     
@@ -817,6 +817,9 @@ path.outline_glyph {
 <h1 id="更改-terminal-settings"><a href="#更改-terminal-settings" class="headerlink" title="更改 terminal settings"></a>更改 terminal settings</h1><h2 id="获取-terminal-settings"><a href="#获取-terminal-settings" class="headerlink" title="获取 terminal settings"></a>获取 terminal settings</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">tcgetattr</span><span class="hljs-params">(<span class="hljs-type">int</span> fd, <span class="hljs-keyword">struct</span> termios *termios_p)</span>;<br></code></pre></td></tr></table></figure>
 <p>获取与 <code>fd</code> 关联的 terminal 的参数, 保存在 <code>termios_p</code> 指向的地址.</p>
 <p>这里的 <code>tc</code> 前缀是 terminal control 的缩写, 是一种命名约定.</p>
+<p>如:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;unistd.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;termios.h&gt;</span></span><br><br><span class="hljs-type">static</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">termios</span> <span class="hljs-title">original_setting</span>;</span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> &#123;<br>    tcgetattr(STDIN_FILENO, &amp;original_setting);<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
 <h2 id="设置-terminal-seettings"><a href="#设置-terminal-seettings" class="headerlink" title="设置 terminal seettings"></a>设置 terminal seettings</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">tcsetattr(<span class="hljs-type">int</span> fd, <span class="hljs-type">int</span> optional_actions, <span class="hljs-type">const</span> <span class="hljs-keyword">struct</span> termios *termios_p);<br></code></pre></td></tr></table></figure>
 <p>设置与 <code>fd</code> 关联的的 terminal 的参数, 具体参数在 <code>termios_p</code> 中指定, <code>optional_actions</code> 指定更改什么时候生效, 可以有下面几个值:</p>
 <ul>
@@ -825,8 +828,14 @@ path.outline_glyph {
 <li><code>TCSAFLUSH</code> (flush, 冲洗输入输出), 先将所有输出都写入 <code>fd</code>, 然后丢弃还没有读取的 <code>input</code>, 之后生效更改</li>
 </ul>
 <p>TCSA 是 Terminal Control Set Attribute 的缩写</p>
+<p>比如:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">termios</span> <span class="hljs-title">new_setting</span> =</span> original_setting;<br>new_setting.c_lflag &amp;= ~(ICANON | ECHO | ECHONL);<br><br><span class="hljs-keyword">if</span> (tcsetattr(STDIN_FILENO, TCSANOW, &amp;new_setting) &lt; <span class="hljs-number">0</span>) &#123;<br>    perror(<span class="hljs-string">&quot;tcsetattr error&quot;</span>);<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>&#125;<br><br></code></pre></td></tr></table></figure>
+
 <h1 id="Canonical-and-noncanonical-mode"><a href="#Canonical-and-noncanonical-mode" class="headerlink" title="Canonical and noncanonical mode"></a>Canonical and noncanonical mode</h1><p>Canonical mode (规范模式), 意思是 Unix 终端的默认模式, 该模式符合大多数用户对终端行为的预期 (输入一行, 按回车, 程序处理).</p>
 <p><code>c_lflag</code> 的 <code>ICANON</code> flag 用来设置 terminal 工作在哪一种 mode. 如果设置, 则在 canonical mode (默认); 如果不设置, 则在 noncanonical mode.</p>
+<p>设置成 noncanonical mode 的示例:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">termios</span> <span class="hljs-title">new_setting</span> =</span> original_setting;<br>new_setting.c_lflag &amp;= ~ICANON;<br><br><span class="hljs-keyword">if</span> (tcsetattr(STDIN_FILENO, TCSANOW, &amp;new_setting) &lt; <span class="hljs-number">0</span>) &#123;<br>    perror(<span class="hljs-string">&quot;tcsetattr error&quot;</span>);<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">-1</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
 <p>在 canonical mode 下的行为有:</p>
 <ul>
 <li>输入一行一行读取 (行缓冲). 终端接收到数据后, 不会立即交给程序, 而是缓存一整行, 直到遇到 delimiters 才会传输</li>
@@ -957,6 +966,12 @@ path.outline_glyph {
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2026/03/20/Haskell-%E5%BA%8F%E5%88%97%E5%8C%96/" title="Haskell-序列化">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Haskell-序列化</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">
