@@ -16,17 +16,19 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="LSP 官方文档jsonRPC 官网 LSP 介绍LSP, 指 Language Server Protocol, 是一种用于开发集成开发环境 (IDE) 和编辑器的通信协议. 它的主要作用是提供一种标准化的方式, 使不同的编辑器和开发工具能够与各种编程语言的语言服务器进行交互. LSP 的主要 features 有:  go-to-definition, 即跳转到定义处 find-referen">
+    <meta name="description" content="LSP 官方文档jsonRPC 官网NVim LSP 介绍在 Nvim 0.9 版本, LSP 相关接口用 Lua 重构, 此时的配置主流是 nvim-lspconfig 和 nvim-cmp 两个插件. 而在 0.11 版本开始, Nvim 引入了很多 Native 的 LSP 特性, 比如:  vim.lsp.config() 和 vim.lsp.enable(), 无需 nvim-lspco">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Nvim-lsp-学习">
-<meta property="og:url" content="http://example.com/2024/03/11/Nvim-lsp-%E5%AD%A6%E4%B9%A0/index.html">
+<meta property="og:url" content="http://example.com/2026/03/25/Nvim-lsp-%E5%AD%A6%E4%B9%A0/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="LSP 官方文档jsonRPC 官网 LSP 介绍LSP, 指 Language Server Protocol, 是一种用于开发集成开发环境 (IDE) 和编辑器的通信协议. 它的主要作用是提供一种标准化的方式, 使不同的编辑器和开发工具能够与各种编程语言的语言服务器进行交互. LSP 的主要 features 有:  go-to-definition, 即跳转到定义处 find-referen">
+<meta property="og:description" content="LSP 官方文档jsonRPC 官网NVim LSP 介绍在 Nvim 0.9 版本, LSP 相关接口用 Lua 重构, 此时的配置主流是 nvim-lspconfig 和 nvim-cmp 两个插件. 而在 0.11 版本开始, Nvim 引入了很多 Native 的 LSP 特性, 比如:  vim.lsp.config() 和 vim.lsp.enable(), 无需 nvim-lspco">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/nvim-lsp-overview.png">
 <meta property="og:image" content="http://example.com/img/nvim-lsp-how-it-works.png">
-<meta property="article:published_time" content="2024-03-11T03:45:12.000Z">
-<meta property="article:modified_time" content="2025-10-24T02:40:35.970Z">
+<meta property="og:image" content="http://example.com/img/nvim-lsp-quickstart-example.png">
+<meta property="og:image" content="http://example.com/img/nvim-lsp-check-capabilities.png">
+<meta property="article:published_time" content="2026-03-25T03:45:12.000Z">
+<meta property="article:modified_time" content="2026-03-25T12:37:55.462Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/nvim-lsp-overview.png">
@@ -428,8 +430,8 @@ path.outline_glyph {
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2024-03-11 11:45" pubdate>
-          2024年3月11日 中午
+        <time datetime="2026-03-25 11:45" pubdate>
+          2026年3月25日 中午
         </time>
       </span>
     
@@ -440,7 +442,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          9.8k 字
+          16k 字
         
       </span>
     
@@ -451,7 +453,7 @@ path.outline_glyph {
         
         
         
-          82 分钟
+          136 分钟
         
       </span>
     
@@ -494,7 +496,15 @@ path.outline_glyph {
             
               <div class="markdown-body">
                 
-                <p><a target="_blank" rel="noopener" href="https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/">LSP 官方文档</a><br><a target="_blank" rel="noopener" href="http://www.jsonrpc.org/">jsonRPC 官网</a></p>
+                <p><a target="_blank" rel="noopener" href="https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/">LSP 官方文档</a><br><a target="_blank" rel="noopener" href="http://www.jsonrpc.org/">jsonRPC 官网</a><br><a target="_blank" rel="noopener" href="https://neovim.io/doc/user/lsp/">NVim LSP</a></p>
+<h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>在 Nvim 0.9 版本, LSP 相关接口用 Lua 重构, 此时的配置主流是 <code>nvim-lspconfig</code> 和 <code>nvim-cmp</code> 两个插件. 而在 0.11 版本开始, Nvim 引入了很多 Native 的 LSP 特性, 比如:</p>
+<ul>
+<li><code>vim.lsp.config()</code> 和 <code>vim.lsp.enable()</code>, 无需 <code>nvim-lspconfig</code> 就能完成配置和启用</li>
+<li><code>vim.lsp.conpletion.enable()</code>, 配合 <code>LspAttach</code> 触发 LSP 补全</li>
+<li>等等</li>
+</ul>
+<p>这里介绍一些重要接口以及基础配置方法.</p>
+<p>Nvim 会作为 LSP client 与 LSP Server 通信, 相关接口都位于 <code>vim.lsp</code> framework (就是一个 lua table) 中.</p>
 <h1 id="LSP-介绍"><a href="#LSP-介绍" class="headerlink" title="LSP 介绍"></a>LSP 介绍</h1><p>LSP, 指 Language Server Protocol, 是一种用于开发集成开发环境 (IDE) 和编辑器的通信协议. 它的主要作用是提供一种标准化的方式, 使不同的编辑器和开发工具能够与各种编程语言的语言服务器进行交互.</p>
 <p>LSP 的主要 features 有:</p>
 <ul>
@@ -508,8 +518,8 @@ path.outline_glyph {
 <p>一般的设置步骤为:</p>
 <ol>
 <li>安装 language server (可在 <a target="_blank" rel="noopener" href="https://microsoft.github.io/language-server-protocol/implementors/servers/">https://microsoft.github.io/language-server-protocol/implementors/servers/</a> 中查找可用列表)</li>
-<li>给每一个 language server 配置一个 LSP client</li>
-<li>配置 keymaps 和 autocmds 来完善 LSP features</li>
+<li>给 language server 配置一个 LSP client (也就是编辑器)</li>
+<li>给 LSP Client 配置 keymaps 和 autocmds 来完善 LSP features</li>
 </ol>
 <h2 id="LSP-是如何工作的"><a href="#LSP-是如何工作的" class="headerlink" title="LSP 是如何工作的"></a>LSP 是如何工作的</h2><p><a target="_blank" rel="noopener" href="https://medium.com/@malintha1996/understanding-the-language-server-protocol-5c0ba3ac83d2">参考 medium 博客</a></p>
 <p>LSP 协议中, 有几个重要的概念:</p>
@@ -545,16 +555,90 @@ path.outline_glyph {
 <p>一个 notification 的示例如:</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs javascript">&#123;<br>  <span class="hljs-string">&quot;jsonrpc&quot;</span>: <span class="hljs-string">&quot;2.0&quot;</span>,<br>  <span class="hljs-string">&quot;method&quot;</span>: <span class="hljs-string">&quot;textDocument/didChange&quot;</span>,<br>  <span class="hljs-string">&quot;params&quot;</span>: &#123;<br>    <span class="hljs-string">&quot;textDocument&quot;</span>: &#123;<br>      <span class="hljs-string">&quot;version&quot;</span>: <span class="hljs-number">13</span>,<br>      <span class="hljs-string">&quot;uri&quot;</span>: <span class="hljs-string">&quot;file:///home/malintha/Documents/wso2/experimental/projects/ballerina/error-constructor/main.bal&quot;</span><br>    &#125;,<br>    <span class="hljs-string">&quot;contentChanges&quot;</span>: [<br>      &#123;<br>        <span class="hljs-string">&quot;text&quot;</span>: <span class="hljs-string">&quot;public function workers() &#123;\n    worker A &#123;\n        1 -\u003e B;\n    &#125;\n    int a \u003d 10;\n    if(a !is 10)\n&#125;&quot;</span><br>      &#125;<br>    ]<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 
-<h1 id="lsp-config"><a href="#lsp-config" class="headerlink" title="lsp-config"></a>lsp-config</h1><p>在 LSP client 启用后, 其会启用 <code>vim.diagnostic</code>, 以及几个选项:</p>
+<h1 id="QuickStart"><a href="#QuickStart" class="headerlink" title="QuickStart"></a>QuickStart</h1><p>这里直接用包管理器安装 LSP Server, 用 typst 做示例:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo pacman -S tinymist<br></code></pre></td></tr></table></figure>
+
+<p>检验安装:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs sh">tinymist --version<br>tinymist<br>Build Timestamp:     2026-03-21T19:43:28.000000000Z<br>Build Git Describe:  VERGEN_IDEMPOTENT_OUTPUT<br>Commit SHA:          VERGEN_IDEMPOTENT_OUTPUT<br>Commit Date:         None<br>Commit Branch:       None<br>Cargo Target Triple: x86_64-unknown-linux-gnu<br>Typst Version:       0.14.2<br>Typst Source:        git+https://github.com/Myriad-Dreamin/typst.git?tag=tinymist/v0.14.6-rc2<span class="hljs-comment">#28af048d65cbb7a5fc78f3ca1a20c9e885384a62</span><br></code></pre></td></tr></table></figure>
+
+<p>之后配置 Nvim, 这里随便建一个文件作为配置文件即可, 比如 <code>/tmp/init.lua</code>:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs lua">vim.lsp.<span class="hljs-built_in">config</span>[<span class="hljs-string">&#x27;tinymist&#x27;</span>] = &#123;<br>    cmd = &#123; <span class="hljs-string">&#x27;tinymist&#x27;</span>, <span class="hljs-string">&#x27;lsp&#x27;</span> &#125;,<br>    filetype = &#123; <span class="hljs-string">&#x27;typst&#x27;</span> &#125;,<br>    root_markers = &#123; <span class="hljs-string">&#x27;main.typ&#x27;</span> &#125;<br>&#125;<br><br>vim.lsp.enable(<span class="hljs-string">&#x27;tinymist&#x27;</span>)<br></code></pre></td></tr></table></figure>
+
+<p>之后:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">touch</span> main.typ<br>nvim --clean -u /tmp/init.lua hello.typ<br></code></pre></td></tr></table></figure>
+
+<p><img src="/../img/nvim-lsp-quickstart-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>这里只有一些默认的设置, 像自动补全, 具体错误信息的 float window, 帮助文档等都不会默认打开.</p>
+<h1 id="Default-features"><a href="#Default-features" class="headerlink" title="Default features"></a>Default features</h1><p>在启用 LSP 后, NVim 会启动一些默认的 features, 并自动设置了些 options 和 keymaps, 具体的效果也与不同的 LSP 相关.</p>
+<p>一些默认的 keymaps 绑定如下:</p>
 <ul>
-<li><code>omnifunc</code>, 其值设置为 <code>vim.lsp.omnifunc()</code>, 用于触发补全 (默认绑定在 insert 模式的 <code>Ctrl-X</code> 和 <code>Ctrl-O</code>)</li>
+<li><code>&quot;gra&quot;</code> (这里都是键位, Normal 和 Visual mode 都行) 映射到 <code>vim.lsp.buf.code_action()</code></li>
+<li><code>&quot;gri&quot;</code> 映射到 <code>vim.lsp.buf.implementation()</code></li>
+<li><code>&quot;grn&quot;</code> 映射到 <code>vim.lsp.buf.rename()</code></li>
+<li><code>&quot;grr&quot;</code> 映射到 <code>vim.lsp.buf.references()</code></li>
+<li><code>&quot;grt&quot;</code> 映射到 <code>vim.lsp.buf.type_definition()</code></li>
+<li><code>&quot;grx&quot;</code> 映射到 <code>vim.lsp.codelens.run()</code></li>
+<li><code>&quot;gO&quot;</code> 映射到 <code>vim.lsp.buf.document_symbol()</code></li>
+<li><code>Ctrl-S</code> 映射到 <code>vim.lsp.buf.signature_help()</code></li>
+</ul>
+<p><code>lsp-diagnostic</code> 会自动启用, 其会实时显示代码错误, 警告, 提示等 (比如拼写错误, 未使用的变量, 类型不匹配等). 这个 feature 可以通过 <code>vim.diagnostic.config()</code> 来自定义配置.</p>
+<p>还有 <code>workspace/didChangeWatchedFiles</code>, 让 LSP 服务器监控项目中文件变化 (如创建, 修改, 删除), 并通知客户端同步更新. 在 Linux 上, 该功能默认不启用, 因为 Linux 的文件监听机制与 macOS&#x2F;Windows 不同, 可能有兼容性或性能问题. 在大型项目中, 如果启用了 <code>workspace/didChangeWatchedFiles</code>, 可能会让性能下降, 因为 LSP 服务器需要持续监听大量文件的变更, 而底层文件系统事件监听机制在 Linux 外的系统上可能效率较低.</p>
+<p>如果想要显示关闭所有 LSP 的 <code>workspace/didChange</code> capability, 可以这样写:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-keyword">local</span> capabilities = vim.lsp.protocol.make_client_capabilities()<br><br><span class="hljs-keyword">if</span> capabilities <span class="hljs-keyword">then</span><br>    capabilities.workspace.didChangeWatchedFiles = <span class="hljs-literal">nil</span><br><span class="hljs-keyword">end</span><br><br>vim.lsp.<span class="hljs-built_in">config</span>(<br>    <span class="hljs-string">&#x27;*&#x27;</span>,<br>    &#123; capabilities = capabilities, &#125;<br>)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>vim.lsp.protocol.make_client_capabilities()</code> 用来生成一个包含 LSP 标准能力的对象</li>
+<li><code>capabilities.workspace.didChangeWatchedFiles = nil</code>, 将文件监听的 capability 设置为 <code>nil</code>, 即告诉 LSP server: 不需要监听文件变化</li>
+<li><code>vim.lsp.config(&#39;*&#39;, &#123;...&#125;)</code>, 这里的第一个参数用一个通配符匹配所有 LSP 服务器, 第二个参数是一个 table, 用来设置一些属性.</li>
+</ul>
+<h2 id="Buffer-local-defaults"><a href="#Buffer-local-defaults" class="headerlink" title="Buffer-local defaults"></a>Buffer-local defaults</h2><p>Buffer-local defaults 是指一些在 buffer 中单独生效的设置. 比如你通过 <code>split</code> 得到了两个 buffers, 那么每个 buffer 都可以进行不同的设置.</p>
+<p>默认有这些设置 (也是因 LSP Server 而异):</p>
+<ul>
+<li><code>omnifunc</code> 设置为 <code>vim.lsp.omnifunc()</code>, 可以在 insert mode 用 <code>Ctrl-X+Ctrl-O</code> 来触发补全, 比如 <code>:setlocal omnifunc=v:lua.vim.lsp.omnifunc</code></li>
+<li><code>tagfunc</code> 设置为 <code>vim.lsp.tagfunc()</code>. 这样就能进行 go-to-definition 操作, 可以在 normal mode 用 <code>Ctrl+]</code> 跳转</li>
+<li><code>formatexpr</code> 设置为 <code>vim.lsp.formatexpr()</code>, 键位绑定在 normal mode 下的 <code>gq</code></li>
+<li>键位 <code>K</code> 绑定到 <code>vim.lsp.buf.hover()</code></li>
+<li>Document colors 和 highlighting color 都启用了</li>
+</ul>
+<p>可以用下面配置来关闭这些默认功能:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs lua">vim.api.nvim_create_autocmd(<span class="hljs-string">&#x27;LspAttach&#x27;</span>, &#123;<br>  callback = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(ev)</span></span><br>    <span class="hljs-comment">-- Unset &#x27;formatexpr&#x27;</span><br>    vim.bo[ev.buf].formatexpr = <span class="hljs-literal">nil</span><br>    <span class="hljs-comment">-- Unset &#x27;omnifunc&#x27;</span><br>    vim.bo[ev.buf].omnifunc = <span class="hljs-literal">nil</span><br>    <span class="hljs-comment">-- Unmap K</span><br>    vim.keymap.del(<span class="hljs-string">&#x27;n&#x27;</span>, <span class="hljs-string">&#x27;K&#x27;</span>, &#123; buf = ev.buf &#125;)<br>    <span class="hljs-comment">-- Disable document colors</span><br>    vim.lsp.document_color.enable(<span class="hljs-literal">false</span>, &#123; bufnr = ev.buf &#125;)<br>  <span class="hljs-keyword">end</span>,<br>&#125;)<br></code></pre></td></tr></table></figure>
+
+<h1 id="配置读取顺序"><a href="#配置读取顺序" class="headerlink" title="配置读取顺序"></a>配置读取顺序</h1><p>下面按照 priority 从低到高列出:</p>
+<ol>
+<li>Configure 名为 <code>&#39;*&#39;</code>, 比如 <code>vim.lsp.config(&quot;*&quot;, &#123; ... &#125;)</code></li>
+<li>位于 <code>lsp/&lt;config&gt;.lua</code> 的文件</li>
+<li>位于 <code>after/lsp/&lt;config&gt;.lua</code> 的文件</li>
+<li>其他配置</li>
+</ol>
+<p><code>lsp</code> 目录下的 <code>&lt;config&gt;.lua</code>, 文件内容会作为 table 传递给 <code>vim.lsp.config(&quot;&lt;config&gt;&quot;, &#123; Here is file content &#125;)</code>.</p>
+<p>重合的配置会通过 <code>vim.tbl_deep_extend()</code> 来 merge, 下面是一个示例, 3 套配置都与 <code>clangd</code> 相关:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs lua"><span class="hljs-comment">-- Defined in init.lua</span><br>vim.lsp.<span class="hljs-built_in">config</span>(<span class="hljs-string">&#x27;*&#x27;</span>, &#123;<br>  capabilities = &#123;<br>    textDocument = &#123;<br>      semanticTokens = &#123;<br>        multilineTokenSupport = <span class="hljs-literal">true</span>,<br>      &#125;<br>    &#125;<br>  &#125;,<br>  root_markers = &#123; <span class="hljs-string">&#x27;.git&#x27;</span> &#125;,<br>&#125;)<br><span class="hljs-comment">-- Defined in &lt;rtp&gt;/lsp/clangd.lua</span><br><span class="hljs-keyword">return</span> &#123;<br>  cmd = &#123; <span class="hljs-string">&#x27;clangd&#x27;</span> &#125;,<br>  root_markers = &#123; <span class="hljs-string">&#x27;.clangd&#x27;</span>, <span class="hljs-string">&#x27;compile_commands.json&#x27;</span> &#125;,<br>  filetypes = &#123; <span class="hljs-string">&#x27;c&#x27;</span>, <span class="hljs-string">&#x27;cpp&#x27;</span> &#125;,<br>&#125;<br><span class="hljs-comment">-- Defined in init.lua</span><br>vim.lsp.<span class="hljs-built_in">config</span>(<span class="hljs-string">&#x27;clangd&#x27;</span>, &#123;<br>  filetypes = &#123; <span class="hljs-string">&#x27;c&#x27;</span> &#125;,<br>&#125;)<br></code></pre></td></tr></table></figure>
+
+<p>最终 <code>merge</code> 出的配置是:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs lua">&#123;<br>  <span class="hljs-comment">-- From the clangd configuration in &lt;rtp&gt;/lsp/clangd.lua</span><br>  cmd = &#123; <span class="hljs-string">&#x27;clangd&#x27;</span> &#125;,<br>  <span class="hljs-comment">-- From the clangd configuration in &lt;rtp&gt;/lsp/clangd.lua</span><br>  <span class="hljs-comment">-- Overrides the &quot;*&quot; configuration in init.lua</span><br>  root_markers = &#123; <span class="hljs-string">&#x27;.clangd&#x27;</span>, <span class="hljs-string">&#x27;compile_commands.json&#x27;</span> &#125;,<br>  <span class="hljs-comment">-- From the clangd configuration in init.lua</span><br>  <span class="hljs-comment">-- Overrides the clangd configuration in &lt;rtp&gt;/lsp/clangd.lua</span><br>  filetypes = &#123; <span class="hljs-string">&#x27;c&#x27;</span> &#125;,<br>  <span class="hljs-comment">-- From the &quot;*&quot; configuration in init.lua</span><br>  capabilities = &#123;<br>    textDocument = &#123;<br>      semanticTokens = &#123;<br>        multilineTokenSupport = <span class="hljs-literal">true</span>,<br>      &#125;<br>    &#125;<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h1 id="Configure-on-attach"><a href="#Configure-on-attach" class="headerlink" title="Configure on attach"></a>Configure on attach</h1><p>Nvim 作为 LSP Client attach 到 LSP Server, 会触发 <code>LspAttach</code> 事件, 因此可以用 <code>autocmd</code> 来创建一些在这个时候才执行的配置, 下面是一个示例:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><code class="hljs lua">vim.api.nvim_create_autocmd(<span class="hljs-string">&#x27;LspAttach&#x27;</span>, &#123;<br>  group = vim.api.nvim_create_augroup(<span class="hljs-string">&#x27;my.lsp&#x27;</span>, &#123;&#125;),<br>  callback = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(ev)</span></span><br>    <span class="hljs-keyword">local</span> client = <span class="hljs-built_in">assert</span>(vim.lsp.get_client_by_id(ev.data.client_id))<br>    <span class="hljs-keyword">if</span> client:supports_method(<span class="hljs-string">&#x27;textDocument/implementation&#x27;</span>) <span class="hljs-keyword">then</span><br>      <span class="hljs-comment">-- Create a keymap for vim.lsp.buf.implementation ...</span><br>    <span class="hljs-keyword">end</span><br>    <span class="hljs-comment">-- Enable auto-completion. Note: Use CTRL-Y to select an item. |complete_CTRL-Y|</span><br>    <span class="hljs-keyword">if</span> client:supports_method(<span class="hljs-string">&#x27;textDocument/completion&#x27;</span>) <span class="hljs-keyword">then</span><br>      <span class="hljs-comment">-- Optional: trigger autocompletion on EVERY keypress. May be slow!</span><br>      <span class="hljs-comment">-- local chars = &#123;&#125;; for i = 32, 126 do table.insert(chars, string.char(i)) end</span><br>      <span class="hljs-comment">-- client.server_capabilities.completionProvider.triggerCharacters = chars</span><br>      vim.lsp.completion.enable(<span class="hljs-literal">true</span>, client.id, ev.buf, &#123;autotrigger = <span class="hljs-literal">true</span>&#125;)<br>    <span class="hljs-keyword">end</span><br>    <span class="hljs-comment">-- Auto-format (&quot;lint&quot;) on save.</span><br>    <span class="hljs-comment">-- Usually not needed if server supports &quot;textDocument/willSaveWaitUntil&quot;.</span><br>    <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> client:supports_method(<span class="hljs-string">&#x27;textDocument/willSaveWaitUntil&#x27;</span>)<br>        <span class="hljs-keyword">and</span> client:supports_method(<span class="hljs-string">&#x27;textDocument/formatting&#x27;</span>) <span class="hljs-keyword">then</span><br>      vim.api.nvim_create_autocmd(<span class="hljs-string">&#x27;BufWritePre&#x27;</span>, &#123;<br>        group = vim.api.nvim_create_augroup(<span class="hljs-string">&#x27;my.lsp&#x27;</span>, &#123;clear=<span class="hljs-literal">false</span>&#125;),<br>        buffer = ev.buf,<br>        callback = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span><br>          vim.lsp.buf.<span class="hljs-built_in">format</span>(&#123; bufnr = ev.buf, id = client.id, timeout_ms = <span class="hljs-number">1000</span> &#125;)<br>        <span class="hljs-keyword">end</span>,<br>      &#125;)<br>    <span class="hljs-keyword">end</span><br>  <span class="hljs-keyword">end</span>,<br>&#125;)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>vim.api.nvim_create_autocmd(Event, Config_table)</code>, 用来创建 <code>autocmd</code></li>
+<li><code>group</code> 和 <code>callback</code> 是 <code>autocmd</code> 的两个重要配置</li>
+<li><code>vim.api.nvim_create_augroup(Group, Config_table)</code> 用来创建 <code>augroup</code></li>
+<li><code>vim.lsp.get_client_by_id(client_id)</code>, 用 <code>id</code> 获取 LSP Client 对象</li>
+<li><code>ev.data.client_id</code> 是当前 client 的 id 值</li>
+<li><code>client:supports_method(Method)</code>, 判断当前 client 连接的 LSP Server 是否支持某个功能</li>
+<li><code>vim.lsp.completion.enable(is_enable, which_client_id, which_buf, Config_table)</code>, 用来启用自动补全</li>
+<li><code>vim.lsp.buf.format(Config_table)</code>, 用来配置格式化</li>
+</ul>
+<p>可以用下面方法查看 LSP server 支持的所有 capabilities:</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs lua">:lua =vim.lsp.get_clients()[<span class="hljs-number">1</span>].server_capabilities<br></code></pre></td></tr></table></figure>
+
+<p><img src="/../img/nvim-lsp-check-capabilities.png" srcset="/img/loading.gif" lazyload></p>
+<h1 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h1><p>在 LSP client 启用后, 其会启用 <code>vim.diagnostic</code>, 以及几个选项:</p>
+<ul>
+<li><code>omnifunc</code>, 其值设置为 <code>vim.lsp.omnifunc()</code>, 用于触发补全 (默认绑定在 insert 模式的 <code>Ctrl-X_Ctrl-O</code>)</li>
 <li><code>tagfunc</code>, 设置为 <code>vim.lsp.tagfunc()</code>, 启用跳转功能, </li>
 <li><code>formatexpr</code>, 设置为 <code>vim.lsp.formatexpr()</code>, 触发格式化文件 (默认绑定在 <code>gq</code>)</li>
 <li><code>K</code>, 设置为 <code>vim.lsp.buf.hover()</code></li>
 </ul>
-<h2 id="移除默认-lsp-config"><a href="#移除默认-lsp-config" class="headerlink" title="移除默认 lsp config"></a>移除默认 lsp config</h2><p>将默认的配置去除:</p>
-<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs lua">vim.api.nvim_create_autocmd(<span class="hljs-string">&#x27;LspAttach&#x27;</span>, &#123;<br>  callback = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(ev)</span></span><br>    vim.bo[ev.buf].formatexpr = <span class="hljs-literal">nil</span><br>    vim.bo[ev.buf].omnifunc = <span class="hljs-literal">nil</span><br>    vim.keymap.del(<span class="hljs-string">&quot;n&quot;</span>, <span class="hljs-string">&quot;K&quot;</span>, &#123; buffer = ev.buf &#125;)<br>  <span class="hljs-keyword">end</span>,<br>&#125;)<br></code></pre></td></tr></table></figure>
-
 <h2 id="为某种-lsp-feature-设置-keymap"><a href="#为某种-lsp-feature-设置-keymap" class="headerlink" title="为某种 lsp feature 设置 keymap"></a>为某种 lsp feature 设置 keymap</h2><p>在 <code>LspAttach</code> 事件触发时设置:</p>
 <figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs lua">vim.api.nvim_create_autocmd(<span class="hljs-string">&#x27;LspAttach&#x27;</span>, &#123;<br>  callback = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(args)</span></span><br>    <span class="hljs-keyword">local</span> client = vim.lsp.get_client_by_id(args.data.client_id)<br>    <span class="hljs-keyword">if</span> client.supports_method(<span class="hljs-string">&#x27;textDocument/rename&#x27;</span>) <span class="hljs-keyword">then</span><br>      <span class="hljs-comment">-- Create a keymap for vim.lsp.buf.rename()</span><br>    <span class="hljs-keyword">end</span><br>    <span class="hljs-keyword">if</span> client.supports_method(<span class="hljs-string">&#x27;textDocument/implementation&#x27;</span>) <span class="hljs-keyword">then</span><br>      <span class="hljs-comment">-- Create a keymap for vim.lsp.buf.implementation</span><br>    <span class="hljs-keyword">end</span><br>  <span class="hljs-keyword">end</span>,<br>&#125;)<br></code></pre></td></tr></table></figure>
 
@@ -745,7 +829,7 @@ path.outline_glyph {
   <div class="license-box my-3">
     <div class="license-title">
       <div>Nvim-lsp-学习</div>
-      <div>http://example.com/2024/03/11/Nvim-lsp-学习/</div>
+      <div>http://example.com/2026/03/25/Nvim-lsp-学习/</div>
     </div>
     <div class="license-meta">
       
@@ -757,7 +841,7 @@ path.outline_glyph {
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2024年3月11日</div>
+          <div>2026年3月25日</div>
         </div>
       
       
@@ -787,18 +871,12 @@ path.outline_glyph {
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2024/03/11/Vim-quickfix-%E8%AF%A6%E8%BF%B0/" title="Vim-quickfix-详述">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">Vim-quickfix-详述</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2024/03/11/%E9%98%85%E8%AF%BB-nvim-lspconfig-%E6%BA%90%E7%A0%81/" title="阅读-nvim-lspconfig-源码">
-                        <span class="hidden-mobile">阅读-nvim-lspconfig-源码</span>
+                      <a href="/2026/03/25/Typst-%E9%83%A8%E5%88%86-Symbol-%E7%A7%AF%E7%B4%AF/" title="Typst-部分-Symbol-积累">
+                        <span class="hidden-mobile">Typst-部分-Symbol-积累</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
