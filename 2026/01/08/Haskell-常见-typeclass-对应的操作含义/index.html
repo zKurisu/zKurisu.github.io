@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="FractionalFractional typeclass 描述 fractional number 的行为, 提供 real division 的支持. 1234class Num a &#x3D;&gt; Fractional a where    fromRational :: Rational -&gt; a    (&#x2F;) :: a -&gt; a -&gt; a    recip :: a -&amp;">
+    <meta name="description" content="图示 Functor, Applicative 和 Monad ShowShow typeclass 描述如何将一个类型转换为 readable Strings. 123class Show a where    showsPrec :: Int -&gt; a -&gt; ShowS    show :: a -&gt; String  showsPrec 和 show 之间实现一个就行 sho">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Haskell-常见-typeclass-对应的操作含义">
 <meta property="og:url" content="http://example.com/2026/01/08/Haskell-%E5%B8%B8%E8%A7%81-typeclass-%E5%AF%B9%E5%BA%94%E7%9A%84%E6%93%8D%E4%BD%9C%E5%90%AB%E4%B9%89/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="FractionalFractional typeclass 描述 fractional number 的行为, 提供 real division 的支持. 1234class Num a &#x3D;&gt; Fractional a where    fromRational :: Rational -&gt; a    (&#x2F;) :: a -&gt; a -&gt; a    recip :: a -&amp;">
+<meta property="og:description" content="图示 Functor, Applicative 和 Monad ShowShow typeclass 描述如何将一个类型转换为 readable Strings. 123class Show a where    showsPrec :: Int -&gt; a -&gt; ShowS    show :: a -&gt; String  showsPrec 和 show 之间实现一个就行 sho">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-01-08T10:13:54.000Z">
-<meta property="article:modified_time" content="2026-03-19T03:20:02.293Z">
+<meta property="article:modified_time" content="2026-04-08T01:41:51.494Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -437,7 +437,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          17k 字
+          20k 字
         
       </span>
     
@@ -448,7 +448,7 @@ path.outline_glyph {
         
         
         
-          144 分钟
+          165 分钟
         
       </span>
     
@@ -491,7 +491,72 @@ path.outline_glyph {
             
               <div class="markdown-body">
                 
-                <h1 id="Fractional"><a href="#Fractional" class="headerlink" title="Fractional"></a>Fractional</h1><p>Fractional typeclass 描述 fractional number 的行为, 提供 real division 的支持.</p>
+                <p><a target="_blank" rel="noopener" href="https://www.adit.io/posts/2013-04-17-functors,_applicatives,_and_monads_in_pictures.html#monads">图示 Functor, Applicative 和 Monad</a></p>
+<h1 id="Show"><a href="#Show" class="headerlink" title="Show"></a>Show</h1><p>Show typeclass 描述如何将一个类型转换为 readable Strings.</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-type">Show</span> a <span class="hljs-keyword">where</span></span><br>    showsPrec :: <span class="hljs-type">Int</span> -&gt; a -&gt; <span class="hljs-type">ShowS</span><br>    show :: a -&gt; <span class="hljs-type">String</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>showsPrec</code> 和 <code>show</code> 之间实现一个就行</li>
+<li><code>showsPrec</code> 是 “shows with Precedence” 的缩写, 其几个参数:<ul>
+<li><code>Int</code>, 通常在实现时命名为 <code>d</code> (Degree of precedence), 表明要求的能够避免歧义的优先级, 用来指示如何加括号, 可以想象成 “外界环境的压力值”, 取值通常是 <code>0~11</code>: <code>0</code> 表示外界环境非常宽松 (比如是在表达式最外层), 此时不论当前类型的构造函数优先级有多低, 都不需要加括号; <code>10</code> 是函数应用的优先级; <code>11</code> 是强制加括号的最高级别 (除非本身就是一个原子值了)</li>
+<li><code>a</code> 是对应的类型</li>
+<li><code>ShowS</code> 定义为 <code>type ShowS = String -&gt; String</code></li>
+</ul>
+</li>
+</ul>
+<p><code>showsPrec</code> 函数还需要满足 <code>showsPrec d x r ++ s  ==  showsPrec d x (r ++ s)</code>.</p>
+<p>这里再说明下 <code>d</code> 这个参数的作用, 当一个类型在进行 <code>show</code> 操作时, 它会检查自身的内部优先级 <code>p</code>:</p>
+<ul>
+<li>如果 $p &lt; d$ (内部的优先级低于外部要求), 说明此时不加括号就会产生歧义 (外部的优先级更高, 可能会拆散当前的表达式), 于是 <code>show</code> 的结果会被 <code>()</code> 包裹</li>
+<li>如果 $p \ge d$, 则可以保持原样输出</li>
+</ul>
+<p>一个例子, 假设要 <code>show</code> 一个中缀表达式 <code>1 + 2</code>:</p>
+<ol>
+<li>如果调用 <code>showsPrec 0 (1 + 2)</code>, 此时 <code>d=0</code> 小于 <code>+</code> 的优先级 (通常是 <code>6</code>), 因此结果是 <code>&quot;1 + 2&quot;</code></li>
+<li>如果调用 <code>showsPrec 7 (1 + 2)</code>, 由于 <code>d=7</code> 大于 <code>+</code> 的优先级 <code>6</code>, 结果会变成 <code>&quot;(1 + 2)&quot;</code></li>
+</ol>
+<p>这种机制能够保证在嵌套结构 (比如树或者复杂的数学表达式) 中, 括号只在必要的时候出现.</p>
+<p>再说明下 <code>ShowS</code> 的作用, 从定义上来看, 其只是一个函数别名:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">type</span> <span class="hljs-type">ShowS</span> = <span class="hljs-type">String</span> -&gt; <span class="hljs-type">String</span></span><br></code></pre></td></tr></table></figure>
+<p>在这里, 本质上表示 “等待填充前缀的字符串”, 函数内部封装了现在已有的字符串, 而其还等待接收一个字符串, 用于添加在现在字符串前面.</p>
+<p>这种设计主要是性能考虑, 在 Haskell 中, <code>String</code> 是字符列表的别名 <code>[Char]</code>:</p>
+<ul>
+<li>使用 <code>++</code> 拼接字符串时, 左边的列表必须被完全遍历</li>
+<li>如果我们执行 <code>(a ++ b) ++ c</code>, <code>a</code> 会被遍历两次 (<code>a</code> 在两个 <code>++</code> 的左边)</li>
+<li>在打印大型数据结构时, 这种 $O(n^2)$ 的复杂度可能会导致程序运行极慢</li>
+</ul>
+<p>而 <code>ShowS</code> 通过函数的组合 (Function Composition) 解决了这个问题. 组合两个 <code>ShowS</code> 函数只需要 $O(1)$ 的时间, 且只有在最后传入空字符串 “” 时才会触发计算, 因此只会进行一次线性遍历. 下面是对比的例子:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Pair</span> = <span class="hljs-type">Pair</span> <span class="hljs-type">Int</span> <span class="hljs-type">Int</span></span><br></code></pre></td></tr></table></figure>
+
+<p>使用普通的 <code>show</code>:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">instance</span> <span class="hljs-type">Show</span> <span class="hljs-type">Pair</span> <span class="hljs-keyword">where</span></span><br>    show (<span class="hljs-type">Pair</span> x y) = <span class="hljs-string">&quot;(&quot;</span> ++ show x <span class="hljs-string">&quot;,&quot;</span> ++ show y ++ <span class="hljs-string">&quot;)&quot;</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>这种方式每次 <code>++</code> 之后都会产生一个中间列表, 因此开销极大</li>
+</ul>
+<p>使用 <code>showsPrec</code> 和 <code>ShowS</code>:</p>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs mipsasm"><span class="hljs-keyword">instance </span><span class="hljs-keyword">Show </span>Pair where<br>    <span class="hljs-keyword">showsPrec </span>_ (Pair x y) =<br>        <span class="hljs-keyword">showChar </span><span class="hljs-string">&#x27;(&#x27;</span> . <span class="hljs-keyword">shows </span>x . <span class="hljs-keyword">showString </span><span class="hljs-string">&quot;,&quot;</span> . <span class="hljs-keyword">shows </span>y . <span class="hljs-keyword">showChar </span><span class="hljs-string">&#x27;)&#x27;</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>ShowChar &#39;(&#39;</code> 是一个函数, 将 <code>(</code> 放在某个字符串前面, 同理其他 <code>shows</code> 和 <code>showString</code></li>
+<li>这里没有任何中间字符串被创建</li>
+</ul>
+<p>对于实现为 Show 的 instance 的类型需要有下面特性:</p>
+<ul>
+<li><code>show</code> 函数的结果需要是 syntactically correct Haskell expression.</li>
+</ul>
+<p>毕竟要能够让 <code>Read</code> 读回去, 比如 <code>show x</code> 得到了 <code>Point 1 2</code>, 那么在代码里写 <code>let y = Point 1 2</code> 必须是合法的, 因此生成的字符串只能包含常量, 构造函数名, 括号和空格.</p>
+<p>如果类型定义中有 labelled constructor, 那么也可以出现 braces, commas, field names, equal signs. 因此, <code>show</code> 的结果还需要跟数据类型的定义方式相匹配:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Color</span> = <span class="hljs-type">RGB</span> <span class="hljs-type">Int</span> <span class="hljs-type">Int</span> <span class="hljs-type">Int</span></span><br><span class="hljs-comment">-- show result example: RGB 255 0 0</span><br><br><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Person</span> = <span class="hljs-type">Person</span> &#123; <span class="hljs-title">name</span> :: <span class="hljs-type">String</span>, <span class="hljs-title">age</span> :: <span class="hljs-type">Int</span> &#125;</span><br><span class="hljs-comment">-- show result example: Person &#123;name = &quot;Alice&quot;, age = 30&#125;</span><br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>如果 type constructor 是一个 infix operator, 此时 <code>showsPrec</code> 需要判断优先级并处理</li>
+</ul>
+<p>下面是一个官方示例:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-keyword">infixr</span> <span class="hljs-number">5</span> :^:<br><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Tree</span> a = <span class="hljs-type">Leaf</span> a | <span class="hljs-type">Tree</span> a :^: <span class="hljs-type">Tree</span> a</span><br><span class="hljs-class"></span><br><span class="hljs-class"><span class="hljs-keyword">instance</span> (<span class="hljs-type">Show</span> <span class="hljs-title">a</span>) =&gt; <span class="hljs-type">Show</span> (<span class="hljs-type">Tree</span> <span class="hljs-title">a</span>) <span class="hljs-keyword">where</span></span><br>    showsPrec d (<span class="hljs-type">Leaf</span> m) = showParen (d &gt; app_prec) $<br>        showString <span class="hljs-string">&quot;Leaf &quot;</span> . showsPrec (app_prec+<span class="hljs-number">1</span>) m<br>      <span class="hljs-keyword">where</span> app_prec = <span class="hljs-number">10</span><br><br>    showsPrec d (u :^: v) = showParen (d &gt; up_prec) $<br>        showsPrec (up_prec+<span class="hljs-number">1</span>) u .<br>        showString <span class="hljs-string">&quot; :^: &quot;</span>      .<br>        showsPrec (up_prec+<span class="hljs-number">1</span>) v<br>      <span class="hljs-keyword">where</span> up_prec = <span class="hljs-number">5</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>showParen :: Bool -&gt; ShowS -&gt; ShowS</code>, 如果传入 <code>True</code>, 则会自动为后面的 <code>ShowS</code> 加上括号; 如果传入 <code>False</code> 则不会</li>
+<li>在 Haskell 中, <code>Leaf m</code> 这种形式被视为 function application, 默认优先级是很高的 10</li>
+<li><code>(app_prec+1)</code>, 因为 <code>m</code> 是包裹在 <code>Leaf</code> 内部的, 可以保证如果 <code>m</code> 是复杂表达式的话, 不会因为 <code>Leaf</code> 而被拆散</li>
+</ul>
+<h1 id="Fractional"><a href="#Fractional" class="headerlink" title="Fractional"></a>Fractional</h1><p>Fractional typeclass 描述 fractional number 的行为, 提供 real division 的支持.</p>
 <figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-type">Num</span> a =&gt; <span class="hljs-type">Fractional</span> a <span class="hljs-keyword">where</span></span><br>    fromRational :: <span class="hljs-type">Rational</span> -&gt; a<br>    (/) :: a -&gt; a -&gt; a<br>    recip :: a -&gt; a<br></code></pre></td></tr></table></figure>
 <ul>
 <li><code>fromRational</code> 这个方法很重要, 其定义了如何将一个 <code>Rational</code> 转换为自己的类型.</li>
@@ -593,7 +658,7 @@ path.outline_glyph {
 <p>示例:</p>
 <figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">fmap</span> (+<span class="hljs-number">1</span>) (*<span class="hljs-number">3</span>)<br>= (+<span class="hljs-number">1</span>) . (*<span class="hljs-number">3</span>)<br>= \x -&gt; (x * <span class="hljs-number">3</span>) + <span class="hljs-number">1</span><br><br><span class="hljs-comment">-- 使用</span><br><span class="hljs-title">result</span> :: <span class="hljs-type">Int</span><br><span class="hljs-title">result</span> = fmap (+<span class="hljs-number">1</span>) (*<span class="hljs-number">3</span>) <span class="hljs-number">5</span><br>= <span class="hljs-number">16</span><br><br><span class="hljs-comment">-- 构建函数链</span><br><span class="hljs-title">process</span> :: <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Int</span><br><span class="hljs-title">process</span> = fmap (+<span class="hljs-number">1</span>) (fmap (*<span class="hljs-number">2</span>) (fmap (^<span class="hljs-number">2</span>) id))<br>= (+<span class="hljs-number">1</span>) . (*<span class="hljs-number">2</span>) . (^<span class="hljs-number">2</span>) . id<br><br><span class="hljs-comment">-- 使用</span><br><span class="hljs-title">result</span> :: <span class="hljs-type">Int</span><br><span class="hljs-title">result</span> = process <span class="hljs-number">3</span><br>= <span class="hljs-number">3</span>^<span class="hljs-number">2</span> * <span class="hljs-number">2</span> + <span class="hljs-number">1</span> = <span class="hljs-number">19</span><br></code></pre></td></tr></table></figure>
 
-<h1 id="Applicative"><a href="#Applicative" class="headerlink" title="Applicative"></a>Applicative</h1><p>Applicative 描述了 “可以应用函数的上下文”, 函数是在上下文中执行的.</p>
+<h1 id="Applicative"><a href="#Applicative" class="headerlink" title="Applicative"></a>Applicative</h1><p>Applicative 描述了 “在上下文中运行计算”, 函数是在上下文中执行的.</p>
 <figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-type">Functor</span> f =&gt; <span class="hljs-type">Applicative</span> f <span class="hljs-keyword">where</span></span><br>  pure  :: a -&gt; f a<br>  (&lt;*&gt;) :: f (a -&gt; b) -&gt; f a -&gt; f b<br></code></pre></td></tr></table></figure>
 <ul>
 <li><code>pure</code> 将普通值 lift 到上下文中</li>

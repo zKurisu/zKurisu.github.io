@@ -16,17 +16,19 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="取 ByteString 的 substring可以这样实现: 12345678910import Data.ByteString (ByteString, empty)import Data.ByteString.Unsafesubstring :: Int -&gt; Int -&gt; ByteString -&gt; ByteStringsubstring a b s  | a &#x3D;&#x3D; b">
+    <meta name="description" content="Monad 小技巧如果实现了一个: 1doSomething :: a -&gt; Maybe b  的操作, 不妨将其改为: 1doSomething :: (Monad m) &#x3D;&gt; a -&gt; m b  让所有 Monad 都能够使用. &gt;&gt;&#x3D; 之所以叫 bind, 就是表明 “连接两个 monad” 的含义. Monad 能很好地指示上下文, 所有 Monad 操作都需">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Haskell-技巧积累">
 <meta property="og:url" content="http://example.com/2026/01/08/Haskell-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="取 ByteString 的 substring可以这样实现: 12345678910import Data.ByteString (ByteString, empty)import Data.ByteString.Unsafesubstring :: Int -&gt; Int -&gt; ByteString -&gt; ByteStringsubstring a b s  | a &#x3D;&#x3D; b">
+<meta property="og:description" content="Monad 小技巧如果实现了一个: 1doSomething :: a -&gt; Maybe b  的操作, 不妨将其改为: 1doSomething :: (Monad m) &#x3D;&gt; a -&gt; m b  让所有 Monad 都能够使用. &gt;&gt;&#x3D; 之所以叫 bind, 就是表明 “连接两个 monad” 的含义. Monad 能很好地指示上下文, 所有 Monad 操作都需">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/haskell-tying-the-knot-example.jpg">
 <meta property="article:published_time" content="2026-01-08T12:44:15.000Z">
-<meta property="article:modified_time" content="2026-03-18T10:44:50.610Z">
+<meta property="article:modified_time" content="2026-04-08T02:42:57.872Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/haskell-tying-the-knot-example.jpg">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -437,7 +439,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          8.3k 字
+          11k 字
         
       </span>
     
@@ -448,7 +450,7 @@ path.outline_glyph {
         
         
         
-          70 分钟
+          89 分钟
         
       </span>
     
@@ -491,7 +493,70 @@ path.outline_glyph {
             
               <div class="markdown-body">
                 
-                <h1 id="取-ByteString-的-substring"><a href="#取-ByteString-的-substring" class="headerlink" title="取 ByteString 的 substring"></a>取 ByteString 的 substring</h1><p>可以这样实现:</p>
+                <h1 id="Monad-小技巧"><a href="#Monad-小技巧" class="headerlink" title="Monad 小技巧"></a>Monad 小技巧</h1><p>如果实现了一个:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">doSomething</span> :: a -&gt; <span class="hljs-type">Maybe</span> b<br></code></pre></td></tr></table></figure>
+
+<p>的操作, 不妨将其改为:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">doSomething</span> :: (<span class="hljs-type">Monad</span> m) =&gt; a -&gt; m b<br></code></pre></td></tr></table></figure>
+
+<p>让所有 Monad 都能够使用.</p>
+<p><code>&gt;&gt;=</code> 之所以叫 <code>bind</code>, 就是表明 “连接两个 monad” 的含义.</p>
+<p>Monad 能很好地指示上下文, 所有 Monad 操作都需要在 Monad 内进行.</p>
+<h1 id="fmap-处理-Monad-的技巧"><a href="#fmap-处理-Monad-的技巧" class="headerlink" title="fmap 处理 Monad 的技巧"></a>fmap 处理 Monad 的技巧</h1><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">fmap</span> :: <span class="hljs-type">Functor</span> f =&gt; (a -&gt; b) -&gt; f a -&gt; f b<br></code></pre></td></tr></table></figure>
+<p><code>fmap</code> 将 <code>(a -&gt; b)</code> 作用到 <code>f a</code> 内, 最后得到 <code>f b</code>. 简单来说, <code>fmap</code> 能够将 <code>(a -&gt; b)</code> 的函数 lift 到 <code>(f a -&gt; f b)</code>; 另一个视角是, <code>fmap</code> 从 <code>f a</code> 中取出 <code>a</code>, 应用 <code>(a -&gt; b)</code> 之后将结果又包裹在 <code>f</code> 中.</p>
+<p>一种命令行参数的常见解析方式为, <code>h</code> 表示 height, <code>w</code> 表示 width, <code>fps</code> 表示 frame per second, 都是 <code>Int</code> 类型:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell">[h, w, fps] &lt;- fmap (fmap read) getArgs<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>getArgs :: IO [String]</code></li>
+<li><code>fmap read</code> 将 <code>String -&gt; a</code> lift 到 <code>[String] -&gt; [a]</code></li>
+<li>外围的 <code>fmap</code> 将 <code>[String] -&gt; [a]</code> lift 到 <code>IO [String] -&gt; IO [a]</code></li>
+</ul>
+<h1 id="程序退出"><a href="#程序退出" class="headerlink" title="程序退出"></a>程序退出</h1><p>用 <code>System.Exit</code> 模块中的函数和状态码:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-keyword">import</span> System.Exit (<span class="hljs-title">exitWith</span>, <span class="hljs-type">ExitCode(..)</span>)<br><br><span class="hljs-title">main</span> :: <span class="hljs-type">IO</span> ()<br><span class="hljs-title">main</span> = <span class="hljs-keyword">do</span><br>    putStrLn <span class="hljs-string">&quot;bye&quot;</span><br>    exitWith <span class="hljs-type">ExitSuccess</span><br></code></pre></td></tr></table></figure>
+
+<h1 id="Tying-the-knot"><a href="#Tying-the-knot" class="headerlink" title="Tying the knot"></a>Tying the knot</h1><p><code>Tying the knot</code> (打结) 是 Haskell 中的一种编码技巧, 描述用 lazy 特性来构建 cylic 结构的过程. 其核心是: 可以定义一个变量, 在这个变量的定义过程中直接引用自己, 而编译器会在运行时通过指针补全, 让这个结构 “首尾相连”.</p>
+<p>一个示例:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">cyclic</span> = <span class="hljs-keyword">let</span> x = <span class="hljs-number">0</span> : y<br>             y = <span class="hljs-number">1</span> : x<br>         <span class="hljs-keyword">in</span>  x<br></code></pre></td></tr></table></figure>
+
+<p>展开过程如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs haskell">  cyclic<br>= x<br>= <span class="hljs-number">0</span> : y<br>= <span class="hljs-number">0</span> : <span class="hljs-number">1</span> : x <span class="hljs-comment">-- Knot! Back to the beginning.</span><br>= <span class="hljs-number">0</span> : <span class="hljs-number">1</span> : <span class="hljs-number">0</span> : y<br>= <span class="hljs-comment">-- etc.</span><br></code></pre></td></tr></table></figure>
+
+<p><img src="/../img/haskell-tying-the-knot-example.jpg" srcset="/img/loading.gif" lazyload></p>
+<p>这样来理解 <code>Tying the knot</code> 这个描述:</p>
+<ul>
+<li>想象你有一根无限长的绳子, 在 Haskell 中, 你直接声明 “这根绳子的末端就是它的开头”. 当你完成这个声明时, 原本线性的逻辑流就被 “弯曲” 并扣在一起, 形成一个环</li>
+<li>在英文语境中, 一根绳子的两头是散开的, 而把两个散开的头拉到一起并固定住的这个动作就称为 “Tying the knot”. 也就是说, 用直线构建环这个动作就是 tying the knot</li>
+</ul>
+<h1 id="利用-Enum-得到-mask"><a href="#利用-Enum-得到-mask" class="headerlink" title="利用 Enum 得到 mask"></a>利用 Enum 得到 mask</h1><p>比如我有一个 <code>display</code> 函数, 需要 mask 来控制显示哪些内容, 数据结构这样定义:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">newtype</span> <span class="hljs-type">DisplayMask</span> = <span class="hljs-type">DisplayMask</span> <span class="hljs-type">Int</span></span><br><br><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">DisplayFlag</span></span><br>    = <span class="hljs-type">ShowCreateTime</span> <span class="hljs-comment">-- 0</span><br>    | <span class="hljs-type">ShowCount</span>      <span class="hljs-comment">-- 1</span><br>    | <span class="hljs-type">ShowTask</span>       <span class="hljs-comment">-- 2</span><br>    | <span class="hljs-type">ShowGroup</span>      <span class="hljs-comment">-- 3</span><br>    | <span class="hljs-type">ShowState</span>      <span class="hljs-comment">-- 4</span><br>    <span class="hljs-keyword">deriving</span> (<span class="hljs-type">Enum</span>)<br></code></pre></td></tr></table></figure>
+
+<p>若要得到传统意义上的 <code>mask</code>, 比如 <code>b00000</code>, 就需要对 Enum 进行处理, 当前的 Enum 不能直接用于 bits 运算, 比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">let</span> m1 = <span class="hljs-type">ShowCreateTime</span> .|. <span class="hljs-number">0</span> <span class="hljs-comment">-- 得到 b00000, 有问题, 应该是 b00001</span><br>    m2 = <span class="hljs-type">ShowCount</span> .|. <span class="hljs-number">0</span>      <span class="hljs-comment">-- 得到 b00001, 有问题, 应该是 b00010</span><br>    m3 = <span class="hljs-type">ShowTask</span>  .|. <span class="hljs-number">0</span>      <span class="hljs-comment">-- 得到 b00010, 有问题, 应该是 b00100</span><br>    m4 = <span class="hljs-type">ShowGroup</span> .|. <span class="hljs-number">0</span>      <span class="hljs-comment">-- 得到 b00011, 有问题, 应该是 b01000</span><br>    m5 = <span class="hljs-type">ShowState</span> .|. <span class="hljs-number">0</span>      <span class="hljs-comment">-- 得到 b00100, 有问题, 应该是 b10000</span><br></code></pre></td></tr></table></figure>
+
+<p>如果把 <code>Enum</code> 的数字视作二进制的位置, 则可行, 比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">let</span> m1 = <span class="hljs-number">1</span> `shiftL` fromEnum <span class="hljs-type">ShowCreateTime</span> <span class="hljs-comment">-- 得到 b00001</span><br>    m2 = <span class="hljs-number">1</span> `shiftL` fromEnum <span class="hljs-type">ShowCount</span>      <span class="hljs-comment">-- 得到 b00010</span><br>    ...<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>m1</code> 这一行相当于把 <code>1</code> 向左移动 <code>0</code> 位, 得到 <code>b00001</code></li>
+<li><code>m2</code> 这一行相当于把 <code>1</code> 向左移动 <code>1</code> 位, 得到 <code>b00010</code></li>
+<li>恰好是满足的</li>
+</ul>
+<p>因此可以用一个函数来快速处理:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">toMask</span> :: [<span class="hljs-type">DisplayFlag</span>] -&gt; <span class="hljs-type">DisplayMask</span><br><span class="hljs-title">toMask</span> flags = foldr (.|.) <span class="hljs-number">0</span> [ <span class="hljs-number">1</span> `shiftL` fromEnum flag | flag &lt;- flags]<br></code></pre></td></tr></table></figure>
+
+<h1 id="获取当前时间戳"><a href="#获取当前时间戳" class="headerlink" title="获取当前时间戳"></a>获取当前时间戳</h1><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-keyword">import</span> Data.Time (<span class="hljs-title">getCurrentTime</span>, <span class="hljs-title">formatTime</span>, <span class="hljs-title">defaultTimeLocale</span>)<br><br><span class="hljs-title">main</span> :: <span class="hljs-type">IO</span> ()<br><span class="hljs-title">main</span> = <span class="hljs-keyword">do</span><br>    now &lt;- getCurrentTime<br>    <span class="hljs-keyword">let</span> str = formatTime defaultTimeLocale <span class="hljs-string">&quot;%Y-%m-%d&quot;</span> now<br>    putStrLn str<br></code></pre></td></tr></table></figure>
+
+<p>几个关键函数的签名为:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">getCurrentTime</span> :: <span class="hljs-type">IO</span> <span class="hljs-type">UTCTime</span><br><span class="hljs-title">formatTime</span> :: <span class="hljs-type">FormatTime</span> t =&gt; <span class="hljs-type">TimeLocale</span> -&gt; <span class="hljs-type">String</span> -&gt; t -&gt; <span class="hljs-type">String</span><br><span class="hljs-title">defaultTimeLocale</span> :: <span class="hljs-type">TimeLocale</span><br></code></pre></td></tr></table></figure>
+
+<p>输出:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ ghc time.hs<br>$ ./time<br>2026-03-30<br></code></pre></td></tr></table></figure>
+
+<h1 id="查看当前环境的-Haskell-包及其版本"><a href="#查看当前环境的-Haskell-包及其版本" class="headerlink" title="查看当前环境的 Haskell 包及其版本"></a>查看当前环境的 Haskell 包及其版本</h1><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">ghc-pkg list<br></code></pre></td></tr></table></figure>
+
+<p>如果想将这个包名和版本信息添加到 stack 依赖中, 修改 <code>package.yaml</code> 文件:</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs yaml"><span class="hljs-attr">dependencies:</span><br><span class="hljs-bullet">-</span> <span class="hljs-string">containers</span> <span class="hljs-string">&gt;=</span> <span class="hljs-number">0.6</span> <span class="hljs-string">&amp;&amp;</span> <span class="hljs-string">&lt;</span> <span class="hljs-number">0.7</span><br></code></pre></td></tr></table></figure>
+
+<h1 id="取-ByteString-的-substring"><a href="#取-ByteString-的-substring" class="headerlink" title="取 ByteString 的 substring"></a>取 ByteString 的 substring</h1><p>可以这样实现:</p>
 <figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-keyword">import</span> Data.ByteString (<span class="hljs-type">ByteString</span>, <span class="hljs-title">empty</span>)<br><span class="hljs-keyword">import</span> Data.ByteString.Unsafe<br><br><span class="hljs-title">substring</span> :: <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">ByteString</span> -&gt; <span class="hljs-type">ByteString</span><br><span class="hljs-title">substring</span> a b s<br>  | a == b    = empty<br>  | otherwise = result<br>    <span class="hljs-keyword">where</span> <br>      start  = unsafeDrop a s<br>      result = unsafeTake (b - a) start<br></code></pre></td></tr></table></figure>
 <ul>
 <li>第一个 <code>Int</code> 是子串的起始 offset</li>
