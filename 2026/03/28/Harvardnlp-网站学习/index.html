@@ -24,7 +24,7 @@
 <meta property="og:description" content="Harvardnpl 网站 介绍Harvard NLP 是一个用 machine learning 来学习如何处理和生成 human language 的组织. 其网站上有很多写得好的 Blog, 都有代码详细解析, 因此专门记录下. Transformer具体链接是 https:&#x2F;&#x2F;nlp.seas.harvard.edu&#x2F;2018&#x2F;04&#x2F;03&#x2F;attention.html. 这里不会按照上述">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-03-28T06:45:09.000Z">
-<meta property="article:modified_time" content="2026-04-05T02:47:35.126Z">
+<meta property="article:modified_time" content="2026-04-10T13:30:57.710Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -437,7 +437,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          7.9k 字
+          14k 字
         
       </span>
     
@@ -448,7 +448,7 @@ path.outline_glyph {
         
         
         
-          67 分钟
+          119 分钟
         
       </span>
     
@@ -560,10 +560,14 @@ path.outline_glyph {
 
 <h2 id="Encoder"><a href="#Encoder" class="headerlink" title="Encoder"></a>Encoder</h2><p>整个 Encoder 就是多个 <code>layer</code> 的堆叠:</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Encoder</span>(nn.Module):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, layer, N</span>):<br>        self.layers = clones(layer, N)<br>        self.norm = LayerNorm(layer.size)<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">self, x, mask</span>):<br>        <span class="hljs-keyword">for</span> layer <span class="hljs-keyword">in</span> self.layers<br>            x = layer(x, mask)<br>        <span class="hljs-keyword">return</span> self.norm(x)<br></code></pre></td></tr></table></figure>
-
+<p>这里的 mask 主要是为了消除 <code>padding</code> token 的影响.</p>
+<blockquote>
+<p>为什么要在 Encoder 的最后进行 normalizatioin 操作</p>
+</blockquote>
+<p>因为每一层都会做 <code>x &lt;- x + SubLayer(x)</code> 的操作, 经过 N 层后, 激活值的 scale 可能漂移 (不太懂这个), 不同 batch &#x2F; 不同位置方差变大 (也不太懂). 做一次 <code>LayerNorm</code> 能把输出拉回均值 <code>0</code>, 方差 <code>1</code>. 去掉 Norm 可能会训练不稳定, 梯度爆炸等.</p>
 <h2 id="Decoder"><a href="#Decoder" class="headerlink" title="Decoder"></a>Decoder</h2><p>该部分与 Encoder 类似, 也是多个 <code>layer</code> 堆叠而成, 区别在于 <code>forward</code> 时的参数:</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Decoder</span>(nn.Module):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, layer, N</span>):<br>        <span class="hljs-built_in">super</span>(Decoder ,self).__init__()<br>        self.layers = clones(layer, N)<br>        self.norm   = LayerNorm(layer.size)<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">self, x, memory, src_mask, tgt_mask</span>):<br>        <span class="hljs-keyword">for</span> layer <span class="hljs-keyword">in</span> self.layers:<br>            x = layer(x, memory, src_mask, tgt_mask)<br>        <span class="hljs-keyword">return</span> self.norm(x)<br></code></pre></td></tr></table></figure>
-
+<p>这里的 <code>src_mask</code> 用来消除 <code>padding</code> token 的影响, <code>tgt_mask</code> 用来消除因果的影响.</p>
 <h2 id="DecoderLayer"><a href="#DecoderLayer" class="headerlink" title="DecoderLayer"></a>DecoderLayer</h2><p>每个 decoder 包含 3 个 sub-layer:</p>
 <ul>
 <li>multi-head self-attention layer</li>
@@ -613,7 +617,19 @@ path.outline_glyph {
 <li><code>contiguous()</code> 会将 tensor 在内存中重新整理为连续布局, 否则后面 <code>view</code> 会报错, 这样才能安全进行 <code>reshape</code></li>
 <li><code>view(nbatch, -1, self.h * self.d_k)</code> 将维度重新变为 <code>(nbatch, seq_len, d_model)</code></li>
 </ul>
-<h2 id="Position-wise-Feed-Forward-Networks"><a href="#Position-wise-Feed-Forward-Networks" class="headerlink" title="Position-wise Feed-Forward Networks"></a>Position-wise Feed-Forward Networks</h2><h2 id="Positional-Encoding"><a href="#Positional-Encoding" class="headerlink" title="Positional Encoding"></a>Positional Encoding</h2><p>对于一个特征维度为 <code>d_model</code> 的 token 而言, 对应的 positional encoding 维度也应该是 <code>d_model</code>, 这样就能够直接相加.</p>
+<h2 id="Position-wise-Feed-Forward-Networks"><a href="#Position-wise-Feed-Forward-Networks" class="headerlink" title="Position-wise Feed-Forward Networks"></a>Position-wise Feed-Forward Networks</h2><h2 id="Embedding"><a href="#Embedding" class="headerlink" title="Embedding"></a>Embedding</h2><p><code>lut</code> 是 Lookup table 的缩写, embedding 本质上就是一个表, 一个 token 对应其中的一行.</p>
+<p>乘以 $\sqrt{d_{model}}$ 的原因: 主要为了对抗位置编码的影响以及稳定深度模型的数值方差.</p>
+<p>在 Transformer 中, embedding 会直接加上位置编码:</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs ini"><span class="hljs-attr">Output</span> = Embedding + PositionalEncoding<br></code></pre></td></tr></table></figure>
+<ul>
+<li>问题: 位置编码的值通常在 <code>[-1, 1]</code> 之间, 且方差是固定的</li>
+<li>由于 Embedding 层初始化的权值通常是按照 $\frac{1}{\sqrt{d_{model}}}$ 缩放后的正态分布, 随着 $d_{model}$ 的增大, 其数值会变得很小. 如果不放大 Embedding, 位置信息就会在数值上占主导地位, 淹没掉词本身的语义信息.</li>
+</ul>
+<p>因此乘以 $\sqrt{d_{model}}$ 的本质是提高词向量的 “能量”, 确保在和位置编码相加时, 语义信号不会被位置信号覆盖掉.</p>
+<p>在深度学习中, 我们希望每一层输出的方差尽可能是 <code>1</code>, 而在 PyTorch 中, <code>nn.Embedding</code> 默认初始化通常会让每个维度的方差约为 $\frac{1}{d_{model}}$, 而我们乘以 $\sqrt{d_{model}}$ 之后, 根据方差的性质 $Var(a X) &#x3D; a^2 Var (X)$, 输出的方差就变成了:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>(\sqrt{d_{model}})^2 \cdot \frac{1}{d_{model}} &#x3D; 1<br>\end{aligned}<br>}<br>$$</p>
+<p>这能让 Embedding 的输出处于一个稳定的量级.</p>
+<h2 id="Positional-Encoding"><a href="#Positional-Encoding" class="headerlink" title="Positional Encoding"></a>Positional Encoding</h2><p>对于一个特征维度为 <code>d_model</code> 的 token 而言, 对应的 positional encoding 维度也应该是 <code>d_model</code>, 这样就能够直接相加.</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">pe = torch.zeros(max_len, d_model)<br></code></pre></td></tr></table></figure>
 <ul>
 <li>对于 <code>0~max_len</code> 中的每一个位置, 都生成一个 <code>d_model</code> 长度的 encoding, 这比较符合直觉</li>
@@ -628,10 +644,175 @@ path.outline_glyph {
 
 <p>原始公式可以这样变换, 先取对数再 <code>exp</code> 等于没变, 但是计算会更快:</p>
 <p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\omega_k &#x3D; 10000^{-2i&#x2F;d_{model}} \newline~ \newline<br>log(\omega_k) &#x3D; -\frac{2k}{d_{model}} log(10000)  \newline~ \newline<br>omega_k &#x3D; exp(-\frac{2k}{d_{model}} log(10000))<br>\end{aligned}<br>}<br>$$</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">self.register_buffer(<span class="hljs-string">&#x27;pe&#x27;</span>, pe)<br></code></pre></td></tr></table></figure>
+<p><code>self.register_buffer</code> 用来将一个 tensor 注册为模型的状态, 其会跟着模型 “移动”, 与普通的 <code>self.pe</code> 的区别如下:</p>
+<table>
+<thead>
+<tr>
+<th>性质</th>
+<th><code>self.pe = pe</code> (普通属性)</th>
+<th><code>self.register_buffer(&#39;pe&#39;, pe)</code></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>是否参与训练</td>
+<td>否</td>
+<td>否</td>
+</tr>
+<tr>
+<td>是否随 <code>model.cuda()</code> 移动</td>
+<td>不会 (需要手动转换)</td>
+<td>会 (自动随模型移动到 GPU&#x2F;CPU)</td>
+</tr>
+<tr>
+<td>是否包含在 <code>state_dict</code> 中</td>
+<td>不会 (保存模型时会丢失)</td>
+<td>会 (保存和加载模型时会包含它)</td>
+</tr>
+<tr>
+<td>是否在 <code>named_buffers()</code> 中</td>
+<td>否</td>
+<td>是</td>
+</tr>
+</tbody></table>
+<p>对于 Positional Encoding (PE), 它有几个特殊属性:</p>
+<ul>
+<li>它是确定的, 不需要更新: PE 是通过正余弦函数算出来的确定值, 不需要梯度下降来优化, 因此不需要作为 <code>nn.Parameter</code></li>
+<li>它必须和输入数据在同一个设备上: 如果模型在 GPU 上跑, 那么 PE 矩阵也必须在 GPU 上, 否则 <code>x + self.pe</code> 会报错. 如果用 <code>self.pe = pe</code>, 当执行 <code>model.to(&#39;cuda&#39;)</code> 时, <code>pe</code> 还是留在内存 (CPU) 里</li>
+<li>它是模型的一部分, 当你把训练好的模型发给别人时, 你希望这个 PE 矩阵也包含在模型文件里, 而不是让别人再手动计算一遍</li>
+</ul>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">x = x + Variable(self.pe[:, :x.size(<span class="hljs-number">1</span>)], requires_grad=<span class="hljs-literal">False</span>)<br></code></pre></td></tr></table></figure>
 <ul>
 <li>首先先了解一点, <code>x</code> 的 <code>seq_len</code> 不一定是 <code>max_len</code>. <code>x.size(1)</code> 取出来的就是 <code>seq_len</code>, <code>self.pe[:, :x.size(1)]</code> 表示取 <code>pe</code> 的前 <code>seq_len</code> 行, 而不是 <code>max_len</code> 行</li>
 </ul>
+<p>在 PyTorch 0.3 及以前:</p>
+<ul>
+<li><code>Tensor</code> 不会自动记录计算图</li>
+<li>必须用 <code>Variable</code> 包一层</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">x = Variable(torch.randn(<span class="hljs-number">3</span>), requires_grad=<span class="hljs-literal">True</span>)<br></code></pre></td></tr></table></figure>
+
+<p>在 PyTorch 0.4 以后, Tensor 自动支持 <code>requires_grad</code>, 因此 <code>Variable</code> 被弃用</p>
+<h2 id="Batches-and-Masking"><a href="#Batches-and-Masking" class="headerlink" title="Batches and Masking"></a>Batches and Masking</h2><p>同样解释部分代码:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">self.src_mask = (src != pad).unsqueeze(-<span class="hljs-number">2</span>)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>src</code> 的维度是 <code>(batch_size, seq_len)</code></li>
+<li><code>unsqueeze(-2)</code> 让 <code>src_mask</code> 的维度变为 <code>(batch_size, 1, seq_len)</code>, 便于广播到 <code>(batch_size, seq_len, seq_len)</code></li>
+<li><code>(src != pad)</code>, 将 <code>src</code> 中与 <code>pad</code> 相同的置为 <code>False</code>, 表示这部分后续会被 mask 处理掉</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python">self.trg = trg[:, :-<span class="hljs-number">1</span>]<br>self.trg_y = trg[:, <span class="hljs-number">1</span>:]<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>trg</code> 是目标序列, 比如 <code>trg = &lt;s&gt; A B C &lt;/s&gt;</code>, <code>&lt;s&gt;</code> 和 <code>&lt;/s&gt;</code> 用来标记序列的起始和结束</li>
+<li><code>trg[:, :-1]</code> 表示 decoder 的输入, 从目标序列中去掉了 <code>&lt;/s&gt;</code>, 不把其作为输入: <code>&lt;s&gt; A B C</code></li>
+<li><code>trg[:, 1:]</code> 表示 decoder 的目标输出, 不把 <code>&lt;/s&gt;</code> 当作预测目标: <code>A B C &lt;/s&gt;</code></li>
+<li>这样也恰好达到自回归的效果, 输入 <code>&lt;s&gt;</code> 时预测得到 <code>A</code>; 输入 <code>A</code> 时预测得到 <code>B</code></li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python">tgt_mask = tgt_mask &amp; Variable(<br>    subsequent_mask(tgt.size(-<span class="hljs-number">1</span>)).type_as(tgt_mask.data))<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>subsequent_mask</code> 会生成一个 <code>size x size</code> 的下三角矩阵 (下三角为 <code>True</code>), 确保不看未来</li>
+<li><code>type_as</code>, 让类型与 <code>tgt_mask.data</code> 保持一致</li>
+<li><code>&amp;</code> 用来合并两个 mask, 确保不看 padding 以及不看未来</li>
+<li><code>data</code> 方法返回的是 <code>Variable</code> 内部的 Tensor (不包含计算图), 通常用于取数值, 避免反响传播. 当前的 PyTorch 已经不需要 <code>Variable</code> 和 <code>data</code> 了</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python">v = Variable(x)<br>t = v.data   <span class="hljs-comment"># Tensor，不带梯度信息</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="Training-Loop"><a href="#Training-Loop" class="headerlink" title="Training Loop"></a>Training Loop</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">loss = loss_compute(out, batch.trg_y, batch.ntokens)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>在 loss 计算中用总 loss 除以 ntokens, 能得到每个 token 的平均损失, 这样不同 batch, 不同长度的句子才能公平比较. 比如有 <code>10</code> 个 token 的句子, 其总 loss 很大概率比 <code>4</code> 个 token 的句子更大, 但并不能因此说后者训练更好</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">return</span> total_loss / total_tokens<br></code></pre></td></tr></table></figure>
+<ul>
+<li>这个计算整个 <code>epoch</code> 的平均 loss</li>
+</ul>
+<h2 id="Optimizer"><a href="#Optimizer" class="headerlink" title="Optimizer"></a>Optimizer</h2><p>解析下这里用到的公式:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>lrate &#x3D; d_{model}^{-0.5} \cdot min(step\_num^{-0.5}, step\_num \cdot warmup\_steps^{-1.5})<br>\end{aligned}<br>}<br>$$</p>
+<h2 id="这是-Transformer-原始论文中的-Noam-Scheduler-学习率预热和衰减的方案-其本质是为了平衡-deep-learning-训练中的两个矛盾-早期的稳定性-防止梯度爆炸-和后期的收敛性-便于精准调整参数-d-model-0-5-是基础的缩放项-d-model-是模型的隐藏层维度-如果模型的维度越大-那么初始的学习率越低-比如-512-0-5-approx-4-42e-2-1024-0-5-approx-3-13e-2-gt-毕竟维度越高-神经元激活值的方差可能越大-导致梯度波动剧烈-min-部分是由两个随-step-变化的函数组成-由于取的是最小值-因此学习率会跟随-“更低”-的曲线走-当-step-较小时-线性预热阶段-min-由-step-num-cdot-warmup-steps-1-5-主导-且由于-step-在分子上-这是一个正比例函数-能够从-0-开始线性缓慢增长-给模型一个-“热身”-过程-使其逐渐适应数据-当-step-大于-warmup-steps-后-衰减阶段-min-会由-step-num-0-5-主导-这是一个反比例函数-当模型进入稳定期后-随着步数增加-学习率逐渐降低"><a href="#这是-Transformer-原始论文中的-Noam-Scheduler-学习率预热和衰减的方案-其本质是为了平衡-deep-learning-训练中的两个矛盾-早期的稳定性-防止梯度爆炸-和后期的收敛性-便于精准调整参数-d-model-0-5-是基础的缩放项-d-model-是模型的隐藏层维度-如果模型的维度越大-那么初始的学习率越低-比如-512-0-5-approx-4-42e-2-1024-0-5-approx-3-13e-2-gt-毕竟维度越高-神经元激活值的方差可能越大-导致梯度波动剧烈-min-部分是由两个随-step-变化的函数组成-由于取的是最小值-因此学习率会跟随-“更低”-的曲线走-当-step-较小时-线性预热阶段-min-由-step-num-cdot-warmup-steps-1-5-主导-且由于-step-在分子上-这是一个正比例函数-能够从-0-开始线性缓慢增长-给模型一个-“热身”-过程-使其逐渐适应数据-当-step-大于-warmup-steps-后-衰减阶段-min-会由-step-num-0-5-主导-这是一个反比例函数-当模型进入稳定期后-随着步数增加-学习率逐渐降低" class="headerlink" title="这是 Transformer 原始论文中的 Noam Scheduler 学习率预热和衰减的方案, 其本质是为了平衡 deep learning 训练中的两个矛盾: 早期的稳定性 (防止梯度爆炸) 和后期的收敛性 (便于精准调整参数):- $d_{model}^{-0.5}$ 是基础的缩放项, $d_{model}$ 是模型的隐藏层维度, 如果模型的维度越大, 那么初始的学习率越低, 比如: $512^{-0.5} \approx 4.42e-2, 1024^{-0.5} \approx 3.13e-2$&gt;. 毕竟维度越高, 神经元激活值的方差可能越大, 导致梯度波动剧烈- min(..) 部分是由两个随 step 变化的函数组成, 由于取的是最小值, 因此学习率会跟随 “更低” 的曲线走- 当 step 较小时 (线性预热阶段), min(..) 由 $step\_num \cdot warmup\_steps^{-1.5}$ 主导, 且由于 step 在分子上, 这是一个正比例函数, 能够从 0 开始线性缓慢增长, 给模型一个 “热身” 过程, 使其逐渐适应数据- 当 step 大于 warmup_steps 后 (衰减阶段), min(..) 会由 $step\_num^{-0.5}$ 主导, 这是一个反比例函数, 当模型进入稳定期后, 随着步数增加, 学习率逐渐降低"></a>这是 Transformer 原始论文中的 Noam Scheduler 学习率预热和衰减的方案, 其本质是为了平衡 deep learning 训练中的两个矛盾: 早期的稳定性 (防止梯度爆炸) 和后期的收敛性 (便于精准调整参数):<br>- $d_{model}^{-0.5}$ 是基础的缩放项, $d_{model}$ 是模型的隐藏层维度, 如果模型的维度越大, 那么初始的学习率越低, 比如: $512^{-0.5} \approx 4.42e-2, 1024^{-0.5} \approx 3.13e-2$&gt;. 毕竟维度越高, 神经元激活值的方差可能越大, 导致梯度波动剧烈<br>- <code>min(..)</code> 部分是由两个随 <code>step</code> 变化的函数组成, 由于取的是最小值, 因此学习率会跟随 “更低” 的曲线走<br>- 当 <code>step</code> 较小时 (线性预热阶段), <code>min(..)</code> 由 $step\_num \cdot warmup\_steps^{-1.5}$ 主导, 且由于 <code>step</code> 在分子上, 这是一个正比例函数, 能够从 0 开始线性缓慢增长, 给模型一个 “热身” 过程, 使其逐渐适应数据<br>- 当 <code>step</code> 大于 <code>warmup_steps</code> 后 (衰减阶段), <code>min(..)</code> 会由 $step\_num^{-0.5}$ 主导, 这是一个反比例函数, 当模型进入稳定期后, 随着步数增加, 学习率逐渐降低</h2><p>利用 <code>warmup</code>, 在训练初期使用较小的 learning rate, 防止模型参数剧烈震荡.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python">self._step = <span class="hljs-number">0</span><br>self._rate = <span class="hljs-number">0</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>self._step</code> 用来记录训练经过的 step 数量</li>
+<li><code>self._rate</code> 表示当前的 learning rate</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">step</span>(<span class="hljs-params">self</span>):<br>    self._step += <span class="hljs-number">1</span><br>    rate = self.rate()<br>    <span class="hljs-keyword">for</span> p <span class="hljs-keyword">in</span> self.optimizer.param_groups:<br>        p[<span class="hljs-string">&#x27;lr&#x27;</span>] = rate<br>    self.optimizer.step()<br></code></pre></td></tr></table></figure>
+<ul>
+<li>每调用一次 <code>step</code>, 让 <code>self._step</code> 自增 <code>1</code></li>
+<li>调用 <code>self.rate()</code> 函数来得到新的学习率</li>
+</ul>
+<p><code>torch.optim.Optimizer</code> 的 <code>param_groups</code> 属性是一个列表, 列表中每个元素都是一个字典, 表示一个 <code>param_group</code>. 每个 <code>param_group</code> 包含:</p>
+<ul>
+<li>一组模型参数, <code>params</code></li>
+<li>这组参数对应的优化器超参数, 比如 <code>lr</code>, <code>weight_decay</code>, <code>momentum</code> 等</li>
+</ul>
+<p>例如:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs python">[<br>    &#123;<br>        <span class="hljs-string">&#x27;params&#x27;</span>: [tensor1, tensor2, ...],<br>        <span class="hljs-string">&#x27;lr&#x27;</span>: <span class="hljs-number">0.001</span>,<br>        <span class="hljs-string">&#x27;weight_decay&#x27;</span>: <span class="hljs-number">0.0001</span>,<br>        <span class="hljs-string">&#x27;betas&#x27;</span>: (<span class="hljs-number">0.9</span>, <span class="hljs-number">0.999</span>),<br>        ...<br>    &#125;,<br>    &#123;<br>        <span class="hljs-string">&#x27;params&#x27;</span>: [tensor3, tensor4, ...],<br>        <span class="hljs-string">&#x27;lr&#x27;</span>: <span class="hljs-number">0.01</span>,<br>        <span class="hljs-string">&#x27;weight_decay&#x27;</span>: <span class="hljs-number">0.0</span>,<br>        ...<br>    &#125;<br>]<br></code></pre></td></tr></table></figure>
+
+<p><code>optimizer.step()</code> 则会利用优化器的超参数进行具体的参数更新, 以 SGD 为例, <code>step()</code> 方法内部会为每个参数进行:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">p.data = p.data - lr * p.grad<br></code></pre></td></tr></table></figure>
+
+<p>如果还加上了 <code>momentum/weight_decay</code>, 则有:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python">buf = momentum * buf + lr * grad<br>p.data -= buf<br></code></pre></td></tr></table></figure>
+
+<h2 id="Label-Smoothing"><a href="#Label-Smoothing" class="headerlink" title="Label Smoothing"></a>Label Smoothing</h2><p>Label Smoothing (标签平滑), 能够减轻过拟合, 以及模型过于 “自信” 的问题.</p>
+<p>比如普通 CrossEntropy, 标签为:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">target = [<span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span>, <span class="hljs-number">0</span>]  (one-hot)<br></code></pre></td></tr></table></figure>
+<p>模型被逼着:</p>
+<ul>
+<li>对正确类输出概率 $\rightarrow 1$ </li>
+<li>对其他类 $\rightarrow 0$</li>
+</ul>
+<p>这容易过拟合, 且对噪声标签不鲁棒, 模型过于 “自信” 等.</p>
+<p>而 Label smoothing 的思想是, 不再用 one-hot, 而是:</p>
+<ul>
+<li>正确类: $1 - \epsilon$, 从 <code>1</code> 变小</li>
+<li>其余类: $(epsilon) &#x2F; (K-1)$, 从 <code>0</code> 增大, 且平分概率</li>
+</ul>
+<p>比如 $\epsilon &#x3D; 0.1$ (平滑因子), $K &#x3D; 5$ (标签数), 有:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">[<span class="hljs-number">0.025</span>, <span class="hljs-number">0.025</span>, <span class="hljs-number">0.9</span>, <span class="hljs-number">0.025</span>, <span class="hljs-number">0.025</span>]<br></code></pre></td></tr></table></figure>
+
+<p>KL divergence (Kullback-Leibler Divergence), 用来衡量两个概率分布之间的差异 (从 divergence “分散” 这个词也可以看出). 也可以说明用一个概率分布 Q 去近似另一个分布 P 时, 损失了多少信息.</p>
+<p>其数学定义如下:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>D_{KL} (P || Q) &#x3D; \sum_x P(x) log \frac{P(x)}{Q(x)}<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>当 $P$ 和 $Q$ 完全一样时, $KL &#x3D; 0$</li>
+<li>如果 $P(x)$ 很大时 $Q(x)$ 很小, 此时 $KL$ 会很大</li>
+<li>如果 $P(x)$ 很小, 此时 $Q(x)$ 的大小无所谓, 最终 $KL$ 都会很小</li>
+</ul>
+<p>需要注意 KL 散度不是对称的:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>D_{KL} (P || Q) \ne D_{KL} (Q || P)<br>\end{aligned}<br>}<br>$$</p>
+<p>如果模型的输入是一个分布, 输出是另一个分布, 那么通过最小化 KL 散度能让信息损失最小.</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">true_dist = x.data.clone()<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>clone()</code> 方法能返回 tensor 数据的一个副本</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">true_dist.fill_(self.smoothing / (self.size - <span class="hljs-number">2</span>))<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>fill_(value)</code> 方法原地将 <code>tensor</code> 的所有元素设为 <code>value</code></li>
+<li><code>self.size - 2</code>, 一个是正确位置 (后面单独插入), 另一个是输入的占位标签</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">true_dist.scatter_(<span class="hljs-number">1</span>, target.data.unsqueeze(<span class="hljs-number">1</span>), self.confidence)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>target</code> 的 shape 为 <code>(batch_size,)</code>, 比如 <code>target = tensor([2, 4, 1])</code></li>
+<li><code>target.data.unsqueeze(1)</code> 将 shape 变为 <code>(batch_size,  1)</code>:</li>
+</ul>
+<figure class="highlight inform7"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs inform7">target = <span class="hljs-comment">[2, 4, 1]</span><br>↓<br>index = <span class="hljs-comment">[<span class="hljs-comment">[2]</span>,</span><br><span class="hljs-comment">         <span class="hljs-comment">[4]</span>,</span><br><span class="hljs-comment">         <span class="hljs-comment">[1]</span>]</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>而 <code>true_dist</code> 的 shape 为 <code>(batch, vocab_size)</code>, 每一行对应一个正确的标签, 标签的取法是 <code>index[i, 0]</code></li>
+<li><code>Tensor.scatter_(dim, index, value)</code>, 沿着 <code>dim</code> 维度, 按照 <code>index</code> 指定的位置, 填入 <code>value</code>, 之所以要扩维, 因为要从 index 中 <code>dimension == dim</code> 的地方找. <code>index</code> 需要与 <code>Tensor</code> 的维度一致. <code>value</code> 一般情况下也与 <code>index</code> 维度一致, 但如果 <code>value</code> 是一个标量, 则在每个 <code>index</code> 指定的地方都填充这个标量</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">true_dist[:, self.padding_idx] = <span class="hljs-number">0</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>将 padding 位置的标签设为 <code>0</code></li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">mask = torch.nonzero(target.data == self.padding_idx)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>假设 <code>target</code> 是 <code>[5, 2, 0, 0]</code>, 而 <code>padding_idx</code> 是 <code>0</code>. 那么 <code>target.data == padding_idx</code> 会返回一个布尔张量 <code>[False, False, True, True]</code></li>
+<li><code>torch.nonzero(..)</code> 会返回所有值为 <code>True</code> (或非零) 的索引坐标, 比如上述例子就会返回 <code>[[2], [3]]</code></li>
+<li><code>mask</code> 存储的就是所有 padding 所在的 “行索引”</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">if</span> mask.dim() &gt; <span class="hljs-number">0</span>:<br>    true_dist.index_fill_(<span class="hljs-number">0</span>, mask.squeeze(), <span class="hljs-number">0.0</span>)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>squeeze()</code> 把坐标从 <code>[[2], [3]]</code> 降维成 <code>[2, 3]</code>, 得到一个单纯的行索引列表</li>
+<li><code>index_fill_(dim, index, value)</code>, 在指定维度, 用 <code>index</code> 填充 <code>value</code></li>
+</ul>
+<h2 id="Loss-Computation"><a href="#Loss-Computation" class="headerlink" title="Loss Computation"></a>Loss Computation</h2><p>这里涉及到的 <code>generator</code> 在深度学习模型中, 通常指代 “将模型隐藏层表示映射为 logits 并算出概率分布” 的模块. 比如长这样:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Generator</span>(nn.Module):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, d_model, vocab</span>):<br>        <span class="hljs-built_in">super</span>().__init__()<br>        self.proj = nn.Linear(d_model, vocab)<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">self, x</span>):<br>        logits = self.proj(x)<br>        <span class="hljs-keyword">return</span> F.log_softmax(logits, dim=-<span class="hljs-number">1</span>)<br></code></pre></td></tr></table></figure>
 
                 
               </div>

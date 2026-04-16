@@ -16,16 +16,16 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="Monad 小技巧如果实现了一个: 1doSomething :: a -&gt; Maybe b  的操作, 不妨将其改为: 1doSomething :: (Monad m) &#x3D;&gt; a -&gt; m b  让所有 Monad 都能够使用. &gt;&gt;&#x3D; 之所以叫 bind, 就是表明 “连接两个 monad” 的含义. Monad 能很好地指示上下文, 所有 Monad 操作都需">
+    <meta name="description" content="type 和 newtype 的一些抉择type 是给一个类型起别名, newtype 是构建一个新类型. 比如我们想要一个类型有 Reader + State 的功能, 可以这样定义: 1type App m a &#x3D; ReaderT BoardInfo (StateT AppState m) a  这种写法很简略, 并且由于 ReaderT 和 StateT 都实现了 MonadReader 和">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Haskell-技巧积累">
 <meta property="og:url" content="http://example.com/2026/01/08/Haskell-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="Monad 小技巧如果实现了一个: 1doSomething :: a -&gt; Maybe b  的操作, 不妨将其改为: 1doSomething :: (Monad m) &#x3D;&gt; a -&gt; m b  让所有 Monad 都能够使用. &gt;&gt;&#x3D; 之所以叫 bind, 就是表明 “连接两个 monad” 的含义. Monad 能很好地指示上下文, 所有 Monad 操作都需">
+<meta property="og:description" content="type 和 newtype 的一些抉择type 是给一个类型起别名, newtype 是构建一个新类型. 比如我们想要一个类型有 Reader + State 的功能, 可以这样定义: 1type App m a &#x3D; ReaderT BoardInfo (StateT AppState m) a  这种写法很简略, 并且由于 ReaderT 和 StateT 都实现了 MonadReader 和">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/haskell-tying-the-knot-example.jpg">
 <meta property="article:published_time" content="2026-01-08T12:44:15.000Z">
-<meta property="article:modified_time" content="2026-04-08T02:42:57.872Z">
+<meta property="article:modified_time" content="2026-04-16T02:54:59.264Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/haskell-tying-the-knot-example.jpg">
@@ -439,7 +439,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          11k 字
+          14k 字
         
       </span>
     
@@ -450,7 +450,7 @@ path.outline_glyph {
         
         
         
-          89 分钟
+          116 分钟
         
       </span>
     
@@ -493,7 +493,102 @@ path.outline_glyph {
             
               <div class="markdown-body">
                 
-                <h1 id="Monad-小技巧"><a href="#Monad-小技巧" class="headerlink" title="Monad 小技巧"></a>Monad 小技巧</h1><p>如果实现了一个:</p>
+                <h1 id="type-和-newtype-的一些抉择"><a href="#type-和-newtype-的一些抉择" class="headerlink" title="type 和 newtype 的一些抉择"></a>type 和 newtype 的一些抉择</h1><p><code>type</code> 是给一个类型起别名, <code>newtype</code> 是构建一个新类型. 比如我们想要一个类型有 <code>Reader + State</code> 的功能, 可以这样定义:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">type</span> <span class="hljs-type">App</span> m a = <span class="hljs-type">ReaderT</span> <span class="hljs-type">BoardInfo</span> (<span class="hljs-type">StateT</span> <span class="hljs-type">AppState</span> <span class="hljs-title">m</span>) a</span><br></code></pre></td></tr></table></figure>
+
+<p>这种写法很简略, 并且由于 <code>ReaderT</code> 和 <code>StateT</code> 都实现了 <code>MonadReader</code> 和 <code>MonadState</code> 等实例, 因此 <code>App</code> 就拥有了这些功能. 但这种方式的缺点在于:</p>
+<ul>
+<li>可能某些场景需要能处理 <code>App</code> 的函数, 但是却接收了一个通用的 <code>ReaderT</code> 函数</li>
+<li>想要为 <code>App</code> 添加自定义的 <code>Show</code> 实例, 但实际上是为 <code>ReaderT ...</code> 定义了实例, 可能会在某些地方冲突</li>
+</ul>
+<p>此时可以考虑用 <code>newtype</code> 封装一层:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">newtype</span> <span class="hljs-type">App</span> m a = <span class="hljs-type">App</span> &#123; <span class="hljs-title">runApp</span> :: <span class="hljs-type">ReaderT</span> <span class="hljs-type">BoardInfo</span> (<span class="hljs-type">StateT</span> <span class="hljs-type">AppState</span> <span class="hljs-title">m</span>) <span class="hljs-title">a</span> &#125;</span><br>  <span class="hljs-keyword">deriving</span> (<span class="hljs-type">Functor</span>, <span class="hljs-type">Applicative</span>, <span class="hljs-type">Monad</span>, <span class="hljs-type">MonadState</span> <span class="hljs-type">AppState</span>, <span class="hljs-type">MonadReader</span> <span class="hljs-type">BoardInfo</span>, <span class="hljs-type">MonadIO</span>)<br></code></pre></td></tr></table></figure>
+<p>由于 <code>App</code> 是新类型, 其需要重新实现 <code>Functor</code> 等 typeclass, 而不能像 <code>type</code> 一样用 <code>ReaderT</code> 等已经实现了的功能.</p>
+<p>这种写法的好处在于有强类型安全, 且可维护性更高.</p>
+<h1 id="Functional-Dependencies"><a href="#Functional-Dependencies" class="headerlink" title="Functional Dependencies"></a>Functional Dependencies</h1><p>Functional Dependencies 通常用在有多个类型参数的 typeclass 上, 其核心是: 通过一个参数类型来唯一确定另一个参数类型.</p>
+<p>语法为:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-type">ClassName</span> a b | a -&gt; b <span class="hljs-keyword">where</span></span> ...<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>|</code> 读作 “such that”</li>
+<li><code>a -&gt; b</code> 读作: 一旦 <code>a</code> 的类型确定了, 那么 <code>b</code> 的类型也就固定了 (此时就不是类型变量了, 是一个固定的类型)</li>
+</ul>
+<p>具体作用通过下面例子来说明, 假设我们要写一个通用的集合处理类 <code>Collection</code>, 其可以向容器 <code>c</code> 中插入元素 <code>e</code>:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-type">Collection</span> c e <span class="hljs-keyword">where</span></span><br>    insert :: e -&gt; c -&gt;<br></code></pre></td></tr></table></figure>
+
+<p>我们可以定义下面实例, 将 <code>Int</code> 插入到 <code>[Int]</code> 中:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">instance</span> <span class="hljs-type">Collection</span> [<span class="hljs-type">Int</span>] <span class="hljs-type">Int</span> <span class="hljs-keyword">where</span></span><br>    insert = (:)<br></code></pre></td></tr></table></figure>
+<p>此时:</p>
+<ul>
+<li>容器 <code>c</code> 是 <code>[Int]</code></li>
+<li>元素类型 <code>e</code> 是 <code>Int</code></li>
+</ul>
+<p>到这里还没有任何问题, 此时我们还能定义下面实例:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">instance</span> <span class="hljs-type">Collection</span> [<span class="hljs-type">Int</span>] <span class="hljs-type">Double</span> <span class="hljs-keyword">where</span></span><br>    insert d list = list<br></code></pre></td></tr></table></figure>
+<ul>
+<li>如果向 <code>[Int]</code> 插入一个 <code>Double</code>, 则将其忽略, 这里也是正确的</li>
+</ul>
+<p>但是在调用如 <code>insert 5 [1,2,3]</code> 时, 由于 <code>5 :: Num a =&gt; a</code>, 也就是 <code>5</code> 既可以是 <code>Int</code>, 也可以是 <code>Double</code>, 此时编译器就会陷入歧义, 不知道调用哪个.</p>
+<p>假如在定义 <code>Collection</code> typeclass 的时候用 functional dependencies:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-type">Collection</span> c e | c -&gt; e <span class="hljs-keyword">where</span></span><br></code></pre></td></tr></table></figure>
+
+<p>当我们定义了:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">instance</span> <span class="hljs-type">Collection</span> [<span class="hljs-type">Int</span>] <span class="hljs-type">Int</span> <span class="hljs-keyword">where</span></span><br></code></pre></td></tr></table></figure>
+
+<p>之后, 编译器就知道了, 如果看到 <code>c</code> 为 <code>[Int]</code>, 那么 <code>e</code> 只能是 <code>Int</code>. 因此, 此时如果还想定义:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">instance</span> <span class="hljs-type">Collection</span> [<span class="hljs-type">Int</span>] <span class="hljs-type">Double</span> <span class="hljs-keyword">where</span></span><br></code></pre></td></tr></table></figure>
+
+<p>就不行了, 因为根据前一个定义, <code>e</code> 固定是 <code>Int</code> 了, 不能再声明一个 <code>e</code> 为 <code>Double</code> 的 instance.</p>
+<p>相当于让 <code>c</code> 与 <code>e</code> 之间有一对一的映射. 当逻辑上允许 <code>c</code> 与 <code>e</code> 有一对多的映射时, 则不需要考虑 functional dependencies.</p>
+<h1 id="Builder"><a href="#Builder" class="headerlink" title="Builder"></a>Builder</h1><p><a target="_blank" rel="noopener" href="https://hackage-content.haskell.org/package/bytestring-0.12.2.0/docs/Data-ByteString-Builder.html#t:Builder">Hackage Builder 文档</a></p>
+<p><code>Data.ByteString.Builder</code> 用于高效构建 sequences of bytes from smaller parts. 其提供了 $O(1)$ 效率的 concatentation 操作以及对 <code>Chars</code>, <code>Ints</code> 等标准 Haskell values 的高效 encoding 方法. <code>Builder</code> 实现了 <code>Monoids</code>, 因此可以用 <code>&lt;&gt;</code>, <code>mconcat</code>, <code>mappend</code> 等进行拼接.</p>
+<p>很多 Haskell value 转为 Builder 的函数就不在下面列出了, 可以查看文档, 这里只列出一部分.</p>
+<h2 id="转换为-LazyByteString"><a href="#转换为-LazyByteString" class="headerlink" title="转换为 LazyByteString"></a>转换为 LazyByteString</h2><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">toLazyByteString</span> :: <span class="hljs-type">Builder</span> -&gt; <span class="hljs-type">LazyByteString</span><br></code></pre></td></tr></table></figure>
+
+<p>通常会用 <code>toLazyByteString</code> 将 <code>Builder</code> 转为 <code>LazyByteString</code> 之后再使用.</p>
+<p>而打印 <code>LazyByteString</code> 需要用到:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-keyword">import</span> Data.ByteString.Lazy.Char8 (<span class="hljs-title">putStrLn</span>)<br></code></pre></td></tr></table></figure>
+
+<p>或者用 <code>hPutBuilder</code>.</p>
+<h2 id="将-Builder-的内容输出到-Handle"><a href="#将-Builder-的内容输出到-Handle" class="headerlink" title="将 Builder 的内容输出到 Handle"></a>将 Builder 的内容输出到 Handle</h2><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">hPutBuilder</span> :: <span class="hljs-type">Handle</span> -&gt; <span class="hljs-type">Builder</span> -&gt; <span class="hljs-type">IO</span> ()<br></code></pre></td></tr></table></figure>
+
+<p>通常要用 <code>hSetBinaryMode</code> 将一个 <code>Handle</code> 设置为 binary mode, 然后用 <code>hSetBuffering</code> 设置为 <code>BlockBuffering</code>.</p>
+<h2 id="将-Builder-的内容写入文件"><a href="#将-Builder-的内容写入文件" class="headerlink" title="将 Builder 的内容写入文件"></a>将 Builder 的内容写入文件</h2><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">writeFile</span> :: <span class="hljs-type">FilePath</span> -&gt; <span class="hljs-type">Builder</span> -&gt; <span class="hljs-type">IO</span> ()<br></code></pre></td></tr></table></figure>
+
+<h2 id="将-StrictByteString-转为-Builder"><a href="#将-StrictByteString-转为-Builder" class="headerlink" title="将 StrictByteString 转为 Builder"></a>将 StrictByteString 转为 Builder</h2><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">byteString</span> :: <span class="hljs-type">StrictByteString</span> -&gt; <span class="hljs-type">Builder</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="将-LazyByteString-转为-Builder"><a href="#将-LazyByteString-转为-Builder" class="headerlink" title="将 LazyByteString 转为 Builder"></a>将 LazyByteString 转为 Builder</h2><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">lazyByteString</span> :: <span class="hljs-type">LazyByteString</span> -&gt; <span class="hljs-type">Builder</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="将单个-signed-byte-转为-Builder"><a href="#将单个-signed-byte-转为-Builder" class="headerlink" title="将单个 signed byte 转为 Builder"></a>将单个 signed byte 转为 Builder</h2><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">int8</span> :: int8 -&gt; <span class="hljs-type">Builder</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="将单个-unsigned-byte-转为-Builder"><a href="#将单个-unsigned-byte-转为-Builder" class="headerlink" title="将单个 unsigned byte 转为 Builder"></a>将单个 unsigned byte 转为 Builder</h2><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">word8</span> :: <span class="hljs-type">Word8</span> -&gt; <span class="hljs-type">Builder</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="将-UTF-8-字符转为-Builder"><a href="#将-UTF-8-字符转为-Builder" class="headerlink" title="将 UTF-8 字符转为 Builder"></a>将 UTF-8 字符转为 Builder</h2><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">charUtf8</span> :: <span class="hljs-type">Char</span> -&gt; <span class="hljs-type">Builder</span><br><span class="hljs-title">stringUtf8</span> :: <span class="hljs-type">String</span> -&gt; <span class="hljs-type">Builder</span><br><span class="hljs-title">floatDec</span> :: <span class="hljs-type">Float</span> -&gt; <span class="hljs-type">Builder</span><br><span class="hljs-title">doubleDec</span> :: <span class="hljs-type">Double</span> -&gt; <span class="hljs-type">Builder</span><br><span class="hljs-title">intDec</span> :: <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Builder</span><br></code></pre></td></tr></table></figure>
+
+<h1 id="Type-annotation-和-Type-application"><a href="#Type-annotation-和-Type-application" class="headerlink" title="Type annotation 和 Type application"></a>Type annotation 和 Type application</h1><p>Type annotation (类型注解), 用来给变量&#x2F;表达式标注类型, 而 Type application 语法是给多态函数显示传递类型参数.</p>
+<p>Type annotation 的示例:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">x</span> :: <span class="hljs-type">Int</span><br><span class="hljs-title">x</span> = <span class="hljs-number">3</span><br><br><span class="hljs-title">f</span> :: <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Bool</span><br><span class="hljs-title">f</span> x = x &gt; <span class="hljs-number">0</span><br><br><span class="hljs-title">floor</span> <span class="hljs-number">3.7</span> :: <span class="hljs-type">Int</span><br></code></pre></td></tr></table></figure>
+<p>其告诉编译器这个表达式的类型是什么.</p>
+<p>Type application 需要开启 <code>TypeApplications</code> 扩展, 比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">floor</span> :: <span class="hljs-keyword">forall</span> a b. (<span class="hljs-type">RealFrac</span> a, <span class="hljs-type">Integral</span> b) =&gt; a -&gt; b<br></code></pre></td></tr></table></figure>
+
+<p>这里有两个类型参数 <code>a</code> 和 <code>b</code>, 可以用 type application 语法手动为类型参数绑定一个类型:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">floor</span> @<span class="hljs-type">Double</span><br></code></pre></td></tr></table></figure>
+
+<p>这里 <code>@Double</code> 绑定的顺序就是 <code>forall</code> 后面的定义顺序, 因此这里是 <code>a</code>, 也就是 <code>floor</code> 的输入需要是一个 <code>Double</code>. 此时类型签名变为了:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haksell">floor forall b. Integral b =&gt; Double -&gt; b<br></code></pre></td></tr></table></figure>
+
+<h1 id="quot-和-div-的区别"><a href="#quot-和-div-的区别" class="headerlink" title="quot 和 div 的区别"></a>quot 和 div 的区别</h1><p><code>quot</code> (quotient) 和 <code>div</code> (division) 都是整数除法运算符, 区别主要在负数的处理上:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">quot</span> :: <span class="hljs-type">Integral</span> a =&gt; a -&gt; a -&gt; a<br><span class="hljs-title">div</span>  :: <span class="hljs-type">Integral</span> a =&gt; a -&gt; a -&gt; a<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>quot</code> 是向 <code>0</code> 取整, 即直接截断小数位置, 比如 <code>-2.5</code> 截断为 <code>-2</code></li>
+<li><code>div</code> 是向下取整, 比如 <code>-2.5</code> 取整为 <code>-3</code></li>
+</ul>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">ghci&gt; (-7) `quot` 3<br>-2<br>ghci&gt; (-7) `div` 3<br>-3<br></code></pre></td></tr></table></figure>
+
+<h1 id="转换为-List"><a href="#转换为-List" class="headerlink" title="转换为 List"></a>转换为 List</h1><p>比如 <code>Data.Sequence</code> 中没有实现 <code>toList</code>, 但 <code>Seq</code> 实现了 <code>Foldable</code>, 在 <code>Data.Foldable</code> 中有:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">toList</span> :: <span class="hljs-type">Foldable</span> t =&gt; t a -&gt; [a]<br></code></pre></td></tr></table></figure>
+
+<h1 id="Monad-小技巧"><a href="#Monad-小技巧" class="headerlink" title="Monad 小技巧"></a>Monad 小技巧</h1><p>如果实现了一个:</p>
 <figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">doSomething</span> :: a -&gt; <span class="hljs-type">Maybe</span> b<br></code></pre></td></tr></table></figure>
 
 <p>的操作, 不妨将其改为:</p>

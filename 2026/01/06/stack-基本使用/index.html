@@ -26,7 +26,7 @@
 <meta property="og:image" content="http://example.com/img/stack-yaml-to-cabal-example.png">
 <meta property="og:image" content="http://example.com/img/stack-how-it-work.png">
 <meta property="article:published_time" content="2026-01-06T12:21:38.000Z">
-<meta property="article:modified_time" content="2026-01-06T13:09:52.422Z">
+<meta property="article:modified_time" content="2026-04-09T02:10:32.976Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/stack-yaml-to-cabal-example.png">
@@ -440,7 +440,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3.8k 字
+          5.6k 字
         
       </span>
     
@@ -451,7 +451,7 @@ path.outline_glyph {
         
         
         
-          32 分钟
+          47 分钟
         
       </span>
     
@@ -540,7 +540,17 @@ path.outline_glyph {
 <h2 id="安装-package"><a href="#安装-package" class="headerlink" title="安装 package"></a>安装 package</h2><p>同样用 <code>install</code> 子命令:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">stack install &lt;package-name&gt;<br></code></pre></td></tr></table></figure>
 
+<h1 id="stack-和代理环境变量"><a href="#stack-和代理环境变量" class="headerlink" title="stack 和代理环境变量"></a>stack 和代理环境变量</h1><p>如果代理变量设置为:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">export</span> https_proxy=https://127.0.0.1:20171<br><span class="hljs-built_in">export</span> http_proxy=http://127.0.0.1:20171<br><span class="hljs-built_in">export</span> all_proxy=socks://127.0.0.1:20171<br></code></pre></td></tr></table></figure>
 
+<p>那么会报错:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ stack init<br>Looking <span class="hljs-keyword">for</span> Cabal or package.yaml files to use to initialise Stack<span class="hljs-string">&#x27;s project-level YAML configuration file.</span><br><span class="hljs-string"></span><br><span class="hljs-string">Using the Cabal packages:</span><br><span class="hljs-string">* ./</span><br><span class="hljs-string"></span><br><span class="hljs-string"></span><br><span class="hljs-string">Error: [S-8332]</span><br><span class="hljs-string">       Stack failed to create project-level configuration file, as it was unable to download the index of available snapshots.</span><br><span class="hljs-string"></span><br><span class="hljs-string">       This sometimes happens because Certificate Authorities are missing on your system. You can try the Stack command again or manually create the configuration file. For</span><br><span class="hljs-string">       help about the content of Stack&#x27;</span>s configuration files, see (<span class="hljs-keyword">for</span> the most recent release of Stack) http://docs.haskellstack.org/en/stable/configure/yaml/.<br><br>       While downloading the snapshot index, Stack encountered the following error:<br><br>       HttpExceptionContentWrapper &#123;unHttpExceptionContentWrapper = InvalidProxyEnvironmentVariable <span class="hljs-string">&quot;https_proxy&quot;</span> <span class="hljs-string">&quot;https://127.0.0.1:20171&quot;</span>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>因为在 Haskell 的某些网络库实现中, <code>https_proxy</code> 环境变量不能包含协议前缀 <code>https://</code>, 因此可以这样设置:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">export</span> https_proxy=127.0.0.1:20171<br><span class="hljs-built_in">export</span> http_proxy=127.0.0.1:20171<br><span class="hljs-built_in">export</span> all_proxy=127.0.0.1:20171<br></code></pre></td></tr></table></figure>
+
+<p>之后重新 <code>init</code> 则不会报错:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ stack init<br>Looking <span class="hljs-keyword">for</span> Cabal or package.yaml files to use to initialise Stack<span class="hljs-string">&#x27;s project-level YAML configuration file.</span><br><span class="hljs-string"></span><br><span class="hljs-string">Using the Cabal packages:</span><br><span class="hljs-string">* ./</span><br><span class="hljs-string"></span><br><span class="hljs-string">Selecting the best among 14 snapshots...</span><br><span class="hljs-string"></span><br><span class="hljs-string"></span><br><span class="hljs-string">Note: Matches https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/24/36.yaml</span><br><span class="hljs-string"></span><br><span class="hljs-string">Selected the snapshot https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/24/36.yaml.</span><br><span class="hljs-string">Initialising Stack&#x27;</span>s project-level configuration file using snapshot https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/24/36.yaml.<br>Considered 1 user package.<br>Writing configuration to stack.yaml.<br>Stack<span class="hljs-string">&#x27;s project-level configuration file has been initialised.</span><br></code></pre></td></tr></table></figure>
 
                 
               </div>

@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="Haskell wiki, all about monad 介绍Monad typeclass 是 Haskell 中比较难的一部分, 用来描述 “计算的组合”, 这样说可能也不太好理解 (等学一遍 category theory 可能就能有所理解了吧). 这篇 Blog 先用来积累一些 Hasekell 中内置的 Monad 操作, 以及实现了 Monad 的类型. 后续补充理解性质的内容. P">
+    <meta name="description" content="Haskell wiki, all about monadmmhaskell monad tutorial 介绍Monad typeclass 是 Haskell 中比较难的一部分, 用来描述 “计算的组合”, 这样说可能也不太好理解 (等学一遍 category theory 可能就能有所理解了吧). 这篇 Blog 先用来积累一些 Hasekell 中内置的 Monad 操作, 以及实现了 M">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Haskell-Monad-积累">
 <meta property="og:url" content="http://example.com/2026/04/08/Haskell-Monad-%E7%A7%AF%E7%B4%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="Haskell wiki, all about monad 介绍Monad typeclass 是 Haskell 中比较难的一部分, 用来描述 “计算的组合”, 这样说可能也不太好理解 (等学一遍 category theory 可能就能有所理解了吧). 这篇 Blog 先用来积累一些 Hasekell 中内置的 Monad 操作, 以及实现了 Monad 的类型. 后续补充理解性质的内容. P">
+<meta property="og:description" content="Haskell wiki, all about monadmmhaskell monad tutorial 介绍Monad typeclass 是 Haskell 中比较难的一部分, 用来描述 “计算的组合”, 这样说可能也不太好理解 (等学一遍 category theory 可能就能有所理解了吧). 这篇 Blog 先用来积累一些 Hasekell 中内置的 Monad 操作, 以及实现了 M">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-04-08T02:59:30.000Z">
-<meta property="article:modified_time" content="2026-04-08T03:15:27.090Z">
+<meta property="article:modified_time" content="2026-04-16T02:12:45.085Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -437,7 +437,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          996 字
+          16k 字
         
       </span>
     
@@ -448,7 +448,7 @@ path.outline_glyph {
         
         
         
-          9 分钟
+          135 分钟
         
       </span>
     
@@ -491,8 +491,18 @@ path.outline_glyph {
             
               <div class="markdown-body">
                 
-                <p><a target="_blank" rel="noopener" href="https://wiki.haskell.org/index.php?title=All_About_Monads">Haskell wiki, all about monad</a></p>
+                <p><a target="_blank" rel="noopener" href="https://wiki.haskell.org/index.php?title=All_About_Monads">Haskell wiki, all about monad</a><br><a target="_blank" rel="noopener" href="https://mmhaskell.com/monads">mmhaskell monad tutorial</a></p>
 <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>Monad typeclass 是 Haskell 中比较难的一部分, 用来描述 “计算的组合”, 这样说可能也不太好理解 (等学一遍 category theory 可能就能有所理解了吧). 这篇 Blog 先用来积累一些 Hasekell 中内置的 Monad 操作, 以及实现了 Monad 的类型. 后续补充理解性质的内容.</p>
+<h1 id="计算组合的理解"><a href="#计算组合的理解" class="headerlink" title="计算组合的理解"></a>计算组合的理解</h1><p>只有 type constructor 能够被声明为 Monad 的 instance, 如果 type constructor 还固定了一个类型, 那么这个类型就可以算作 context, 能够在 Monad 计算中使用. 比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">instance</span> <span class="hljs-type">Monad</span> (<span class="hljs-type">State</span> <span class="hljs-title">s</span>) <span class="hljs-keyword">where</span></span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>这里的 <code>s</code> 就是 State monad 的重要 context, 并且在 <code>&gt;&gt;=</code> 等运算符中都是隐式传递的</li>
+</ul>
+<p>需要非常注意, Monad 本身只是定义一个计算而已, 比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">sumR</span> :: <span class="hljs-type">Reader</span> <span class="hljs-type">Config</span> <span class="hljs-type">Int</span><br><span class="hljs-title">sumR</span> = <span class="hljs-keyword">do</span><br>    x &lt;- foo<br>    y &lt;- bar<br>    z &lt;- baz<br>    return (x + y + z)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>这里共享的 <code>Config</code> 是什么呢? 这里还没有传递, 只是定义了传递之后的组合操作</li>
+</ul>
 <h1 id="Prelude-中提供的处理函数"><a href="#Prelude-中提供的处理函数" class="headerlink" title="Prelude 中提供的处理函数"></a>Prelude 中提供的处理函数</h1><h2 id="sequence"><a href="#sequence" class="headerlink" title="sequence"></a>sequence</h2><p><code>sequence</code> 用于将所有元素为 monad 的 list 中每个 monad 包裹的值取出来形成一个 list, 然后再用 monad 包裹:</p>
 <figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">sequence</span> :: <span class="hljs-type">Monad</span> m =&gt; [m a] -&gt; m [a]<br><span class="hljs-title">sequence</span> = foldr mcons (return [])<br>    <span class="hljs-keyword">where</span> mcons p q = p &gt;&gt;= \x -&gt; q &gt;&gt;= \y -&gt; return (p:q)<br></code></pre></td></tr></table></figure>
 
@@ -504,6 +514,336 @@ path.outline_glyph {
 
 <p>编译输出:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ ghc sequence<br>$ ./sequence  <br>Enter your Name  : Jie<br>Enter your age   : 23<br>Enter your gender: male<br>[<span class="hljs-string">&quot;Jie&quot;</span>,<span class="hljs-string">&quot;23&quot;</span>,<span class="hljs-string">&quot;male&quot;</span>]<br></code></pre></td></tr></table></figure>
+
+<h2 id="mapM"><a href="#mapM" class="headerlink" title="mapM"></a>mapM</h2><p><code>mapM</code> 用于将一个列表的元素分别经 <code>a -&gt; m b</code> 处理后, 收集结果到列表中, 最后用 monad 包裹:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">mapM</span> :: (a -&gt; m b) -&gt; [a] -&gt; m [b]<br><span class="hljs-title">mapM</span> f <span class="hljs-keyword">as</span> = sequence (map f <span class="hljs-keyword">as</span>)<br></code></pre></td></tr></table></figure>
+
+<p>同样有舍弃结果的版本:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">mapM_</span> :: (a -&gt; m b) -&gt; [a] -&gt; m ()<br><span class="hljs-title">mapM_</span> f <span class="hljs-keyword">as</span> = sequence_ (map f <span class="hljs-keyword">as</span>)<br></code></pre></td></tr></table></figure>
+
+<p>几个简单的例子就是, 分别打印列表中的元素:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-keyword">module</span> Main (<span class="hljs-title">main</span>) <span class="hljs-keyword">where</span><br><br><span class="hljs-keyword">import</span> Control.Monad (<span class="hljs-title">mapM</span>)<br><br><span class="hljs-title">main</span> :: <span class="hljs-type">IO</span> ()<br><span class="hljs-title">main</span> = <span class="hljs-keyword">do</span><br>    <span class="hljs-keyword">let</span> names = [<span class="hljs-string">&quot;jie&quot;</span>, <span class="hljs-string">&quot;orkarin&quot;</span>, <span class="hljs-string">&quot;kurisu&quot;</span>]<br>    mapM_ (print . (<span class="hljs-string">&quot;Hello &quot;</span>++)) names<br></code></pre></td></tr></table></figure>
+
+<p>编译运行为:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs haskell">$ ghc mapM<br>$ ./mapM    <br><span class="hljs-string">&quot;Hello jie&quot;</span><br><span class="hljs-string">&quot;Hello orkarin&quot;</span><br><span class="hljs-string">&quot;Hello kurisu&quot;</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="Reverse-binder"><a href="#Reverse-binder" class="headerlink" title="Reverse binder"></a>Reverse binder</h2><figure class="highlight livescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs livescript"><span class="hljs-function"><span class="hljs-params">(=&lt;&lt;)</span> :: <span class="hljs-title">Monad</span> <span class="hljs-title">m</span> =&gt; <span class="hljs-params">(a -&gt; m b)</span> -&gt;</span> m a -&gt; m b<br>f =&lt;&lt; x = x &gt;&gt;= f<br></code></pre></td></tr></table></figure>
+<p>也就是将计算放在左边, monad 放在右边.</p>
+<h1 id="Control-Monad-中提供的处理函数"><a href="#Control-Monad-中提供的处理函数" class="headerlink" title="Control.Monad 中提供的处理函数"></a>Control.Monad 中提供的处理函数</h1><p>这里说明下部分 <code>Control.Monad</code> 中提供的函数.</p>
+<h2 id="foldM"><a href="#foldM" class="headerlink" title="foldM"></a>foldM</h2><p><code>foldM</code> 是 <code>foldl</code> 的 monadic 版本:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">foldM</span> :: <span class="hljs-type">Monad</span> m =&gt; (a -&gt; b -&gt; m a) -&gt; a -&gt; [b] -&gt; m a<br><span class="hljs-title">foldM</span> f a []     = return a<br><span class="hljs-title">foldM</span> f a (x:xs) = f a x &gt;&gt;= \acc -&gt; foldM f acc xs<br></code></pre></td></tr></table></figure>
+
+<h2 id="filterM"><a href="#filterM" class="headerlink" title="filterM"></a>filterM</h2><p><code>filterM</code> 是 <code>filter</code> 的 monadic 版本:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">filterM</span> :: <span class="hljs-type">Monad</span> m =&gt; (a -&gt; m <span class="hljs-type">Bool</span>) -&gt; [a] -&gt; m [a]<br><span class="hljs-title">filterM</span> p [] = return []<br><span class="hljs-title">filterM</span> p (x:xs) = p x &gt;&gt;= \b -&gt;<br>  <span class="hljs-keyword">if</span> b<br>    <span class="hljs-keyword">then</span> x:filterM p xs<br>    <span class="hljs-keyword">else</span> filterM p xs<br></code></pre></td></tr></table></figure>
+
+<p>比如, <code>doesDirectoryExist :: FilePath -&gt; IO Bool</code>, 给定一个 <code>[FilePath]</code>, 取出里面所有的 directory:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-keyword">module</span> Main (<span class="hljs-title">main</span>) <span class="hljs-keyword">where</span><br><br><span class="hljs-keyword">import</span> System.Environment (<span class="hljs-title">getArgs</span>)<br><span class="hljs-keyword">import</span> System.Directory (<span class="hljs-title">doesDirectoryExist</span>)<br><span class="hljs-keyword">import</span> Control.Monad (<span class="hljs-title">filterM</span>)<br><br><span class="hljs-title">main</span> :: <span class="hljs-type">IO</span> ()<br><span class="hljs-title">main</span> = getArgs &gt;&gt;= \pathes -&gt;<br>  filterM doesDirectoryExist pathes &gt;&gt;= \dirs -&gt;<br>  mapM_ print dirs<br></code></pre></td></tr></table></figure>
+
+<p>编译运行:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs haskell">$ ghc filterM<br>$ ./filterM ffi hello exercism<br><span class="hljs-string">&quot;ffi&quot;</span><br><span class="hljs-string">&quot;exercism&quot;</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="zipWithM"><a href="#zipWithM" class="headerlink" title="zipWithM"></a>zipWithM</h2><p><code>zipWithM</code> 是 <code>zipWith</code> 的 monadic 版本, <code>zipWithM_</code> 会丢弃结果:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">zipWithM</span> :: (<span class="hljs-type">Monad</span> m) =&gt; (a -&gt; b -&gt; m c) -&gt; [a] -&gt; [b] -&gt; m [c]<br><span class="hljs-title">zipWithM</span>  f xs ys = sequence (zipWith f xs ys)<br><br><span class="hljs-title">zipWithM_</span> :: (<span class="hljs-type">Monad</span> m) =&gt; (a -&gt; b -&gt; m c) -&gt; [a] -&gt; [b] -&gt; m [c]<br><span class="hljs-title">zipWithM_</span> f xs ys = sequence_ (zipWith f xs ys)<br></code></pre></td></tr></table></figure>
+
+<h2 id="when"><a href="#when" class="headerlink" title="when"></a>when</h2><p><code>when</code> 函数, 当 <code>Bool</code> 为 <code>True</code> 时执行 monad 中的计算:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">when</span> :: (<span class="hljs-type">Monad</span> m) =&gt; <span class="hljs-type">Bool</span> -&gt; m () -&gt; m ()<br><span class="hljs-title">when</span> p s = <span class="hljs-keyword">if</span> p <span class="hljs-keyword">then</span> s <span class="hljs-keyword">else</span> return ()<br></code></pre></td></tr></table></figure>
+
+<h2 id="unless"><a href="#unless" class="headerlink" title="unless"></a>unless</h2><p><code>unless</code> 函数, 当 <code>Bool</code> 为 <code>False</code> 时执行 monad 中的计算:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskel">unless :: (Monad m) =&gt; Bool -&gt; m () -&gt; m ()<br>unless p s = when (not p) s<br></code></pre></td></tr></table></figure>
+
+<h2 id="liftM"><a href="#liftM" class="headerlink" title="liftM"></a>liftM</h2><p><code>liftM</code> 将一个接受一个参数的普通函数 lift 到 monad 上下文中:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">liftM</span> :: (<span class="hljs-type">Monad</span> m) =&gt; (a -&gt; b) -&gt; (m a -&gt; m b)<br><span class="hljs-title">liftM</span> f = \a -&gt; <span class="hljs-keyword">do</span> &#123; a&#x27; &lt;- a; return (f a&#x27;) &#125;<br></code></pre></td></tr></table></figure>
+
+<p><code>liftM2</code> 将一个接受两个参数的普通函数 lift 到 monad 上下文中:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">liftM2</span> :: (<span class="hljs-type">Monad</span> m) =&gt; (a -&gt; b -&gt; c) -&gt; (m a -&gt; m b -&gt; m c)<br><span class="hljs-title">liftM2</span> f = \a b -&gt; <span class="hljs-keyword">do</span> &#123; a&#x27; &lt;- a; b&#x27; &lt;- b; return (f a&#x27; b&#x27;) &#125;<br></code></pre></td></tr></table></figure>
+
+<p>一直到 <code>liftM5</code> 都有定义.</p>
+<p>我们知道, <code>[]</code> monad 中取列表值进行操作相当于对所有可能的组合进行操作并收集到结果中, 比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-keyword">module</span> Main (<span class="hljs-title">main</span>) <span class="hljs-keyword">where</span><br><br><span class="hljs-title">allPlusCombination</span> :: [<span class="hljs-type">Int</span>] -&gt; [<span class="hljs-type">Int</span>] -&gt; [<span class="hljs-type">Int</span>]<br><span class="hljs-title">allPlusCombination</span> xs ys = <span class="hljs-keyword">do</span><br>  x &lt;- xs<br>  y &lt;- ys<br>  return (x+y)<br><br><span class="hljs-title">main</span> :: <span class="hljs-type">IO</span> ()<br><span class="hljs-title">main</span> = print $ allPlusCombination [<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>] [-<span class="hljs-number">1</span>,-<span class="hljs-number">2</span>,-<span class="hljs-number">3</span>] <br></code></pre></td></tr></table></figure>
+
+<p>编译运行:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ ghc list<br>$ ./list  <br>[0,-1,-2,1,0,-1,2,1,0]<br></code></pre></td></tr></table></figure>
+
+<p>可以用 <code>liftM</code> 实现一个函数, 让指定函数作用于 <code>[[a]]</code> 中元素的所有组合中:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">allCombinations</span> :: (a -&gt; a -&gt; a) -&gt; [[a]] -&gt; [a]<br><span class="hljs-title">allCombinations</span> fn [] = []<br><span class="hljs-title">allCombinations</span> fn (l:ls) = foldl (liftM2 fn) l ls<br></code></pre></td></tr></table></figure>
+
+<h2 id="针对-MonadPlus-的操作"><a href="#针对-MonadPlus-的操作" class="headerlink" title="针对 MonadPlus 的操作"></a>针对 MonadPlus 的操作</h2><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">msum</span> :: <span class="hljs-type">MonadPlus</span> m =&gt; [m a] -&gt; m a<br><span class="hljs-title">msum</span> = foldr mplus mzero xs<br></code></pre></td></tr></table></figure>
+<p>比如在 List monad 中, <code>msum</code> 就等价于 <code>concat</code>.</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">guard</span> :: <span class="hljs-type">MonadPlus</span> m =&gt; <span class="hljs-type">Bool</span> -&gt; m ()<br><span class="hljs-title">guard</span> p = <span class="hljs-keyword">if</span> p <span class="hljs-keyword">then</span> return () <span class="hljs-keyword">else</span> mzero<br></code></pre></td></tr></table></figure>
+
+<h1 id="Writer-Monad"><a href="#Writer-Monad" class="headerlink" title="Writer Monad"></a>Writer Monad</h1><p><code>Writer</code> monad 定义在 <code>Control.Monad.Writer</code> 中, 表示能追加追加附带信息的计算.</p>
+<p>可以将其简化实现如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">newtype</span> <span class="hljs-type">Writer</span> w a = <span class="hljs-type">Writer</span> &#123; <span class="hljs-title">runWriter</span> :: (<span class="hljs-title">a</span>, <span class="hljs-title">w</span>) &#125;</span><br><span class="hljs-class"></span><br><span class="hljs-class"><span class="hljs-keyword">instance</span> (<span class="hljs-type">Monoid</span> <span class="hljs-title">w</span>) =&gt; <span class="hljs-type">Monad</span> (<span class="hljs-type">Writer</span> <span class="hljs-title">w</span>) <span class="hljs-keyword">where</span></span><br>  return x = <span class="hljs-type">Writer</span> (x, mempty)<br>  (<span class="hljs-type">Writer</span> (x, v)) &gt;&gt;= f =<br>    <span class="hljs-keyword">let</span> (<span class="hljs-type">Writer</span> (y, v&#x27;)) = f x<br>    <span class="hljs-keyword">in</span> <span class="hljs-type">Writer</span> (y, v `mappend` v&#x27;)<br></code></pre></td></tr></table></figure>
+
+<p>下面是几个取值的函数:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">runWriter</span> :: <span class="hljs-type">Writer</span> w a -&gt; (a, w)<br></code></pre></td></tr></table></figure>
+<ul>
+<li>返回 <code>(result, output)</code> 的二元组</li>
+</ul>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">execWriter</span> :: <span class="hljs-type">Writer</span> w a -&gt; w<br></code></pre></td></tr></table></figure>
+<ul>
+<li>只返回累积的 output, 等价于 <code>snd (runWriter m)</code></li>
+</ul>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">mapWriter</span> :: ((a, w) -&gt; (b, w&#x27;)) -&gt; <span class="hljs-type">Writer</span> w a -&gt; <span class="hljs-type">Writer</span> w&#x27; b<br></code></pre></td></tr></table></figure>
+<ul>
+<li>用函数将 <code>Writer w a</code> 映射到 <code>Writer w&#39; b</code> 中</li>
+</ul>
+<p>一些常用操作如下.</p>
+<h2 id="构建-Writer-monad"><a href="#构建-Writer-monad" class="headerlink" title="构建 Writer monad"></a>构建 Writer monad</h2><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">writer</span> :: (a, w) -&gt; m a<br></code></pre></td></tr></table></figure>
+
+<h2 id="将附加信息添加到-Writer-monad-中"><a href="#将附加信息添加到-Writer-monad-中" class="headerlink" title="将附加信息添加到 Writer monad 中"></a>将附加信息添加到 Writer monad 中</h2><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">tell</span> :: w -&gt; m ()<br></code></pre></td></tr></table></figure>
+
+<h2 id="读取-Writer-monad-信息"><a href="#读取-Writer-monad-信息" class="headerlink" title="读取 Writer monad 信息"></a>读取 Writer monad 信息</h2><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">listen</span> :: m a -&gt; m (a, w)<br></code></pre></td></tr></table></figure>
+
+<p>比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">stepWithListen</span> :: <span class="hljs-type">Writer</span> [<span class="hljs-type">String</span>] <span class="hljs-type">Int</span><br><span class="hljs-title">stepWithListen</span> = <span class="hljs-keyword">do</span><br>    tell [<span class="hljs-string">&quot;Start calculation&quot;</span>]<br>    r &lt;- listen step1<br>    <span class="hljs-keyword">let</span> (value, logs) = r<br>    tell [<span class="hljs-string">&quot;Current logs so far: &quot;</span> ++ show logs]<br>    return value<br></code></pre></td></tr></table></figure>
+
+<h2 id="根据日志调整行为"><a href="#根据日志调整行为" class="headerlink" title="根据日志调整行为"></a>根据日志调整行为</h2><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">pass</span> :: m (a, w -&gt; w) -&gt; m a<br></code></pre></td></tr></table></figure>
+
+<p>比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">conditionalLog</span> :: <span class="hljs-type">Writer</span> [<span class="hljs-type">String</span>] <span class="hljs-type">Int</span><br><span class="hljs-title">conditionalLog</span> = <span class="hljs-keyword">do</span><br>    tell [<span class="hljs-string">&quot;Step A&quot;</span>]<br>    tell [<span class="hljs-string">&quot;Step B&quot;</span>]<br><br>    <span class="hljs-comment">-- 用 pass 修改日志</span><br>    pass $ <span class="hljs-keyword">do</span><br>        current &lt;- listen (tell [<span class="hljs-string">&quot;Internal step&quot;</span>])<br>        <span class="hljs-keyword">let</span> (_, logs) = current<br>            warning =<br>                <span class="hljs-keyword">if</span> length logs &gt; <span class="hljs-number">2</span><br>                    <span class="hljs-keyword">then</span> [<span class="hljs-string">&quot;⚠ Too many steps!&quot;</span>]<br>                    <span class="hljs-keyword">else</span> []<br>        return ((), const (logs &lt;&gt; warning))<br></code></pre></td></tr></table></figure>
+
+<h2 id="示例-记录计算过程"><a href="#示例-记录计算过程" class="headerlink" title="示例, 记录计算过程"></a>示例, 记录计算过程</h2><p>使用 <code>Writer</code> monad 的一个好处在于, <code>&gt;&gt;=</code> 中用 <code>mappend</code> 将多个 monad 的附加信息拼接在了一起:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-keyword">module</span> Main (<span class="hljs-title">main</span>) <span class="hljs-keyword">where</span><br><br><span class="hljs-keyword">import</span> Control.Monad.Writer<br><span class="hljs-keyword">import</span> GHC.Base (<span class="hljs-title">undefined</span>)<br><br><span class="hljs-title">myCalculation</span> :: <span class="hljs-type">Writer</span> [<span class="hljs-type">String</span>] <span class="hljs-type">Int</span><br><span class="hljs-title">myCalculation</span> = return <span class="hljs-number">0</span> &gt;&gt;= addInt <span class="hljs-number">10</span> &gt;&gt;= incInt &gt;&gt;= mulInt <span class="hljs-number">5</span> &gt;&gt;= \r -&gt; return r<br><br><span class="hljs-title">incInt</span> :: <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Writer</span> [<span class="hljs-type">String</span>] <span class="hljs-type">Int</span><br><span class="hljs-title">incInt</span> x  = <span class="hljs-keyword">do</span><br>  <span class="hljs-keyword">let</span> r = x + <span class="hljs-number">1</span><br>  tell [(show x) ++ <span class="hljs-string">&quot; inc 1 = &quot;</span> ++ (show r)]<br>  return r<br><br><span class="hljs-title">addInt</span> :: <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Writer</span> [<span class="hljs-type">String</span>] <span class="hljs-type">Int</span><br><span class="hljs-title">addInt</span> x a = <span class="hljs-keyword">do</span><br>  <span class="hljs-keyword">let</span> r = x + a<br>  tell [(show a) ++ <span class="hljs-string">&quot; add &quot;</span> ++ (show x) ++ <span class="hljs-string">&quot; = &quot;</span> ++ (show r)]<br>  return r<br><br><span class="hljs-title">mulInt</span> :: <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Writer</span> [<span class="hljs-type">String</span>] <span class="hljs-type">Int</span><br><span class="hljs-title">mulInt</span> x a = <span class="hljs-keyword">do</span><br>  <span class="hljs-keyword">let</span> r = x * a<br>  tell [(show a) ++ <span class="hljs-string">&quot; mul &quot;</span> ++ (show x) ++ <span class="hljs-string">&quot; = &quot;</span> ++ (show r)]<br>  return r<br><br><span class="hljs-title">main</span> :: <span class="hljs-type">IO</span> ()<br><span class="hljs-title">main</span> = print myCalculation<br></code></pre></td></tr></table></figure>
+
+
+<h1 id="Reader-Monad"><a href="#Reader-Monad" class="headerlink" title="Reader Monad"></a>Reader Monad</h1><p><code>Reader</code> monad 定义在 <code>Control.Monad.Reader</code> 中, 表示 “依赖共享环境 r 的计算”.</p>
+<p>定义如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">newtype</span> <span class="hljs-type">Reader</span> r a = <span class="hljs-type">Reader</span> &#123; <span class="hljs-title">runReader</span> :: <span class="hljs-title">r</span> -&gt; <span class="hljs-title">a</span> &#125;</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>r</code> 是接收的环境</li>
+<li><code>a</code> 是根据环境返回的结果</li>
+</ul>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">instance</span> <span class="hljs-type">Monad</span> (<span class="hljs-type">Reader</span> <span class="hljs-title">r</span>) <span class="hljs-keyword">where</span></span><br>    return x = <span class="hljs-type">Reader</span> $ \_ -&gt; x<br>    m &gt;&gt;= f  = <span class="hljs-type">Reader</span> $ \r -&gt;<br>        <span class="hljs-keyword">let</span> a = runReader m r<br>            nextReader = f a<br>        <span class="hljs-keyword">in</span> runReader nextReader r<br></code></pre></td></tr></table></figure>
+<p>从 <code>&gt;&gt;=</code> 的实现可以看到, 之所以叫共享环境, 是因为组合中传递的都是同一个 <code>r</code>.</p>
+<p>取出 Reader 中包裹的函数:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">runReader</span> :: <span class="hljs-type">Reader</span> r a -&gt; r -&gt; a<br></code></pre></td></tr></table></figure>
+
+<p>用函数映射一个 Reader 中包裹的值:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">mapReader</span> :: (a -&gt; b) -&gt; <span class="hljs-type">Reader</span> r a -&gt; <span class="hljs-type">Reader</span> r a<br></code></pre></td></tr></table></figure>
+
+<p>修改环境并执行:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">withReader</span> :: (r -&gt; r&#x27;) -&gt; <span class="hljs-type">Reader</span> r a -&gt; <span class="hljs-type">Reader</span> r&#x27; a<br></code></pre></td></tr></table></figure>
+
+<h2 id="读取环境"><a href="#读取环境" class="headerlink" title="读取环境"></a>读取环境</h2><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">ask</span> :: <span class="hljs-type">Reader</span> r r<br></code></pre></td></tr></table></figure>
+<p><code>ask</code> 将传来的环境原封不动返回.</p>
+<p>比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-keyword">module</span> Main (<span class="hljs-title">main</span>) <span class="hljs-keyword">where</span><br><br><span class="hljs-keyword">import</span> Control.Monad.Reader<br><br><span class="hljs-title">greet</span> :: <span class="hljs-type">Reader</span> <span class="hljs-type">String</span> [<span class="hljs-type">String</span>]<br><span class="hljs-title">greet</span> = <span class="hljs-keyword">do</span><br>  estr &lt;- ask<br>  return [ estr ++ name | name &lt;- [<span class="hljs-string">&quot;jie&quot;</span>, <span class="hljs-string">&quot;orkarin&quot;</span>, <span class="hljs-string">&quot;kurisu&quot;</span>]]<br><br><span class="hljs-title">main</span> :: <span class="hljs-type">IO</span> ()<br><span class="hljs-title">main</span> = print $ runReader greet <span class="hljs-string">&quot;Hello &quot;</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>Hello </code> 这个字符串作为环境传入了 <code>greet</code> 中</li>
+</ul>
+<h2 id="从环境中取部分内容"><a href="#从环境中取部分内容" class="headerlink" title="从环境中取部分内容"></a>从环境中取部分内容</h2><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">asks</span> :: (r -&gt; a) -&gt; <span class="hljs-type">Reader</span> r a<br></code></pre></td></tr></table></figure>
+<p><code>(r -&gt; a)</code> 这个函数就是接受一个环境, 返回一部分内容.</p>
+<h2 id="临时修改环境"><a href="#临时修改环境" class="headerlink" title="临时修改环境"></a>临时修改环境</h2><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">local</span> :: (r -&gt; r) -&gt; <span class="hljs-type">Reader</span> r a -&gt; <span class="hljs-type">Reader</span> r a<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>(r -&gt; r)</code> 是如何从一个环境得到另一个环境</li>
+<li>第一个 <code>Reader r a</code> 是要修改环境</li>
+<li>第二个 <code>Reader r a</code> 表示运行修改后的环境</li>
+</ul>
+<h2 id="MonadReader"><a href="#MonadReader" class="headerlink" title="MonadReader"></a>MonadReader</h2><p>将 Reader Monad 实现为一个 typeclass 就是 <code>MonadReader</code>:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-type">Monad</span> m =&gt; <span class="hljs-type">MonadReader</span> r (<span class="hljs-title">m</span> :: <span class="hljs-type">Type</span> -&gt; <span class="hljs-type">Type</span>) | m -&gt; r <span class="hljs-keyword">where</span></span><br>  ask    :: m r<br>  local  :: (r -&gt; r) -&gt; m a -&gt; m a<br>  reader :: (r -&gt; a) -&gt; m a<br></code></pre></td></tr></table></figure>
+<ul>
+<li>实现 <code>reader</code> 或者实现 <code>ask</code> 和 <code>local</code></li>
+</ul>
+<h1 id="Except-Monad"><a href="#Except-Monad" class="headerlink" title="Except Monad"></a>Except Monad</h1><p>Except Monad 描述可能会抛出异常的计算. 其定义了一套标准的方法, 可以在 “抛出” 错误并在后续流程中 “捕获” 错误, 而不需要手动解构 <code>Either</code> 或其他数据类型.</p>
+<p>注意区分 <code>ExceptT</code> 和 <code>throwError</code> with <code>Exception/SomeException</code> and <code>catch</code>. 后者是 GHC 内置的, 且需要包裹在 IO Monad 中使用.</p>
+<p>该 library 中的 <code>catching</code> 机制没法捕获 <code>Control.Exception</code> 中抛出的异常, 反之亦然.</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-type">Monad</span> m =&gt; <span class="hljs-type">MonadError</span> e (<span class="hljs-title">m</span> :: <span class="hljs-type">Type</span> -&gt; <span class="hljs-type">Type</span>) | m -&gt; e <span class="hljs-keyword">where</span></span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>e</code> 和 <code>m</code> 是两个类型参数. <code>e</code> 表示错误信息, <code>m</code> 代表容器类型</li>
+<li><code>m :: Type -&gt; Type</code> 表明 <code>m</code> 是一个类型构造器, 接受一个具体的类型, 返回一个类型</li>
+<li><code>| m -&gt; e</code> 是函数依赖, 其告诉编译器, 如果知道了 Monad <code>m</code>, 那么错误类型 <code>e</code> 就唯一确定了</li>
+</ul>
+<p><code>MonadError</code> 最重要的特性是, 当抛出错误时, 如调用 <code>throwError</code>, 计算就会停止; 然后链条中所有后续的 <code>&gt;&gt;=</code> (bind) 操作都会被跳过; 计算会直接跳转到最近的一个处理函数 (通常是 <code>catchError</code>).</p>
+<p>如果 <code>m</code> 是 <code>Either e</code>, 那么大部分情况其已经被实现为 <code>MonadError</code> 的 instance 了; 如果想自定义错误类型或用其他的 monad type constructor, 则需要手动定义.</p>
+<p>主要要实现下面两个方法:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">throwError</span> :: e -&gt; m a<br></code></pre></td></tr></table></figure>
+<p>其接收一个错误值, 并产生一个代表 “失败” 的计算.</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">catchError</span> :: m a -&gt; (e -&gt; m a) -&gt; m a<br></code></pre></td></tr></table></figure>
+<p>其接收一个可能失败的计算, 以及一个错误处理的函数. 如果第一个计算成功, 则返回结果; 如果失败, 则允许处理函数.</p>
+<p>比如这样使用:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">do</span> &#123; action1; action2; action3 &#125; `catchError` handler<br></code></pre></td></tr></table></figure>
+<p>在 <code>action</code> 中可以用 <code>throwError</code> 抛出错误</p>
+<p>下面列出一些常用的处理函数. 会看到 <code>Except</code> 这个类型, 其本质是 <code>Either</code> 的一层包装, 使其能够作为 <code>Monad</code> 运行:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">newtype</span> <span class="hljs-type">ExceptT</span> e (<span class="hljs-title">m</span> :: <span class="hljs-type">Type</span> -&gt; <span class="hljs-type">Type</span>) a</span><br><span class="hljs-class"><span class="hljs-keyword">type</span> <span class="hljs-type">Except</span> e a = <span class="hljs-type">ExceptT</span> e <span class="hljs-type">Identity</span> a</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>ExceptT</code> 给一个 Monad 添加错误处理能力, <code>e</code> 是错误类型</li>
+<li><code>Identity</code> 是最简单的 Monad, 只负责将值包裹起来</li>
+</ul>
+<h2 id="将-Either-包裹进-MonadError"><a href="#将-Either-包裹进-MonadError" class="headerlink" title="将 Either 包裹进 MonadError"></a>将 Either 包裹进 MonadError</h2><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">liftEither</span> :: <span class="hljs-type">MonadError</span> e m =&gt; <span class="hljs-type">Either</span> e a -&gt; m a<br></code></pre></td></tr></table></figure>
+<p>将一个普通错误 lift 为 Monad error, 主要用于想把 <code>Either</code> 集成到 <code>bind</code> 中的情况, 比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">registerUser</span> :: <span class="hljs-type">String</span> -&gt; <span class="hljs-type">Except</span> <span class="hljs-type">AppError</span> <span class="hljs-type">String</span><br><span class="hljs-title">registerUser</span> input = <span class="hljs-keyword">do</span><br>    email &lt;- liftEither (validateEmail input) <br>    return $ <span class="hljs-string">&quot;User registered with: &quot;</span> ++ email<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>validateEmail input</code> 返回一个 <code>Either</code></li>
+</ul>
+<h2 id="尝试一个可能抛出错误的计算"><a href="#尝试一个可能抛出错误的计算" class="headerlink" title="尝试一个可能抛出错误的计算"></a>尝试一个可能抛出错误的计算</h2><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">tryError</span> :: <span class="hljs-type">MonadError</span> e m =&gt; m a -&gt; m (<span class="hljs-type">Either</span> e a)<br></code></pre></td></tr></table></figure>
+<p>其尝试一个可能抛出错误的计算, 将结果用 <code>Either</code> 存储然后包裹在 Monad 中返回. 就算计算失败也不会停止当前程序流.</p>
+<p>比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">checkStatus</span> :: <span class="hljs-type">Except</span> <span class="hljs-type">AppError</span> <span class="hljs-type">String</span><br><span class="hljs-title">checkStatus</span> = <span class="hljs-keyword">do</span><br>    result &lt;- tryError (throwError <span class="hljs-type">Timeout</span>)<br>    <span class="hljs-keyword">case</span> result <span class="hljs-keyword">of</span><br>        <span class="hljs-type">Left</span> e  -&gt; return $ <span class="hljs-string">&quot;Caught error: &quot;</span> ++ show e<br>        <span class="hljs-type">Right</span> v -&gt; return $ <span class="hljs-string">&quot;All good: &quot;</span> ++ v<br></code></pre></td></tr></table></figure>
+
+<h2 id="修改错误信息"><a href="#修改错误信息" class="headerlink" title="修改错误信息"></a>修改错误信息</h2><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">withError</span> :: <span class="hljs-type">MonadError</span> e m =&gt; (e -&gt; e) -&gt; m a -&gt; m a<br></code></pre></td></tr></table></figure>
+<p>能够修改错误信息, 但是要注意不能更改错误信息的类型, 因为函数依赖已经确定了 <code>e</code> 的类型.</p>
+<p>比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">actionWithError</span> :: <span class="hljs-type">Except</span> <span class="hljs-type">AppError</span> ()<br><span class="hljs-title">actionWithError</span> = withError modify (throwError (<span class="hljs-type">DatabaseError</span> <span class="hljs-string">&quot;Conn fail&quot;</span>))<br>  <span class="hljs-keyword">where</span><br>    modify (<span class="hljs-type">DatabaseError</span> msg) = <span class="hljs-type">DatabaseError</span> (<span class="hljs-string">&quot;CRITICAL: &quot;</span> ++ msg)<br>    modify e = e<br></code></pre></td></tr></table></figure>
+
+<h2 id="错误处理"><a href="#错误处理" class="headerlink" title="错误处理"></a>错误处理</h2><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">handleError</span> :: <span class="hljs-type">MonadError</span> e m =&gt; (e -&gt; m a) -&gt; m a -&gt; m a<br></code></pre></td></tr></table></figure>
+<p><code>handleError</code> 等价于 <code>flip catchError</code>, 用 <code>e -&gt; m a</code> 来根据错误信息进行处理.</p>
+<p>比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-comment">-- catchError action handler</span><br><span class="hljs-comment">-- handleError handler action</span><br><br><span class="hljs-title">saveData</span> :: <span class="hljs-type">Except</span> <span class="hljs-type">AppError</span> ()<br><span class="hljs-title">saveData</span> = handleError handler (throwError <span class="hljs-type">Timeout</span>)<br>  <span class="hljs-keyword">where</span><br>    handler <span class="hljs-type">Timeout</span> = return () <span class="hljs-comment">-- 遇到超时就假装成功</span><br>    handler e       = throwError e <span class="hljs-comment">-- 其他错误照样抛出</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="只在出错时执行"><a href="#只在出错时执行" class="headerlink" title="只在出错时执行"></a>只在出错时执行</h2><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">onError</span> :: <span class="hljs-type">MonadError</span> e m =&gt; m a -&gt; m b -&gt; m a<br></code></pre></td></tr></table></figure>
+<p>当 <code>m a</code> 抛出错误时, 会先执行 <code>m b</code>, 然后重新抛出 <code>m a</code> 的错误.</p>
+<p>比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">complexTask</span> :: <span class="hljs-type">Except</span> <span class="hljs-type">AppError</span> ()<br><span class="hljs-title">complexTask</span> = task `onError` cleanup<br>  <span class="hljs-keyword">where</span><br>    task = throwError (<span class="hljs-type">DatabaseError</span> <span class="hljs-string">&quot;Disk Full&quot;</span>)<br>    cleanup = liftIO $ putStrLn <span class="hljs-string">&quot;Cleaning up temporary files...&quot;</span><br></code></pre></td></tr></table></figure>
+<p>这里 <code>task</code> 抛出错误, 程序会先用 <code>cleanup</code> 打印信息, 然后返回 <code>Left (Database Error &quot;Disk Full)</code>.</p>
+<h2 id="自定义错误类型的示例"><a href="#自定义错误类型的示例" class="headerlink" title="自定义错误类型的示例"></a>自定义错误类型的示例</h2><p>Hackage 上的示例:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-comment">-- This is the type to represent length calculation error.</span><br><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">LengthError</span> = <span class="hljs-type">EmptyString</span>  <span class="hljs-comment">-- Entered string was empty.</span></span><br>          | <span class="hljs-type">StringTooLong</span> <span class="hljs-type">Int</span>   <span class="hljs-comment">-- A string is longer than 5 characters.</span><br>                                <span class="hljs-comment">-- Records a length of the string.</span><br>          | <span class="hljs-type">OtherError</span> <span class="hljs-type">String</span>   <span class="hljs-comment">-- Other error, stores the problem description.</span><br><br><span class="hljs-comment">-- Converts LengthError to a readable message.</span><br><span class="hljs-class"><span class="hljs-keyword">instance</span> <span class="hljs-type">Show</span> <span class="hljs-type">LengthError</span> <span class="hljs-keyword">where</span></span><br>  show <span class="hljs-type">EmptyString</span> = <span class="hljs-string">&quot;The string was empty!&quot;</span><br>  show (<span class="hljs-type">StringTooLong</span> len) =<br>      <span class="hljs-string">&quot;The length of the string (&quot;</span> ++ (show len) ++ <span class="hljs-string">&quot;) is bigger than 5!&quot;</span><br>  show (<span class="hljs-type">OtherError</span> msg) = msg<br><br><span class="hljs-comment">-- For our monad type constructor, we use Either LengthError</span><br><span class="hljs-comment">-- which represents failure using Left LengthError</span><br><span class="hljs-comment">-- or a successful result of type a using Right a.</span><br><span class="hljs-class"><span class="hljs-keyword">type</span> <span class="hljs-type">LengthMonad</span> = <span class="hljs-type">Either</span> <span class="hljs-type">LengthError</span></span><br><br><span class="hljs-title">main</span> = <span class="hljs-keyword">do</span><br>  putStrLn <span class="hljs-string">&quot;Please enter a string:&quot;</span><br>  s &lt;- getLine<br>  reportResult (calculateLength s)<br><br><span class="hljs-comment">-- Attempts to calculate length and throws an error if the provided string is</span><br><span class="hljs-comment">-- empty or longer than 5 characters.</span><br><span class="hljs-comment">-- (Throwing an error in this monad means returning a &#x27;Left&#x27;.)</span><br><span class="hljs-title">calculateLength</span> :: <span class="hljs-type">String</span> -&gt; <span class="hljs-type">LengthMonad</span> <span class="hljs-type">Int</span><br><span class="hljs-title">calculateLength</span> [] = throwError <span class="hljs-type">EmptyString</span><br><span class="hljs-title">calculateLength</span> s | len &gt; <span class="hljs-number">5</span> = throwError (<span class="hljs-type">StringTooLong</span> len)<br>                  | otherwise = return len<br>  <span class="hljs-keyword">where</span> len = length s<br><br><span class="hljs-comment">-- Prints result of the string length calculation.</span><br><span class="hljs-title">reportResult</span> :: <span class="hljs-type">LengthMonad</span> <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">IO</span> ()<br><span class="hljs-title">reportResult</span> (<span class="hljs-type">Right</span> len) = putStrLn (<span class="hljs-string">&quot;The length of the string is &quot;</span> ++ (show len))<br><span class="hljs-title">reportResult</span> (<span class="hljs-type">Left</span> e) = putStrLn (<span class="hljs-string">&quot;Length calculation failed with error: &quot;</span> ++ (show e))<br></code></pre></td></tr></table></figure>
+
+<h2 id="ExceptT-的示例"><a href="#ExceptT-的示例" class="headerlink" title="ExceptT 的示例"></a>ExceptT 的示例</h2><figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-keyword">import</span> Control.Monad.Except<br><br><span class="hljs-comment">-- An IO monad which can return String failure.</span><br><span class="hljs-comment">-- It is convenient to define the monad type of the combined monad,</span><br><span class="hljs-comment">-- especially if we combine more monad transformers.</span><br><span class="hljs-class"><span class="hljs-keyword">type</span> <span class="hljs-type">LengthMonad</span> = <span class="hljs-type">ExceptT</span> <span class="hljs-type">String</span> <span class="hljs-type">IO</span></span><br><br><span class="hljs-title">main</span> = <span class="hljs-keyword">do</span><br>  <span class="hljs-comment">-- runExceptT removes the ExceptT wrapper</span><br>  r &lt;- runExceptT calculateLength<br>  reportResult r<br><br><span class="hljs-comment">-- Asks user for a non-empty string and returns its length.</span><br><span class="hljs-comment">-- Throws an error if user enters an empty string.</span><br><span class="hljs-title">calculateLength</span> :: <span class="hljs-type">LengthMonad</span> <span class="hljs-type">Int</span><br><span class="hljs-title">calculateLength</span> = <span class="hljs-keyword">do</span><br>  <span class="hljs-comment">-- all the IO operations have to be lifted to the IO monad in the monad stack</span><br>  liftIO $ putStrLn <span class="hljs-string">&quot;Please enter a non-empty string: &quot;</span><br>  s &lt;- liftIO getLine<br>  <span class="hljs-keyword">if</span> null s<br>    <span class="hljs-keyword">then</span> throwError <span class="hljs-string">&quot;The string was empty!&quot;</span><br>    <span class="hljs-keyword">else</span> return $ length s<br><br><span class="hljs-comment">-- Prints result of the string length calculation.</span><br><span class="hljs-title">reportResult</span> :: <span class="hljs-type">Either</span> <span class="hljs-type">String</span> <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">IO</span> ()<br><span class="hljs-title">reportResult</span> (<span class="hljs-type">Right</span> len) = putStrLn (<span class="hljs-string">&quot;The length of the string is &quot;</span> ++ (show len))<br><span class="hljs-title">reportResult</span> (<span class="hljs-type">Left</span> e) = putStrLn (<span class="hljs-string">&quot;Length calculation failed with error: &quot;</span> ++ (show e))<br></code></pre></td></tr></table></figure>
+
+<h1 id="Identity-Monad"><a href="#Identity-Monad" class="headerlink" title="Identity Monad"></a>Identity Monad</h1><p><code>Identity</code> Monad 满足:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-type">Identity</span> x &gt;&gt;= f = <span class="hljs-type">Identity</span> (f x)<br></code></pre></td></tr></table></figure>
+
+<p>其本身不包含任何计算逻辑, 定义该 Monad 的目的是验证 monad transformer 的性质: 任何 monad transformer 应用到 <code>Identity</code> monad 上会得到 a non-transformer version of that monad.</p>
+<p>定义如下:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">newtype</span> <span class="hljs-type">Identity</span> a</span><br></code></pre></td></tr></table></figure>
+
+<p>比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">example</span> :: <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Identity</span> <span class="hljs-type">Int</span><br><span class="hljs-title">example</span> x = return (x*x)<br></code></pre></td></tr></table></figure>
+
+<p>运行:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">Main&gt; runIdentity (example 42)<br>1764 :: Int<br></code></pre></td></tr></table></figure>
+
+<h1 id="Monad-Transformer"><a href="#Monad-Transformer" class="headerlink" title="Monad Transformer"></a>Monad Transformer</h1><p>Monad Transformer 是一种组合多个 Monad 的工具, 因为在现实代码实现中, 单一 Monad 的能力通常是有限的, 比如:</p>
+<table>
+<thead>
+<tr>
+<th>Monad</th>
+<th>Capability</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Maybe</code></td>
+<td>失败&#x2F;空值</td>
+</tr>
+<tr>
+<td><code>[]</code></td>
+<td>非确定性</td>
+</tr>
+<tr>
+<td><code>IO</code></td>
+<td>副作用</td>
+</tr>
+<tr>
+<td><code>Reader r</code></td>
+<td>只读环境</td>
+</tr>
+<tr>
+<td><code>State s</code></td>
+<td>可变状态</td>
+</tr>
+</tbody></table>
+<p>如果代码需要多种 cabability 同时存在, 比如: <code>IO + Maybe + Reader + State</code>, 此时可能需要这样写:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">foo</span> :: <span class="hljs-type">Config</span> -&gt; <span class="hljs-type">State</span> -&gt; <span class="hljs-type">IO</span> (<span class="hljs-type">Maybe</span> <span class="hljs-type">Result</span>)<br></code></pre></td></tr></table></figure>
+
+<p>这种写法可读性和组合性都较差.</p>
+<p>而 Monad Transformer 的核心是把一个 Monad “套进” 另一个 Monad:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-type">MaybeT</span> <span class="hljs-type">IO</span> a 相当于 <span class="hljs-type">IO</span> (<span class="hljs-type">Maybe</span> a)<br></code></pre></td></tr></table></figure>
+
+<p>这样来看: <code>IO (Maybe a)</code> 通常我们会用 <code>r &lt;- xx</code> 来取出里面的 <code>Maybe a</code>, 我们最终看到的是 <code>Maybe</code> 这一层. 因此 <code>MaybeT IO a</code> 这里的 <code>MaybeT</code> 设计在最外层, 其将 <code>IO</code> 升级为 “带失败处理的 IO”.</p>
+<p>常见的 transformer 有:</p>
+<table>
+<thead>
+<tr>
+<th>Transformer</th>
+<th>Monad</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>MaybeT m a</code></td>
+<td><code>m (Maybe a)</code></td>
+<td>可能失败的计算</td>
+</tr>
+<tr>
+<td><code>EitherT e m a</code></td>
+<td><code>m (Either e a)</code></td>
+<td>带错误信息的计算</td>
+</tr>
+<tr>
+<td><code>ReaderT r m a</code></td>
+<td><code>r -&gt; m a</code></td>
+<td>读取环境</td>
+</tr>
+<tr>
+<td><code>StateT s m a</code></td>
+<td><code>s -&gt; m (a, s)</code></td>
+<td>状态</td>
+</tr>
+<tr>
+<td><code>WriterT w m a</code></td>
+<td><code>m (a, w)</code></td>
+<td>日志</td>
+</tr>
+</tbody></table>
+<p>注意这些 Transformer 都只是类型构造器, 而不是 Monad, 比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">newtype</span> <span class="hljs-type">StateT</span> s (<span class="hljs-title">m</span> :: <span class="hljs-type">Type</span> -&gt; <span class="hljs-type">Type</span>) a</span><br></code></pre></td></tr></table></figure>
+
+<p>它们带来的 Monad 能力是因为它们是某些 Monad 的 instance, 比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">instance</span> <span class="hljs-type">Monad</span> m =&gt; <span class="hljs-type">MonadState</span> s (<span class="hljs-type">StateT</span> <span class="hljs-title">s</span> <span class="hljs-title">m</span>)</span><br></code></pre></td></tr></table></figure>
+
+<p>下面是一个 <code>MaybeT</code> 的例子, 不使用 Transformer 的普通写法是:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">lookupUser</span> :: <span class="hljs-type">UserId</span> -&gt; <span class="hljs-type">IO</span> (<span class="hljs-type">Maybe</span> <span class="hljs-type">User</span>)<br><span class="hljs-title">lookupOrder</span> :: <span class="hljs-type">User</span> -&gt; <span class="hljs-type">IO</span> (<span class="hljs-type">Maybe</span> <span class="hljs-type">Order</span>)<br><br><span class="hljs-title">process</span> :: <span class="hljs-type">UserId</span> -&gt; <span class="hljs-type">IO</span> (<span class="hljs-type">Maybe</span> <span class="hljs-type">Order</span>)<br><span class="hljs-title">process</span> uid = <span class="hljs-keyword">do</span><br>  muser &lt;- lookupUser uid<br>  <span class="hljs-keyword">case</span> muser <span class="hljs-keyword">of</span><br>    <span class="hljs-type">Nothing</span> -&gt; return <span class="hljs-type">Nothing</span><br>    <span class="hljs-type">Just</span> u  -&gt; lookupOrder u<br></code></pre></td></tr></table></figure>
+
+<p>使用 <code>MaybeT</code> 则会更加清晰:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-keyword">import</span> Control.Monad.Trans.Maybe<br><br><span class="hljs-title">lookupUser</span>  :: <span class="hljs-type">UserId</span> -&gt; <span class="hljs-type">IO</span> (<span class="hljs-type">Maybe</span> <span class="hljs-type">User</span>)<br><span class="hljs-title">lookupOrder</span> :: <span class="hljs-type">User</span> -&gt; <span class="hljs-type">IO</span> (<span class="hljs-type">Maybe</span> <span class="hljs-type">Order</span>)<br><br><span class="hljs-title">process</span> :: <span class="hljs-type">UserId</span> -&gt; <span class="hljs-type">MaybeT</span> <span class="hljs-type">IO</span> <span class="hljs-type">Order</span><br><span class="hljs-title">process</span> uid = <span class="hljs-keyword">do</span><br>  user  &lt;- <span class="hljs-type">MaybeT</span> (lookupUser uid)<br>  <span class="hljs-type">MaybeT</span> (lookupOrder user)<br></code></pre></td></tr></table></figure>
+
+<h2 id="Monad-Transformer-Stack"><a href="#Monad-Transformer-Stack" class="headerlink" title="Monad Transformer Stack"></a>Monad Transformer Stack</h2><p>Monad Transformer Stack 用来描述通过 “叠加” 不同功能层来构建复杂 Monad 的架构模式. 整个结构像 Stack 一样, 最外层就是栈顶, 想使用栈内部的功能, 就一层一层进行 <code>lift</code>.</p>
+<p>比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">newtype</span> <span class="hljs-type">GameStep</span> m a = <span class="hljs-type">GameStep</span> &#123; <span class="hljs-title">runGameStep</span> :: <span class="hljs-type">ReaderT</span> <span class="hljs-type">BoardInfo</span> (<span class="hljs-type">StateT</span> <span class="hljs-type">GameState</span> <span class="hljs-title">m</span>) <span class="hljs-title">a</span> &#125;</span><br></code></pre></td></tr></table></figure>
+<p>它的结构从外到内是:</p>
+<ol>
+<li>顶层 (<code>Reader T</code>): 处理 <code>BoardInfo</code> 的读取</li>
+<li>中间层 (<code>StateT GameState</code>): 处理 <code>GameState</code> 的读写</li>
+<li>底层 (<code>m</code>): 基础的 Monad, 比如 <code>IO</code> 或 <code>Identity</code></li>
+</ol>
+<h1 id="mtl"><a href="#mtl" class="headerlink" title="mtl"></a>mtl</h1><p><a target="_blank" rel="noopener" href="https://hackage.haskell.org/package/mtl">Hackage mtl 文档</a></p>
+<p>MTL 是一个 collection of monad classes, 扩展了 transformer package.</p>
+<p>MTL 和 transformers 共享同一套 module 导入, data type 和 function 的名称定义方式, 比如我们有 <code>Foo</code> monad 的  transformer, 那么在 <code>Control.Monad.Foo</code> 中会定义:</p>
+<ul>
+<li>一个 typeclass <code>MonadFoo</code>, 其描述了该 transformer 的操作</li>
+<li>一个 data type <code>FooT</code>, 实现为所有 monad transformer 的 instance</li>
+<li>用 <code>runFooT</code> 来运行 transformed computation</li>
+</ul>
+<h2 id="Lifting"><a href="#Lifting" class="headerlink" title="Lifting"></a>Lifting</h2><p>在 monad transformer 中, 通常需要用 <code>lift</code> 来执行内部的 monadic action, 其通常定义在 <code>Control.Monad.Trans.Class</code> 模块中:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">lift</span> :: (<span class="hljs-type">Monad</span> m, <span class="hljs-type">MonadTrans</span> t) =&gt; m a -&gt; t m a<br></code></pre></td></tr></table></figure>
+<p>将 <code>m a</code> 操作 lift 为 <code>t m a</code> 操作.</p>
+<p>一个示例:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">MyError</span> = <span class="hljs-type">EmptyLine</span></span><br><br><span class="hljs-title">mightFail</span> :: <span class="hljs-type">ExceptT</span> <span class="hljs-type">MyError</span> <span class="hljs-type">IO</span> ()<br><span class="hljs-title">mightFail</span> = <span class="hljs-keyword">do</span><br>  l &lt;- lift getLine<br>  when (null l) (throwError <span class="hljs-type">EmptyLine</span>)<br></code></pre></td></tr></table></figure>
+
+<h2 id="可交换顺序的-Monad-Transformer-Stack"><a href="#可交换顺序的-Monad-Transformer-Stack" class="headerlink" title="可交换顺序的 Monad Transformer Stack"></a>可交换顺序的 Monad Transformer Stack</h2><p>对于直接用 Monad Transformer 叠加定义的 Monad, 比如:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">type</span> <span class="hljs-type">GameStep</span> a = <span class="hljs-type">ReaderT</span> <span class="hljs-type">BoardInfo</span> (<span class="hljs-type">State</span> <span class="hljs-type">GameState</span>) a</span><br></code></pre></td></tr></table></figure>
+
+<p>此时 <code>GameStep a</code> 的能力是有层次关系的, <code>ReaderT</code> 在最外层, 自身的 <code>State</code> 在最内层, 因此如果要调用 <code>State</code> 操作, 则需要进行 <code>lift</code>:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">lift</span> get &gt;&gt;= \s -&gt;<br></code></pre></td></tr></table></figure>
+
+<p>此时如果将 <code>GameStep a</code> 定义中 <code>ReaderT</code> 和 <code>State</code> 的位置调换, 不修改其他逻辑代码, 上述使用了 <code>lift</code> 的操作就会报错:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">type</span> <span class="hljs-type">GameStep</span> a = <span class="hljs-type">StateT</span> <span class="hljs-type">GameState</span> (<span class="hljs-type">Reader</span> <span class="hljs-type">BoarddInfo</span>) a</span><br></code></pre></td></tr></table></figure>
+
+<p>因为此时 <code>StateT</code> 在最外层, 因此对 <code>State</code> 的操作不需要进行 <code>lift</code>, 而 <code>Reader</code> 在内层, 此时需要 <code>lift</code>.</p>
+<p>对于该场景下, 一个 Monad 叠加了能力, 按理说不需要有这种顺序关系, 因此更好的抽象是定义一个新的 Monad, 并且实现为 <code>MonadState</code> 和 <code>MonadReader</code> 的 instance, 由于是该 Monad 直接实现了这两个 typeclass, 因此对应的 method 可以直接调用而不需要 lift:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">newtype</span> <span class="hljs-type">GameStep</span> m a = <span class="hljs-type">GameStep</span> &#123; <span class="hljs-title">runGameStep</span> :: <span class="hljs-type">ReaderT</span> <span class="hljs-type">BoardInfo</span> (<span class="hljs-type">StateT</span> <span class="hljs-type">GameState</span> <span class="hljs-title">m</span>) <span class="hljs-title">a</span> &#125;</span><br><span class="hljs-class"></span><br><span class="hljs-class"><span class="hljs-keyword">instance</span> (<span class="hljs-type">Functor</span> <span class="hljs-title">m</span>) =&gt; <span class="hljs-type">Functor</span> (<span class="hljs-type">GameStep</span> <span class="hljs-title">m</span>) <span class="hljs-keyword">where</span></span><br>  fmap f (<span class="hljs-type">GameStep</span> s) = <span class="hljs-type">GameStep</span> $ fmap f s<br><span class="hljs-class"></span><br><span class="hljs-class"><span class="hljs-keyword">instance</span> (<span class="hljs-type">Monad</span> <span class="hljs-title">m</span>) =&gt; <span class="hljs-type">Applicative</span> (<span class="hljs-type">GameStep</span> <span class="hljs-title">m</span>) <span class="hljs-keyword">where</span></span><br>  pure x = <span class="hljs-type">GameStep</span> $ pure x<br>  (<span class="hljs-type">GameStep</span> f) &lt;*&gt; (<span class="hljs-type">GameStep</span> s) = <span class="hljs-type">GameStep</span> $ f &lt;*&gt; s<br><span class="hljs-class"></span><br><span class="hljs-class"><span class="hljs-keyword">instance</span> (<span class="hljs-type">Monad</span> <span class="hljs-title">m</span>) =&gt; <span class="hljs-type">Monad</span> (<span class="hljs-type">GameStep</span> <span class="hljs-title">m</span>) <span class="hljs-keyword">where</span></span><br>  return x = <span class="hljs-type">GameStep</span> $ return x<br>  (<span class="hljs-type">GameStep</span> s) &gt;&gt;= f = <span class="hljs-type">GameStep</span> $ s &gt;&gt;= (runGameStep . f)<br><span class="hljs-class"></span><br><span class="hljs-class"><span class="hljs-keyword">instance</span> (<span class="hljs-type">Monad</span> <span class="hljs-title">m</span>) =&gt; <span class="hljs-type">MonadReader</span> <span class="hljs-type">BoardInfo</span> (<span class="hljs-type">GameStep</span> <span class="hljs-title">m</span>) <span class="hljs-keyword">where</span></span><br>  ask = <span class="hljs-type">GameStep</span> ask<br>  local f (<span class="hljs-type">GameStep</span> s) = <span class="hljs-type">GameStep</span> $ local f s<br><span class="hljs-class"></span><br><span class="hljs-class"><span class="hljs-keyword">instance</span> (<span class="hljs-type">Monad</span> <span class="hljs-title">m</span>) =&gt; <span class="hljs-type">MonadState</span> <span class="hljs-type">GameState</span> (<span class="hljs-type">GameStep</span> <span class="hljs-title">m</span>) <span class="hljs-keyword">where</span></span><br>  get   = <span class="hljs-type">GameStep</span> get<br>  put s = <span class="hljs-type">GameStep</span> (put s)<br></code></pre></td></tr></table></figure>
+
+<p>需要注意, 这里的 <code>get = GameStep get</code> 并没有写为 <code>get = GameStep $ lift get</code>, 这里有隐式推导的过程, 这里详细说明.</p>
+<p><code>GameStep</code> 类型构造器期望的参数类型是: <code>ReaderT BoardInfo (StateT GameState m)</code>. 因此 <code>get = GameStep get</code> 右侧的 <code>get</code> 类型就是 <code>ReaderT BoardInfo (StateT GameState m)</code>. 此时编译器会在导入的库中找, 有没有为 <code>ReaderT r m</code> (且 <code>m</code> 是 <code>MonadState</code> 的实例) 实现 <code>MonadState</code> 的 instance, 恰好有这样的定义:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">instance</span> <span class="hljs-type">MonadState</span> s m =&gt; <span class="hljs-type">MonadState</span> s (<span class="hljs-type">ReaderT</span> <span class="hljs-title">r</span> <span class="hljs-title">m</span>) <span class="hljs-keyword">where</span></span><br>  get = lift get<br>  put = lift . put<br></code></pre></td></tr></table></figure>
+
+<p>可以看到这里自动添加了 <code>lift</code>.</p>
+<p>因此可以看到 <code>get = GameStep get</code> 这里右侧的 <code>get</code> 实际上调用的是 <code>ReaderT</code> 实现的 <code>get</code>.</p>
+<h2 id="MonadIO"><a href="#MonadIO" class="headerlink" title="MonadIO"></a>MonadIO</h2><p><code>MonadIO</code> 实现了副作用的计算, 主要用于 monad transformer stack 中需要用到 <code>IO</code> 的地方. 要在一个 Monad m 中执行 <code>IO</code> 操作, 则需要让 <code>m</code> 实现为 <code>MonadIO</code> 的 instance.</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-type">Monad</span> m =&gt; <span class="hljs-type">MonadIO</span> (<span class="hljs-title">m</span> :: <span class="hljs-type">Type</span> -&gt; <span class="hljs-type">Type</span>) <span class="hljs-keyword">where</span></span><br>  liftIO :: <span class="hljs-type">IO</span> a -&gt; m a<br></code></pre></td></tr></table></figure>
+<p><code>liftIO</code> 将一个 <code>IO</code> 操作 lift 到 <code>m</code> 所在计算中. 其需要满足这些 laws:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-title">liftIO</span> . return = return<br><span class="hljs-title">liftIO</span> (m &gt;&gt;= f) = liftIO m &gt;&gt;= (liftIO . f)<br></code></pre></td></tr></table></figure>
 
                 
               </div>
@@ -584,6 +924,12 @@ path.outline_glyph {
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2026/04/09/Python-%E6%83%B0%E6%80%A7%E6%B1%82%E5%80%BC/" title="Python-惰性求值">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Python-惰性求值</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">
