@@ -1,0 +1,1224 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/wallhaven-j5kjgy_1920x1080.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Jie">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="参考 B 站课程 介绍脉络图如下:  除此之外还需要找找开源仓库来练习. Chapter 1: Basic ConceptsState, action, policy, …用到的例子是 grid-world, 一个机器人在网格世界中移动, 每个 cell 有 Accessible&#x2F;forbidden&#x2F;target 其中一个属性, 且 world 存在 boundary:  强化">
+<meta property="og:type" content="article">
+<meta property="og:title" content="强化学习基础">
+<meta property="og:url" content="http://example.com/2026/04/20/%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="参考 B 站课程 介绍脉络图如下:  除此之外还需要找找开源仓库来练习. Chapter 1: Basic ConceptsState, action, policy, …用到的例子是 grid-world, 一个机器人在网格世界中移动, 每个 cell 有 Accessible&#x2F;forbidden&#x2F;target 其中一个属性, 且 world 存在 boundary:  强化">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/reinforcement-learning-intro-structure.png">
+<meta property="og:image" content="http://example.com/img/reinforcement-learning-grid-world-example.png">
+<meta property="og:image" content="http://example.com/img/reinforcement-learning-grid-world-state.png">
+<meta property="og:image" content="http://example.com/img/reinforcement-learning-action-concept.png">
+<meta property="og:image" content="http://example.com/img/reinforcement-learning-tabular-representation-example.png">
+<meta property="og:image" content="http://example.com/img/reinforcement-learning-policy-intuitive-representation.png">
+<meta property="og:image" content="http://example.com/img/reinforcement-learning-policy-path-example.png">
+<meta property="og:image" content="http://example.com/img/reinforcement-learning-policy-tabular-repr.png">
+<meta property="og:image" content="http://example.com/img/reinforcement-learning-reward-transition-example.png">
+<meta property="og:image" content="http://example.com/img/reinforcement-learning-trajectory-example.png">
+<meta property="og:image" content="http://example.com/img/reinforcement-learning-trajectory-not-end.png">
+<meta property="og:image" content="http://example.com/img/reinforcement-learning-return-expectation-example.png">
+<meta property="og:image" content="http://example.com/img/reinforcement-learning-diff-state-return.png">
+<meta property="og:image" content="http://example.com/img/reinforcement-learning-bellman-equation-derive.png">
+<meta property="og:image" content="http://example.com/img/reinforcement-learning-full-bellman-equation.png">
+<meta property="og:image" content="http://example.com/img/reinforcement-learning-transition-matrix-example.png">
+<meta property="og:image" content="http://example.com/img/reinforcement-learning-state-value-rep-by-action-value.png">
+<meta property="og:image" content="http://example.com/img/reinforcement-learning-contraction-mapping.png">
+<meta property="og:image" content="http://example.com/img/reinforcement-learning-value-iteration-algorithm-pseudo.png">
+<meta property="og:image" content="http://example.com/img/reinforcement-learning-policy-iteration-algorithm-pseudo.png">
+<meta property="og:image" content="http://example.com/img/reinforcement-learning-truncated-policy-iteration.png">
+<meta property="article:published_time" content="2026-04-20T05:41:41.000Z">
+<meta property="article:modified_time" content="2026-04-25T07:36:00.543Z">
+<meta property="article:author" content="Jie">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/reinforcement-learning-intro-structure.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>强化学习基础 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<!-- hexo injector head_end start --><style>.typst-app {
+  margin: 0;
+  --typst-dom-scale: 1;
+  /* --typst-dom-scale: 1.5; */
+  margin: 5px;
+}
+
+.typst-dom-page {
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  --data-text-width: calc(1px * var(--typst-dom-scale));
+  --data-text-height: calc(1px * var(--typst-dom-scale));
+}
+
+.typst-back-canvas {
+  position: absolute;
+  z-index: -1;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  pointer-events: none;
+}
+
+.typst-svg-page {
+  position: absolute;
+  z-index: 0;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+}
+
+.typst-html-semantics {
+  position: absolute;
+  z-index: 2;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  color: transparent;
+  font-family: monospace;
+  white-space: pre;
+  opacity: 0.62;
+}
+
+.typst-html-semantics span {
+  color: transparent;
+  font-family: monospace;
+  transform-origin: left top;
+  position: absolute;
+  display: inline-block;
+  left: 0;
+  top: 0;
+}
+
+.typst-content-hint {
+  position: absolute;
+  display: inline-block;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.typst-html-semantics a {
+  position: absolute;
+  display: inline-block;
+}
+
+/* set transparent itself */
+.typst-content-group {
+  pointer-events: visible;
+}
+
+.typst-html-semantics span::-moz-selection {
+  color: transparent;
+  background: #7db9de;
+}
+
+.typst-html-semantics span::selection {
+  color: transparent;
+  background: #7db9de;
+}
+
+.typst-html-semantics *::-moz-selection {
+  color: transparent;
+  background: transparent;
+}
+
+.typst-html-semantics *::selection {
+  color: transparent;
+  background: transparent;
+}
+
+.typst-content-fallback {
+  color: transparent;
+  background: transparent;
+}
+
+.pseudo-link,
+.typst-text {
+  pointer-events: none;
+}
+
+.tsel span,
+.tsel {
+  left: 0;
+  position: fixed;
+  text-align: justify;
+  white-space: pre;
+  width: 100%;
+  height: 100%;
+  text-align-last: justify;
+  color: transparent;
+}
+.tsel span::-moz-selection,
+.tsel::-moz-selection {
+  color: transparent;
+  background: #7db9dea0;
+}
+.tsel span::selection,
+.tsel::selection {
+  color: transparent;
+  background: #7db9dea0;
+}
+.pseudo-link {
+  fill: transparent;
+  cursor: pointer;
+  pointer-events: all;
+}
+svg {
+  fill: none;
+}
+
+.outline_glyph path,
+path.outline_glyph {
+  fill: var(--glyph_fill);
+  stroke: var(--glyph_stroke);
+}
+
+.outline_glyph path,
+path.outline_glyph {
+  transition: 0.2s fill stroke;
+}
+.hover .typst-text {
+  --glyph_fill: #66bab7;
+  --glyph_stroke: #66bab7;
+}
+
+.typst-jump-ripple,
+.typst-debug-react-ripple {
+  width: 0;
+  height: 0;
+  background-color: transparent;
+  position: absolute;
+  border-radius: 50%;
+}
+.typst-jump-ripple {
+  border: 1px solid #66bab7;
+}
+.typst-debug-react-ripple {
+  border: 1px solid #cb1b45;
+}
+@keyframes typst-jump-ripple-effect {
+  to {
+    width: 10vw;
+    height: 10vw;
+    opacity: 0.01;
+    margin: -5vw;
+  }
+}
+@keyframes typst-debug-react-ripple-effect {
+  to {
+    width: 3vw;
+    height: 3vw;
+    opacity: 0.01;
+    margin: -1.5vw;
+  }
+}
+</style>
+<script>/// https://segmentfault.com/a/1190000016574288
+(function () {
+  var ie = !!(window.attachEvent && !window.opera);
+  var wk = /webkit\/(\d+)/i.test(navigator.userAgent) && RegExp.$1 < 525;
+  var fn = [];
+  var run = function () {
+    for (var i = 0; i < fn.length; i++) fn[i]();
+  };
+  var d = document;
+  d.ready = function (f) {
+    if (!ie && !wk && d.addEventListener) return d.addEventListener('DOMContentLoaded', f, false);
+    if (fn.push(f) > 1) return;
+    if (ie)
+      (function () {
+        try {
+          d.documentElement.doScroll('left');
+          run();
+        } catch (err) {
+          setTimeout(arguments.callee, 0);
+        }
+      })();
+    else if (wk)
+      var t = setInterval(function () {
+        if (/^(loaded|complete)$/.test(d.readyState)) clearInterval(t), run();
+      }, 0);
+  };
+})();
+</script>
+<script type="module" src="/typst/typst-main.js"></script><script src="/typst/svg-utils.js"></script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Jie</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/SteinsGate_all.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="强化学习基础"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-04-20 13:41" pubdate>
+          2026年4月20日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          15k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          128 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">强化学习基础</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p><a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1sd4y167NS/?spm_id_from=333.337.search-card.all.click&vd_source=bc8ddbb1a08707dc809c3fd9bb85290d">参考 B 站课程</a></p>
+<h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>脉络图如下:</p>
+<p><img src="/../img/reinforcement-learning-intro-structure.png" srcset="/img/loading.gif" lazyload></p>
+<p>除此之外还需要找找开源仓库来练习.</p>
+<h1 id="Chapter-1-Basic-Concepts"><a href="#Chapter-1-Basic-Concepts" class="headerlink" title="Chapter 1: Basic Concepts"></a>Chapter 1: Basic Concepts</h1><h2 id="State-action-policy-…"><a href="#State-action-policy-…" class="headerlink" title="State, action, policy, …"></a>State, action, policy, …</h2><p>用到的例子是 grid-world, 一个机器人在网格世界中移动, 每个 cell 有 Accessible&#x2F;forbidden&#x2F;target 其中一个属性, 且 world 存在 boundary:</p>
+<p><img src="/../img/reinforcement-learning-grid-world-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>强化学习中的 State 定义为: agent 在当前环境中的 status. 对应到 grid-world 中, 就是 agent 的 location, 对于复杂的问题, 可能还包括速度, 加速度, 温度等等信息:</p>
+<p><img src="/../img/reinforcement-learning-grid-world-state.png" srcset="/img/loading.gif" lazyload></p>
+<p>将所有 state 集合到一起 (形成一个集合), 就是 State space: $S &#x3D; \{s_i\}_{i &#x3D; 1}^9$.</p>
+<p>Action 就是在一个 state 下, 可以采取的行为, 比如:</p>
+<ul>
+<li>$a_1$, 向上移动</li>
+<li>$a_2$, 向下移动</li>
+<li>…</li>
+</ul>
+<p><img src="/../img/reinforcement-learning-action-concept.png" srcset="/img/loading.gif" lazyload></p>
+<p>一个 state 的所有可能 actions 构成 action space: $A(s_i) &#x3D; \{a_i\}_{i&#x3D;1}^5$.</p>
+<p>需要注意 action space 是依赖于 state 的, 不同 state 下的 action space 不同.</p>
+<p>采取一个 action 后, agent 从一个 state 移动到了另一个 state 的过程称为 State transition:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>s1 \overset{a2}{\rightarrow} s2<br>\end{aligned}<br>}<br>$$</p>
+<p>State transition 本质上定义了 agent 与环境的交互. 其可以用 tabular representation 来表现:</p>
+<p><img src="/../img/reinforcement-learning-tabular-representation-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>但只适用于 deterministic cases (一个 action 只可能进入一个 state).</p>
+<p>对于 State transition 的更一般的表达是用 state transition probability, 用概率来描述 state transition. 比如下面例子, 描述在 $s_1$ 采用 action $a_2$ 回到达 $s_2$:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>p(s_2 | s_1, a_2) &#x3D; 1 \newline \newline<br>p(s_1 | s_1, a_2) &#x3D; 0, \forall i \ne 2<br>\end{aligned}<br>}<br>$$</p>
+<p>该方式既能描述 deterministic case, 也能用于 stochastic cases.</p>
+<p>Policy 会告诉 agent 在一个 state 下采取哪一个 action. 如果从示例上直观理解的话, 一个 policy 就表示一个箭头:</p>
+<p><img src="/../img/reinforcement-learning-policy-intuitive-representation.png" srcset="/img/loading.gif" lazyload></p>
+<p>基于 policy 运行到底, 就能得到一个 path 或 trajectory:</p>
+<p><img src="/../img/reinforcement-learning-policy-path-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>Policy 用 conditional probability 作为更一般的数学表示, 比如对 $s_1$ 有:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\pi (a_1 | s_1) &#x3D; 0 \newline<br>\pi (a_2 | s_1) &#x3D; 1 \newline<br>\pi (a_3 | s_1) &#x3D; 0 \newline<br>\pi (a_4 | s_1) &#x3D; 0 \newline<br>\pi (a_5 | s_1) &#x3D; 0<br>\end{aligned}<br>}<br>$$</p>
+<p>针对一个状态的所有概率之和应该等于 <code>1</code>. 上述描述的是一种 deterministic case; 如果是 stochastic case, 则会有多个概率不为 <code>0</code>.</p>
+<p>也可以用 tabular representation 来表示 Policy, 该表示方法也是 general 的:</p>
+<p><img src="/../img/reinforcement-learning-policy-tabular-repr.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="Reward-return-Markov-decision-process"><a href="#Reward-return-Markov-decision-process" class="headerlink" title="Reward, return, Markov decision process"></a>Reward, return, Markov decision process</h2><p>Reward 是 RL 中一个独特的概念, 其本质是一个 real number, 每次采取一个 action 都会得到一个 reward:</p>
+<ul>
+<li>如果 reward 是 positive, 表明鼓励采取这种 action</li>
+<li>如果 reward 是 negative, 表明不希望采取这种 action, 相当于 punishment</li>
+</ul>
+<p>Reward 通常被视为一种 human-machine interface, 即我们通过设计 reward 来与机器交互, 引导 agent 做出我们期望的行为.</p>
+<p>比如在 grid-world 例子中可以设计:</p>
+<ul>
+<li>进入 forbidden area 时 $r_{forbid} &#x3D; -1$</li>
+<li>进入 boundary 时 $r_{bound} &#x3D; -1$</li>
+<li>到达 target 时 $r_{target} &#x3D; 1$</li>
+<li>其余时候 $r &#x3D; 0$</li>
+</ul>
+<p>这样能引导 agent 走向目标区域. 同样可以用 tabular representation 来表示 reward transition, 但注意其只能表示 deterministic 的情况:</p>
+<p><img src="/../img/reinforcement-learning-reward-transition-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>更 general 的方式也是 conditional probability, 比如:</p>
+<ul>
+<li>$p(r &#x3D; -1 | s_1,a_1) &#x3D; 1$</li>
+<li>$p(r \ne -1 | s_1,a_1) &#x3D; 0$</li>
+</ul>
+<p>对于 stochastic 的场景下, reward 本身是不确定的, 可能随环境改变.</p>
+<p>Tranjectory 表示一个 state-action-reward chain (path), 比如:</p>
+<p><img src="/../img/reinforcement-learning-trajectory-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>对应的数学表示可以写为:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>s_1 \overset{a_2}{\underset{r&#x3D;0}{\rightarrow}} s_2 \overset{a_3}{\underset{r&#x3D;0}{\rightarrow}} s_5 \overset{a_3}{\underset{r&#x3D;0}{\rightarrow}} s_8 \overset{a_2}{\underset{r&#x3D;1}{\rightarrow}} s_9<br>\end{aligned}<br>}<br>$$</p>
+<p>可以看到其包含了 3 个部分: state, action 和 reward.</p>
+<p>一个 trajectory 的 return 表示沿着该 trajectory 的所有 rewards 之和 (也可以说是 cumulative future reward), 比如对于上面例子有:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>return &#x3D; 0 + 0 + 0 + 1 &#x3D; 1<br>\end{aligned}<br>}<br>$$</p>
+<p>不同的 policy 会得到不同的 trajectory, 也会有不同的 return.</p>
+<p>Return 可以用来衡量 policy 的好坏.</p>
+<p>在上述例子中, 到达 target location 之后, 策略其实还在继续运行:</p>
+<p><img src="/../img/reinforcement-learning-trajectory-not-end.png" srcset="/img/loading.gif" lazyload></p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>s_1 \overset{a_2}{\underset{r&#x3D;0}{\rightarrow}} s_2 \overset{a_3}{\underset{r&#x3D;0}{\rightarrow}} s_5 \overset{a_3}{\underset{r&#x3D;0}{\rightarrow}} s_8 \overset{a_2}{\underset{r&#x3D;1}{\rightarrow}} s_9 \overset{a_5}{\underset{r&#x3D;1}{\rightarrow}} s_9 \overset{a_5}{\underset{r&#x3D;1}{\rightarrow}} s_9 …<br>\end{aligned}<br>}<br>$$</p>
+<p>此时的 return 就变为:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>return &#x3D; 0 + 0 + 0 + 1 + 1 + 1 + … &#x3D; \infty<br>\end{aligned}<br>}<br>$$</p>
+<p>解决的办法就是引入 discount rate $\gamma \in [0, 1)$, 得到 discounted return:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>discounted\ return &amp;&#x3D; 0 + \gamma 0 + \gamma^2 0 + \gamma^3 1 + \gamma^4 1 + \gamma^5 1 + … &#x3D; \newline \newline<br>&amp;&#x3D; \gamma (1 + \gamma + \gamma^2 + …) &#x3D; \gamma^3 \frac{1}{1-\gamma}<br>\end{aligned}<br>}<br>$$</p>
+<p>此时能得到一个有限解. 如果 $\gamma$ 接近 <code>0</code>, 那么 discounted return 就取决于更近未来 (near future, 越往后, $\gamma^n$ 越小, 后面项的影响就越小) 的 rewards; 而 $\gamma$ 接近 <code>1</code> 时, 其取决于更远未来 (far future, 衰减得慢, 积累起来的 reward 就会大一些) 得到的 return.</p>
+<p>当 agent 沿着 policy 到达 terminal states, 得到的 trajectory 称为 episode (or a trial). 这种有限步的也被称为 episodic tasks.</p>
+<p>有些任务没有 terminal states, 意味着其会永远与环境交互下去. 这类任务称为 continuing tasks.</p>
+<p>通常会统一 episodic 和 continuing tasks, 有两种方法, 都是将 episodic task 转换为 continuing task:</p>
+<ul>
+<li>将 target state 视为 absorbing state, agent 进入该状态后, 任何 action 都是原地踏步留在该状态, 且后续的 reward 为 $r &#x3D; 0$</li>
+<li>将 target state 视为普通的带 policy 的 state, 策略好的时候留在该状态; 不好时跳出</li>
+</ul>
+<p>这里用的第二个方法.</p>
+<h2 id="Markov-decision-process-MDP"><a href="#Markov-decision-process-MDP" class="headerlink" title="Markov decision process (MDP)"></a>Markov decision process (MDP)</h2><p>MDP 是一个框架, 这里把上述提到过的概念都套在这里.</p>
+<p>MDP 涉及几个 Sets:</p>
+<ul>
+<li>State: 状态的集合, 就是 state space $S$</li>
+<li>Action: action 的集合, 就是 action space $A(s), s \in S$</li>
+<li>Reward: reward 的集合, $R(s, a)$</li>
+</ul>
+<p>另一个要素是几个 probability distribution:</p>
+<ul>
+<li>State transition probability: 在状态 $s$ 下, 采取 action $a$, 状态转移到 $s’$ 的概率 $p(s’|s,a)$</li>
+<li>Reward probability: 在状态 $s$, 采取 action $a$, 得到的 reward $r$ 的概率 $p(r|s,a)$</li>
+</ul>
+<p>第三个要素是 Policy: 在状态 $s$, 选择 action a 的概率是 $\pi (a|s)$.</p>
+<p>最后 MDP 需要满足 Markov property, 也称 memoryless property, 即当前的概率与历史无关, 比如下面式子表明, 当前求 $p(s_{t+1}|a_{t+1}, s_t)$, 与 $a_1, s_0$, $a_2, s_1$ 这些历史状态无关:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>p(s_{t+1} | a_{t+1}, s_t, …, a_1, s_0) &#x3D; p(s_{t+1} | a_{t+1}, s_t) \newline \newline<br>p(r_{t+1} | a_{t+1}, s_t, …, a_1, s_0) &#x3D; p(r_{t+1} | a_{t+1}, s_t)<br>\end{aligned}<br>}<br>$$</p>
+<p>可以用 Markov decision process 这个名词来记忆上述组成:</p>
+<ul>
+<li>Markov 对应 Markov property</li>
+<li>decision 对应 policy</li>
+<li>process 对应 sets 和 probability distribution</li>
+</ul>
+<p>如果 policy 确定, 那么 markov decision process 就变成了 markov process.</p>
+<h1 id="Chapter-2-Bellman-Equation"><a href="#Chapter-2-Bellman-Equation" class="headerlink" title="Chapter 2: Bellman Equation"></a>Chapter 2: Bellman Equation</h1><h2 id="Why-return-is-important"><a href="#Why-return-is-important" class="headerlink" title="Why return is important"></a>Why return is important</h2><p>从之前的定义可以知道, return 是求一条 trajectory 上所有 reward 的累加, 其可以用来衡量一个 policy 的好坏. 对于下图而言, return 的计算为:</p>
+<p><img src="/../img/reinforcement-learning-return-expectation-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>return &#x3D; 0.5(-1 + \frac{\gamma}{1 - \gamma}) + 0.5(\frac{\gamma}{1 - \gamma})<br>\end{aligned}<br>}<br>$$</p>
+<p>本质是求从 <code>1</code> 开始向下和向右两个 policy 的期望值. 严格来说其不是 return 了, 而是后面要提到的 state value.</p>
+<p>由于从每个 state 出发的 trajectory 都能得到一个 return, 比如下面例子:</p>
+<p><img src="/../img/reinforcement-learning-diff-state-return.png" srcset="/img/loading.gif" lazyload></p>
+<p>假设从 <code>s1</code> 开始 policy 得到的 return 为 <code>v1</code>; 从 <code>s2</code> 开始得到的是 <code>v2</code>; <code>s3</code> 是 <code>v3</code>; <code>s4</code> 是 <code>v4</code>, 那么就有:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>v1 &#x3D; r_1 + \gamma v_2 \newline \newline<br>v2 &#x3D; r_2 + \gamma v_3 \newline \newline<br>v3 &#x3D; r_3 + \gamma v_4 \newline \newline<br>v4 &#x3D; r_4 + \gamma v_1 \newline \newline<br>\end{aligned}<br>}<br>$$<br>这比较直观, <code>s1</code> 经一个 action 到 <code>s2</code>, 那么其 return 就是该 action 的 reward 加上 <code>s2</code> 的 return; 对于其他情况也是这个原理. 这种一个 state 的 return 依赖于其他 state 的 return 的 idea 在强化学习中被称为 Bootstrapping (Bootstrapping 原意是将两侧鞋带往上提的动作, 后引申出让自己原地腾空的讽刺意义, 而这里指代迭代自己得到结果的行为).</p>
+<p>上述式子写成矩阵的形式就是:</p>
+<p><img src="/../img/reinforcement-learning-bellman-equation-derive.png" srcset="/img/loading.gif" lazyload></p>
+<p>简写为:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>v &#x3D; r + \gamma P v<br>\end{aligned}<br>}<br>$$</p>
+<p>这个式子就是该特定 deterministic 问题的 Bellman equation.</p>
+<p>这个例子中最重要的点就是 bootstrapping 的 idea, 一个 state 的 value 会依赖于其他 state 的 value. 还有就是用 matrix-vector form 来求解会比较容易.</p>
+<h2 id="State-value"><a href="#State-value" class="headerlink" title="State value"></a>State value</h2><p>考虑一个 single-step process:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>S_t \overset{A_t}{\rightarrow} R_{t + 1}, S_{t + 1}<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>$t, t+1$ 都是离散的 time instances</li>
+<li>$S_t$ 表示 t 时刻的 state</li>
+<li>$A_t$ 表示 $S_t$ 采取的 action</li>
+<li>$R_{t+1}$ 表示采取 $A_t$ 后得到的 reward</li>
+<li>$S_{t+1}$ 表示采取 $A_t$ 后转移得到的 state</li>
+</ul>
+<p>注意 $S_t, A_t, R_t$ 这些都是随机变量, 这里的每个操作都是用 probability distribution 来决定的:</p>
+<ul>
+<li>$S_t \rightarrow A_t$, 一个 state 会采取什么样的 action, 由 $\pi(A_t &#x3D; a | S_t &#x3D; s)$ 决定</li>
+<li>$S_t, A_t \rightarrow R_{t+1}$, 在一个 state 下采取一个 action, 会得到什么 reward, 由 $p(R_{t+1} &#x3D; r | S_t &#x3D; s, A_t &#x3D; a)$ 决定</li>
+<li>$S_t, A_t \rightarrow S_{t+1}$, 在一个 state 下采取一个 action, 会跳转到什么 state, 由 $p(S_{t+1} &#x3D; s’ | S_t &#x3D; s, A_t &#x3D; a)$ 决定</li>
+</ul>
+<p>当然可以把 single-step 扩展到 multi-step 的场景:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>S_t \overset{A_t}{\rightarrow} R_{t+1},S_{t+1} \overset{A_{t+1}}{\rightarrow} R_{t+2},S_{t+2} \overset{A_{t+2}}{\rightarrow} R_{t+3},S_{t+3}<br>\end{aligned}<br>}<br>$$</p>
+<p>将该 trajectory 上所有 reward 累加, 在附上 discounted rate, 就能得到 discounted return:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>G_t &#x3D; R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + …<br>\end{aligned}<br>}<br>$$</p>
+<p>有了上述这些概念, 就能够定义 state value (state value function) 了, 其就是 $G_t$ 的期望值:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>v_\pi (s) &#x3D; E[G_t | S_t &#x3D; s]<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>不同的 $s$ 能得到不同的 state value</li>
+<li>不同的 policy 会得到不同的 trajectory, 也会得到不同的 state value</li>
+<li>$v_\pi (s)$ 也可以写为 $v(s, \pi)$</li>
+</ul>
+<h2 id="Bellman-equation"><a href="#Bellman-equation" class="headerlink" title="Bellman equation"></a>Bellman equation</h2><p>Bellman equation 描述了不同 state 间 state value 的关系. 主要依赖的推导思想是: 当前 state 的 return 等于 immediate reward 加上下一个时刻的 return.</p>
+<p>考虑一个 random trajectory:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>S_t \overset{A_t}{\rightarrow} R_{t+1},S_{t+1} \overset{A_{t+1}}{\rightarrow} R_{t+2},S_{t+2} \overset{A_{t+2}}{\rightarrow} R_{t+3},S_{t+3}<br>\end{aligned}<br>}<br>$$</p>
+<p>其 return $G_t$ 可以写为:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>G_t &amp;&#x3D; R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + … \newline\newline<br>&amp;&#x3D; R_{t+1} + \gamma(R_{t+2} + \gamma R_{t+3} + …) \newline\newline<br>&amp;&#x3D; R_{t+1} + \gamma G_{t+1}<br>\end{aligned}<br>}<br>$$</p>
+<p>写成 state value 的定义就有:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>v_\pi (s) &amp;&#x3D; E[ G_t | S_t &#x3D; s] \newline\newline<br>&amp;&#x3D; E[ R_{t+1} + \gamma G_{t+1} | S_t &#x3D; s ] \newline\newline<br>&amp;&#x3D; E[ R_{t+1} | S_t &#x3D; s ] + \gamma E[G_{t+1} | S_t &#x3D; s]<br>\end{aligned}<br>}<br>$$</p>
+<p>之后把两项都解出来就能得到 Bellman equation.</p>
+<p>首先是 $E[R_{t+1} | S_t &#x3D; s]$, 其等于在 $s$ 处采取所有可能的 action 后, 得到的 reward 的期望, 也就是 immediate reward 的 mean 值:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>E[R_{t+1} | S_t &#x3D; s] &amp;&#x3D; \sum_a \pi (a|s) E [R_{t+1} | S_t &#x3D; s, A_t &#x3D; a] \newline \newline<br>&amp;&#x3D; \sum_a \pi (a|s) \sum_r p(r | s, a) r<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>$\pi (a|s)$ 是在 $s$ 处采取 action $a$ 的概率</li>
+<li>由于在 $s$ 处采取 $a$ 得到的 reward 也是一个概率分布, 因此需要求期望 $E [R_{t+1} | S_t &#x3D; s, A_t &#x3D; a]$</li>
+<li>$p(r|s, a)$ 表示在 $s$ 处采取 $a$ 得到 reward $r$ 的概率</li>
+</ul>
+<p>接下来展开第二项 $E[G_{t+1} | S_t &#x3D; s]$, $G_{t+1}$ 是下一个 state 的 return, 因此会涉及到从 $s$ 到 $s’$ 的概率分布; 而从 $s$ 需要采取某个 action 才能到 $s’$, 因此涉及到从 $s$ 如何选取 action 的概率分布. 该项的本质是求 mean of future rewards:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>E[G_{t+1} | S_t &#x3D; s] &amp;&#x3D; \sum_s’ E[G_{t+1} | S_{t+1} &#x3D; s’] p(s’|s) \newline \newline<br>&amp;&#x3D; \sum_s’ v_\pi (s’) p(s’|s) \newline \newline<br>&amp;&#x3D; \sum_s’ v_\pi (s’) \sum_a p(s’ | s,a) \pi (a|s)<br>\end{aligned}<br>}<br>$$</p>
+<p>完整的 Bellman equation 如下:</p>
+<p><img src="/../img/reinforcement-learning-full-bellman-equation.png" srcset="/img/loading.gif" lazyload></p>
+<p>对状态空间中所有 state 列出上述公式, 然后进行求解, 这个过程也称作 policy evaluation, 因为其与 policy 相关.</p>
+<p>这里的 $p(r | s,a)$ 和 $p(s’ | s,a)$ 代表 dynamic model.</p>
+<h2 id="Bellman-equation-Matrix-vector-form"><a href="#Bellman-equation-Matrix-vector-form" class="headerlink" title="Bellman equation: Matrix-vector form"></a>Bellman equation: Matrix-vector form</h2><p>先对上述 Bellman equation 做一个变换, 让整个式子看起来简化一些:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>v_\pi (s) &amp;&#x3D; \sum_a \pi (a|s) [\sum_r p(r|s,a)r + \gamma \sum_s’ p(s’|s,a) v_\pi (s’)] \newline \newline<br>v_\pi (s) &amp;&#x3D; r_\pi (s) + \gamma \sum_s’ p_\pi (s’|s) v_\pi (s’) \newline \newline<br>其中: r_\pi (s) &amp;\overset{\triangle}{&#x3D;} \sum_a \pi (a|s) \sum_r p(r|s,a)r \newline \newline<br>p_\pi (s’|s) &amp;\overset{\triangle}{&#x3D;} \sum_a \pi (a|s) p(s’|s,a)<br>\end{aligned}<br>}<br>$$</p>
+<p>为了写成 matrix-vector 的形式, 还需要为 state 标上号, 写为:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>v_\pi (s_i) &#x3D; r_\pi (s_i) + \gamma \sum_{s_j} p_\pi (s_j|s_i) v_\pi (s_j) \newline \newline<br>\end{aligned}<br>}<br>$$</p>
+<p>写出所有 $s_i$ 的 bellman equation, 就得到矩阵形式:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>v_\pi &#x3D; r_\pi + \gamma P_\pi v_\pi<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>$v_\pi &#x3D; [v_\pi (s_1),…,v_\pi (s_n)]^T \in R^n$</li>
+<li>$r_\pi &#x3D; [r_\pi (s_1),…,r_\pi (s_n)]^T \in R^n$</li>
+<li>$P_\pi \in R^{n \times n}$, $[P_{\pi}]_{i j} &#x3D; p_\pi (s_j | s_i)$, 该矩阵也称 state transition matrix</li>
+</ul>
+<p>下面是一个例子:</p>
+<p><img src="/../img/reinforcement-learning-transition-matrix-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>解上述矩阵的过程就叫 “policy evaluation”.</p>
+<p>其 closed-form solution 可以写为:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>v_\pi &#x3D; (I - \gamma P_\pi)^{-1} r_\pi<br>\end{aligned}<br>}<br>$$</p>
+<p>但实际中一般不用这个求解, 因为维度高时, 求逆的计算量会比较大. 通常用 iterative solution:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>v_{k+1} &#x3D; r_\pi + \gamma P_\pi v_k<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>注意 $v$ 的下标是 $k$ 和 $k+1$, 与之前的 $\pi$ 并不冲突</li>
+</ul>
+<p>这样一直得到一个序列 ${v_0, v_1, v_2,…}$, 我们可以证明, 当 $k \rightarrow \infty$ 时, $v_k$ 就收敛到了 $v_\pi$:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>v_{k} \rightarrow v_\pi &#x3D; (I - \gamma P_pi)^{-1} r_\pi, k \rightarrow \infty<br>\end{aligned}<br>}<br>$$</p>
+<p>核心的证明思路是证明 $\delta_k &#x3D; v_k - v_\pi$, 在 $k \rightarrow \infty$ 时, $\delta_k \rightarrow 0$.</p>
+<h2 id="Action-value"><a href="#Action-value" class="headerlink" title="Action value"></a>Action value</h2><p>这里说明下 state value 和 action value 的区别:</p>
+<ul>
+<li>State value 是从一个 state 出发得到的 average return</li>
+<li>Action value 是从一个 state 出发采取某个 action 后得到的 average return</li>
+</ul>
+<p>Action 的选择通常就是根据 action value 来判断, 越大越容易选择. 其定义写为:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>q_\pi (s,a) &#x3D; E[G_t | S_t &#x3D; s, A_t &#x3D; a]<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>在 policy $\pi$ 下, 固定 state 和 action 得到的 return $G_t$ 的期望值</li>
+</ul>
+<p>当然可以用 action value 来写 state value 的表达式:</p>
+<p><img src="/../img/reinforcement-learning-state-value-rep-by-action-value.png" srcset="/img/loading.gif" lazyload></p>
+<p>同样, 如果知道了 state value, 也能用来求 action value:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>q_\pi (s,a) &#x3D; \sum_r p(r|s,a) r + \gamma \sum_s’ p(s’|s,a) v_\pi (s’)<br>\end{aligned}<br>}<br>$$</p>
+<h2 id="Summary"><a href="#Summary" class="headerlink" title="Summary"></a>Summary</h2><p>几个关键概念和公式这里汇总下:</p>
+<ul>
+<li>State value: $v_\pi (s) &#x3D; E[G_t | S_t &#x3D; s]$</li>
+<li>Action value: $q_\pi (s, a) &#x3D; E[G_t | S_t &#x3D; s, A_t &#x3D; a]$</li>
+<li>The Bellman equation (elementwise form): $v_\pi (s) &#x3D; \sum_a \pi (a|s) q_\pi (s,a)$</li>
+<li>The Bellman equation (matrix-vector form): $v_\pi &#x3D; r_\pi + \gamma P_\pi v_\pi$</li>
+</ul>
+<h1 id="Chapter-3-Bellman-Optimality-Equation"><a href="#Chapter-3-Bellman-Optimality-Equation" class="headerlink" title="Chapter 3: Bellman Optimality Equation"></a>Chapter 3: Bellman Optimality Equation</h1><p>当当前策略不是最优时, 可以用 action value 来判断哪个 action 最优, 进而调整 policy:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\pi_{new} (a | s_1) &#x3D;<br>\begin{cases}<br>1, a &#x3D; a^* \newline \newline<br>0, a \ne a^*<br>\end{cases} \newline \newline<br>where\ a^* &#x3D; argmax_a\ q_\pi (s_1, a) &#x3D; a_3<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>$a^*$ 表示最优的 action</li>
+</ul>
+<p>用严格的数学工具说明上述过程的可靠性就是 Bellman Optimality Equation.</p>
+<h2 id="Optimal-policy"><a href="#Optimal-policy" class="headerlink" title="Optimal policy"></a>Optimal policy</h2><p>State value 可以用来衡量一个 policy 的好坏, 如果有:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>v_{\pi_1} (s) \ge v_{\pi_2} (s) \ \ for\ all\ s in S<br>\end{aligned}<br>}<br>$$</p>
+<p>即, 对任意状态都有 $\pi_1$ 带来的 state value 更大, 则说明 $\pi_1$ 比 $\pi_2$ 好.</p>
+<p>因此正式的定义就是: 如果 policy $\pi^*$ 是 optimal, 那么就有 $v_{\pi^*} (s) \ge v_{\pi}(s)$, 对于任何 $s$ 或任何 policy $\pi$ 都成立.</p>
+<p>Bellman optimality equation 定义如下 (elementwise form), 与 Bellman equation 的区别就是加上了 $\max_{\pi}$:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>v(s) &amp;&#x3D; \max_{\pi} \sum_a \pi(a|s) (\sum_r p(r|s, a)r + \gamma \sum_{s’} p(s’|s,a)v(s’)),\ \forall s \in S \newline \newline<br>&amp;&#x3D; \max_{\pi} \sum_a \pi(a|s) q(s,a)\ \ s \in S<br>\end{aligned}<br>}<br>$$</p>
+<p>Matrix-vector form 如下:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>v &#x3D; \max_{\pi} (r_\pi + \gamma P_\pi v) \newline \newline<br>[r_\pi]_s \overset{\Delta}{&#x3D;} \sum_a \pi (a|s) \sum_r p(r|s,a) r \newline \newline<br>[P_\pi]_{s,s’} &#x3D; p(s’|s) \overset{\Delta}{&#x3D;} \sum_a \pi (a|s) \sum_s’ p(s’ | s,a)<br>\end{aligned}<br>}<br>$$</p>
+<p>通常 $p(r|s,a)$ 和 $p(s’|s,a)$ 是已知的, 在给 $v(s’)$ 赋初始值之后, 整个 $q(s,a)$ 都是已知的.</p>
+<p>求解 elementwise form, 其实就等价于:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\max_{\pi} \sum_a \pi(a|s) q(s,a) &#x3D; \max_{a \in A(s)} q(s,a)<br>\end{aligned}<br>}<br>$$</p>
+<p>也就是直接让最大的 $q(s,a)$ 的概率为 1:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\pi(a|s) &#x3D;<br>\begin{cases}<br>1\ a &#x3D; a^* \newline \newline<br>0\ a \ne a^* \newline \newline<br>where\ a^* &#x3D; arg\ max_a q(s,a)<br>\end{cases}<br>\end{aligned}<br>}<br>$$</p>
+<h2 id="Contraction-mapping-theorem"><a href="#Contraction-mapping-theorem" class="headerlink" title="Contraction mapping theorem"></a>Contraction mapping theorem</h2><p>这里引入 fixed point 的概念, 对于函数 $f: X \rightarrow X$, 如果有 $x \in X$:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>f(x) &#x3D; x<br>\end{aligned}<br>}<br>$$</p>
+<p>就称 $x$ 是一个 fixed point.</p>
+<p>如果一个 $f$ 是 contraction mapping (contraction function), 需要满足:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\vert \vert f(x_1) - f(x_2) \vert \vert \le \gamma \vert \vert x_1 - x_2 \vert \vert<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>$\gamma \in (0,1)$, 也就是说映射后距离变短了</li>
+</ul>
+<p><img src="/../img/reinforcement-learning-contraction-mapping.png" srcset="/img/loading.gif" lazyload></p>
+<p>这里引出 Contraction Mapping Theorem: 对于任何 $x &#x3D; f(x)$ ($x$ 通过一个以它为参数的函数求得) 这种形式的 equation, 如果 $f$ 是一个 contraction mapping, 那么就会有下面性质:</p>
+<ul>
+<li>Existence: 存在一个 fixed point $x^*$, 满足 $f(x^*) &#x3D; x^*$</li>
+<li>Uniqueness: Fixed point $x^*$ 是 unique 的</li>
+<li>Algorithm: 考虑序列 ${x_k}$, 且 $x_{k+1} &#x3D; f(x_k)$, 那么当 $k \rightarrow \infty$ 时, 有 $x_k \rightarrow x^*$. 且 convergence rate 是指数级别的. 也就是说可以用迭代的方法找到 fixed point</li>
+</ul>
+<p>对于 Bellman optimality equation, 可以写为:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>v &#x3D; f(v) &#x3D; max_\pi (r_\pi + \gamma P_\pi v)<br>\end{aligned}<br>}<br>$$</p>
+<p>其中可以证明 $f(v)$ 是 contraction mapping, $\gamma$ 是 discount rate. 那么我们就能通过迭代找到解.</p>
+<p>假设 $v^*$ 是 Bellman Optimality equation 的解, 那么就满足:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>v^* &#x3D; \max_\pi (r_\pi + \gamma P_\pi v^*) \newline \newline<br>\pi^* &#x3D; arg\ \max_\pi (r_\pi + \gamma P_\pi v^*) \newline \newline<br>v^* &#x3D; r_{\pi^*} + \gamma P_{\pi^*} v^*<br>\end{aligned}<br>}<br>$$</p>
+<p>可以看出, Bellman Optimality equation 其实就是一种特殊的 Bellman equation, 只不过采取 $\pi^*$ 最优策略, 得到的也是最优 state value $v^*$. 其实就是采取让 $a^*$ 概率最大的策略的 Bellman equation.</p>
+<h2 id="Analyzing-optimal-policies"><a href="#Analyzing-optimal-policies" class="headerlink" title="Analyzing optimal policies"></a>Analyzing optimal policies</h2><p>影响 optimal policy ($\pi(a|s)$)  决策的主要有 3 个 factors:</p>
+<ul>
+<li>Reward design: $r$</li>
+<li>System model: $p(r|s,a), p(s’|s,a)$</li>
+<li>Discount rate: $\gamma$</li>
+</ul>
+<p>通常调整 $r$ 和 $\gamma$ 是比较容易的.</p>
+<h1 id="Chapter-4-Value-Iteration-amp-Policy-Iteration"><a href="#Chapter-4-Value-Iteration-amp-Policy-Iteration" class="headerlink" title="Chapter 4 Value Iteration &amp; Policy Iteration"></a>Chapter 4 Value Iteration &amp; Policy Iteration</h1><h2 id="Value-Iteration-algorithm"><a href="#Value-Iteration-algorithm" class="headerlink" title="Value Iteration algorithm"></a>Value Iteration algorithm</h2><p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>v_{k+1} &#x3D; f(v_k) &#x3D; \max_\pi (r_\pi + \gamma P_\pi v_k), k&#x3D; 1,2,3…<br>\end{aligned}<br>}<br>$$</p>
+<p>这个算法其实叫做 “value iteration”.</p>
+<p>需要注意这里的下标, $k$ 表示的不是 “时间步”, 而是 “迭代次数”:</p>
+<ul>
+<li>$v_k$ 表示当前手里的 “旧的, 不太准确的” 价值表</li>
+<li>$v_{k+1}$ 表示经过一次 Bellman 算子作用后, “更新的, 更准一点的” 价值表</li>
+</ul>
+<p>该式子分两步计算, 会给定一个初始的 $v_0$:</p>
+<ol>
+<li>Policy update, 先找到最优的 $\pi$</li>
+</ol>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\pi_{k+1} &#x3D; arg\ max_\pi (r_\pi + \gamma P_\pi v_k)<br>\end{aligned}<br>}<br>$$</p>
+<ol start="2">
+<li>Value update, 用找到的 $\pi$ 更新 value</li>
+</ol>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>v_{k+1} &#x3D; r_{\pi_{k+1}} + \gamma P_{\pi_{k+1}} v_k<br>\end{aligned}<br>}<br>$$</p>
+<p>一个伪代码如下:</p>
+<p><img src="/../img/reinforcement-learning-value-iteration-algorithm-pseudo.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="Policy-iteration-algorithm"><a href="#Policy-iteration-algorithm" class="headerlink" title="Policy iteration algorithm"></a>Policy iteration algorithm</h2><p>给定一个 random initial policy $\pi_0$, 然后分两步迭代:</p>
+<ol>
+<li>Policy evaluation (PE), 计算在 $\pi_k$ 下的 state value:</li>
+</ol>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>v_{\pi_k} &#x3D; r_{\pi_k} + \gamma P_{\pi_k} v_{\pi_k}<br>\end{aligned}<br>}<br>$$</p>
+<ol start="2">
+<li>Policy improvement (PI), 更新成新的 policy $\pi_{k+1}$:</li>
+</ol>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\pi_{k+1} &#x3D; arg\ \max_\pi (r_\pi + \gamma P_\pi v_{\pi_k})<br>\end{aligned}<br>}<br>$$</p>
+<p>整个过程如下:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\pi_0 \overset{PE}{\rightarrow} v_{\pi_0} \overset{PI}{\rightarrow} \pi_1 \overset{PE}{\rightarrow} v_{\pi_1} \overset{PI}{\rightarrow} \pi_2 \overset{PE}{\rightarrow} v_{\pi_2} …<br>\end{aligned}<br>}<br>$$</p>
+<p>每次迭代一定有:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>v_{\pi_0} \le v_{\pi_1} \le v_{\pi_2} \le … \le v^*<br>\end{aligned}<br>}<br>$$</p>
+<p>可以通过 Convergence of Policy Iteration theorem 来证明.</p>
+<p>伪代码如下:</p>
+<p><img src="/../img/reinforcement-learning-policy-iteration-algorithm-pseudo.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="Truncated-policy-iteration-algorithm"><a href="#Truncated-policy-iteration-algorithm" class="headerlink" title="Truncated policy iteration algorithm"></a>Truncated policy iteration algorithm</h2><p>Truncated policy iteration algorithm 是 value&#x2F;policy iteration algorithm 的一般化.</p>
+<p>伪代码如下:</p>
+<p><img src="/../img/reinforcement-learning-truncated-policy-iteration.png" srcset="/img/loading.gif" lazyload></p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/AI/" class="category-chain-item">AI</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>强化学习基础</div>
+      <div>http://example.com/2026/04/20/强化学习基础/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Jie</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年4月20日</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>许可协议</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/04/17/Python-abc/" title="Python-abc">
+                        <span class="hidden-mobile">Python-abc</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zKurisu/comments-utterances');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Jie</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Orkarin</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.1/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

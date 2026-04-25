@@ -24,8 +24,9 @@
 <meta property="og:description" content="微软开源库 Recommenders 简介该文档主要记录 recommenders 这个仓库的学习过程, 设计算法原理和代码技巧. 相关概念这里积累一些推荐算法中的术语. 涉及几个解释方向:  什么是 xxx xxx 对推荐会有什么影响 如何减缓 xxx 的影响  Cold itemCold item 是指系统中那些几乎没有或完全没有历史交互数据 (如点击, 购买, 评分, 收藏等) 的物品. 这">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/recomender-system-sar-structure.png">
+<meta property="og:image" content="http://example.com/img/reinforcement-learning-rbm-structure.png">
 <meta property="article:published_time" content="2026-04-11T02:13:57.000Z">
-<meta property="article:modified_time" content="2026-04-11T05:23:57.853Z">
+<meta property="article:modified_time" content="2026-04-22T06:30:41.302Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/recomender-system-sar-structure.png">
@@ -439,7 +440,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3.6k 字
+          13k 字
         
       </span>
     
@@ -450,7 +451,7 @@ path.outline_glyph {
         
         
         
-          30 分钟
+          105 分钟
         
       </span>
     
@@ -565,6 +566,167 @@ path.outline_glyph {
 <li>$\frac{1}{2}^{\frac{t_0 - t_k}{T}}$ 用来根据时间进行缩放, $t_0$ 是当前时间, $t_k$ 是时间发生时间. $T$ 是一个常数, 用来控制衰减的速度, 如果 $t_0 - t_k &#x3D; T$, 则称为半衰期, 如果 $T$ 设置得很大, 则分数衰减慢, 此时系统更看重用户的长期兴趣; 而 $T$ 设置很小, 此时分数会迅速减小, 更看重实时兴趣</li>
 </ul>
 <p>假如有 <code>n</code> 个用户, <code>m</code> 个 items, 则会得到一个 <code>n x m</code> 的矩阵.</p>
+<h1 id="ALS"><a href="#ALS" class="headerlink" title="ALS"></a>ALS</h1><p>Matrix factorization by ALS (Alternating Least Squares) 是一种 collaborative filtering algorithm.</p>
+<p>这里要先了解一些数学基础.</p>
+<p>秩 (Rank) 用来衡量矩阵中包含的 “非冗余信息” 的量. 一个包含信息的矩阵, 如果数据不是随机生成的, 那么它内部通常存在某种关联性, 比如一个 <code>3x3</code> 的矩阵:</p>
+<ul>
+<li>如果 rank 为 3, 说明 3 个向量 (一行&#x2F;一列是一个向量) 都指向不同的方向, 此时它们可以 “撑起” 整个三维空间, 可以用它们的线性组合到达空间中的任何一个点</li>
+<li>如果 rank 为 2, 说明 3 个向量中, 有一个能通过另外两个相加或缩放得到 (共面), 相当于这个向量的信息是无效的, 已经包含在其他向量中了, 此时它们就只能撑起一个 “二维空间”</li>
+<li>如果 rank 为 1, 说明 3 个向量都指向一个方向 (共线), 此时只能撑起一条 “直线”</li>
+</ul>
+<p>从线性代数的术语来讲, rank 是矩阵中线性无关的行 (或列) 的最大数量. 如果一行可以通过其他行的加减乘除组合出来, 那这一行就是 “多余” 的:</p>
+<ul>
+<li>满秩 (Full Rank), 所有的行都是独立的, 没有任何信息是重复的</li>
+<li>秩亏 (Rank Deficient): 矩阵中存在冗余</li>
+</ul>
+<p>比如:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>A &#x3D; \begin{bmatrix}<br>1 &amp; 2 \newline \newline<br>2 &amp; 4<br>\end{bmatrix}<br>\end{aligned}<br>}<br>$$</p>
+<p>第二行恰好是第一行的 2 倍, 这意味着第二行没有提供任何新信息, 因此这个矩阵的 rank 就是 <code>1</code>, 尽管它是一个 <code>2 x 2</code> 矩阵.</p>
+<p>去除一个高维矩阵中冗余信息的一个方法就是矩阵分解 (低秩分解), 如果 <code>mxn</code> 矩阵的秩 <code>r</code> 远小于其维度, 即 $r &lt;&lt; m,n$, 意味着这个矩阵可以用两个更小的矩阵相乘来精确表达:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>A_{m \times n} \approx U_{m \times k} \times V_{k \times n}<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>这里的 <code>k</code> 就是我们选定的 rank</li>
+<li>原矩阵需要存储 <code>m x n</code> 个元素, 而分解后只需要存储 <code>(m + n) x k</code> 个元素, 当 <code>k</code> 很小时, 能实现极大的数据压缩</li>
+<li>$A$ 矩阵的每一行维度是 <code>n</code>, $U$ 就表明将每一行投影到了 <code>k</code> 维上 (高维投影到低维); $V$ 矩阵相当于对 $U$ 的每一行做线性变换, 近似还原出 $A$</li>
+<li>$U$ 的每一行也可以称为原始向量的 “隐向量”</li>
+</ul>
+<p>此时回到推荐系统的场景, 假设有一个巨大的表格 (评分矩阵 $R$), 行代表用户 (Users), 列代表物品 (Items). 表格中的每个单元格是用户对物品的评分. 用户肯定是没办法看完全部电影的, 因此这张表的绝大多数地方都是空白的. 此时就能够通过矩阵分解来压缩 $R$ 的维度, 寻找两个维度更小的矩阵 $P$ (用户矩阵) 和 $Q$ (物品矩阵), 使得它们的乘积尽可能地还原原始矩阵 $R$:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>R \approx P \times Q^T<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>$P$ 的每一行代表一个用户的 “特征向量”</li>
+<li>$Q$ 的每一行代表一个物品的 “特征向量”</li>
+<li>这里的特征都不是显性的 (比如导演, 题材等自己加上的标签), 而是算法自动学习出来的 “隐向量”, 表示某种特征</li>
+</ul>
+<p>将大矩阵拆为两个小矩阵的好处在于, 原本的稀疏矩阵中, 用户与某个电影很可能没有交互, 因此无法计算相关分数. 而拆分后的 “隐向量” 中包含某种关联, 可以计算出一个 “预测分”.</p>
+<p>通常损失函数的定义是让 $P \times Q^T$ 与已知评分的差值最小 (预测分与实际分数的差值越小, 说明预测越准). 由于 $P$ 和 $Q$ 都是未知的需要求解, 如果要同时优化它们, 方程很难直接求解, 因此有了 ALS, 其核心思路是: 固定一个矩阵, 求解另一个矩阵, 然后交换后继续求解, 直到两个矩阵的数值收敛:</p>
+<ol>
+<li>固定 $Q$, 优化 $P$. 假设物品的特征向量是已知的, 此时问题退化为一个简单的 “最小二乘法” 线性回归问题, 此时能通过解析解算出每个用户的最佳特征向量</li>
+<li>固定 $P$, 优化 $Q$. 拿到更新后的用户向量后, 反过来假设用户是已知的, 再优化物品向量</li>
+<li>重复迭代, 直到两个矩阵的数值趋于稳定</li>
+</ol>
+<p>这里回顾下最小二乘法, “最小” 指的是误差最小, “二乘” 指计算式子里的平方项. 其核心目标是通过让误差的平方和最小, 来找到一个最合适的直线 (或平面).</p>
+<p>假如你在纸上画了很多个点, 这些点大致排成一条线, 但并不完全笔直, 此时想用一条直线来代表这些点的趋势. 由于无论怎么画, 都无法让一条直线经过所有的点, 因此只能找到一条近似的直线. 衡量这条直线的好坏, 就是算各个点与直线的距离, 然后取平方 (消除正负号的影响, 并且放大较大的误差) 后相加. 通过最小化平方和, 来调整直线的位置.</p>
+<p>用数学语言表达就是, 假设有一组观测数据 $(x_i, y_i)$, 找一个线性函数 $f(x) &#x3D; wx + b$ 来拟合, 用最小二乘法的损失函数就是:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>S &#x3D; \sum_{i&#x3D;1}^n (y_i - f(x_i)^2) &#x3D; \sum_{i&#x3D;1}^n (y_i - (wx_i + b))^2<br>\end{aligned}<br>}<br>$$<br>之后通过反向梯度传播, 来更新 $w$ 和 $b$.</p>
+<p>解析解 (Analytical solution) 这个概念也经常用到, 其也叫做封闭解 (Closed-form solution), 是指通过数学公式, 代数运算和已知的数学函数 (如 <code>sin</code>, <code>cos</code>, <code>log</code>, <code>exp</code> 等), 直接推导出的解. 特点是只要把变量代入公式, 就能立刻算出精确结果. </p>
+<p>比如求解一个一元二次方程 $ax^2 + bx + c &#x3D; 0$, 其解析解就是 $x &#x3D; \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$, 不管输入多复杂, 总能得到精确答案.</p>
+<p>与之对应的是数值解 (Numerical solution), 是一组近似解, 存在计算误差, 通过迭代来拟合, 好处就是普适性很强, 任何问题都能找出一个近似值.</p>
+<p>ALS 中的每一步都能算出当前时候的最优解, 由于固定了一个矩阵, 可以算出解析解: $\hat{x} &#x3D; (A^T A)^{-1} A^T b$.</p>
+<h1 id="RBM"><a href="#RBM" class="headerlink" title="RBM"></a>RBM</h1><h2 id="Joint-probability-distribution"><a href="#Joint-probability-distribution" class="headerlink" title="Joint probability distribution"></a>Joint probability distribution</h2><p>先介绍一个数学概念: joint probability distribution, 其核心在于, 不再只关注一个随机变量, 而是关注两个或多个随机变量在同一实验或同一时刻同时发生的概率.</p>
+<p>比如有两个随机变量 $X$ 和 $Y$:</p>
+<ul>
+<li>对于单一分布, 回答 “X 等于某个值的概率是多少”</li>
+<li>对于联合分布, 回答 “X 等于 a 且 Y 等于 b 的概率是多少”</li>
+</ul>
+<p>如果是离散型变量, 通常用 Joint PMF 来表示:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>P(X &#x3D; x, Y &#x3D; y)<br>\end{aligned}<br>}<br>$$</p>
+<p>对于连续型变量, 用 Joint PDF 表示:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>f(x,y)<br>\end{aligned}<br>}<br>$$</p>
+<h2 id="Chain-Rule"><a href="#Chain-Rule" class="headerlink" title="Chain Rule"></a>Chain Rule</h2><p>在概率论中有一个 Chain Rule, 对于任何两个随机变量, $P(A,B)$ 都可以拆解为 “先发生 A 的概率” 乘以 “在 A 发生条件下 B 发生的概率”, 有:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>P(v,h) &#x3D; P(v|h) P(h) &#x3D; P(h|v) P(v)<br>\end{aligned}<br>}<br>$$<br>(条件概率的计算式子移个项就是上面式子)</p>
+<h2 id="Partition-Function"><a href="#Partition-Function" class="headerlink" title="Partition Function"></a>Partition Function</h2><p>Partition Function (配分函数), 通常用符号 $Z$ 表示, 是一个源自物理学 (统计力学) 的核心概念. 在机器学习中, 可以把它视为 “归一化系数”, 直观理解其就是概率的分母.</p>
+<p>比如扔一个骰子, 其点数 <code>1~6</code> 分别对应不同的分数: 10, 20, 30, 40, 50, 60. 这些分数的总和并不等于 <code>1</code> (和是 <code>210</code>), 所以它们不是概率值. 为了把这些分数转换成真正的概率, 需要用分数除以总和. 而这个总和, 就是这个系统的 partition function $Z$:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>P(i) &#x3D; \frac{score_i}{Z}<br>\end{aligned}<br>}<br>$$</p>
+<p>在 RBM 这种基于能量的系统中, 每个状态 <code>(v,h)</code> 对应一个能量 $E(v,h)$, 而在计算概率时, 需要将能量写作 $e^{-E}$ 的形式. 因此概率计算为:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>P(v, h) &#x3D; \frac{1}{Z} e^{-E(v,h)} \newline \newline<br>Z &#x3D; \sum_{v,h} e^{-E(v,h)}<br>\end{aligned}<br>}<br>$$</p>
+<p>在物理和信息论中, 通常希望系统是可组合的:</p>
+<ul>
+<li>能量能够对称相加: 如果你有两个独立的系统 A 和 B, 总能量应该是 $E_{total} &#x3D; E_A + E_B$</li>
+<li>概率时独立相乘的: 如果两个系统相互独立, 它们同时发生的概率应该是 $P_{total} &#x3D; P_A \times P_B$</li>
+</ul>
+<p>而数学上能够把 “加法” 映射到 “乘法” 的, 只有指数函数:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>e^{-(E_A + E_B)} &#x3D; e^{-E_A} \times e^{-E_B}<br>\end{aligned}<br>}<br>$$</p>
+<p>这里添加负号的意义在于, 能量越低 (越稳定), $e^{-E}$ 越大. 这符合物理常识, 即系统倾向于停留在低能量状态. 比如山谷里的石头, 大部分时间会停留在地势最低的地方 (地能量), 偶尔会因为扰动出现在高处.</p>
+<p>也能通过最大熵原理 (Principle of Maximum Entropy) 来解释为什么这样计算. 假设想为一个系统建立概率模型, 但你只知道一些观察到的特征 (比如平均能量), 而对其他一无所知. 此时为了不引入主观偏见, 应该选择一个 “最随机 (熵最大)” 的分布. 而可以通过数学证明 (通过拉格朗日乘子法) 得到, 在给定平均能量限制下, 使熵最大化的概率分布形式一定是指数形式: $P \propto e^{-\lambda E}$.</p>
+<p>Partition function 的一个重要特征时, 对其对数求导能得到概率的期望值. 假设这里 $Z &#x3D; \sum_s e^{b \cdot s}$, $s$ 是状态, $b$ 是参数:</p>
+<ol>
+<li>直接求导有: $\frac{\partial Z}{\partial b} &#x3D; \sum_s s \cdot e^{b \cdot s}$</li>
+<li>如果是对其对数求导:</li>
+</ol>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\frac{\partial log Z}{\partial b} &#x3D; \frac{1}{Z} \cdot \frac{\partial Z}{\partial b} &#x3D; \frac{\sum_s s \cdot e^{b \cdot s}}{Z} &#x3D; \sum_s s \cdot \frac{e^{b \cdot s}}{Z}<br>\end{aligned}<br>}<br>$$</p>
+<p>这里的 $\frac{e^{b \cdot s}}{Z}$ 恰好是一个 $s$ 对应的概率, 而结果整体表示 $\sum_s s \cdot P(s)$ 是期望值的定义.</p>
+<h2 id="Boltzmann-Distribution"><a href="#Boltzmann-Distribution" class="headerlink" title="Boltzmann Distribution"></a>Boltzmann Distribution</h2><p>Boltzmann distribution (玻尔兹曼分布), 在数学上也常被称为吉布斯分布 (Gibbs Distribution), 是统计力学和机器学习中描述系统状态分布的最基本公式. 其回答了一个核心问题: 在一个处于平衡状态的系统中, 某个特定状态出现的概率是多少.</p>
+<p>比如在一个处于特定温度 $T$ 下的系统, 状态 $i$ 出现的概率 $P_i$ 取决于该状态的能量 $E_i$:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>P_i &#x3D; \frac{1}{Z}e^{-\frac{E_i}{k}}<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>$E_i$ 是该状态下的能量. 能量越低, 概率越高</li>
+<li>$k$ 是玻尔兹曼常数, 是一个用来连接微观能量与宏观温度的常数</li>
+<li>$T$ 指系统所处的环境温度</li>
+<li>$Z$ partition function, 是归一化常数, 确保所有概率之和为 <code>1</code>. 即 $Z &#x3D; \sum_j e^{e-\frac{E_j}{k}}$</li>
+</ul>
+<p>在机器学习中, 通常简化 $k$ 为 <code>1</code>.</p>
+<h2 id="Hamiltonian"><a href="#Hamiltonian" class="headerlink" title="Hamiltonian"></a>Hamiltonian</h2><p>在 RBM 语境下, Hamiltonian (哈密顿量) 指代系统的总能量函数 $E(v,h)$. 在统计物理中, Hamiltonian 描述系统的总能量; 而在 RBM 中, 它描述了 visible layer 和 hidden layer 特定状态组合的 “不和谐度”.</p>
+<p>对于一组状态 $(v,h)$, 其 Hamiltonian 通常写为:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>H(v,h) &#x3D; -\sum_i a_i v_i - \sum_j b_j h_j - \sum_{i,j} v_i w_{i j} h_j<br>\end{aligned}<br>}<br>$$</p>
+<p>式子由三部分组成:</p>
+<ul>
+<li>$-\sum a_i v_i$, 表示 visible unit $v_i$ 自带的能量倾向 ($a_i$ 是一个偏置项). 其反应数据本身的先验分布, 比如推荐系统中某个电影非常热门, 那么其 $a_i$ 就会很大. 加上符号也是希望让能量低的概率高</li>
+<li>$-\sum b_j h_j$. 表示 hidden 特征的自己激活倾向. 反应隐藏特征出现的频率</li>
+<li>$-\sum v_i w_{i j} h_j$, 描述 visible layer 和 hidden layer 之间的耦合能量, 用来衡量 $v_i$ 和 $h_j$ 的一致性. 如果 $w_{i j}$ 是正数, 当 $v_i &#x3D; 1$ 且 $h_j &#x3D; 1$ 同时发生时, 能量会大幅下降 (因为加上了负号), 这意味着模型 “喜欢” 它们同时出现; 反之</li>
+</ul>
+<h2 id="Gibbs-Sampling"><a href="#Gibbs-Sampling" class="headerlink" title="Gibbs Sampling"></a>Gibbs Sampling</h2><p>Gibbs Sampling 是一种特殊的马尔可夫链蒙特卡洛算法, 其核心作用是: 当你很难直接从一个复杂的联合概率分布 $P(x_1, x_2, …, x_n)$ 中进行采样时, 它可以让你通过不断地从简单的条件概率分布中采样, 最终得到符合联合分布的样本.</p>
+<p>想象你要找到从一个洒满了点的二维平面中选择一个点的概率, 这可能比较复杂, 不知道从哪里下手. 但如果你站在平面的某条线上, 找到沿着该线的某点的概率, 就会清楚一些.</p>
+<p>Gibbs sampling 的做法是:</p>
+<ol>
+<li>随机给所有变量赋一个初始值</li>
+<li>固定住其他所有变量, 只根据条件概率更新其中一个变量的值</li>
+<li>轮流对所有变量执行这个操作</li>
+<li>重复多次后, 变量的状态组合就会趋近于真实的联合分布</li>
+</ol>
+<h2 id="Idea"><a href="#Idea" class="headerlink" title="Idea"></a>Idea</h2><p>RBM (Restricted Boltzmann Machine) 是一个 generative neural network model, 通常用 unsupervised learning 方式训练. 从结构上来看, 它是一个二分图, 包含两层神经元:</p>
+<ul>
+<li>Visible layer, $v$ (可视层): 对应我们能观测到的数据 (即喂给模型的真实数据, 在推荐系统中, 通常是用户的评分或点击行为)</li>
+<li>Hidden layer, $h$ (隐藏层): 对应数据背后的 “隐含特征” (即模型能捕捉到的隐藏模式, 比如电影的类型, 导演风格, 演员组合等)</li>
+</ul>
+<p>Restricted 的意思是, 上述两层的神经元之间没有连接. 这意味着给定可视层时, 隐藏层的每个单元是条件独立的; 反之亦然, 这种结构能极大简化计算.</p>
+<p><img src="/../img/reinforcement-learning-rbm-structure.png" srcset="/img/loading.gif" lazyload></p>
+<p>RBM 的目标是学习到一个 joint probability distribution $P(v, h)$. 此时模型能够理解什么样的隐藏特征 ($h$) 组合会产生什么样的观测数据 ($v$), 比如给定一个电影的隐藏特征, 其能够通过 $P(v|h)$ 在可见层 $v$ 给出用户评分.</p>
+<p>RMB 的核心思想是用物理学中的能量模型来描述变量之间的相关性. 其为每一种 $(v,h)$ 的状态组合赋予一个能量值, 公式如下:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>E(v,h) &#x3D; -\sum_i a_i v_i - \sum_j b_j h_j - \sum_{i, j}v_i w_{i j} h_j<br>\end{aligned}<br>}<br>$$<br>能量越低, 发生的概率越大. 模型训练的目的就是让观察到的样本 (用户的真实行为) 处于能量最低点, 即发生的概率最大.</p>
+<p>在推荐场景下, RBM 通过隐藏层 h 来解释用户的评分行为:</p>
+<ul>
+<li>前向过程 ($v \rightarrow h$): 将用户的评分映射为一组隐藏特征</li>
+<li>反向过程 ($h \rightarrow v$): 利用隐藏特征重新 “重建” 评分. 如果重建的评分与原始评分一致, 说明模型抓住了数据的本质规律</li>
+</ul>
+<p>将 RBM 用于 collaborative filtering 时, 思路通常为:</p>
+<ol>
+<li>输入: 每一个用户对应一个 RBM, 可视层单元的数量等于电影数量, 输入是该用户对电影的评分</li>
+<li>处理缺失值: 由于用户只看过极少数电影, RBM 只对用户评价过的电影节点进行参数更新, 忽略未评价的节点</li>
+<li>预测评分: 通过已有的评分激活隐藏层, 再由隐藏层反向预测用户每看过 (缺失) 的电影评分</li>
+</ol>
+<p>具体涉及的公式下面说明.</p>
+<p>这里先说明一个技巧:<br>$$<br>\displaylines<br>{<br>\begin{aligned}<br>(1 + f(x))(1 + f(y)) &#x3D; 1 + f(x) + f(y) + f(x)f(y)<br>\end{aligned}<br>}<br>$$<br>假设 <code>x</code> 和 <code>y</code> 是系统所有可能的状态, <code>f(x)</code> 是 <code>x</code> 的贡献; <code>f(y)</code> 是 <code>y</code> 的贡献. $(1 + f(x))(1 + f(y))$ 这个表达式写出了所有 <code>x</code> 和 <code>y</code> 的组合:</p>
+<ul>
+<li><code>1</code>: <code>x</code> 和 <code>y</code> 都不发生时对系统的贡献</li>
+<li><code>f(x)</code>: 只有 <code>x</code> 发生时对系统的贡献</li>
+<li><code>f(y)</code>: 只有 <code>y</code> 发生时对系统的贡献</li>
+<li><code>f(x)f(y)</code>: 当 <code>x</code> 和 <code>y</code> 同时发生时对系统的贡献</li>
+</ul>
+<p>由上面技巧, 计算给定 $v$ 和偏执 $b$ 时 (Positive phase) 所有 $h$ 的组合的贡献可以写为:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>Z[v,b] &#x3D; \product_j \sum_{h_j &#x3D; 0,1} e^{(\sum_i w_{i j}v_i + b_j) h_j} &#x3D; \product_j (1 + e^{\sum_i w_{i j} v_i + b_j})<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>$Z[v,b]$ 既然表示所有组合的贡献, 因此就是 partition function</li>
+<li>先说内部的 $\sum$, 每个 $h_j$ 有 <code>0</code> (不激活) 和 <code>1</code> (激活) 两种状态, $w_{i j} v_i + b_j$ 是一个 <code>v_i</code> 经过线性变换后的结果, $\sum_i w_{i j} v_i + b_j$ 是累加整个 visible layer 的线性变换结果. 累加 <code>0</code> 和 <code>1</code> 两个状态的结果就能得到单个 $h_j$ 的贡献</li>
+<li>对于变换后的式子, $e^{\sum_i w_{i j} v_i + b_j}$ 表示 $h_j$ 激活对系统的贡献, 累乘能得到所有 $h_j$ 激活&#x2F;不激活的组合</li>
+</ul>
+<p>如果对 $Z$ 的 log 求某一个激活神经元 $h_j$ 的偏置的导数, 就能够得到其平均激活程度 (前面可以看到, 求 $Z$ 的 log 导数恰好是求概率的期望):</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\frac{\partial}{\partial b_j} log Z[v,b] &#x3D;  \frac{1}{1 + e^{-(\sum_i w_{i j} v_i + b_j)}} &#x3D; \sigma(\phi_j (v,b))<br>\end{aligned}<br>}<br>$$</p>
+<p>其中 $\phi_j (v,b) &#x3D; \sum_i w_{i j} v_i + b_j$. 也就是说神经元的 “平均激活概率” 的计算实际上可以直接用 <code>sigmoid</code> 函数来算.</p>
+<p>对于 Negative phase, 固定刚才采样得到的 $h$, 来求 $P(v_i &#x3D; q | h)$, 比如 $q &#x3D; 1,…,5$:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>P(v_i &#x3D; q | h,a) &#x3D; \product_{v_i &#x3D; 1}^q e^{v_i (\sum_j w_{i j} h_j + a_i)} &#x2F; Z_q<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>对于一个 visible layer 的神经元 $v_i$, 要计算 5 个可能分数的概率</li>
+<li>这里其实是 one-hot 的写法, $v_i$ 是一个 5 维的向量, 每次只有一个位置为 <code>1</code>, 比如 $v_i &#x3D; 1$ 其实是 [1, 0, 0, 0, 0], 即第一个位置置 1, 其他位置置 0</li>
+<li>$Z_q$ 是 partition function, 作为归一化分母</li>
+<li>整体相当于 softmax 函数</li>
+</ul>
+<p>由上述式子能够得到新的 $v_i$, 之后又固定这个 $v_i$ 来更新 <code>h</code>, 这样交替进行.</p>
+<p>在经过 <code>k</code> 次迭代后, 我们通过初始 free energy 和此时 free energy 的差来求梯度并反向更新参数:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>F &#x3D; - log Z &#x3D; -log \sum_{v_i,h_i} P(v,h) \newline \newline<br>\Delta F &#x3D; F_0 - F_k \newline \newline<br>\frac{\partial}{\partial b_j} \Delta F &#x3D; \frac{\partial}{\partial b_j} (log Z_0 [v,b] - log Z_k[v,b]) &#x3D; P_0 (h_j &#x3D; 1 | v,b) - P_k(h_j &#x3D; 1 | v,b) \newline \newline<br>\frac{\partial}{\partial w_{i j}} \Delta F &#x3D; v_i P_0 (v_i &#x3D; q|h,a) - v_i P_k (v_i | h,a) &#x3D; \langle v_i \rangle_0 - \langle v_i \rangle_k<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>$\langle v_i \rangle_0$ 表示初始分布采样出的 $v_i$</li>
+<li>$\langle v_i \rangle_k$ 表示经过 k 次更新迭代后的分布采样出的 $v_i$</li>
+</ul>
+<p>当 $\Delta F &#x3D; 0$ 时, 说明学习到的 distribution 已经完全符合输入了.</p>
 
                 
               </div>
