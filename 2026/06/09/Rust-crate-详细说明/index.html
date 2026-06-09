@@ -1,0 +1,1036 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/wallhaven-j5kjgy_1920x1080.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Jie">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="介绍Crate 是 Rust 中编译的最小单元. 一个 .rs 文件不等于一个 Crate. rustc 一次编译会产生一个 crate. Crate 最常用的类型有两种:    类型 入口文件 产物    二进制 crate (binary) main.rs (当然也可以是别的名字) 可执行文件   库 crate (library) lib.rs .rlib 库文件（给别人用的）   Crat">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Rust-crate-详细说明">
+<meta property="og:url" content="http://example.com/2026/06/09/Rust-crate-%E8%AF%A6%E7%BB%86%E8%AF%B4%E6%98%8E/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="介绍Crate 是 Rust 中编译的最小单元. 一个 .rs 文件不等于一个 Crate. rustc 一次编译会产生一个 crate. Crate 最常用的类型有两种:    类型 入口文件 产物    二进制 crate (binary) main.rs (当然也可以是别的名字) 可执行文件   库 crate (library) lib.rs .rlib 库文件（给别人用的）   Crat">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-06-09T05:37:19.000Z">
+<meta property="article:modified_time" content="2026-06-09T06:45:38.221Z">
+<meta property="article:author" content="Jie">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>Rust-crate-详细说明 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<!-- hexo injector head_end start --><style>.typst-app {
+  margin: 0;
+  --typst-dom-scale: 1;
+  /* --typst-dom-scale: 1.5; */
+  margin: 5px;
+}
+
+.typst-dom-page {
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  --data-text-width: calc(1px * var(--typst-dom-scale));
+  --data-text-height: calc(1px * var(--typst-dom-scale));
+}
+
+.typst-back-canvas {
+  position: absolute;
+  z-index: -1;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  pointer-events: none;
+}
+
+.typst-svg-page {
+  position: absolute;
+  z-index: 0;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+}
+
+.typst-html-semantics {
+  position: absolute;
+  z-index: 2;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  color: transparent;
+  font-family: monospace;
+  white-space: pre;
+  opacity: 0.62;
+}
+
+.typst-html-semantics span {
+  color: transparent;
+  font-family: monospace;
+  transform-origin: left top;
+  position: absolute;
+  display: inline-block;
+  left: 0;
+  top: 0;
+}
+
+.typst-content-hint {
+  position: absolute;
+  display: inline-block;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.typst-html-semantics a {
+  position: absolute;
+  display: inline-block;
+}
+
+/* set transparent itself */
+.typst-content-group {
+  pointer-events: visible;
+}
+
+.typst-html-semantics span::-moz-selection {
+  color: transparent;
+  background: #7db9de;
+}
+
+.typst-html-semantics span::selection {
+  color: transparent;
+  background: #7db9de;
+}
+
+.typst-html-semantics *::-moz-selection {
+  color: transparent;
+  background: transparent;
+}
+
+.typst-html-semantics *::selection {
+  color: transparent;
+  background: transparent;
+}
+
+.typst-content-fallback {
+  color: transparent;
+  background: transparent;
+}
+
+.pseudo-link,
+.typst-text {
+  pointer-events: none;
+}
+
+.tsel span,
+.tsel {
+  left: 0;
+  position: fixed;
+  text-align: justify;
+  white-space: pre;
+  width: 100%;
+  height: 100%;
+  text-align-last: justify;
+  color: transparent;
+}
+.tsel span::-moz-selection,
+.tsel::-moz-selection {
+  color: transparent;
+  background: #7db9dea0;
+}
+.tsel span::selection,
+.tsel::selection {
+  color: transparent;
+  background: #7db9dea0;
+}
+.pseudo-link {
+  fill: transparent;
+  cursor: pointer;
+  pointer-events: all;
+}
+svg {
+  fill: none;
+}
+
+.outline_glyph path,
+path.outline_glyph {
+  fill: var(--glyph_fill);
+  stroke: var(--glyph_stroke);
+}
+
+.outline_glyph path,
+path.outline_glyph {
+  transition: 0.2s fill stroke;
+}
+.hover .typst-text {
+  --glyph_fill: #66bab7;
+  --glyph_stroke: #66bab7;
+}
+
+.typst-jump-ripple,
+.typst-debug-react-ripple {
+  width: 0;
+  height: 0;
+  background-color: transparent;
+  position: absolute;
+  border-radius: 50%;
+}
+.typst-jump-ripple {
+  border: 1px solid #66bab7;
+}
+.typst-debug-react-ripple {
+  border: 1px solid #cb1b45;
+}
+@keyframes typst-jump-ripple-effect {
+  to {
+    width: 10vw;
+    height: 10vw;
+    opacity: 0.01;
+    margin: -5vw;
+  }
+}
+@keyframes typst-debug-react-ripple-effect {
+  to {
+    width: 3vw;
+    height: 3vw;
+    opacity: 0.01;
+    margin: -1.5vw;
+  }
+}
+</style>
+<script>/// https://segmentfault.com/a/1190000016574288
+(function () {
+  var ie = !!(window.attachEvent && !window.opera);
+  var wk = /webkit\/(\d+)/i.test(navigator.userAgent) && RegExp.$1 < 525;
+  var fn = [];
+  var run = function () {
+    for (var i = 0; i < fn.length; i++) fn[i]();
+  };
+  var d = document;
+  d.ready = function (f) {
+    if (!ie && !wk && d.addEventListener) return d.addEventListener('DOMContentLoaded', f, false);
+    if (fn.push(f) > 1) return;
+    if (ie)
+      (function () {
+        try {
+          d.documentElement.doScroll('left');
+          run();
+        } catch (err) {
+          setTimeout(arguments.callee, 0);
+        }
+      })();
+    else if (wk)
+      var t = setInterval(function () {
+        if (/^(loaded|complete)$/.test(d.readyState)) clearInterval(t), run();
+      }, 0);
+  };
+})();
+</script>
+<script type="module" src="/typst/typst-main.js"></script><script src="/typst/svg-utils.js"></script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Jie</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/SteinsGate_all.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Rust-crate-详细说明"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-06-09 13:37" pubdate>
+          2026年6月9日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          4.6k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          39 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">Rust-crate-详细说明</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>Crate 是 Rust 中编译的最小单元. 一个 <code>.rs</code> 文件不等于一个 Crate. <code>rustc</code> 一次编译会产生一个 crate.</p>
+<p>Crate 最常用的类型有两种:</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>入口文件</th>
+<th>产物</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>二进制 crate (binary)</td>
+<td>main.rs (当然也可以是别的名字)</td>
+<td>可执行文件</td>
+</tr>
+<tr>
+<td>库 crate (library)</td>
+<td>lib.rs</td>
+<td>.rlib 库文件（给别人用的）</td>
+</tr>
+</tbody></table>
+<p>Crate 可以提供命名空间的隔离:</p>
+<ul>
+<li>当前 <code>crate</code> 下的模块, 可以用 <code>use crate::mod_name::func_name;</code> 来访问</li>
+<li>其他 <code>crate</code> 下的模块, 比如 <code>use core::arch::asm</code>, 需要指定具体的 crate 名称</li>
+</ul>
+<h1 id="Crate-的结构"><a href="#Crate-的结构" class="headerlink" title="Crate 的结构"></a>Crate 的结构</h1><p>Rust 编译器在编译时会构建一颗模块树. 假设有下面代码:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">├── lib<br>│   └── mod.rs<br>└── main.rs<br></code></pre></td></tr></table></figure>
+
+<p>文件内容分别是:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// main.rs</span><br><span class="hljs-keyword">mod</span> lib;<br><br><span class="hljs-keyword">use</span> crate::lib::greet;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-title function_ invoke__">greet</span>();<br>&#125;<br><br><span class="hljs-comment">// lib/mod.rs</span><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">greet</span>() &#123;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Hello jie!&quot;</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>编译器看到 <code>main.rs</code> 时:</p>
+<ol>
+<li>以 <code>main.rs</code> 为根, 创建命名空间 <code>crate::</code></li>
+<li>遇到 <code>mod lib;</code>, 会在文件系统中找 <code>lib.rs</code> 或 <code>lib/mod.rs</code>, 然后把其内容挂在模块树上，这里是 <code>crate::lib</code></li>
+<li>对于 <code>lib/mod.rs</code> 中的函数, 也挂在模块树上为 <code>crate::lib::greet</code></li>
+<li>因此 <code>use crate::lib::greet;</code> 指向的就是 <code>lib/mod.rs</code> 中的 greet 函数</li>
+</ol>
+<p>如果子模块不是定义在 <code>xxx.rs</code> 或者 <code>xxx/mod.rs</code> 中, 则需要用 <code>#[path = xxx]</code> 来手动指定, 比如:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#[path = <span class="hljs-string">&quot;library/main.rs&quot;</span>]</span><br><span class="hljs-keyword">mod</span> lib;<br></code></pre></td></tr></table></figure>
+
+<h1 id="Crate-控制"><a href="#Crate-控制" class="headerlink" title="Crate 控制"></a>Crate 控制</h1><h2 id="纯-rustc-环境"><a href="#纯-rustc-环境" class="headerlink" title="纯 rustc 环境"></a>纯 rustc 环境</h2><p>在纯 <code>rustc</code> 环境下, 可以通过 crate-level attributes 和编译器参数来控制 <code>crate</code>.</p>
+<h3 id="指定-Crate-类型"><a href="#指定-Crate-类型" class="headerlink" title="指定 Crate 类型"></a>指定 Crate 类型</h3><p>在文件最顶部用 <code>#![crate_type =]</code> 来指定, 告诉 <code>rustc</code> 编译出什么产物, 比如:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// main.rs — 二进制可执行文件（这是默认行为）</span><br><span class="hljs-meta">#![crate_type = <span class="hljs-string">&quot;bin&quot;</span>]</span><br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Hello&quot;</span>);<br>&#125;<br><br><span class="hljs-comment">// lib.rs — 库文件 (.rlib)</span><br><span class="hljs-meta">#![crate_type = <span class="hljs-string">&quot;lib&quot;</span>]</span><br><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">add</span>(a: <span class="hljs-type">i32</span>, b: <span class="hljs-type">i32</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">i32</span> &#123;<br>    a + b<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>所有可用的 crate 类型有:</p>
+<table>
+<thead>
+<tr>
+<th>值</th>
+<th>产物</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>“bin”</td>
+<td>可执行文件</td>
+<td>必须有 fn main()</td>
+</tr>
+<tr>
+<td>“lib”</td>
+<td>.rlib</td>
+<td>Rust 库，给其他 Rust 代码使用</td>
+</tr>
+<tr>
+<td>“dylib”</td>
+<td>.so &#x2F; .dll</td>
+<td>动态链接库，C&#x2F;其他语言也能用</td>
+</tr>
+<tr>
+<td>“staticlib”</td>
+<td>.a &#x2F; .lib</td>
+<td>静态库，给 C&#x2F;其他语言链接用</td>
+</tr>
+<tr>
+<td>“cdylib”</td>
+<td>.so &#x2F; .dll</td>
+<td>专给 C 调用的动态库（剥离了 Rust 元数据）</td>
+</tr>
+<tr>
+<td>“proc-macro”</td>
+<td>.so &#x2F; .dll</td>
+<td>过程宏专用</td>
+</tr>
+</tbody></table>
+<h3 id="指定-Crate-名称"><a href="#指定-Crate-名称" class="headerlink" title="指定 Crate 名称"></a>指定 Crate 名称</h3><p>在文件顶部用 <code>#![crate_name = ]</code> 来指定:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// lib.rs</span><br><span class="hljs-meta">#![crate_type = <span class="hljs-string">&quot;lib&quot;</span>]</span><br><span class="hljs-meta">#![crate_name = <span class="hljs-string">&quot;my_math&quot;</span>]</span><br><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">add</span>(a: <span class="hljs-type">i32</span>, b: <span class="hljs-type">i32</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">i32</span> &#123; a + b &#125;<br></code></pre></td></tr></table></figure>
+
+<p>此时编译后的产物是 <code>libmy_math.rlib</code>, 外部引用时用 <code>extern crate my_math;</code></p>
+<h3 id="引入外部-Crate"><a href="#引入外部-Crate" class="headerlink" title="引入外部 Crate"></a>引入外部 Crate</h3><p>用 <code>extern crate xxx;</code> 来指示编译器查找和链接:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">extern</span> <span class="hljs-keyword">crate</span> my_math;       <span class="hljs-comment">// 告诉编译器：去找 libmy_math.rlib</span><br><span class="hljs-keyword">use</span> my_math::add;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;&#125;&quot;</span>, <span class="hljs-title function_ invoke__">add</span>(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>));<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>此时编译命令为:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">rustc main.rs -L . --extern my_math=libmy_math.rlib<br></code></pre></td></tr></table></figure>
+
+<h3 id="命令行指定"><a href="#命令行指定" class="headerlink" title="命令行指定"></a>命令行指定</h3><p><code>#![crate_type = &quot;bin&quot;]</code> 和 <code>#![crate_name = &quot;my_app&quot;]</code> 这种都能直接用 <code>rustc</code> 的参数指定:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">rustc main.rs --crate-type bin --crate-name my_app<br></code></pre></td></tr></table></figure>
+
+<p>且命令行参数优先级更高.</p>
+<h3 id="简单示例"><a href="#简单示例" class="headerlink" title="简单示例"></a>简单示例</h3><p>项目文件组织为:</p>
+<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs cmake">my_project/<br>├── <span class="hljs-keyword">math</span>.rs          <span class="hljs-comment"># 库 crate</span><br>└── app.rs           <span class="hljs-comment"># 二进制 crate</span><br></code></pre></td></tr></table></figure>
+
+<p>各文件内容为:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// math.rs</span><br><span class="hljs-meta">#![crate_type = <span class="hljs-string">&quot;lib&quot;</span>]</span><br><span class="hljs-meta">#![crate_name = <span class="hljs-string">&quot;math&quot;</span>]</span><br><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">multiply</span>(x: <span class="hljs-type">i32</span>, y: <span class="hljs-type">i32</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">i32</span> &#123;<br>    x * y<br>&#125;<br><br><span class="hljs-comment">// app.rs</span><br><span class="hljs-meta">#![crate_type = <span class="hljs-string">&quot;bin&quot;</span>]</span><br><br><span class="hljs-keyword">extern</span> <span class="hljs-keyword">crate</span> math;<br><span class="hljs-keyword">use</span> math::multiply;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;5 x 3 = &#123;&#125;&quot;</span>, <span class="hljs-title function_ invoke__">multiply</span>(<span class="hljs-number">5</span>, <span class="hljs-number">3</span>));<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>之后编译运行:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">rustc math.rs                     <span class="hljs-comment"># → libmath.rlib</span><br>rustc app.rs -L . --extern math=libmath.rlib  <span class="hljs-comment"># → app（可执行文件）</span><br>./app                             <span class="hljs-comment"># 输出: 5 x 3 = 15</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="Cargo-环境"><a href="#Cargo-环境" class="headerlink" title="Cargo 环境"></a>Cargo 环境</h2><p>有 Cargo 时, 不再需要用 <code>#![crate_type = xxx]</code>, <code>#![crate_name = xxx]</code>, <code>extern crate xxx;</code> 这些在代码内部指定, 而是该为全部由 <code>Cargo.toml</code> 控制.</p>
+<p>一个完整示例:</p>
+<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><code class="hljs toml"><span class="hljs-section">[package]</span><br><span class="hljs-attr">name</span> = <span class="hljs-string">&quot;my_project&quot;</span>        <span class="hljs-comment"># ← package 名，也决定默认的 crate 名</span><br><span class="hljs-attr">version</span> = <span class="hljs-string">&quot;0.1.0&quot;</span><br><span class="hljs-attr">edition</span> = <span class="hljs-string">&quot;2021&quot;</span><br><span class="hljs-attr">autobins</span> = <span class="hljs-literal">true</span>            <span class="hljs-comment"># 自动发现 src/main.rs 作为 binary crate（默认 true）</span><br><span class="hljs-attr">autolib</span> = <span class="hljs-literal">true</span>             <span class="hljs-comment"># 自动发现 src/lib.rs 作为 library crate（默认 true）</span><br><span class="hljs-attr">autoexamples</span> = <span class="hljs-literal">true</span>        <span class="hljs-comment"># 自动发现 examples/ 下的示例</span><br><br><span class="hljs-section">[dependencies]</span>             <span class="hljs-comment"># ← 依赖的外部 crate</span><br><span class="hljs-attr">serde</span> = <span class="hljs-string">&quot;1.0&quot;</span><br><span class="hljs-attr">rand</span> = &#123; version = <span class="hljs-string">&quot;0.8&quot;</span>, features = [<span class="hljs-string">&quot;small_rng&quot;</span>] &#125;<br><br><span class="hljs-section">[dev-dependencies]</span>         <span class="hljs-comment"># ← 只在测试/示例中使用的 crate</span><br><span class="hljs-attr">tempfile</span> = <span class="hljs-string">&quot;3.0&quot;</span><br><br><span class="hljs-section">[build-dependencies]</span>       <span class="hljs-comment"># ← 只在 build.rs 编译时使用的 crate</span><br><span class="hljs-attr">cc</span> = <span class="hljs-string">&quot;1.0&quot;</span><br><br><span class="hljs-comment"># [lib] 和 [[bin]] —— 精确控制 crate 的配置</span><br><span class="hljs-section">[lib]</span><br><span class="hljs-attr">name</span> = <span class="hljs-string">&quot;my_lib&quot;</span>            <span class="hljs-comment"># 覆盖 library crate 的名字（默认 = package name）</span><br><span class="hljs-attr">path</span> = <span class="hljs-string">&quot;src/lib.rs&quot;</span>        <span class="hljs-comment"># library crate 的入口文件</span><br><span class="hljs-attr">crate-type</span> = [<span class="hljs-string">&quot;lib&quot;</span>, <span class="hljs-string">&quot;rlib&quot;</span>]  <span class="hljs-comment"># 产物类型列表</span><br><span class="hljs-attr">test</span> = <span class="hljs-literal">true</span>                <span class="hljs-comment"># 是否启用测试（默认 true）</span><br><span class="hljs-attr">doctest</span> = <span class="hljs-literal">true</span>             <span class="hljs-comment"># 是否启用文档测试（默认 true）</span><br><br><span class="hljs-section">[[bin]]</span>                    <span class="hljs-comment"># 声明额外的 binary crate（可以有多个）</span><br><span class="hljs-attr">name</span> = <span class="hljs-string">&quot;cli&quot;</span><br><span class="hljs-attr">path</span> = <span class="hljs-string">&quot;src/cli.rs&quot;</span><br><br><span class="hljs-section">[[bin]]</span><br><span class="hljs-attr">name</span> = <span class="hljs-string">&quot;server&quot;</span><br><span class="hljs-attr">path</span> = <span class="hljs-string">&quot;src/bin/server.rs&quot;</span><br><br><span class="hljs-section">[[example]]</span><br><span class="hljs-attr">name</span> = <span class="hljs-string">&quot;demo&quot;</span><br><span class="hljs-attr">path</span> = <span class="hljs-string">&quot;examples/demo.rs&quot;</span><br><span class="hljs-attr">crate-type</span> = [<span class="hljs-string">&quot;bin&quot;</span>]<br></code></pre></td></tr></table></figure>
+
+<h3 id="package-下的-crate-相关字段"><a href="#package-下的-crate-相关字段" class="headerlink" title="[package] 下的 crate 相关字段"></a>[package] 下的 crate 相关字段</h3><figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs toml"><span class="hljs-section">[package]</span><br><span class="hljs-attr">name</span> = <span class="hljs-string">&quot;my_project&quot;</span><br><span class="hljs-comment"># ↑ crate 的默认名称就是这个。library crate 变成 libmy_project.rlib</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="lib-控制-library-crate"><a href="#lib-控制-library-crate" class="headerlink" title="[lib] 控制 library crate"></a>[lib] 控制 library crate</h3><figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs toml"><span class="hljs-section">[lib]</span><br><span class="hljs-attr">crate-type</span> = [<span class="hljs-string">&quot;lib&quot;</span>]        <span class="hljs-comment"># 默认只有一个 &quot;lib&quot;；可以改成 [&quot;cdylib&quot;, &quot;rlib&quot;]</span><br>                            <span class="hljs-comment"># 多个类型会同时产出多种格式</span><br><span class="hljs-attr">bench</span> = <span class="hljs-literal">false</span>               <span class="hljs-comment"># 禁用 benchmark</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="bin-控制-binary-crate-可以有多个"><a href="#bin-控制-binary-crate-可以有多个" class="headerlink" title="[[bin]] 控制 binary crate (可以有多个)"></a>[[bin]] 控制 binary crate (可以有多个)</h3><figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs toml"><span class="hljs-comment"># [[双中括号]] 表示这是一个数组项，可以声明多个 binary crate</span><br><span class="hljs-section">[[bin]]</span><br><span class="hljs-attr">name</span> = <span class="hljs-string">&quot;app&quot;</span>                <span class="hljs-comment"># 产出物名称（和 path 联动）</span><br><span class="hljs-attr">path</span> = <span class="hljs-string">&quot;src/main.rs&quot;</span>        <span class="hljs-comment"># 入口文件</span><br><br><span class="hljs-section">[[bin]]</span><br><span class="hljs-attr">name</span> = <span class="hljs-string">&quot;admin&quot;</span><br><span class="hljs-attr">path</span> = <span class="hljs-string">&quot;src/bin/admin.rs&quot;</span><br><span class="hljs-attr">required-features</span> = [<span class="hljs-string">&quot;cli&quot;</span>] <span class="hljs-comment"># 只在特定 features 开启时才编译</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="dependencies-引入外部-crate"><a href="#dependencies-引入外部-crate" class="headerlink" title="[dependencies] 引入外部 crate"></a>[dependencies] 引入外部 crate</h3><figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs toml"><span class="hljs-section">[dependencies]</span><br><span class="hljs-comment"># 基础写法</span><br><span class="hljs-attr">serde</span> = <span class="hljs-string">&quot;1.0&quot;</span>               <span class="hljs-comment"># 从 crates.io 拉取</span><br><br><span class="hljs-comment"># 详细写法</span><br><span class="hljs-attr">tokio</span> = &#123;<br>    <span class="hljs-attr">version</span> = <span class="hljs-string">&quot;1.0&quot;</span>,<br>    <span class="hljs-attr">features</span> = [<span class="hljs-string">&quot;full&quot;</span>],        <span class="hljs-comment"># 开启特定 features</span><br>    <span class="hljs-attr">optional</span> = <span class="hljs-literal">true</span>,            <span class="hljs-comment"># 可选依赖，不默认引入</span><br>    <span class="hljs-attr">default-features</span> = <span class="hljs-literal">false</span>,   <span class="hljs-comment"># 禁用默认 features</span><br>&#125;<br><br><span class="hljs-comment"># Git 仓库</span><br><span class="hljs-attr">my_lib</span> = &#123; git = <span class="hljs-string">&quot;https://github.com/user/repo&quot;</span>, branch = <span class="hljs-string">&quot;dev&quot;</span> &#125;<br><br><span class="hljs-comment"># 本地路径</span><br><span class="hljs-attr">my_utils</span> = &#123; path = <span class="hljs-string">&quot;../my_utils&quot;</span> &#125;<br><br><span class="hljs-comment"># 条件依赖（仅在特定平台编译）</span><br><span class="hljs-section">[target.&#x27;cfg(windows)&#x27;.dependencies]</span><br><span class="hljs-attr">winapi</span> = <span class="hljs-string">&quot;0.3&quot;</span><br><br><span class="hljs-section">[target.&#x27;cfg(unix)&#x27;.dependencies]</span><br><span class="hljs-attr">libc</span> = <span class="hljs-string">&quot;0.2&quot;</span><br></code></pre></td></tr></table></figure>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Rust/" class="category-chain-item">Rust</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Rust-crate-详细说明</div>
+      <div>http://example.com/2026/06/09/Rust-crate-详细说明/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Jie</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年6月9日</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>许可协议</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/06/08/Rust-Write-trait-%E5%AD%97%E7%AC%A6%E4%B8%B2%E8%BF%BD%E5%8A%A0/" title="Rust-Write-trait-字符串追加">
+                        <span class="hidden-mobile">Rust-Write-trait-字符串追加</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zKurisu/comments-utterances');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Jie</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Orkarin</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.1/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

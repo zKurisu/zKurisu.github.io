@@ -62,7 +62,7 @@
 <meta property="og:image" content="http://example.com/img/riscv-machine-mode-scause-interrupt-code-list.png">
 <meta property="og:image" content="http://example.com/img/riscv-machine-mode-exception-list.png">
 <meta property="article:published_time" content="2025-09-25T02:41:59.000Z">
-<meta property="article:modified_time" content="2025-10-13T06:00:15.932Z">
+<meta property="article:modified_time" content="2026-06-08T08:53:16.337Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/riscv-isa-position-example.png">
@@ -487,7 +487,7 @@ path.outline_glyph {
         
         
         
-          118 分钟
+          121 分钟
         
       </span>
     
@@ -736,12 +736,12 @@ path.outline_glyph {
 <p>语法示例:</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs asm">LUI RD, IMM<br></code></pre></td></tr></table></figure>
 
-<p>示例:</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs asm">lui x5, 0x12345      # x5 = 0x12345 &lt;&lt; 12<br>addi x5, x5, 0x678   # x5 = 0x12345678<br></code></pre></td></tr></table></figure>
+<p>示例, 如果我们想构造 <code>0x12345FFF</code>, 一种很直观的想法是:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs asm">lui x5, 0x12345      # x5 = 0x12345 &lt;&lt; 12<br>addi x5, x5, 0xFFF<br></code></pre></td></tr></table></figure>
 
-<p>这种方法的一个问题是, 如 <code>0x12345FFF</code> 不能直接构造, 因为低位为 <code>0xFFF</code> 表示的是 <code>-1</code>, 由于会符号扩展为 32 位后相加, 因此不能得到期望的结果:</p>
+<p>这种方法的一个问题是, 如 <code>0x12345FFF</code> 不能直接这样构造, 因为低位为 <code>0xFFF</code> 表示的是 <code>-1</code>, 由于会符号扩展为 32 位后相加, 因此不能得到期望的结果:</p>
 <figure class="highlight asciidoc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs asciidoc">0xFFF + 0x12345<br><span class="hljs-section">= 1111 1111 1111 1111 1111 1111 1111 1111 </span><br>+ 0001 0010 0011 0100 0101 0000 0000 0000<br><span class="hljs-section">= 0001 0010 0011 0100 0100 1111 1111 1111</span><br><span class="hljs-section">= 0x12344FFF</span><br></code></pre></td></tr></table></figure>
-
+<p>(注意不是期望的 <code>0x12345FFF</code>)</p>
 <p>正确的构造方法是:</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs asm">lui x5, 0x12346<br>addi x5, x5, -1<br></code></pre></td></tr></table></figure>
 
@@ -803,6 +803,9 @@ path.outline_glyph {
 <h3 id="条件分支伪指令汇总"><a href="#条件分支伪指令汇总" class="headerlink" title="条件分支伪指令汇总"></a>条件分支伪指令汇总</h3><p><img src="/../img/riscv-conditional-branch-pseudo-instructions-table.png" srcset="/img/loading.gif" lazyload></p>
 <h2 id="Unconditional-Jump-Instructions"><a href="#Unconditional-Jump-Instructions" class="headerlink" title="Unconditional Jump Instructions"></a>Unconditional Jump Instructions</h2><h3 id="JAL"><a href="#JAL" class="headerlink" title="JAL"></a>JAL</h3><p><code>JAL</code> (“Jump And Link”), 使用 <code>J-type</code> 编码格式, 用于调用 subroutine&#x2F;function, 会跳转到指定地址执行并将当前指令的下一条的地址保存在寄存器中:</p>
 <p><img src="/../img/riscv-jal-instruction-format.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li><code>link</code> 这个词在计算机中通常表示建立 “调用者 -&gt; 被调用者” 之间的返回关系, 这里就表明: 把 “返回地址” 保存起来</li>
+</ul>
 <p>语法:</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs asm">JAL RD, LABEL<br></code></pre></td></tr></table></figure>
 
@@ -868,7 +871,7 @@ path.outline_glyph {
 <h3 id="函数调用过程中被调函数的约定"><a href="#函数调用过程中被调函数的约定" class="headerlink" title="函数调用过程中被调函数的约定"></a>函数调用过程中被调函数的约定</h3><p>Callee 需要保存信息以及运行结束后恢复:</p>
 <p><img src="/../img/riscv-function-call-callee-rule.png" srcset="/img/loading.gif" lazyload></p>
 <h3 id="栈帧规范"><a href="#栈帧规范" class="headerlink" title="栈帧规范"></a>栈帧规范</h3><p><img src="/../img/riscv-stack-frame-spec-example.png" srcset="/img/loading.gif" lazyload></p>
-<h2 id="rept"><a href="#rept" class="headerlink" title=".rept"></a>.rept</h2><p><code>.rept</code> (“Repeat”) 伪指令和 <code>.endr</code> (“end repeat”) 伪指令表明重复中间的指令指定次数:</p>
+<h2 id="rept"><a href="#rept" class="headerlink" title=".rept"></a>.rept</h2><p><code>.rept</code> (“Repeat”) directive 和 <code>.endr</code> (“end repeat”) directive 表明重复中间的指令指定次数:</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs asm">.rept 12<br>.word 0<br>.endr<br></code></pre></td></tr></table></figure>
 <ul>
 <li><code>.word 0</code> 表示插入一个 32 位 (4 字节) 整数 <code>0</code> 到当前段</li>
@@ -989,6 +992,15 @@ path.outline_glyph {
 <ul>
 <li>当作循环语句来用</li>
 </ul>
+<h1 id="测试-RISC-V-汇编"><a href="#测试-RISC-V-汇编" class="headerlink" title="测试 RISC-V 汇编"></a>测试 RISC-V 汇编</h1><p>比如:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs asm">.section .text<br>.globl main<br><br>main:<br>    li  a0, 1<br>    li  a1, 2<br>    add a2, a0, a1<br>    # 死循环方便观察<br>1:  j 1b<br></code></pre></td></tr></table></figure>
+
+<p>编译运行:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ sudo pacman -S riscv64-linux-gnu-gcc qemu-user<br>$ riscv64-linux-gnu-gcc -static test.s -o <span class="hljs-built_in">test</span><br>$ qemu-riscv64 ./test<br></code></pre></td></tr></table></figure>
+
+<p>如果要调试:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">qemu-riscv64 -g 1234 ./test<br>riscv64-linux-gnu-gdb ./test<br>(gdb) target remote localhost:1234<br></code></pre></td></tr></table></figure>
+
 <h1 id="RISC-V-汇编与-C-混合编程"><a href="#RISC-V-汇编与-C-混合编程" class="headerlink" title="RISC-V 汇编与 C 混合编程"></a>RISC-V 汇编与 C 混合编程</h1><h2 id="在-RISC-V-汇编中调用-C-函数"><a href="#在-RISC-V-汇编中调用-C-函数" class="headerlink" title="在 RISC-V 汇编中调用 C 函数"></a>在 RISC-V 汇编中调用 C 函数</h2><p>函数参数通过 <code>a0~a7</code> 传递, 返回值用 <code>a0</code> 和 <code>a1</code> 接收.</p>
 <h2 id="C-函数中潜入-RISC-V-汇编"><a href="#C-函数中潜入-RISC-V-汇编" class="headerlink" title="C 函数中潜入 RISC-V 汇编"></a>C 函数中潜入 RISC-V 汇编</h2><p>需要用 <code>asm</code> 关键字. 语法为:</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">asm</span> [<span class="hljs-keyword">volatile</span>] (<br>    <span class="hljs-string">&quot;汇编指令&quot;</span><br>    :输出操作数列表 (可选)<br>    :输入操作数列表 (可选)<br>    :可能影响的寄存器或者存储器 (可选)<br>);<br></code></pre></td></tr></table></figure>

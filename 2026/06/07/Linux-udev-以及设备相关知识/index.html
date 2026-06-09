@@ -1,0 +1,1145 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/wallhaven-j5kjgy_1920x1080.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Jie">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="介绍udev (userspace device manager) 是 Linux 内核的设备管理器, 运行在用户态. 它会监听内核发出的设备事件 (比如插入&#x2F;拔出), 然后按照预设的规则执行动作, 最常见的就是创建设备文件, 设置权限, 创建符号链接等. 为什么需要 udevLinux 遵循 “一切皆文件的哲学”. 当插入一个 U 盘后, 内核检测到硬件, 之后会在 &#x2F;dev 下创建设">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux-udev-以及设备相关知识">
+<meta property="og:url" content="http://example.com/2026/06/07/Linux-udev-%E4%BB%A5%E5%8F%8A%E8%AE%BE%E5%A4%87%E7%9B%B8%E5%85%B3%E7%9F%A5%E8%AF%86/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="介绍udev (userspace device manager) 是 Linux 内核的设备管理器, 运行在用户态. 它会监听内核发出的设备事件 (比如插入&#x2F;拔出), 然后按照预设的规则执行动作, 最常见的就是创建设备文件, 设置权限, 创建符号链接等. 为什么需要 udevLinux 遵循 “一切皆文件的哲学”. 当插入一个 U 盘后, 内核检测到硬件, 之后会在 &#x2F;dev 下创建设">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-06-07T06:21:46.000Z">
+<meta property="article:modified_time" content="2026-06-07T07:32:47.945Z">
+<meta property="article:author" content="Jie">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>Linux-udev-以及设备相关知识 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<!-- hexo injector head_end start --><style>.typst-app {
+  margin: 0;
+  --typst-dom-scale: 1;
+  /* --typst-dom-scale: 1.5; */
+  margin: 5px;
+}
+
+.typst-dom-page {
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  --data-text-width: calc(1px * var(--typst-dom-scale));
+  --data-text-height: calc(1px * var(--typst-dom-scale));
+}
+
+.typst-back-canvas {
+  position: absolute;
+  z-index: -1;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  pointer-events: none;
+}
+
+.typst-svg-page {
+  position: absolute;
+  z-index: 0;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+}
+
+.typst-html-semantics {
+  position: absolute;
+  z-index: 2;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  color: transparent;
+  font-family: monospace;
+  white-space: pre;
+  opacity: 0.62;
+}
+
+.typst-html-semantics span {
+  color: transparent;
+  font-family: monospace;
+  transform-origin: left top;
+  position: absolute;
+  display: inline-block;
+  left: 0;
+  top: 0;
+}
+
+.typst-content-hint {
+  position: absolute;
+  display: inline-block;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.typst-html-semantics a {
+  position: absolute;
+  display: inline-block;
+}
+
+/* set transparent itself */
+.typst-content-group {
+  pointer-events: visible;
+}
+
+.typst-html-semantics span::-moz-selection {
+  color: transparent;
+  background: #7db9de;
+}
+
+.typst-html-semantics span::selection {
+  color: transparent;
+  background: #7db9de;
+}
+
+.typst-html-semantics *::-moz-selection {
+  color: transparent;
+  background: transparent;
+}
+
+.typst-html-semantics *::selection {
+  color: transparent;
+  background: transparent;
+}
+
+.typst-content-fallback {
+  color: transparent;
+  background: transparent;
+}
+
+.pseudo-link,
+.typst-text {
+  pointer-events: none;
+}
+
+.tsel span,
+.tsel {
+  left: 0;
+  position: fixed;
+  text-align: justify;
+  white-space: pre;
+  width: 100%;
+  height: 100%;
+  text-align-last: justify;
+  color: transparent;
+}
+.tsel span::-moz-selection,
+.tsel::-moz-selection {
+  color: transparent;
+  background: #7db9dea0;
+}
+.tsel span::selection,
+.tsel::selection {
+  color: transparent;
+  background: #7db9dea0;
+}
+.pseudo-link {
+  fill: transparent;
+  cursor: pointer;
+  pointer-events: all;
+}
+svg {
+  fill: none;
+}
+
+.outline_glyph path,
+path.outline_glyph {
+  fill: var(--glyph_fill);
+  stroke: var(--glyph_stroke);
+}
+
+.outline_glyph path,
+path.outline_glyph {
+  transition: 0.2s fill stroke;
+}
+.hover .typst-text {
+  --glyph_fill: #66bab7;
+  --glyph_stroke: #66bab7;
+}
+
+.typst-jump-ripple,
+.typst-debug-react-ripple {
+  width: 0;
+  height: 0;
+  background-color: transparent;
+  position: absolute;
+  border-radius: 50%;
+}
+.typst-jump-ripple {
+  border: 1px solid #66bab7;
+}
+.typst-debug-react-ripple {
+  border: 1px solid #cb1b45;
+}
+@keyframes typst-jump-ripple-effect {
+  to {
+    width: 10vw;
+    height: 10vw;
+    opacity: 0.01;
+    margin: -5vw;
+  }
+}
+@keyframes typst-debug-react-ripple-effect {
+  to {
+    width: 3vw;
+    height: 3vw;
+    opacity: 0.01;
+    margin: -1.5vw;
+  }
+}
+</style>
+<script>/// https://segmentfault.com/a/1190000016574288
+(function () {
+  var ie = !!(window.attachEvent && !window.opera);
+  var wk = /webkit\/(\d+)/i.test(navigator.userAgent) && RegExp.$1 < 525;
+  var fn = [];
+  var run = function () {
+    for (var i = 0; i < fn.length; i++) fn[i]();
+  };
+  var d = document;
+  d.ready = function (f) {
+    if (!ie && !wk && d.addEventListener) return d.addEventListener('DOMContentLoaded', f, false);
+    if (fn.push(f) > 1) return;
+    if (ie)
+      (function () {
+        try {
+          d.documentElement.doScroll('left');
+          run();
+        } catch (err) {
+          setTimeout(arguments.callee, 0);
+        }
+      })();
+    else if (wk)
+      var t = setInterval(function () {
+        if (/^(loaded|complete)$/.test(d.readyState)) clearInterval(t), run();
+      }, 0);
+  };
+})();
+</script>
+<script type="module" src="/typst/typst-main.js"></script><script src="/typst/svg-utils.js"></script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Jie</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/SteinsGate_all.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Linux-udev-以及设备相关知识"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-06-07 14:21" pubdate>
+          2026年6月7日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          4.8k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          40 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">Linux-udev-以及设备相关知识</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p><code>udev</code> (userspace device manager) 是 Linux 内核的设备管理器, 运行在用户态. 它会监听内核发出的设备事件 (比如插入&#x2F;拔出), 然后按照预设的规则执行动作, 最常见的就是创建设备文件, 设置权限, 创建符号链接等.</p>
+<h1 id="为什么需要-udev"><a href="#为什么需要-udev" class="headerlink" title="为什么需要 udev"></a>为什么需要 udev</h1><p>Linux 遵循 “一切皆文件的哲学”. 当插入一个 U 盘后, 内核检测到硬件, 之后会在 <code>/dev</code> 下创建设备节点, 比如 <code>/dev/sdb</code>. 但是有一些问题:</p>
+<ol>
+<li>每次插拔 U 盘后创建的文件名不同, 这次是 <code>/dev/sdb</code>, 下次可能是 <code>sdc</code>, 这取决于插入顺序</li>
+<li>权限不固定, 默认可能只允许 root 读写</li>
+<li>无法区分同型号设备, 插入两个同样的 <code>CH340</code>, 一个叫 <code>ttyUSB0</code>, 另一个叫 <code>ttyUSB1</code>, 无法根据名称来区分</li>
+</ol>
+<p>而 <code>udev</code> 可以根据具体的设备属性 (比如 VID&#x2F;PID, 序列号, 物理端口等) 来识别出 “你是谁”, 然后给出一个固定的名字和正确的权限. 具体的工作流程如下:</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs awk">硬件插入 → 内核检测 → 创建设备到 <span class="hljs-regexp">/sys/</span> + 发送 uevent<br>    → systemd-udevd 收到 uevent<br>    → 遍历 <span class="hljs-regexp">/etc/u</span>dev<span class="hljs-regexp">/rules.d/</span> 和 <span class="hljs-regexp">/lib/u</span>dev<span class="hljs-regexp">/rules.d/</span> 找匹配规则<br>    → 执行规则中定义的动作（SYMLINK, MODE, RUN 等）<br></code></pre></td></tr></table></figure>
+
+<p>这里涉及的几个路径比较关键:</p>
+<ul>
+<li><code>/sys/</code>, 内核导出的设备属性树 (是 udev 的数据来源)</li>
+<li><code>/lib/udev/rules.d/</code>, 系统自带的规则 (通常不修改)</li>
+<li><code>/etc/udev/rules.d/</code>, 自定义规则, 优先级更高 (用户自己编写的就放在这里)</li>
+<li><code>/dev/</code>, 设备文件放置的位置</li>
+</ul>
+<h1 id="rules"><a href="#rules" class="headerlink" title="rules"></a>rules</h1><p>一条 rule 就是一个 “匹配条件 + 执行动作” 的表达式, 比如 ：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs">匹配条件1, 匹配条件2, 动作1, 动作2<br></code></pre></td></tr></table></figure>
+<p>先是一系列匹配条件, 都满足后执行后续一系列的动作, 注意都使用 <code>,</code> 来分隔.</p>
+<p>常用的匹配条件有:</p>
+<table>
+<thead>
+<tr>
+<th>条件</th>
+<th>含义</th>
+<th>来源</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>SUBSYSTEM&#x3D;&#x3D;”tty”</td>
+<td>设备类型</td>
+<td>设备所属子系统</td>
+</tr>
+<tr>
+<td>KERNEL&#x3D;&#x3D;”ttyUSB*”</td>
+<td>内核设备名</td>
+<td>&#x2F;dev&#x2F; 下的原始名称</td>
+</tr>
+<tr>
+<td>ATTRS{idVendor}&#x3D;&#x3D;”1a86”</td>
+<td>USB 厂商 ID</td>
+<td>lsusb 可查</td>
+</tr>
+<tr>
+<td>ATTRS{idProduct}&#x3D;&#x3D;”7523”</td>
+<td>USB 产品 ID</td>
+<td>lsusb 可查</td>
+</tr>
+<tr>
+<td>ATTRS{serial}&#x3D;&#x3D;”xxx”</td>
+<td>设备序列号</td>
+<td>部分设备有</td>
+</tr>
+<tr>
+<td>KERNELS&#x3D;&#x3D;”1-4.2:1.0”</td>
+<td>USB 物理路径</td>
+<td>取决于插在哪个口</td>
+</tr>
+</tbody></table>
+<p>常用的动作有:</p>
+<table>
+<thead>
+<tr>
+<th>动作</th>
+<th>含义</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>SYMLINK+&#x3D;”name”</td>
+<td>创建符号链接</td>
+<td>&#x2F;dev&#x2F;gps_serial</td>
+</tr>
+<tr>
+<td>MODE:&#x3D;”0666”</td>
+<td>设权限</td>
+<td>所有人可读写</td>
+</tr>
+<tr>
+<td>GROUP:&#x3D;”dialout”</td>
+<td>设所属组</td>
+<td>避免只能 root 访问</td>
+</tr>
+<tr>
+<td>RUN+&#x3D;”&#x2F;path&#x2F;script”</td>
+<td>触发后执行脚本</td>
+<td>自动挂载等</td>
+</tr>
+</tbody></table>
+<ul>
+<li><code>==</code> 用来比较&#x2F;匹配</li>
+<li><code>:=</code> 用来赋值并锁定 (后续规则不可更改)</li>
+<li><code>+=</code> 用来追加 (允许多个值叠加)</li>
+</ul>
+<p>示例:</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs ini"><span class="hljs-comment"># --- GPS 模块 ---</span><br><span class="hljs-attr">SUBSYSTEM</span>==<span class="hljs-string">&quot;tty&quot;</span>, KERNELS==<span class="hljs-string">&quot;1-4.2:1.0&quot;</span>, MODE:=<span class="hljs-string">&quot;0666&quot;</span>, SYMLINK+=<span class="hljs-string">&quot;gps_serial&quot;</span><br><br><span class="hljs-comment"># --- IMU 模块 ---</span><br><span class="hljs-attr">SUBSYSTEM</span>==<span class="hljs-string">&quot;tty&quot;</span>, KERNELS==<span class="hljs-string">&quot;1-4.1:1.0&quot;</span>, MODE:=<span class="hljs-string">&quot;0666&quot;</span>, SYMLINK+=<span class="hljs-string">&quot;imu_usb&quot;</span><br></code></pre></td></tr></table></figure>
+
+<p>这里用 <code>KERNELS</code> 来匹配其实不太可靠, 如果换一种插法就会失效. 通常匹配的可靠程度从高到低如下:</p>
+<table>
+<thead>
+<tr>
+<th>方式</th>
+<th>换口影响</th>
+<th>前提条件</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ATTRS{serial}</td>
+<td>不影响</td>
+<td>芯片固件烧录了唯一序列号</td>
+</tr>
+<tr>
+<td>USB Hub 端口</td>
+<td>不影响（固定 Hub）</td>
+<td>设备始终插在同一个物理 Hub 的固定端口上</td>
+</tr>
+<tr>
+<td>KERNELS&#x3D;&#x3D;</td>
+<td>换口就变</td>
+<td>无（最后一招）</td>
+</tr>
+</tbody></table>
+<p>可以用 <code>udevadm</code> 来查看序列号:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">udevadm info -a -n /dev/ttyUSB0 | grep serial<br></code></pre></td></tr></table></figure>
+
+<h1 id="命令行工具"><a href="#命令行工具" class="headerlink" title="命令行工具"></a>命令行工具</h1><p>在现代 Linux 上, <code>udev</code> 都通过 <code>systemd</code> 来管理, 有 3 个核心的后台服务:</p>
+<table>
+<thead>
+<tr>
+<th>服务</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>systemd-udevd</td>
+<td>主守护进程，监听内核 uevent 并执行规则</td>
+</tr>
+<tr>
+<td>systemd-udevd-control.socket</td>
+<td>接收 udevadm control 指令的 socket</td>
+</tr>
+<tr>
+<td>systemd-udevd-kernel.socket</td>
+<td>接收内核 uevent 的 socket</td>
+</tr>
+</tbody></table>
+<p>基本管理如下:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo systemctl status systemd-udevd        <span class="hljs-comment"># 查看服务状态</span><br>sudo systemctl restart systemd-udevd       <span class="hljs-comment"># 重启守护进程</span><br>sudo systemctl stop systemd-udevd          <span class="hljs-comment"># 停止（设备热插拔将失效）</span><br>sudo systemctl status systemd-udevd-control.socket  <span class="hljs-comment"># 控制 socket 状态</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="udevadm-使用"><a href="#udevadm-使用" class="headerlink" title="udevadm 使用"></a>udevadm 使用</h2><p><code>udevadm</code> 有下面几个常用的子命令.</p>
+<h3 id="udevadm-info-查看设备属性"><a href="#udevadm-info-查看设备属性" class="headerlink" title="udevadm info, 查看设备属性"></a><code>udevadm info</code>, 查看设备属性</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-comment"># 基本用法：列出某设备的所有已知属性</span><br>udevadm info -a -n /dev/ttyUSB0<br><br><span class="hljs-comment"># -a: 列出该设备及其所有父设备（沿 USB 树上溯）的属性</span><br><span class="hljs-comment"># -n: 指定设备节点路径</span><br><br><span class="hljs-comment"># 从 sysfs 路径查询（等效但不需要设备已挂载）</span><br>udevadm info -a -p /sys/class/tty/ttyUSB0<br><br><span class="hljs-comment"># 只看 KERNELS 这条</span><br>udevadm info -a -n /dev/ttyUSB0 | grep <span class="hljs-string">&quot;KERNELS==&quot;</span><br><br><span class="hljs-comment"># 看 USB 设备的不易混淆属性</span><br>udevadm info -q property -n /dev/ttyUSB0<br></code></pre></td></tr></table></figure>
+
+<h3 id="udevadm-control-控制服务"><a href="#udevadm-control-控制服务" class="headerlink" title="udevadm control, 控制服务"></a><code>udevadm control</code>, 控制服务</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">udevadm control --reload-rules     <span class="hljs-comment"># 重载规则文件（改规则后必跑）</span><br>udevadm control --reload           <span class="hljs-comment"># 重载 rules + 内核模块等</span><br>udevadm control --log-priority=debug  <span class="hljs-comment"># 开启调试日志</span><br>udevadm control --ping             <span class="hljs-comment"># 检查守护进程是否存活</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="udevadm-trigger-重新触发设备事件"><a href="#udevadm-trigger-重新触发设备事件" class="headerlink" title="udevadm trigger, 重新触发设备事件"></a><code>udevadm trigger</code>, 重新触发设备事件</h3><p>规则更新后, 已插入的设备不会自动重新匹配, 需要手动触发:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-comment"># 重新触发所有设备</span><br>sudo udevadm trigger<br><br><span class="hljs-comment"># 只触发某个子系统</span><br>sudo udevadm trigger --subsystem-match=<span class="hljs-built_in">tty</span><br><br><span class="hljs-comment"># 只触发某个设备</span><br>sudo udevadm trigger --sysname-match=ttyUSB0<br><br><span class="hljs-comment"># 只触发某个 action（测试 &quot;拔掉&quot; 后的规则）</span><br>sudo udevadm trigger --action=remove --sysname-match=ttyUSB0<br></code></pre></td></tr></table></figure>
+
+<h3 id="udevadm-monitor-实时监听设备事件"><a href="#udevadm-monitor-实时监听设备事件" class="headerlink" title="udevadm monitor, 实时监听设备事件"></a><code>udevadm monitor</code>, 实时监听设备事件</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-comment"># 监听所有设备事件（彩色输出）</span><br>sudo udevadm monitor<br><br><span class="hljs-comment"># 只监听内核 uevent（不显示 udev 处理后的事件）</span><br>sudo udevadm monitor -k<br><br><span class="hljs-comment"># 只监听 udev 处理后的事件</span><br>sudo udevadm monitor -u<br><br><span class="hljs-comment"># 带属性输出（调试用，刷屏很多）</span><br>sudo udevadm monitor -p<br><br><span class="hljs-comment"># 配合插入/拔出设备，观察火线输出</span><br><span class="hljs-comment"># 插入 GPS 后立刻能看到 ADD 事件的完整细节</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="udevadm-test-模拟规则的执行-不实际应用"><a href="#udevadm-test-模拟规则的执行-不实际应用" class="headerlink" title="udevadm test, 模拟规则的执行 (不实际应用)"></a><code>udevadm test</code>, 模拟规则的执行 (不实际应用)</h3><p>改完规则后, 想测试它会匹配哪些设备但不真正执行:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-comment"># 模拟 ttyUSB0 的设备事件，看规则是否匹配</span><br>sudo udevadm <span class="hljs-built_in">test</span> $(udevadm info -q path -n /dev/ttyUSB0)<br><br><span class="hljs-comment"># 或直接用 sysfs 路径</span><br>sudo udevadm <span class="hljs-built_in">test</span> /sys/class/tty/ttyUSB0<br></code></pre></td></tr></table></figure>
+
+<h3 id="udevadm-settle-等待事件处理完毕"><a href="#udevadm-settle-等待事件处理完毕" class="headerlink" title="udevadm settle, 等待事件处理完毕"></a><code>udevadm settle</code>, 等待事件处理完毕</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-comment"># 阻塞直到所有挂起的 udev 事件处理完毕</span><br>udevadm settle<br><br><span class="hljs-comment"># 超时（秒）</span><br>udevadm settle -t 30<br><br></code></pre></td></tr></table></figure>
+<p>常用于脚本中: <code>trigger</code> 后, 需要用 <code>settle</code> 等所有符链接就绪再继续. 否则可能出现 “设备还没 ready 就读取” 的竞态.</p>
+<h3 id="udevadm-hwdb-硬件数据库管理"><a href="#udevadm-hwdb-硬件数据库管理" class="headerlink" title="udevadm hwdb, 硬件数据库管理"></a><code>udevadm hwdb</code>, 硬件数据库管理</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-comment"># 更新硬件数据库（很少直接使用，包管理器会自动调）</span><br>sudo udevadm hwdb --update<br></code></pre></td></tr></table></figure>
+
+<h1 id="sysfs"><a href="#sysfs" class="headerlink" title="sysfs"></a>sysfs</h1><p><code>sysfs</code> (根据包含的内容可以称其为 “设备属性树”) 是 Linux 内核导出的内存文件系统, 挂载在 <code>/sys</code> 路径, 用于把内核中所有设备, 驱动, 总线层级关系以目录树的形式暴露给用户空间. udev 的所有设备属性 (如 <code>ATTRS&#123;...&#125;</code>, <code>KERNELS==</code> 等) 都来自这里.</p>
+<p>需要注意它不是存在于硬盘上的文件, 而是内核数据结构的实时映射. 比如 <code>cat /sys/class/tty/ttyUSB0/dev</code> 读取到的不是磁盘文件, 而是内核在那一刻返回的值.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ <span class="hljs-built_in">cd</span> /sys<br>$ tree -L 1<br>.<br>├── block<br>├── bus<br>├── class<br>├── dev<br>├── devices<br>├── firmware<br>├── fs<br>├── hypervisor<br>├── kernel<br>├── module<br>└── power<br></code></pre></td></tr></table></figure>
+
+<p>比如查看所有的 <code>tty</code> 设备和 <code>usb</code> 设备:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ <span class="hljs-built_in">ls</span> /sys/class/tty/<br>$ <span class="hljs-built_in">ls</span> /sys/bus/usb/devices/<br></code></pre></td></tr></table></figure>
+
+<p>核心的子目录是下面四个:</p>
+<table>
+<thead>
+<tr>
+<th>目录</th>
+<th>内容</th>
+<th>组织方式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>&#x2F;sys&#x2F;class&#x2F;</td>
+<td>按功能分类</td>
+<td>“所有 tty 设备”、”所有网卡”、”所有块设备”</td>
+</tr>
+<tr>
+<td>&#x2F;sys&#x2F;bus&#x2F;</td>
+<td>按总线类型分类</td>
+<td>“所有 USB 设备”、”所有 PCI 设备”、”所有I2C 设备”</td>
+</tr>
+<tr>
+<td>&#x2F;sys&#x2F;devices&#x2F;</td>
+<td>按物理拓扑</td>
+<td>真实硬件树的唯一路径</td>
+</tr>
+<tr>
+<td>&#x2F;sys&#x2F;block&#x2F;</td>
+<td>按设备名</td>
+<td>sda, mmcblk0 等块设备</td>
+</tr>
+</tbody></table>
+<p>比如一个设备的硬件树路径:</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs routeros">/sys/devices/<br>  platform/                     ← SoC 内部总线<br>    3610000.usb/               ← USB 控制器（你的 Jetson 的 USB3 口）<br>       usb1/                   ← USB Root Hub<br>         1-1/                  ←<span class="hljs-built_in"> Port </span>1 上的 Hub<br>           1-1.4/              ← Hub 上的<span class="hljs-built_in"> Port </span>4（你的外接 USB Hub）<br>             1-1.4.2/          ← 那个 Hub 上的<span class="hljs-built_in"> Port </span>2（插着 GPS）<br>               1-1.4.2:1.0/    ←<span class="hljs-built_in"> Interface </span>0（CH340 芯片的串口功能）<br>                 ttyUSB0/       ← 内核创建的 tty 设备<br></code></pre></td></tr></table></figure>
+
+<p><code>1-1.4.2:1.0</code> 这种命名规则是:</p>
+<ul>
+<li><code>1-1</code>: 总线 1 上的第一个设备</li>
+<li><code>.4</code>: 该设备第 4 个端口</li>
+<li><code>.2</code>: 该端口下的第 2 个设备</li>
+<li><code>:1.0</code>: 该设备的第 0 个接口 (一个 USB 设备可以有多个功能接口)</li>
+</ul>
+<p>又比如 <code>tty</code> 视角下的 <code>ttyUSB0</code>, 其目录下包括:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">ls</span> /sys/class/tty/ttyUSB0/<br><span class="hljs-comment"># dev        → 设备号 (major:minor)，如 &quot;188:0&quot;</span><br><span class="hljs-comment"># power/     → 电源管理状态</span><br><span class="hljs-comment"># subsystem/ → 指向所属子系统的符号链接</span><br><span class="hljs-comment"># uevent     → 内核发送给 udev 的事件数据</span><br><span class="hljs-comment"># driver/    → 指向驱动的符号链接</span><br></code></pre></td></tr></table></figure>
+
+<p>同一个设备, 在不同的路径下可以用不同的视角查看其信息:</p>
+<ul>
+<li><code>/sys/class/tty/ttyUSB0/</code>   → “我是一个 tty 设备，别管我从哪来”</li>
+<li><code>/sys/bus/usb/devices/.../</code> → “我是一个 USB 设备，挂在 USB 总线上”</li>
+<li><code>/sys/devices/.../ttyUSB0/</code> → “我物理上位于这片 SoC 的这条总线下的这个端口”</li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Linux/" class="category-chain-item">Linux</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Linux-udev-以及设备相关知识</div>
+      <div>http://example.com/2026/06/07/Linux-udev-以及设备相关知识/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Jie</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年6月7日</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>许可协议</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2026/06/08/Rust-Write-trait-%E5%AD%97%E7%AC%A6%E4%B8%B2%E8%BF%BD%E5%8A%A0/" title="Rust-Write-trait-字符串追加">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Rust-Write-trait-字符串追加</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/06/04/rCore-Tutorial-%E7%AC%94%E8%AE%B0%E5%8F%8A%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9F%A5%E8%AF%86/" title="rCore-Tutorial-笔记及操作系统知识">
+                        <span class="hidden-mobile">rCore-Tutorial-笔记及操作系统知识</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zKurisu/comments-utterances');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Jie</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Orkarin</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.1/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

@@ -1,0 +1,1026 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/wallhaven-j5kjgy_1920x1080.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Jie">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="介绍这部分用一个示例说明 Rust 中的 IntoIterator, Iterator 以及他们与 for 循环的关系.  IntoIterator trait 负责用 into_iter 方法返回一个实现了 Iterator 的迭代器 Iterator trait 定义了 next 方法表明如何进行迭代取值  在 Rust 中:  for item in collection, 会自动调用 co">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Rust-Iterator">
+<meta property="og:url" content="http://example.com/2026/06/01/Rust-Iterator/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="介绍这部分用一个示例说明 Rust 中的 IntoIterator, Iterator 以及他们与 for 循环的关系.  IntoIterator trait 负责用 into_iter 方法返回一个实现了 Iterator 的迭代器 Iterator trait 定义了 next 方法表明如何进行迭代取值  在 Rust 中:  for item in collection, 会自动调用 co">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-06-01T03:59:15.000Z">
+<meta property="article:modified_time" content="2026-06-04T02:48:32.795Z">
+<meta property="article:author" content="Jie">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>Rust-Iterator - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<!-- hexo injector head_end start --><style>.typst-app {
+  margin: 0;
+  --typst-dom-scale: 1;
+  /* --typst-dom-scale: 1.5; */
+  margin: 5px;
+}
+
+.typst-dom-page {
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  --data-text-width: calc(1px * var(--typst-dom-scale));
+  --data-text-height: calc(1px * var(--typst-dom-scale));
+}
+
+.typst-back-canvas {
+  position: absolute;
+  z-index: -1;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  pointer-events: none;
+}
+
+.typst-svg-page {
+  position: absolute;
+  z-index: 0;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+}
+
+.typst-html-semantics {
+  position: absolute;
+  z-index: 2;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  color: transparent;
+  font-family: monospace;
+  white-space: pre;
+  opacity: 0.62;
+}
+
+.typst-html-semantics span {
+  color: transparent;
+  font-family: monospace;
+  transform-origin: left top;
+  position: absolute;
+  display: inline-block;
+  left: 0;
+  top: 0;
+}
+
+.typst-content-hint {
+  position: absolute;
+  display: inline-block;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.typst-html-semantics a {
+  position: absolute;
+  display: inline-block;
+}
+
+/* set transparent itself */
+.typst-content-group {
+  pointer-events: visible;
+}
+
+.typst-html-semantics span::-moz-selection {
+  color: transparent;
+  background: #7db9de;
+}
+
+.typst-html-semantics span::selection {
+  color: transparent;
+  background: #7db9de;
+}
+
+.typst-html-semantics *::-moz-selection {
+  color: transparent;
+  background: transparent;
+}
+
+.typst-html-semantics *::selection {
+  color: transparent;
+  background: transparent;
+}
+
+.typst-content-fallback {
+  color: transparent;
+  background: transparent;
+}
+
+.pseudo-link,
+.typst-text {
+  pointer-events: none;
+}
+
+.tsel span,
+.tsel {
+  left: 0;
+  position: fixed;
+  text-align: justify;
+  white-space: pre;
+  width: 100%;
+  height: 100%;
+  text-align-last: justify;
+  color: transparent;
+}
+.tsel span::-moz-selection,
+.tsel::-moz-selection {
+  color: transparent;
+  background: #7db9dea0;
+}
+.tsel span::selection,
+.tsel::selection {
+  color: transparent;
+  background: #7db9dea0;
+}
+.pseudo-link {
+  fill: transparent;
+  cursor: pointer;
+  pointer-events: all;
+}
+svg {
+  fill: none;
+}
+
+.outline_glyph path,
+path.outline_glyph {
+  fill: var(--glyph_fill);
+  stroke: var(--glyph_stroke);
+}
+
+.outline_glyph path,
+path.outline_glyph {
+  transition: 0.2s fill stroke;
+}
+.hover .typst-text {
+  --glyph_fill: #66bab7;
+  --glyph_stroke: #66bab7;
+}
+
+.typst-jump-ripple,
+.typst-debug-react-ripple {
+  width: 0;
+  height: 0;
+  background-color: transparent;
+  position: absolute;
+  border-radius: 50%;
+}
+.typst-jump-ripple {
+  border: 1px solid #66bab7;
+}
+.typst-debug-react-ripple {
+  border: 1px solid #cb1b45;
+}
+@keyframes typst-jump-ripple-effect {
+  to {
+    width: 10vw;
+    height: 10vw;
+    opacity: 0.01;
+    margin: -5vw;
+  }
+}
+@keyframes typst-debug-react-ripple-effect {
+  to {
+    width: 3vw;
+    height: 3vw;
+    opacity: 0.01;
+    margin: -1.5vw;
+  }
+}
+</style>
+<script>/// https://segmentfault.com/a/1190000016574288
+(function () {
+  var ie = !!(window.attachEvent && !window.opera);
+  var wk = /webkit\/(\d+)/i.test(navigator.userAgent) && RegExp.$1 < 525;
+  var fn = [];
+  var run = function () {
+    for (var i = 0; i < fn.length; i++) fn[i]();
+  };
+  var d = document;
+  d.ready = function (f) {
+    if (!ie && !wk && d.addEventListener) return d.addEventListener('DOMContentLoaded', f, false);
+    if (fn.push(f) > 1) return;
+    if (ie)
+      (function () {
+        try {
+          d.documentElement.doScroll('left');
+          run();
+        } catch (err) {
+          setTimeout(arguments.callee, 0);
+        }
+      })();
+    else if (wk)
+      var t = setInterval(function () {
+        if (/^(loaded|complete)$/.test(d.readyState)) clearInterval(t), run();
+      }, 0);
+  };
+})();
+</script>
+<script type="module" src="/typst/typst-main.js"></script><script src="/typst/svg-utils.js"></script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Jie</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/SteinsGate_all.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Rust-Iterator"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-06-01 11:59" pubdate>
+          2026年6月1日 中午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          6.1k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          51 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">Rust-Iterator</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>这部分用一个示例说明 Rust 中的 <code>IntoIterator</code>, <code>Iterator</code> 以及他们与 <code>for</code> 循环的关系.</p>
+<ul>
+<li><code>IntoIterator</code> trait 负责用 <code>into_iter</code> 方法返回一个实现了 <code>Iterator</code> 的迭代器</li>
+<li><code>Iterator</code> trait 定义了 <code>next</code> 方法表明如何进行迭代取值</li>
+</ul>
+<p>在 Rust 中:</p>
+<ul>
+<li><code>for item in collection</code>, 会自动调用 <code>collection.into_iter()</code></li>
+<li><code>for item in &amp;collection</code>, 会自动调用 <code>(&amp;collection).into_iter()</code></li>
+<li><code>for item in &amp;mut collection</code>, 会自动调用 <code>(&amp;mut collection).into_iter()</code></li>
+</ul>
+<h1 id="Iterator"><a href="#Iterator" class="headerlink" title="Iterator"></a>Iterator</h1><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">pub</span> <span class="hljs-keyword">trait</span> <span class="hljs-title class_">Iterator</span> &#123;<br>    <span class="hljs-keyword">type</span> <span class="hljs-title class_">Item</span>;                              <span class="hljs-comment">// 关联类型</span><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">next</span>(&amp;<span class="hljs-keyword">mut</span> <span class="hljs-keyword">self</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">Option</span>&lt;<span class="hljs-keyword">Self</span>::Item&gt;; <span class="hljs-comment">// 唯一必须实现的方法</span><br><br>    <span class="hljs-comment">// 以下全是带默认实现的方法 (count, last, nth, fold, map,</span><br>    <span class="hljs-comment">// filter, collect, take, skip, enumerate, zip, chain,</span><br>    <span class="hljs-comment">// flat_map, flatten, any, all, find, max, sum, for_each, inspect)</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>next</code> 函数负责取下一个值, 如果有, 则包裹在 <code>Some</code> 中; 如果没有, 则返回 <code>None</code></li>
+<li>实现了 <code>next</code> 之后, <code>count</code>, <code>last</code> 这些函数就会被默认自动实现</li>
+</ul>
+<h2 id="为什么用关联类型不用泛型"><a href="#为什么用关联类型不用泛型" class="headerlink" title="为什么用关联类型不用泛型"></a>为什么用关联类型不用泛型</h2><p>对于关联类型而言, 一个类型对一个 trait, 只能有一种实现. 下面是例子:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">trait</span> <span class="hljs-title class_">Iterator</span> &#123;<br>    <span class="hljs-keyword">type</span> <span class="hljs-title class_">Item</span>;<br><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">next</span>(&amp;<span class="hljs-keyword">mut</span> <span class="hljs-keyword">self</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">Option</span>&lt;<span class="hljs-keyword">Self</span>::Item&gt;;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>实现它有:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">impl</span> <span class="hljs-title class_">Iterator</span> <span class="hljs-keyword">for</span> <span class="hljs-title class_">MyVec</span> &#123;<br>    <span class="hljs-keyword">type</span> <span class="hljs-title class_">Item</span> = <span class="hljs-type">u32</span>;<br><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">next</span>(&amp;<span class="hljs-keyword">mut</span> <span class="hljs-keyword">self</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">Option</span>&lt;<span class="hljs-keyword">Self</span>::Item&gt; &#123;<br>        ...<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>对于 <code>MyVec</code>, 只能有一个 <code>Iterator</code> 的实现, 而这里已经写定 <code>Item = u32</code> 了, 只有 <code>Iterator&lt;Item=u32&gt;</code>, 而不会有 <code>Iterator&lt;Item=String&gt;</code> 的实现.</p>
+<p>如果是泛型:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">trait</span> <span class="hljs-title class_">Iterator</span>&lt;T&gt; &#123;<br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">next</span>(&amp;<span class="hljs-keyword">mut</span> <span class="hljs-keyword">self</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">Option</span>&lt;T&gt;;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>那么可以有很多实现:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">impl</span> <span class="hljs-title class_">Iterator</span>&lt;<span class="hljs-type">u32</span>&gt; <span class="hljs-keyword">for</span> <span class="hljs-title class_">MyVec</span> &#123;<br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">next</span>(&amp;<span class="hljs-keyword">mut</span> <span class="hljs-keyword">self</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">Option</span>&lt;<span class="hljs-type">u32</span>&gt; &#123; ... &#125;<br>&#125;<br><br><span class="hljs-keyword">impl</span> <span class="hljs-title class_">Iterator</span>&lt;<span class="hljs-type">String</span>&gt; <span class="hljs-keyword">for</span> <span class="hljs-title class_">MyVec</span> &#123;<br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">next</span>(&amp;<span class="hljs-keyword">mut</span> <span class="hljs-keyword">self</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">Option</span>&lt;<span class="hljs-type">String</span>&gt; &#123; ... &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>在迭代器的语境下, 一个迭代器永远只该产生一种元素类型, 对于下面这种就毫无意义:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">v</span>: <span class="hljs-type">Vec</span>&lt;<span class="hljs-type">u32</span>&gt; = ...;<br>v.iter::&lt;<span class="hljs-type">u32</span>&gt;();<br>v.iter::&lt;<span class="hljs-type">i64</span>&gt;(); <span class="hljs-comment">// ❌ 毫无意义</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="Fibonacci-数列示例"><a href="#Fibonacci-数列示例" class="headerlink" title="Fibonacci 数列示例"></a>Fibonacci 数列示例</h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">struct</span> <span class="hljs-title class_">Fibonacci</span> &#123;<br>    curr: <span class="hljs-type">u64</span>,<br>    next: <span class="hljs-type">u64</span>,<br>&#125;<br><br><span class="hljs-keyword">impl</span> <span class="hljs-title class_">Fibonacci</span> &#123;<br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">new</span>() <span class="hljs-punctuation">-&gt;</span> <span class="hljs-keyword">Self</span> &#123;<br>        Fibonacci &#123; curr: <span class="hljs-number">0</span>, next: <span class="hljs-number">1</span> &#125;<br>    &#125;<br>&#125;<br><br><span class="hljs-keyword">impl</span> <span class="hljs-title class_">Iterator</span> <span class="hljs-keyword">for</span> <span class="hljs-title class_">Fibonacci</span> &#123;<br>    <span class="hljs-keyword">type</span> <span class="hljs-title class_">Item</span> = <span class="hljs-type">u64</span>;<br><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">next</span>(&amp;<span class="hljs-keyword">mut</span> <span class="hljs-keyword">self</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">Option</span>&lt;<span class="hljs-keyword">Self</span>::Item&gt; &#123;<br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">new_next</span> = <span class="hljs-keyword">self</span>.curr.<span class="hljs-title function_ invoke__">checked_add</span>(<span class="hljs-keyword">self</span>.next)?;  <span class="hljs-comment">// 防溢出</span><br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">ret</span> = <span class="hljs-keyword">self</span>.curr;<br>        <span class="hljs-keyword">self</span>.curr = <span class="hljs-keyword">self</span>.next;<br>        <span class="hljs-keyword">self</span>.next = new_next;<br>        <span class="hljs-title function_ invoke__">Some</span>(ret)<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="Counter-示例"><a href="#Counter-示例" class="headerlink" title="Counter 示例"></a>Counter 示例</h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">struct</span> <span class="hljs-title class_">Counter</span> &#123;<br>    current: <span class="hljs-type">u32</span>,<br>    end: <span class="hljs-type">u32</span>,<br>&#125;<br><br><span class="hljs-keyword">impl</span> <span class="hljs-title class_">Counter</span> &#123;<br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">new</span>(start: <span class="hljs-type">u32</span>, end: <span class="hljs-type">u32</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-keyword">Self</span> &#123;<br>        Counter &#123; current: start, end &#125;<br>    &#125;<br>&#125;<br><br><span class="hljs-keyword">impl</span> <span class="hljs-title class_">Iterator</span> <span class="hljs-keyword">for</span> <span class="hljs-title class_">Counter</span> &#123;<br>    <span class="hljs-keyword">type</span> <span class="hljs-title class_">Item</span> = <span class="hljs-type">u32</span>;<br><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">next</span>(&amp;<span class="hljs-keyword">mut</span> <span class="hljs-keyword">self</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">Option</span>&lt;<span class="hljs-keyword">Self</span>::Item&gt; &#123;<br>        <span class="hljs-keyword">if</span> <span class="hljs-keyword">self</span>.current &gt;= <span class="hljs-keyword">self</span>.end &#123;<br>            <span class="hljs-literal">None</span><br>        &#125; <span class="hljs-keyword">else</span> &#123;<br>            <span class="hljs-keyword">let</span> <span class="hljs-variable">val</span> = <span class="hljs-keyword">self</span>.current;<br>            <span class="hljs-keyword">self</span>.current += <span class="hljs-number">1</span>;<br>            <span class="hljs-title function_ invoke__">Some</span>(val)<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="cloned"><a href="#cloned" class="headerlink" title="cloned"></a>cloned</h2><p><code>cloned()</code> 定义在 <code>std::iter</code> 中, 属于 Iterator trait 的扩展, 主要目的是把 <code>Iterator&lt;Item = &amp;T&gt;</code> 变成 <code>Iterator&lt;Item = T&gt;</code>, 其不会转移所有权, 也不会消费原集合, 只是把 “引用” 变成 “值”.</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">cloned</span>&lt;<span class="hljs-symbol">&#x27;a</span>, T&gt;(<span class="hljs-keyword">self</span>) <span class="hljs-punctuation">-&gt;</span> Cloned&lt;<span class="hljs-keyword">Self</span>&gt;<br><span class="hljs-keyword">where</span><br>    T: <span class="hljs-symbol">&#x27;a</span> + <span class="hljs-built_in">Clone</span>,<br>    <span class="hljs-keyword">Self</span>: <span class="hljs-built_in">Iterator</span>&lt;Item = &amp;<span class="hljs-symbol">&#x27;a</span> T&gt;,<br></code></pre></td></tr></table></figure>
+<p>要求:</p>
+<ul>
+<li>原始的迭代器包裹的是 <code>&lt;Item = &amp;T&gt;</code></li>
+<li><code>T</code> 必须实现了 <code>Clone</code></li>
+</ul>
+<p>下面是一个直观的例子, 先看原始迭代器:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">v</span> = <span class="hljs-built_in">vec!</span>[<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>];<br><br><span class="hljs-keyword">for</span> <span class="hljs-variable">x</span> <span class="hljs-keyword">in</span> &amp;v &#123;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;&#125;&quot;</span>, x); <span class="hljs-comment">// x: &amp;i32</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>使用 <code>cloned()</code>:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">v</span> = <span class="hljs-built_in">vec!</span>[<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>];<br><br><span class="hljs-keyword">for</span> <span class="hljs-variable">x</span> <span class="hljs-keyword">in</span> v.<span class="hljs-title function_ invoke__">iter</span>().<span class="hljs-title function_ invoke__">cloned</span>() &#123;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;&#125;&quot;</span>, x); <span class="hljs-comment">// x: i32</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>虽然输出一样, 但是拿到了值.</p>
+<p>本质上:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust">v.<span class="hljs-title function_ invoke__">iter</span>().<span class="hljs-title function_ invoke__">cloned</span>()<br></code></pre></td></tr></table></figure>
+
+<p>等价于:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust">v.<span class="hljs-title function_ invoke__">iter</span>().<span class="hljs-title function_ invoke__">map</span>(|x| x.<span class="hljs-title function_ invoke__">clone</span>())<br></code></pre></td></tr></table></figure>
+
+<h1 id="IntoIterator"><a href="#IntoIterator" class="headerlink" title="IntoIterator"></a>IntoIterator</h1><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">pub</span> <span class="hljs-keyword">trait</span> <span class="hljs-title class_">IntoIterator</span> &#123;<br>    <span class="hljs-keyword">type</span> <span class="hljs-title class_">Item</span>;<br>    <span class="hljs-keyword">type</span> <span class="hljs-title class_">IntoIter</span>: <span class="hljs-built_in">Iterator</span>&lt;Item = <span class="hljs-keyword">Self</span>::Item&gt;;  <span class="hljs-comment">// 约束在这里!</span><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">into_iter</span>(<span class="hljs-keyword">self</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-keyword">Self</span>::IntoIter;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>into_iter</code> 方法返回的类型需要实现了 <code>Iterator</code> trait</li>
+<li><code>Item = Self::Item</code>, 表示 <code>Iterator</code> 包裹的 Item 需要与 <code>IntoIterator</code> 的一致</li>
+<li>需要注意这里是 <code>self</code>, 会消耗式获取所有权</li>
+</ul>
+<p>通常情况下, 只要为类型实现了 <code>Iterator</code>, 就能自动得到其 <code>IntoIterator</code> 实现:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">impl</span>&lt;I: <span class="hljs-built_in">Iterator</span>&gt; <span class="hljs-built_in">IntoIterator</span> <span class="hljs-keyword">for</span> <span class="hljs-title class_">I</span> &#123;<br>    <span class="hljs-keyword">type</span> <span class="hljs-title class_">Item</span>     = I::Item;<br>    <span class="hljs-keyword">type</span> <span class="hljs-title class_">IntoIter</span> = I;<br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">into_iter</span>(<span class="hljs-keyword">self</span>) <span class="hljs-punctuation">-&gt;</span> I &#123; <span class="hljs-keyword">self</span> &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>对于 <code>&amp;mut I</code> 也间接实现了 <code>IntoIterator</code>, 标准库先为其实现了 <code>Iterator</code>, 然后由上面的 <code>I</code> 替换为 <code>&amp;mut I</code> 即可.</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">impl</span>&lt;I: <span class="hljs-built_in">Iterator</span> + ?<span class="hljs-built_in">Sized</span>&gt; <span class="hljs-built_in">Iterator</span> <span class="hljs-keyword">for</span> &amp;<span class="hljs-keyword">mut</span> I &#123;<br>    <span class="hljs-keyword">type</span> <span class="hljs-title class_">Item</span> = I::Item;<br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">next</span>(&amp;<span class="hljs-keyword">mut</span> <span class="hljs-keyword">self</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">Option</span>&lt;I::Item&gt; &#123;<br>        (**<span class="hljs-keyword">self</span>).<span class="hljs-title function_ invoke__">next</span>()<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>但 <code>&amp;I</code> 没有默认实现, 因为 <code>Iterator</code> 要求的是可变引用.</p>
+<h2 id="实现三种-IntoIterator"><a href="#实现三种-IntoIterator" class="headerlink" title="实现三种 IntoIterator"></a>实现三种 IntoIterator</h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// ── 3a. 消耗式 IntoIterator (stack.into_iter()) ──</span><br><span class="hljs-keyword">impl</span>&lt;T&gt; <span class="hljs-built_in">IntoIterator</span> <span class="hljs-keyword">for</span> <span class="hljs-title class_">Stack</span>&lt;T&gt; &#123;<br>    <span class="hljs-keyword">type</span> <span class="hljs-title class_">Item</span> = T;<br>    <span class="hljs-keyword">type</span> <span class="hljs-title class_">IntoIter</span> = StackIntoIter&lt;T&gt;;<br><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">into_iter</span>(<span class="hljs-keyword">self</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-keyword">Self</span>::IntoIter &#123;<br>        StackIntoIter &#123;<br>            inner: <span class="hljs-keyword">self</span>.items,  <span class="hljs-comment">// 转移所有权</span><br>        &#125;<br>    &#125;<br>&#125;<br><br><span class="hljs-comment">// ── 3b. 不可变引用 IntoIterator (&amp;stack) ──</span><br><span class="hljs-keyword">impl</span>&lt;<span class="hljs-symbol">&#x27;a</span>, T&gt; <span class="hljs-built_in">IntoIterator</span> <span class="hljs-keyword">for</span> &amp;<span class="hljs-symbol">&#x27;a</span> Stack&lt;T&gt; &#123;<br>    <span class="hljs-keyword">type</span> <span class="hljs-title class_">Item</span> = &amp;<span class="hljs-symbol">&#x27;a</span> T;<br>    <span class="hljs-keyword">type</span> <span class="hljs-title class_">IntoIter</span> = StackIter&lt;<span class="hljs-symbol">&#x27;a</span>, T&gt;;<br><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">into_iter</span>(<span class="hljs-keyword">self</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-keyword">Self</span>::IntoIter &#123;<br>        StackIter &#123;<br>            inner: &amp;<span class="hljs-keyword">self</span>.items,<br>            pos: <span class="hljs-number">0</span>,<br>        &#125;<br>    &#125;<br>&#125;<br><br><span class="hljs-comment">// ── 3c. 可变引用 IntoIterator (&amp;mut stack) ──</span><br><span class="hljs-keyword">impl</span>&lt;<span class="hljs-symbol">&#x27;a</span>, T&gt; <span class="hljs-built_in">IntoIterator</span> <span class="hljs-keyword">for</span> &amp;<span class="hljs-symbol">&#x27;a</span> <span class="hljs-keyword">mut</span> Stack&lt;T&gt; &#123;<br>    <span class="hljs-keyword">type</span> <span class="hljs-title class_">Item</span> = &amp;<span class="hljs-symbol">&#x27;a</span> <span class="hljs-keyword">mut</span> T;<br>    <span class="hljs-keyword">type</span> <span class="hljs-title class_">IntoIter</span> = StackIterMut&lt;<span class="hljs-symbol">&#x27;a</span>, T&gt;;<br><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">into_iter</span>(<span class="hljs-keyword">self</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-keyword">Self</span>::IntoIter &#123;<br>        StackIterMut &#123;<br>            inner: &amp;<span class="hljs-keyword">mut</span> <span class="hljs-keyword">self</span>.items,<br>            pos: <span class="hljs-number">0</span>,<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>注意这里三种实现中的 <code>self</code> 的含义都不相同, 分别代表 <code>Stack&lt;T&gt;</code>, <code>&amp;&#39;a Stack&lt;T&gt;</code>, <code>&amp;&#39;a mut Stack&lt;T&gt;</code> 的实例.</p>
+<h1 id="Iterator-adapter"><a href="#Iterator-adapter" class="headerlink" title="Iterator adapter"></a>Iterator adapter</h1><p>在 Rust 的语境下, adapter 表示: 一个接受一个 iterator 然后返回新的 iterator 的方法.</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs dart"><span class="hljs-built_in">Iterator</span> → <span class="hljs-built_in">Iterator</span><br></code></pre></td></tr></table></figure>
+
+<p>比如 <code>map</code>, <code>filter</code> 这些:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">nums</span> = <span class="hljs-built_in">vec!</span>[<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">5</span>, <span class="hljs-number">6</span>, <span class="hljs-number">7</span>, <span class="hljs-number">8</span>];<br><br><span class="hljs-comment">// map — 逐个转换</span><br>nums.<span class="hljs-title function_ invoke__">iter</span>().<span class="hljs-title function_ invoke__">map</span>(|x| x * <span class="hljs-number">2</span>); <span class="hljs-comment">// [2,4,6,...]</span><br><br><span class="hljs-comment">// filter — 按条件保留</span><br>nums.<span class="hljs-title function_ invoke__">iter</span>().<span class="hljs-title function_ invoke__">filter</span>(|&amp;&amp;x| x % <span class="hljs-number">2</span> == <span class="hljs-number">0</span>); <span class="hljs-comment">// [2,4,6,8]</span><br></code></pre></td></tr></table></figure>
+
+<p>此时同样是惰性的, 只有在使用时才会计算.</p>
+<p>这里再列举出一些常见的 adaptor method.</p>
+<h2 id="enumerate"><a href="#enumerate" class="headerlink" title="enumerate"></a>enumerate</h2><p><code>enumerate</code> 会让迭代器每次返回带下标的二元组:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-title function_ invoke__">for</span> (i, &amp;val) <span class="hljs-keyword">in</span> nums.<span class="hljs-title function_ invoke__">iter</span>().<span class="hljs-title function_ invoke__">enumerate</span>() &#123; ... &#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="take-x2F-skip"><a href="#take-x2F-skip" class="headerlink" title="take&#x2F;skip"></a>take&#x2F;skip</h2><p><code>take</code> 用来截取指定长度的元素, <code>skip</code> 用来跳过一些元素:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">nums</span> = <span class="hljs-built_in">vec!</span>[<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">5</span>, <span class="hljs-number">6</span>, <span class="hljs-number">7</span>, <span class="hljs-number">8</span>];<br>nums.<span class="hljs-title function_ invoke__">iter</span>().<span class="hljs-title function_ invoke__">take</span>(<span class="hljs-number">3</span>); <span class="hljs-comment">// [1,2,3]</span><br>nums.<span class="hljs-title function_ invoke__">iter</span>().<span class="hljs-title function_ invoke__">skip</span>(<span class="hljs-number">5</span>); <span class="hljs-comment">// [6,7,8]</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="zip"><a href="#zip" class="headerlink" title="zip"></a>zip</h2><p><code>zip</code> 将两个迭代器配对, 每次返回二元组:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">a</span> = [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>];<br><span class="hljs-keyword">let</span> <span class="hljs-variable">b</span> = [<span class="hljs-number">4</span>, <span class="hljs-number">5</span>, <span class="hljs-number">6</span>];<br>a.<span class="hljs-title function_ invoke__">iter</span>().<span class="hljs-title function_ invoke__">zip</span>(b.<span class="hljs-title function_ invoke__">iter</span>()); <span class="hljs-comment">// [(1,4), (2,5), (3,6)]</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="rev"><a href="#rev" class="headerlink" title="rev"></a>rev</h2><p><code>rev</code> (reverse), 返回顺序颠倒的迭代器:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust">(<span class="hljs-number">0</span>..<span class="hljs-number">5</span>).<span class="hljs-title function_ invoke__">rev</span>() <span class="hljs-comment">// [4, 3, 2, 1, 0]</span><br></code></pre></td></tr></table></figure>
+
+<h1 id="Iterator-consumer"><a href="#Iterator-consumer" class="headerlink" title="Iterator consumer"></a>Iterator consumer</h1><p>Consumer 这个命名可能会有点疑惑, 这里的 “消费” 指的是消耗迭代器本身 (让迭代器输出下一个元素直到没有元素可以输出), 不一定会 move 元素的所有权. 目的是把迭代器 “用完”.</p>
+<p>比如:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">nums</span> = [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">5</span>];<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">b</span>: <span class="hljs-type">Vec</span>&lt;_&gt; = nums.<span class="hljs-title function_ invoke__">iter</span>().<span class="hljs-title function_ invoke__">map</span>(|x| x*x).<span class="hljs-title function_ invoke__">collect</span>();<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;:?&#125;&quot;</span>, nums); <span class="hljs-comment">// [1, 2, 3, 4, 5]</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<p><code>nums</code> 中元素都还在, 并没有 <code>move</code>.</p>
+<p>下面列出一些常见的 consumer method.</p>
+<h2 id="fold"><a href="#fold" class="headerlink" title="fold"></a>fold</h2><p>同 Haskell, 将一个列表折叠为一个值:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">nums</span> = [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">5</span>];<br><span class="hljs-keyword">let</span> <span class="hljs-variable">sum</span> = nums.<span class="hljs-title function_ invoke__">iter</span>().<span class="hljs-title function_ invoke__">fold</span>(<span class="hljs-number">0</span>, |acc, &amp;x| acc + x);<br><span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;&#125;&quot;</span>, sum);<br></code></pre></td></tr></table></figure>
+
+<h2 id="all-x2F-any"><a href="#all-x2F-any" class="headerlink" title="all&#x2F;any"></a>all&#x2F;any</h2><p><code>all</code> 表示当所有元素都满足某个条件时返回 <code>true</code>; <code>any</code> 会在某一个元素满足条件时返回 <code>true</code>:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">nums</span> = [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">5</span>];<br><span class="hljs-keyword">let</span> <span class="hljs-variable">is_all_greater_than_0</span> = nums.<span class="hljs-title function_ invoke__">iter</span>().<span class="hljs-title function_ invoke__">all</span>(|&amp;x| x &gt; <span class="hljs-number">0</span>); <span class="hljs-comment">// true</span><br><span class="hljs-keyword">let</span> <span class="hljs-variable">is_one_greater_than_3</span> = nums.<span class="hljs-title function_ invoke__">iter</span>().<span class="hljs-title function_ invoke__">any</span>(|&amp;x| x &gt; <span class="hljs-number">3</span>); <span class="hljs-comment">// true</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="find-x2F-position-x2F-nth"><a href="#find-x2F-position-x2F-nth" class="headerlink" title="find&#x2F;position&#x2F;nth"></a>find&#x2F;position&#x2F;nth</h2><p><code>find</code> 返回第一个满足条件的元素; <code>position</code> 返回第一个满足条件的元素的索引;  <code>nth</code> 返回第 n 个位置的元素.</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">nums</span> = <span class="hljs-built_in">vec!</span>[<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">5</span>, <span class="hljs-number">6</span>];<br>nums.<span class="hljs-title function_ invoke__">iter</span>().<span class="hljs-title function_ invoke__">find</span>(|&amp;&amp;x| x &gt; <span class="hljs-number">4</span>);    <span class="hljs-comment">// Some(&amp;5)</span><br>nums.<span class="hljs-title function_ invoke__">iter</span>().<span class="hljs-title function_ invoke__">position</span>(|&amp;x| x &gt; <span class="hljs-number">4</span>); <span class="hljs-comment">// Some(4)</span><br>nums.<span class="hljs-title function_ invoke__">iter</span>().<span class="hljs-title function_ invoke__">nth</span>(<span class="hljs-number">2</span>);               <span class="hljs-comment">// Some(&amp;3)</span><br></code></pre></td></tr></table></figure>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Rust/" class="category-chain-item">Rust</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Rust-Iterator</div>
+      <div>http://example.com/2026/06/01/Rust-Iterator/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Jie</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年6月1日</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>许可协议</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2026/06/01/Rust-Clone-Copy/" title="Rust-Clone-Copy">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Rust-Clone-Copy</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/05/09/Stable-baseline3-%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8/" title="Stable-baseline3-基本使用">
+                        <span class="hidden-mobile">Stable-baseline3-基本使用</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zKurisu/comments-utterances');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Jie</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Orkarin</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.1/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

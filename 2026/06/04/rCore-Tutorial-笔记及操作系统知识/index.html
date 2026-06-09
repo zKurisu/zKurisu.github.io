@@ -1,0 +1,1595 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/wallhaven-j5kjgy_1920x1080.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Jie">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="rCore tutorial guide 地址参考教材 OSTEP课程 ppt课程实践参考书MiniDecaf 编译实验 介绍rCore tutorial 是一个从零开始用 Rust 写一个基于 RISC-V 架构的类 Unix 内核的实验. 这篇文章主要记录实验里比较重要的点或者复现时遇到的问题, 如何解决的, 还有配套课程的笔记. 环境配置Rust需要安装 Rust 版本管理器 rustup">
+<meta property="og:type" content="article">
+<meta property="og:title" content="rCore-Tutorial-笔记及操作系统知识">
+<meta property="og:url" content="http://example.com/2026/06/04/rCore-Tutorial-%E7%AC%94%E8%AE%B0%E5%8F%8A%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9F%A5%E8%AF%86/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="rCore tutorial guide 地址参考教材 OSTEP课程 ppt课程实践参考书MiniDecaf 编译实验 介绍rCore tutorial 是一个从零开始用 Rust 写一个基于 RISC-V 架构的类 Unix 内核的实验. 这篇文章主要记录实验里比较重要的点或者复现时遇到的问题, 如何解决的, 还有配套课程的笔记. 环境配置Rust需要安装 Rust 版本管理器 rustup">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/rcore-qemu-start-os-example.png">
+<meta property="og:image" content="http://example.com/img/rcore-os-structure.png">
+<meta property="og:image" content="http://example.com/img/rcore-os-hardware-abstraction-example.png">
+<meta property="og:image" content="http://example.com/img/rcore-physical-absraction.png">
+<meta property="og:image" content="http://example.com/img/rcore-multi-layer-os.png">
+<meta property="og:image" content="http://example.com/img/rcore-micro-kernel-example.png">
+<meta property="og:image" content="http://example.com/img/rcore-external-kernel-example.png">
+<meta property="og:image" content="http://example.com/img/rcore-virtual-machine-example.png">
+<meta property="og:image" content="http://example.com/img/rcore-libos-structure-example.png">
+<meta property="og:image" content="http://example.com/img/rcore-batch-os-structure-example.png">
+<meta property="og:image" content="http://example.com/img/rcore-multi-program-os-structure-example.png">
+<meta property="og:image" content="http://example.com/img/rcore-split-time-os-structure-example.png">
+<meta property="og:image" content="http://example.com/img/rcore-address-space-abs-os-example.png">
+<meta property="og:image" content="http://example.com/img/rcore-virtual-memory-example.png">
+<meta property="og:image" content="http://example.com/img/rcore-process-abs-os-example.png">
+<meta property="og:image" content="http://example.com/img/rcore-file-abs-os-example.png">
+<meta property="og:image" content="http://example.com/img/rcore-prog-commu-enable-os-example.png">
+<meta property="og:image" content="http://example.com/img/rcore-para-enable-os-example.png">
+<meta property="og:image" content="http://example.com/img/rcore-io-handle-os-example.png">
+<meta property="og:image" content="http://example.com/img/rcore-elf-two-view-examples.png">
+<meta property="og:image" content="http://example.com/img/rcore-libos-structure-example.png">
+<meta property="og:image" content="http://example.com/img/rcore-app-os-memory-structure.png">
+<meta property="og:image" content="http://example.com/img/rcore-elf-only-left-binary-image.png">
+<meta property="og:image" content="http://example.com/img/rcore-how-a-function-is-called.png">
+<meta property="og:image" content="http://example.com/img/rcore-stack-frame-create-example.png">
+<meta property="og:image" content="http://example.com/img/rcore-stack-frame-structure-example.png">
+<meta property="og:image" content="http://example.com/img/rcore-riscv-with-sbi-structure.png">
+<meta property="og:image" content="http://example.com/img/rcore-prog-exec-env-stack-example.png">
+<meta property="og:image" content="http://example.com/img/rcore-relation-between-os-and-hardware.png">
+<meta property="og:image" content="http://example.com/img/rcore-boundary-between-hardware-and-os.png">
+<meta property="og:image" content="http://example.com/img/rcore-riscv-instruction-execution.png">
+<meta property="article:published_time" content="2026-06-04T08:33:51.000Z">
+<meta property="article:modified_time" content="2026-06-09T07:52:01.763Z">
+<meta property="article:author" content="Jie">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/rcore-qemu-start-os-example.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>rCore-Tutorial-笔记及操作系统知识 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<!-- hexo injector head_end start --><style>.typst-app {
+  margin: 0;
+  --typst-dom-scale: 1;
+  /* --typst-dom-scale: 1.5; */
+  margin: 5px;
+}
+
+.typst-dom-page {
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  --data-text-width: calc(1px * var(--typst-dom-scale));
+  --data-text-height: calc(1px * var(--typst-dom-scale));
+}
+
+.typst-back-canvas {
+  position: absolute;
+  z-index: -1;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  pointer-events: none;
+}
+
+.typst-svg-page {
+  position: absolute;
+  z-index: 0;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+}
+
+.typst-html-semantics {
+  position: absolute;
+  z-index: 2;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  color: transparent;
+  font-family: monospace;
+  white-space: pre;
+  opacity: 0.62;
+}
+
+.typst-html-semantics span {
+  color: transparent;
+  font-family: monospace;
+  transform-origin: left top;
+  position: absolute;
+  display: inline-block;
+  left: 0;
+  top: 0;
+}
+
+.typst-content-hint {
+  position: absolute;
+  display: inline-block;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.typst-html-semantics a {
+  position: absolute;
+  display: inline-block;
+}
+
+/* set transparent itself */
+.typst-content-group {
+  pointer-events: visible;
+}
+
+.typst-html-semantics span::-moz-selection {
+  color: transparent;
+  background: #7db9de;
+}
+
+.typst-html-semantics span::selection {
+  color: transparent;
+  background: #7db9de;
+}
+
+.typst-html-semantics *::-moz-selection {
+  color: transparent;
+  background: transparent;
+}
+
+.typst-html-semantics *::selection {
+  color: transparent;
+  background: transparent;
+}
+
+.typst-content-fallback {
+  color: transparent;
+  background: transparent;
+}
+
+.pseudo-link,
+.typst-text {
+  pointer-events: none;
+}
+
+.tsel span,
+.tsel {
+  left: 0;
+  position: fixed;
+  text-align: justify;
+  white-space: pre;
+  width: 100%;
+  height: 100%;
+  text-align-last: justify;
+  color: transparent;
+}
+.tsel span::-moz-selection,
+.tsel::-moz-selection {
+  color: transparent;
+  background: #7db9dea0;
+}
+.tsel span::selection,
+.tsel::selection {
+  color: transparent;
+  background: #7db9dea0;
+}
+.pseudo-link {
+  fill: transparent;
+  cursor: pointer;
+  pointer-events: all;
+}
+svg {
+  fill: none;
+}
+
+.outline_glyph path,
+path.outline_glyph {
+  fill: var(--glyph_fill);
+  stroke: var(--glyph_stroke);
+}
+
+.outline_glyph path,
+path.outline_glyph {
+  transition: 0.2s fill stroke;
+}
+.hover .typst-text {
+  --glyph_fill: #66bab7;
+  --glyph_stroke: #66bab7;
+}
+
+.typst-jump-ripple,
+.typst-debug-react-ripple {
+  width: 0;
+  height: 0;
+  background-color: transparent;
+  position: absolute;
+  border-radius: 50%;
+}
+.typst-jump-ripple {
+  border: 1px solid #66bab7;
+}
+.typst-debug-react-ripple {
+  border: 1px solid #cb1b45;
+}
+@keyframes typst-jump-ripple-effect {
+  to {
+    width: 10vw;
+    height: 10vw;
+    opacity: 0.01;
+    margin: -5vw;
+  }
+}
+@keyframes typst-debug-react-ripple-effect {
+  to {
+    width: 3vw;
+    height: 3vw;
+    opacity: 0.01;
+    margin: -1.5vw;
+  }
+}
+</style>
+<script>/// https://segmentfault.com/a/1190000016574288
+(function () {
+  var ie = !!(window.attachEvent && !window.opera);
+  var wk = /webkit\/(\d+)/i.test(navigator.userAgent) && RegExp.$1 < 525;
+  var fn = [];
+  var run = function () {
+    for (var i = 0; i < fn.length; i++) fn[i]();
+  };
+  var d = document;
+  d.ready = function (f) {
+    if (!ie && !wk && d.addEventListener) return d.addEventListener('DOMContentLoaded', f, false);
+    if (fn.push(f) > 1) return;
+    if (ie)
+      (function () {
+        try {
+          d.documentElement.doScroll('left');
+          run();
+        } catch (err) {
+          setTimeout(arguments.callee, 0);
+        }
+      })();
+    else if (wk)
+      var t = setInterval(function () {
+        if (/^(loaded|complete)$/.test(d.readyState)) clearInterval(t), run();
+      }, 0);
+  };
+})();
+</script>
+<script type="module" src="/typst/typst-main.js"></script><script src="/typst/svg-utils.js"></script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Jie</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/SteinsGate_all.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="rCore-Tutorial-笔记及操作系统知识"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-06-04 16:33" pubdate>
+          2026年6月4日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          20k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          165 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">rCore-Tutorial-笔记及操作系统知识</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p><a target="_blank" rel="noopener" href="https://learningos.cn/rCore-Tutorial-Guide/">rCore tutorial guide 地址</a><br><a target="_blank" rel="noopener" href="https://pages.cs.wisc.edu/~remzi/OSTEP/">参考教材 OSTEP</a><br><a target="_blank" rel="noopener" href="http://learningos.github.io/os-lectures/">课程 ppt</a><br><a target="_blank" rel="noopener" href="https://learningos.github.io/rCore-Tutorial-Book-v3/">课程实践参考书</a><br><a target="_blank" rel="noopener" href="https://decaf-lang.github.io/minidecaf-tutorial/">MiniDecaf 编译实验</a></p>
+<h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>rCore tutorial 是一个从零开始用 Rust 写一个基于 RISC-V 架构的类 Unix 内核的实验. 这篇文章主要记录实验里比较重要的点或者复现时遇到的问题, 如何解决的, 还有配套课程的笔记.</p>
+<h1 id="环境配置"><a href="#环境配置" class="headerlink" title="环境配置"></a>环境配置</h1><h2 id="Rust"><a href="#Rust" class="headerlink" title="Rust"></a>Rust</h2><p>需要安装 Rust 版本管理器 <code>rustup</code> 和包管理器 <code>cargo</code>:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">curl https://sh.rustup.rs -sSf | sh<br></code></pre></td></tr></table></figure>
+
+<p>确认安装情况:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">cargo --version<br></code></pre></td></tr></table></figure>
+
+<p>更换 <code>cargo</code> 拉取包的镜像地址, 需要创建 <code>~/.cargo/config</code> 文件, 添加下面内容:</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs ini"><span class="hljs-section">[source.crates-io]</span><br><span class="hljs-attr">replace-with</span> = <span class="hljs-string">&#x27;mirror&#x27;</span><br><br><span class="hljs-section">[source.mirror]</span><br><span class="hljs-attr">registry</span> = <span class="hljs-string">&quot;sparse+https://mirrors.tuna.tsinghua.edu.cn/crates.io-index/&quot;</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="QEMU"><a href="#QEMU" class="headerlink" title="QEMU"></a>QEMU</h2><p>还需要安装 QEMU, 这里各个发行版自便, 查看安装情况如下:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">qemu-system-riscv64 --version<br></code></pre></td></tr></table></figure>
+
+<h3 id="QEMU-的启动流程"><a href="#QEMU-的启动流程" class="headerlink" title="QEMU 的启动流程"></a>QEMU 的启动流程</h3><p>比如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sh">qemu-system-riscv64 \<br>    -machine virt \<br>    -nographic \<br>    -bios ../bootloader/rustsbi-qemu.bin \<br>    -device loader,file=target/riscv64gc-unknow-none-elf/release/os.bin,addr=0x80200000<br></code></pre></td></tr></table></figure>
+<ul>
+<li>用 <code>qemu-system-riscv64</code> 而非 <code>qemu-riscv64</code>, 表明是启动 RISC-V 64 位系统模拟器, 而非用户态执行程序, 是完整的硬件虚拟化</li>
+<li><code>-machine virt</code> 表明使用 QEMU 的 <code>virt</code> 虚拟开发板</li>
+<li><code>-nographic</code> 表示不使用 GUI 窗口, 输入输出重定向到当前终端</li>
+<li><code>-bios</code> 指定 bootloader 程序</li>
+<li><code>-device loader,...</code> 表示加载文件到内存中</li>
+</ul>
+<p>QEMU 模拟的启动流程可以分为三个阶段:</p>
+<ol>
+<li>由固化在 QEMU 模拟的计算机内存中的一小段汇编程序初始化并跳转执行 bootloader</li>
+<li>由 bootloader 负责, 初始化并加载 OS, 跳转 OS 执行</li>
+<li>由内核执行初始化工作</li>
+</ol>
+<p><img src="/../img/rcore-qemu-start-os-example.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="GBD"><a href="#GBD" class="headerlink" title="GBD"></a>GBD</h2><p>需要安装 <code>gdb</code> 和 <code>riscv64-unknown-elf-gdb</code>.</p>
+<p>下面可获取 <code>riscv64-unknown-elf-gdb</code> 预编译版本:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">wget https://static.dev.sifive.com/dev-tools/riscv64-unknown-elf-gcc-8.3.0-2020.04.1-x86_64-linux-ubuntu14.tar.gz<br><span class="hljs-comment"># CentOS: wget https://static.dev.sifive.com/dev-tools/riscv64-unknown-elf-gcc-8.3.0-2020.04.1-x86_64-linux-centos6.tar.gz</span><br></code></pre></td></tr></table></figure>
+
+<h1 id="Hello-World"><a href="#Hello-World" class="headerlink" title="Hello World"></a>Hello World</h1><p>运行 rCore-Tutorial 的示例:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sh">git <span class="hljs-built_in">clone</span> https://github.com/LearningOS/rCore-Tutorial-Code<br><span class="hljs-built_in">cd</span> rCore-Tutorial-Code<br>git checkout ch1<br><span class="hljs-built_in">cd</span> os<br>LOG=DEBUG make run<br></code></pre></td></tr></table></figure>
+
+<h1 id="课程笔记"><a href="#课程笔记" class="headerlink" title="课程笔记"></a>课程笔记</h1><h1 id="第一讲-操作系统概述"><a href="#第一讲-操作系统概述" class="headerlink" title="第一讲 操作系统概述"></a>第一讲 操作系统概述</h1><p>操作系统结构:</p>
+<p><img src="/../img/rcore-os-structure.png" srcset="/img/loading.gif" lazyload></p>
+<p>操作系统对硬件的抽象示例:</p>
+<p><img src="/../img/rcore-os-hardware-abstraction-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>将 <code>I/O</code> 设备抽象为文件, 将内存抽象为地址空间, 将处理器资源抽象为进程. 同时文件也是以地址空间形式组织, 进程也包含地址空间和文件作为其组成.</p>
+<p>主要需要关注的主题有:</p>
+<ul>
+<li>操作系统结构</li>
+<li>中断及系统调用</li>
+<li>内存管理</li>
+<li>进程管理</li>
+<li>处理器调度</li>
+<li>同步互斥</li>
+<li>文件系统</li>
+<li>I&#x2F;O 子系统</li>
+</ul>
+<p>操作系统起承上启下的作用, 向上为应用开发提供便利 (比如提供 syscall), 向下管理硬件 (比如 CPU 分配, 内存, 硬盘等管理, 也能够更好支持应用开发).</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs">┌──────────┐<br>│   用户   │<br>├──────────┤<br>│ 应用程序 │<br>├──────────┤<br>│ 操作系统 │<br>├──────────┤<br>│ 硬件(裸机│<br>└──────────┘<br></code></pre></td></tr></table></figure>
+
+<p>对于寻常提到的 “操作系统”, 比如 <code>Windows</code>, <code>Linux</code>, <code>安卓</code>, 这些通常是包含了 “应用程序” 这一层. 这里要学习的 “操作系统” 用更精细的范围来讲是 “OS kernel”.</p>
+<p>操作系统的一个核心就是 “支持应用”. 如果一个软件不是为了支持应用, 那么它肯定不是 OS.</p>
+<p>操作系统通常会对物力资源进行抽象 (也可以说是一种虚拟化), 比如:</p>
+<table>
+<thead>
+<tr>
+<th>物理资源</th>
+<th>操作系统抽象</th>
+<th>关键概念</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CPU</td>
+<td>进程&#x2F;线程</td>
+<td>调度、上下文切换</td>
+</tr>
+<tr>
+<td>内存</td>
+<td>虚拟地址空间</td>
+<td>分页、分段、交换</td>
+</tr>
+<tr>
+<td>磁盘</td>
+<td>文件</td>
+<td>文件系统、inode</td>
+</tr>
+<tr>
+<td>网络&#x2F;外设</td>
+<td>Socket&#x2F;设备文件</td>
+<td>驱动、中断处理</td>
+</tr>
+</tbody></table>
+<p><img src="/../img/rcore-physical-absraction.png" srcset="/img/loading.gif" lazyload></p>
+<p>操作系统内核通常有下面特征:</p>
+<ul>
+<li>并发: 计算机系统中同时存在多个运行程序</li>
+<li>共享: 程序间 “同时” 访问互斥共享各种资源</li>
+<li>虚拟: 每个程序 “独占” 一个完整的计算机</li>
+<li>异步: 服务的完成时间不确定, 也可能失败 (这里的异步可能和后面的异步含义不同)</li>
+</ul>
+<h2 id="操作系统历史的演变"><a href="#操作系统历史的演变" class="headerlink" title="操作系统历史的演变"></a>操作系统历史的演变</h2><p>还有什么典型系统没有提到? 下面系统的特点是什么? 操作系统的组成是什么? 相比于之前有什么改进? 有什么问题? </p>
+<ul>
+<li>单用户系统 (LibOS), 一台计算机同一时间只能被一个用户使用, 此时用户独占全部硬件资源 (CPU, 内存, 外设). 由于操作系统的功能极简, 本质上就是一组程序库, 因此也称 Library OS</li>
+</ul>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs awk">┌──────────────────┐<br>│   用户程序       │  ← 直接控制硬件<br>├──────────────────┤<br>│   简单的I<span class="hljs-regexp">/O库    │  ← 提供读写纸带/</span>卡片的基本函数<br>├──────────────────┤<br>│   裸机硬件       │<br>└──────────────────┘<br></code></pre></td></tr></table></figure>
+<p>此时没有 “内核” 的概念, 也没有保护机制, 程序可以直接访问任意内存空间.</p>
+<ul>
+<li>批处理系统, 核心思想是将多个作业 (Job) 收集成一批, 由常驻内存的监控程序自动依次执行. 程序员不再直接操作机器, 而是将程序交给操作员. 相比 LibOS 而言, 能减少一些人工干预, 一批任务能自动顺序执行. 但当前面的任务在等待 I&#x2F;O 处理时, CPU 也不会空出来给后续任务使用</li>
+</ul>
+<figure class="highlight crmsh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs crmsh">┌────────────────────────┐<br>│     监控程序（<span class="hljs-literal">Monitor</span>）│  ← 常驻内存<br>├────────────────────────┤<br>│  用户程序区            │  ← 一次只加载一个作业<br>├────────────────────────┤<br>│  硬件                  │<br>└────────────────────────┘<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>多道程序系统, 核心思想是内存中同时驻留多道作业, 当一道作业等待 I&#x2F;O 时, CPU 立即切换到另一道作业. 此时的目标是最大化 CPU 利用率</li>
+</ul>
+<figure class="highlight mathematica"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs mathematica">┌─────────────────────────────────┐<br>│           操作系统内核          │<br>│  ┌────────┬────────┬────────┐   │<br>│  │作业调度│<span class="hljs-variable">CPU</span>调度 │内存管理│   │<br>│  ├────────┼────────┼────────┤   │<br>│  │<span class="hljs-built_in">I</span><span class="hljs-operator">/</span><span class="hljs-built_in">O</span>管理 │中断处理│保护机制│   │<br>│  └────────┴────────┴────────┘   │<br>├─────────────────────────────────┤<br>│  作业<span class="hljs-number">1</span>  │  作业<span class="hljs-number">2</span>  │  作业<span class="hljs-number">3</span>  │<span class="hljs-operator">...</span>│  ← 多道作业同时在内存<br>├─────────────────────────────────┤<br>│            硬件                 │<br>└─────────────────────────────────┘<br></code></pre></td></tr></table></figure>
+<p>需要硬件支持中断系统, I&#x2F;O 完成后硬件通知 CPU. 也需要 DMA 支持, 外设直接和内存交换数据, 无需 CPU 参与. 多个作业在内存中需要隔离, 同时 CPU 要有调度程序决定哪个作业获得 CPU.</p>
+<ul>
+<li>分时系统, 核心思想是CPU 时间被切分成极短的时间片 (time slice), 轮流转分配给多个联机终端用户. 及时性强, 能让多个用户同时使用一台主机, 且每个用户相互独立</li>
+</ul>
+<figure class="highlight excel"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs excel">┌──────────────────────────────────────┐<br>│              操作系统内核            │<br>│  ┌──────────┬──────────┬──────────┐  │<br>│  │时间片调度│  虚拟内存│ 文件系统 │  │<br>│  ├──────────┼──────────┼──────────┤  │<br>│  │多反馈队列│ 内存保护 │ 设备管理 │  │<br>│  ├──────────┼──────────┼──────────┤  │<br>│  │Shel解释器│ 记账系统 │ 作业控制 │  │<br>│  └──────────┴──────────┴──────────┘  │<br>├──────────────────────────────────────┤<br>│  终端<span class="hljs-number">1</span>  终端<span class="hljs-number">2</span>  终端<span class="hljs-number">3</span>  ...  终端<span class="hljs-built_in">N</span>     │<br>└──────────────────────────────────────┘<br></code></pre></td></tr></table></figure>
+
+<h2 id="操作系统结构"><a href="#操作系统结构" class="headerlink" title="操作系统结构"></a>操作系统结构</h2><p>单体分层结构: 将单体操作系统 (Monolithic OS) 划分为多层 (levels), 每层仅依赖于相邻底层的接口, 比如最底层 (layer 0) 是硬件驱动, 最高层 (layer N) 是用户界面:</p>
+<p><img src="/../img/rcore-multi-layer-os.png" srcset="/img/loading.gif" lazyload></p>
+<p>这会产生一个问题, 有时候我可能需要跨层的功能, 需要绕过一些中间层, 此时就很不方便.</p>
+<p>微内核结构: 尽可能把内核功能移到用户空间, 用户模块间的通信仅通过消息来传递.</p>
+<p><img src="/../img/rcore-micro-kernel-example.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>LPC (Local Procedure Call)</li>
+<li>HAL (Hardware Abstraction Layer)</li>
+</ul>
+<p>好处在于内核精简比较灵活和安全, 但坏处就是频繁的通信会带来很大的性能开销. 在部分安全要求高的场景下可能会使用.</p>
+<p>外核结构: 程序直接链接到操作系统库, 只有与硬件交互的内容存在于外核中, 外核虚拟出多个外设来处理这些请求.</p>
+<p><img src="/../img/rcore-external-kernel-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>这种方式可以为应用定制操作系统库, 也能更好利用外核提供的服务.</p>
+<p>虚拟机结构: 虚拟机管理器将单独的机器接口转换成很多的虚拟机, 每个虚拟机都是一个原始计算机系统的有效副本, 并能完成所有的处理器指令.</p>
+<p><img src="/../img/rcore-virtual-machine-example.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="尝试-UNIX-x2F-Linux"><a href="#尝试-UNIX-x2F-Linux" class="headerlink" title="尝试 UNIX&#x2F;Linux"></a>尝试 UNIX&#x2F;Linux</h2><p>Linux 内核为应用提供的接口称为 “系统调用 (syscall)”. 核心的系统调用数量并不多 (可能就 20 多个).</p>
+<p>常见的 C 库封装的系统调用比如:</p>
+<ul>
+<li><code>int fork()</code></li>
+<li><code>int exit(int status)</code></li>
+<li><code>int wait(int *status)</code></li>
+<li><code>int kill(int pid)</code></li>
+<li><code>int getpid()</code></li>
+<li><code>int sleep(int n)</code></li>
+<li><code>int exec(char *file, char *argv[])</code></li>
+<li><code>char *sbrk(int n)</code>, 像 <code>malloc</code>, <code>free</code> 等会调用这个</li>
+<li><code>int open(char *file, int flags)</code>, <code>open</code> 和 <code>close</code> 这种设计能够便于共享资源的互斥保护</li>
+<li><code>int write(int fd, char *buf, int n)</code></li>
+<li><code>int read(int fd, char *buf, int n)</code></li>
+<li><code>int close(int fd)</code></li>
+<li><code>int dup(int fd)</code></li>
+<li><code>int pipe(int p[])</code></li>
+<li><code>int chdir(char *dir)</code></li>
+<li><code>int mkdir(char *dir)</code></li>
+<li><code>int mknod(char *file, int, int)</code></li>
+<li><code>int fstat(int fd, struct stat *st)</code></li>
+<li><code>int stat(char *file, struct stat *st)</code></li>
+<li><code>int link(chaar *file1, char *file2)</code></li>
+<li><code>int unlink(char *file)</code></li>
+</ul>
+<h2 id="实践与实验介绍"><a href="#实践与实验介绍" class="headerlink" title="实践与实验介绍"></a>实践与实验介绍</h2><p>rcore tutorial 中涉及下面几个 OS, 每个都是建立在前一个 OS 的代码之上改进的, 这部分主要是提供硬件支持:</p>
+<ul>
+<li>LibOS</li>
+<li>批处理 OS</li>
+<li>多道程序与分时多任务 OS</li>
+</ul>
+<p>为了支持更复杂应用, 涉及这部分抽象:</p>
+<ul>
+<li>地址空间抽象的 OS</li>
+<li>进程抽象的 OS</li>
+<li>文件抽象的 OS</li>
+</ul>
+<p>为了提供更灵活的功能, 还需要有这些抽象:</p>
+<ul>
+<li>可进程间通信的 OS</li>
+<li>可并发的 OS</li>
+<li>管理 I&#x2F;O 设备的 OS</li>
+</ul>
+<h2 id="LibOS"><a href="#LibOS" class="headerlink" title="LibOS"></a>LibOS</h2><p><img src="/../img/rcore-libos-structure-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>相关知识点有:</p>
+<ul>
+<li>函数调用</li>
+<li>编译器与操作系统的配合</li>
+<li>硬件启动和软件启动</li>
+<li>编写&#x2F;调试裸机程序</li>
+</ul>
+<h2 id="批处理-OS"><a href="#批处理-OS" class="headerlink" title="批处理 OS"></a>批处理 OS</h2><p><img src="/../img/rcore-batch-os-structure-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>支持程序执行的切换, 此时相关的知识点有:</p>
+<ul>
+<li>特权级&#x2F;特权操作</li>
+<li>RISC-V 特权级&#x2F;特权操作</li>
+<li>系统调用&#x2F;异常</li>
+<li>加载&#x2F;执行&#x2F;切换应用程序 (内存一次只有一个任务)</li>
+<li>特权级切换</li>
+</ul>
+<h2 id="多道程序-OS"><a href="#多道程序-OS" class="headerlink" title="多道程序 OS"></a>多道程序 OS</h2><p>支持多个程序驻留内存并依次执行.</p>
+<p><img src="/../img/rcore-multi-program-os-structure-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>相关知识点有:</p>
+<ul>
+<li>协作式调度</li>
+<li>内存空间划分与管理</li>
+</ul>
+<h2 id="分时多任务-OS"><a href="#分时多任务-OS" class="headerlink" title="分时多任务 OS"></a>分时多任务 OS</h2><p>支持多个程序轮流执行.</p>
+<p><img src="/../img/rcore-split-time-os-structure-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>相关知识点有:</p>
+<ul>
+<li>抢占式调度</li>
+<li>中断处理</li>
+<li>上下文切换</li>
+</ul>
+<h2 id="地址空间抽象-OS"><a href="#地址空间抽象-OS" class="headerlink" title="地址空间抽象 OS"></a>地址空间抽象 OS</h2><p>支持程序间内存空间隔离.</p>
+<p><img src="/../img/rcore-address-space-abs-os-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>相关知识点有:</p>
+<ul>
+<li>地址空间抽象</li>
+<li>静态内存分配</li>
+<li>动态内存分配</li>
+<li>页式存储管理</li>
+</ul>
+<p>再进一步实现虚拟存储 (为什么不说是内存, 因为这个技术需要结合内存和硬盘, 把常用的放内存, 不常访问的放硬盘).</p>
+<p><img src="/../img/rcore-virtual-memory-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>相关知识点有:</p>
+<ul>
+<li>局部性原理</li>
+<li>缺页异常</li>
+<li>虚拟页式存储</li>
+<li>置换算法 (内存内容与硬盘中的内容交换)</li>
+</ul>
+<h2 id="进程抽象的-OS"><a href="#进程抽象的-OS" class="headerlink" title="进程抽象的 OS"></a>进程抽象的 OS</h2><p>支持动态创建程序执行.</p>
+<p><img src="/../img/rcore-process-abs-os-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>相关知识点有:</p>
+<ul>
+<li>进程抽象</li>
+<li>进程管理</li>
+<li>调度机制</li>
+</ul>
+<p>再进一步支持多处理器&#x2F;多核计算. 相关的知识点有:</p>
+<ul>
+<li>多处理器&#x2F;多核架构</li>
+<li>多处理器调度</li>
+<li>实际 OS 调度</li>
+</ul>
+<h2 id="文件抽象的-OS"><a href="#文件抽象的-OS" class="headerlink" title="文件抽象的 OS"></a>文件抽象的 OS</h2><p>处理数据的便捷长期存储.</p>
+<p><img src="/../img/rcore-file-abs-os-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>相关知识点有:</p>
+<ul>
+<li>文件抽象</li>
+<li>文件组织结构</li>
+<li>文件系统设计与实现</li>
+</ul>
+<h2 id="可进程间通信的-OS"><a href="#可进程间通信的-OS" class="headerlink" title="可进程间通信的 OS"></a>可进程间通信的 OS</h2><p>进程间可显式&#x2F;隐式交互信息.</p>
+<p><img src="/../img/rcore-prog-commu-enable-os-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>相关知识点有:</p>
+<ul>
+<li>信号, 管道</li>
+<li>消息队列, 共享内存</li>
+<li>I&#x2F;O 重定向</li>
+</ul>
+<h2 id="可并发的-OS"><a href="#可并发的-OS" class="headerlink" title="可并发的 OS"></a>可并发的 OS</h2><p>更方便共享资源.</p>
+<p><img src="/../img/rcore-para-enable-os-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>相关知识点有:</p>
+<ul>
+<li>线程: 用户&#x2F;内核线程</li>
+<li>协程的机制</li>
+<li>协程, 线程, 进程的关系 (一个进程包含多个线程, 一个线程包含多个协程)</li>
+</ul>
+<p>涉及到合理共享资源,  同步与互斥等内容时, 相关的知识点有:</p>
+<ul>
+<li>同步互斥的机制</li>
+<li>同步互斥解决并发问题</li>
+<li>死锁等问题</li>
+</ul>
+<h2 id="管理-I-x2F-O-设备的-OS"><a href="#管理-I-x2F-O-设备的-OS" class="headerlink" title="管理 I&#x2F;O 设备的 OS"></a>管理 I&#x2F;O 设备的 OS</h2><p>支持各种外设.</p>
+<p><img src="/../img/rcore-io-handle-os-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>相关知识点有:</p>
+<ul>
+<li>设备抽象</li>
+<li>设备执行模型</li>
+<li>同步&#x2F;异步 I&#x2F;O</li>
+<li>I&#x2F;Os 设备管理</li>
+</ul>
+<h2 id="Compiler-与-OS"><a href="#Compiler-与-OS" class="headerlink" title="Compiler 与 OS"></a>Compiler 与 OS</h2><p>Compiler 负责把程序转换为特定硬件的执行码. 而 OS 负责把这段执行码跑起来.</p>
+<p>通常我们在 x86 的机器上开发, 但目标硬件环境是 RISC-V. 因此需要熟悉交叉编译的环境.</p>
+<p>整个流程通常是 bootloader 加载 OS 并执行, 之后程序代码经过编译器&#x2F;汇编器&#x2F;链接器, 从源码变为汇编指令, 再变为机器码, 最终由 OS 来加载执行.</p>
+<p>对于编译器, 需要了解一个三元组 (CPU架构&#x2F;厂商&#x2F;操作系统) 来描述目标架构信息:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs sh">rustc --<span class="hljs-built_in">print</span> target-list | grep riscv<br>riscv32-wrs-vxworks<br>riscv32e-unknown-none-elf<br>riscv32em-unknown-none-elf<br>riscv32emc-unknown-none-elf<br>riscv32gc-unknown-linux-gnu<br>...<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>none-elf</code> 表示不依赖特定操作系统, 可以在裸机上运行</li>
+</ul>
+<p>最终会得到 ELF 文件 (Executable and Linkable Format, 包含可执行机器码和描述信息).</p>
+<p><img src="/../img/rcore-elf-two-view-examples.png" srcset="/img/loading.gif" lazyload></p>
+<p>在编写代码时, 有两种库需要注意:</p>
+<ul>
+<li>标准库: 通常以来操作系统, 比如 Rust 的 <code>std</code> 标准库, C 的 <code>glibc</code></li>
+<li>核心库: 与操作系统无关, 比如 Rust 的 <code>core</code> 库, C 的 Linux kernel libc (与 kernel 绑定)</li>
+</ul>
+<h1 id="第二讲-实践与实验介绍"><a href="#第二讲-实践与实验介绍" class="headerlink" title="第二讲 实践与实验介绍"></a>第二讲 实践与实验介绍</h1><h2 id="Bootloader-x2F-SBI-的区别以及-QEMU-启动-OS-的流程"><a href="#Bootloader-x2F-SBI-的区别以及-QEMU-启动-OS-的流程" class="headerlink" title="Bootloader&#x2F;SBI 的区别以及 QEMU 启动 OS 的流程"></a>Bootloader&#x2F;SBI 的区别以及 QEMU 启动 OS 的流程</h2><p>Bootloader 负责把内核从磁盘&#x2F;Flash 加载到内存, 然后跳转到内核入口, 比如一个经典的 x86 Linux 启动流程:</p>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs mipsasm"><span class="hljs-keyword">BIOS </span>→ <span class="hljs-keyword">Bootloader(GRUB) </span>→ Linux Kernel<br></code></pre></td></tr></table></figure>
+
+<p>SBI (Supervisor Binary Interface), 是 RISC-V 特有的运行层, 其并不是 Bootloader, 不负责加载内核. SBI 运行在 M-Mode, 为 S-Mode 内核提供一些功能:</p>
+<figure class="highlight asciidoc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs asciidoc"><span class="hljs-code">+-------------------+</span><br><span class="hljs-section">|  OS Kernel        |  (S-mode)</span><br><span class="hljs-section">+-------------------+</span><br><span class="hljs-section">|  SBI (OpenSBI)    |  (M-mode)</span><br><span class="hljs-section">+-------------------+</span><br><span class="hljs-section">|  Hardware         |</span><br><span class="hljs-section">+-------------------+</span><br></code></pre></td></tr></table></figure>
+
+<p>通常用 QEMU 在 RISC-V 上启动一个 OS 时, 一个简化的流程如下:</p>
+<ol>
+<li>复位所有 hart</li>
+<li>把 OpenSBI (内置) 载入到 <code>0x80000000</code></li>
+<li>把指定的 kernel 放到 <code>0x80200000</code></li>
+<li>跳到 OpenSBI, 然后 OpenSBI 在跳到 kernel 的 <code>_start</code> 部分</li>
+</ol>
+<p>(可以看到, 是 QEMU 充当 BIOS 和 bootloader)</p>
+<p>真实的硬件的流程需要:</p>
+<figure class="highlight avrasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs avrasm">ROM → <span class="hljs-built_in">SPL</span> → U-Boot（bootloader）→ OpenSBI → Kernel<br></code></pre></td></tr></table></figure>
+
+<h2 id="LibOS-实践"><a href="#LibOS-实践" class="headerlink" title="LibOS 实践"></a>LibOS 实践</h2><p>LibOS 的目标是为应用程序建立执行环境 (Execution Environment, 负责给其上执行的软件提供相应的功能与资源的多层次软硬件系统), 让应用与硬件隔离并简化应用访问硬件的难度和复杂度.</p>
+<p><img src="/../img/rcore-libos-structure-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>该部分的学习目标:</p>
+<ul>
+<li>会编写&#x2F;编译&#x2F;运行裸机程序</li>
+<li>懂基于裸机程序的函数调用</li>
+<li>能看懂汇编代码伪代码</li>
+<li>能看懂内嵌汇编代码</li>
+<li>初步理解 SBI 调用</li>
+</ul>
+<blockquote>
+<p>ABI 和 SBI 的区别是什么?</p>
+</blockquote>
+<p>Binary 的意思就是脱离了高级语言, 需要看机器码.</p>
+<p>ABI (Application Binary Interface), 规定了编译器&#x2F;linker&#x2F;OS 的二进制调用规范. 比如函数怎么调用? 参数放在哪里? 返回值放在哪里? 栈如何清理? 结构体如何传递等.</p>
+<p>SBI (Supervisor Binary Interface), 是 RISC-V 的一个固件, 为内核提供一些调用接口.</p>
+<blockquote>
+<p>在机器级层面理解函数需要考虑</p>
+</blockquote>
+<ul>
+<li>寄存器 (registers)</li>
+<li>函数调用&#x2F;返回 (call&#x2F;return)</li>
+<li>函数进入&#x2F;离开 (enter&#x2F;exit)</li>
+<li>函数序言&#x2F;收尾 (prologue&#x2F;epilogue)</li>
+</ul>
+<p>完成这部分内容的总体思路如下:</p>
+<ul>
+<li>编译: 通过设置编译器来支持编译裸机程序 (移除标准库)</li>
+<li>构造: 建立裸机程序的栈和 SBI 服务请求接口 (用 SBI 提供的服务来编写程序)</li>
+<li>运行: OS 的起始地址和执行环境初始化</li>
+</ul>
+<p>实践步骤如下:</p>
+<ul>
+<li>建好开发与实验环境</li>
+<li>移除标准库依赖</li>
+<li>支持函数调用</li>
+<li>基于 SBI 服务完成输出与关机<br>(需要理解运行程序的内存空间和栈)</li>
+</ul>
+<p>获取这部分代码:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">git <span class="hljs-built_in">clone</span> https://github.com/LearningOS/rCore-Tutorial-Code<br><span class="hljs-built_in">cd</span> rCore-Tutorial-Code<br>git checkout ch1<br></code></pre></td></tr></table></figure>
+
+<p>需要关注这些内容:</p>
+<ul>
+<li>代码结构</li>
+<li>App&#x2F;OS 内存布局</li>
+<li>定制内存布局</li>
+<li>生成内核二进制镜像</li>
+<li>基于 GDB 验证启动流程</li>
+<li>支持函数调用</li>
+<li>支持 SBI 调用</li>
+</ul>
+<h3 id="OS-内存布局"><a href="#OS-内存布局" class="headerlink" title="OS 内存布局"></a>OS 内存布局</h3><p><img src="/../img/rcore-app-os-memory-structure.png" srcset="/img/loading.gif" lazyload></p>
+<p>编译器不会对 heap 部分做管理, 因为这部分变量的大小无法判断.</p>
+<p><code>bss</code> (Block Started by Symbol) 段属于静态内存分配, 通常是指用来存放程序中未初始化的全局变量的一块内存区域. 但在 Rust 中不允许出现未初始化的全局变量, 不然就是 unsafe 的.</p>
+<p><code>data</code> 段用来存放初始化了的全局变量.</p>
+<p><code>text</code> 段是代码段 (code segment&#x2F;text segment) 是指存放执行代码的内存区域, 这部分区域的大小确定, 通常属于只读. 在代码段中, 也有可能包含一些只读的常数变量.</p>
+<p><code>heap</code> 是用于动态分配的内存段, 可以动态扩张或缩减. 程序调用 <code>malloc</code> 等函数时, 新分配的内存会被动态添加到堆上. 之后调用 <code>free</code> 等函数时, 释放的内存会在堆中被删除.</p>
+<p><code>stack</code> (栈), 是用户存放程序临时创建的局部变量. 函数被调用时, 其参数和函数的返回值也会放到栈中. 由于栈的先进后出特点, 其能够方便地用于保存&#x2F;恢复当前执行状态. 放在栈上的变量一定是在编译期已知大小的.</p>
+<p>可以把 stack 看作一个寄存, 交换临时数据的内存区.</p>
+<h3 id="定制内存布局"><a href="#定制内存布局" class="headerlink" title="定制内存布局"></a>定制内存布局</h3><p>这部分需要看 linker 的脚本. 其中设置的 <code>BASE_ADDRESS</code> 不仅要给编译器看, 也要让 bootloader 知道 (把 OS 放在哪里), 也要让 QEMU 知道 (到哪里运行 OS).</p>
+<h3 id="生成内核二进制镜像"><a href="#生成内核二进制镜像" class="headerlink" title="生成内核二进制镜像"></a>生成内核二进制镜像</h3><p>要用一些工具将 ELF 格式中的调试信息给去除, 只留下 binary 内容.</p>
+<p><img src="/../img/rcore-elf-only-left-binary-image.png" srcset="/img/loading.gif" lazyload></p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">rust-objcopy --strip-all \<br>    target/riscv64gc-unknown-none-elf/release/os \<br>    -O binary target/riscv64gc-unknown-none-elf/release/os.bin<br></code></pre></td></tr></table></figure>
+
+<h3 id="基于-GDB-验证启动流程"><a href="#基于-GDB-验证启动流程" class="headerlink" title="基于 GDB 验证启动流程"></a>基于 GDB 验证启动流程</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs sh">qemu-system-riscv64 \<br>    -machine virt \<br>    -nographic \<br>    -bios ../bootloader/rustsbi-qemu.bin \<br>    -device loader,file=target/riscv64gc-unknown-none-elf/release/os.bin,addr=0x80200000 \<br>    -s -S<br><br>riscv64-unknown-elf-gdb \<br>    -ex <span class="hljs-string">&#x27;file target/riscv64gc-unknown-none-elf/release/os&#x27;</span> \<br>    -ex <span class="hljs-string">&#x27;set arch riscv:rv64&#x27;</span> \<br>    -ex <span class="hljs-string">&#x27;target remote localhost:1234&#x27;</span><br>[GDB output]<br>0x0000000000001000 <span class="hljs-keyword">in</span> ?? ()<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>0x1000</code> 这个地址就是 QEMU 中 bootloader 所在的 ROM 的地址</li>
+</ul>
+<p>之后:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">(gdb) b _start<br>(gdb) c<br></code></pre></td></tr></table></figure>
+
+<p>就能跳转到 OS 的起始地址. 后续可能要用到的指令有:</p>
+<ul>
+<li><code>ni</code> (next instruction), 执行单条机器指令</li>
+<li><code>si</code> (step instruction), 执行单条机器指令, 且会 step into 一个函数</li>
+<li><code>n/s</code>, 执行单条高级语言语句</li>
+<li><code>x/4i $pc</code>, 看接下来几条汇编</li>
+<li><code>info registers</code>, 查看寄存器</li>
+</ul>
+<h3 id="支持函数调用"><a href="#支持函数调用" class="headerlink" title="支持函数调用"></a>支持函数调用</h3><p>函数调用本质:</p>
+<p><img src="/../img/rcore-how-a-function-is-called.png" srcset="/img/loading.gif" lazyload></p>
+<p>函数调用约定 (Calling Convention), 其规定在某个指令集架构上, 某种编程语言的函数调用如何实现, 其包括下面内容:</p>
+<ul>
+<li>函数的输入参数和返回值如何传递</li>
+<li>函数调用上下文中调用者&#x2F;被调用者保存寄存器的划分</li>
+<li>其他的在函数调用流程中对于寄存器的使用方法</li>
+</ul>
+<p>RISC-V 的函数调用规范如下:</p>
+<table>
+<thead>
+<tr>
+<th>寄存器组</th>
+<th>保存者</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>a0~a7</code> (<code>x10~x17</code>)</td>
+<td>调用者保存 (caller)</td>
+<td>用来传递输入参数, 其中的 <code>a0</code> 和 <code>a1</code> 还用来保存返回值</td>
+</tr>
+<tr>
+<td><code>t0~t6</code> (<code>x5~x7,x28~x31</code>)</td>
+<td>调用者保存 (caller)</td>
+<td>作为临时寄存器使用, 在被调函数中可以随意使用无需保存</td>
+</tr>
+<tr>
+<td><code>s0~s11</code> (<code>x8~x9,x18~x27</code>)</td>
+<td>被调用者保存 (callee)</td>
+<td>作为临时寄存器使用, 被调函数保存后才能在被调函数中使用</td>
+</tr>
+</tbody></table>
+<p>对于 <code>caller</code> 和 <code>callee</code> 的区分, 下面有个简单的例子:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">foo</span>() &#123;<br>    <span class="hljs-title function_ invoke__">bar</span>();  <span class="hljs-comment">// foo 是 caller，bar 是 callee</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>两个角色是相对的. <code>foo</code> 相对于 <code>bar</code> 就是 <code>caller</code></li>
+<li>谁调用了一个函数, 谁就是 <code>caller</code>, 而被调用的函数本身就是 <code>callee</code></li>
+</ul>
+<p>栈帧的创建示例:</p>
+<p><img src="/../img/rcore-stack-frame-create-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>栈帧结构示例:</p>
+<p><img src="/../img/rcore-stack-frame-structure-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>可以用 fp (frame pointer) 来构建出整个函数调用关系.</p>
+<ul>
+<li><code>sp</code> 寄存器总是指向当前堆栈框架的底部</li>
+<li><code>fp</code> 寄存器总是指向当前堆栈框架的顶部</li>
+</ul>
+<p>当 <code>ret</code> 指令执行时, 回收堆栈的伪代码如下:</p>
+<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs abnf"><span class="hljs-attribute">sp</span> <span class="hljs-operator">=</span> fp          <span class="hljs-comment">; sp 回到帧顶（释放局部变量和帧头）</span><br><span class="hljs-attribute">fp</span> <span class="hljs-operator">=</span> *(fp - <span class="hljs-number">8</span>)   <span class="hljs-comment">; 从帧内读出旧 fp</span><br><span class="hljs-attribute">pc</span> <span class="hljs-operator">=</span> *(fp - <span class="hljs-number">4</span>)   <span class="hljs-comment">; 从帧内读出返回地址</span><br></code></pre></td></tr></table></figure>
+
+<p>RISC-V 函数调用规范中, 函数结构需要包含 3 个组成: prologue, body part 和 epilogue.</p>
+<p>比如:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs asm">.global sum_then_double<br>sum_then_double:<br>    addi sp, sp, -16        # prologue<br>    sd ra, 0(sp)<br><br>    call sum_to             # body part<br>    li t0, 2<br>    mul a0, a0, t0<br><br>    ld ra, 0(sp)            # epilogue<br>    addi sp, sp, 16<br>    ret<br></code></pre></td></tr></table></figure>
+<p>在高级语言中, 通常 <code>prologue</code> 和 <code>epilogue</code> 部分由编译器来完成.</p>
+<h3 id="LibOS-初始化"><a href="#LibOS-初始化" class="headerlink" title="LibOS 初始化"></a>LibOS 初始化</h3><p>分配并使用栈部分:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs asm"># os/src/entry.asm<br><br>    .section .text.entry<br>    .global _start<br>_start:<br>    la sp, boot_stack_top<br>    call rust_main<br><br>    .section .bss.stack<br>    .global boot_stack<br>boot_stack:<br>    .space 4096 * 16<br>    .global boot_stack_top<br>boot_stack_top:<br></code></pre></td></tr></table></figure>
+
+<p>这里实际上是把 stack 放在了 <code>.bss</code> 段内. 在 link 时, 会把 <code>.bss.stack</code> 段汇集到 <code>.bss</code> 段中:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs linker"># os/src/linker-qemu.ld<br>.bss : &#123;<br>    *(.bss.stack)<br>    sbss = .;<br>    *(.bss .bss.*)<br>    *(.sbss .sbss.*)<br>&#125;<br>ebss = .;<br></code></pre></td></tr></table></figure>
+
+<p>清空 bss 段:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">rust_main</span>() <span class="hljs-punctuation">-&gt;</span> ! &#123;<br>    <span class="hljs-title function_ invoke__">clear_bss</span>(); <span class="hljs-comment">// 调用清空 bss 的函数</span><br>&#125;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">clear_bss</span>() &#123;<br>    <span class="hljs-keyword">extern</span> <span class="hljs-string">&quot;C&quot;</span> &#123;<br>        <span class="hljs-keyword">fn</span> <span class="hljs-title function_">sbss</span>(); <span class="hljs-comment">// bss 段的起始地址</span><br>        <span class="hljs-keyword">fn</span> <span class="hljs-title function_">ebss</span>(); <span class="hljs-comment">// bss 段的结束地址</span><br>    &#125;<br><br>    <span class="hljs-comment">// 对 [sbss..ebss] 这段内存空间清零</span><br>    (sbss <span class="hljs-keyword">as</span> <span class="hljs-type">usize</span>..ebss <span class="hljs-keyword">as</span> <span class="hljs-type">usize</span>).<span class="hljs-title function_ invoke__">for_each</span>(|a| &#123;<br>        <span class="hljs-keyword">unsafe</span> &#123; (a <span class="hljs-keyword">as</span> *<span class="hljs-keyword">mut</span> <span class="hljs-type">u8</span>).<span class="hljs-title function_ invoke__">write_volatile</span>(<span class="hljs-number">0</span>) &#125;<br>    &#125;);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>从这里可以知道, <code>ld</code> 里面定义的变量, 都可以在 <code>rust</code> 中通过 <code>extern &quot;C&quot;</code> 来导入.</p>
+<h3 id="支持-SBI-调用"><a href="#支持-SBI-调用" class="headerlink" title="支持 SBI 调用"></a>支持 SBI 调用</h3><p>对于 RISC-V 而言, OS 并不是运行在最底层的, 其下还有一层 SBI (Supervisor Binary Interface, 给 Supervisor Mode 提供服务), 作为更底层的软件给操作系统提供服务.</p>
+<p><img src="/../img/rcore-riscv-with-sbi-structure.png" srcset="/img/loading.gif" lazyload></p>
+<p>这主要和 RISC-V 的设计哲学相关. 其定义了 3 个特权级:</p>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs pgsql">┌─────────────────────────────────────┐<br>│  U-mode (<span class="hljs-keyword">User</span>/用户态)               │ ← 应用程序<br>├─────────────────────────────────────┤<br>│  S-mode (Supervisor/监管态)         │ ← 操作系统内核<br>├─────────────────────────────────────┤<br>│  M-mode (Machine/机器态)            │ ← 固件 / SBI<br>└─────────────────────────────────────┘<br></code></pre></td></tr></table></figure>
+
+<p>M-mode 的能力远超 S-mode, 但并不适合作为通用 OS 的内核态. 如果 OS 在 M-mode 上运行:</p>
+<ul>
+<li><p>每次 OS 做上下文切换, 需要保存&#x2F;恢复所有 M-mode 状态的寄存器, 开销巨大</p>
+</li>
+<li><p>OS 代码会和具体硬件板子强耦合, 无法移植</p>
+<table>
+<thead>
+<tr>
+<th>能力</th>
+<th>M-mode</th>
+<th>S-mode</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>访问所有 CSR（控制状态寄存器）</td>
+<td>✓</td>
+<td>部分</td>
+</tr>
+<tr>
+<td>操作物理内存保护 (PMP)</td>
+<td>✓</td>
+<td>✗</td>
+</tr>
+<tr>
+<td>处理所有中断&#x2F;异常</td>
+<td>✓</td>
+<td>可被委托</td>
+</tr>
+<tr>
+<td>控制所有硬件特性</td>
+<td>✓</td>
+<td>受限</td>
+</tr>
+<tr>
+<td>跨平台</td>
+<td>否（和板子绑定）</td>
+<td>是（通用）</td>
+</tr>
+</tbody></table>
+</li>
+</ul>
+<p>这种设计下, OS 代码就能与具体硬件解耦合, 通过 SBI 来屏蔽硬件差异, 不管是什么硬件, OS 都发出相同的 SBI 调用.</p>
+<figure class="highlight avrasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs avrasm">         ┌───────┐  ┌───────┐<br>         │ Linux │  │ Xv6   │  ← 同一个操作系统<br>         └───┬───┘  └───┬───┘<br>             │          │<br>┌────────────┴──────────┴────────────┐<br>│           <span class="hljs-keyword">SBI</span> (统一接口)             │  ← <span class="hljs-keyword">SBI</span> 屏蔽硬件差异<br>├─────────────┬──────────────────────┤<br>│  OpenSBI    │  RustSBI             │<br>├─────────────┴──────────────────────┤<br>│   不同板子 (SiFive, 全志, ...)       │<br>└────────────────────────────────────┘<br></code></pre></td></tr></table></figure>
+
+<p>这里用到的是 <code>RustSBI</code>, 其实现了基本的 SBI 服务, 也遵守 SBI 的调用约定.</p>
+<p>比如 SBI 服务编号:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// os/src/sbi.rs</span><br><br><span class="hljs-keyword">const</span> SBI_SET_TIMER: <span class="hljs-type">usize</span> = <span class="hljs-number">0</span>;<br><span class="hljs-keyword">const</span> SBI_CONSOLE_PUTCHAR: <span class="hljs-type">usize</span> = <span class="hljs-number">1</span>;<br><span class="hljs-keyword">const</span> SBI_CONSOLE_GETCHAR: <span class="hljs-type">usize</span> = <span class="hljs-number">2</span>;<br>...<br></code></pre></td></tr></table></figure>
+
+<p>汇编级 SBI 调用示例:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// os/src/sbi.rs</span><br><span class="hljs-meta">#[inline(always)]</span> <span class="hljs-comment">// 总是把函数展开</span><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">sbi_call</span>(which: <span class="hljs-type">usize</span>, arg0: <span class="hljs-type">usize</span>, arg1: <span class="hljs-type">usize</span>, arg2: <span class="hljs-type">usize</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">usize</span> &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">ret</span>; <span class="hljs-comment">// 可修改的返回值变量</span><br>    <span class="hljs-keyword">unsafe</span> &#123;<br>        asm!( <span class="hljs-comment">// 内联汇编</span><br>            <span class="hljs-string">&quot;ecall&quot;</span>, <span class="hljs-comment">// 切换到更高特权级的机器指令</span><br>            <span class="hljs-title function_ invoke__">inlateout</span>(<span class="hljs-string">&quot;x10&quot;</span>) arg0 =&gt; ret, <span class="hljs-comment">// SBI 参数 0&amp; 返回值</span><br>            <span class="hljs-title function_ invoke__">in</span>(<span class="hljs-string">&quot;x11&quot;</span>) arg1,  <span class="hljs-comment">// SBI 参数 1</span><br>            <span class="hljs-title function_ invoke__">in</span>(<span class="hljs-string">&quot;x12&quot;</span>) arg2,  <span class="hljs-comment">// SBI 参数 2</span><br>            <span class="hljs-title function_ invoke__">in</span>(<span class="hljs-string">&quot;x17&quot;</span>) which, <span class="hljs-comment">// SBI 编号</span><br>        );<br>    &#125;<br>    ret <span class="hljs-comment">// 返回 ret 值</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>之后可以封装更高级的函数, 比如:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// os/src/sbi.rs</span><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">console_putchar</span>(c: <span class="hljs-type">usize</span>) &#123;<br>    <span class="hljs-title function_ invoke__">sbi_call</span>(SBI_CONSOLE_PUTCHAR, c, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>);<br>&#125;<br><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">shutdown</span>() <span class="hljs-punctuation">-&gt;</span> ! &#123;<br>    <span class="hljs-title function_ invoke__">sbi_call</span>(SBI_SHUTDOWN, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>);<br>    <span class="hljs-built_in">panic!</span>(<span class="hljs-string">&quot;It should shutdown!&quot;</span>);<br>&#125;<br><br><span class="hljs-meta">#[panic_handler]</span><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">panic</span>(info: &amp;PanicInfo) <span class="hljs-punctuation">-&gt;</span> ! &#123; <span class="hljs-comment">// PanicInfo 是一个结构类型</span><br>&#125;<br>    <span class="hljs-keyword">if</span> <span class="hljs-keyword">let</span> <span class="hljs-variable">Some</span>(location) = info.<span class="hljs-title function_ invoke__">location</span>() &#123; <span class="hljs-comment">// 出错的位置是否存在</span><br>        <span class="hljs-built_in">println!</span>(<br>            <span class="hljs-string">&quot;Panicked at &#123;&#125;:&#123;&#125; &#123;&#125;&quot;</span>,<br>            location.<span class="hljs-title function_ invoke__">file</span>(), <span class="hljs-comment">// 出错的文件名</span><br>            location.<span class="hljs-title function_ invoke__">line</span>(), <span class="hljs-comment">// 出错的文件中的行数</span><br>            info.<span class="hljs-title function_ invoke__">message</span>().<span class="hljs-title function_ invoke__">unwrap</span>() <span class="hljs-comment">// 出错信息</span><br>        );<br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Panicked: &#123;&#125;&quot;</span>, info.<span class="hljs-title function_ invoke__">message</span>().<span class="hljs-title function_ invoke__">unwrap</span>());<br>    &#125;<br>    <span class="hljs-title function_ invoke__">shutdown</span>() <span class="hljs-comment">// 关机</span><br></code></pre></td></tr></table></figure>
+
+<p>测试上述功能:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">rust_main</span>() <span class="hljs-punctuation">-&gt;</span> ! &#123;<br>    <span class="hljs-title function_ invoke__">clear_bss</span>();<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Hello, world!&quot;</span>);<br>    <span class="hljs-built_in">panic!</span>(<span class="hljs-string">&quot;Shutdown machine!&quot;</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="rCore-tutorial-对应部分-第一章-应用程序与基本执行环境"><a href="#rCore-tutorial-对应部分-第一章-应用程序与基本执行环境" class="headerlink" title="rCore tutorial 对应部分, 第一章: 应用程序与基本执行环境"></a>rCore tutorial 对应部分, 第一章: 应用程序与基本执行环境</h2><p>在现代通用操作系统上运行应用程序, 通常需要多层次的执行环境栈的支持:</p>
+<p><img src="/../img/rcore-prog-exec-env-stack-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>比如打印 <code>Hello World</code>, 通常就是应用程序调用标准库或第三方库的接口, 用少量代码完成的复杂功能 (Rust 中调用的 <code>println!</code> 宏就由 std 标准库提供).</p>
+<p>查看目标三元组 (target triplet, 描述目标平台的 CPU 指令集, 操作系统类型和标准运行时库):</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ rustc --version --verbose<br>rustc 1.92.0-nightly (caccb4d03 2025-09-24)<br>binary: rustc<br>commit-hash: caccb4d0368bd918ef6668af8e13834d07040417<br>commit-date: 2025-09-24<br>host: x86_64-unknown-linux-gnu<br>release: 1.92.0-nightly<br>LLVM version: 21.1.2<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>x86_64-unknown-linux-gnu</code> 中表明: CPU 架构是 <code>x86_64</code>, CPU 厂商是 <code>unknown</code>, 操作系统是 <code>linux</code>, 运行时库是 <code>gnu libc</code></li>
+</ul>
+<p>这一章的目标是把 <code>Hello, world!</code> 移植到 RISCV 目标平台 <code>riscv64gc-unknown-none-elf</code> 上运行 (CPU 架构是 <code>riscv</code>, 厂商是 <code>unknown</code>, 操作系统是 <code>none</code>, <code>elf</code> 表示没有标准的运行时库, 没有任何系统调用的封装支持, 但可以生成 ELF 格式的执行程序).</p>
+<p>如果在一个普通项目上修改程序的目标平台:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ cargo run --target riscv64gc-unknown-none-elf<br>error[E0463]: can<span class="hljs-string">&#x27;t find crate for `std`</span><br><span class="hljs-string">  |</span><br><span class="hljs-string">  = note: the `riscv64gc-unknown-none-elf` target may not support the standard library</span><br><span class="hljs-string">  = note: `std` is required by `os` because it does not declare `#![no_std]`</span><br><span class="hljs-string">  = help: consider building the standard library from source with `cargo build -Zbuild-std`</span><br><span class="hljs-string"></span><br><span class="hljs-string">error: cannot resolve a prelude import</span><br><span class="hljs-string"></span><br><span class="hljs-string">error: cannot find macro `println` in this scope</span><br><span class="hljs-string"> --&gt; src/main.rs:2:5</span><br><span class="hljs-string">  |</span><br><span class="hljs-string">2 |     println!(&quot;Hello, world!&quot;);</span><br><span class="hljs-string">  |     ^^^^^^^</span><br><span class="hljs-string"></span><br><span class="hljs-string">error: `#[panic_handler]` function required, but not found</span><br><span class="hljs-string"></span><br><span class="hljs-string">For more information about this error, try `rustc --explain E0463`.</span><br><span class="hljs-string">error: could not compile `os` (bin &quot;os&quot;) due to 4 previous errors</span><br></code></pre></td></tr></table></figure>
+
+<p>报错的原因是目标平台上没有 Rust 标准库 <code>std</code>, 也不存在任何受 OS 支持的系统调用. 这样的平台称为裸机平台 (bare-metal).</p>
+<p>Rust 的 core 库是一个不需要任何操作系统支持的核心库, 可以用来开发裸机程序.</p>
+<h3 id="移除标准库依赖"><a href="#移除标准库依赖" class="headerlink" title="移除标准库依赖"></a>移除标准库依赖</h3><p>可以更改项目目录下的 <code>.cargo/config</code> 文件, 来设置一些默认行为, 比如:</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs ini"><span class="hljs-section">[build]</span><br><span class="hljs-attr">target</span> = <span class="hljs-string">&quot;riscv64gc-unknown-none-elf&quot;</span><br></code></pre></td></tr></table></figure>
+
+<p>这样会修改默认平台为 <code>riscv64gc-unknown-none-elf</code>.</p>
+<p>给程序加上 <code>#![no_std]</code>, 则能告诉 Rust 编译器不使用 Rust 标准库而是用核心库 <code>core</code>:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#![no_std]</span><br></code></pre></td></tr></table></figure>
+
+<p>之后必须要提供 <code>panic_handler</code> 语义项:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> core::panic::PanicInfo;<br><br><span class="hljs-meta">#[panic_handler]</span><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">panic</span>(_info: &amp;PanicInfo) <span class="hljs-punctuation">-&gt;</span> ! &#123;<br>    loog &#123;&#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>再移除 <code>main</code> 函数, 让编译器不考虑 <code>start</code> 语义项的初始化工作:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#![no_main]</span><br></code></pre></td></tr></table></figure>
+
+<p>如果编译时遇到下面报错:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ cargo build<br>   Compiling os v0.1.0 (/root/workspace/os)<br>error: unwinding panics are not supported without std<br>  |<br>  = <span class="hljs-built_in">help</span>: using nightly cargo, use -Zbuild-std with panic=<span class="hljs-string">&quot;abort&quot;</span> to avoid unwinding<br>  = note: since the core library is usually precompiled with panic=<span class="hljs-string">&quot;unwind&quot;</span>, rebuilding your crate with panic=<span class="hljs-string">&quot;abort&quot;</span> may not be enough to fix the problem<br><br>error: could not compile `os` (bin <span class="hljs-string">&quot;os&quot;</span>) due to 1 previous error<br></code></pre></td></tr></table></figure>
+
+<p>报错原因是 Rust 默认 panic 策略是 <code>unwind</code>, 即: 发生 panic 时, 自动沿着调用栈一层层回退, 清理资源的机制. 比如下面代码:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">a</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">f</span> = File::<span class="hljs-title function_ invoke__">open</span>(<span class="hljs-string">&quot;x&quot;</span>);<br>    <span class="hljs-title function_ invoke__">b</span>();<br>&#125;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">b</span>() &#123;<br>    <span class="hljs-built_in">panic!</span>(<span class="hljs-string">&quot;oops&quot;</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>如果是 <code>unwinding</code>, 那么会有:</p>
+<ol>
+<li><code>b()</code> panic</li>
+<li>Rust 开始往回走</li>
+<li>调用 <code>a()</code> 里的 <code>File</code> 析构函数</li>
+<li>文件被正确关闭</li>
+<li>栈帧一层层销毁</li>
+</ol>
+<p>还有一种策略是 <code>abort</code>, 即发生 <code>panic</code> 时, 直接进程&#x2F;系统崩溃, 不回退栈, 不调用析构, 不清理资源. 好处在于实现简单, 但是不保证资源释放. 对于 bare metal&#x2F;OS 通常只能选择这样.</p>
+<p>在去除 <code>std</code> 之后 (裸机程序), 就失去了 unwinding panic, 因为其需要一系列依靠 OS 的功能, 比如栈便利, 异常处理 ABI, 内存分配, 线程, 符号表等. Rust 的 unwinding 使用 <code>libunwind</code> 库以及平台 ABI 来实现, 而在 <code>no_std</code> 的裸机上, 没有这些内容.</p>
+<p>上面报错中, <code>core</code> 中的 <code>panic</code> 也是 <code>unwind</code> 预编译的, 但这里的代码直接 <code>-&gt; !</code> 且内部 <code>abort</code>, 因此需要指定一下. 需要 <code>nightly + -Zbuild-std</code>:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">rustup default nightly<br>rustup component add rust-src<br></code></pre></td></tr></table></figure>
+
+<p>然后修改 <code>Cargo.toml</code>:</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs ini"><span class="hljs-section">[profile.dev]</span><br><span class="hljs-attr">panic</span> = <span class="hljs-string">&quot;abort&quot;</span><br><br><span class="hljs-section">[profile.release]</span><br><span class="hljs-attr">panic</span> = <span class="hljs-string">&quot;abort&quot;</span><br></code></pre></td></tr></table></figure>
+
+<p>之后再编译时指定:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">cargo build -Zbuild-std=core --target riscv64gc-unknown-none-elf<br></code></pre></td></tr></table></figure>
+
+<p>当然也可以在 <code>.cargo/config.toml</code> 中加入:</p>
+<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs toml"><span class="hljs-section">[build]</span><br><span class="hljs-attr">target</span> = <span class="hljs-string">&quot;riscv64gc-unknown-none-elf&quot;</span><br><br><span class="hljs-section">[unstable]</span><br><span class="hljs-attr">build-std</span> = [<span class="hljs-string">&quot;core&quot;</span>]<br></code></pre></td></tr></table></figure>
+
+<p>当然, 也可以直接在 <code>rustc</code> 中指定:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">rustc -C panic=abort --target riscv64gc-unknown-none-elf main.rs<br></code></pre></td></tr></table></figure>
+
+<h3 id="分析被移除标准库的程序"><a href="#分析被移除标准库的程序" class="headerlink" title="分析被移除标准库的程序"></a>分析被移除标准库的程序</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs sh">[文件格式]<br>$ file target/riscv64gc-unknown-none-elf/debug/os<br>target/riscv64gc-unknown-none-elf/debug/os: ELF 64-bit LSB executable, UCB RISC-V, ......<br><br>[文件头信息]<br>$ rust-readobj -h target/riscv64gc-unknown-none-elf/debug/os<br>   File: target/riscv64gc-unknown-none-elf/debug/os<br>   Format: elf64-littleriscv<br>   Arch: riscv64<br>   AddressSize: 64bit<br>   ......<br>   Type: Executable (0x2)<br>   Machine: EM_RISCV (0xF3)<br>   Version: 1<br>   Entry: 0x0<br>   ......<br>   &#125;<br><br>[反汇编导出汇编程序]<br>$ rust-objdump -S target/riscv64gc-unknown-none-elf/debug/os<br>   target/riscv64gc-unknown-none-elf/debug/os:       file format elf64-littleriscv<br></code></pre></td></tr></table></figure>
+
+<h3 id="构建用户态执行环境"><a href="#构建用户态执行环境" class="headerlink" title="构建用户态执行环境"></a>构建用户态执行环境</h3><p>通常编译器的入口函数是 <code>_start</code>, 这里可以这样提供:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// os/src/main.rs</span><br><br><span class="hljs-meta">#[no_mangle]</span><br><span class="hljs-keyword">extern</span> <span class="hljs-string">&quot;C&quot;</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">_start</span>() &#123;<br>    <span class="hljs-keyword">loop</span> &#123;&#125;;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="QEMU-运行模式"><a href="#QEMU-运行模式" class="headerlink" title="QEMU 运行模式"></a>QEMU 运行模式</h3><p>QEMU 有两种运行模式:</p>
+<ul>
+<li>User mode, 即用户态模拟, 如 <code>qemu-riscv64</code> 程序. 能够模拟不同处理器的用户态指令的执行, 并可以直接解析 ELF 可执行文件, 加载运行那些为不同处理器编译的用户级 Linux 应用程序</li>
+<li>System mode, 即系统态模式, 如 <code>qemu-system-riscv64</code> 程序, 能够模拟一个完整的基于不同 CPU 的硬件系统, 包括处理器, 内存及其他外部设备, 支持运行完整的操作系统</li>
+</ul>
+<h3 id="退出机制"><a href="#退出机制" class="headerlink" title="退出机制"></a>退出机制</h3><p>这里用 SBI 提供的 <code>exit</code> 调用来退出程序:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// os/src/main.rs</span><br><br><span class="hljs-keyword">const</span> SYSCALL_EXIT: <span class="hljs-type">usize</span> = <span class="hljs-number">93</span>;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">syscall</span>(id: <span class="hljs-type">usize</span>, args: [<span class="hljs-type">usize</span>; <span class="hljs-number">3</span>]) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">isize</span> &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">ret</span>;<br>    <span class="hljs-keyword">unsafe</span> &#123;<br>        core::arch::asm!(<br>            <span class="hljs-string">&quot;ecall&quot;</span>,<br>            <span class="hljs-title function_ invoke__">inlateout</span>(<span class="hljs-string">&quot;x10&quot;</span>) args[<span class="hljs-number">0</span>] =&gt; ret,<br>            <span class="hljs-title function_ invoke__">in</span>(<span class="hljs-string">&quot;x11&quot;</span>) args[<span class="hljs-number">1</span>],<br>            <span class="hljs-title function_ invoke__">in</span>(<span class="hljs-string">&quot;x12&quot;</span>) args[<span class="hljs-number">2</span>],<br>            <span class="hljs-title function_ invoke__">in</span>(<span class="hljs-string">&quot;x17&quot;</span>) id,<br>        );<br>    &#125;<br>    ret<br>&#125;<br><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">sys_exit</span>(xstate: <span class="hljs-type">i32</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">isize</span> &#123;<br>    <span class="hljs-title function_ invoke__">syscall</span>(SYSCALL_EXIT, [xstate <span class="hljs-keyword">as</span> <span class="hljs-type">usize</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>])<br>&#125;<br><br><span class="hljs-meta">#[no_mangle]</span><br><span class="hljs-keyword">extern</span> <span class="hljs-string">&quot;C&quot;</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">_start</span>() &#123;<br>    <span class="hljs-title function_ invoke__">sys_exit</span>(<span class="hljs-number">9</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="字符串打印支持"><a href="#字符串打印支持" class="headerlink" title="字符串打印支持"></a>字符串打印支持</h3><p>这里需要封装 <code>SYSCALL_WRITE</code> SBI 调用:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">const</span> SYSCALL_WRITE: <span class="hljs-type">usize</span> = <span class="hljs-number">64</span>;<br><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">sys_write</span>(fd: <span class="hljs-type">usize</span>, buffer: &amp;[<span class="hljs-type">u8</span>]) &#123;<br>    <span class="hljs-title function_ invoke__">syscall</span>(SYSCALL_WRITE, [fd, buffer.<span class="hljs-title function_ invoke__">as_ptr</span>() <span class="hljs-keyword">as</span> <span class="hljs-type">usize</span>, buffer.<span class="hljs-title function_ invoke__">len</span>()])<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>之后实现 <code>Write</code> trait (向 stdout 追加字符串这个语义):</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">struct</span> <span class="hljs-title class_">Stdout</span>;<br><br><span class="hljs-keyword">impl</span> <span class="hljs-title class_">Write</span> <span class="hljs-keyword">for</span> <span class="hljs-title class_">Stdout</span> &#123;<br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">write_str</span>(&amp;<span class="hljs-keyword">mut</span> <span class="hljs-keyword">self</span>, s: &amp;<span class="hljs-type">str</span>) <span class="hljs-punctuation">-&gt;</span> fmt::<span class="hljs-type">Result</span> &#123;<br>        <span class="hljs-title function_ invoke__">sys_write</span>(<span class="hljs-number">1</span>, s.<span class="hljs-title function_ invoke__">as_bytes</span>());<br>        <span class="hljs-title function_ invoke__">Ok</span>(());<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>再封装一层 <code>print</code> 便于调用:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">print</span>(args: fmt::Arguments) &#123;<br>    Stdout.<span class="hljs-title function_ invoke__">write_fmt</span>(args).<span class="hljs-title function_ invoke__">unwrap</span>();<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>注意这里的 <code>unwrap()</code> 进一步说明了 “不可能失败” 这一性质.</p>
+<p>之后可以基于 <code>print</code>, 实现格式化宏:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#[macro_export]</span><br><span class="hljs-built_in">macro_rules!</span> print &#123;<br>    ($fmt: literal $(, $($arg: tt)+)?) =&gt; &#123;<br>        $crate::console::<span class="hljs-title function_ invoke__">print</span>(<span class="hljs-built_in">format_args!</span>($fmt $(, $($arg)+)?));<br>    &#125;<br>&#125;<br><br><span class="hljs-meta">#[macro_export]</span><br><span class="hljs-built_in">macro_rules!</span> println &#123;<br>    ($fmt: literal $(, $($arg: tt)+)?) =&gt; &#123;<br>        <span class="hljs-title function_ invoke__">print</span>(<span class="hljs-built_in">format_args!</span>(<span class="hljs-built_in">concat!</span>($fmt, <span class="hljs-string">&quot;\n&quot;</span>) $(, $($arg)+)?));<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="设置内存布局"><a href="#设置内存布局" class="headerlink" title="设置内存布局"></a>设置内存布局</h3><p>修改 Cargo 的配置文件以使用自定义的链接脚本:</p>
+<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs toml">// os/.cargo/config<br><span class="hljs-section">[build]</span><br><span class="hljs-attr">target</span> = <span class="hljs-string">&quot;riscv64gc-unknown-none-elf&quot;</span><br><br><span class="hljs-section">[target.riscv64gc-unknown-none-elf]</span><br><span class="hljs-attr">rustflags</span> = [<br>    <span class="hljs-string">&quot;-Clink-arg=-Tsrc/linker.ld&quot;</span>, <span class="hljs-string">&quot;-Cforce-frame-pointers=yes&quot;</span><br>]<br></code></pre></td></tr></table></figure>
+
+<p>具体的链接脚本内容为:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><code class="hljs linker">OUTPUT_ARCH(riscv)<br>ENTRY(_start)<br>BASE_ADDRESS = 0x80200000;<br><br>SECTIONS<br>&#123;<br>    . = BASE_ADDRESS;<br>    skernel = .;<br><br>    stext = .;<br>    .text : &#123;<br>        *(.text.entry)<br>        *(.text .text.*)<br>    &#125;<br><br>    . = ALIGN(4K);<br>    etext = .;<br>    srodata = .;<br>    .rodata : &#123;<br>        *(.rodata .rodata.*)<br>    &#125;<br><br>    . = ALIGN(4K);<br>    erodata = .;<br>    sdata = .;<br>    .data : &#123;<br>        *(.data .data.*)<br>    &#125;<br><br>    . = ALIGN(4K);<br>    edata = .;<br>    .bss : &#123;<br>        *(.bss.stack)<br>        sbss = .;<br>        *(.bss .bss.*)<br>    &#125;<br><br>    . = ALIGN(4K);<br>    ebss = .;<br>    ekernel = .;<br><br>    /DISCARD/ : &#123;<br>        *(.eh_frame)<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>然后用汇编来初始化栈空间:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs asm"># os/src/entry.asm<br>    .section .text.entry<br>    .globl _start<br>_start:<br>    la sp, boot_stack_top<br>    call rust_main<br><br>    .section .bss.stack<br>    .globl boot_stack<br>boot_stack:<br>    .space 4096 * 16<br>    .globl boot_stack_top<br>boot_stack_top:<br></code></pre></td></tr></table></figure>
+<ul>
+<li>这里为栈预留了 <code>4096*16</code> 字节的空间, 也就是 <code>64KB</code></li>
+<li>栈顶用 <code>boot_stack_top</code> 全局符号标识 (用 <code>.global</code> 导出了), 栈底用 <code>boot_stack</code> 全局符号标识</li>
+<li>这块栈空间被命名为 <code>.bss.stack</code></li>
+</ul>
+<h3 id="应用程序入口"><a href="#应用程序入口" class="headerlink" title="应用程序入口"></a>应用程序入口</h3><p>之后应用程序入口可以写为:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#![no_std]</span><br><span class="hljs-meta">#![no_main]</span><br><br>core::arch::global_asm!(<span class="hljs-built_in">include_str!</span>(<span class="hljs-string">&quot;entry.asm&quot;</span>));<br><br><span class="hljs-meta">#[no_mangle]</span><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">rust_main</span>() <span class="hljs-punctuation">-&gt;</span> ! &#123;<br>    <span class="hljs-title function_ invoke__">clear_bss</span>();<br>    <span class="hljs-title function_ invoke__">shutdown</span>();<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h1 id="第三讲-基于特权级的隔离与批处理操作系统"><a href="#第三讲-基于特权级的隔离与批处理操作系统" class="headerlink" title="第三讲 基于特权级的隔离与批处理操作系统"></a>第三讲 基于特权级的隔离与批处理操作系统</h1><h2 id="从-OS-角度看计算机系统"><a href="#从-OS-角度看计算机系统" class="headerlink" title="从 OS 角度看计算机系统"></a>从 OS 角度看计算机系统</h2><p>操作系统位于硬件 (Hardware) 和应用 (Application) 之间, 只有理解 OS 与 HW&#x2F;APP 的关系, 才能更好掌握 OS, 因此这部分需要了解:</p>
+<ul>
+<li>OS 与硬件的关系</li>
+<li>OS 与应用程序的关系</li>
+<li>隔离 (isolation) 机制<ul>
+<li>为什么隔离</li>
+<li>什么是隔离</li>
+<li>隔离的方法</li>
+</ul>
+</li>
+</ul>
+<p>计算机系统是一种抽象层次的设计, 从硬件到应用之间有很多层:</p>
+<p><img src="/../img/rcore-relation-between-os-and-hardware.png" srcset="/img/loading.gif" lazyload></p>
+<p>硬件与 OS 的边界是: 指令集和寄存器.</p>
+<p><img src="/../img/rcore-boundary-between-hardware-and-os.png" srcset="/img/loading.gif" lazyload></p>
+<p>硬件提供指令, 对于一些操作, 只要没有相对应的指令, 就没办法完成.</p>
+<p>RISCV 中指令的执行流程可以大致从下图看出:</p>
+<p><img src="/../img/rcore-riscv-instruction-execution.png" srcset="/img/loading.gif" lazyload></p>
+<p>OS 对硬件进行虚拟和抽象, 从而为应用提供更简便的接口. 其与应用的关系可以从三个方面来说明:</p>
+<ul>
+<li>提供服务</li>
+<li>系统调用</li>
+<li>memory layout</li>
+</ul>
+<p>OS 通过系统调用为应用提供服务 (OS 与 APP 的边界之一就是系统调用)</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/OS/" class="category-chain-item">OS</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>rCore-Tutorial-笔记及操作系统知识</div>
+      <div>http://example.com/2026/06/04/rCore-Tutorial-笔记及操作系统知识/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Jie</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年6月4日</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>许可协议</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2026/06/07/Linux-udev-%E4%BB%A5%E5%8F%8A%E8%AE%BE%E5%A4%87%E7%9B%B8%E5%85%B3%E7%9F%A5%E8%AF%86/" title="Linux-udev-以及设备相关知识">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Linux-udev-以及设备相关知识</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/06/01/Rust-Clone-Copy/" title="Rust-Clone-Copy">
+                        <span class="hidden-mobile">Rust-Clone-Copy</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zKurisu/comments-utterances');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Jie</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Orkarin</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.1/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

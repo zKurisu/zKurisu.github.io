@@ -16,16 +16,16 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="type 和 newtype 的一些抉择type 是给一个类型起别名, newtype 是构建一个新类型. 比如我们想要一个类型有 Reader + State 的功能, 可以这样定义: 1type App m a &#x3D; ReaderT BoardInfo (StateT AppState m) a  这种写法很简略, 并且由于 ReaderT 和 StateT 都实现了 MonadReader 和">
+    <meta name="description" content="Tuple Constructor(,) 是 Haskell 中的 Tuple Constructor: 1data Tuple2 a b &#x3D; (,) a b  (,) 是一个 constructor  Haskell 中定义有 Tuple0~Tuple64 的类型: 12345type Tuple0 &#x3D; ()type Tuple1 &#x3D; Solodate Tuple3 a b c &#x3D; (,,) a">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Haskell-技巧积累">
 <meta property="og:url" content="http://example.com/2026/01/08/Haskell-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="type 和 newtype 的一些抉择type 是给一个类型起别名, newtype 是构建一个新类型. 比如我们想要一个类型有 Reader + State 的功能, 可以这样定义: 1type App m a &#x3D; ReaderT BoardInfo (StateT AppState m) a  这种写法很简略, 并且由于 ReaderT 和 StateT 都实现了 MonadReader 和">
+<meta property="og:description" content="Tuple Constructor(,) 是 Haskell 中的 Tuple Constructor: 1data Tuple2 a b &#x3D; (,) a b  (,) 是一个 constructor  Haskell 中定义有 Tuple0~Tuple64 的类型: 12345type Tuple0 &#x3D; ()type Tuple1 &#x3D; Solodate Tuple3 a b c &#x3D; (,,) a">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/haskell-tying-the-knot-example.jpg">
 <meta property="article:published_time" content="2026-01-08T12:44:15.000Z">
-<meta property="article:modified_time" content="2026-04-16T02:54:59.264Z">
+<meta property="article:modified_time" content="2026-04-25T12:19:13.893Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/haskell-tying-the-knot-example.jpg">
@@ -450,7 +450,7 @@ path.outline_glyph {
         
         
         
-          116 分钟
+          119 分钟
         
       </span>
     
@@ -493,7 +493,46 @@ path.outline_glyph {
             
               <div class="markdown-body">
                 
-                <h1 id="type-和-newtype-的一些抉择"><a href="#type-和-newtype-的一些抉择" class="headerlink" title="type 和 newtype 的一些抉择"></a>type 和 newtype 的一些抉择</h1><p><code>type</code> 是给一个类型起别名, <code>newtype</code> 是构建一个新类型. 比如我们想要一个类型有 <code>Reader + State</code> 的功能, 可以这样定义:</p>
+                <h1 id="Tuple-Constructor"><a href="#Tuple-Constructor" class="headerlink" title="Tuple Constructor"></a>Tuple Constructor</h1><p><code>(,)</code> 是 Haskell 中的 Tuple Constructor:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Tuple2</span> a b = (,) a b</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>(,)</code> 是一个 constructor</li>
+</ul>
+<p>Haskell 中定义有 <code>Tuple0~Tuple64</code> 的类型:</p>
+<figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">type</span> <span class="hljs-type">Tuple0</span> = ()</span><br><span class="hljs-class"><span class="hljs-keyword">type</span> <span class="hljs-type">Tuple1</span> = <span class="hljs-type">Solo</span></span><br><span class="hljs-title">date</span> <span class="hljs-type">Tuple3</span> a b c = (,,) a b c<br><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Tuple4</span> a b c d = (,,,) a b c d</span><br>...<br></code></pre></td></tr></table></figure>
+
+<p>在类型表达中, <code>(a, b, c)</code> 这种事 Haskell 提供的语法糖, 在编译器内部, 元组就是由上述形式根据逗号数量来判断类型的, 对应关系如下:</p>
+<table>
+<thead>
+<tr>
+<th>元素个数</th>
+<th>值构造器</th>
+<th>语法糖形式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td><code>()</code></td>
+<td><code>()</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>(,)</code></td>
+<td><code>(a, b)</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>(,,)</code></td>
+<td><code>(a, b, c)</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>(,,,)</code></td>
+<td><code>(a , b, c, d)</code></td>
+</tr>
+</tbody></table>
+<p><code>(,) a b</code> 是前缀形式, 而 <code>(a, b)</code> 是中缀形式, 虽然和一般情况下的中缀多了个括号. 不加括号的话会与 <code>,</code> 的其他职能冲突, 比如 <code>[a,b,c]</code> 这里的元素分隔.</p>
+<h1 id="type-和-newtype-的一些抉择"><a href="#type-和-newtype-的一些抉择" class="headerlink" title="type 和 newtype 的一些抉择"></a>type 和 newtype 的一些抉择</h1><p><code>type</code> 是给一个类型起别名, <code>newtype</code> 是构建一个新类型. 比如我们想要一个类型有 <code>Reader + State</code> 的功能, 可以这样定义:</p>
 <figure class="highlight haskell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haskell"><span class="hljs-class"><span class="hljs-keyword">type</span> <span class="hljs-type">App</span> m a = <span class="hljs-type">ReaderT</span> <span class="hljs-type">BoardInfo</span> (<span class="hljs-type">StateT</span> <span class="hljs-type">AppState</span> <span class="hljs-title">m</span>) a</span><br></code></pre></td></tr></table></figure>
 
 <p>这种写法很简略, 并且由于 <code>ReaderT</code> 和 <code>StateT</code> 都实现了 <code>MonadReader</code> 和 <code>MonadState</code> 等实例, 因此 <code>App</code> 就拥有了这些功能. 但这种方式的缺点在于:</p>

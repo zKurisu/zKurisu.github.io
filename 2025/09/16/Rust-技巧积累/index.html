@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="Fat PointerFat Pointer (胖指针) 区别于普通 thin pointer:  Thin Pointer 只包含一个内存地址 Fat Pointer 除了包含内存地址, 还额外携带了一份元数据  之所以称为 “Fat”, 是因为在 64 位系统上, 普通指针占 8 字节, 而胖指针占 16 字节 (8+8), 占用的空间更大. Fat Pointer 主要用来解决 DST (D">
+    <meta name="description" content="unsafe 关键字unsafe 能让编译器关闭一些检查, 从而允许一些可能会出现错误的写法. 这部分代码的正确性需要程序员来保证. 就算有错误, 也能编译通过. 12345678fn main() &amp;#123;    let p: *const i32 &#x3D; std::ptr::null();    let x &#x3D; unsafe &amp;#123; *p &amp;#125;;    &#x2F;&#x2F;">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Rust-技巧积累">
 <meta property="og:url" content="http://example.com/2025/09/16/Rust-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="Fat PointerFat Pointer (胖指针) 区别于普通 thin pointer:  Thin Pointer 只包含一个内存地址 Fat Pointer 除了包含内存地址, 还额外携带了一份元数据  之所以称为 “Fat”, 是因为在 64 位系统上, 普通指针占 8 字节, 而胖指针占 16 字节 (8+8), 占用的空间更大. Fat Pointer 主要用来解决 DST (D">
+<meta property="og:description" content="unsafe 关键字unsafe 能让编译器关闭一些检查, 从而允许一些可能会出现错误的写法. 这部分代码的正确性需要程序员来保证. 就算有错误, 也能编译通过. 12345678fn main() &amp;#123;    let p: *const i32 &#x3D; std::ptr::null();    let x &#x3D; unsafe &amp;#123; *p &amp;#125;;    &#x2F;&#x2F;">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-09-16T13:15:22.000Z">
-<meta property="article:modified_time" content="2026-03-04T10:53:00.921Z">
+<meta property="article:modified_time" content="2026-06-08T12:36:51.020Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -437,7 +437,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          30k 字
+          40k 字
         
       </span>
     
@@ -448,7 +448,7 @@ path.outline_glyph {
         
         
         
-          252 分钟
+          336 分钟
         
       </span>
     
@@ -491,7 +491,289 @@ path.outline_glyph {
             
               <div class="markdown-body">
                 
-                <h1 id="Fat-Pointer"><a href="#Fat-Pointer" class="headerlink" title="Fat Pointer"></a>Fat Pointer</h1><p>Fat Pointer (胖指针) 区别于普通 thin pointer:</p>
+                <h1 id="unsafe-关键字"><a href="#unsafe-关键字" class="headerlink" title="unsafe 关键字"></a>unsafe 关键字</h1><p><code>unsafe</code> 能让编译器关闭一些检查, 从而允许一些可能会出现错误的写法. 这部分代码的正确性需要程序员来保证. 就算有错误, 也能编译通过.</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">p</span>: *<span class="hljs-keyword">const</span> <span class="hljs-type">i32</span> = std::ptr::<span class="hljs-title function_ invoke__">null</span>();<br><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">x</span> = <span class="hljs-keyword">unsafe</span> &#123; *p &#125;;<br>    <span class="hljs-comment">//               ^^</span><br>    <span class="hljs-comment">//   编译通过 ✅  运行崩溃 ❌</span><br>    <span class="hljs-comment">//   编译器不会检查 p 是不是 null</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>在一些场景下必须使用 <code>unsafe</code>:</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>为什么是 unsafe</th>
+<th>你的责任</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>调用 C 函数</td>
+<td>编译器不知道 C 代码有没有 UB (Undefined Behavior)</td>
+<td>保证 C 函数的签名正确、参数有效、调用后 Rust 不变式成立</td>
+</tr>
+<tr>
+<td>解引用裸指针</td>
+<td>指针可能悬垂&#x2F;错位&#x2F;null</td>
+<td>保证指针有效、对齐、指向已初始化的正确类型的数据</td>
+</tr>
+<tr>
+<td>内联汇编（<code>asm!</code>）</td>
+<td>汇编代码不受 Rust 语义控制</td>
+<td>保证汇编不破坏内存 &#x2F; 栈 &#x2F; ABI</td>
+</tr>
+<tr>
+<td>手动管理内存（alloc&#x2F;dealloc）</td>
+<td>可能 double-free、泄漏、use-after-free</td>
+<td>保证每个分配恰好释放一次</td>
+</tr>
+<tr>
+<td>绕过 UTF-8 检查</td>
+<td>可能产生无效字符串</td>
+<td>保证字节序列是有效 UTF-8</td>
+</tr>
+<tr>
+<td>绕过边界检查</td>
+<td>可能越界访问</td>
+<td>保证索引在范围内</td>
+</tr>
+<tr>
+<td>构造”不可变”数据的可变操作</td>
+<td>可能违反别名规则导致 UB</td>
+<td>保证修改方式不造成未定义行为</td>
+</tr>
+<tr>
+<td>实现并发原语（Mutex、Atomic）</td>
+<td>编译器不能自动验证线程安全</td>
+<td>保证内存序正确、没有数据竞争</td>
+</tr>
+</tbody></table>
+<h1 id="as-xxx-系列方法"><a href="#as-xxx-系列方法" class="headerlink" title="as_xxx 系列方法"></a><code>as_xxx</code> 系列方法</h1><p>对于 <code>as_xxx</code> 这种形式的方法, 一部分由 trait 管理, 但大部分是各类型的固有方法.</p>
+<h2 id="trait-管理的-as-xxx"><a href="#trait-管理的-as-xxx" class="headerlink" title="trait 管理的 as_xxx"></a>trait 管理的 <code>as_xxx</code></h2><h3 id="AsRef"><a href="#AsRef" class="headerlink" title="AsRef"></a>AsRef</h3><p><code>AsRef</code> 提供 <code>as_ref</code> 方法, 用于零成本的引用转换 (一个类型转换成另一个类型的引用), 不会失败:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">pub</span> <span class="hljs-keyword">trait</span> <span class="hljs-title class_">AsRef</span>&lt;T: ?<span class="hljs-built_in">Sized</span>&gt; &#123;<br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">as_ref</span>(&amp;<span class="hljs-keyword">self</span>) <span class="hljs-punctuation">-&gt;</span> &amp;T;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这里的 <code>Self</code> 是原类型, 而 <code>T</code> 是目标类型.</p>
+<p>比如 <code>&amp;String</code> 转为 <code>&amp;str</code>:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// String 实现了 AsRef&lt;str&gt;</span><br><span class="hljs-keyword">let</span> <span class="hljs-variable">s</span> = <span class="hljs-type">String</span>::<span class="hljs-title function_ invoke__">from</span>(<span class="hljs-string">&quot;hello&quot;</span>);<br><span class="hljs-keyword">let</span> <span class="hljs-variable">r</span>: &amp;<span class="hljs-type">str</span> = s.<span class="hljs-title function_ invoke__">as_ref</span>();           <span class="hljs-comment">// &amp;String → &amp;str，零开销</span><br><br><span class="hljs-comment">// String 实现了 AsRef&lt;[u8]&gt;</span><br><span class="hljs-keyword">let</span> <span class="hljs-variable">bytes</span>: &amp;[<span class="hljs-type">u8</span>] = s.<span class="hljs-title function_ invoke__">as_ref</span>();      <span class="hljs-comment">// &amp;String → &amp;[u8]</span><br><br><span class="hljs-comment">// String 实现了 AsRef&lt;Path&gt;</span><br><span class="hljs-keyword">let</span> <span class="hljs-variable">path</span>: &amp;Path = s.<span class="hljs-title function_ invoke__">as_ref</span>();       <span class="hljs-comment">// &amp;String → &amp;Path</span><br><br><span class="hljs-comment">// Vec&lt;T&gt; 实现了 AsRef&lt;[T]&gt;</span><br><span class="hljs-keyword">let</span> <span class="hljs-variable">v</span> = <span class="hljs-built_in">vec!</span>[<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>];<br><span class="hljs-keyword">let</span> <span class="hljs-variable">slice</span>: &amp;[<span class="hljs-type">i32</span>] = v.<span class="hljs-title function_ invoke__">as_ref</span>();     <span class="hljs-comment">// &amp;Vec&lt;i32&gt; → &amp;[i32]</span><br></code></pre></td></tr></table></figure>
+
+<p>有时候可以用其扩展函数的参数范围:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// 不用 AsRef：函数只能接受一种类型</span><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">read_file</span>(path: &amp;Path) &#123; ... &#125;<br><br><span class="hljs-comment">// 用 AsRef：接受所有能当路径用的类型</span><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">read_file</span>&lt;P: <span class="hljs-built_in">AsRef</span>&lt;Path&gt;&gt;(path: P) &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">path</span> = path.<span class="hljs-title function_ invoke__">as_ref</span>();       <span class="hljs-comment">// String, &amp;str, PathBuf, &amp;Path 都能传进来</span><br>    <span class="hljs-comment">// ...</span><br>&#125;<br><br><span class="hljs-title function_ invoke__">read_file</span>(<span class="hljs-string">&quot;config.toml&quot;</span>);           <span class="hljs-comment">// &amp;str ✅</span><br><span class="hljs-title function_ invoke__">read_file</span>(<span class="hljs-type">String</span>::<span class="hljs-title function_ invoke__">from</span>(<span class="hljs-string">&quot;...&quot;</span>));     <span class="hljs-comment">// String ✅</span><br><span class="hljs-title function_ invoke__">read_file</span>(PathBuf::<span class="hljs-title function_ invoke__">from</span>(<span class="hljs-string">&quot;...&quot;</span>));    <span class="hljs-comment">// PathBuf ✅</span><br></code></pre></td></tr></table></figure>
+
+<h3 id="AsMut"><a href="#AsMut" class="headerlink" title="AsMut"></a>AsMut</h3><p>AsMut 与 AsRef 逻辑一致, 只不过转换为可变引用:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">pub</span> <span class="hljs-keyword">trait</span> <span class="hljs-title class_">AsMut</span>&lt;T: ?<span class="hljs-built_in">Sized</span>&gt; &#123;<br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">as_mut</span>(&amp;<span class="hljs-keyword">mut</span> <span class="hljs-keyword">self</span>) <span class="hljs-punctuation">-&gt;</span> &amp;<span class="hljs-keyword">mut</span> T;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>比如:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">v</span> = <span class="hljs-built_in">vec!</span>[<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>];<br><span class="hljs-keyword">let</span> <span class="hljs-variable">s</span>: &amp;<span class="hljs-keyword">mut</span> [<span class="hljs-type">i32</span>] = v.<span class="hljs-title function_ invoke__">as_mut</span>();     <span class="hljs-comment">// &amp;mut Vec&lt;i32&gt; → &amp;mut [i32]</span><br>s[<span class="hljs-number">0</span>] = <span class="hljs-number">42</span>;<br><span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;:?&#125;&quot;</span>, v);                <span class="hljs-comment">// [42, 2, 3]</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="没有-trait-管理的-as-xxx"><a href="#没有-trait-管理的-as-xxx" class="headerlink" title="没有 trait 管理的 as_xxx"></a>没有 trait 管理的 <code>as_xxx</code></h2><p>这里主要说明 <code>as_ptr</code> 和 <code>as_mut_ptr</code>. 这两个函数主要用于从安全的 Rust 类型里拿到底层裸指针, 以便于 FFI 调用 C 库, 或者实现编译器无法验证的 <code>unsafe</code> 优化等.</p>
+<p>很多类型都有这两个方法的实现, 但并不是来自某个 trait, 而是单独作为固有方法:</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th><code>as_ptr()</code> →</th>
+<th><code>as_mut_ptr()</code> →</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Vec&lt;T&gt;</code></td>
+<td><code>*const T</code></td>
+<td><code>*mut T</code></td>
+</tr>
+<tr>
+<td><code>[T; N]</code>（数组）</td>
+<td><code>*const T</code></td>
+<td><code>*mut T</code></td>
+</tr>
+<tr>
+<td><code>[T]</code>（切片）</td>
+<td><code>*const T</code></td>
+<td><code>*mut T</code></td>
+</tr>
+<tr>
+<td><code>String</code></td>
+<td><code>*const u8</code></td>
+<td><code>*mut u8</code></td>
+</tr>
+<tr>
+<td><code>str</code></td>
+<td><code>*const u8</code></td>
+<td><code>*mut u8</code></td>
+</tr>
+<tr>
+<td><code>Box&lt;T&gt;</code></td>
+<td><code>*const T</code></td>
+<td><code>*mut T</code></td>
+</tr>
+<tr>
+<td><code>OsString</code></td>
+<td>❌（需借用为 <code>&amp;OsStr</code>）</td>
+<td>❌（需借用为 <code>&amp;mut OsStr</code>）</td>
+</tr>
+<tr>
+<td><code>CString</code></td>
+<td><code>*const c_char</code>（<code>libc::c_char</code>）</td>
+<td><code>*mut c_char</code></td>
+</tr>
+<tr>
+<td><code>Rc&lt;T&gt;</code></td>
+<td><code>*const T</code>（指向内部值）</td>
+<td>❌</td>
+</tr>
+<tr>
+<td><code>Arc&lt;T&gt;</code></td>
+<td><code>*const T</code>（指向内部值）</td>
+<td>❌</td>
+</tr>
+<tr>
+<td><code>RawVec&lt;T&gt;</code></td>
+<td><code>*const T</code></td>
+<td><code>*mut T</code></td>
+</tr>
+</tbody></table>
+<p>用裸指针可以在不拿走所有权的前提下拿到内部数据的地址:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">v</span> = <span class="hljs-built_in">vec!</span>[<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>];<br><br><span class="hljs-keyword">let</span> <span class="hljs-variable">p</span>: *<span class="hljs-keyword">const</span> <span class="hljs-type">i32</span> = v.<span class="hljs-title function_ invoke__">as_ptr</span>();     <span class="hljs-comment">// 只读指针，指向 v[0]</span><br><span class="hljs-keyword">let</span> <span class="hljs-variable">q</span>: *<span class="hljs-keyword">mut</span> <span class="hljs-type">i32</span> = v.<span class="hljs-title function_ invoke__">as_mut_ptr</span>();   <span class="hljs-comment">// 可变指针，指向 v[0]</span><br><br><span class="hljs-keyword">unsafe</span> &#123;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;&#125;&quot;</span>, *p);             <span class="hljs-comment">// 1</span><br>    *q = <span class="hljs-number">42</span>;                        <span class="hljs-comment">// v[0] = 42</span><br>&#125;<br><span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;:?&#125;&quot;</span>, v);                <span class="hljs-comment">// [42, 2, 3]</span><br></code></pre></td></tr></table></figure>
+
+<p>对于 <code>Vec</code> 的裸指针, 需要著有某些情况下可能导致指针悬垂:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">v</span> = <span class="hljs-built_in">vec!</span>[<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>];<br><span class="hljs-keyword">let</span> <span class="hljs-variable">p</span> = v.<span class="hljs-title function_ invoke__">as_ptr</span>();                  <span class="hljs-comment">// 指向当前堆地址</span><br><br>v.<span class="hljs-title function_ invoke__">push</span>(<span class="hljs-number">4</span>);                           <span class="hljs-comment">// ⚠️ 可能重新分配，p 悬垂！</span><br><span class="hljs-comment">// unsafe &#123; println!(&quot;&#123;&#125;&quot;, *p); &#125;    // ❌ use-after-free</span><br></code></pre></td></tr></table></figure>
+
+<h1 id="attr-和-attr-的区别"><a href="#attr-和-attr-的区别" class="headerlink" title="#[attr] 和 #![attr] 的区别"></a><code>#[attr]</code> 和 <code>#![attr]</code> 的区别</h1><ul>
+<li><code>#[attr]</code>, 只作用于下一个 item (如函数, struct, mod 等)</li>
+<li><code>#![attr]</code>, 作用于整个 <code>crate/module</code></li>
+</ul>
+<p>比如:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#![no_std]</span><br></code></pre></td></tr></table></figure>
+<p>就告诉 Rust, 这个 crate 不使用 <code>std</code> (标准库).</p>
+<h1 id="常用-std-模块"><a href="#常用-std-模块" class="headerlink" title="常用 std 模块"></a>常用 std 模块</h1><h2 id="std-cmp-用于比较和排序"><a href="#std-cmp-用于比较和排序" class="headerlink" title="std::cmp, 用于比较和排序"></a>std::cmp, 用于比较和排序</h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::cmp::&#123;min, max, Reverse, Ordering, min_by, max_by&#125;;<br><br><span class="hljs-keyword">let</span> <span class="hljs-variable">low</span> = <span class="hljs-title function_ invoke__">min</span>(<span class="hljs-number">3</span>, <span class="hljs-number">7</span>);      <span class="hljs-comment">// 3</span><br><span class="hljs-keyword">let</span> <span class="hljs-variable">high</span> = <span class="hljs-title function_ invoke__">max</span>(<span class="hljs-number">3.0</span>, <span class="hljs-number">7.0</span>); <span class="hljs-comment">// 7.0（浮点也行）</span><br><br><span class="hljs-comment">// Reverse — 反转排序语义</span><br><span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">nums</span> = <span class="hljs-built_in">vec!</span>[<span class="hljs-number">3</span>, <span class="hljs-number">1</span>, <span class="hljs-number">4</span>, <span class="hljs-number">1</span>, <span class="hljs-number">5</span>];<br>nums.<span class="hljs-title function_ invoke__">sort_by_key</span>(|&amp;x| <span class="hljs-title function_ invoke__">Reverse</span>(x)); <span class="hljs-comment">// 降序: [5,4,3,1,1]</span><br><br><span class="hljs-comment">// 自定义比较</span><br>points.<span class="hljs-title function_ invoke__">sort_by</span>(|a, b| a.<span class="hljs-number">1</span>.<span class="hljs-title function_ invoke__">cmp</span>(&amp;b.<span class="hljs-number">1</span>)); <span class="hljs-comment">// 按 y 排序</span><br><br>points.<span class="hljs-title function_ invoke__">sort_by</span>(|a, b| &#123;<br>    a.<span class="hljs-number">1</span>.<span class="hljs-title function_ invoke__">cmp</span>(&amp;b.<span class="hljs-number">1</span>).<span class="hljs-title function_ invoke__">then</span>(a.<span class="hljs-number">0</span>.<span class="hljs-title function_ invoke__">cmp</span>(&amp;b.<span class="hljs-number">0</span>)) <span class="hljs-comment">// y 优先，然后 x</span><br>&#125;);<br><br><span class="hljs-comment">// Ordering</span><br><span class="hljs-keyword">match</span> a.<span class="hljs-title function_ invoke__">cmp</span>(&amp;b) &#123;<br>    Ordering::Less    =&gt; <span class="hljs-string">&quot;a &lt; b&quot;</span>,<br>    Ordering::Equal   =&gt; <span class="hljs-string">&quot;a = b&quot;</span>,<br>    Ordering::Greater =&gt; <span class="hljs-string">&quot;a &gt; b&quot;</span>,<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="std-mem-用于内存操作"><a href="#std-mem-用于内存操作" class="headerlink" title="std::mem, 用于内存操作"></a>std::mem, 用于内存操作</h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::mem;<br><br><span class="hljs-comment">// swap — O(1) 交换两个值</span><br><span class="hljs-keyword">let</span> (<span class="hljs-keyword">mut</span> a, <span class="hljs-keyword">mut</span> b) = (<span class="hljs-number">1</span>, <span class="hljs-number">2</span>);<br>mem::<span class="hljs-title function_ invoke__">swap</span>(&amp;<span class="hljs-keyword">mut</span> a, &amp;<span class="hljs-keyword">mut</span> b);   <span class="hljs-comment">// a=2, b=1 </span><br><span class="hljs-comment">// 等价于: (a, b) = (b, a);</span><br><br><span class="hljs-comment">// take — 取走值，留下 Default::default()</span><br><span class="hljs-comment">// 算法题经典：从 Option 中移出值</span><br><span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">opt</span> = <span class="hljs-title function_ invoke__">Some</span>(<span class="hljs-number">42</span>);<br><span class="hljs-keyword">let</span> <span class="hljs-variable">val</span> = mem::<span class="hljs-title function_ invoke__">take</span>(&amp;<span class="hljs-keyword">mut</span> opt); <span class="hljs-comment">// val=Some(42), opt=None</span><br><br><span class="hljs-comment">// 用于链表节点替换</span><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">take_node</span>(node: &amp;<span class="hljs-keyword">mut</span> <span class="hljs-type">Option</span>&lt;<span class="hljs-type">Box</span>&lt;ListNode&gt;&gt;) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">Option</span>&lt;<span class="hljs-type">Box</span>&lt;ListNode&gt;&gt; &#123;<br>    mem::<span class="hljs-title function_ invoke__">take</span>(node) <span class="hljs-comment">// node 变 None，返回原值</span><br>&#125;<br><br><span class="hljs-comment">// replace — 替换并返回旧值</span><br><span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">x</span> = <span class="hljs-number">5</span>;<br><span class="hljs-keyword">let</span> <span class="hljs-variable">old</span> = mem::<span class="hljs-title function_ invoke__">replace</span>(&amp;<span class="hljs-keyword">mut</span> x, <span class="hljs-number">10</span>); <span class="hljs-comment">// old=5, x=10</span><br></code></pre></td></tr></table></figure>
+
+<h1 id="Option-和-Result-间的转换"><a href="#Option-和-Result-间的转换" class="headerlink" title="Option 和 Result 间的转换"></a>Option 和 Result 间的转换</h1><p>在 <code>Option</code> 上可以用 <code>ok_or</code> 和 <code>ok_or_else</code> 方法, 将 <code>Option</code> 转为 <code>Result</code>, 这样可以提供错误信息:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">x</span> = <span class="hljs-literal">None</span>;<br><span class="hljs-keyword">let</span> <span class="hljs-variable">r1</span>: <span class="hljs-type">Result</span>&lt;<span class="hljs-type">i32</span>, &amp;<span class="hljs-type">str</span>&gt; = x.<span class="hljs-title function_ invoke__">ok_or</span>(<span class="hljs-string">&quot;var is None&quot;</span>) <span class="hljs-comment">// Err(&quot;var is None&quot;)</span><br><span class="hljs-keyword">let</span> <span class="hljs-variable">r2</span>: <span class="hljs-type">Result</span>&lt;<span class="hljs-type">i32</span>, &amp;<span class="hljs-type">str</span>&gt; = x.<span class="hljs-title function_ invoke__">ok_or_else</span>(|| <span class="hljs-string">&quot;var is None&quot;</span>)<br></code></pre></td></tr></table></figure>
+
+<p>在 <code>Result</code> 上可以用 <code>ok()</code>, <code>err()</code> 方法, 将其转为 <code>Option</code> 包裹:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">x</span>  = Ok::&lt;<span class="hljs-type">i32</span>, &amp;<span class="hljs-type">str</span>&gt;(<span class="hljs-number">10</span>);<br><span class="hljs-keyword">let</span> <span class="hljs-variable">r1</span> = x.<span class="hljs-title function_ invoke__">ok</span>()  <span class="hljs-comment">// Some(10);</span><br><span class="hljs-keyword">let</span> <span class="hljs-variable">r2</span> = x.<span class="hljs-title function_ invoke__">err</span>() <span class="hljs-comment">// None;</span><br></code></pre></td></tr></table></figure>
+
+<h1 id="操作符的使用"><a href="#操作符的使用" class="headerlink" title="? 操作符的使用"></a>? 操作符的使用</h1><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">foo</span>() <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">Result</span>&lt;xxx, xxx&gt; &#123;&#125;<br><br><span class="hljs-keyword">let</span> <span class="hljs-variable">x</span> = <span class="hljs-title function_ invoke__">foo</span>()?;<br></code></pre></td></tr></table></figure>
+
+<p>等价于:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">x</span> = <span class="hljs-keyword">match</span> <span class="hljs-title function_ invoke__">foo</span>() &#123;<br>    <span class="hljs-title function_ invoke__">Ok</span>(v)  =&gt; v,<br>    <span class="hljs-title function_ invoke__">Err</span>(e) =&gt; <span class="hljs-keyword">return</span> <span class="hljs-title function_ invoke__">Err</span>(e),<br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<p>相当于提前将错误返回给上一层调用了.</p>
+<p><code>?</code> 相当于 <code>match</code> 处理 <code>Result</code> 的语法糖, 比如简化下面代码:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">read_and_parse</span>(path: &amp;<span class="hljs-type">str</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">Result</span>&lt;<span class="hljs-type">i32</span>, <span class="hljs-type">Box</span>&lt;<span class="hljs-keyword">dyn</span> Error&gt;&gt; &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">s</span> = <span class="hljs-keyword">match</span> std::fs::<span class="hljs-title function_ invoke__">read_to_string</span>(path) &#123;<br>        <span class="hljs-title function_ invoke__">Ok</span>(s)  =&gt; s,<br>        <span class="hljs-title function_ invoke__">Err</span>(e) =&gt; <span class="hljs-keyword">return</span> <span class="hljs-title function_ invoke__">Err</span>(<span class="hljs-type">Box</span>::<span class="hljs-title function_ invoke__">new</span>(e)),<br>    &#125;;<br><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">num</span> = <span class="hljs-keyword">match</span> s.<span class="hljs-title function_ invoke__">trim</span>().parse::&lt;<span class="hljs-type">i32</span>&gt;() &#123;<br>        <span class="hljs-title function_ invoke__">Ok</span>(n)  =&gt; n,<br>        <span class="hljs-title function_ invoke__">Err</span>(e) =&gt; <span class="hljs-keyword">return</span> <span class="hljs-title function_ invoke__">Err</span>(<span class="hljs-type">Box</span>::<span class="hljs-title function_ invoke__">new</span>(e)),<br>    &#125;;<br><br>    <span class="hljs-keyword">if</span> num &lt; <span class="hljs-number">0</span> &#123;<br>        <span class="hljs-keyword">return</span> <span class="hljs-title function_ invoke__">Err</span>(<span class="hljs-type">Box</span>::<span class="hljs-title function_ invoke__">new</span>(std::io::Error::<span class="hljs-title function_ invoke__">new</span>(<br>            std::io::ErrorKind::InvalidData, <span class="hljs-string">&quot;负数不允许&quot;</span><br>        )));<br>    &#125;<br><br>    <span class="hljs-title function_ invoke__">Ok</span>(num)<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>为:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">read_and_parse</span>(path: &amp;<span class="hljs-type">str</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">Result</span>&lt;<span class="hljs-type">i32</span>, <span class="hljs-type">Box</span>&lt;<span class="hljs-keyword">dyn</span> Error&gt;&gt; &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">s</span> = <span class="hljs-keyword">match</span> std::fs::<span class="hljs-title function_ invoke__">read_to_string</span>(path)?;<br><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">num</span> = <span class="hljs-keyword">match</span> s.<span class="hljs-title function_ invoke__">trim</span>().parse::&lt;<span class="hljs-type">i32</span>&gt;()?;<br><br>    <span class="hljs-keyword">if</span> num &lt; <span class="hljs-number">0</span> &#123;<br>        <span class="hljs-keyword">return</span> <span class="hljs-title function_ invoke__">Err</span>(<span class="hljs-type">Box</span>::<span class="hljs-title function_ invoke__">new</span>(std::io::Error::<span class="hljs-title function_ invoke__">new</span>(<br>            std::io::ErrorKind::InvalidData, <span class="hljs-string">&quot;负数不允许&quot;</span><br>        )));<br>    &#125;<br><br>    <span class="hljs-title function_ invoke__">Ok</span>(num)<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>注意这里还自动做了类型转换, 相当于 <code>e.into()</code>.</p>
+<p>相比于 <code>unwrap</code>, <code>?</code> 操作符不会让程序直接退出, 会更友好.</p>
+<p>当然 <code>?</code> 也能处理 <code>Option</code>, 此时直接返回的是 <code>None</code>.</p>
+<p>需要注意, 如果要在 <code>main</code> 函数中使用 <code>?</code> 操作符, 需要指明返回值:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">Result</span>&lt;(), <span class="hljs-type">Box</span>&lt;<span class="hljs-keyword">dyn</span> Error&gt;&gt; &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">content</span> = std::fs::<span class="hljs-title function_ invoke__">read_to_string</span>(<span class="hljs-string">&quot;input.txt&quot;</span>)?;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;&#125;&quot;</span>, content);<br>    <span class="hljs-title function_ invoke__">Ok</span>(())<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h1 id="常用宏"><a href="#常用宏" class="headerlink" title="常用宏"></a>常用宏</h1><h2 id="println"><a href="#println" class="headerlink" title="println!"></a><code>println!</code></h2><p><code>println!</code> 将格式化内容输出到 <code>stdout</code>:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;x = &#123;&#125;, y = &#123;:?&#125;&quot;</span>, x, y);<br></code></pre></td></tr></table></figure>
+
+<p>还有 <code>print!</code>, 与 <code>println!</code> 的区别在于前者不会追加换行符:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-built_in">print!</span>(<span class="hljs-string">&quot;x = &#123;&#125;, y = &#123;:?&#125;&quot;</span>, x, y);<br></code></pre></td></tr></table></figure>
+
+<h2 id="eprintln"><a href="#eprintln" class="headerlink" title="eprintln!"></a><code>eprintln!</code></h2><p><code>eprintln!</code> 将格式化内容输出到 <code>stderr</code> 且不经过缓冲, 因此常用来调试:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust">eprintln!(<span class="hljs-string">&quot;error: &#123;&#125;&quot;</span>, e);<br></code></pre></td></tr></table></figure>
+
+<h2 id="format"><a href="#format" class="headerlink" title="format!"></a><code>format!</code></h2><p><code>format!</code> 将格式化内容返回为字符串:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-built_in">format!</span>(<span class="hljs-string">&quot;&#123;&#125;-&#123;&#125;&quot;</span>, a, b);<br></code></pre></td></tr></table></figure>
+
+<h2 id="vec"><a href="#vec" class="headerlink" title="vec!"></a><code>vec!</code></h2><p><code>vec!</code> 用数组快速构建 <code>Vec</code>, 比如:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">v</span> = <span class="hljs-built_in">vec!</span>[<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>];                  <span class="hljs-comment">// Vec&lt;i32&gt;</span><br><span class="hljs-keyword">let</span> <span class="hljs-variable">v</span> = <span class="hljs-built_in">vec!</span>[<span class="hljs-number">0</span>; <span class="hljs-number">100</span>];                   <span class="hljs-comment">// 100 个 0</span><br><span class="hljs-keyword">let</span> <span class="hljs-variable">v</span>: <span class="hljs-type">Vec</span>&lt;_&gt; = (<span class="hljs-number">0</span>..<span class="hljs-number">10</span>).<span class="hljs-title function_ invoke__">collect</span>();      <span class="hljs-comment">// 功能一样，但 vec![] 更常见</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="assert-assert-eq-assert-ne"><a href="#assert-assert-eq-assert-ne" class="headerlink" title="assert!/assert_eq!/assert_ne!"></a><code>assert!/assert_eq!/assert_ne!</code></h2><ul>
+<li><code>assert!</code> 在参数为 <code>true</code> 时相当于不做任何操作, 但参数为 <code>false</code> 时 <code>panic!</code></li>
+<li><code>assert_eq!</code> 在两个参数相等时不做任何操作, 不相等时 <code>panic!</code></li>
+<li><code>assert_ne!</code> 在两个参数不相等时不做任何操作, 相等时 <code>panic!</code></li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-built_in">assert!</span>(x &gt; <span class="hljs-number">0</span>);<br><span class="hljs-built_in">assert_eq!</span>(result, expected);   <span class="hljs-comment">// 需要 PartialEq</span><br><span class="hljs-built_in">assert_ne!</span>(a, b);               <span class="hljs-comment">// panic 时会打印两边的值（对 assert_eq!/assert_ne!）</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="panic"><a href="#panic" class="headerlink" title="panic!"></a><code>panic!</code></h2><p><code>panic!</code> 打印错误信息并退出程序:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-built_in">panic!</span>(<span class="hljs-string">&quot;error: &#123;&#125;&quot;</span>, e);<br></code></pre></td></tr></table></figure>
+
+<h2 id="todo-unimplemented"><a href="#todo-unimplemented" class="headerlink" title="todo!/unimplemented"></a><code>todo!/unimplemented</code></h2><p><code>todo!</code> 和 <code>unimplemented!</code> 都会调用 <code>panic!</code> 打印信息, 语义上标记还未实现的代码:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// todo! 和 unimplemented! 本质就是 panic! 的别名</span><br>todo!();                                <span class="hljs-comment">// → panic!(&quot;not yet implemented&quot;)</span><br><span class="hljs-built_in">unimplemented!</span>();                       <span class="hljs-comment">// → panic!(&quot;not implemented&quot;)</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="match"><a href="#match" class="headerlink" title="match!"></a><code>match!</code></h2><p><code>match!</code> 简化 <code>match</code> 的语法, 输出布尔值. 给一个变量, 第二个参数用来匹配并做 <code>gaurd</code> 判断:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">x</span> = <span class="hljs-title function_ invoke__">Some</span>(<span class="hljs-number">42</span>);<br><br><span class="hljs-keyword">if</span> matches!(x, <span class="hljs-title function_ invoke__">Some</span>(v) <span class="hljs-keyword">if</span> v &gt; <span class="hljs-number">10</span>) &#123;     <span class="hljs-comment">// 比 match 省 4 行</span><br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;大于 10&quot;</span>);<br>&#125;<br><br><span class="hljs-comment">// 等价于（但可以内联在条件里）</span><br><span class="hljs-keyword">match</span> x &#123;<br>    <span class="hljs-title function_ invoke__">Some</span>(v) <span class="hljs-keyword">if</span> v &gt; <span class="hljs-number">10</span> =&gt; <span class="hljs-literal">true</span>,<br>    _ =&gt; <span class="hljs-literal">false</span>,<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="dbg"><a href="#dbg" class="headerlink" title="dbg!"></a><code>dbg!</code></h2><p><code>dbg!</code> 会打印代码的调用位置信息然后返回值:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">x</span> = dbg!(<span class="hljs-title function_ invoke__">expensive_computation</span>());  <span class="hljs-comment">// 打印 文件:行号 x = 值，然后返回 x</span><br></code></pre></td></tr></table></figure>
+
+<h1 id="有特殊前后缀命名约定的函数"><a href="#有特殊前后缀命名约定的函数" class="headerlink" title="有特殊前后缀命名约定的函数"></a>有特殊前后缀命名约定的函数</h1><p>这类函数通常会在成功&#x2F;失败之后会接着运行一个匿名函数或者设置一个默认值. 主要分下面几类.</p>
+<h2 id="带-or-后缀的函数"><a href="#带-or-后缀的函数" class="headerlink" title="带 _or 后缀的函数"></a>带 <code>_or</code> 后缀的函数</h2><p>带 <code>_or</code> 后缀的函数通常会把原本的 <code>panic</code> 变为 fallback 值</p>
+<p>比如 <code>unwrap</code> 和 <code>unwrap_or</code>. <code>unwrap</code> 在有值时解包, 为 <code>None</code> 时直接触发 <code>panic</code>. 而 <code>unwrap_or</code> 则能在 <code>None</code> 时避免 <code>panic</code>, 用一个默认值代替:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// Option</span><br><span class="hljs-keyword">let</span> <span class="hljs-variable">x</span>: <span class="hljs-type">Option</span>&lt;<span class="hljs-type">i32</span>&gt; = <span class="hljs-title function_ invoke__">Some</span>(<span class="hljs-number">42</span>);<br>x.<span class="hljs-title function_ invoke__">unwrap</span>();             <span class="hljs-comment">// → 42        ✅</span><br><br><span class="hljs-keyword">let</span> <span class="hljs-variable">y</span>: <span class="hljs-type">Option</span>&lt;<span class="hljs-type">i32</span>&gt; = <span class="hljs-literal">None</span>;<br><span class="hljs-comment">// y.unwrap();          // → panic!   ❌ 炸了</span><br>y.<span class="hljs-title function_ invoke__">unwrap_or</span>(<span class="hljs-number">0</span>);         <span class="hljs-comment">// → 0         ✅ 没炸</span><br><br><span class="hljs-comment">// Result — 同理</span><br><span class="hljs-keyword">let</span> <span class="hljs-variable">r</span>: <span class="hljs-type">Result</span>&lt;<span class="hljs-type">i32</span>, &amp;<span class="hljs-type">str</span>&gt; = <span class="hljs-title function_ invoke__">Ok</span>(<span class="hljs-number">42</span>);<br>r.<span class="hljs-title function_ invoke__">unwrap</span>();             <span class="hljs-comment">// → 42        ✅</span><br><br><span class="hljs-keyword">let</span> <span class="hljs-variable">e</span>: <span class="hljs-type">Result</span>&lt;<span class="hljs-type">i32</span>, &amp;<span class="hljs-type">str</span>&gt; = <span class="hljs-title function_ invoke__">Err</span>(<span class="hljs-string">&quot;fail&quot;</span>);<br><span class="hljs-comment">// e.unwrap();          // → panic!   ❌ 炸了，还把 &quot;fail&quot; 这个信息丢了</span><br>e.<span class="hljs-title function_ invoke__">unwrap_or</span>(<span class="hljs-number">0</span>);         <span class="hljs-comment">// → 0         ✅ 没炸，但 &quot;fail&quot; 也丢了</span><br></code></pre></td></tr></table></figure>
+
+<p>另一个例子是 <code>Option/Result</code> 的 <code>map</code> 和 <code>map_or</code> 方法. <code>map</code> 如果遇到 <code>None</code> 则返回 <code>None</code>, 如果想要和平解包, 则需要配合 <code>unwrap_or</code>:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">x</span>: <span class="hljs-type">Option</span>&lt;<span class="hljs-type">i32</span>&gt; = <span class="hljs-literal">None</span>;<br><span class="hljs-comment">// x.map(|n|n*n).unwrap() 会直接 panic</span><br><span class="hljs-keyword">let</span> <span class="hljs-variable">y</span> = x.<span class="hljs-title function_ invoke__">map</span>(|n|n*n).<span class="hljs-title function_ invoke__">unwrap_or</span>(<span class="hljs-number">0</span>); <span class="hljs-comment">// y = 0</span><br></code></pre></td></tr></table></figure>
+
+<p>等价于直接用 <code>map_or</code>:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">y</span> = x.<span class="hljs-title function_ invoke__">map_or</span>(<span class="hljs-number">0</span>, |n|n*n);<br></code></pre></td></tr></table></figure>
+
+<p>两个函数的函数签名分别是:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">map</span>&lt;U, F&gt;(<span class="hljs-keyword">self</span>, f: F) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">Option</span>&lt;U&gt;<br><span class="hljs-keyword">where</span><br>    F: <span class="hljs-title function_ invoke__">FnOnce</span>(T) <span class="hljs-punctuation">-&gt;</span> U,<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">map_or</span>&lt;U, F&gt;(<span class="hljs-keyword">self</span>, default: U, f: F) <span class="hljs-punctuation">-&gt;</span> U<br><span class="hljs-keyword">where</span><br>    F: <span class="hljs-title function_ invoke__">FnOnce</span>(T) <span class="hljs-punctuation">-&gt;</span> U,<br></code></pre></td></tr></table></figure>
+
+<h2 id="带-or-后缀的函数-1"><a href="#带-or-后缀的函数-1" class="headerlink" title="带 or_ 后缀的函数"></a>带 <code>or_</code> 后缀的函数</h2><p><code>or_</code> 前缀的函数同样是在没有值时提供默认值, 与 <code>_or</code> 的区别主要在主操作的位置, 对于:</p>
+<ul>
+<li><code>_or</code>, 比如 <code>unwrap_or</code>, 主操作时 <code>unwrap</code>, 根据该操作决定是否执行 fallback</li>
+<li><code>or_</code>, 比如 <code>scores.entry(&quot;Green&quot;).or_insert(30)</code>, 主操作是 <code>entry</code>, 根据这里的结果决定是否执行 fallback</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">a</span> = <span class="hljs-title function_ invoke__">Some</span>(<span class="hljs-number">1</span>);<br><span class="hljs-keyword">let</span> <span class="hljs-variable">b</span> = <span class="hljs-literal">None</span>;<br><br><span class="hljs-keyword">let</span> <span class="hljs-variable">c</span> = a.<span class="hljs-title function_ invoke__">or</span>(b); <span class="hljs-comment">// Some(1)</span><br><span class="hljs-keyword">let</span> <span class="hljs-variable">d</span> = b.<span class="hljs-title function_ invoke__">or</span>(a); <span class="hljs-comment">// Some(1)</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="带-else-后缀的函数"><a href="#带-else-后缀的函数" class="headerlink" title="带 _else 后缀的函数"></a>带 <code>_else</code> 后缀的函数</h2><p>带 <code>_else</code> 表示惰性, 只有在需要时才会计算:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// 假设这个函数很昂贵</span><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">expensive_computation</span>() <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">i32</span> &#123;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;计算中... 耗时 3 秒&quot;</span>);<br>    <span class="hljs-comment">// 实际中可能是数据库查询、大文件读取</span><br>    <span class="hljs-number">42</span><br>&#125;<br><br><span class="hljs-keyword">let</span> <span class="hljs-variable">x</span>: <span class="hljs-type">Option</span>&lt;<span class="hljs-type">i32</span>&gt; = <span class="hljs-title function_ invoke__">Some</span>(<span class="hljs-number">10</span>);<br><br><span class="hljs-comment">// ❌ unwrap_or：就算不需要，参数也会被求值</span><br>x.<span class="hljs-title function_ invoke__">unwrap_or</span>(<span class="hljs-title function_ invoke__">expensive_computation</span>());<br><span class="hljs-comment">// 输出: 计算中... 耗时 3 秒   ← 白算了！明明 x 是 Some</span><br><br><span class="hljs-comment">// ✅ unwrap_or_else：闭包只在需要时才执行</span><br>x.<span class="hljs-title function_ invoke__">unwrap_or_else</span>(|| <span class="hljs-title function_ invoke__">expensive_computation</span>());<br><span class="hljs-comment">// 没有输出                   ← 只会在 None 时才调用</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="带-and-前缀"><a href="#带-and-前缀" class="headerlink" title="带 and_ 前缀"></a>带 <code>and_</code> 前缀</h2><p>表示在主操作成功后执行:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">x</span>: <span class="hljs-type">Option</span>&lt;<span class="hljs-type">i32</span>&gt; = <span class="hljs-title function_ invoke__">Some</span>(<span class="hljs-number">2</span>);<br><br><span class="hljs-comment">// map：转换值，自动包回 Option</span><br>x.<span class="hljs-title function_ invoke__">map</span>(|v| v * <span class="hljs-number">2</span>);               <span class="hljs-comment">// → Some(4)</span><br><span class="hljs-comment">//       ^^^^^^ 返回 i32，Rust 自动包成 Some(4)</span><br><br><span class="hljs-comment">// and_then：你的函数自己返回 Option，不自动包装</span><br>x.<span class="hljs-title function_ invoke__">and_then</span>(|v| <span class="hljs-keyword">if</span> v &gt; <span class="hljs-number">0</span> &#123; <span class="hljs-title function_ invoke__">Some</span>(v * <span class="hljs-number">2</span>) &#125; <span class="hljs-keyword">else</span> &#123; <span class="hljs-literal">None</span> &#125;);<br></code></pre></td></tr></table></figure>
+
+<p><code>and_then</code> 就像 Haskell 中的 <code>&gt;&gt;=</code> bind 操作, 会自动解包, 但是要自己封装.</p>
+<h1 id="Sized-trait"><a href="#Sized-trait" class="headerlink" title="Sized trait"></a>Sized trait</h1><p><code>Sized</code> 是 Rust 中一个内置 trait, 表示在编译期具有已知的固定大小. 绝大多数类型都会自动实现, 比如下面例子:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// 这些类型都是 Sized 的</span><br><span class="hljs-keyword">let</span> <span class="hljs-variable">x</span>: <span class="hljs-type">i32</span> = <span class="hljs-number">42</span>;           <span class="hljs-comment">// 4 bytes</span><br><span class="hljs-keyword">let</span> <span class="hljs-variable">y</span>: <span class="hljs-type">f64</span> = <span class="hljs-number">3.14</span>;         <span class="hljs-comment">// 8 bytes</span><br><span class="hljs-keyword">let</span> <span class="hljs-variable">z</span>: [<span class="hljs-type">i32</span>; <span class="hljs-number">4</span>] = [<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>,<span class="hljs-number">4</span>]; <span class="hljs-comment">// 4 * 4 = 16 bytes</span><br><span class="hljs-keyword">let</span> <span class="hljs-variable">s</span>: &amp;<span class="hljs-type">str</span> = <span class="hljs-string">&quot;hello&quot;</span>;     <span class="hljs-comment">// &amp;str 是指针，16 bytes (pointer + length)</span><br></code></pre></td></tr></table></figure>
+
+<p>Dynamically Sized Typed 都是编译期大小不确定的, 因此是 <code>!Sized</code>, 比如:</p>
+<ul>
+<li><code>str</code>, 字符串切片 (<code>&amp;str</code> 是指针, 因此大小是确定的)</li>
+<li><code>[T]</code>, 切片 (同理 <code>&amp;[T]</code> 是指针, 大小确定)</li>
+<li><code>dyn Trait</code>, 堆上分配, 大小不确定</li>
+</ul>
+<p>在编写泛型函数时, 编译器会自动添加 <code>Sized</code> 约束, 比如:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">foo</span>&lt;T&gt;(x: T) &#123; &#125;<br></code></pre></td></tr></table></figure>
+
+<p>实际上会变为:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">foo</span>&lt;T: <span class="hljs-built_in">Sized</span>&gt;(x: T) &#123; &#125;<br></code></pre></td></tr></table></figure>
+
+<p>对于 <code>Sized</code> 有一个特殊的取消约束语法 <code>?Sized</code>, 意思是 “<code>T</code> 即可以是 <code>Sized</code> 也可以是 <code>!Sized</code>“, 让函数取消默认的约束, 以接受 DST 类型:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">foo</span>&lt;T: ?<span class="hljs-built_in">Sized</span>&gt;(x: T) &#123; &#125;<br></code></pre></td></tr></table></figure>
+
+<p>需要注意栈上的变量都需要是 Sized, 因此在函数内给变量赋值时, 如果传递的是非 Sized 的值, 就无法通过编译, 比如:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">arr</span>: [<span class="hljs-type">i32</span>; <span class="hljs-number">4</span>] = [<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>,<span class="hljs-number">4</span>];<br><span class="hljs-keyword">let</span> <span class="hljs-variable">slice</span> = arr[<span class="hljs-number">1</span>..<span class="hljs-number">3</span>];<br></code></pre></td></tr></table></figure>
+
+<h1 id="数组-x2F-切片常用方法"><a href="#数组-x2F-切片常用方法" class="headerlink" title="数组&#x2F;切片常用方法"></a>数组&#x2F;切片常用方法</h1><p>Array 本身是固定长度的 <code>[T; N]</code>, 可用方法不太多. 但大多数场景下可以转为 Slick <code>&amp;[T]/&amp;mut [T]</code>.</p>
+<h2 id="获取长度-x2F-总字节数"><a href="#获取长度-x2F-总字节数" class="headerlink" title="获取长度&#x2F;总字节数"></a>获取长度&#x2F;总字节数</h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">a</span> = [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>];<br><br><span class="hljs-keyword">let</span> <span class="hljs-variable">len</span> = a.<span class="hljs-title function_ invoke__">len</span>();<br><br><span class="hljs-keyword">let</span> <span class="hljs-variable">size</span> = a.<span class="hljs-title function_ invoke__">size</span>();<br></code></pre></td></tr></table></figure>
+
+<h2 id="安全访问"><a href="#安全访问" class="headerlink" title="安全访问"></a>安全访问</h2><p>直接用下标访问可能会越界导致 panic:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">x</span> = a[<span class="hljs-number">100</span>]<br></code></pre></td></tr></table></figure>
+
+<p>用 <code>get</code> 方法返回 <code>Option</code> 可以安全访问:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">if</span> <span class="hljs-keyword">let</span> <span class="hljs-variable">Some</span>(x) = a.<span class="hljs-title function_ invoke__">get</span>(<span class="hljs-number">100</span>) &#123;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;&#125;&quot;</span>, x);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="遍历"><a href="#遍历" class="headerlink" title="遍历"></a>遍历</h2><p>在 Rust 中 <code>for</code> 循环的本质是把一个值交给 <code>IntoIterator</code>, 之后不断调用 <code>next()</code></p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">for</span> <span class="hljs-variable">v</span> <span class="hljs-keyword">in</span> expr &#123;<br>    body<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>等价于:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">iter</span> = <span class="hljs-built_in">IntoIterator</span>::<span class="hljs-title function_ invoke__">into_iter</span>(expr);<br><span class="hljs-keyword">loop</span> &#123;<br>    <span class="hljs-keyword">match</span> iter.<span class="hljs-title function_ invoke__">next</span>() &#123;<br>        <span class="hljs-title function_ invoke__">Some</span>(v) =&gt; &#123; body &#125;,<br>        <span class="hljs-literal">None</span> =&gt; <span class="hljs-keyword">break</span>,<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>通常有 3 种遍历方式:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">for</span> <span class="hljs-variable">v</span> <span class="hljs-keyword">in</span> &amp;a<br></code></pre></td></tr></table></figure>
+<p>本质上会先调用 <code>&lt;&amp;[i32; 3] as IntoIterator&gt;::into_iter(&amp;a)</code> 来得到一个迭代器, 每次取一个引用.</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">for</span> <span class="hljs-variable">v</span> <span class="hljs-keyword">in</span> a<br></code></pre></td></tr></table></figure>
+<p>会调用 &lt;[i32; 3] as IntoIterator&gt;::into_iter(a), 遍历的值会被 <code>move</code> 消费.</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">for</span> <span class="hljs-variable">v</span> <span class="hljs-keyword">in</span> a.<span class="hljs-title function_ invoke__">iter</span>()<br></code></pre></td></tr></table></figure>
+<p>会得到一个 <code>std::slice::Iter&lt;&#39;_, T&gt;</code> 的迭代器, 同样取引用.</p>
+<h1 id="Fat-Pointer"><a href="#Fat-Pointer" class="headerlink" title="Fat Pointer"></a>Fat Pointer</h1><p>Fat Pointer (胖指针) 区别于普通 thin pointer:</p>
 <ul>
 <li>Thin Pointer 只包含一个内存地址</li>
 <li>Fat Pointer 除了包含内存地址, 还额外携带了一份元数据</li>
@@ -738,7 +1020,7 @@ path.outline_glyph {
 <h2 id="通过索引访问元素"><a href="#通过索引访问元素" class="headerlink" title="通过索引访问元素"></a>通过索引访问元素</h2><p>只能用 <code>.get(index)</code> 方法访问元素, 最好用 <code>deque[0]</code> 这种语法, 可能会越界.</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">if</span> <span class="hljs-keyword">let</span> <span class="hljs-variable">Some</span>(value) = deque.<span class="hljs-title function_ invoke__">get</span>(<span class="hljs-number">0</span>) &#123;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;First element: &#123;&#125;&quot;</span>, value);<br>&#125; <span class="hljs-keyword">else</span> &#123;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Index out of bounds&quot;</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
 
-<h2 id="遍历"><a href="#遍历" class="headerlink" title="遍历"></a>遍历</h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">for</span> <span class="hljs-variable">item</span> <span class="hljs-keyword">in</span> &amp;deque &#123;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;&#125;&quot;</span>, item);<br>&#125;<br><br><span class="hljs-comment">// 如果需要可变遍历</span><br><span class="hljs-keyword">for</span> <span class="hljs-variable">item</span> <span class="hljs-keyword">in</span> &amp;<span class="hljs-keyword">mut</span> deque &#123;<br>    *item *= <span class="hljs-number">2</span>; <span class="hljs-comment">// 每个元素乘以 2</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="遍历-1"><a href="#遍历-1" class="headerlink" title="遍历"></a>遍历</h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">for</span> <span class="hljs-variable">item</span> <span class="hljs-keyword">in</span> &amp;deque &#123;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;&#125;&quot;</span>, item);<br>&#125;<br><br><span class="hljs-comment">// 如果需要可变遍历</span><br><span class="hljs-keyword">for</span> <span class="hljs-variable">item</span> <span class="hljs-keyword">in</span> &amp;<span class="hljs-keyword">mut</span> deque &#123;<br>    *item *= <span class="hljs-number">2</span>; <span class="hljs-comment">// 每个元素乘以 2</span><br>&#125;<br></code></pre></td></tr></table></figure>
 
 <h2 id="其他常用方法"><a href="#其他常用方法" class="headerlink" title="其他常用方法"></a>其他常用方法</h2><ul>
 <li><code>len()</code>, 返回元素个数</li>

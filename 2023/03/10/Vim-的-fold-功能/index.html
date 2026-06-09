@@ -16,17 +16,22 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="参考 Youtube fold 操作都以 z 开头的原因, 因为 z 字母看起来向折叠的纸张. 查看当前的 foldmethod, 在普通模式下输入: 1:set fdm  在 visual 模式下 fold 选中的行首先设置 :set foldmethod&#x3D;manual. 用 visual 模式选中行后按 zf (create fold) 则可 fold 选中的行. fold 基本操作按 zo">
+    <meta name="description" content="参考 Youtube fold 操作都以 z 开头的原因, 因为 z 字母看起来向折叠的纸张. 查看当前的 foldmethod, 在普通模式下输入: 1:set fdm  foldmethodmanual: 在 visual 模式下 fold 选中的行设置 :set foldmethod&#x3D;manual, 即自己手动选择要 fold 那些内容. 用 visual 模式选中行后按 zf (creat">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Vim-的-fold-功能">
 <meta property="og:url" content="http://example.com/2023/03/10/Vim-%E7%9A%84-fold-%E5%8A%9F%E8%83%BD/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="参考 Youtube fold 操作都以 z 开头的原因, 因为 z 字母看起来向折叠的纸张. 查看当前的 foldmethod, 在普通模式下输入: 1:set fdm  在 visual 模式下 fold 选中的行首先设置 :set foldmethod&#x3D;manual. 用 visual 模式选中行后按 zf (create fold) 则可 fold 选中的行. fold 基本操作按 zo">
+<meta property="og:description" content="参考 Youtube fold 操作都以 z 开头的原因, 因为 z 字母看起来向折叠的纸张. 查看当前的 foldmethod, 在普通模式下输入: 1:set fdm  foldmethodmanual: 在 visual 模式下 fold 选中的行设置 :set foldmethod&#x3D;manual, 即自己手动选择要 fold 那些内容. 用 visual 模式选中行后按 zf (creat">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/vim-fold-method-indent-example.png">
+<meta property="og:image" content="http://example.com/img/vim-fold-method-expr-example.png">
+<meta property="og:image" content="http://example.com/img/vim-fold-method-marker-example.png">
+<meta property="og:image" content="http://example.com/img/vim-fold-method-marker-example2.png">
 <meta property="article:published_time" content="2023-03-10T10:32:46.000Z">
-<meta property="article:modified_time" content="2023-03-10T12:35:23.128Z">
+<meta property="article:modified_time" content="2026-04-30T04:48:04.052Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/vim-fold-method-indent-example.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -437,7 +442,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          805 字
+          1.8k 字
         
       </span>
     
@@ -448,7 +453,7 @@ path.outline_glyph {
         
         
         
-          7 分钟
+          16 分钟
         
       </span>
     
@@ -496,8 +501,47 @@ path.outline_glyph {
 <p>查看当前的 <code>foldmethod</code>, 在普通模式下输入:</p>
 <figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs vim">:<span class="hljs-keyword">set</span> fdm<br></code></pre></td></tr></table></figure>
 
-<h1 id="在-visual-模式下-fold-选中的行"><a href="#在-visual-模式下-fold-选中的行" class="headerlink" title="在 visual 模式下 fold 选中的行"></a>在 visual 模式下 fold 选中的行</h1><p>首先设置 <code>:set foldmethod=manual</code>.</p>
+<h1 id="foldmethod"><a href="#foldmethod" class="headerlink" title="foldmethod"></a>foldmethod</h1><h2 id="manual-在-visual-模式下-fold-选中的行"><a href="#manual-在-visual-模式下-fold-选中的行" class="headerlink" title="manual: 在 visual 模式下 fold 选中的行"></a>manual: 在 visual 模式下 fold 选中的行</h2><p>设置 <code>:set foldmethod=manual</code>, 即自己手动选择要 fold 那些内容.</p>
 <p>用 visual 模式选中行后按 <code>zf</code> (create fold) 则可 fold 选中的行.</p>
+<p>如果 <code>set</code> 失败, 大概率是某个地方设置了 <code>autogroup</code> 导致的, 可以用 <code>:verbose set foldmethod?</code> 来定位.</p>
+<h2 id="indent-相同-indent-的行属于同一个-fold"><a href="#indent-相同-indent-的行属于同一个-fold" class="headerlink" title="indent: 相同 indent 的行属于同一个 fold"></a>indent: 相同 indent 的行属于同一个 fold</h2><p>设置 <code>:set foldmethod=indent</code>.</p>
+<p><img src="/../img/vim-fold-method-indent-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>需要注意几点:</p>
+<ul>
+<li>Vim 会检查 <code>shiftwidth</code> 来知道至少需要比上一个层级多几个 space 才能进行折叠. 比如上述示例就需要设置 <code>shiftwidth=2</code>.</li>
+<li>有相同 leading space 的相邻行会视为一个 block, 最外层的 block 不会被折叠.</li>
+<li>如果下一个 block 只有一行, 那也不会折叠</li>
+</ul>
+<h2 id="expr-自定义-expression-来匹配一个-fold"><a href="#expr-自定义-expression-来匹配一个-fold" class="headerlink" title="expr: 自定义 expression 来匹配一个 fold"></a>expr: 自定义 expression 来匹配一个 fold</h2><p>设置 <code>:set foldmethod=expr</code>.</p>
+<p>在定义了 fold expressions 之后, vim 会扫描每一行并执行 <code>foldexpr</code> 变量保存的函数, 其返回值决定是否折叠:</p>
+<ul>
+<li>如果为 <code>0</code>, 则不 fold</li>
+<li>如果为 <code>1</code>, 则该行的 foldlevel 为 <code>1</code></li>
+<li>如果为 <code>2</code>, 则该行的 foldlevel 为 <code>2</code></li>
+<li>除了 integer 外还有其他可能值, 具体看 <code>:h fold-expr</code></li>
+</ul>
+<p>比如想要折叠以 <code>m</code> 开头的行, 可以这样设置:</p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs vim">:<span class="hljs-keyword">set</span> foldexpr=<span class="hljs-built_in">getline</span>(<span class="hljs-variable">v:lnum</span>)[<span class="hljs-number">0</span>]==\\<span class="hljs-string">&quot;m\\&quot;</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>在 vim 中, <code>true</code> 等价于 <code>1</code>; <code>false</code> 等价于 <code>0</code></li>
+</ul>
+<p><img src="/../img/vim-fold-method-expr-example.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="marker-手动标记-fold"><a href="#marker-手动标记-fold" class="headerlink" title="marker: 手动标记 fold"></a>marker: 手动标记 fold</h2><p>设置 <code>:set foldmethod=marker</code>.</p>
+<p>示例:<br><img src="/../img/vim-fold-method-marker-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>默认的 <code>marker</code> 就是 <code>&#123;&#123;&#123;` 和 `&#125;&#125;&#125;</code>, 也可以用 <code>foldmarker</code> 来设置, 比如 <code>set foldmarker=+++,---</code>:</p>
+<p><img src="/../img/vim-fold-method-marker-example2.png" srcset="/img/loading.gif" lazyload></p>
+<h1 id="foldlevel"><a href="#foldlevel" class="headerlink" title="foldlevel"></a>foldlevel</h1><p><code>foldlevel</code> 表示 fold 嵌套的深度, 每一行都有一个 <code>foldlevel</code>, 可以用:</p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs vim">:<span class="hljs-keyword">echo</span> <span class="hljs-built_in">foldlevel</span>(line_nun)<br></code></pre></td></tr></table></figure>
+<p>来获取某一行所处的 foldlevel.</p>
+<p>可以想象为目录:</p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs vim">/               <span class="hljs-built_in">foldlevel</span> <span class="hljs-number">0</span><br>├── src/        <span class="hljs-built_in">foldlevel</span> <span class="hljs-number">1</span><br>│   └── util/   <span class="hljs-built_in">foldlevel</span> <span class="hljs-number">2</span><br>└── test/       <span class="hljs-built_in">foldlevel</span> <span class="hljs-number">1</span><br></code></pre></td></tr></table></figure>
+
+<p>设置全局变量 <code>foldlevel</code> 如:</p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs vim">:<span class="hljs-keyword">set</span> <span class="hljs-built_in">foldlevel</span>=<span class="hljs-number">1</span><br></code></pre></td></tr></table></figure>
+<p>意思是立刻让所有 <code>foldlevel&gt;1</code> 的行都进行折叠, 注意这是一个动作.</p>
+<p>因此打开所有的 fold 可以用:</p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs vim">:<span class="hljs-keyword">set</span> <span class="hljs-built_in">foldlevel</span>=<span class="hljs-number">99</span><br></code></pre></td></tr></table></figure>
+
 <h1 id="fold-基本操作"><a href="#fold-基本操作" class="headerlink" title="fold 基本操作"></a>fold 基本操作</h1><p>按 <code>zo</code> (open fold) 可以<mark>打开 fold</mark> 的文本.</p>
 <p>按 <code>zc</code> (close fold) 可以<mark>关闭 fold</mark></p>
 <p>一般情况下 fold 在你退出后不会保存, 若要<mark>保存</mark>可运行 <code>:mkview</code></p>
@@ -514,7 +558,7 @@ path.outline_glyph {
 <p>(<code>+10</code> 也就是行号 <code>+10</code>)</p>
 <p>fold 一对 <code>&#123;&#125;</code> 的内容, 按 <code>zfa&#123;</code> (fold text in <code>&#123;&#125;</code>)</p>
 <p><code>a</code> 这个描述对于很多动词都管用. (和 <code>i</code> 类似)</p>
-<h1 id="对整个文件的-fold-操作"><a href="#对整个文件的-fold-操作" class="headerlink" title="对整个文件的 fold 操作"></a>对整个文件的 fold 操作</h1><p><code>zn</code>, 打开所有的 fold.</p>
+<h2 id="对整个文件的-fold-操作"><a href="#对整个文件的-fold-操作" class="headerlink" title="对整个文件的 fold 操作"></a>对整个文件的 fold 操作</h2><p><code>zn</code>, 打开所有的 fold.</p>
 <p><code>zN</code>, 所有 fold 回到原来的状态.</p>
 <p>打开一个范围的 fold, 如:</p>
 <figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs vim"><span class="hljs-number">86</span>, <span class="hljs-number">136</span> <span class="hljs-keyword">foldopen</span><br></code></pre></td></tr></table></figure>
@@ -522,12 +566,12 @@ path.outline_glyph {
 <p><code>zE</code> 去除文件内的所有欧 folds.</p>
 <p><code>zr</code> (reduce all folds one level), 也就是都打开一层</p>
 <p><code>zR</code> 打开所有 folds.</p>
-<p><code>zm</code> (fold up all folds one level)</p>
-<p><code>zM</code></p>
-<h1 id="跳转-fold"><a href="#跳转-fold" class="headerlink" title="跳转 fold"></a>跳转 fold</h1><p><code>zj</code> 跳转到下一个 fold.</p>
+<p><code>zm</code> (fold up all folds one level), 放 <code>foldlevel</code> 减小 <code>1</code>.</p>
+<p><code>zM</code> 关闭所有 folds (就是让 fold 起作用), 本质上是设置 <code>foldlevel</code> 为 <code>0</code>.</p>
+<h2 id="跳转-fold"><a href="#跳转-fold" class="headerlink" title="跳转 fold"></a>跳转 fold</h2><p><code>zj</code> 跳转到下一个 fold.</p>
 <p><code>[z</code> 跳转到当前 fold 的第一行.</p>
 <p><code>]z</code> 跳转到当前 fold 的最后一行.</p>
-<h1 id="嵌套-folds"><a href="#嵌套-folds" class="headerlink" title="嵌套 folds"></a>嵌套 folds</h1><p><code>zC</code>, 关闭当前 fold 以及所有其内部嵌套的 folds.</p>
+<h2 id="嵌套-folds"><a href="#嵌套-folds" class="headerlink" title="嵌套 folds"></a>嵌套 folds</h2><p><code>zC</code>, 关闭当前 fold 以及所有其内部嵌套的 folds.</p>
 <p><code>zO</code>, 打开当前 fold 以及所有其内部嵌套的 folds.</p>
 <p><code>zA</code>, <code>zC</code> 和 <code>zO</code> 的 toggle.</p>
 
