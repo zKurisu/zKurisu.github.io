@@ -1,0 +1,1063 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/wallhaven-j5kjgy_1920x1080.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Jie">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="Rust 语言圣经中 async 部分 介绍先区分一下一般意义上的同步和异步:  同步: 在线程阻塞时 (block), OS 会把它挂起, 直到 I&#x2F;O 完成. 这个线程完全占着 CPU 但什么都不干 异步: 线程发起 I&#x2F;O 请求后就返回, 继续处理下一个任务. 当 I&#x2F;O 好了再回来收尾 (I&#x2F;O 结束后会发起中断)  异步的好处就在于等待期间可以执行">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Rust-async">
+<meta property="og:url" content="http://example.com/2026/06/10/Rust-async/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="Rust 语言圣经中 async 部分 介绍先区分一下一般意义上的同步和异步:  同步: 在线程阻塞时 (block), OS 会把它挂起, 直到 I&#x2F;O 完成. 这个线程完全占着 CPU 但什么都不干 异步: 线程发起 I&#x2F;O 请求后就返回, 继续处理下一个任务. 当 I&#x2F;O 好了再回来收尾 (I&#x2F;O 结束后会发起中断)  异步的好处就在于等待期间可以执行">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-06-10T00:13:55.000Z">
+<meta property="article:modified_time" content="2026-06-10T06:12:33.842Z">
+<meta property="article:author" content="Jie">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>Rust-async - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<!-- hexo injector head_end start --><style>.typst-app {
+  margin: 0;
+  --typst-dom-scale: 1;
+  /* --typst-dom-scale: 1.5; */
+  margin: 5px;
+}
+
+.typst-dom-page {
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  --data-text-width: calc(1px * var(--typst-dom-scale));
+  --data-text-height: calc(1px * var(--typst-dom-scale));
+}
+
+.typst-back-canvas {
+  position: absolute;
+  z-index: -1;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  pointer-events: none;
+}
+
+.typst-svg-page {
+  position: absolute;
+  z-index: 0;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+}
+
+.typst-html-semantics {
+  position: absolute;
+  z-index: 2;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  color: transparent;
+  font-family: monospace;
+  white-space: pre;
+  opacity: 0.62;
+}
+
+.typst-html-semantics span {
+  color: transparent;
+  font-family: monospace;
+  transform-origin: left top;
+  position: absolute;
+  display: inline-block;
+  left: 0;
+  top: 0;
+}
+
+.typst-content-hint {
+  position: absolute;
+  display: inline-block;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.typst-html-semantics a {
+  position: absolute;
+  display: inline-block;
+}
+
+/* set transparent itself */
+.typst-content-group {
+  pointer-events: visible;
+}
+
+.typst-html-semantics span::-moz-selection {
+  color: transparent;
+  background: #7db9de;
+}
+
+.typst-html-semantics span::selection {
+  color: transparent;
+  background: #7db9de;
+}
+
+.typst-html-semantics *::-moz-selection {
+  color: transparent;
+  background: transparent;
+}
+
+.typst-html-semantics *::selection {
+  color: transparent;
+  background: transparent;
+}
+
+.typst-content-fallback {
+  color: transparent;
+  background: transparent;
+}
+
+.pseudo-link,
+.typst-text {
+  pointer-events: none;
+}
+
+.tsel span,
+.tsel {
+  left: 0;
+  position: fixed;
+  text-align: justify;
+  white-space: pre;
+  width: 100%;
+  height: 100%;
+  text-align-last: justify;
+  color: transparent;
+}
+.tsel span::-moz-selection,
+.tsel::-moz-selection {
+  color: transparent;
+  background: #7db9dea0;
+}
+.tsel span::selection,
+.tsel::selection {
+  color: transparent;
+  background: #7db9dea0;
+}
+.pseudo-link {
+  fill: transparent;
+  cursor: pointer;
+  pointer-events: all;
+}
+svg {
+  fill: none;
+}
+
+.outline_glyph path,
+path.outline_glyph {
+  fill: var(--glyph_fill);
+  stroke: var(--glyph_stroke);
+}
+
+.outline_glyph path,
+path.outline_glyph {
+  transition: 0.2s fill stroke;
+}
+.hover .typst-text {
+  --glyph_fill: #66bab7;
+  --glyph_stroke: #66bab7;
+}
+
+.typst-jump-ripple,
+.typst-debug-react-ripple {
+  width: 0;
+  height: 0;
+  background-color: transparent;
+  position: absolute;
+  border-radius: 50%;
+}
+.typst-jump-ripple {
+  border: 1px solid #66bab7;
+}
+.typst-debug-react-ripple {
+  border: 1px solid #cb1b45;
+}
+@keyframes typst-jump-ripple-effect {
+  to {
+    width: 10vw;
+    height: 10vw;
+    opacity: 0.01;
+    margin: -5vw;
+  }
+}
+@keyframes typst-debug-react-ripple-effect {
+  to {
+    width: 3vw;
+    height: 3vw;
+    opacity: 0.01;
+    margin: -1.5vw;
+  }
+}
+</style>
+<script>/// https://segmentfault.com/a/1190000016574288
+(function () {
+  var ie = !!(window.attachEvent && !window.opera);
+  var wk = /webkit\/(\d+)/i.test(navigator.userAgent) && RegExp.$1 < 525;
+  var fn = [];
+  var run = function () {
+    for (var i = 0; i < fn.length; i++) fn[i]();
+  };
+  var d = document;
+  d.ready = function (f) {
+    if (!ie && !wk && d.addEventListener) return d.addEventListener('DOMContentLoaded', f, false);
+    if (fn.push(f) > 1) return;
+    if (ie)
+      (function () {
+        try {
+          d.documentElement.doScroll('left');
+          run();
+        } catch (err) {
+          setTimeout(arguments.callee, 0);
+        }
+      })();
+    else if (wk)
+      var t = setInterval(function () {
+        if (/^(loaded|complete)$/.test(d.readyState)) clearInterval(t), run();
+      }, 0);
+  };
+})();
+</script>
+<script type="module" src="/typst/typst-main.js"></script><script src="/typst/svg-utils.js"></script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Jie</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/SteinsGate_all.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Rust-async"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-06-10 08:13" pubdate>
+          2026年6月10日 早上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          11k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          93 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">Rust-async</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p><a target="_blank" rel="noopener" href="https://course.j4cka.cc/advance/async/getting-started">Rust 语言圣经中 async 部分</a></p>
+<h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>先区分一下一般意义上的同步和异步:</p>
+<ul>
+<li>同步: 在线程阻塞时 (block), OS 会把它挂起, 直到 I&#x2F;O 完成. 这个线程完全占着 CPU 但什么都不干</li>
+<li>异步: 线程发起 I&#x2F;O 请求后就返回, 继续处理下一个任务. 当 I&#x2F;O 好了再回来收尾 (I&#x2F;O 结束后会发起中断)</li>
+</ul>
+<p>异步的好处就在于等待期间可以执行代码的其他部分, 不浪费 CPU.</p>
+<p>异步编程是一种并发编程模型, 比如 1000 个 I&#x2F;O 任务, 每启动一个 I&#x2F;O 之后就会立刻进行下一个 I&#x2F;O 任务的启动, 而不是等待一个 I&#x2F;O 结束后才启动下一个, 直观上就像所有 I&#x2F;O 一起启动了一样.</p>
+<p>Rust 中的异步由 <code>async/await</code> 关键字提供.</p>
+<h1 id="async-vs-多线程"><a href="#async-vs-多线程" class="headerlink" title="async vs 多线程"></a>async vs 多线程</h1><p>对于 CPU 密集型任务, 推荐使用多线程模型 (并行). 而对于 I&#x2F;O 密集型任务 (比如 Web 服务器, 数据库连接等网络服务), 则推荐使用高并发模型 (线程的切换开销很大, 当需要频繁切换上下文时选择并发模型更好).</p>
+<p>本质上, <code>async</code> 底层也是基于线程实现的, 但是它基于线程封装了一个运行时, 可以将多个任务映射到少量线程上, 然后将线程切换变成了任务切换, 后者仅仅是内存中的访问, 因此要高效很多.</p>
+<p><code>async</code> 的一个缺点在于, 编译器会为 <code>async</code> 函数生成状态机, 然后将整个运行时打包进来, 这会造成编译出的二进制可执行文件体积显著增大.</p>
+<h1 id="相关概念"><a href="#相关概念" class="headerlink" title="相关概念"></a>相关概念</h1><h2 id="什么是-Runtime"><a href="#什么是-Runtime" class="headerlink" title="什么是 Runtime"></a>什么是 Runtime</h2><p>这里解释一个术语 Runtime, 经常在很多地方看到, 都感觉比较让人困惑 (感觉很抽象).</p>
+<p>Runtime 表示: 为程序运行提供基本的环境 (程序在运行期间必须存在的支持环境).</p>
+<p>比如 C 语言的 runtime, 我们有一段 Hello World 代码:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span> &#123;<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;hello\n&quot;</span>);<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>编译时, 还会链接 <code>crt0.o</code> (C RunTime), 其会进行栈和堆初始化, 命令行参数解析, 程序退出清理, <code>atexit</code> 注册的回调执行等等. 这些就是一个 C 程序运行所必须的环境.</p>
+<p>Async 的 Runtime 通常需要管理三个部分:</p>
+<ul>
+<li>Executor (执行器), 持有任务队列, 决定下一个执行哪个 task</li>
+<li>Reactor (反应器), 监控 OS 的 epoll&#x2F;kqueue&#x2F;IOCP 等, 哪个 socket 有数据或者哪个定时器到期了, 就让 Waker 通知 Executor</li>
+<li>Timer (定时器), 管理 sleep, timeout 等, 到时间就叫醒对应 task</li>
+</ul>
+<p>需要注意, 由于 <code>async</code> 的底层实现非常复杂, Rust 没有选择像 Go 语言那样内置完整的特性和运行时, 而是在语言中仅提供必要的特性支持, 然后通过社区来提供 <code>async</code> 的 runtime 支持. 因此, 如果要完整使用 <code>async</code> 异步编程, 需要依赖下面特性和外部库:</p>
+<ul>
+<li>所必须的 trait (如 <code>Future</code>), 类型和函数, 由标准库提供实现</li>
+<li>关键字 <code>async/await</code> 由 Rust 编译器提供支持</li>
+<li>实用函数, 类型和宏由官方开发的 <code>futures</code> 包提供 (不是标准库)</li>
+<li><code>async</code> 代码的执行, IO 操作, 任务创建和复杂调度等复杂特性由社区的 <code>async</code> runtime 提供, 如 <code>tokio</code> 和 <code>async-std</code></li>
+</ul>
+<h2 id="Future"><a href="#Future" class="headerlink" title="Future"></a>Future</h2><p><code>Future</code> 这个词在异步的语境下, 表示: 一个尚未计算出的值, 未来某个时刻会就绪.</p>
+<p>在 <code>std::future</code> 内的定义如下:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">pub</span> <span class="hljs-keyword">trait</span> <span class="hljs-title class_">Future</span> &#123;<br>    <span class="hljs-keyword">type</span> <span class="hljs-title class_">Output</span>;  <span class="hljs-comment">// 最终产出的类型</span><br><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">poll</span>(<span class="hljs-keyword">self</span>: Pin&lt;&amp;<span class="hljs-keyword">mut</span> <span class="hljs-keyword">Self</span>&gt;, cx: &amp;<span class="hljs-keyword">mut</span> Context&lt;<span class="hljs-symbol">&#x27;_</span>&gt;) <span class="hljs-punctuation">-&gt;</span> Poll&lt;<span class="hljs-keyword">Self</span>::Output&gt;;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>(<code>poll</code>, <code>Pin</code>, <code>Context</code> 这些概念先看后文)</p>
+<h2 id="Poll"><a href="#Poll" class="headerlink" title="Poll"></a>Poll</h2><p><code>Poll</code> 字面意思是 “轮询”, 询问一下 “好了没”, 如果好了, 则取出结果; 如果没好, 则下一次再进行询问. 定义如下:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">pub</span> <span class="hljs-keyword">enum</span> <span class="hljs-title class_">Poll</span>&lt;T&gt; &#123;<br>    Ready&lt;T&gt;, <span class="hljs-comment">// &quot;好了! 这是结果&quot;</span><br>    Pending,  <span class="hljs-comment">// &quot;还没好, 下次再来问&quot;</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>Runtime 会不断 Poll 一个 Future:</p>
+<ul>
+<li>如果返回 <code>Ready</code>, 则表示任务完成, 把结果交给调用方</li>
+<li>如果返回 <code>Pending</code>, 则去 poll 下一个任务</li>
+</ul>
+<h2 id="Waker"><a href="#Waker" class="headerlink" title="Waker"></a>Waker</h2><p><code>Wake</code> 意思是 “唤醒”, 而 <code>Waker</code> 则代表 “用来唤醒的东西”. <code>Waker</code> 在 async 的语境下表示: 一个用来通知 runtime “该重新 poll 这个 task” 的令牌.</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">pub</span> <span class="hljs-keyword">struct</span> <span class="hljs-title class_">Waker</span> &#123; <span class="hljs-comment">/* 内部: RawWaker */</span> &#125;<br><span class="hljs-keyword">impl</span> <span class="hljs-title class_">Waker</span> &#123;<br>    <span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">wake</span>(<span class="hljs-keyword">self</span>) &#123; ... &#125;        <span class="hljs-comment">// 消耗自己，唤醒一次</span><br>    <span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">wake_by_ref</span>(&amp;<span class="hljs-keyword">self</span>) &#123; ... &#125; <span class="hljs-comment">// 借用，唤醒一次</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="Pin"><a href="#Pin" class="headerlink" title="Pin"></a>Pin</h2><p><code>Pin</code> 字面意思就是 “钉住”. 需要这个东西的原因是 Rust 内存安全里的一个漏洞: 自引用结构体.</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">struct</span> <span class="hljs-title class_">SelfReferential</span> &#123;<br>    value: <span class="hljs-type">String</span>,<br>    <span class="hljs-comment">// 指针指向 value —— 如果 value 被 move 了，这个指针就悬垂了！</span><br>    ptr: *<span class="hljs-keyword">const</span> <span class="hljs-type">String</span>,<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><code>Pin&lt;P&gt;</code> 能保证: 被包裹的值, 永远不会再被移动到别的地址.</p>
+<p>一个示例:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::pin::Pin;<br><span class="hljs-keyword">use</span> std::marker::PhantomPinned;<br><br><span class="hljs-keyword">struct</span> <span class="hljs-title class_">SelfReferential</span> &#123;<br>    value: <span class="hljs-type">String</span>,<br>    pointer: *<span class="hljs-keyword">const</span> <span class="hljs-type">String</span>,<br>    _marker: PhantomPinned,<br>&#125;<br><br><span class="hljs-keyword">impl</span> <span class="hljs-title class_">SelfReferential</span> &#123;<br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">new</span>(value: <span class="hljs-type">String</span>) <span class="hljs-punctuation">-&gt;</span> Pin&lt;<span class="hljs-type">Box</span>&lt;<span class="hljs-keyword">Self</span>&gt;&gt; &#123;<br>        <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">s</span> = <span class="hljs-type">Box</span>::<span class="hljs-title function_ invoke__">pin</span>(<span class="hljs-keyword">Self</span> &#123;<br>            value,<br>            pointer: std::ptr::<span class="hljs-title function_ invoke__">null</span>(),<br>            _marker: PhantomPinned,<br>        &#125;);<br><br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">ptr</span> = &amp;s.value <span class="hljs-keyword">as</span> *<span class="hljs-keyword">const</span> <span class="hljs-type">String</span>;<br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">this</span> = <span class="hljs-keyword">unsafe</span> &#123; s.<span class="hljs-title function_ invoke__">as_mut</span>().<span class="hljs-title function_ invoke__">get_unchecked_mut</span>() &#125;;<br>        this.pointer = ptr;<br><br>        s<br>    &#125;<br><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">value</span>(&amp;<span class="hljs-keyword">self</span>) <span class="hljs-punctuation">-&gt;</span> &amp;<span class="hljs-type">str</span> &#123;<br>        &amp;<span class="hljs-keyword">self</span>.value<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>_marker: PhantomPinned</code> 会告诉编译器, 这个类型 “不能被随意移动”</li>
+</ul>
+<h3 id="Unpin"><a href="#Unpin" class="headerlink" title="Unpin"></a>Unpin</h3><p>与 <code>Pin</code> 相对, <code>Unpin</code> 表示可以安全移动的类型:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// 大多数类型都是 Unpin 的</span><br><span class="hljs-keyword">let</span> <span class="hljs-variable">x</span>: <span class="hljs-type">i32</span> = <span class="hljs-number">42</span>;           <span class="hljs-comment">// i32: Unpin ✓</span><br><span class="hljs-keyword">let</span> <span class="hljs-variable">s</span>: <span class="hljs-type">String</span> = <span class="hljs-string">&quot;hi&quot;</span>.<span class="hljs-title function_ invoke__">into</span>(); <span class="hljs-comment">// String: Unpin ✓</span><br><span class="hljs-keyword">let</span> <span class="hljs-variable">v</span>: <span class="hljs-type">Vec</span>&lt;<span class="hljs-type">u8</span>&gt; = <span class="hljs-built_in">vec!</span>[<span class="hljs-number">1</span>];   <span class="hljs-comment">// Vec&lt;u8&gt;: Unpin ✓</span><br></code></pre></td></tr></table></figure>
+
+<p>需要注意: <code>!Unpin</code> 的类型必须在 <code>Pin</code> 包裹下才能被 poll.</p>
+<h1 id="async-x2F-await-简单入门"><a href="#async-x2F-await-简单入门" class="headerlink" title="async&#x2F;.await 简单入门"></a>async&#x2F;.await 简单入门</h1><p><code>async/.await</code> 都是 Rust 内置的语言特性.</p>
+<p>对于被 <code>async</code> 标记的块, 都会被编译器转换为实现了 <code>Future</code> trait 的状态机. 当 <code>Future</code> 执行并遇到阻塞时, 它会让出当前线程的控制权, 这样其他的 <code>Future</code> 就可以在该线程中运行, 这种方式完全不会导致当前线程的阻塞.</p>
+<p>示例:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">cargo new learn<br><span class="hljs-built_in">cd</span> learn<br></code></pre></td></tr></table></figure>
+
+<p>给 <code>Cargo.toml</code> 文件添加下面内容:</p>
+<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs toml"><span class="hljs-section">[dependencies]</span><br><span class="hljs-attr">futures</span> = <span class="hljs-string">&quot;0.3&quot;</span><br></code></pre></td></tr></table></figure>
+
+<p>创建一个 <code>async</code> 函数:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">async</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">do_something</span>() &#123;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;go go go!&quot;</span>);<br>&#125;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-title function_ invoke__">do_something</span>();<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>运行后, <code>go go go!</code> 并没有打印, 并且编译器还会有一个提示:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs sh">warning: unused implementer of `Future` that must be used<br> --&gt; src/main.rs:6:5<br>  |<br>6 |     do_something();<br>  |     ^^^^^^^^^^^^^^<br>  |<br>  = note: futures <span class="hljs-keyword">do</span> nothing unless you `.await` or poll them<br>  = note: `<span class="hljs-comment">#[warn(unused_must_use)]` on by default</span><br></code></pre></td></tr></table></figure>
+
+<p>因为异步函数的返回值是一个 <code>Future</code>, 直接调用并不会执行它. 可以用一个 execotor 来执行:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> futures::executor::block_on;<br><br><span class="hljs-keyword">async</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">hello_world</span>() &#123;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Hello World!&quot;</span>);<br>&#125;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">future</span> = <span class="hljs-title function_ invoke__">hello_world</span>();<br>    <span class="hljs-title function_ invoke__">block_on</span>(future);<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>block_on</code> 会等待一个 <code>Future</code> 执行完毕, 这种写法就像同步</li>
+</ul>
+<p>在一个 <code>async</code> 函数内, 直接调用另一个 <code>async</code> 函数, 也会得到 <code>Future</code> 没人执行的提示:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> futures::executor::block_on;<br><br><span class="hljs-keyword">async</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">hello_world</span>() &#123;<br>    <span class="hljs-title function_ invoke__">hello_cat</span>();<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;hello, world!&quot;</span>);<br>&#125;<br><br><span class="hljs-keyword">async</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">hello_cat</span>() &#123;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;hello, kitty!&quot;</span>);<br>&#125;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">future</span> = <span class="hljs-title function_ invoke__">hello_world</span>();<br>    <span class="hljs-title function_ invoke__">block_on</span>(future);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>编译运行:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ cargo run<br>   Compiling rust v0.1.0 (/tmp/rust)<br>warning: unused implementer of `futures::Future` that must be used<br> --&gt; src/main.rs:4:5<br>  |<br>4 |     hello_cat();<br>  |     ^^^^^^^^^^^<br>  |<br>  = note: futures <span class="hljs-keyword">do</span> nothing unless you `.await` or poll them<br>  = note: `<span class="hljs-comment">#[warn(unused_must_use)]` on by default</span><br><br>warning: `rust` (bin <span class="hljs-string">&quot;rust&quot;</span>) generated 1 warning<br>    Finished `dev` profile [unoptimized + debuginfo] target(s) <span class="hljs-keyword">in</span> 0.14s<br>     Running `target/debug/rust`<br>hello, world!<br></code></pre></td></tr></table></figure>
+
+<p>此时有一个简便的运行方法, 就是用 <code>.await</code>:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> futures::executor::block_on;<br><br><span class="hljs-keyword">async</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">hello_world</span>() &#123;<br>    <span class="hljs-title function_ invoke__">hello_cat</span>().<span class="hljs-keyword">await</span>;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;hello, world!&quot;</span>);<br>&#125;<br><br><span class="hljs-keyword">async</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">hello_cat</span>() &#123;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;hello, kitty!&quot;</span>);<br>&#125;<br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">future</span> = <span class="hljs-title function_ invoke__">hello_world</span>();<br>    <span class="hljs-title function_ invoke__">block_on</span>(future);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>此时就能输出:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs rust">hello, kitty!<br>hello, world!<br></code></pre></td></tr></table></figure>
+
+<p>并且与 <code>block_on</code> 不同, <code>.await</code> 并不会阻塞当前线程, 而是会在等待执行时让出线程.</p>
+<p>也可以用 <code>join!</code> 来并发的处理和等待多个 <code>Future</code>:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">async</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">async_main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">t1</span> = <span class="hljs-title function_ invoke__">task1</span>();<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">t2</span> = <span class="hljs-title function_ invoke__">task2</span>();<br><br>    futures::join!(t1, t2);<br>&#125;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-title function_ invoke__">block_on</span>(<span class="hljs-title function_ invoke__">async_main</span>());<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>这里的 <code>async_main</code> 也会被包装为 <code>Future</code></li>
+<li>之所以这样写是因为 <code>join!</code> 内部使用了 <code>.await</code>, 而这个关键字只能在 <code>async</code> 标记的函数内使用</li>
+</ul>
+<p>当 <code>t1</code> 阻塞时, <code>t2</code> 可以拿过线程的所有权继续运行; 当 <code>t2</code> 阻塞时, <code>t1</code> 又能再次拿回所有权运行.</p>
+<h1 id="Future-executor-与任务调度"><a href="#Future-executor-与任务调度" class="headerlink" title="Future executor 与任务调度"></a>Future executor 与任务调度</h1><h2 id="Future-trait"><a href="#Future-trait" class="headerlink" title="Future trait"></a>Future trait</h2><p><code>Future</code> 这个 trait 是 Rust async 编程的核心, 其定义为: 一个能产出值的异步计算 (当然值可以为空).</p>
+<p>一个简化版的实现如:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">trait</span> <span class="hljs-title class_">SimpleFuture</span> &#123;<br>    <span class="hljs-keyword">type</span> <span class="hljs-title class_">Output</span>;<br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">poll</span>(&amp;<span class="hljs-keyword">mut</span> <span class="hljs-keyword">self</span>, wake: <span class="hljs-title function_ invoke__">fn</span>()) <span class="hljs-punctuation">-&gt;</span> Poll&lt;<span class="hljs-keyword">Self</span>::Output&gt;;<br>&#125;<br><br><span class="hljs-keyword">enum</span> <span class="hljs-title class_">Poll</span>&lt;T&gt; &#123;<br>    <span class="hljs-title function_ invoke__">Ready</span>(T),<br>    Pending,<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>一个 <code>Future</code> 会由 executor 执行 <code>poll</code> 之后运行 (一次 <code>poll</code> 不保证其会被运行完成).</p>
+<p>如果一个 <code>poll</code> 运行完成, 则会返回 <code>Poll::Ready(result)</code>; 否则返回 <code>Poll::Pending</code>, 并且安排一个 <code>wake</code> 函数: 当 <code>Future</code> 准备好进一步执行时, 该函数会被调用, 然后主动通知 executor 来调用 <code>poll</code> 方法.</p>
+<p>示例:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">pub</span> <span class="hljs-keyword">struct</span> <span class="hljs-title class_">SocketRead</span>&lt;<span class="hljs-symbol">&#x27;a</span>&gt; &#123;<br>    socket: &amp;<span class="hljs-symbol">&#x27;a</span> Socket,<br>&#125;<br><br><span class="hljs-keyword">impl</span> <span class="hljs-title class_">SimpleFuture</span> <span class="hljs-keyword">for</span> <span class="hljs-title class_">SocketRead</span>&lt;<span class="hljs-symbol">&#x27;_</span>&gt; &#123;<br>    <span class="hljs-keyword">type</span> <span class="hljs-title class_">Output</span> = <span class="hljs-type">Vec</span>&lt;<span class="hljs-type">u8</span>&gt;;<br><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">poll</span>(&amp;<span class="hljs-keyword">mut</span> <span class="hljs-keyword">self</span>, wake: <span class="hljs-title function_ invoke__">fn</span>()) <span class="hljs-punctuation">-&gt;</span> Poll&lt;<span class="hljs-keyword">Self</span>::Output&gt; &#123;<br>        <span class="hljs-keyword">if</span> <span class="hljs-keyword">self</span>.socket.<span class="hljs-title function_ invoke__">has_data_to_read</span>() &#123;<br>            <span class="hljs-comment">// socket有数据，写入buffer中并返回</span><br>            Poll::<span class="hljs-title function_ invoke__">Ready</span>(<span class="hljs-keyword">self</span>.socket.<span class="hljs-title function_ invoke__">read_buf</span>())<br>        &#125; <span class="hljs-keyword">else</span> &#123;<br>            <span class="hljs-comment">// socket中还没数据</span><br>            <span class="hljs-comment">//</span><br>            <span class="hljs-comment">// 注册一个`wake`函数，当数据可用时，该函数会被调用，</span><br>            <span class="hljs-comment">// 然后当前Future的执行器会再次调用`poll`方法，此时就可以读取到数据</span><br>            <span class="hljs-keyword">self</span>.socket.<span class="hljs-title function_ invoke__">set_readable_callback</span>(wake);<br>            Poll::Pending<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>真实的 <code>Future</code> 定义如下:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">trait</span> <span class="hljs-title class_">Future</span> &#123;<br>    <span class="hljs-keyword">type</span> <span class="hljs-title class_">Output</span>;<br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">poll</span>(<br>        <span class="hljs-comment">// 首先值得注意的地方是，`self`的类型从`&amp;mut self`变成了`Pin&lt;&amp;mut Self&gt;`:</span><br>        <span class="hljs-keyword">self</span>: Pin&lt;&amp;<span class="hljs-keyword">mut</span> <span class="hljs-keyword">Self</span>&gt;,<br>        <span class="hljs-comment">// 其次将`wake: fn()` 修改为 `cx: &amp;mut Context&lt;&#x27;_&gt;`:</span><br>        cx: &amp;<span class="hljs-keyword">mut</span> Context&lt;<span class="hljs-symbol">&#x27;_</span>&gt;,<br>    ) <span class="hljs-punctuation">-&gt;</span> Poll&lt;<span class="hljs-keyword">Self</span>::Output&gt;;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>Context</code> 主要是给 <code>wake</code> 携带数据, 便于 executor 知道是哪一个 <code>Futrue</code> 准备好了</li>
+</ul>
+<h2 id="使用-Waker-来唤醒任务"><a href="#使用-Waker-来唤醒任务" class="headerlink" title="使用 Waker 来唤醒任务"></a>使用 Waker 来唤醒任务</h2><p><code>Waker</code> 提供了一个 <code>wake()</code> 方法, 用于告诉 executor, 可以对当前 <code>Future</code> 再次执行 <code>poll</code> 操作了.</p>
+<p>下面构建一个定时器例子来说明:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::&#123;<br>    future::Future,<br>    pin::Pin,<br>    sync::&#123;Arc, Mutex&#125;,<br>    task::&#123;Context, Poll, Waker&#125;,<br>    thread,<br>    time::Duration,<br>&#125;;<br><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">struct</span> <span class="hljs-title class_">TimerFuture</span> &#123;<br>    shared_state: Arc&lt;Mutex&lt;SharedState&gt;&gt;,<br>&#125;<br><br><span class="hljs-comment">// 在 Future 和等待的线程间共享状态</span><br><span class="hljs-keyword">struct</span> <span class="hljs-title class_">SharedState</span> &#123;<br>    <span class="hljs-comment">// 定时 (睡眠) 是否结束</span><br>    completed: <span class="hljs-type">bool</span>,<br><br>    <span class="hljs-comment">// 当睡眠结束后, 线程可以用 `waker` 通知 `TimerFuture` 来唤醒任务</span><br>    waker: <span class="hljs-type">Option</span>&lt;Waker&gt;,<br>&#125;<br><br><span class="hljs-keyword">impl</span> <span class="hljs-title class_">Future</span> <span class="hljs-keyword">for</span> <span class="hljs-title class_">TimerFuture</span> &#123;<br>    <span class="hljs-keyword">type</span> <span class="hljs-title class_">Output</span> = ();<br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">poll</span>(<span class="hljs-keyword">self</span>: Pin&lt;&amp;<span class="hljs-keyword">mut</span> <span class="hljs-keyword">Self</span>&gt;, cx: &amp;<span class="hljs-keyword">mut</span> Context&lt;<span class="hljs-symbol">&#x27;_</span>&gt;) <span class="hljs-punctuation">-&gt;</span> Poll&lt;<span class="hljs-keyword">Self</span>::Output&gt; &#123;<br>        <span class="hljs-comment">// 通过检查共享状态，来确定定时器是否已经完成</span><br>        <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">shared_state</span> = <span class="hljs-keyword">self</span>.shared_state.<span class="hljs-title function_ invoke__">lock</span>().<span class="hljs-title function_ invoke__">unwrap</span>();<br>        <span class="hljs-keyword">if</span> shared_state.completed &#123;<br>            Poll::<span class="hljs-title function_ invoke__">Ready</span>(())<br>        &#125; <span class="hljs-keyword">else</span> &#123;<br>            <span class="hljs-comment">// 设置`waker`，这样新线程在睡眠(计时)结束后可以唤醒当前的任务，接着再次对`Future`进行`poll`操作,</span><br>            <span class="hljs-comment">//</span><br>            <span class="hljs-comment">// 下面的`clone`每次被`poll`时都会发生一次，实际上，应该是只`clone`一次更加合理。</span><br>            <span class="hljs-comment">// 选择每次都`clone`的原因是： `TimerFuture`可以在执行器的不同任务间移动，如果只克隆一次，</span><br>            <span class="hljs-comment">// 那么获取到的`waker`可能已经被篡改并指向了其它任务，最终导致执行器运行了错误的任务</span><br>            shared_state.waker = <span class="hljs-title function_ invoke__">Some</span>(cx.<span class="hljs-title function_ invoke__">waker</span>().<span class="hljs-title function_ invoke__">clone</span>());<br>            Poll::Pending<br>        &#125;<br>    &#125;<br>&#125;<br><br><span class="hljs-keyword">impl</span> <span class="hljs-title class_">TimerFuture</span> &#123;<br>    <span class="hljs-comment">/// 创建一个新的`TimerFuture`，在指定的时间结束后，该`Future`可以完成</span><br>    <span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">new</span>(duration: Duration) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-keyword">Self</span> &#123;<br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">shared_state</span> = Arc::<span class="hljs-title function_ invoke__">new</span>(Mutex::<span class="hljs-title function_ invoke__">new</span>(SharedState &#123;<br>            completed: <span class="hljs-literal">false</span>,<br>            waker: <span class="hljs-literal">None</span>,<br>        &#125;));<br><br>        <span class="hljs-comment">// 创建新线程</span><br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">thread_shared_state</span> = shared_state.<span class="hljs-title function_ invoke__">clone</span>();<br>        thread::<span class="hljs-title function_ invoke__">spawn</span>(<span class="hljs-keyword">move</span> || &#123;<br>            <span class="hljs-comment">// 睡眠指定时间实现计时功能</span><br>            thread::<span class="hljs-title function_ invoke__">sleep</span>(duration);<br>            <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">shared_state</span> = thread_shared_state.<span class="hljs-title function_ invoke__">lock</span>().<span class="hljs-title function_ invoke__">unwrap</span>();<br>            <span class="hljs-comment">// 通知执行器定时器已经完成，可以继续`poll`对应的`Future`了</span><br>            shared_state.completed = <span class="hljs-literal">true</span>;<br>            <span class="hljs-keyword">if</span> <span class="hljs-keyword">let</span> <span class="hljs-variable">Some</span>(waker) = shared_state.waker.<span class="hljs-title function_ invoke__">take</span>() &#123;<br>                waker.<span class="hljs-title function_ invoke__">wake</span>()<br>            &#125;<br>        &#125;);<br><br>        TimerFuture &#123; shared_state &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>之后还需要一个 executor 才能运行这个 <code>Future</code>.</p>
+<h2 id="Executor"><a href="#Executor" class="headerlink" title="Executor"></a>Executor</h2><p>Rust 的 <code>Future</code> 是惰性的, 一种触发方式是在一个 <code>async</code> 函数中用 <code>.await</code> 来调用另一个 <code>async</code> 函数. 但最外层的 <code>async</code> 函数也需要被调用, 此时就需要用到 <code>executor</code>.</p>
+<p>Executor 会管理一批 <code>Future</code> (最外层的 <code>async</code> 函数), 然后通过不停 <code>poll</code> 直到全部完成. <code>Executor</code> 只会在最开始主动执行一次 <code>poll</code>, 后面则是等待 <code>Future</code> 调用 <code>wake</code> 来通知它, 然后再 <code>poll</code>. 这种 <code>wake</code> 通知然后 <code>poll</code> 的方式会不断重复, 直到 <code>Future</code> 完成.</p>
+<p>Executor 的实现比较复杂, 感觉把代码贴出来也不太看得懂. 后面再整理书里的内容吧.</p>
+<h1 id="Pin-和-Unpin"><a href="#Pin-和-Unpin" class="headerlink" title="Pin 和 Unpin"></a>Pin 和 Unpin</h1><p>在 Rust 中, 所有类型可以分为两类:</p>
+<ul>
+<li>类型的值可以在内存中安全地被移动, 例如数值, 字符串, 布尔值, 结构体, 枚举等等几乎所有类型</li>
+<li>自引用类型, 比如下面示例:</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">struct</span> <span class="hljs-title class_">SelfRef</span> &#123;<br>    value: <span class="hljs-type">String</span>,<br>    pointer_to_value: *<span class="hljs-keyword">const</span> <span class="hljs-type">String</span>,<br>&#125;<br></code></pre></td></tr></table></figure>
+<p><code>pointer_to_value</code> 是一个裸指针, 指向第一个字段 <code>value</code> 持有的字符串 <code>String</code>. 现在考虑一个问题, 如果 <code>value</code> 被移动了, 那么其内存地址会发生变化 (字节从一个内存位置复制到另一个位置), 但 <code>pointer_to_value</code> 还是指向原来的位置, 此时 <code>pointer_to_value</code> 就会悬挂.</p>
+<p><code>Pin</code> 的作用就是防止一个类型在内存中被移动.</p>
+<p>为什么在 <code>async</code> 语境下需要用到 <code>Pin</code> 呢? 因为 <code>async</code> 标记的块会被编译成 <code>Futre</code> 形式, 块中的内容相当于都是一个结构体的成员, 比如:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">async</span> &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">x</span> = [<span class="hljs-number">0</span>; <span class="hljs-number">128</span>];<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">read_into_buf_fut</span> = <span class="hljs-title function_ invoke__">read_into_buf</span>(&amp;<span class="hljs-keyword">mut</span> x);<br>    read_into_buf_fut.<span class="hljs-keyword">await</span>;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;:?&#125;&quot;</span>, x);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><code>x</code> 和 <code>read_into_buf_fut</code> 都是一个结构体的成员, 但 <code>read_into_buf_fut</code> 是指向 <code>x</code> 的, 这就是一种典型的自引用类型:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// 上述 async 块编译后会变成下面</span><br><span class="hljs-keyword">struct</span> <span class="hljs-title class_">ReadIntoBuf</span>&lt;<span class="hljs-symbol">&#x27;a</span>&gt; &#123;<br>    buf: &amp;<span class="hljs-symbol">&#x27;a</span> <span class="hljs-keyword">mut</span> [<span class="hljs-type">u8</span>], <span class="hljs-comment">// 指向下面的`x`字段</span><br>&#125;<br><br><span class="hljs-keyword">struct</span> <span class="hljs-title class_">AsyncFuture</span> &#123;<br>    x: [<span class="hljs-type">u8</span>; <span class="hljs-number">128</span>],<br>    read_into_buf_fut: ReadIntoBuf&lt;<span class="hljs-symbol">&#x27;what_lifetime</span>?&gt;,<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="Unpin-1"><a href="#Unpin-1" class="headerlink" title="Unpin"></a>Unpin</h2><p>大部分类型其实并不在意是否被移动, 因此它们都自动实现了 <code>Unpin</code> trait (一个标记 trait, 未定义任何行为, 可以用 <code>!</code> 语法去除).</p>
+<p>但 <code>Pin</code> 并不是 trait, 它是一个结构体:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">pub</span> <span class="hljs-keyword">struct</span> <span class="hljs-title class_">Pin</span>&lt;P&gt; &#123;<br>    pointer: P,<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>其包裹一个指针, 确保该指针指向的数据不会被移动, 比如 <code>Pin&lt;&amp;mut T&gt;</code>, <code>Pin&lt;&amp;T&gt;</code>, <code>Pin&lt;Box&lt;T&gt;&gt;</code> 等, 都能确保 <code>T</code> 不会被移动.</p>
+<p>能够让 <code>Pin</code> 起作用, 就需要实现 <code>!Unpin</code>. 没有实现 <code>!Unpin</code> 的类型虽然也能被  <code>Pin</code> 包裹, 但其实是可以移动的. 比如 <code>Pin&lt;&amp;mut u8&gt;</code>, 显然 <code>u8</code> 是实现了 <code>Unpin</code> 的, 因此 <code>Pin&lt;&amp;mut u8&gt;</code> 和 <code>&amp;mut u8</code> 没有区别, 一样可以移动.</p>
+<p>对于官方示例的一部分需要说明:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">a</span>(<span class="hljs-keyword">self</span>: Pin&lt;&amp;<span class="hljs-keyword">Self</span>&gt;) <span class="hljs-punctuation">-&gt;</span> &amp;<span class="hljs-type">str</span> &#123;<br>    &amp;<span class="hljs-keyword">self</span>.<span class="hljs-title function_ invoke__">get_ref</span>().a<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>这里的 <code>self</code>, 是 <code>Pin&lt;&amp;Self&gt;</code>, 而非 <code>&amp;Self</code> 这个需要注意. <code>self.get_ref()</code> 用来取得内部的 <code>&amp;Self</code>.</p>
+<p>另一个是:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">init</span>(<span class="hljs-keyword">self</span>: Pin&lt;&amp;<span class="hljs-keyword">mut</span> <span class="hljs-keyword">Self</span>&gt;) &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">self_ptr</span>: *<span class="hljs-keyword">const</span> <span class="hljs-type">String</span> = &amp;<span class="hljs-keyword">self</span>.a;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">this</span> = <span class="hljs-keyword">unsafe</span> &#123; <span class="hljs-keyword">self</span>.<span class="hljs-title function_ invoke__">get_unchecked_mut</span>() &#125;;<br>    this.b = self_ptr;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>不能直接写为 <code>this.b = &amp;self.a</code>. 因为此时用到了引用, 就要考虑生命周期, 但编译器对 <code>self.a</code> 的生命周期并不确定, 如果 <code>self.a</code> 比 <code>Self</code> 活得短, 那么此时 <code>this.b</code> 就会悬挂. 但如果这里不用引用, 而是裸指针, 则能跳过这个检查</li>
+</ul>
+<h2 id="一个固定到堆的示例"><a href="#一个固定到堆的示例" class="headerlink" title="一个固定到堆的示例"></a>一个固定到堆的示例</h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::pin::Pin;<br><span class="hljs-keyword">use</span> std::marker::PhantomPinned;<br><br><span class="hljs-meta">#[derive(Debug)]</span><br><span class="hljs-keyword">struct</span> <span class="hljs-title class_">Test</span> &#123;<br>    a: <span class="hljs-type">String</span>,<br>    b: *<span class="hljs-keyword">const</span> <span class="hljs-type">String</span>,<br>    _marker: PhantomPinned,<br>&#125;<br><br><span class="hljs-keyword">impl</span> <span class="hljs-title class_">Test</span> &#123;<br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">new</span>(txt: &amp;<span class="hljs-type">str</span>) <span class="hljs-punctuation">-&gt;</span> Pin&lt;<span class="hljs-type">Box</span>&lt;<span class="hljs-keyword">Self</span>&gt;&gt; &#123;<br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">t</span> = Test &#123;<br>            a: <span class="hljs-type">String</span>::<span class="hljs-title function_ invoke__">from</span>(txt),<br>            b: std::ptr::<span class="hljs-title function_ invoke__">null</span>(),<br>            _marker: PhantomPinned,<br>        &#125;;<br>        <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">boxed</span> = <span class="hljs-type">Box</span>::<span class="hljs-title function_ invoke__">pin</span>(t);<br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">self_ptr</span>: *<span class="hljs-keyword">const</span> <span class="hljs-type">String</span> = &amp;boxed.<span class="hljs-title function_ invoke__">as_ref</span>().a;<br>        <span class="hljs-keyword">unsafe</span> &#123; boxed.<span class="hljs-title function_ invoke__">as_mut</span>().<span class="hljs-title function_ invoke__">get_unchecked_mut</span>().b = self_ptr &#125;;<br><br>        boxed<br>    &#125;<br><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">a</span>(<span class="hljs-keyword">self</span>: Pin&lt;&amp;<span class="hljs-keyword">Self</span>&gt;) <span class="hljs-punctuation">-&gt;</span> &amp;<span class="hljs-type">str</span> &#123;<br>        &amp;<span class="hljs-keyword">self</span>.<span class="hljs-title function_ invoke__">get_ref</span>().a<br>    &#125;<br><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">b</span>(<span class="hljs-keyword">self</span>: Pin&lt;&amp;<span class="hljs-keyword">Self</span>&gt;) <span class="hljs-punctuation">-&gt;</span> &amp;<span class="hljs-type">String</span> &#123;<br>        <span class="hljs-keyword">unsafe</span> &#123; &amp;*(<span class="hljs-keyword">self</span>.b) &#125;<br>    &#125;<br>&#125;<br><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">test1</span> = Test::<span class="hljs-title function_ invoke__">new</span>(<span class="hljs-string">&quot;test1&quot;</span>);<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">test2</span> = Test::<span class="hljs-title function_ invoke__">new</span>(<span class="hljs-string">&quot;test2&quot;</span>);<br><br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;a: &#123;&#125;, b: &#123;&#125;&quot;</span>,test1.<span class="hljs-title function_ invoke__">as_ref</span>().<span class="hljs-title function_ invoke__">a</span>(), test1.<span class="hljs-title function_ invoke__">as_ref</span>().<span class="hljs-title function_ invoke__">b</span>());<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;a: &#123;&#125;, b: &#123;&#125;&quot;</span>,test2.<span class="hljs-title function_ invoke__">as_ref</span>().<span class="hljs-title function_ invoke__">a</span>(), test2.<span class="hljs-title function_ invoke__">as_ref</span>().<span class="hljs-title function_ invoke__">b</span>());<br>&#125;<br></code></pre></td></tr></table></figure>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Rust/" class="category-chain-item">Rust</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Rust-async</div>
+      <div>http://example.com/2026/06/10/Rust-async/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Jie</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年6月10日</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>许可协议</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/06/09/Rust-crate-%E8%AF%A6%E7%BB%86%E8%AF%B4%E6%98%8E/" title="Rust-crate-详细说明">
+                        <span class="hidden-mobile">Rust-crate-详细说明</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zKurisu/comments-utterances');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Jie</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Orkarin</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.1/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

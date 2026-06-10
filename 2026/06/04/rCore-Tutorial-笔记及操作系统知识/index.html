@@ -54,8 +54,12 @@
 <meta property="og:image" content="http://example.com/img/rcore-relation-between-os-and-hardware.png">
 <meta property="og:image" content="http://example.com/img/rcore-boundary-between-hardware-and-os.png">
 <meta property="og:image" content="http://example.com/img/rcore-riscv-instruction-execution.png">
+<meta property="og:image" content="http://example.com/img/rcore-boundary-between-os-and-application.png">
+<meta property="og:image" content="http://example.com/img/rcore-app-os-memory-structure.png">
+<meta property="og:image" content="http://example.com/img/rcore-memory-layout-protection-example.png">
+<meta property="og:image" content="http://example.com/img/rcore-riscv-with-sbi-structure.png">
 <meta property="article:published_time" content="2026-06-04T08:33:51.000Z">
-<meta property="article:modified_time" content="2026-06-09T07:52:01.763Z">
+<meta property="article:modified_time" content="2026-06-09T12:48:39.872Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/rcore-qemu-start-os-example.png">
@@ -469,7 +473,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          20k 字
+          22k 字
         
       </span>
     
@@ -480,7 +484,7 @@ path.outline_glyph {
         
         
         
-          165 分钟
+          180 分钟
         
       </span>
     
@@ -1163,7 +1167,67 @@ path.outline_glyph {
 <li>系统调用</li>
 <li>memory layout</li>
 </ul>
-<p>OS 通过系统调用为应用提供服务 (OS 与 APP 的边界之一就是系统调用)</p>
+<p>OS 通过系统调用为应用提供服务 (OS 与 APP 的边界之一就是系统调用):</p>
+<p><img src="/../img/rcore-boundary-between-os-and-application.png" srcset="/img/loading.gif" lazyload></p>
+<p>如果没有用户态, 内核态这种区分, 那系统调用就和普通的函数调用无异. 有了这种区分后, 就能进行一些安全设置 (硬件层面设置, 比如内核态能执行特权指令).</p>
+<p>函数调用相比于系统调用有一些好处, 比如执行更快 (不会有那么多检查), 灵活 (易于传递和返回复杂的数据结构), 但坏处就是可能不太可靠 (可能有恶意, 有崩溃的风险).</p>
+<p>OS 和 APP 的另一个边界在于 memory layout, 应用程序可以不断执行函数调用, 让 stack 溢出, 从而侵占 OS 的其他内存区域:</p>
+<p><img src="/../img/rcore-app-os-memory-structure.png" srcset="/img/loading.gif" lazyload></p>
+<p> 因此在这里还需要一层隔离, 避免应用对 OS 的破坏:</p>
+<p> <img src="/../img/rcore-memory-layout-protection-example.png" srcset="/img/loading.gif" lazyload></p>
+<h3 id="隔离机制"><a href="#隔离机制" class="headerlink" title="隔离机制"></a>隔离机制</h3><p>隔离机制通常需要解决这些问题:</p>
+<ul>
+<li>防止程序 X 破坏或监视程序 Y</li>
+<li>防止进程干扰操作系统</li>
+<li>防止恶意程序, 病毒, 木马和 bug</li>
+</ul>
+<p>在操作系统语义下, 隔离可以定义为: 操作系统中的应用程序不会影响 (或破坏) 其他应用或操作系统的正常执行或信息泄露.</p>
+<p>隔离的本质是在需要交换信息或共享资源的情况下才出现, 隔离并不意味着不要共享.</p>
+<p>隔离需要建立边界 (boundary). 便捷决定了各自的势力范围, 当跨界出现时 (即共享资源) 会有风险. 运行的程序通常是一种隔离单元.</p>
+<p>隔离的方法通常有: 基于软件的隔离, 基于硬件的隔离, 基于网络的隔离. 这里特别注意的是利用处理器进行硬件的隔离.</p>
+<p>OS 对 Application 的隔离可以分为下面几类:</p>
+<ul>
+<li>对控制的隔离: 特权级机制, 如用户态和内核态</li>
+<li>对数据的隔离: 地址空间, 如用户地址空间和内核地址空间</li>
+<li>对时间的隔离: 中断处理, 随时打断正在执行的用户态 application</li>
+<li>对破坏隔离的处理 (不按照隔离方式进行时的处理手段): 异常处理</li>
+</ul>
+<h3 id="特权模式的隔离机制"><a href="#特权模式的隔离机制" class="headerlink" title="特权模式的隔离机制"></a>特权模式的隔离机制</h3><p>特权通常指: 能够对计算机系统进行管控的操作.</p>
+<p>CPU 硬件中的特权模式可以: 防止应用程序访问设备和敏感的 CPU 寄存器 (比如地址空间配置寄存器, 关机相关的指令或寄存器).</p>
+<p>CPU 硬件通常要支持两个特权模式: Kernel Mode (内核态) 和 User Mode (用户态).</p>
+<p>Kernel Mode 可以执行 User Mode 无法执行的特权操作, 比如访问外设, 配置地址空间 (虚拟内存), 读&#x2F;写特殊系统级寄存器等.</p>
+<p>OS Kernel 运行在 Kernel Mode, 而应用程序运行在 User Mode.</p>
+<p>每个重要的微处理器都有类似的用户&#x2F;内核模式区分.</p>
+<h3 id="中断-x2F-异常机制"><a href="#中断-x2F-异常机制" class="headerlink" title="中断&#x2F;异常机制"></a>中断&#x2F;异常机制</h3><p>处理器要支持中断&#x2F;异常的处理, 才能够及时响应和处理应用的异常行为. 比如要打断一直占用 CPU 的应用程序.</p>
+<p>中断是异步发生的, 通常来自处理器外部的 I&#x2F;O 设备的信号.</p>
+<p>硬件中断不是由任何一条专门的 CPU 指令造成的, 从这个意义上它是异步的.</p>
+<p>硬件中断&#x2F;异常的处理程序通常称为中断处理程序 (Interrupt handle), 一个示例流程如:</p>
+<ol>
+<li>I&#x2F;O 设备通过向处理器芯片的一个引脚发信号, 并将异常号放到系统总线上, 以触发中断</li>
+<li>在当前指令执行完后, 处理器从系统总线读取异常号, 保存现场, 切换到 Kernel Mode</li>
+<li>调用中断处理程序, 当中断处理程序完成后, 它将控制返回给下一条本来要执行的指令</li>
+</ol>
+<p>可以用 Timer 来稳定定时地产生中断, 防止应用程序死占着 CPU 不放, 让 OS kernel 能周期性地进行资源管理.</p>
+<h2 id="从-OS-角度看-RISC-V"><a href="#从-OS-角度看-RISC-V" class="headerlink" title="从 OS 角度看 RISC-V"></a>从 OS 角度看 RISC-V</h2><p>这部分主要会了解:</p>
+<ul>
+<li>RISC-V 特权级和硬件隔离方式</li>
+<li>RISC-V 的 M-Mode 和 S-Mode 的基本特征</li>
+<li>OS 在 M-Mode 和 S-Mode 下如何访问控制计算机系统</li>
+<li>不同软件如何在 M-Mode, S-Mode, U-Mode 之间进行切换</li>
+</ul>
+<h3 id="RISC-V-系统模式"><a href="#RISC-V-系统模式" class="headerlink" title="RISC-V 系统模式"></a>RISC-V 系统模式</h3><p>这里涉及下面术语:</p>
+<ul>
+<li>应用程序二进制接口 (Application Binary Interface, ABI)</li>
+<li>应用执行环境 (Application Execution Environment, AEE)</li>
+<li>管理员二进制接口 (Supervisor Binary Interface, SBI)</li>
+<li>管理员执行环境 (Supervisor Execution Environment, SEE)</li>
+<li>Hypervisor: 虚拟机管理程序</li>
+<li>Hypervisor 二进制接口 (Hypervisor Binary Interface, HBI)</li>
+<li>Hypervisor 执行环境 (Hypervisor Execution Environment, HEE)</li>
+</ul>
+<p>注意都是先构建好 Execution Environment, 然后暴露出 Binary Interface.</p>
+<p>RISC-V 对应的架构图如下:</p>
+<p><img src="/../img/rcore-riscv-with-sbi-structure.png" srcset="/img/loading.gif" lazyload></p>
 
                 
               </div>
