@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="Rust 语言圣经中 async 部分 介绍先区分一下一般意义上的同步和异步:  同步: 在线程阻塞时 (block), OS 会把它挂起, 直到 I&#x2F;O 完成. 这个线程完全占着 CPU 但什么都不干 异步: 线程发起 I&#x2F;O 请求后就返回, 继续处理下一个任务. 当 I&#x2F;O 好了再回来收尾 (I&#x2F;O 结束后会发起中断)  异步的好处就在于等待期间可以执行">
+    <meta name="description" content="Rust 语言圣经中 async 部分Tokio Tutorial 介绍先区分一下一般意义上的同步和异步:  同步: 在线程阻塞时 (block), OS 会把它挂起, 直到 I&#x2F;O 完成. 这个线程完全占着 CPU 但什么都不干 异步: 线程发起 I&#x2F;O 请求后就返回, 继续处理下一个任务. 当 I&#x2F;O 好了再回来收尾 (I&#x2F;O 结束后会发起中断)  异步">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Rust-async">
 <meta property="og:url" content="http://example.com/2026/06/10/Rust-async/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="Rust 语言圣经中 async 部分 介绍先区分一下一般意义上的同步和异步:  同步: 在线程阻塞时 (block), OS 会把它挂起, 直到 I&#x2F;O 完成. 这个线程完全占着 CPU 但什么都不干 异步: 线程发起 I&#x2F;O 请求后就返回, 继续处理下一个任务. 当 I&#x2F;O 好了再回来收尾 (I&#x2F;O 结束后会发起中断)  异步的好处就在于等待期间可以执行">
+<meta property="og:description" content="Rust 语言圣经中 async 部分Tokio Tutorial 介绍先区分一下一般意义上的同步和异步:  同步: 在线程阻塞时 (block), OS 会把它挂起, 直到 I&#x2F;O 完成. 这个线程完全占着 CPU 但什么都不干 异步: 线程发起 I&#x2F;O 请求后就返回, 继续处理下一个任务. 当 I&#x2F;O 好了再回来收尾 (I&#x2F;O 结束后会发起中断)  异步">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-06-10T00:13:55.000Z">
-<meta property="article:modified_time" content="2026-06-10T06:12:33.842Z">
+<meta property="article:modified_time" content="2026-06-11T07:03:06.200Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -437,7 +437,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          11k 字
+          14k 字
         
       </span>
     
@@ -448,7 +448,7 @@ path.outline_glyph {
         
         
         
-          93 分钟
+          115 分钟
         
       </span>
     
@@ -491,7 +491,7 @@ path.outline_glyph {
             
               <div class="markdown-body">
                 
-                <p><a target="_blank" rel="noopener" href="https://course.j4cka.cc/advance/async/getting-started">Rust 语言圣经中 async 部分</a></p>
+                <p><a target="_blank" rel="noopener" href="https://course.j4cka.cc/advance/async/getting-started">Rust 语言圣经中 async 部分</a><br><a target="_blank" rel="noopener" href="https://tokio.rs/tokio/tutorial">Tokio Tutorial</a></p>
 <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>先区分一下一般意义上的同步和异步:</p>
 <ul>
 <li>同步: 在线程阻塞时 (block), OS 会把它挂起, 直到 I&#x2F;O 完成. 这个线程完全占着 CPU 但什么都不干</li>
@@ -550,7 +550,7 @@ path.outline_glyph {
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// 大多数类型都是 Unpin 的</span><br><span class="hljs-keyword">let</span> <span class="hljs-variable">x</span>: <span class="hljs-type">i32</span> = <span class="hljs-number">42</span>;           <span class="hljs-comment">// i32: Unpin ✓</span><br><span class="hljs-keyword">let</span> <span class="hljs-variable">s</span>: <span class="hljs-type">String</span> = <span class="hljs-string">&quot;hi&quot;</span>.<span class="hljs-title function_ invoke__">into</span>(); <span class="hljs-comment">// String: Unpin ✓</span><br><span class="hljs-keyword">let</span> <span class="hljs-variable">v</span>: <span class="hljs-type">Vec</span>&lt;<span class="hljs-type">u8</span>&gt; = <span class="hljs-built_in">vec!</span>[<span class="hljs-number">1</span>];   <span class="hljs-comment">// Vec&lt;u8&gt;: Unpin ✓</span><br></code></pre></td></tr></table></figure>
 
 <p>需要注意: <code>!Unpin</code> 的类型必须在 <code>Pin</code> 包裹下才能被 poll.</p>
-<h1 id="async-x2F-await-简单入门"><a href="#async-x2F-await-简单入门" class="headerlink" title="async&#x2F;.await 简单入门"></a>async&#x2F;.await 简单入门</h1><p><code>async/.await</code> 都是 Rust 内置的语言特性.</p>
+<h2 id="Green-thread"><a href="#Green-thread" class="headerlink" title="Green thread"></a>Green thread</h2><h1 id="async-x2F-await-简单入门"><a href="#async-x2F-await-简单入门" class="headerlink" title="async&#x2F;.await 简单入门"></a>async&#x2F;.await 简单入门</h1><p><code>async/.await</code> 都是 Rust 内置的语言特性.</p>
 <p>对于被 <code>async</code> 标记的块, 都会被编译器转换为实现了 <code>Future</code> trait 的状态机. 当 <code>Future</code> 执行并遇到阻塞时, 它会让出当前线程的控制权, 这样其他的 <code>Future</code> 就可以在该线程中运行, 这种方式完全不会导致当前线程的阻塞.</p>
 <p>示例:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">cargo new learn<br><span class="hljs-built_in">cd</span> learn<br></code></pre></td></tr></table></figure>
@@ -639,6 +639,65 @@ path.outline_glyph {
 </ul>
 <h2 id="一个固定到堆的示例"><a href="#一个固定到堆的示例" class="headerlink" title="一个固定到堆的示例"></a>一个固定到堆的示例</h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::pin::Pin;<br><span class="hljs-keyword">use</span> std::marker::PhantomPinned;<br><br><span class="hljs-meta">#[derive(Debug)]</span><br><span class="hljs-keyword">struct</span> <span class="hljs-title class_">Test</span> &#123;<br>    a: <span class="hljs-type">String</span>,<br>    b: *<span class="hljs-keyword">const</span> <span class="hljs-type">String</span>,<br>    _marker: PhantomPinned,<br>&#125;<br><br><span class="hljs-keyword">impl</span> <span class="hljs-title class_">Test</span> &#123;<br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">new</span>(txt: &amp;<span class="hljs-type">str</span>) <span class="hljs-punctuation">-&gt;</span> Pin&lt;<span class="hljs-type">Box</span>&lt;<span class="hljs-keyword">Self</span>&gt;&gt; &#123;<br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">t</span> = Test &#123;<br>            a: <span class="hljs-type">String</span>::<span class="hljs-title function_ invoke__">from</span>(txt),<br>            b: std::ptr::<span class="hljs-title function_ invoke__">null</span>(),<br>            _marker: PhantomPinned,<br>        &#125;;<br>        <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">boxed</span> = <span class="hljs-type">Box</span>::<span class="hljs-title function_ invoke__">pin</span>(t);<br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">self_ptr</span>: *<span class="hljs-keyword">const</span> <span class="hljs-type">String</span> = &amp;boxed.<span class="hljs-title function_ invoke__">as_ref</span>().a;<br>        <span class="hljs-keyword">unsafe</span> &#123; boxed.<span class="hljs-title function_ invoke__">as_mut</span>().<span class="hljs-title function_ invoke__">get_unchecked_mut</span>().b = self_ptr &#125;;<br><br>        boxed<br>    &#125;<br><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">a</span>(<span class="hljs-keyword">self</span>: Pin&lt;&amp;<span class="hljs-keyword">Self</span>&gt;) <span class="hljs-punctuation">-&gt;</span> &amp;<span class="hljs-type">str</span> &#123;<br>        &amp;<span class="hljs-keyword">self</span>.<span class="hljs-title function_ invoke__">get_ref</span>().a<br>    &#125;<br><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">b</span>(<span class="hljs-keyword">self</span>: Pin&lt;&amp;<span class="hljs-keyword">Self</span>&gt;) <span class="hljs-punctuation">-&gt;</span> &amp;<span class="hljs-type">String</span> &#123;<br>        <span class="hljs-keyword">unsafe</span> &#123; &amp;*(<span class="hljs-keyword">self</span>.b) &#125;<br>    &#125;<br>&#125;<br><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">test1</span> = Test::<span class="hljs-title function_ invoke__">new</span>(<span class="hljs-string">&quot;test1&quot;</span>);<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">test2</span> = Test::<span class="hljs-title function_ invoke__">new</span>(<span class="hljs-string">&quot;test2&quot;</span>);<br><br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;a: &#123;&#125;, b: &#123;&#125;&quot;</span>,test1.<span class="hljs-title function_ invoke__">as_ref</span>().<span class="hljs-title function_ invoke__">a</span>(), test1.<span class="hljs-title function_ invoke__">as_ref</span>().<span class="hljs-title function_ invoke__">b</span>());<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;a: &#123;&#125;, b: &#123;&#125;&quot;</span>,test2.<span class="hljs-title function_ invoke__">as_ref</span>().<span class="hljs-title function_ invoke__">a</span>(), test2.<span class="hljs-title function_ invoke__">as_ref</span>().<span class="hljs-title function_ invoke__">b</span>());<br>&#125;<br></code></pre></td></tr></table></figure>
 
+<h1 id="Tokio"><a href="#Tokio" class="headerlink" title="Tokio"></a>Tokio</h1><p>Tokio 是 Rust 社区提供的 (也就是第三方, 非标准库) asynchronous runtime.</p>
+<p>该 blog 是 tokio tutorial 的笔记, 这个教程会基于 Mini-Redis 构建一些 Redis 命令来熟悉该 lib 的使用.</p>
+<h2 id="Mini-Redis-Setup"><a href="#Mini-Redis-Setup" class="headerlink" title="Mini-Redis Setup"></a>Mini-Redis Setup</h2><p>安装 <code>mini-redis</code>:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">cargo install mini-redis<br></code></pre></td></tr></table></figure>
+
+<p>测试 mini-redis server:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">mini-redis-server<br></code></pre></td></tr></table></figure>
+
+<p>测试 mini-redis client:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">mini-redis-cli get foo<br></code></pre></td></tr></table></figure>
+
+<h2 id="Hello-Tokio"><a href="#Hello-Tokio" class="headerlink" title="Hello Tokio"></a>Hello Tokio</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">cargo new my-redis<br><span class="hljs-built_in">cd</span> my-redis<br></code></pre></td></tr></table></figure>
+
+<p>然后修改 <code>Cargo.toml</code>, 添加 <code>tokio</code> 依赖:</p>
+<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs toml"><span class="hljs-section">[dependencies]</span><br><span class="hljs-attr">tokio</span> = &#123; version = <span class="hljs-string">&quot;1&quot;</span>, features = [<span class="hljs-string">&quot;full&quot;</span>] &#125;<br><span class="hljs-attr">mini-redis</span> = <span class="hljs-string">&quot;0.4&quot;</span><br></code></pre></td></tr></table></figure>
+
+<p>一个 Hello World 示例:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">async</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">say_hello</span>() &#123;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;world&quot;</span>);<br>&#125;<br><br><span class="hljs-meta">#[tokio::main]</span><br><span class="hljs-keyword">async</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">op</span> = <span class="hljs-title function_ invoke__">say_hello</span>();<br><br>    <span class="hljs-built_in">print!</span>(<span class="hljs-string">&quot;hello &quot;</span>);<br><br>    op.<span class="hljs-keyword">await</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>输出:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">hello world<br></code></pre></td></tr></table></figure>
+
+<p>注意这里的 <code>main</code> 函数在 <code>#[tokio::main]</code> attribute macro 修饰后, 可以用 <code>async</code> 进行标记. 这个宏会将 <code>async fn main()</code> 包裹在一个同步的 <code>fn main()</code> 中, 会先初始化一个 runtime, 之后执行 async main function 的内容.</p>
+<p>(所有的 asynchronous functions 都会在 tokio 提供的 runtime 下运行)</p>
+<p>比如下面 <code>async fn main</code>:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#[tokio::main]</span><br><span class="hljs-keyword">async</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;hello&quot;</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>会转换为:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">rt</span> = tokio::runtime::Runtime::<span class="hljs-title function_ invoke__">new</span>().<span class="hljs-title function_ invoke__">unwrap</span>();<br>    rt.<span class="hljs-title function_ invoke__">block_on</span>(<span class="hljs-keyword">async</span> &#123;<br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;hello&quot;</span>);<br>    &#125;)<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="Spawning"><a href="#Spawning" class="headerlink" title="Spawning"></a>Spawning</h2><p>Tokio task 是 asynchronous green thread, 通过给 <code>tokio::spawn</code> 传递一个 <code>async</code> block 来创建. <code>tokio::spawn</code> 函数会返回一个 <code>JoinHandle</code>, 用来与 spawned task 交互. <code>async block</code> 的返回值通过在 <code>handle</code> 上使用 <code>.await</code> 来获取 (返回 <code>Result</code>):</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#[tokio::main]</span><br><span class="hljs-keyword">async</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">handle</span> = tokio::<span class="hljs-title function_ invoke__">spawn</span>(<span class="hljs-keyword">async</span> &#123;<br>        <span class="hljs-comment">// Do some async work</span><br>        <span class="hljs-string">&quot;return value&quot;</span><br>    &#125;);<br><br>    <span class="hljs-comment">// Do some other work</span><br><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">out</span> = handle.<span class="hljs-keyword">await</span>.<span class="hljs-title function_ invoke__">unwrap</span>();<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;GOT &#123;&#125;&quot;</span>, out);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>在 <code>async block</code> 内使用的变量需要是 <code>&#39;static</code> 生命周期的, 不然会编译错误:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> tokio::task;<br><br><span class="hljs-meta">#[tokio::main]</span><br><span class="hljs-keyword">async</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">v</span> = <span class="hljs-built_in">vec!</span>[<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>];<br><br>    task::<span class="hljs-title function_ invoke__">spawn</span>(<span class="hljs-keyword">async</span> &#123;<br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Here&#x27;s a vec: &#123;:?&#125;&quot;</span>, v);<br>    &#125;);<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>(这种是错误的)</p>
+<p>因为变量默认情况下不会被 <code>move</code> 到 <code>async block</code> 内, 比如这里的 <code>v</code> 的所有者还是 <code>main</code> 函数. 可以加上 <code>move</code> 关键字来修复</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> tokio::task;<br><br><span class="hljs-meta">#[tokio::main]</span><br><span class="hljs-keyword">async</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">v</span> = <span class="hljs-built_in">vec!</span>[<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>];<br><br>    task::<span class="hljs-title function_ invoke__">spawn</span>(<span class="hljs-keyword">async</span> <span class="hljs-keyword">move</span> &#123;<br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Here&#x27;s a vec: &#123;:?&#125;&quot;</span>, v);<br>    &#125;);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>如果一个数据要在多个 task 中共享, 则要用到 <code>Arc</code>.</p>
+<p>注意这里用的是 <code>tokio::task::spawn</code>, 而不是 <code>tokio::spawn</code>, 前者可以直接运行而非返回一个 <code>JoinHandle</code>.</p>
+<p>所有用 <code>tokio::spawn</code> 启动的 tasks 都必须实现 <code>Send</code>, 这样 tokio runtime 才能让 task 在 <code>.await</code> suspend 时传递到别的 thread 里.</p>
+<p>Tasks 是 <code>Send</code> 的前提是 <code>async block</code> 内所有的数据也是 <code>Send</code> 的. 在task 内遇到 <code>yield_now().await</code> 时, 所有数据需要和 task 一起保存, 可能会一起传递给另一个线程. 而如果一个 data 不能跨线程, 则会编译出错, 比如:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> tokio::task::yield_now;<br><span class="hljs-keyword">use</span> std::rc::Rc;<br><br><span class="hljs-meta">#[tokio::main]</span><br><span class="hljs-keyword">async</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    tokio::<span class="hljs-title function_ invoke__">spawn</span>(<span class="hljs-keyword">async</span> &#123;<br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">rc</span> = Rc::<span class="hljs-title function_ invoke__">new</span>(<span class="hljs-string">&quot;hello&quot;</span>);<br><br>        <span class="hljs-comment">// `rc` is used after `.await`. It must be persisted to</span><br>        <span class="hljs-comment">// the task&#x27;s state.</span><br>        <span class="hljs-title function_ invoke__">yield_now</span>().<span class="hljs-keyword">await</span>;<br><br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;&#125;&quot;</span>, rc);<br>    &#125;);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>可以换成 <code>Arc</code> 修复:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> tokio;<br><span class="hljs-keyword">use</span> tokio::task::yield_now;<br><span class="hljs-keyword">use</span> std::sync::Arc;<br><br><span class="hljs-meta">#[tokio::main]</span><br><span class="hljs-keyword">async</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    tokio::<span class="hljs-title function_ invoke__">spawn</span>(<span class="hljs-keyword">async</span> &#123;<br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">v</span> = Arc::<span class="hljs-title function_ invoke__">new</span>(<span class="hljs-string">&quot;hello world&quot;</span>);<br><br>        <span class="hljs-title function_ invoke__">yield_now</span>().<span class="hljs-keyword">await</span>;<br>    &#125;);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+
+
+
                 
               </div>
             
@@ -718,6 +777,12 @@ path.outline_glyph {
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2026/06/11/Rust-thread/" title="Rust-thread">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Rust-thread</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">

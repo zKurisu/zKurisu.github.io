@@ -58,8 +58,13 @@
 <meta property="og:image" content="http://example.com/img/rcore-app-os-memory-structure.png">
 <meta property="og:image" content="http://example.com/img/rcore-memory-layout-protection-example.png">
 <meta property="og:image" content="http://example.com/img/rcore-riscv-with-sbi-structure.png">
+<meta property="og:image" content="http://example.com/img/rcore-u-mode-hello-world-example.png">
+<meta property="og:image" content="http://example.com/img/rcore-hello-world-example-with-sret.png">
+<meta property="og:image" content="http://example.com/img/rcore-batch-process-os-structure.png">
+<meta property="og:image" content="http://example.com/img/rcore-batch-os-structure-example.png">
+<meta property="og:image" content="http://example.com/img/rcore-trap-context-switch-kernel-stack-status.png">
 <meta property="article:published_time" content="2026-06-04T08:33:51.000Z">
-<meta property="article:modified_time" content="2026-06-09T12:48:39.872Z">
+<meta property="article:modified_time" content="2026-06-11T11:56:38.419Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/rcore-qemu-start-os-example.png">
@@ -473,7 +478,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          22k 字
+          27k 字
         
       </span>
     
@@ -484,7 +489,7 @@ path.outline_glyph {
         
         
         
-          180 分钟
+          229 分钟
         
       </span>
     
@@ -1035,7 +1040,7 @@ path.outline_glyph {
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// os/src/sbi.rs</span><br><br><span class="hljs-keyword">const</span> SBI_SET_TIMER: <span class="hljs-type">usize</span> = <span class="hljs-number">0</span>;<br><span class="hljs-keyword">const</span> SBI_CONSOLE_PUTCHAR: <span class="hljs-type">usize</span> = <span class="hljs-number">1</span>;<br><span class="hljs-keyword">const</span> SBI_CONSOLE_GETCHAR: <span class="hljs-type">usize</span> = <span class="hljs-number">2</span>;<br>...<br></code></pre></td></tr></table></figure>
 
 <p>汇编级 SBI 调用示例:</p>
-<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// os/src/sbi.rs</span><br><span class="hljs-meta">#[inline(always)]</span> <span class="hljs-comment">// 总是把函数展开</span><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">sbi_call</span>(which: <span class="hljs-type">usize</span>, arg0: <span class="hljs-type">usize</span>, arg1: <span class="hljs-type">usize</span>, arg2: <span class="hljs-type">usize</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">usize</span> &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">ret</span>; <span class="hljs-comment">// 可修改的返回值变量</span><br>    <span class="hljs-keyword">unsafe</span> &#123;<br>        asm!( <span class="hljs-comment">// 内联汇编</span><br>            <span class="hljs-string">&quot;ecall&quot;</span>, <span class="hljs-comment">// 切换到更高特权级的机器指令</span><br>            <span class="hljs-title function_ invoke__">inlateout</span>(<span class="hljs-string">&quot;x10&quot;</span>) arg0 =&gt; ret, <span class="hljs-comment">// SBI 参数 0&amp; 返回值</span><br>            <span class="hljs-title function_ invoke__">in</span>(<span class="hljs-string">&quot;x11&quot;</span>) arg1,  <span class="hljs-comment">// SBI 参数 1</span><br>            <span class="hljs-title function_ invoke__">in</span>(<span class="hljs-string">&quot;x12&quot;</span>) arg2,  <span class="hljs-comment">// SBI 参数 2</span><br>            <span class="hljs-title function_ invoke__">in</span>(<span class="hljs-string">&quot;x17&quot;</span>) which, <span class="hljs-comment">// SBI 编号</span><br>        );<br>    &#125;<br>    ret <span class="hljs-comment">// 返回 ret 值</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// os/src/sbi.rs</span><br><span class="hljs-meta">#[inline(always)]</span> <span class="hljs-comment">// 总是把函数展开</span><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">sbi_call</span>(which: <span class="hljs-type">usize</span>, arg0: <span class="hljs-type">usize</span>, arg1: <span class="hljs-type">usize</span>, arg2: <span class="hljs-type">usize</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">usize</span> &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">ret</span>; <span class="hljs-comment">// 可修改的返回值变量</span><br>    <span class="hljs-keyword">unsafe</span> &#123;<br>        asm!( <span class="hljs-comment">// 内联汇编</span><br>            <span class="hljs-string">&quot;ecall&quot;</span>, <span class="hljs-comment">// Environment Call 切换到更高特权级的机器指令</span><br>            <span class="hljs-title function_ invoke__">inlateout</span>(<span class="hljs-string">&quot;x10&quot;</span>) arg0 =&gt; ret, <span class="hljs-comment">// SBI 参数 0&amp; 返回值</span><br>            <span class="hljs-title function_ invoke__">in</span>(<span class="hljs-string">&quot;x11&quot;</span>) arg1,  <span class="hljs-comment">// SBI 参数 1</span><br>            <span class="hljs-title function_ invoke__">in</span>(<span class="hljs-string">&quot;x12&quot;</span>) arg2,  <span class="hljs-comment">// SBI 参数 2</span><br>            <span class="hljs-title function_ invoke__">in</span>(<span class="hljs-string">&quot;x17&quot;</span>) which, <span class="hljs-comment">// SBI 编号</span><br>        );<br>    &#125;<br>    ret <span class="hljs-comment">// 返回 ret 值</span><br>&#125;<br></code></pre></td></tr></table></figure>
 
 <p>之后可以封装更高级的函数, 比如:</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// os/src/sbi.rs</span><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">console_putchar</span>(c: <span class="hljs-type">usize</span>) &#123;<br>    <span class="hljs-title function_ invoke__">sbi_call</span>(SBI_CONSOLE_PUTCHAR, c, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>);<br>&#125;<br><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">shutdown</span>() <span class="hljs-punctuation">-&gt;</span> ! &#123;<br>    <span class="hljs-title function_ invoke__">sbi_call</span>(SBI_SHUTDOWN, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>);<br>    <span class="hljs-built_in">panic!</span>(<span class="hljs-string">&quot;It should shutdown!&quot;</span>);<br>&#125;<br><br><span class="hljs-meta">#[panic_handler]</span><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">panic</span>(info: &amp;PanicInfo) <span class="hljs-punctuation">-&gt;</span> ! &#123; <span class="hljs-comment">// PanicInfo 是一个结构类型</span><br>&#125;<br>    <span class="hljs-keyword">if</span> <span class="hljs-keyword">let</span> <span class="hljs-variable">Some</span>(location) = info.<span class="hljs-title function_ invoke__">location</span>() &#123; <span class="hljs-comment">// 出错的位置是否存在</span><br>        <span class="hljs-built_in">println!</span>(<br>            <span class="hljs-string">&quot;Panicked at &#123;&#125;:&#123;&#125; &#123;&#125;&quot;</span>,<br>            location.<span class="hljs-title function_ invoke__">file</span>(), <span class="hljs-comment">// 出错的文件名</span><br>            location.<span class="hljs-title function_ invoke__">line</span>(), <span class="hljs-comment">// 出错的文件中的行数</span><br>            info.<span class="hljs-title function_ invoke__">message</span>().<span class="hljs-title function_ invoke__">unwrap</span>() <span class="hljs-comment">// 出错信息</span><br>        );<br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Panicked: &#123;&#125;&quot;</span>, info.<span class="hljs-title function_ invoke__">message</span>().<span class="hljs-title function_ invoke__">unwrap</span>());<br>    &#125;<br>    <span class="hljs-title function_ invoke__">shutdown</span>() <span class="hljs-comment">// 关机</span><br></code></pre></td></tr></table></figure>
@@ -1228,6 +1233,210 @@ path.outline_glyph {
 <p>注意都是先构建好 Execution Environment, 然后暴露出 Binary Interface.</p>
 <p>RISC-V 对应的架构图如下:</p>
 <p><img src="/../img/rcore-riscv-with-sbi-structure.png" srcset="/img/loading.gif" lazyload></p>
+<p>这里是不同 RISC-V 架构的实现, 最左边的只有 M 和 U mode, 中间的有 M, S, U mode, 右边的有 M, H, S, U mode. 可以根据具体应用来组合. 比如:</p>
+<ul>
+<li>M Mode: 蓝牙耳机</li>
+<li>U+M Mode: 电视遥控器</li>
+<li>U+S+M Mode: Android 手机</li>
+<li>U+S+H+M Mode: 数据中心服务器</li>
+</ul>
+<p>这里主要讲中间这种.</p>
+<p>RISC-V 定义了三种主要的特权级别, 加上一个可选的 Hypervisor 扩展的话就是 4 种:</p>
+<ul>
+<li>M-Mode (Machine mode), 所有 RISC-V 实现都必须有, 对应固件&#x2F;bootloader 等程序运行的环境</li>
+<li>H-Mode (Hypervisor mode), 可选, 对应虚拟机管理器 (VMM)</li>
+<li>S-mode (Supervisor mode), 传统的 OS 需要, 对应 OS 内核</li>
+<li>U-mode (User mode), 可选, 对应普通程序和应用</li>
+</ul>
+<p>每多一个 Mode, 都是为了增加一层隔离, 防止上层低权限应用对下层造成破坏. 越多的 Mode 灵活性更高, 但复杂性也会相应提升.</p>
+<p>U-Mode (User Mode) 是非特权模式 (Unprivileged Mode), 只能进行基本计算. 是应用程序运行的用户态 CPU 执行模式. 不能执行特权指令, 不能直接影响其他应用程序的执行.</p>
+<p>S-Mode (Supervisor Mode) 是特权模式 (Privileged Mode), 能限制 APP 的执行与内存访问, 是操作系统运行的内核态 CPU 执行模式, 能执行 S-Mode 特权指令, 能直接影响其他应用程序执行.</p>
+<p>H-Mode (Hypervisor Mode) 也是特权模式 (Privileged Mode), 能限制 OS 访问的内存空间, 是 VMM (Virtual Machine Monitor) 运行的 Hypervisor Mode CPU 执行模式, 能执行 H-Mode 特权指令, 能直接影响 OS 执行.</p>
+<p>M-mode (Machine Mode) 也是特权模式 (Privileged Mode), 可以控制物理内存, 直接关机等, 是 Bootloader&#x2F;BIOS 运行的 Machine Mode CPU 执行模式, 能执行 M-Mode 特权指令, 直接影响上述所有其他软件的运行, 可以访问所有 CSR (Control and State Register), 能处理最底层的如中断, 异常, 时钟, 物理内存保护等.</p>
+<p>特权级是为不同软件栈部分提供的一种保护机制, 在任何时候, 一个 RISC-V 硬件线程 (hart, 即 CPU core) 是运行在某个特权级上的 (注意是某个, 意思是不同的特权级有不同的 CSR), 这个权限级由 CSR 配置. </p>
+<p>当处理器执行当前特权模式不允许的操作时将产生一个异常, 这些异常通常会产生 trap 导致下层执行环境接管控制权.</p>
+<p>特权级的跨越可以通过几条特殊指令来实现, 比如 <code>ecall</code>, <code>sret</code>, <code>mret</code>.</p>
+<h4 id="CSR-寄存器"><a href="#CSR-寄存器" class="headerlink" title="CSR 寄存器"></a>CSR 寄存器</h4><p>寄存器分两类:</p>
+<ul>
+<li>通用寄存器 <code>x0~x31</code> (有编程用名方便记忆和使用, 比如 <code>x10</code> 对应 <code>a0</code>, argument 0, 也就是第一个参数). 可以用一般指令访问</li>
+<li>控制状态寄存器 (CSR, Control and Status Registers), 需要通过控制状态寄存器指令 (单独的指令) 来访问, 可以有 4096 个 CSR</li>
+</ul>
+<p>运行在用户态的应用程序不能访问大部分的 CSR 寄存器 (个别只读 CSR 可以访问, 比如获取时钟信息或其他通用信息). 而运行在内核态的操作系统可以通过访问 CSR 寄存器来控制计算机.</p>
+<p>常见的通过设置 CSR 实现的隔离有:</p>
+<ul>
+<li>权利隔离: 防止应用访问系统管控相关寄存器, 用地址空间配置寄存器 <code>mstatus/sstatus</code> CSR</li>
+<li>时间隔离: 防止应用长期使用 <code>100%</code> 的 CPU, 用中断配置寄存器 <code>sstatus/stvec</code> CSR</li>
+<li>数据隔离: 防止应用破坏窃取数据, 用地址空间相关寄存器 <code>sstatus/satp/stvec</code> CSR</li>
+</ul>
+<h2 id="RISC-V-系统编程"><a href="#RISC-V-系统编程" class="headerlink" title="RISC-V 系统编程"></a>RISC-V 系统编程</h2><p>这部分需要详细了解各重要 CSR 的功能.</p>
+<h3 id="U-Mode-编程"><a href="#U-Mode-编程" class="headerlink" title="U-Mode 编程"></a>U-Mode 编程</h3><p>U-Mode 下的应用程序想要直接使用计算机的物理资源, 就需要执行 <code>ecall</code> 指令切换到 S-Mode, OS 需要做一系列的安全检查, 确保这条指令不会产生威胁, 之后才进行进一步的操作.</p>
+<p>下面是在 U-Mode 下打印 “Hello World” 的一个小例子:</p>
+<p><img src="/../img/rcore-u-mode-hello-world-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>如果加上完整的返回路径则如下图所示:</p>
+<p><img src="/../img/rcore-hello-world-example-with-sret.png" srcset="/img/loading.gif" lazyload></p>
+<p>如果仅靠特权指令, 还无法避免 App 访问 OS 的数据, 需要借助页表来管理. 比如 U-mode 是页表管理的一块区域, S-mode 是另一块区域, 如果 U-mode 下的程序想访问 S-Mode 下的内存, 则会越界.</p>
+<h3 id="特权操作"><a href="#特权操作" class="headerlink" title="特权操作"></a>特权操作</h3><p>RISC-V 架构下的特权操作包括特权指令和 CSR 读写指令.</p>
+<p>特权指令只有下面几个:</p>
+<ul>
+<li><code>mret</code> (Machine return), 从 Machine Mode 返回</li>
+<li><code>sret</code> (Supervisor return), 从 Supervisor Mode 返回</li>
+<li><code>wfi</code> (Wait for interupt),  等待中断</li>
+<li><code>sfence.vma</code>, 虚拟地址屏障指令</li>
+<li><code>fence.i</code>, i-cache 屏障 (barrier) 指令</li>
+</ul>
+<p>很多其他的管理功能都是通过读写控制寄存器来实现.</p>
+<h3 id="M-Mode-编程"><a href="#M-Mode-编程" class="headerlink" title="M-Mode 编程"></a>M-Mode 编程</h3><p>M-Mode 是 RISC-V 中 hart 的最高权限模式, 对计算机系统的底层功能有完全的使用权.</p>
+<p>M-Mode 最重要的特性是拦截和处理异常和中断:</p>
+<ul>
+<li>异常是同步的: 执行期间产生, 访问无效的寄存器地址, 或执行了无效操作码的指令</li>
+<li>中断是异步的: 指令流异步的外部事件, 中断, 如时钟中断</li>
+</ul>
+<p>RISC-V 要求实现精确异常: 保证异常之前的所有指令都完整执行, 后续指令都没有开始执行.</p>
+<p>硬件会负责设置这些 CSR 寄存器, 而软件需要把它们读出来.</p>
+<p>中断时异步发生的, 通常是来自处理器外部的 I&#x2F;O 设备的信号的结果. 而 Timer 可以稳定产生中断, 可以:</p>
+<ul>
+<li>防止应用程序死占着 CPU 不妨, 让 Kernel 能得到执行权</li>
+<li>由高特权模式下的软件获得 CPU 控制权</li>
+<li>也可由高特权模式下的软件授权低特权模式软件处理中断</li>
+</ul>
+<p>目前 RISC-V 的设计中, 可以 disable 掉中断, 但是不能 disable 异常.</p>
+<p>通常处理器与外设之间还有一个中间结构, 比如 RISC-V 中的 PLIC (Platform Level Interupt Controller), 负责识别是哪一个外设产生的中断.</p>
+<p><code>scause</code> 的最高位, <code>1</code> 表示中断, <code>0</code> 表示异常.</p>
+<p>当中断&#x2F;异常发生时, 被打断的那条指令的 PC 就会保存在 <code>mepc</code> 内, 然后将 PC 设置为 <code>mtvec</code>.</p>
+<ul>
+<li>对于异常, <code>mepc</code> 指向导致异常的指令</li>
+<li>对于中断, <code>mepc</code> 指向中断处理后应该恢复执行的位置</li>
+</ul>
+<p>在产生一个中断之后, 通常会把 <code>mstatus[MIE位]</code> 置零以禁用中断 (避免中断没处理完又产生了下一个中断), 并把先前的 MIE 值保存在 <code>MPIE</code> 中.</p>
+<p>还需要注意, 发生异常&#x2F;中断时, 处理器控制权不会移交给权限更低的模式.</p>
+<p>(这部分很多可能得后续从 ppt 摘录下来)</p>
+<h4 id="中断-x2F-异常的响应"><a href="#中断-x2F-异常的响应" class="headerlink" title="中断&#x2F;异常的响应"></a>中断&#x2F;异常的响应</h4><p>当接收到中断时, 硬件需要设置中断标记, 然后依据中断向量调用相应中断服务.</p>
+<p>软件需要:</p>
+<ul>
+<li>保存当前处理状态</li>
+<li>执行中断程序</li>
+<li>清除中断标记</li>
+<li>恢复之前的保存状态</li>
+</ul>
+<h4 id="中断控制和状态寄存器"><a href="#中断控制和状态寄存器" class="headerlink" title="中断控制和状态寄存器"></a>中断控制和状态寄存器</h4><p>这里详细说明中断发生时, 相关 CSR 是如何工作的.</p>
+<p><code>mstatus</code> (Machine Status) 保存全局中断以及其他状态. 涉及中断的几个 bits:</p>
+<ul>
+<li><code>mie</code> (Machine Interupt Enable) 位, 控制中断是否启用</li>
+<li><code>mpie</code> (Machine previous Interupt Enable) 位, 记录中断发生之前 <code>mie</code> 的值</li>
+<li><code>spp</code> (Supervisor Previous Privilege), 记录变化之前的特权级别是 <code>S-Mode</code> 还是 <code>U-Mode</code></li>
+<li><code>mpp</code> (Machine Previous Privilege), 记录变化之前的特权级别是 <code>M-Mode</code> 还是 <code>U-Mode</code></li>
+</ul>
+<p><code>mcause</code> (Machine cause), 最高一位用来指示是 interrupt 还是 expect (异常). 其他位用来指示 interrupt&#x2F;exception 事件的编号.</p>
+<p>M-Mode 下中断的硬件响应流程如下:</p>
+<ul>
+<li>对于同步异常, <code>mepc</code> (Machine Exception Program Count) 指向导致异常的指令; 对于中断, <code>mepc</code> 指向中断处理后应该恢复执行的位置</li>
+<li>将 <code>pc</code> 设置为 <code>mtvec</code> (Machine Trap Vector) 的值</li>
+<li>根据 interrupt&#x2F;exception 来源设置 <code>mcause</code>, 并将 <code>mtval</code> (Machine Trap Value) 设置为出错的地址或者特定异常的信息字</li>
+<li>先将 <code>mstatus[mie]</code> 值保存在 <code>mpie</code> 中, 然后将 <code>mstatus[mie]</code> 位置零以禁用中断 (还有 <code>sie</code> 和 <code>spie</code> 要考虑)</li>
+<li>将发生异常之前的权限模式保存到 <code>mstatus[mpp]</code>, 然后更改特权模式为 <code>M</code></li>
+<li>跳转到 <code>pc</code> 指向的位置开始执行</li>
+</ul>
+<p>需要注意, 上面 trap 的过程是一个原子操作, 在一个时钟周期内同时完成, 不存在顺序.</p>
+<h3 id="S-Mode-编程"><a href="#S-Mode-编程" class="headerlink" title="S-Mode 编程"></a>S-Mode 编程</h3><p>S-Mode 需要避免 U-Mode 的 APP 执行越权指令, 非法地址或长期占用处理器. 还要让 U-Mode 的 APP 能够得到 S-Mode 的 OS 的服务.</p>
+<p>同样要注意此时的:</p>
+<ul>
+<li>中断&#x2F;异常机制</li>
+<li>异常&#x2F;中断的硬件处理</li>
+<li>异常&#x2F;中断的软件处理</li>
+<li>虚存机制</li>
+</ul>
+<p>MMU 负责地址转换, TLB 是页表下的一个 cache.</p>
+<h2 id="实践-批处理-OS"><a href="#实践-批处理-OS" class="headerlink" title="实践: 批处理 OS"></a>实践: 批处理 OS</h2><p>总体的软件架构为:</p>
+<p><img src="/../img/rcore-batch-process-os-structure.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>AppManager 能查找一个 App 在什么地方, 并能够将其加载执行</li>
+<li><code>Trap_handler</code> 来响应系统调用, 并且完成状态的保存与恢复</li>
+</ul>
+<p>简略的结构为:</p>
+<p><img src="/../img/rcore-batch-os-structure-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>相比于 LibOS 的进化目标是: 让 APP 与 OS 隔离, 自动加载并运行多个程序.</p>
+<p>实现的总体思路如下:</p>
+<ul>
+<li>编译: 应用程序和内核独立编译, 合并为一个镜像</li>
+<li>构造: 系统调用服务请求结构, 应用的管理与初始化</li>
+<li>运行: OS 一个一个地执行应用</li>
+<li>运行: 应用发出系统调用请求 (注意不是 SBI call 了), OS 完成系统调用</li>
+<li>运行: 应用于 OS 基于硬件特权级机制进行特权级切换</li>
+</ul>
+<p>具体的实验步骤:</p>
+<ul>
+<li>构造包含 OS 和多个 APP 的单一执行镜像</li>
+<li>通过批处理支持多个 APP 的自动加载和运行</li>
+<li>利用硬件特权级机制实现对操作系统自身的保护</li>
+<li>支持跨特权级的 <code>syscall</code></li>
+<li>实现特权级的穿越</li>
+</ul>
+<p>内核程序设计需要考虑:</p>
+<ul>
+<li>内核与应用形成单一镜像</li>
+<li>找到并加载应用程序二进制码</li>
+<li>特权级切换</li>
+<li>执行应用程序</li>
+</ul>
+<h3 id="代码准备"><a href="#代码准备" class="headerlink" title="代码准备"></a>代码准备</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ git <span class="hljs-built_in">clone</span> https://github.com/LearningOS/rCore-Tutorial-Code.git<br>$ <span class="hljs-built_in">cd</span> rCore-Tutorial-Code<br>$ git checkout ch2<br>$ git <span class="hljs-built_in">clone</span> https://github.com/LearningOS/rCore-Tutorial-Test.git user<br>$ <span class="hljs-built_in">cd</span> os<br>$ make run LOG=INFO<br></code></pre></td></tr></table></figure>
+
+<p><code>link_app.S</code> 由 <code>os/build.rs</code> 来生成, 用于将多个应用合在一起与 OS 形成一个二进制镜像.</p>
+<p><code>trap.S</code> 包含 Trap 上下文保存与恢复的汇编代码.</p>
+<p><code>user/src/bin</code> 目录下的就是 app 的源码.</p>
+<p>AppManager 定义在 <code>os/src/batch.rs</code> 内.</p>
+<h3 id="关键指令"><a href="#关键指令" class="headerlink" title="关键指令"></a>关键指令</h3><ul>
+<li><code>ecall</code>, 随着 <code>CPU</code> 当前特权级而触发不同的 trap</li>
+<li><code>ebreak</code>, 触发一个断点 trap 异常</li>
+<li><code>sret</code>, 同样随 <code>CPU</code> 当前特权级而触发不同 trap</li>
+</ul>
+<p>这里要有一个关键的认知, <code>ecall</code> 和 <code>sret</code> 这类指令会触发异常, 从而能够捕获. 在 U-Mode 执行 <code>ecall</code> 会触发名为 “Environment call from U-mode” 的异常. 在 S-Mode 执行会触发名为 “Environment call from S-mode” 的异常. 同理 M-Mode 会触发 “Environment call from M-mode”.</p>
+<p>会用到 <code>fence.i</code> 指令, 用于清理 i-cache.</p>
+<p>CPU 对物理内存所做的缓存又分成 d-cache 和 i-cache, OS 将修改会被 CPU 取址的内存区域, 这会使得 i-cache 中含有与内存中不一致的内容. OS 在这里必须使用 <code>fence.i</code> 指令手动清空 i-cache, 让里面所有的内容全部失效, 才能够保证 CPU 访问内存数据和代码的正确性.</p>
+<h3 id="特权级切换"><a href="#特权级切换" class="headerlink" title="特权级切换"></a>特权级切换</h3><p>这里相关的 CSR 有:</p>
+<ul>
+<li><code>sstatus</code>, <code>spp</code> 等字段给出 Trap 发生之前 CPU 的特权级 (S&#x2F;U) 等</li>
+<li><code>sepc</code>, 记录 Trap 发生之前执行的最后一条指令的地址</li>
+<li><code>scause</code>, 描述 Trap 的原因</li>
+<li><code>stval</code>, 给出 Trap 附加信息</li>
+<li><code>stvec</code>, 控制 Trap 处理代码的入口地址</li>
+</ul>
+<p>执行 <code>ecall</code> 时, 硬件会完成下面操作:</p>
+<ul>
+<li><code>sstatus</code> 的 <code>spp</code> 字段会被修改为 CPU 当前的特权级 (U&#x2F;S)</li>
+<li><code>sepc</code> 会被修改为 Trap 处理完成后默认会执行的下一条指令的地址</li>
+<li><code>scause/stval</code> 分别会被修改成这次 Trap 的原因以及相关的附加信息</li>
+<li>CPU 将当前特权级设为 S, 将 <code>pc</code> 设置为 <code>stvec</code> 所设置的 Trap 处理入口地址</li>
+</ul>
+<h3 id="用户栈和内核栈"><a href="#用户栈和内核栈" class="headerlink" title="用户栈和内核栈"></a>用户栈和内核栈</h3><p>之所以还要建立一个内核栈, 就在于内核的设计是完全不信任用户程序, 这里也不会相信用户为内核建立了一个可用的用户栈. 建立内核栈能保证所有控制逻辑内核自己知道 (都是基于安全的考虑).</p>
+<h3 id="Trap-上下文"><a href="#Trap-上下文" class="headerlink" title="Trap 上下文"></a>Trap 上下文</h3><p>通用寄存器, <code>sstatus</code>, <code>sepc</code> 这些需要进行恢复的都要用户自己来保存.</p>
+<p>切换 Trap 上下文的步骤为:</p>
+<ol>
+<li>应用程序通过 ecall 进入内核状态时, 操作系统保存被打断应用的 Trap 上下文</li>
+<li>操作系统根据 Trap 相关的 CSR 寄存器内容, 完成系统调用服务的分发与处理</li>
+<li>操作系统完成系统调用服务后, 需要恢复被打断的应用程序的 Trap 上下文, 并通过 <code>sret</code> 指令让应用程序继续执行</li>
+</ol>
+<p><img src="/../img/rcore-trap-context-switch-kernel-stack-status.png" srcset="/img/loading.gif" lazyload></p>
+<p>(蓝色部分需要手动用汇编完成, 黄色部分是编译器在高级语言中帮我们完成. 这是 make sense 的, 像 <code>sstatus</code> 这些寄存器, 在高级语言中确实不会自动保存, 也不知道保存在哪里)</p>
+<p><code>sscratch</code> CSR 是一个重要的中转寄存器, 在特权级切换的时候, 我们需要将 Trap 上下文保存在内核栈上, 因此需要一个寄存器暂存内核栈地址, 并以它作为基地址指针来依次保存 Trap 上下文的内容 (不能放通用寄存器, 因为很容易被覆盖).</p>
+<p>之后可以用: </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs asm">csrrw sp, sscratch, sp // 交换对 sp 和 sscratch 两个寄存器的内容<br></code></pre></td></tr></table></figure>
+
+<p>来完成用户栈到内核栈的切换.</p>
+<h3 id="执行应用程序"><a href="#执行应用程序" class="headerlink" title="执行应用程序"></a>执行应用程序</h3><p>因为一开始就在内核态, 所以对于第一个应用程序的运行, 还需要考虑从内核态切换到用户态.</p>
+<p>需要:</p>
+<ul>
+<li>准备好应用的上下文 <code>Trap 上下文</code></li>
+<li>恢复应用的相关寄存器</li>
+<li>应用用户栈指针和执行地址</li>
+<li>返回用户态让应用执行</li>
+</ul>
+<p>这里需要利用 <code>sret</code>, 其硬件逻辑是:</p>
+<ul>
+<li>恢复相应中断&#x2F;异常</li>
+<li>CPU Mode 从 S-Mode 回到 U-Mode</li>
+<li><code>pc &lt;- sepc</code>, 从 <code>sepc</code> 读地址到 <code>pc</code></li>
+<li>继续运行 (从 <code>pc</code> 开始)</li>
+</ul>
 
                 
               </div>

@@ -1,0 +1,1022 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/wallhaven-j5kjgy_1920x1080.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Jie">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="Rust 语言圣经 thread 部分 介绍该 blog 整理 Rust 中多线程和并发 (concurrent), 并行 (parallel) 的相关的内容. 下面是区分 concurrent 和 parallel 的简单例子, 排队到咖啡机做咖啡:   Concurrent 相当于可以排多列, 交替处理, 但是只有一个咖啡机, 每次只能做一杯咖啡 (一个 core, 多个任务交替运行) Par">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Rust-thread">
+<meta property="og:url" content="http://example.com/2026/06/11/Rust-thread/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="Rust 语言圣经 thread 部分 介绍该 blog 整理 Rust 中多线程和并发 (concurrent), 并行 (parallel) 的相关的内容. 下面是区分 concurrent 和 parallel 的简单例子, 排队到咖啡机做咖啡:   Concurrent 相当于可以排多列, 交替处理, 但是只有一个咖啡机, 每次只能做一杯咖啡 (一个 core, 多个任务交替运行) Par">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/rust-thread-concurrent-and-parallel-explain.png">
+<meta property="article:published_time" content="2026-06-11T05:19:17.000Z">
+<meta property="article:modified_time" content="2026-06-11T07:23:51.600Z">
+<meta property="article:author" content="Jie">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/rust-thread-concurrent-and-parallel-explain.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>Rust-thread - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<!-- hexo injector head_end start --><style>.typst-app {
+  margin: 0;
+  --typst-dom-scale: 1;
+  /* --typst-dom-scale: 1.5; */
+  margin: 5px;
+}
+
+.typst-dom-page {
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  --data-text-width: calc(1px * var(--typst-dom-scale));
+  --data-text-height: calc(1px * var(--typst-dom-scale));
+}
+
+.typst-back-canvas {
+  position: absolute;
+  z-index: -1;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  pointer-events: none;
+}
+
+.typst-svg-page {
+  position: absolute;
+  z-index: 0;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+}
+
+.typst-html-semantics {
+  position: absolute;
+  z-index: 2;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  color: transparent;
+  font-family: monospace;
+  white-space: pre;
+  opacity: 0.62;
+}
+
+.typst-html-semantics span {
+  color: transparent;
+  font-family: monospace;
+  transform-origin: left top;
+  position: absolute;
+  display: inline-block;
+  left: 0;
+  top: 0;
+}
+
+.typst-content-hint {
+  position: absolute;
+  display: inline-block;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.typst-html-semantics a {
+  position: absolute;
+  display: inline-block;
+}
+
+/* set transparent itself */
+.typst-content-group {
+  pointer-events: visible;
+}
+
+.typst-html-semantics span::-moz-selection {
+  color: transparent;
+  background: #7db9de;
+}
+
+.typst-html-semantics span::selection {
+  color: transparent;
+  background: #7db9de;
+}
+
+.typst-html-semantics *::-moz-selection {
+  color: transparent;
+  background: transparent;
+}
+
+.typst-html-semantics *::selection {
+  color: transparent;
+  background: transparent;
+}
+
+.typst-content-fallback {
+  color: transparent;
+  background: transparent;
+}
+
+.pseudo-link,
+.typst-text {
+  pointer-events: none;
+}
+
+.tsel span,
+.tsel {
+  left: 0;
+  position: fixed;
+  text-align: justify;
+  white-space: pre;
+  width: 100%;
+  height: 100%;
+  text-align-last: justify;
+  color: transparent;
+}
+.tsel span::-moz-selection,
+.tsel::-moz-selection {
+  color: transparent;
+  background: #7db9dea0;
+}
+.tsel span::selection,
+.tsel::selection {
+  color: transparent;
+  background: #7db9dea0;
+}
+.pseudo-link {
+  fill: transparent;
+  cursor: pointer;
+  pointer-events: all;
+}
+svg {
+  fill: none;
+}
+
+.outline_glyph path,
+path.outline_glyph {
+  fill: var(--glyph_fill);
+  stroke: var(--glyph_stroke);
+}
+
+.outline_glyph path,
+path.outline_glyph {
+  transition: 0.2s fill stroke;
+}
+.hover .typst-text {
+  --glyph_fill: #66bab7;
+  --glyph_stroke: #66bab7;
+}
+
+.typst-jump-ripple,
+.typst-debug-react-ripple {
+  width: 0;
+  height: 0;
+  background-color: transparent;
+  position: absolute;
+  border-radius: 50%;
+}
+.typst-jump-ripple {
+  border: 1px solid #66bab7;
+}
+.typst-debug-react-ripple {
+  border: 1px solid #cb1b45;
+}
+@keyframes typst-jump-ripple-effect {
+  to {
+    width: 10vw;
+    height: 10vw;
+    opacity: 0.01;
+    margin: -5vw;
+  }
+}
+@keyframes typst-debug-react-ripple-effect {
+  to {
+    width: 3vw;
+    height: 3vw;
+    opacity: 0.01;
+    margin: -1.5vw;
+  }
+}
+</style>
+<script>/// https://segmentfault.com/a/1190000016574288
+(function () {
+  var ie = !!(window.attachEvent && !window.opera);
+  var wk = /webkit\/(\d+)/i.test(navigator.userAgent) && RegExp.$1 < 525;
+  var fn = [];
+  var run = function () {
+    for (var i = 0; i < fn.length; i++) fn[i]();
+  };
+  var d = document;
+  d.ready = function (f) {
+    if (!ie && !wk && d.addEventListener) return d.addEventListener('DOMContentLoaded', f, false);
+    if (fn.push(f) > 1) return;
+    if (ie)
+      (function () {
+        try {
+          d.documentElement.doScroll('left');
+          run();
+        } catch (err) {
+          setTimeout(arguments.callee, 0);
+        }
+      })();
+    else if (wk)
+      var t = setInterval(function () {
+        if (/^(loaded|complete)$/.test(d.readyState)) clearInterval(t), run();
+      }, 0);
+  };
+})();
+</script>
+<script type="module" src="/typst/typst-main.js"></script><script src="/typst/svg-utils.js"></script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Jie</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/SteinsGate_all.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Rust-thread"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-06-11 13:19" pubdate>
+          2026年6月11日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          10k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          87 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">Rust-thread</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p><a target="_blank" rel="noopener" href="https://course.j4cka.cc/advance/concurrency-with-threads/concurrency-parallelism">Rust 语言圣经 thread 部分</a></p>
+<h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>该 blog 整理 Rust 中多线程和并发 (concurrent), 并行 (parallel) 的相关的内容.</p>
+<p>下面是区分 concurrent 和 parallel 的简单例子, 排队到咖啡机做咖啡:</p>
+<p><img src="/../img/rust-thread-concurrent-and-parallel-explain.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>Concurrent 相当于可以排多列, 交替处理, 但是只有一个咖啡机, 每次只能做一杯咖啡 (一个 core, 多个任务交替运行)</li>
+<li>Parallel 也是排多列, 但是每一列都有一个咖啡机, 每次能做多杯 (多个 core, 多个任务可以一起运行)</li>
+<li>如果是串行, 那么就只会有一个队列, 一个咖啡机</li>
+</ul>
+<p>在早期只有一个 CPU 核心时, 想同时处理多个任务, 借助的就是操作系统的多线程. 重点就在于任务间的调度, 什么时候让一个任务让出核心给其他线程使用.</p>
+<p>假如一个任务运行时间过长, 就会导致用户界面的假死, 这时需要靠调度器将任务强行切换到后台, 然后按照某些条件从队列中选择下一个任务进行执行.</p>
+<p>当 CPU 核心增加的 <code>N</code> 时, 同一时间就能有 <code>N</code> 个任务被处理了, 此时的并行度就是 <code>N</code>.</p>
+<p>但操作系统此时的任务肯定远不止 <code>N</code> 个, 这些任务放到 <code>M</code> 个队列中, 接着交给 <code>N</code> 个核心来执行, 实现了一种 <code>M:N</code> 的处理模型, 此时并行和并发是同时发生的.</p>
+<p>对并发和并行的正式定义如下:</p>
+<ul>
+<li>如果某个系统支持两个或者多个动作同时存在, 那么这个系统就是一个并发系统</li>
+<li>如果某个系统支持两个或者多个动作同时执行, 那么这个系统就是一个并行系统</li>
+</ul>
+<h1 id="编程语言的并发模型"><a href="#编程语言的并发模型" class="headerlink" title="编程语言的并发模型"></a>编程语言的并发模型</h1><p>由于操作系统提供了创建线程的 API, 因此部分语言会直接调用该 API 来创建线程, 最终程序内的线程数和该程序占用的操作系统线程数相等, 一般称之为 <code>1:1</code> 线程模型, 例如 <code>Rust</code>.</p>
+<p>还有一些语言在内部实现了自己的线程模型 (绿色线程, 协程), 程序内的 M 个线程会以某种映射方式使用 N 个操作系统线程去运行, 因此成 <code>M:N</code> 线程模型, 其中 M 和 N 并没有特定的彼此限制关系, 比如 <code>Go</code>.</p>
+<h1 id="基本使用"><a href="#基本使用" class="headerlink" title="基本使用"></a>基本使用</h1><p>由于多线程的代码是同时运行的, 因此在无法保证线程间的执行顺序时, 会导致一些问题:</p>
+<ul>
+<li>Race condition, 多个线程以非一致性的顺序同时访问数据资源</li>
+<li>Deadlock, 两个线程都想使用某个资源, 但是又都在等待对方释放资源后才能使用, 最终都无法继续执行</li>
+</ul>
+<p>因此在编程时需要尤其注意这些问题.</p>
+<h2 id="创建线程"><a href="#创建线程" class="headerlink" title="创建线程"></a>创建线程</h2><p>用 <code>thread::spawn</code> 来创建线程:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::thread;<br><span class="hljs-keyword">use</span> std::time::Duration;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    thread::<span class="hljs-title function_ invoke__">spawn</span>(|| &#123;<br>        (<span class="hljs-number">1</span>..<span class="hljs-number">10</span>).<span class="hljs-title function_ invoke__">for_each</span>(|x| &#123;<br>            <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;hi &#123;&#125;, from spawned thread...&quot;</span>, x);<br>            thread::<span class="hljs-title function_ invoke__">sleep</span>(Duration::<span class="hljs-title function_ invoke__">from_millis</span>(<span class="hljs-number">1</span>));<br>        &#125;);<br>    &#125;);<br><br>    (<span class="hljs-number">1</span>..<span class="hljs-number">5</span>).<span class="hljs-title function_ invoke__">for_each</span>(|x| &#123;<br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;hi &#123;&#125;, from main thread...&quot;</span>, x);<br>        thread::<span class="hljs-title function_ invoke__">sleep</span>(Duration::<span class="hljs-title function_ invoke__">from_millis</span>(<span class="hljs-number">1</span>));<br>    &#125;);<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>thread::sleep</code> 会让线程休眠指定的时间, 将核心让给其他线程来运行</li>
+</ul>
+<p>输出:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ ./thread <br>hi 1, from main thread...<br>hi 1, from spawned thread...<br>hi 2, from main thread...<br>hi 2, from spawned thread...<br>hi 3, from main thread...<br>hi 3, from spawned thread...<br>hi 4, from main thread...<br>hi 4, from spawned thread...<br></code></pre></td></tr></table></figure>
+
+<p>虽然线程往往是轮流执行的, 但这一点并没有保证, 调度方式取决于操作系统的实现, 因此不能只以来线程的执行顺序.</p>
+<h2 id="等待子线程的结束"><a href="#等待子线程的结束" class="headerlink" title="等待子线程的结束"></a>等待子线程的结束</h2><p>上述例子可以看到, 子线程并没有完整执行, 但由于主线程执行结束并退出, 因此子线程也被 kill 了.</p>
+<p><code>thread::spawn</code> 其实会返回一个 <code>handle</code>, 其 <code>join</code> 方法就能用来等待执行结束, 相当于阻塞住别的线程, 自己独占了:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::thread;<br><span class="hljs-keyword">use</span> std::time::Duration;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">handle</span> = thread::<span class="hljs-title function_ invoke__">spawn</span>(|| &#123;<br>        (<span class="hljs-number">1</span>..<span class="hljs-number">10</span>).<span class="hljs-title function_ invoke__">for_each</span>(|x| &#123;<br>            <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;hi &#123;&#125;, from spawned thread...&quot;</span>, x);<br>            thread::<span class="hljs-title function_ invoke__">sleep</span>(Duration::<span class="hljs-title function_ invoke__">from_millis</span>(<span class="hljs-number">1</span>));<br>        &#125;);<br>    &#125;);<br><br>    handle.<span class="hljs-title function_ invoke__">join</span>().<span class="hljs-title function_ invoke__">expect</span>(<span class="hljs-string">&quot;Err when join the thread...&quot;</span>);<br><br>    (<span class="hljs-number">1</span>..<span class="hljs-number">5</span>).<span class="hljs-title function_ invoke__">for_each</span>(|x| &#123;<br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;hi &#123;&#125;, from main thread...&quot;</span>, x);<br>        thread::<span class="hljs-title function_ invoke__">sleep</span>(Duration::<span class="hljs-title function_ invoke__">from_millis</span>(<span class="hljs-number">1</span>));<br>    &#125;);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>此时运行输出就是:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ ./thread <br>hi 1, from spawned thread...<br>hi 2, from spawned thread...<br>hi 3, from spawned thread...<br>hi 4, from spawned thread...<br>hi 5, from spawned thread...<br>hi 6, from spawned thread...<br>hi 7, from spawned thread...<br>hi 8, from spawned thread...<br>hi 9, from spawned thread...<br>hi 1, from main thread...<br>hi 2, from main thread...<br>hi 3, from main thread...<br>hi 4, from main thread...<br></code></pre></td></tr></table></figure>
+
+<h2 id="在线程闭包中使用-move"><a href="#在线程闭包中使用-move" class="headerlink" title="在线程闭包中使用 move"></a>在线程闭包中使用 move</h2><p>直接在线程中使用外部数据可能会编译不过:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::thread;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">v</span> = <span class="hljs-built_in">vec!</span>[<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>];<br><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">handle</span> = thread::<span class="hljs-title function_ invoke__">spawn</span>(|| &#123;<br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Vec: &#123;:?&#125;&quot;</span>, v);<br>    &#125;);<br><br>    handle.<span class="hljs-title function_ invoke__">join</span>().<span class="hljs-title function_ invoke__">unwrap</span>();<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>编译:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs sh">error[E0373]: closure may outlive the current <span class="hljs-keyword">function</span>, but it borrows `v`, <br><span class="hljs-built_in">which</span> is owned by the current <span class="hljs-keyword">function</span><br> --&gt; thread.rs:6:32<br>  |<br>6 |     <span class="hljs-built_in">let</span> handle = thread::spawn(|| &#123;<br>  |                                ^^ may outlive borrowed value `v`<br>7 |         println!(<span class="hljs-string">&quot;Vec: &#123;:?&#125;&quot;</span>, v);<br>  |                               - `v` is borrowed here<br>  |<br>note: <span class="hljs-keyword">function</span> requires argument <span class="hljs-built_in">type</span> to outlive `<span class="hljs-string">&#x27;static`</span><br><span class="hljs-string"> --&gt; thread.rs:6:18</span><br><span class="hljs-string">  |</span><br><span class="hljs-string">6 |       let handle = thread::spawn(|| &#123;</span><br><span class="hljs-string">  |  __________________^</span><br><span class="hljs-string">7 | |         println!(&quot;Vec: &#123;:?&#125;&quot;, v);</span><br><span class="hljs-string">8 | |     &#125;);</span><br><span class="hljs-string">  | |______^</span><br><span class="hljs-string">help: to force the closure to take ownership of `v` (and any other reference</span><br><span class="hljs-string">d variables), use the `move` keyword</span><br><span class="hljs-string">  |</span><br><span class="hljs-string">6 |     let handle = thread::spawn(move || &#123;</span><br><span class="hljs-string">  |                                ++++</span><br><span class="hljs-string"></span><br><span class="hljs-string">error: aborting due to 1 previous error</span><br><span class="hljs-string"></span><br><span class="hljs-string">For more information about this error, try `rustc --explain E0373`.</span><br></code></pre></td></tr></table></figure>
+<p>因为编译器无法确定线程会活多久, 如果线程还在但 <code>v</code> 被销毁了, 则会引发错误.</p>
+<p>比如下面情况, 提前 <code>drop</code> 掉 <code>v</code>, 但线程可能还没有运行 <code>println</code>, 那么当它执行时, 就会报错:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::thread;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">v</span> = <span class="hljs-built_in">vec!</span>[<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>];<br><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">handle</span> = thread::<span class="hljs-title function_ invoke__">spawn</span>(|| &#123;<br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Vec: &#123;:?&#125;&quot;</span>, v);<br>    &#125;);<br><br>    <span class="hljs-title function_ invoke__">drop</span>(v);<br><br>    handle.<span class="hljs-title function_ invoke__">join</span>().<span class="hljs-title function_ invoke__">unwrap</span>();<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>此时就需要直接将变量 <code>move</code> 到 <code>thread</code> 中, 当 <code>thread</code> 结束, 自然就会销毁:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::thread;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">v</span> = <span class="hljs-built_in">vec!</span>[<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>];<br><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">handle</span> = thread::<span class="hljs-title function_ invoke__">spawn</span>(<span class="hljs-keyword">move</span> || &#123;<br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Vec: &#123;:?&#125;&quot;</span>, v);<br>    &#125;);<br><br>    handle.<span class="hljs-title function_ invoke__">join</span>().<span class="hljs-title function_ invoke__">unwrap</span>();<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="线程屏障-Barrier"><a href="#线程屏障-Barrier" class="headerlink" title="线程屏障 (Barrier)"></a>线程屏障 (Barrier)</h2><p>可以用 <code>Barrier</code> 让多个线程都执行到某个点后, 才继续一起往后执行:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::sync::&#123;Arc, Barrier&#125;;<br><span class="hljs-keyword">use</span> std::thread;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">handles</span> = <span class="hljs-type">Vec</span>::<span class="hljs-title function_ invoke__">with_capacity</span>(<span class="hljs-number">6</span>);<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">barrier</span> = Arc::<span class="hljs-title function_ invoke__">new</span>(Barrier::<span class="hljs-title function_ invoke__">new</span>(<span class="hljs-number">6</span>));<br><br>    <span class="hljs-keyword">for</span> <span class="hljs-variable">_</span> <span class="hljs-keyword">in</span> <span class="hljs-number">0</span>..<span class="hljs-number">6</span> &#123;<br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">b</span> = barrier.<span class="hljs-title function_ invoke__">clone</span>();<br>        handles.<span class="hljs-title function_ invoke__">push</span>(thread::<span class="hljs-title function_ invoke__">spawn</span>(<span class="hljs-keyword">move</span>|| &#123;<br>            <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;before wait&quot;</span>);<br>            b.<span class="hljs-title function_ invoke__">wait</span>();<br>            <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;after wait&quot;</span>);<br>        &#125;));<br>    &#125;<br><br>    <span class="hljs-keyword">for</span> <span class="hljs-variable">handle</span> <span class="hljs-keyword">in</span> handles &#123;<br>        handle.<span class="hljs-title function_ invoke__">join</span>().<span class="hljs-title function_ invoke__">unwrap</span>();<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>Barrier::new(6)</code> 的意思是: 必须要有 6 个线程到达 <code>wait()</code>, 它们才能一起继续往下跑</li>
+</ul>
+<p>输出:</p>
+<figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs livecodeserver"><span class="hljs-keyword">before</span> <span class="hljs-built_in">wait</span><br><span class="hljs-keyword">before</span> <span class="hljs-built_in">wait</span><br><span class="hljs-keyword">before</span> <span class="hljs-built_in">wait</span><br><span class="hljs-keyword">before</span> <span class="hljs-built_in">wait</span><br><span class="hljs-keyword">before</span> <span class="hljs-built_in">wait</span><br><span class="hljs-keyword">before</span> <span class="hljs-built_in">wait</span><br><span class="hljs-keyword">after</span> <span class="hljs-built_in">wait</span><br><span class="hljs-keyword">after</span> <span class="hljs-built_in">wait</span><br><span class="hljs-keyword">after</span> <span class="hljs-built_in">wait</span><br><span class="hljs-keyword">after</span> <span class="hljs-built_in">wait</span><br><span class="hljs-keyword">after</span> <span class="hljs-built_in">wait</span><br><span class="hljs-keyword">after</span> <span class="hljs-built_in">wait</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="只被调用一次的函数"><a href="#只被调用一次的函数" class="headerlink" title="只被调用一次的函数"></a>只被调用一次的函数</h2><p>有时需要某个函数在多线程环境下只被调用一次, 无论哪个线程先调用:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::thread;<br><span class="hljs-keyword">use</span> std::sync::Once;<br><br><span class="hljs-keyword">static</span> <span class="hljs-keyword">mut</span> VAL: <span class="hljs-type">usize</span> = <span class="hljs-number">0</span>;<br><span class="hljs-keyword">static</span> INIT: Once = Once::<span class="hljs-title function_ invoke__">new</span>();<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">handle1</span> = thread::<span class="hljs-title function_ invoke__">spawn</span>(<span class="hljs-keyword">move</span> || &#123;<br>        INIT.<span class="hljs-title function_ invoke__">call_once</span>(|| &#123;<br>            <span class="hljs-keyword">unsafe</span> &#123;<br>                VAL = <span class="hljs-number">1</span>;<br>            &#125;<br>        &#125;);<br>    &#125;);<br><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">handle2</span> = thread::<span class="hljs-title function_ invoke__">spawn</span>(<span class="hljs-keyword">move</span> || &#123;<br>        INIT.<span class="hljs-title function_ invoke__">call_once</span>(|| &#123;<br>            <span class="hljs-keyword">unsafe</span> &#123;<br>                VAL = <span class="hljs-number">2</span>;<br>            &#125;<br>        &#125;);<br>    &#125;);<br><br>    handle1.<span class="hljs-title function_ invoke__">join</span>().<span class="hljs-title function_ invoke__">unwrap</span>();<br>    handle2.<span class="hljs-title function_ invoke__">join</span>().<span class="hljs-title function_ invoke__">unwrap</span>();<br><br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;&#125;&quot;</span>, <span class="hljs-keyword">unsafe</span> &#123; VAL &#125;);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="线程同步-Mutex"><a href="#线程同步-Mutex" class="headerlink" title="线程同步: Mutex"></a>线程同步: Mutex</h2><p>Mutex (Mutual Exclusion, 互斥锁), 能让多个线程并发的访问变成排队访问: 同一时间, 只允许一个线程 <code>A</code> 访问该值, 其他线程需要等待 <code>A</code> 访问后才能继续.</p>
+<p>单线程中使用示例:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::sync::Mutex;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-comment">// 使用`Mutex`结构体的关联函数创建新的互斥锁实例</span><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">m</span> = Mutex::<span class="hljs-title function_ invoke__">new</span>(<span class="hljs-number">5</span>);<br><br>    &#123;<br>        <span class="hljs-comment">// 获取锁，然后deref为`m`的引用</span><br>        <span class="hljs-comment">// lock返回的是Result</span><br>        <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">num</span> = m.<span class="hljs-title function_ invoke__">lock</span>().<span class="hljs-title function_ invoke__">unwrap</span>();<br>        *num = <span class="hljs-number">6</span>;<br>        <span class="hljs-comment">// 锁自动被drop</span><br>    &#125;<br><br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;m = &#123;:?&#125;&quot;</span>, m);<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>和 <code>Box</code> 类似, 数据被 <code>Mutex</code> 所有, 要访问内部数据, 需要使用方法 <code>m.lock()</code> 向 <code>m</code> 申请一个锁, 该方法会阻塞当前线程, 直到获得锁.</p>
+<p><code>m.lock()</code> 也可能报错, 例如当前正在持有锁的线程 <code>panic</code> 了. 此时其他线程不可能再获得锁, 因此 <code>lock</code> 方法会返回一个错误.</p>
+<p>本质上, <code>m.lock()</code> 返回一个智能指针 <code>MutexGuard&lt;T&gt;</code>, 其实现了 <code>Deref</code> trait, 会被自动解引用后获得一个引用类型, 该引用指向 <code>Mutex</code> 内部的数据; 它还实现了 <code>Drop</code> trait, 会在超出作用域后自动释放锁.</p>
+<p>有时需要用 <code>drop</code> 手动释放锁, 不然会永远阻塞:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::sync::Mutex;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">m</span> = Mutex::<span class="hljs-title function_ invoke__">new</span>(<span class="hljs-number">5</span>);<br><br>    <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">num</span> = m.<span class="hljs-title function_ invoke__">lock</span>().<span class="hljs-title function_ invoke__">unwrap</span>();<br>    *num = <span class="hljs-number">6</span>;<br>    <span class="hljs-comment">// 锁还没有被 drop 就尝试申请下一个锁，导致主线程阻塞</span><br>    <span class="hljs-comment">// drop(num); // 手动 drop num ，可以让 num1 申请到下个锁</span><br>    <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">num1</span> = m.<span class="hljs-title function_ invoke__">lock</span>().<span class="hljs-title function_ invoke__">unwrap</span>();<br>    *num1 = <span class="hljs-number">7</span>;<br>    <span class="hljs-comment">// drop(num1); // 手动 drop num1 ，观察打印结果的不同</span><br><br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;m = &#123;:?&#125;&quot;</span>, m);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>多线程示例:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::sync::&#123;Arc, Mutex&#125;;<br><span class="hljs-keyword">use</span> std::thread;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-comment">// 通过`Arc`实现`Mutex`的多所有权</span><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">counter</span> = Arc::<span class="hljs-title function_ invoke__">new</span>(Mutex::<span class="hljs-title function_ invoke__">new</span>(<span class="hljs-number">0</span>));<br>    <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">handles</span> = <span class="hljs-built_in">vec!</span>[];<br><br>    <span class="hljs-keyword">for</span> <span class="hljs-variable">_</span> <span class="hljs-keyword">in</span> <span class="hljs-number">0</span>..<span class="hljs-number">10</span> &#123;<br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">counter</span> = Arc::<span class="hljs-title function_ invoke__">clone</span>(&amp;counter);<br>        <span class="hljs-comment">// 创建子线程，并将`Mutex`的所有权拷贝传入到子线程中</span><br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">handle</span> = thread::<span class="hljs-title function_ invoke__">spawn</span>(<span class="hljs-keyword">move</span> || &#123;<br>            <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">num</span> = counter.<span class="hljs-title function_ invoke__">lock</span>().<span class="hljs-title function_ invoke__">unwrap</span>();<br><br>            *num += <span class="hljs-number">1</span>;<br>        &#125;);<br>        handles.<span class="hljs-title function_ invoke__">push</span>(handle);<br>    &#125;<br><br>    <span class="hljs-comment">// 等待所有子线程完成</span><br>    <span class="hljs-keyword">for</span> <span class="hljs-variable">handle</span> <span class="hljs-keyword">in</span> handles &#123;<br>        handle.<span class="hljs-title function_ invoke__">join</span>().<span class="hljs-title function_ invoke__">unwrap</span>();<br>    &#125;<br><br>    <span class="hljs-comment">// 输出最终的计数结果</span><br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Result: &#123;&#125;&quot;</span>, *counter.<span class="hljs-title function_ invoke__">lock</span>().<span class="hljs-title function_ invoke__">unwrap</span>());<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>还有 <code>try_lock</code> 方法, 其会尝试获取一次锁, 如果无法获取会返回一个错误, 但不会阻塞.</p>
+<h2 id="线程同步-RwLock"><a href="#线程同步-RwLock" class="headerlink" title="线程同步: RwLock"></a>线程同步: RwLock</h2><p><code>RwLock</code> 读写锁, 同一时间允许多个读锁 (但读锁和写锁不能同时存在), 其余与 <code>Mutex</code> 一致:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::sync::RwLock;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">lock</span> = RwLock::<span class="hljs-title function_ invoke__">new</span>(<span class="hljs-number">5</span>);<br><br>    <span class="hljs-comment">// 同一时间允许多个读</span><br>    &#123;<br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">r1</span> = lock.<span class="hljs-title function_ invoke__">read</span>().<span class="hljs-title function_ invoke__">unwrap</span>();<br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">r2</span> = lock.<span class="hljs-title function_ invoke__">read</span>().<span class="hljs-title function_ invoke__">unwrap</span>();<br>        <span class="hljs-built_in">assert_eq!</span>(*r1, <span class="hljs-number">5</span>);<br>        <span class="hljs-built_in">assert_eq!</span>(*r2, <span class="hljs-number">5</span>);<br>    &#125; <span class="hljs-comment">// 读锁在此处被drop</span><br><br>    <span class="hljs-comment">// 同一时间只允许一个写</span><br>    &#123;<br>        <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">w</span> = lock.<span class="hljs-title function_ invoke__">write</span>().<span class="hljs-title function_ invoke__">unwrap</span>();<br>        *w += <span class="hljs-number">1</span>;<br>        <span class="hljs-built_in">assert_eq!</span>(*w, <span class="hljs-number">6</span>);<br><br>        <span class="hljs-comment">// 以下代码会阻塞发生死锁，因为读和写不允许同时存在</span><br>        <span class="hljs-comment">// 写锁w直到该语句块结束才被释放，因此下面的读锁依然处于`w`的作用域中</span><br>        <span class="hljs-comment">// let r1 = lock.read();</span><br>        <span class="hljs-comment">// println!(&quot;&#123;:?&#125;&quot;,r1);</span><br>    &#125;<span class="hljs-comment">// 写锁在此处被drop</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="线程同步-消息传递"><a href="#线程同步-消息传递" class="headerlink" title="线程同步: 消息传递"></a>线程同步: 消息传递</h2><p>Rust 在标准库 <code>std::sync::mpsc</code> (Multiple Producer, Single Consumer) 中提供了消息通道 (channel).</p>
+<p>一个单发送者, 单接收者的简单场景如下:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::sync::mpsc;<br><span class="hljs-keyword">use</span> std::thread;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-comment">// 创建一个消息通道, 返回一个元组：(发送者，接收者)</span><br>    <span class="hljs-keyword">let</span> (tx, rx) = mpsc::<span class="hljs-title function_ invoke__">channel</span>();<br><br>    <span class="hljs-comment">// 创建线程，并发送消息</span><br>    thread::<span class="hljs-title function_ invoke__">spawn</span>(<span class="hljs-keyword">move</span> || &#123;<br>        <span class="hljs-comment">// 发送一个数字1, send方法返回Result&lt;T,E&gt;，通过unwrap进行快速错误处理</span><br>        tx.<span class="hljs-title function_ invoke__">send</span>(<span class="hljs-number">1</span>).<span class="hljs-title function_ invoke__">unwrap</span>();<br><br>        <span class="hljs-comment">// 下面代码将报错，因为编译器自动推导出通道传递的值是i32类型，那么Option&lt;i32&gt;类型将产生不匹配错误</span><br>        <span class="hljs-comment">// tx.send(Some(1)).unwrap()</span><br>    &#125;);<br><br>    <span class="hljs-comment">// 在主线程中接收子线程发送的消息并输出</span><br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;receive &#123;&#125;&quot;</span>, rx.<span class="hljs-title function_ invoke__">recv</span>().<span class="hljs-title function_ invoke__">unwrap</span>());<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这里 <code>tx</code> (transmission, 代表发送者) 和 <code>rx</code> (recieve, 代表接收者)  的类型由编译器自动推断. 由于 <code>tx.send(1)</code> 发送的是 <code>i32</code> 类型, 因此类型分别为 <code>mpsc::Sender&lt;i32&gt;</code> 和 <code>mpsc::Receiver&lt;i32&gt;</code>.</p>
+<p><code>rx.recv()</code> 会阻塞当前线程, 直到读取到值或者通道被关闭.</p>
+<p>用 <code>try_recv()</code> 方法则会尝试接收一次信息, 不会阻塞, 当通道中没有消息时立刻返回一个错误.</p>
+<p>通道传输数据时, 也会遵循 Rust 的所有权规则:</p>
+<ul>
+<li>若值实现了 <code>Copy</code> trait, 则会直接复制一份该值, 然后传输过去</li>
+<li>如果没有实现 <code>Copy</code> trait, 则会将所有权转移给接收端</li>
+</ul>
+<p>注意 <code>mpsc::Receiver</code> 实现了 <code>Iterator</code>, 能够阻塞迭代取值:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::sync::mpsc;<br><span class="hljs-keyword">use</span> std::thread;<br><span class="hljs-keyword">use</span> std::time::Duration;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> (tx, rx) = mpsc::<span class="hljs-title function_ invoke__">channel</span>();<br><br>    thread::<span class="hljs-title function_ invoke__">spawn</span>(<span class="hljs-keyword">move</span> || &#123;<br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">vals</span> = <span class="hljs-built_in">vec!</span>[<br>            <span class="hljs-type">String</span>::<span class="hljs-title function_ invoke__">from</span>(<span class="hljs-string">&quot;hi&quot;</span>),<br>            <span class="hljs-type">String</span>::<span class="hljs-title function_ invoke__">from</span>(<span class="hljs-string">&quot;from&quot;</span>),<br>            <span class="hljs-type">String</span>::<span class="hljs-title function_ invoke__">from</span>(<span class="hljs-string">&quot;the&quot;</span>),<br>            <span class="hljs-type">String</span>::<span class="hljs-title function_ invoke__">from</span>(<span class="hljs-string">&quot;thread&quot;</span>),<br>        ];<br><br>        <span class="hljs-keyword">for</span> <span class="hljs-variable">val</span> <span class="hljs-keyword">in</span> vals &#123;<br>            tx.<span class="hljs-title function_ invoke__">send</span>(val).<span class="hljs-title function_ invoke__">unwrap</span>();<br>            thread::<span class="hljs-title function_ invoke__">sleep</span>(Duration::<span class="hljs-title function_ invoke__">from_secs</span>(<span class="hljs-number">1</span>));<br>        &#125;<br>    &#125;);<br><br>    <span class="hljs-keyword">for</span> <span class="hljs-variable">received</span> <span class="hljs-keyword">in</span> rx &#123;<br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Got: &#123;&#125;&quot;</span>, received);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>多发送者的示例如下:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::sync::mpsc;<br><span class="hljs-keyword">use</span> std::thread;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> (tx, rx) = mpsc::<span class="hljs-title function_ invoke__">channel</span>();<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">tx1</span> = tx.<span class="hljs-title function_ invoke__">clone</span>();<br>    thread::<span class="hljs-title function_ invoke__">spawn</span>(<span class="hljs-keyword">move</span> || &#123;<br>        tx.<span class="hljs-title function_ invoke__">send</span>(<span class="hljs-type">String</span>::<span class="hljs-title function_ invoke__">from</span>(<span class="hljs-string">&quot;hi from raw tx&quot;</span>)).<span class="hljs-title function_ invoke__">unwrap</span>();<br>    &#125;);<br><br>    thread::<span class="hljs-title function_ invoke__">spawn</span>(<span class="hljs-keyword">move</span> || &#123;<br>        tx1.<span class="hljs-title function_ invoke__">send</span>(<span class="hljs-type">String</span>::<span class="hljs-title function_ invoke__">from</span>(<span class="hljs-string">&quot;hi from cloned tx&quot;</span>)).<span class="hljs-title function_ invoke__">unwrap</span>();<br>    &#125;);<br><br>    <span class="hljs-keyword">for</span> <span class="hljs-variable">received</span> <span class="hljs-keyword">in</span> rx &#123;<br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Got: &#123;&#125;&quot;</span>, received);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>上述通道都是异步通道, 发送端不会阻塞. 标准库中还有同步通道, 发送消息是阻塞的, 只有在消息接收后才会解除阻塞:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::sync::mpsc;<br><span class="hljs-keyword">use</span> std::thread;<br><span class="hljs-keyword">use</span> std::time::Duration;<br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> (tx, rx)= mpsc::<span class="hljs-title function_ invoke__">sync_channel</span>(<span class="hljs-number">0</span>);<br><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">handle</span> = thread::<span class="hljs-title function_ invoke__">spawn</span>(<span class="hljs-keyword">move</span> || &#123;<br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;发送之前&quot;</span>);<br>        tx.<span class="hljs-title function_ invoke__">send</span>(<span class="hljs-number">1</span>).<span class="hljs-title function_ invoke__">unwrap</span>();<br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;发送之后&quot;</span>);<br>    &#125;);<br><br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;睡眠之前&quot;</span>);<br>    thread::<span class="hljs-title function_ invoke__">sleep</span>(Duration::<span class="hljs-title function_ invoke__">from_secs</span>(<span class="hljs-number">3</span>));<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;睡眠之后&quot;</span>);<br><br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;receive &#123;&#125;&quot;</span>, rx.<span class="hljs-title function_ invoke__">recv</span>().<span class="hljs-title function_ invoke__">unwrap</span>());<br>    handle.<span class="hljs-title function_ invoke__">join</span>().<span class="hljs-title function_ invoke__">unwrap</span>();<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>sync_channel(N)</code> 这里的参数决定可以无阻塞发送几条消息</li>
+</ul>
+<h1 id="Rc-和-Arc"><a href="#Rc-和-Arc" class="headerlink" title="Rc 和 Arc"></a>Rc 和 Arc</h1><p>这里主要想讲 <code>Arc</code>, 因为 <code>Rc</code> 是单线程场景, 但这里顺便就一起讲了.</p>
+<p>Rust 中一个值只能有一个所有者, 但是需要考虑下面情况:</p>
+<ul>
+<li>在图数据结构中, 一个节点可能由多条边共享, 只有该节点没有边指向它时, 才应该被释放</li>
+<li>在多线程中, 多个线程可能持有同一个数据, 但由于 Rust 的安全机制, 无法同时获取该数据的可变引用</li>
+</ul>
+<h2 id="Rc-lt-T-gt"><a href="#Rc-lt-T-gt" class="headerlink" title="Rc&lt;T&gt;"></a><code>Rc&lt;T&gt;</code></h2><p>Rc (Reference Counting), 通过记录一个数据被引用的次数来确定该数据是否正在被使用 (而非依靠生命周期). 当引用次数归零时, 代表该数据不再被使用, 此时可以被清理.</p>
+<p>当我们希望在堆上创建一个数据供程序的多个部分使用, 但不知道哪个部分最后结束时, 也可以使用 <code>Rc</code> 包裹数据:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">s</span> = <span class="hljs-type">String</span>::<span class="hljs-title function_ invoke__">from</span>(<span class="hljs-string">&quot;hello, world&quot;</span>);<br>    <span class="hljs-comment">// s在这里被转移给a</span><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">a</span> = <span class="hljs-type">Box</span>::<span class="hljs-title function_ invoke__">new</span>(s);<br>    <span class="hljs-comment">// 报错！此处继续尝试将 s 转移给 b</span><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">b</span> = <span class="hljs-type">Box</span>::<span class="hljs-title function_ invoke__">new</span>(s);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>改为 <code>Rc</code>:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::rc::Rc;<br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">a</span> = Rc::<span class="hljs-title function_ invoke__">new</span>(<span class="hljs-type">String</span>::<span class="hljs-title function_ invoke__">from</span>(<span class="hljs-string">&quot;hello, world&quot;</span>));<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">b</span> = Rc::<span class="hljs-title function_ invoke__">clone</span>(&amp;a);<br><br>    <span class="hljs-built_in">assert_eq!</span>(<span class="hljs-number">2</span>, Rc::<span class="hljs-title function_ invoke__">strong_count</span>(&amp;a));<br>    <span class="hljs-built_in">assert_eq!</span>(Rc::<span class="hljs-title function_ invoke__">strong_count</span>(&amp;a), Rc::<span class="hljs-title function_ invoke__">strong_count</span>(&amp;b))<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>这里的 <code>Rc::clone(&amp;a)</code> 等价于 <code>a.clone()</code></li>
+<li>需要注意, 这里并不是深拷贝, 仅仅是复制了智能指针并增加了引用计数, 没有克隆底层数据</li>
+</ul>
+<p>这里涉及的都是不可变的场景, 如果要求内部可变性, 则需要配合 <code>RefCell&lt;T&gt;</code> 和互斥锁 <code>Mutex&lt;T&gt;</code>.</p>
+<h2 id="Arc"><a href="#Arc" class="headerlink" title="Arc"></a>Arc</h2><p>Arc (Atomic Rc), 原子化的 <code>Rc&lt;T&gt;</code>, 能保证数据安全的在线程间共享 (当然会有一些性能损耗).</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::sync::Arc;<br><span class="hljs-keyword">use</span> std::thread;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">s</span> = Arc::<span class="hljs-title function_ invoke__">new</span>(<span class="hljs-type">String</span>::<span class="hljs-title function_ invoke__">from</span>(<span class="hljs-string">&quot;多线程漫游者&quot;</span>));<br>    <span class="hljs-keyword">for</span> <span class="hljs-variable">_</span> <span class="hljs-keyword">in</span> <span class="hljs-number">0</span>..<span class="hljs-number">10</span> &#123;<br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">s</span> = Arc::<span class="hljs-title function_ invoke__">clone</span>(&amp;s);<br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">handle</span> = thread::<span class="hljs-title function_ invoke__">spawn</span>(<span class="hljs-keyword">move</span> || &#123;<br>           <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;&#125;&quot;</span>, s)<br>        &#125;);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Rust-thread</div>
+      <div>http://example.com/2026/06/11/Rust-thread/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Jie</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年6月11日</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>许可协议</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/06/10/Rust-async/" title="Rust-async">
+                        <span class="hidden-mobile">Rust-async</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zKurisu/comments-utterances');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Jie</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Orkarin</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.1/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

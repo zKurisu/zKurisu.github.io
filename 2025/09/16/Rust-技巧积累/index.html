@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="expect 方法的语义expect 这个词直译是 “预期, 期望发生” 的意思. 但在编程的语境中, 应该理解为: “我预计这个表达式必须成功, 否则就是严重的错误” 的意思. 但在编程的语境中, 应该理解为: “我预计这个表达式必须成功, 否则就是严重的错误”. 这是一种预设, 如果 expect 执行了, 就说明出现了严重的错误. 比如 Option::expect: 1let x &#x3D; so">
+    <meta name="description" content="需要标注生命周期的情况只有在引用之间的关系无法被编译器自动推断时, 才需要手动标注生命周期. 编译器自动标注的情况一种情况是: 函数只有一个输入引用, 比如: 123fn foo(s: &amp;str) -&gt; &amp;str &amp;#123;    s&amp;#125;  此时编译器能直接推导出: 1fn foo&lt;&amp;#x27;a&gt;(s: &amp;&amp;#x27;a str) -&gt;">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Rust-技巧积累">
 <meta property="og:url" content="http://example.com/2025/09/16/Rust-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="expect 方法的语义expect 这个词直译是 “预期, 期望发生” 的意思. 但在编程的语境中, 应该理解为: “我预计这个表达式必须成功, 否则就是严重的错误” 的意思. 但在编程的语境中, 应该理解为: “我预计这个表达式必须成功, 否则就是严重的错误”. 这是一种预设, 如果 expect 执行了, 就说明出现了严重的错误. 比如 Option::expect: 1let x &#x3D; so">
+<meta property="og:description" content="需要标注生命周期的情况只有在引用之间的关系无法被编译器自动推断时, 才需要手动标注生命周期. 编译器自动标注的情况一种情况是: 函数只有一个输入引用, 比如: 123fn foo(s: &amp;str) -&gt; &amp;str &amp;#123;    s&amp;#125;  此时编译器能直接推导出: 1fn foo&lt;&amp;#x27;a&gt;(s: &amp;&amp;#x27;a str) -&gt;">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-09-16T13:15:22.000Z">
-<meta property="article:modified_time" content="2026-06-10T00:50:15.643Z">
+<meta property="article:modified_time" content="2026-06-10T07:55:27.664Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -437,7 +437,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          41k 字
+          42k 字
         
       </span>
     
@@ -448,7 +448,7 @@ path.outline_glyph {
         
         
         
-          340 分钟
+          349 分钟
         
       </span>
     
@@ -491,7 +491,36 @@ path.outline_glyph {
             
               <div class="markdown-body">
                 
-                <h1 id="expect-方法的语义"><a href="#expect-方法的语义" class="headerlink" title="expect 方法的语义"></a>expect 方法的语义</h1><p><code>expect</code> 这个词直译是 “预期, 期望发生” 的意思. 但在编程的语境中, 应该理解为: “我预计这个表达式必须成功, 否则就是严重的错误” 的意思. 但在编程的语境中, 应该理解为: “我预计这个表达式必须成功, 否则就是严重的错误”. 这是一种预设, 如果 <code>expect</code> 执行了, 就说明出现了严重的错误.</p>
+                <h1 id="需要标注生命周期的情况"><a href="#需要标注生命周期的情况" class="headerlink" title="需要标注生命周期的情况"></a>需要标注生命周期的情况</h1><p>只有在引用之间的关系无法被编译器自动推断时, 才需要手动标注生命周期.</p>
+<h2 id="编译器自动标注的情况"><a href="#编译器自动标注的情况" class="headerlink" title="编译器自动标注的情况"></a>编译器自动标注的情况</h2><p>一种情况是: 函数只有一个输入引用, 比如:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">foo</span>(s: &amp;<span class="hljs-type">str</span>) <span class="hljs-punctuation">-&gt;</span> &amp;<span class="hljs-type">str</span> &#123;<br>    s<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>此时编译器能直接推导出:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">foo</span>&lt;<span class="hljs-symbol">&#x27;a</span>&gt;(s: &amp;<span class="hljs-symbol">&#x27;a</span> <span class="hljs-type">str</span>) <span class="hljs-punctuation">-&gt;</span> &amp;<span class="hljs-symbol">&#x27;a</span> <span class="hljs-type">str</span><br></code></pre></td></tr></table></figure>
+
+<p>另一种情况是方法中返回 <code>&amp;self</code>:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">impl</span> <span class="hljs-title class_">Foo</span>&lt;<span class="hljs-symbol">&#x27;_</span>&gt; &#123;<br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">bar</span>(&amp;<span class="hljs-keyword">self</span>, a: &amp;<span class="hljs-type">str</span>, b: &amp;<span class="hljs-type">str</span>) <span class="hljs-punctuation">-&gt;</span> &amp;<span class="hljs-type">str</span> &#123;<br>        <span class="hljs-keyword">self</span>.val<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>注意这里 <code>bar</code> 方法有多个输入引用, 但由于返回的是 <code>self</code> 的字段, 因此不需要手动标注. 编译器会推断返回值的引用和 <code>&amp;self</code> 的寿命一样.</p>
+<p>但如果写成下面形式就不行了:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">impl</span> <span class="hljs-title class_">Foo</span>&lt;<span class="hljs-symbol">&#x27;_</span>&gt; &#123;<br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">bar</span>(<span class="hljs-keyword">self</span>, a: &amp;<span class="hljs-type">str</span>, b: &amp;<span class="hljs-type">str</span>) <span class="hljs-punctuation">-&gt;</span> &amp;<span class="hljs-type">str</span> &#123;<br>        <span class="hljs-keyword">self</span>.val<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>或者:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">impl</span> <span class="hljs-title class_">Foo</span>&lt;<span class="hljs-symbol">&#x27;_</span>&gt; &#123;<br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">bar</span>(&amp;<span class="hljs-keyword">self</span>, a: &amp;<span class="hljs-type">str</span>, b: &amp;<span class="hljs-type">str</span>) <span class="hljs-punctuation">-&gt;</span> &amp;<span class="hljs-type">str</span> &#123;<br>        a<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="需要手动标注的情况"><a href="#需要手动标注的情况" class="headerlink" title="需要手动标注的情况"></a>需要手动标注的情况</h2><p>第一种情况是, 存在多个输入引用并且返回一个引用 (不一定返回输入相关的引用):</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">foo</span>(a: &amp;<span class="hljs-type">str</span>, b: &amp;<span class="hljs-type">str</span>) <span class="hljs-punctuation">-&gt;</span> &amp;<span class="hljs-type">str</span> &#123;<br>    a<br>&#125;<br><span class="hljs-comment">// fn foo(a: &amp;str, b: &amp;str) -&gt; &amp;str &#123;</span><br><span class="hljs-comment">//     &quot;hello&quot;</span><br><span class="hljs-comment">// &#125;</span><br></code></pre></td></tr></table></figure>
+
+<p>此时应该写为:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">foo</span>&lt;<span class="hljs-symbol">&#x27;a</span>&gt;(a: &amp;<span class="hljs-symbol">&#x27;a</span> <span class="hljs-type">str</span>, b: &amp;<span class="hljs-symbol">&#x27;a</span> <span class="hljs-type">str</span>) <span class="hljs-punctuation">-&gt;</span> &amp;<span class="hljs-symbol">&#x27;a</span> <span class="hljs-type">str</span> &#123;<br>    a<br>&#125;<br><span class="hljs-comment">// fn foo&lt;&#x27;a&gt;(a: &amp;&#x27;a str, b: &amp;&#x27;a str) -&gt; &amp;&#x27;a str &#123;</span><br><span class="hljs-comment">//     &quot;hello&quot;</span><br><span class="hljs-comment">// &#125;</span><br></code></pre></td></tr></table></figure>
+
+<p>第二种情况是, 结构体定义中出现了引用 (比如字段比结构体活得久, 那自然会出错, 结构体释放了字段也应该释放):</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">struct</span> <span class="hljs-title class_">Foo</span> &#123;<br>    val: &amp;<span class="hljs-type">str</span>,<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>需要写为:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">struct</span> <span class="hljs-title class_">Foo</span>&lt;<span class="hljs-symbol">&#x27;a</span>&gt; &#123;<br>    val: &amp;<span class="hljs-symbol">&#x27;a</span> <span class="hljs-type">str</span>,<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h1 id="expect-方法的语义"><a href="#expect-方法的语义" class="headerlink" title="expect 方法的语义"></a>expect 方法的语义</h1><p><code>expect</code> 这个词直译是 “预期, 期望发生” 的意思. 但在编程的语境中, 应该理解为: “我预计这个表达式必须成功, 否则就是严重的错误” 的意思. 但在编程的语境中, 应该理解为: “我预计这个表达式必须成功, 否则就是严重的错误”. 这是一种预设, 如果 <code>expect</code> 执行了, 就说明出现了严重的错误.</p>
 <p>比如 <code>Option::expect</code>:</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">x</span> = some_opt.<span class="hljs-title function_ invoke__">expect</span>(<span class="hljs-string">&quot;Value must exist&quot;</span>);<br></code></pre></td></tr></table></figure>
 <ul>
