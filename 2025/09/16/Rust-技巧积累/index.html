@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="需要标注生命周期的情况只有在引用之间的关系无法被编译器自动推断时, 才需要手动标注生命周期. 编译器自动标注的情况一种情况是: 函数只有一个输入引用, 比如: 123fn foo(s: &amp;str) -&gt; &amp;str &amp;#123;    s&amp;#125;  此时编译器能直接推导出: 1fn foo&lt;&amp;#x27;a&gt;(s: &amp;&amp;#x27;a str) -&gt;">
+    <meta name="description" content="lazy_staticlazy_static 是一个第三方库, 其提供 lazy_static! 宏. 从名字上就能大致理解其作用: static 全局变量默认情况下需要在编译期设置初始值, 但是有些变量的初始化依赖于运行期间才能得到的数据, 这里的 lazy 就是指能够让全局变量在第一次使用时再初始化. 比如下面代码会编译报错: 1234567use std::collections::Hash">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Rust-技巧积累">
 <meta property="og:url" content="http://example.com/2025/09/16/Rust-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="需要标注生命周期的情况只有在引用之间的关系无法被编译器自动推断时, 才需要手动标注生命周期. 编译器自动标注的情况一种情况是: 函数只有一个输入引用, 比如: 123fn foo(s: &amp;str) -&gt; &amp;str &amp;#123;    s&amp;#125;  此时编译器能直接推导出: 1fn foo&lt;&amp;#x27;a&gt;(s: &amp;&amp;#x27;a str) -&gt;">
+<meta property="og:description" content="lazy_staticlazy_static 是一个第三方库, 其提供 lazy_static! 宏. 从名字上就能大致理解其作用: static 全局变量默认情况下需要在编译期设置初始值, 但是有些变量的初始化依赖于运行期间才能得到的数据, 这里的 lazy 就是指能够让全局变量在第一次使用时再初始化. 比如下面代码会编译报错: 1234567use std::collections::Hash">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-09-16T13:15:22.000Z">
-<meta property="article:modified_time" content="2026-06-10T07:55:27.664Z">
+<meta property="article:modified_time" content="2026-06-13T06:53:33.697Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -437,7 +437,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          42k 字
+          44k 字
         
       </span>
     
@@ -448,7 +448,7 @@ path.outline_glyph {
         
         
         
-          349 分钟
+          370 分钟
         
       </span>
     
@@ -491,7 +491,38 @@ path.outline_glyph {
             
               <div class="markdown-body">
                 
-                <h1 id="需要标注生命周期的情况"><a href="#需要标注生命周期的情况" class="headerlink" title="需要标注生命周期的情况"></a>需要标注生命周期的情况</h1><p>只有在引用之间的关系无法被编译器自动推断时, 才需要手动标注生命周期.</p>
+                <h1 id="lazy-static"><a href="#lazy-static" class="headerlink" title="lazy_static"></a><code>lazy_static</code></h1><p><code>lazy_static</code> 是一个第三方库, 其提供 <code>lazy_static!</code> 宏. 从名字上就能大致理解其作用: <code>static</code> 全局变量默认情况下需要在编译期设置初始值, 但是有些变量的初始化依赖于运行期间才能得到的数据, 这里的 <code>lazy</code> 就是指能够让全局变量在第一次使用时再初始化.</p>
+<p>比如下面代码会编译报错:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::collections::HashMap;<br><br><span class="hljs-keyword">static</span> m: HashMap&lt;<span class="hljs-type">String</span>, <span class="hljs-type">String</span>&gt; = HashMap::<span class="hljs-title function_ invoke__">new</span>();<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>报错内容如下:</p>
+<figure class="highlight vhdl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs vhdl"><span class="hljs-literal">error</span>[E0015]: cannot call non-const associated <span class="hljs-keyword">function</span> `HashMap::&lt;<span class="hljs-built_in">String</span>, S<br>tring&gt;::<span class="hljs-keyword">new</span>` <span class="hljs-keyword">in</span> statics<br> <span class="hljs-comment">--&gt; lazy.rs:3:37</span><br>  |<br><span class="hljs-number">3</span> | static m: HashMap&lt;<span class="hljs-built_in">String</span>, <span class="hljs-built_in">String</span>&gt; = HashMap::<span class="hljs-keyword">new</span>();<br>  |                                     ^^^^^^^^^^^^^^<br>  |<br>  = <span class="hljs-literal">note</span>: calls <span class="hljs-keyword">in</span> statics are limited <span class="hljs-keyword">to</span> <span class="hljs-keyword">constant</span> functions, tuple structs <br><span class="hljs-keyword">and</span> tuple variants<br>  = <span class="hljs-literal">note</span>: consider wrapping this expression <span class="hljs-keyword">in</span> `std::sync::LazyLock::<span class="hljs-keyword">new</span>(|| <br>...)`<br><br><span class="hljs-literal">error</span>: aborting due <span class="hljs-keyword">to</span> <span class="hljs-number">1</span> previous <span class="hljs-literal">error</span><br><br><span class="hljs-keyword">For</span> more information about this <span class="hljs-literal">error</span>, try `rustc <span class="hljs-comment">--explain E0015`.</span><br></code></pre></td></tr></table></figure>
+
+<p>可以改为:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> lazy_static::lazy_static;<br><span class="hljs-keyword">use</span> std::collections::HashMap;<br><br>lazy_static! &#123;<br>    <span class="hljs-keyword">static</span> <span class="hljs-keyword">ref</span> m: HashMap&lt;<span class="hljs-type">String</span>, <span class="hljs-type">String</span>&gt; = HashMap::<span class="hljs-title function_ invoke__">new</span>();<br>&#125;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;Hello, world!&quot;</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>另外, 标准库已经吸收了 <code>lazy_static</code> 的设计, 内置 <code>std::sync::LazyLock</code>:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::collections::HashMap;<br><span class="hljs-keyword">use</span> std::sync::LazyLock;<br><br><span class="hljs-keyword">static</span> m: LazyLock&lt;HashMap&lt;<span class="hljs-type">String</span>, <span class="hljs-type">String</span>&gt;&gt; = LazyLock::<span class="hljs-title function_ invoke__">new</span>(|| HashMap::<span class="hljs-title function_ invoke__">new</span>());<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h1 id="volatile-语义的方法"><a href="#volatile-语义的方法" class="headerlink" title="volatile 语义的方法"></a>volatile 语义的方法</h1><p><code>volatile</code> 一词的本意是 “易变的, 挥发性的”. 其描述了硬件寄存器的行为:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// 假设这是一个映射到内存地址的硬件状态寄存器</span><br><span class="hljs-keyword">const</span> STATUS_REG: *<span class="hljs-keyword">const</span> <span class="hljs-type">u32</span> = <span class="hljs-number">0x1000_0000</span> <span class="hljs-keyword">as</span> *<span class="hljs-keyword">const</span> <span class="hljs-type">u32</span>;<br><br><span class="hljs-comment">// 硬件可以在任何时刻改变这个值——编译器完全不知道</span><br><span class="hljs-comment">// 两次连续的读可能得到完全不同的结果</span><br></code></pre></td></tr></table></figure>
+
+<p>在编译器默认的世界观里: 我写的代码会唯一改变内存里的东西, 只要我没写, 值就不会变.</p>
+<p>而 <code>volatile</code> 会告诉编译器: 这块内存是 “易变的”, 外部世界 (硬件, 中断处理程序, 另一个核心) 随时可能改变它.</p>
+<p><code>volatile</code> 让编译器知道, 你不能假设这块内存是不变的. 体现在具体行为上, 就是让编译器不去优化这行代码.</p>
+<p>比如下面是编译器默认的视角:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// 普通 read：编译器的视角</span><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">normal_read</span>(ptr: *<span class="hljs-keyword">const</span> <span class="hljs-type">u32</span>) &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">a</span> = <span class="hljs-keyword">unsafe</span> &#123; ptr.<span class="hljs-title function_ invoke__">read</span>() &#125;;     <span class="hljs-comment">// &quot;读一次&quot;</span><br>    <span class="hljs-title function_ invoke__">do_something_expensive</span>();          <span class="hljs-comment">// 做点耗时的</span><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">b</span> = <span class="hljs-keyword">unsafe</span> &#123; ptr.<span class="hljs-title function_ invoke__">read</span>() &#125;;     <span class="hljs-comment">// 编译器: &quot;ptr 没人写过，a == b，直接用 a 吧&quot;</span><br>&#125;<br><br><span class="hljs-comment">// 实际生成的机器码：</span><br><span class="hljs-comment">//   mov eax, [ptr]</span><br><span class="hljs-comment">//   call do_something_expensive</span><br><span class="hljs-comment">//   ; 第二个 read 被优化掉了！直接用 eax 里的旧值</span><br><span class="hljs-comment">//   cmp eax, ...</span><br></code></pre></td></tr></table></figure>
+<p>编译器看到程序连续读了两次 <code>ptr</code>, 而 <code>do_something_expensive</code> 里面也没有修改 <code>ptr</code>, 因此认为 <code>ptr</code> 没有改变, 就会进行优化, 减少一次读取.</p>
+<p>如果用 <code>volatile</code> 语义, 则编译器不会进行优化, 生成的机器码不会变化:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::ptr::read_volatile;<br><br><span class="hljs-comment">// volatile read：每次都必须真的读</span><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">volatile_read</span>(ptr: *<span class="hljs-keyword">const</span> <span class="hljs-type">u32</span>) &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">a</span> = <span class="hljs-keyword">unsafe</span> &#123; <span class="hljs-title function_ invoke__">read_volatile</span>(ptr) &#125;;   <span class="hljs-comment">// &quot;读一次&quot;</span><br>    <span class="hljs-title function_ invoke__">do_something_expensive</span>();                 <span class="hljs-comment">// 做点耗时的</span><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">b</span> = <span class="hljs-keyword">unsafe</span> &#123; <span class="hljs-title function_ invoke__">read_volatile</span>(ptr) &#125;;   <span class="hljs-comment">// 再读一次——必须真的发出 load 指令</span><br>&#125;<br><br><span class="hljs-comment">// 实际生成的机器码：</span><br><span class="hljs-comment">//   mov eax, [ptr]</span><br><span class="hljs-comment">//   call do_something_expensive</span><br><span class="hljs-comment">//   mov eax, [ptr]     ; 第二次 load，即使看起来&quot;没必要&quot;</span><br><span class="hljs-comment">//   cmp eax, ...</span><br></code></pre></td></tr></table></figure>
+
+<p>当然还有一些其他例子, 这里就不一一说明了.</p>
+<p>因此在 OS&#x2F;裸机开发中必须要用到 <code>volatile</code>.</p>
+<h1 id="原始字符串字面量"><a href="#原始字符串字面量" class="headerlink" title="原始字符串字面量"></a>原始字符串字面量</h1><p>普通的字符串如 “\t.quad {}”, 这里的 <code>\t</code> 会被转义, 如果想不包含转义字符, 看见什么就输出什么, 可以写为:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-string">r#&quot;</span><br><span class="hljs-string">    .align 3</span><br><span class="hljs-string">    .section .data</span><br><span class="hljs-string">&quot;#</span><br></code></pre></td></tr></table></figure>
+
+<p>用 <code>r#&quot;&quot;#</code> 来包裹.</p>
+<h1 id="需要标注生命周期的情况"><a href="#需要标注生命周期的情况" class="headerlink" title="需要标注生命周期的情况"></a>需要标注生命周期的情况</h1><p>只有在引用之间的关系无法被编译器自动推断时, 才需要手动标注生命周期.</p>
 <h2 id="编译器自动标注的情况"><a href="#编译器自动标注的情况" class="headerlink" title="编译器自动标注的情况"></a>编译器自动标注的情况</h2><p>一种情况是: 函数只有一个输入引用, 比如:</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">foo</span>(s: &amp;<span class="hljs-type">str</span>) <span class="hljs-punctuation">-&gt;</span> &amp;<span class="hljs-type">str</span> &#123;<br>    s<br>&#125;<br></code></pre></td></tr></table></figure>
 

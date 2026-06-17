@@ -28,7 +28,7 @@
 <meta property="og:image" content="http://example.com/img/rust-core-module-list2.png">
 <meta property="og:image" content="http://example.com/img/rust-core-macro-list.png">
 <meta property="article:published_time" content="2025-10-04T06:23:02.000Z">
-<meta property="article:modified_time" content="2025-10-09T06:18:22.956Z">
+<meta property="article:modified_time" content="2026-06-12T05:46:28.050Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/rust-core-primitive-types.png">
@@ -442,7 +442,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          5.7k 字
+          6k 字
         
       </span>
     
@@ -453,7 +453,7 @@ path.outline_glyph {
         
         
         
-          48 分钟
+          50 分钟
         
       </span>
     
@@ -576,11 +576,20 @@ path.outline_glyph {
 <p>该宏返回一个 <code>fmt::Arguments</code> 结构体. 可用于 <code>&#123;&#125;</code> 或 <code>&#123;:?&#125;</code> 显示. 比如:</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">debug</span> = <span class="hljs-built_in">format!</span>(<span class="hljs-string">&quot;&#123;:?&#125;&quot;</span>, <span class="hljs-built_in">format_args!</span>(<span class="hljs-string">&quot;&#123;&#125; foo &#123;:?&#125;&quot;</span>, <span class="hljs-number">1</span>, <span class="hljs-number">2</span>));<br><span class="hljs-keyword">let</span> <span class="hljs-variable">display</span> = <span class="hljs-built_in">format!</span>(<span class="hljs-string">&quot;&#123;&#125;&quot;</span>, <span class="hljs-built_in">format_args!</span>(<span class="hljs-string">&quot;&#123;&#125; foo &#123;:?&#125;&quot;</span>, <span class="hljs-number">1</span>, <span class="hljs-number">2</span>));<br><span class="hljs-built_in">assert_eq!</span>(<span class="hljs-string">&quot;1 foo 2&quot;</span>, display);<br><span class="hljs-built_in">assert_eq!</span>(display, debug);<br></code></pre></td></tr></table></figure>
 
-<h1 id="core-slice"><a href="#core-slice" class="headerlink" title="core::slice"></a><code>core::slice</code></h1><p><code>core::slice</code> 是一种数据结构, 用于表示一块连续内存区域上的一组相同类型的元素, 本质上是一个指向数据的指针 <code>+</code> 一个长度 (即 <code>&amp;[T]</code> 或 <code>&amp;mut T</code>), 例如:</p>
+<h1 id="core-slice"><a href="#core-slice" class="headerlink" title="core::slice"></a><code>core::slice</code></h1><p><code>core::slice</code> 提供一些底层开发会用到的 slice 处理相关的函数.</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">arr</span> = [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>];<br><span class="hljs-keyword">let</span> <span class="hljs-variable">slice</span>: &amp;[<span class="hljs-type">i32</span>] = &amp;arr[<span class="hljs-number">1</span>..<span class="hljs-number">3</span>]; <span class="hljs-comment">// 类型是 &amp;[i32]，表示从索引 1 到 2 的子数组</span><br></code></pre></td></tr></table></figure>
 
 <p>在底层开发中, 通常只有一个裸指针 (比如 <code>*const i32</code>) 和一个长度 (这个指针后有 5 个元素), 此时可以把 <code>裸指针+长度</code> 转换为一个切片 <code>&amp;[T]</code>, 然后像访问普通切片一样遍历其中的数据.</p>
-<h2 id="core-slice-from-raw-parts"><a href="#core-slice-from-raw-parts" class="headerlink" title="core::slice::from_raw_parts()"></a><code>core::slice::from_raw_parts()</code></h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">pub</span> <span class="hljs-keyword">const</span> <span class="hljs-keyword">unsafe</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">from_raw_parts</span>&lt;<span class="hljs-symbol">&#x27;a</span>, T&gt;(data: *<span class="hljs-keyword">const</span> T, len: <span class="hljs-type">usize</span>) <span class="hljs-punctuation">-&gt;</span> &amp;<span class="hljs-symbol">&#x27;a</span> [T]<br></code></pre></td></tr></table></figure>
+<p>下面说明下这个模块内提供的主要函数.</p>
+<h2 id="core-slice-from-mut"><a href="#core-slice-from-mut" class="headerlink" title="core::slice::from_mut"></a><code>core::slice::from_mut</code></h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">pub</span> <span class="hljs-keyword">const</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">from_mut</span>&lt;T&gt;(s: &amp;<span class="hljs-keyword">mut</span> T) <span class="hljs-punctuation">-&gt;</span> &amp;<span class="hljs-keyword">mut</span> [T]<br></code></pre></td></tr></table></figure>
+
+<p>将一个可变值包裹在一个可变 slice 中. 比如:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">extern</span> <span class="hljs-keyword">crate</span> core;<br><span class="hljs-keyword">use</span> core::slice::from_mut;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">x</span> = <span class="hljs-number">10</span>;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">y</span> = <span class="hljs-title function_ invoke__">from_mut</span>(&amp;<span class="hljs-keyword">mut</span> x);<br>    y[<span class="hljs-number">0</span>] = <span class="hljs-number">20</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="core-slice-from-ref"><a href="#core-slice-from-ref" class="headerlink" title="core::slice::from_ref"></a><code>core::slice::from_ref</code></h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">pub</span> <span class="hljs-keyword">const</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">from_ref</span>&lt;T&gt;(s: &amp;T) <span class="hljs-punctuation">-&gt;</span> &amp;[T]<br></code></pre></td></tr></table></figure>
+
+<p>将一个引用包裹在 slice 中, 且不可变更.</p>
+<h2 id="core-slice-from-raw-parts"><a href="#core-slice-from-raw-parts" class="headerlink" title="core::slice::from_raw_parts"></a><code>core::slice::from_raw_parts</code></h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">pub</span> <span class="hljs-keyword">const</span> <span class="hljs-keyword">unsafe</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">from_raw_parts</span>&lt;<span class="hljs-symbol">&#x27;a</span>, T&gt;(data: *<span class="hljs-keyword">const</span> T, len: <span class="hljs-type">usize</span>) <span class="hljs-punctuation">-&gt;</span> &amp;<span class="hljs-symbol">&#x27;a</span> [T]<br></code></pre></td></tr></table></figure>
 
 <p>这个函数用于从 <code>一个裸指针 *const T 和一个长度 len 构造出一个不可变切片 &amp;[T]</code>:</p>
 <ul>

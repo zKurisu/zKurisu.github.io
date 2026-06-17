@@ -63,8 +63,24 @@
 <meta property="og:image" content="http://example.com/img/rcore-batch-process-os-structure.png">
 <meta property="og:image" content="http://example.com/img/rcore-batch-os-structure-example.png">
 <meta property="og:image" content="http://example.com/img/rcore-trap-context-switch-kernel-stack-status.png">
+<meta property="og:image" content="http://example.com/img/rcore-relation-between-task-and-program.png">
+<meta property="og:image" content="http://example.com/img/rcore-relation-between-task-and-program2.png">
+<meta property="og:image" content="http://example.com/img/rcore-task-control-block-example.png">
+<meta property="og:image" content="http://example.com/img/rcore-three-state-task-model.png">
+<meta property="og:image" content="http://example.com/img/rcore-task-switch-example.png">
+<meta property="og:image" content="http://example.com/img/rcore-multiprog-os-structure-example.png">
+<meta property="og:image" content="http://example.com/img/rcore-multi-program-os-with-interrupt.png">
+<meta property="og:image" content="http://example.com/img/rcore-multi-program-os-with-interrupt.png">
+<meta property="og:image" content="http://example.com/img/rcore-task-switch-structure-example.png">
+<meta property="og:image" content="http://example.com/img/rcore-context-compare-example.png">
+<meta property="og:image" content="http://example.com/img/rcore-task-context-store-position.png">
+<meta property="og:image" content="http://example.com/img/rcore-switch-function-exec-example.png">
+<meta property="og:image" content="http://example.com/img/rcore-time-sharing-os-structure.png">
+<meta property="og:image" content="http://example.com/img/rcore-libos-structure-example.png">
+<meta property="og:image" content="http://example.com/img/rcore-batch-os-structure-example.png">
+<meta property="og:image" content="http://example.com/img/rcore-multiprog-os-structure-example.png">
 <meta property="article:published_time" content="2026-06-04T08:33:51.000Z">
-<meta property="article:modified_time" content="2026-06-11T11:56:38.419Z">
+<meta property="article:modified_time" content="2026-06-17T05:19:28.311Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/rcore-qemu-start-os-example.png">
@@ -478,7 +494,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          27k 字
+          36k 字
         
       </span>
     
@@ -489,7 +505,7 @@ path.outline_glyph {
         
         
         
-          229 分钟
+          299 分钟
         
       </span>
     
@@ -1346,7 +1362,9 @@ path.outline_glyph {
 <li>虚存机制</li>
 </ul>
 <p>MMU 负责地址转换, TLB 是页表下的一个 cache.</p>
-<h2 id="实践-批处理-OS"><a href="#实践-批处理-OS" class="headerlink" title="实践: 批处理 OS"></a>实践: 批处理 OS</h2><p>总体的软件架构为:</p>
+<h2 id="实践-批处理-OS"><a href="#实践-批处理-OS" class="headerlink" title="实践: 批处理 OS"></a>实践: 批处理 OS</h2><p>批处理系统 (Batch System) 的核心思想是: 将多个程序打包到一起输入计算机; 当一个程序运行结束后, 计算机会自动执行下一个程序.</p>
+<p>当应用程序出错时, 保护操作系统不会被一起破坏的机制就是特权级机制 (Privilege), 它实现了用户态和内核态的隔离.</p>
+<p>总体的软件架构为:</p>
 <p><img src="/../img/rcore-batch-process-os-structure.png" srcset="/img/loading.gif" lazyload></p>
 <ul>
 <li>AppManager 能查找一个 App 在什么地方, 并能够将其加载执行</li>
@@ -1379,7 +1397,10 @@ path.outline_glyph {
 <li>执行应用程序</li>
 </ul>
 <h3 id="代码准备"><a href="#代码准备" class="headerlink" title="代码准备"></a>代码准备</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ git <span class="hljs-built_in">clone</span> https://github.com/LearningOS/rCore-Tutorial-Code.git<br>$ <span class="hljs-built_in">cd</span> rCore-Tutorial-Code<br>$ git checkout ch2<br>$ git <span class="hljs-built_in">clone</span> https://github.com/LearningOS/rCore-Tutorial-Test.git user<br>$ <span class="hljs-built_in">cd</span> os<br>$ make run LOG=INFO<br></code></pre></td></tr></table></figure>
-
+<ul>
+<li><code>rCore-Tutorial-Code</code> 存放内核程序</li>
+<li><code>rCore-Tutorial-Test</code> 存放用户程序</li>
+</ul>
 <p><code>link_app.S</code> 由 <code>os/build.rs</code> 来生成, 用于将多个应用合在一起与 OS 形成一个二进制镜像.</p>
 <p><code>trap.S</code> 包含 Trap 上下文保存与恢复的汇编代码.</p>
 <p><code>user/src/bin</code> 目录下的就是 app 的源码.</p>
@@ -1407,6 +1428,12 @@ path.outline_glyph {
 <li><code>scause/stval</code> 分别会被修改成这次 Trap 的原因以及相关的附加信息</li>
 <li>CPU 将当前特权级设为 S, 将 <code>pc</code> 设置为 <code>stvec</code> 所设置的 Trap 处理入口地址</li>
 </ul>
+<p>当 CPU 完成 Trap 处理准备返回的时候, 需要通过一条 S 特权级的特权指令 <code>sret</code> 来完成, 这一条指令具体完成以下功能:</p>
+<ul>
+<li>CPU 会将当前的特权级按照 <code>sstatus</code> 的 <code>spp</code> 字段设置为 U 或者 S</li>
+<li>CPU 会将 <code>pc</code> 设置为 <code>sepc</code> 寄存器指向的那条指令, 然后跳转执行</li>
+</ul>
+<p>可以看到, 运行 <code>ecall</code> 时, 硬件并不会自动保存 <code>x0-x31</code> 这些通用寄存器, 因此需要自己手动保存, 这里就需要用到栈. 需要专门为内核设置一个内核栈.</p>
 <h3 id="用户栈和内核栈"><a href="#用户栈和内核栈" class="headerlink" title="用户栈和内核栈"></a>用户栈和内核栈</h3><p>之所以还要建立一个内核栈, 就在于内核的设计是完全不信任用户程序, 这里也不会相信用户为内核建立了一个可用的用户栈. 建立内核栈能保证所有控制逻辑内核自己知道 (都是基于安全的考虑).</p>
 <h3 id="Trap-上下文"><a href="#Trap-上下文" class="headerlink" title="Trap 上下文"></a>Trap 上下文</h3><p>通用寄存器, <code>sstatus</code>, <code>sepc</code> 这些需要进行恢复的都要用户自己来保存.</p>
 <p>切换 Trap 上下文的步骤为:</p>
@@ -1437,6 +1464,308 @@ path.outline_glyph {
 <li><code>pc &lt;- sepc</code>, 从 <code>sepc</code> 读地址到 <code>pc</code></li>
 <li>继续运行 (从 <code>pc</code> 开始)</li>
 </ul>
+<h1 id="第四讲-多道程序与分时多任务"><a href="#第四讲-多道程序与分时多任务" class="headerlink" title="第四讲 多道程序与分时多任务"></a>第四讲 多道程序与分时多任务</h1><h2 id="相关背景与基本概念"><a href="#相关背景与基本概念" class="headerlink" title="相关背景与基本概念"></a>相关背景与基本概念</h2><p>操作系统的被广泛使用是从大型机向小型机 (minicomputer) 过渡的时期开始的.</p>
+<p>多道程序 (Multiprogramming):</p>
+<ul>
+<li>在内存中存在多个可执行程序</li>
+<li>各个可执行程序共享处理器</li>
+</ul>
+<p>工作 (Job):</p>
+<ul>
+<li>应用的一次执行过程</li>
+</ul>
+<p>Job 和 Multiprogramming 都是 IBM 用于多道程序设计的概念.</p>
+<p>协作式调度 (Cooperative scheduling):</p>
+<ul>
+<li>可执行程序主动放弃处理器的使用</li>
+<li>操作系统不会打断正在执行的程序</li>
+<li>操作系统选择下一个执行程序使用处理器</li>
+</ul>
+<p>后续的操作系统都会支持抢占. 小型机 (minicomputer) 的普及和广泛使用推动了分时多任务的需求, 形成了支持多用户的分时操作系统.</p>
+<p>分时多任务 (Time sharing multitask), 从用户的视角看: </p>
+<ul>
+<li>Task 表示应用的一次执行过程 </li>
+<li>在内存中存在多个可执行程序</li>
+<li>各个可执行程序分时共享处理器</li>
+<li>操作系统按时间片来给各个可执行程序分配 CPU 使用时间</li>
+</ul>
+<p>从操作系统角度看:</p>
+<ul>
+<li>Task 是一个具有一定独立功能的程序在一个数据集合上的一次动态执行过程 (可以把 task 认为是 process 的一个前身, process 管控了更多资源)</li>
+<li>应用执行过程中的一个时间片段上的执行片段或空闲片段称为 “计算任务片” (占了 CPU) 或 “空闲任务片” (没占 CPU)</li>
+<li>从一个应用的任务切换到另外一个应用的任务称为任务切换</li>
+</ul>
+<p>抢占式调度 (Preemptive scheduling):</p>
+<ul>
+<li>可执行程序被动地放弃处理器使用</li>
+<li>可执行程序按时间片轮流使用处理器, 是一种 “暂停-继续” 组合的执行过程</li>
+<li>基于时钟硬件中断机制, 操作系统可随时打断正在执行的程序</li>
+<li>操作系统选择下一个执行程序使用处理器</li>
+</ul>
+<p>任务的特点:</p>
+<ul>
+<li>动态性: 开始执行 -&gt; 暂停 -&gt; 继续 -&gt; 结束执行的过程</li>
+<li>并发性: 一段时间内多个任务在执行 (注意不是同一个时间, 同一个时间就是并行了)</li>
+<li>有限度的独立性: 任务之间不用感知对方的存在</li>
+</ul>
+<p>目前还没具备的更强大的特点: 隔离更彻底, 任务间的协同, 任务创建任务等…</p>
+<p>当这些都有了, 则称为进程.</p>
+<p>Task (加载到内存中的代码) 和程序 (磁盘上的代码) 的关系如下:</p>
+<p><img src="/../img/rcore-relation-between-task-and-program.png" srcset="/img/loading.gif" lazyload></p>
+<p><img src="/../img/rcore-relation-between-task-and-program2.png" srcset="/img/loading.gif" lazyload></p>
+<p>Task 是操作系统处于执行状态时对程序的抽象:</p>
+<ul>
+<li>程序 &#x3D; 文件 (静态的可执行文件)</li>
+<li>Task &#x3D; 执行中的程序 &#x3D; 程序 + 执行状态 (加载到内存中, 对 CPU 寄存器的修改)</li>
+</ul>
+<p>任务执行需要的资源:</p>
+<ul>
+<li>内存: 保存代码和数据</li>
+<li>CPU: 执行指令</li>
+</ul>
+<p>任务是动态的, 程序是静态的:</p>
+<ul>
+<li>程序是有序代码的集合</li>
+<li>任务是程序的执行</li>
+</ul>
+<p>任务是暂时的, 程序是永久的:</p>
+<ul>
+<li>任务是一个状态变化的过程 (内存, CPU 寄存器)</li>
+<li>程序可长久保存 (磁盘)</li>
+</ul>
+<p>任务与程序的组成不同:</p>
+<ul>
+<li>任务的组成包括程序, 数据和进程控制块</li>
+</ul>
+<h3 id="任务的组成"><a href="#任务的组成" class="headerlink" title="任务的组成"></a>任务的组成</h3><p>任务包含了运行程序的所有状态信息:</p>
+<ul>
+<li>任务执行的控制流: 代码内容与代码的执行位置 (代码段, CPU 从哪里取指令来运行)</li>
+<li>任务访问的数据: 被任务读写的内存 (堆, 栈, 数据段), 被任务读写的寄存器 (通用寄存器等)</li>
+<li>操作系统管理任务的相关数据 (任务上下文, 任务被中断打断的时刻, 或任务执行系统调用的时候, 需要保存对应的状态): 任务切换所需的通用寄存器; 任务切换所需的状态寄存器 (PC 等); 其他信息如任务的栈地址; 其他资源</li>
+</ul>
+<h3 id="操作系统管理任务"><a href="#操作系统管理任务" class="headerlink" title="操作系统管理任务"></a>操作系统管理任务</h3><p>为了进行管理, 将这些状态存起来, 就设计了一个数据结构: 任务控制块 (TCB, Task Control Block). 之后操作系统才能进行有效的管理, 记录, 修改状态.</p>
+<ul>
+<li>操作系统管理控制进程运行所用的信息集合</li>
+<li>操作系统用 TCB 来描述进程的基本情况以及运行变化的过程</li>
+<li>TCB 是进程存在的唯一标志</li>
+<li>每个任务都在操作系统中有一个对应的 TCB</li>
+</ul>
+<p><img src="/../img/rcore-task-control-block-example.png" srcset="/img/loading.gif" lazyload></p>
+<h3 id="任务生命周期"><a href="#任务生命周期" class="headerlink" title="任务生命周期"></a>任务生命周期</h3><p>到这里的时候突然又回想起 <code>sret</code> 和 <code>ecall</code> 在两个态之间转换的流程, 再整理一遍.</p>
+<p>计算机上电启动后, 操作系统先在内核态:</p>
+<ul>
+<li>手动向内核栈压入一个上下文, 包括 <code>sepc</code> 指向加载到内存中的用户程序, <code>sstatus</code> 各标志等</li>
+<li>执行 <code>sret</code>, <code>pc &lt;- sepc</code>, CPU 从内核态标记为用户态, 之后跳转执行</li>
+<li>用户态执行 <code>ecall</code>, 保存返回地址 <code>sepc &lt;- pc</code> (当前 ecall 的地址); 保存特权级 <code>sstatus.SPP &lt;- U-mode</code>; 保存中断使能位: <code>sstatus.SPIE &lt;- sstatus.SIE</code>; 禁用中断 <code>sstatus.SIE &lt;- 0</code>; 然后跳转到内核的某个位置 <code>pc &lt;- stvec</code> (handler 就是内核的一部分); CPU 从用户态标记为内核态, 然后跳转执行</li>
+</ul>
+<p>创建任务就是将其初始状态设置好. 之后任务就处于就绪状态, 操作系统可以运行它.</p>
+<p>执行时操作系统需要从内核态切换到用户态来执行.</p>
+<p>任务进入等待的原因可能是:</p>
+<ul>
+<li>自身, 自己交出 CPU, 比如 sleep, 等待 IO, 网络等</li>
+<li>外界, 操作系统抢占</li>
+</ul>
+<p>唤醒等待可能是:</p>
+<ul>
+<li>自身, 等待时间结束, 自然醒</li>
+<li>外界, 外设产生中断来恢复</li>
+</ul>
+<p>任务被抢占的原因: 通常都是用时钟中断产生中断, 然后把任务放回就绪状态.</p>
+<p>任务退出的原因通常也是两种:</p>
+<ul>
+<li>自愿, 比如程序执行 <code>exit</code></li>
+<li>被迫, 操作系统 kill 掉</li>
+</ul>
+<p>最重要的三种状态就是: 就绪, 运行, 等待.</p>
+<p><img src="/../img/rcore-three-state-task-model.png" srcset="/img/loading.gif" lazyload></p>
+<p>这些状态的切换涉及哪些系统调用呢:</p>
+<ul>
+<li>运行 -&gt; 退出, 涉及 <code>sys_exit</code></li>
+<li>运行 -&gt; 就绪, 只涉及中断</li>
+<li>运行 -&gt; 等待, 涉及 <code>sys_sleep</code></li>
+<li>等</li>
+</ul>
+<p>在任务的生命周期中, 进行任务切换的时机通常是:</p>
+<ul>
+<li>时间片用完</li>
+<li>等待结束</li>
+<li>退出</li>
+<li>等</li>
+</ul>
+<p>任务切换的一个大致流程图:</p>
+<p><img src="/../img/rcore-task-switch-example.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="实践-多道程序与分时多任务操作系统"><a href="#实践-多道程序与分时多任务操作系统" class="headerlink" title="实践: 多道程序与分时多任务操作系统"></a>实践: 多道程序与分时多任务操作系统</h2><p>多道程序和分时多任务其实是两个 OS.</p>
+<p>框架图:</p>
+<p><img src="/../img/rcore-multiprog-os-structure-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>应用程序部分相比于前面的批处理没有太大的变化, 主要是内核的变化:</p>
+<ul>
+<li>将 AppManager 换成了两个模块: loader (任务的查找和加载) 和 taskmanager (任务切换, TCB 管理)</li>
+<li>增加 task 的主动切换. 需要增加一个系统调用 <code>yield</code>, 主动放弃 CPU, 需要保存该任务上下文, 然后切换到下一个任务运行</li>
+<li>引入中断, 建立 timer. 任务执行时间的记录 (时间片, 到了就能切换). 中断和异常都是走一个通道, 都是从用户态切换到内核态 (TrapHandler)</li>
+</ul>
+<p><img src="/../img/rcore-multi-program-os-with-interrupt.png" srcset="/img/loading.gif" lazyload></p>
+<p>进化目标: 进一步提高系统中多个应用的总体性能和效率 (以前是内存中只有一个应用, 这里是全部加载).</p>
+<p>需要学到:</p>
+<ul>
+<li>理解协作式调度</li>
+<li>理解抢占式调度</li>
+<li>理解任务抽象</li>
+<li>理解任务切换</li>
+<li>会写多道程序操作系统</li>
+<li>会写分时多任务操作系统</li>
+</ul>
+<p>总体思路:</p>
+<ul>
+<li>编译: 应用程序和内核独立编译, 合并为一个镜像 (loader 会从这个镜像中找到所有的应用程序然后加载到内存中)</li>
+<li>编译: 应用程序需要各自的起始地址. 由于多个应用都会放在内存中, 但由于没有虚存, 都是物理地址统一编址, 所以需要找到各自的起始地址才能正确执行</li>
+<li>构造: 系统调用服务请求接口 (新的 <code>yield</code>), 任务的管理与初始化 (任务控制块, 任务执行阶段的状态保存, 任务的上下文在内核态)</li>
+<li>构造: 任务控制块, 任务的上下文&#x2F;状态管理</li>
+<li>运行: 特权级切换, 任务与 OS 相互切换</li>
+<li>运行: 任务通过系统调用&#x2F;中断实现主动&#x2F;被动切换</li>
+</ul>
+<p>基于 <code>BatchOS</code>, 需要修改 APP 的链接脚本.</p>
+<p>各应用的起始地址计算为: <code>应用程序起始地址 = 基址 + 数字编号 * 0x20000</code>. 这也表明一个应用程序的大小不能超过 2M.</p>
+<h3 id="系统调用"><a href="#系统调用" class="headerlink" title="系统调用"></a>系统调用</h3><p>封装为一个系统调用:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">const</span> SYSCALL_YIELD: <span class="hljs-type">usize</span> = <span class="hljs-number">124</span>;<br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">sys_yield</span>() <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">isize</span> &#123;<br>    <span class="hljs-title function_ invoke__">syscall</span>(SYSCALL_YIELD, [<span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>])<br>&#125;<br><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">yield_</span>() <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">isize</span> &#123;<br>    <span class="hljs-title function_ invoke__">sys_yield</span>()<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>如果 SBI 没有提供, 则需要在 handler 中处理这个系统调用.</p>
+<h3 id="多道程序加载"><a href="#多道程序加载" class="headerlink" title="多道程序加载"></a>多道程序加载</h3><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">get_base_i</span>(app_id: <span class="hljs-type">usize</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">usize</span> &#123;<br>    APP_BASE_ADDRESS + app_id * APP_SIZE_LIMIT<br>&#125;<br><br><span class="hljs-comment">// 算 memory 的起始</span><br><span class="hljs-keyword">let</span> <span class="hljs-variable">base_i</span> = <span class="hljs-title function_ invoke__">get_base_i</span>(i);<br><span class="hljs-comment">// load app from data section to memory</span><br><span class="hljs-comment">// 算 image 中的位置</span><br><span class="hljs-keyword">let</span> <span class="hljs-variable">src</span> = (app_start[i]..app_start[i+<span class="hljs-number">1</span>]);<br><span class="hljs-comment">// 要放到内存中的位置</span><br><span class="hljs-keyword">let</span> <span class="hljs-variable">dst</span> = (base_i..base_i+src.<span class="hljs-title function_ invoke__">len</span>());<br>dst.<span class="hljs-title function_ invoke__">copy_from_slice</span>(src);<br></code></pre></td></tr></table></figure>
+
+<h3 id="执行程序"><a href="#执行程序" class="headerlink" title="执行程序"></a>执行程序</h3><p>执行时机:</p>
+<ul>
+<li>初始化完成时运行第一个程序</li>
+<li>某个应用程序运行结束或出错时选择下一个来运行</li>
+</ul>
+<p>执行方式:</p>
+<ul>
+<li>调用 <code>run_next_app</code> 函数切换到第一个&#x2F;下一个应用程序</li>
+</ul>
+<p>切换下一个程序 (陷入上下文需要完成):</p>
+<ul>
+<li>内核态到用户态</li>
+<li>用户态到内核态</li>
+<li>跳转到编号 <code>i</code> 的应用程序的入口点 (entry)</li>
+<li>将使用的栈切换到用户栈 (stack)</li>
+</ul>
+<p>看到这里的时候回想了一下该 OS 的栈的建立过程:</p>
+<ul>
+<li>汇编用 <code>.space 4096 * 16</code> 和两个标签直接开辟一块大区域, 这块区域放在 <code>.bss.stack</code>, 并且设置 <code>sp</code> 寄存器指向栈顶</li>
+<li>Rust 中 <code>main</code> 函数是入口, 因此 <code>main</code> 函数下的局部变量能使用汇编创建的栈</li>
+<li>Rust 中 <code>USER_STACK</code> 和 <code>KERNEL_STACK</code> 都是 0 初始化的全局变量, 因此会放到 <code>.bss</code> 段内, 因此可以使用汇编构建的栈空间</li>
+</ul>
+<h3 id="任务切换"><a href="#任务切换" class="headerlink" title="任务切换"></a>任务切换</h3><p>核心是 TaskContext 这个数据结构, 这样才知道任务是什么时候被打断的, 无论是主动 (<code>yield</code>) 还是被动 (时钟), 都会保存状态信息, 主要是通用寄存器的内容 (还是在 <code>Trap_handler</code> 中进行记录, 尽管说 trap context 中保存了一份通用寄存器).</p>
+<p><img src="/../img/rcore-multi-program-os-with-interrupt.png" srcset="/img/loading.gif" lazyload></p>
+<p>任务运行状态有:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">pub</span> <span class="hljs-keyword">enum</span> <span class="hljs-title class_">TaskStatus</span> &#123;<br>    UnInit,<br>    Ready,<br>    Running,<br>    Exited,<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这里需要做的就是将一个 <code>Running</code> 的 task 与一个 <code>Ready</code> 的 task 进行切换 (暂停一个 task 的执行, 继续另一个 task 的执行).</p>
+<h3 id="任务上下文"><a href="#任务上下文" class="headerlink" title="任务上下文"></a>任务上下文</h3><p>任务上下文指任务运行在某一时刻的执行状态 (上下文):</p>
+<ul>
+<li>应用要暂停时, 执行状态 (上下文) 需要被保存</li>
+<li>应用要继续时, 执行状态 (上下文) 需要被恢复</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">pub</span> <span class="hljs-keyword">struct</span> <span class="hljs-title class_">TaskContext</span> &#123;<br>    ra: <span class="hljs-type">usize</span>,      <span class="hljs-comment">// 函数返回地址</span><br>    sp: <span class="hljs-type">usize</span>,      <span class="hljs-comment">// 内核栈指针</span><br>    s: [<span class="hljs-type">usize</span>; <span class="hljs-number">12</span>]  <span class="hljs-comment">// 属于 Callee 函数保存的寄存器集 s0~s11</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<p>(为什么 trap handler 不根据这个约定只保存部分寄存器呢)</p>
+<p>这里并没有涉及到 <code>sepc</code>, <code>stvec</code>, <code>sstatus</code> 这些特殊的寄存器, 只有通用寄存器.</p>
+<p>这里对比下 <code>TrapContext</code>:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">pub</span> <span class="hljs-keyword">struct</span> <span class="hljs-title class_">TrapContext</span> &#123;<br>    <span class="hljs-keyword">pub</span> x: [<span class="hljs-type">usize</span>; <span class="hljs-number">32</span>],<br>    <span class="hljs-keyword">pub</span> sstatus: Sstatus,<br>    <span class="hljs-keyword">pub</span> sepc: <span class="hljs-type">usize</span>,<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><img src="/../img/rcore-task-switch-structure-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>注意这里的内核栈, 切换的上下文是保存在内核的栈中 (注意不是和 trap context 一个位置, 而是单独的一个数据区域). 切换的时候内核才能读取.</p>
+<p>也就是说, task 除了有自己的用户栈之外, 还需要有内核栈.</p>
+<p>这里回顾下不同类型的上下文:</p>
+<ul>
+<li>函数调用上下文. 无法且应用, 函数一路往下执行</li>
+<li>Trap 上下文</li>
+<li>Task 上下文</li>
+</ul>
+<p><img src="/../img/rcore-context-compare-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>任务 (Task) 上下文相比系统调用 (Trap) 上下文:</p>
+<ul>
+<li>与 Trap 切换不同, 它不涉及特权级切换</li>
+<li>与 Trap 切换不同, 它的一部分是由编译器帮忙完成的</li>
+<li>与 Trap 切换相同, 它对应用是透明的</li>
+</ul>
+<p>任务切换时来自两个不同应用在内核中的 Trap 控制流之间的切换.</p>
+<p>在编译原理里: 程序的控制流 (Flow of Control or Control Flow) 是指以一个程序的指令, 语句或基本块为单位的执行序列 (pc 寄存器的跳转).</p>
+<p>在计算机组成原理里: 处理器的控制流是指处理器中程序计数器的控制转移序列.</p>
+<p>从应用程序员的角度来看: 控制流是应用程序员编写的应用程序的执行序列, 这些序列是程序员预设好的. 统称为普通控制流 (CCF, Common Control Flow).</p>
+<p>从操作系统 (除了操作系统自身外还要管很多应用) 程序员的角度来看控制流:</p>
+<ul>
+<li>应用程序在执行过程中, 如果发出系统调用请求, 或出现外设中断, CPU 异常等情况, 会出现前一条指令还在应用程序的代码段中, 后一条指令就跑到操作系统的代码段中去了</li>
+<li>这就是一种控制流的 “突变”, 即控制流脱离了其所在的执行环境, 并产生执行环境的切换. 我们把这种 “突变” 的控制流称为异常控制流 (ECF, Exceptional Control Flow).</li>
+</ul>
+<p>站在硬件的角度来看普通控制流或异常控制流的具体执行过程, 我们会发现从控制流起始的某条指令开始, 指令可访问的所有物理资源的内容, 包括自带的所有通用寄存器, 特权级相关特殊寄存器, 以及指令访问内存等, 会随着指令的执行而逐渐发生变化.</p>
+<p>把控制流在执行完某指令时的物理资源内容, 即确保下一时刻能继续正确执行控制流指令的物理&#x2F;虚拟资源内容称为控制流的上下文 (Context), 也可称为控制流所在执行环境的状态.</p>
+<p>对于当前实践的 OS, 没有虚拟资源, 而物理资源内容就是通用寄存器&#x2F;CSR 寄存器.</p>
+<p>如果一个控制流属于某个函数, 那么这个控制流的上下文简称为函数调用上下文.</p>
+<p>一个控制流是属于操作系统中处理中断&#x2F;异常&#x2F;陷入的那段代码, 那么这个控制流的上下文简称为中断&#x2F;异常&#x2F;陷入上下文.</p>
+<p>一个控制流是属于操作系统中任务 (进程) 执行相关的那段代码, 那么这个控制流的上下文简称为任务 (进程) 上下文.</p>
+<p>在进行 Trap 上下文时需要考虑:</p>
+<ul>
+<li>Trap 上下文在哪?</li>
+<li>任务上下文在哪?</li>
+<li>如何切换任务?</li>
+<li>任务切换应该发生在哪?</li>
+<li>任务切换后还能切换回吗?</li>
+</ul>
+<p><img src="/../img/rcore-task-context-store-position.png" srcset="/img/loading.gif" lazyload></p>
+<p>(每个 trap 一个 Stack??)</p>
+<p>需要注意 task context 不在栈中 (不同实现方式肯定不同, 当然也是可以放在栈中的. 原理和实现需要自圆其说).</p>
+<p>一个特殊的函数 <code>__switch</code>: 在 trap handler 接收到用户的系统调用, 发现是 <code>yield</code> 之后, 会调用 <code>__switch</code>, 之后直到它返回前的这段时间, 原 Trap 控制流 A 会先被暂停并被切换出去, CPU 转而运行另一个应用在内核中的 Trap 控制流 B. 然后再某个合适的时机, 原 Trap 控制流 A 才会从某一条 Trap 控制流 C (很可能不是它之前切换到的 B) 切换回来继续执行并最终返回.</p>
+<p>从实现的角度看, <code>__switch</code> 函数和一个普通的函数之间的核心差别仅仅是它会换栈.</p>
+<p><img src="/../img/rcore-switch-function-exec-example.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>这里应该是 task context 的指针而不是 trap context</li>
+<li><code>[1]-[4]</code>  是 4 个步骤:<ul>
+<li><code>[1]</code>, 在 Trap 控制流 A 调用 <code>__switch</code> 之前, A 的内核栈上只有 Trap 上下文和 Trap 处理函数的调用栈信息, 还没有用到 B 的栈</li>
+<li><code>[2]</code>, 执行 <code>__switch</code> 的过程中, A 在 A 任务上下文空间里面保存 CPU 当前的寄存器快照 (图里灰色变绿色, 读寄存器来保存)</li>
+<li><code>[3]</code>, <code>__switch</code> 读取 <code>next_task_cx_ptr</code> 指向的 B 任务上下文, 根据 B 任务上下文保存的内容来恢复 <code>ra</code> 寄存器, <code>s0~s11</code> 寄存器以及 <code>sp</code> 寄存器, 只有这一步做完后, <code>__switch</code> 才能做到一个函数跨两条控制流执行, 即通过换栈也就实现了控制流的切换 (读寄存器来恢复)</li>
+<li><code>[4]</code>, 上一步寄存器恢复后, 可以看到通过恢复 <code>sp</code> 寄存器换到了任务 B 的内核栈上, 进而实现了控制流的切换. 这就是为什么 <code>__switch</code> 能做到一个函数跨两条控制流执行. 此后, 当 CPU 执行 <code>ret</code> 汇编伪指令 (注意不是 <code>sret</code>) 完成 <code>__switch</code> 函数返回后, 任务 B 可以从调用 <code>__switch</code> 的位置继续向下执行</li>
+</ul>
+</li>
+</ul>
+<h3 id="任务调度"><a href="#任务调度" class="headerlink" title="任务调度"></a>任务调度</h3><p>任务调度和任务切换不同, 调度是一种策略, 比如决定什么时候进行切换.</p>
+<p>比如这里用户程序运行 <code>yield</code> 就进行切换, 也是完成了一次调度, 但是是一种协作式调度, 操作系统是被动地.</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">sys_yield</span>() <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">isize</span> &#123;<br>    <span class="hljs-title function_ invoke__">suspend_current_and_run_next</span>();<br>&#125;<br><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">sys_exit</span>(exit_code: <span class="hljs-type">i32</span>) <span class="hljs-punctuation">-&gt;</span> ! &#123;<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;[kernel] Application exited with code &#123;&#125;&quot;</span>, exit_code);<br>    <span class="hljs-title function_ invoke__">exit_current_and_run_next</span>();<br>    <span class="hljs-built_in">panic!</span>(<span class="hljs-string">&quot;Unreachable in sys_exit!&quot;</span>);<br>&#125;<br><br><span class="hljs-comment">// os/src/task/mod.rs</span><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">suspend_current_and_run_next</span>() &#123;<br>    <span class="hljs-title function_ invoke__">mark_current_suspended</span>(); <span class="hljs-comment">// 会调用 __switch</span><br>    <span class="hljs-title function_ invoke__">run_next_task</span>();<br>&#125;<br><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">exit_current_and_run_next</span>() &#123;<br>    <span class="hljs-title function_ invoke__">mark_current_exited</span>();<br>    <span class="hljs-title function_ invoke__">run_next_task</span>(); <span class="hljs-comment">// 会进行 context switch</span><br>&#125;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">run_next_task</span>(&amp;<span class="hljs-keyword">self</span>) &#123;<br>    ...<br>    <span class="hljs-keyword">unsafe</span> &#123;<br>        __switch(<br>            current_task_cx_ptr, <span class="hljs-comment">// 当前任务上下文</span><br>            next_task_cx_ptr, <span class="hljs-comment">// 下个任务上下文</span><br>        );<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>任务控制块, 是操作系统管理控制进程运行所用的信息集合.</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">pub</span> <span class="hljs-keyword">struct</span> <span class="hljs-title class_">TaskControlBlock</span> &#123;<br>    <span class="hljs-keyword">pub</span> task_status: TaskStatus,<br>    <span class="hljs-keyword">pub</span> task_cx: TaskContext,<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>任务管理模块:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">struct</span> <span class="hljs-title class_">TaskManagerInner</span> &#123;<br>    tasks: [TaskControlBlock; MAX_APP_NUM],<br>    current_task: <span class="hljs-type">usize</span>,<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="时钟"><a href="#时钟" class="headerlink" title="时钟"></a>时钟</h3><p>时钟也是一种异常的处理, 设置好后随时能产生, 一旦产生就会从用户态陷入到内核态, 基本思路是:</p>
+<ul>
+<li>设置时钟中断 (交给 SBI 来直接设置, 不需要自己写驱动)</li>
+<li>在受到时钟中断后统计任务的使用时间片</li>
+<li>在时间片用完后, 切换任务</li>
+</ul>
+<p><img src="/../img/rcore-time-sharing-os-structure.png" srcset="/img/loading.gif" lazyload></p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// os/src/sbi.rs</span><br><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">set_timer</span>(timer: <span class="hljs-type">usize</span>) &#123;<br>    <span class="hljs-title function_ invoke__">sbi_call</span>(SBI_SET_TIMER, timer, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>);<br>&#125;<br><br><span class="hljs-comment">// os/src/timer.rs</span><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">set_next_trigger</span>() &#123;<br>    <span class="hljs-title function_ invoke__">set_timer</span>(<span class="hljs-title function_ invoke__">get_time</span>() + CLOCK_FREQ / TICKS_PER_SEC);<br>&#125;<br><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">rust_main</span>() <span class="hljs-punctuation">-&gt;</span> ! &#123;<br>    trap::<span class="hljs-title function_ invoke__">enable_timer_interrupt</span>();<br>    timer::<span class="hljs-title function_ invoke__">set_next_trigger</span>();<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>抢占式调度:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// os/src/trap/mod.rs trap_handler 函数内部</span><br><br>...<br><span class="hljs-keyword">match</span> scause.<span class="hljs-title function_ invoke__">cause</span>() &#123;<br>    Trap::<span class="hljs-title function_ invoke__">Interrupt</span>(Interrupt::SupervisorTimer) =&gt; &#123;<br>        <span class="hljs-title function_ invoke__">set_next_trigger</span>();<br>        <span class="hljs-title function_ invoke__">suspend_current_and_run_next</span>();<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h1 id="第五讲-地址空间-物理内存管理"><a href="#第五讲-地址空间-物理内存管理" class="headerlink" title="第五讲 地址空间-物理内存管理"></a>第五讲 地址空间-物理内存管理</h1><p>改进 OS 都是为了给应用提供更好的服务:</p>
+<ul>
+<li>提高性能, 简化开发, 加强安全</li>
+<li>应用的执行环境持续进化</li>
+<li>操作系统功能持续增强</li>
+</ul>
+<p>对前面课程的回顾:</p>
+<ul>
+<li>写裸机程序, LibOS. 需要了解软硬件启动, 函数调用 (和编译课里面的区别), SBI 调用</li>
+</ul>
+<p><img src="/../img/rcore-libos-structure-example.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>写 Batch OS. 需要了解特权级 <code>U-Mode</code>, <code>S-Mode</code>, 特权级切换, 陷入上下文. 编译多应用 + OS 的镜像. 加载并执行应用</li>
+</ul>
+<p><img src="/../img/rcore-batch-os-structure-example.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>写 MultiProg OS. 需要了解任务的概念与设计实现. 理解协作&#x2F;抢占式调度. 陷入上下文+任务上下文 (这样才能让内存里的多个应用依次去得到 CPU 的使用)</li>
+</ul>
+<p><img src="/../img/rcore-multiprog-os-structure-example.png" srcset="/img/loading.gif" lazyload></p>
 
                 
               </div>
