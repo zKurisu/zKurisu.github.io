@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="lazy_staticlazy_static 是一个第三方库, 其提供 lazy_static! 宏. 从名字上就能大致理解其作用: static 全局变量默认情况下需要在编译期设置初始值, 但是有些变量的初始化依赖于运行期间才能得到的数据, 这里的 lazy 就是指能够让全局变量在第一次使用时再初始化. 比如下面代码会编译报错: 1234567use std::collections::Hash">
+    <meta name="description" content="提前释放可变引用由于 Rust 中, 可变引用只能借给一个 owner, 并且可变引用和不可变引用不能共存, 因此很多时候在使用完可变引用之后需要手动 drop, 方便后续使用, 比如: 1234567891011121314151617181920212223use std::cell::RefCell;struct Data &amp;#123;    val: RefCell&lt;String&amp;g">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Rust-技巧积累">
 <meta property="og:url" content="http://example.com/2025/09/16/Rust-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="lazy_staticlazy_static 是一个第三方库, 其提供 lazy_static! 宏. 从名字上就能大致理解其作用: static 全局变量默认情况下需要在编译期设置初始值, 但是有些变量的初始化依赖于运行期间才能得到的数据, 这里的 lazy 就是指能够让全局变量在第一次使用时再初始化. 比如下面代码会编译报错: 1234567use std::collections::Hash">
+<meta property="og:description" content="提前释放可变引用由于 Rust 中, 可变引用只能借给一个 owner, 并且可变引用和不可变引用不能共存, 因此很多时候在使用完可变引用之后需要手动 drop, 方便后续使用, 比如: 1234567891011121314151617181920212223use std::cell::RefCell;struct Data &amp;#123;    val: RefCell&lt;String&amp;g">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-09-16T13:15:22.000Z">
-<meta property="article:modified_time" content="2026-06-13T06:53:33.697Z">
+<meta property="article:modified_time" content="2026-06-17T08:59:19.036Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -437,7 +437,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          44k 字
+          46k 字
         
       </span>
     
@@ -448,7 +448,7 @@ path.outline_glyph {
         
         
         
-          370 分钟
+          381 分钟
         
       </span>
     
@@ -491,7 +491,23 @@ path.outline_glyph {
             
               <div class="markdown-body">
                 
-                <h1 id="lazy-static"><a href="#lazy-static" class="headerlink" title="lazy_static"></a><code>lazy_static</code></h1><p><code>lazy_static</code> 是一个第三方库, 其提供 <code>lazy_static!</code> 宏. 从名字上就能大致理解其作用: <code>static</code> 全局变量默认情况下需要在编译期设置初始值, 但是有些变量的初始化依赖于运行期间才能得到的数据, 这里的 <code>lazy</code> 就是指能够让全局变量在第一次使用时再初始化.</p>
+                <h1 id="提前释放可变引用"><a href="#提前释放可变引用" class="headerlink" title="提前释放可变引用"></a>提前释放可变引用</h1><p>由于 Rust 中, 可变引用只能借给一个 owner, 并且可变引用和不可变引用不能共存, 因此很多时候在使用完可变引用之后需要手动 <code>drop</code>, 方便后续使用, 比如:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::cell::RefCell;<br><br><span class="hljs-keyword">struct</span> <span class="hljs-title class_">Data</span> &#123;<br>    val: RefCell&lt;<span class="hljs-type">String</span>&gt;,<br>&#125;<br><br><span class="hljs-keyword">impl</span> <span class="hljs-title class_">Data</span> &#123;<br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">update_then_read</span>(&amp;<span class="hljs-keyword">self</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">String</span> &#123;<br>        <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">w</span> = <span class="hljs-keyword">self</span>.val.<span class="hljs-title function_ invoke__">borrow_mut</span>();  <span class="hljs-comment">// RefMut&lt;String&gt;，可变借用</span><br>        w.<span class="hljs-title function_ invoke__">push_str</span>(<span class="hljs-string">&quot; world&quot;</span>);<br><br>        <span class="hljs-comment">// 下面这行会 panic! (如果没先 drop)</span><br>        <span class="hljs-comment">// self.read();  // borrow_mut 还持有着，拿不到 Ref</span><br><br>        <span class="hljs-title function_ invoke__">drop</span>(w);  <span class="hljs-comment">// 手动释放可变借用</span><br><br>        <span class="hljs-keyword">self</span>.<span class="hljs-title function_ invoke__">read</span>()  <span class="hljs-comment">// 现在可以拿不可变借用了</span><br>    &#125;<br><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">read</span>(&amp;<span class="hljs-keyword">self</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">String</span> &#123;<br>        <span class="hljs-keyword">self</span>.val.<span class="hljs-title function_ invoke__">borrow</span>().<span class="hljs-title function_ invoke__">clone</span>()<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h1 id="struct-内可变性考究"><a href="#struct-内可变性考究" class="headerlink" title="struct 内可变性考究"></a>struct 内可变性考究</h1><p>假如一个结构体需要在很多地方用到, 如果这样定义:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">pub</span> <span class="hljs-keyword">struct</span> <span class="hljs-title class_">TaskManager</span> &#123;<br>    num_app: <span class="hljs-type">usize</span>,<br>    tasks: [TaskControlBlock; MAX_APP_NUM],<br>    current_task: <span class="hljs-type">usize</span>,<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>那么想要修改 <code>tasks</code> 和 <code>current_task</code> 字段, 就需要用到 <code>&amp;mut self</code>:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">impl</span> <span class="hljs-title class_">TaskManager</span> &#123;<br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">run_next_task</span>(&amp;<span class="hljs-keyword">mut</span> <span class="hljs-keyword">self</span>) &#123;   <span class="hljs-comment">// 需要可变借用</span><br>        <span class="hljs-keyword">self</span>.current_task = ...;<br>        <span class="hljs-comment">// 操作 self.tasks</span><br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>而使用 <code>&amp;mut self</code> 意味着整个 TaskManager 被独占借用了, 在整个函数的执行期间, 别的地方不能有任何对 TaskManager 的引用.</p>
+<p>为了解决问题, 可以这样定义:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">pub</span> <span class="hljs-keyword">struct</span> <span class="hljs-title class_">TaskManager</span> &#123;<br>    num_app: <span class="hljs-type">usize</span>,<br>    inner: UPSafeCell&lt;TaskManagerInner&gt;,<br>&#125;<br><br><span class="hljs-keyword">struct</span> <span class="hljs-title class_">TaskManagerInner</span> &#123;<br>    tasks: [TaskControlBlock; MAX_APP_NUM],<br>    current_task: <span class="hljs-type">usize</span>,<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>将要变更的部分用新的一个结构体 <code>TaskManagerInner</code> 包裹, 然后再用 <code>UPSafeCell</code> 包裹 (Uniprocessor Safe Cell, 可以通过不可变引用来修改). 这样就只需要 <code>&amp;self</code> 了, 此时可以多地方共享.</p>
+<h1 id="rustc-编译指定-text-段地址"><a href="#rustc-编译指定-text-段地址" class="headerlink" title="rustc 编译指定 .text 段地址"></a>rustc 编译指定 .text 段地址</h1><p>裸机开发时可能会用到:</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs routeros">rustc <span class="hljs-attribute">-Clink-arg</span>=-nostartfiles \<br>      <span class="hljs-attribute">-Clink-args</span>=-Ttext=0x80400000 \<br>      hello.rs<br></code></pre></td></tr></table></figure>
+
+<h1 id="lazy-static"><a href="#lazy-static" class="headerlink" title="lazy_static"></a><code>lazy_static</code></h1><p><code>lazy_static</code> 是一个第三方库, 其提供 <code>lazy_static!</code> 宏. 从名字上就能大致理解其作用: <code>static</code> 全局变量默认情况下需要在编译期设置初始值, 但是有些变量的初始化依赖于运行期间才能得到的数据, 这里的 <code>lazy</code> 就是指能够让全局变量在第一次使用时再初始化.</p>
 <p>比如下面代码会编译报错:</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> std::collections::HashMap;<br><br><span class="hljs-keyword">static</span> m: HashMap&lt;<span class="hljs-type">String</span>, <span class="hljs-type">String</span>&gt; = HashMap::<span class="hljs-title function_ invoke__">new</span>();<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br><br>&#125;<br></code></pre></td></tr></table></figure>
 
