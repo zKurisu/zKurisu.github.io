@@ -1,0 +1,1162 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/wallhaven-j5kjgy_1920x1080.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Jie">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="介绍该 Blog 记录从快手 LLM-REC 挑战赛中学到的知识. 生成式推荐传统的推荐系统通常是多级级联架构, 比如分为召回, 粗排, 精排三个阶段, 一个阶段的输出作为另一个阶段的输入. 一个问题是, 每个阶段的优化目标不一致, 需要为每个阶段训练不同结构, 不同规格的模型来处理数据. 这样的级联结构也难以吸收 AI 演进过程中的技术, 比如 Scaling law, RL 等. OneRec">
+<meta property="og:type" content="article">
+<meta property="og:title" content="快手LLM-REC挑战赛记录">
+<meta property="og:url" content="http://example.com/2026/07/03/%E5%BF%AB%E6%89%8BLLM-REC%E6%8C%91%E6%88%98%E8%B5%9B%E8%AE%B0%E5%BD%95/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="介绍该 Blog 记录从快手 LLM-REC 挑战赛中学到的知识. 生成式推荐传统的推荐系统通常是多级级联架构, 比如分为召回, 粗排, 精排三个阶段, 一个阶段的输出作为另一个阶段的输入. 一个问题是, 每个阶段的优化目标不一致, 需要为每个阶段训练不同结构, 不同规格的模型来处理数据. 这样的级联结构也难以吸收 AI 演进过程中的技术, 比如 Scaling law, RL 等. OneRec">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-07-03T13:00:36.000Z">
+<meta property="article:modified_time" content="2026-07-11T03:46:11.620Z">
+<meta property="article:author" content="Jie">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>快手LLM-REC挑战赛记录 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<!-- hexo injector head_end start --><style>.typst-app {
+  margin: 0;
+  --typst-dom-scale: 1;
+  /* --typst-dom-scale: 1.5; */
+  margin: 5px;
+}
+
+.typst-dom-page {
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  --data-text-width: calc(1px * var(--typst-dom-scale));
+  --data-text-height: calc(1px * var(--typst-dom-scale));
+}
+
+.typst-back-canvas {
+  position: absolute;
+  z-index: -1;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  pointer-events: none;
+}
+
+.typst-svg-page {
+  position: absolute;
+  z-index: 0;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+}
+
+.typst-html-semantics {
+  position: absolute;
+  z-index: 2;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  color: transparent;
+  font-family: monospace;
+  white-space: pre;
+  opacity: 0.62;
+}
+
+.typst-html-semantics span {
+  color: transparent;
+  font-family: monospace;
+  transform-origin: left top;
+  position: absolute;
+  display: inline-block;
+  left: 0;
+  top: 0;
+}
+
+.typst-content-hint {
+  position: absolute;
+  display: inline-block;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.typst-html-semantics a {
+  position: absolute;
+  display: inline-block;
+}
+
+/* set transparent itself */
+.typst-content-group {
+  pointer-events: visible;
+}
+
+.typst-html-semantics span::-moz-selection {
+  color: transparent;
+  background: #7db9de;
+}
+
+.typst-html-semantics span::selection {
+  color: transparent;
+  background: #7db9de;
+}
+
+.typst-html-semantics *::-moz-selection {
+  color: transparent;
+  background: transparent;
+}
+
+.typst-html-semantics *::selection {
+  color: transparent;
+  background: transparent;
+}
+
+.typst-content-fallback {
+  color: transparent;
+  background: transparent;
+}
+
+.pseudo-link,
+.typst-text {
+  pointer-events: none;
+}
+
+.tsel span,
+.tsel {
+  left: 0;
+  position: fixed;
+  text-align: justify;
+  white-space: pre;
+  width: 100%;
+  height: 100%;
+  text-align-last: justify;
+  color: transparent;
+}
+.tsel span::-moz-selection,
+.tsel::-moz-selection {
+  color: transparent;
+  background: #7db9dea0;
+}
+.tsel span::selection,
+.tsel::selection {
+  color: transparent;
+  background: #7db9dea0;
+}
+.pseudo-link {
+  fill: transparent;
+  cursor: pointer;
+  pointer-events: all;
+}
+svg {
+  fill: none;
+}
+
+.outline_glyph path,
+path.outline_glyph {
+  fill: var(--glyph_fill);
+  stroke: var(--glyph_stroke);
+}
+
+.outline_glyph path,
+path.outline_glyph {
+  transition: 0.2s fill stroke;
+}
+.hover .typst-text {
+  --glyph_fill: #66bab7;
+  --glyph_stroke: #66bab7;
+}
+
+.typst-jump-ripple,
+.typst-debug-react-ripple {
+  width: 0;
+  height: 0;
+  background-color: transparent;
+  position: absolute;
+  border-radius: 50%;
+}
+.typst-jump-ripple {
+  border: 1px solid #66bab7;
+}
+.typst-debug-react-ripple {
+  border: 1px solid #cb1b45;
+}
+@keyframes typst-jump-ripple-effect {
+  to {
+    width: 10vw;
+    height: 10vw;
+    opacity: 0.01;
+    margin: -5vw;
+  }
+}
+@keyframes typst-debug-react-ripple-effect {
+  to {
+    width: 3vw;
+    height: 3vw;
+    opacity: 0.01;
+    margin: -1.5vw;
+  }
+}
+</style>
+<script>/// https://segmentfault.com/a/1190000016574288
+(function () {
+  var ie = !!(window.attachEvent && !window.opera);
+  var wk = /webkit\/(\d+)/i.test(navigator.userAgent) && RegExp.$1 < 525;
+  var fn = [];
+  var run = function () {
+    for (var i = 0; i < fn.length; i++) fn[i]();
+  };
+  var d = document;
+  d.ready = function (f) {
+    if (!ie && !wk && d.addEventListener) return d.addEventListener('DOMContentLoaded', f, false);
+    if (fn.push(f) > 1) return;
+    if (ie)
+      (function () {
+        try {
+          d.documentElement.doScroll('left');
+          run();
+        } catch (err) {
+          setTimeout(arguments.callee, 0);
+        }
+      })();
+    else if (wk)
+      var t = setInterval(function () {
+        if (/^(loaded|complete)$/.test(d.readyState)) clearInterval(t), run();
+      }, 0);
+  };
+})();
+</script>
+<script type="module" src="/typst/typst-main.js"></script><script src="/typst/svg-utils.js"></script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Jie</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/SteinsGate_all.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="快手LLM-REC挑战赛记录"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-07-03 21:00" pubdate>
+          2026年7月3日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          11k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          91 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">快手LLM-REC挑战赛记录</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>该 Blog 记录从快手 LLM-REC 挑战赛中学到的知识.</p>
+<h1 id="生成式推荐"><a href="#生成式推荐" class="headerlink" title="生成式推荐"></a>生成式推荐</h1><p>传统的推荐系统通常是多级级联架构, 比如分为召回, 粗排, 精排三个阶段, 一个阶段的输出作为另一个阶段的输入.</p>
+<p>一个问题是, 每个阶段的优化目标不一致, 需要为每个阶段训练不同结构, 不同规格的模型来处理数据. 这样的级联结构也难以吸收 AI 演进过程中的技术, 比如 Scaling law, RL 等.</p>
+<p>OneRec 就是一种生成式推荐的框架, 核心思路是: 将召回和排序融合为单一阶段的 Encoder-Decoder 生成式架构, 直接端到端生成推荐结果.</p>
+<h1 id="LLaMA-Factory-transformers"><a href="#LLaMA-Factory-transformers" class="headerlink" title="LLaMA-Factory + transformers"></a>LLaMA-Factory + transformers</h1><p><code>transformers</code> 是 HuggingFace 出品的一个核心模型库, 其本身不是一个训练框架, 而是提供了两个内容:</p>
+<ul>
+<li>模型定义层, 库中内置了所有主流架构的 Python 实现, 比如 Qwen2ForCausalLM, LlamaForCausalLM, GemmaForCausalLM 等, 这些 class 里面写好了 attention, FFN, layernorm, position encoding 等等模块的代码实现</li>
+<li>权重加载层, 提供 <code>AutoModel.from_pretrained(path)</code>, 可以读取模型的 <code>config.json</code> 文件, 确定预训练模型使用的哪一个 class, 将其实例化后, 把 <code>model.safetensors</code> 的权重 <code>tensor</code> 填入对应参数</li>
+</ul>
+<p>也就是说, <code>transformers</code> 负责一个现有的模型准备好 (模型代码, 权重加载). 而训练则交给 <code>LLaMA-Factory</code>, 其在 <code>transformers</code> 之上封装了完整的训练流程, 并且将配置导出到 YAML 中, 便于修改, 提供一行命令开始训练的便利性, 其完成的事情有:</p>
+<ul>
+<li>执行模型加载, 调用 <code>AutoModel.from_pretrained()</code>, 会自动读取 YAML 中的 <code>model_name_or_path: /path</code></li>
+<li>设置训练方法, 用 LoRA 训练还是说全参训练, 通过 <code>finetuning_type: lora / full</code> 指定</li>
+<li>设置数据集, 读取 <code>.jsonl</code>, 然后通过 tokenize 拼成 batch, 最后 packing. 通过 <code>dataset: biz_sft</code> 指定</li>
+<li>设置模板, 比如按照 Qwen3 的 chat template 拼接 message. 通过 <code>template: qwen3_nothink</code> 指定</li>
+<li>启用显存优化, 比如替换 attention 实现 + fused 算子. 通过 <code>flash_attn: fa2, enable_liger_kernel: true</code> 指定</li>
+<li>设置训练配置, 配置 <code>Trainer</code> 的参数. 比如 <code>learning_rate</code>, <code>epoches</code>, <code>batch_size</code> 等</li>
+</ul>
+<p>启动命令如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">llamafactory-cli train /workspace/lf_configs/biz_sft.yaml<br></code></pre></td></tr></table></figure>
+
+<p>安装方式:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs sh">git <span class="hljs-built_in">clone</span> --depth 1 https://github.com/hiyouga/LLaMA-Factory.git<br><span class="hljs-built_in">cd</span> LLaMA-Factory<br><span class="hljs-comment"># 最小安装</span><br>pip install -e .<br><br><span class="hljs-comment"># 常用训练</span><br>pip install -e <span class="hljs-string">&quot;.[torch,metrics]&quot;</span><br><br><span class="hljs-comment"># 要测 benchmark</span><br>pip install -e <span class="hljs-string">&quot;.[torch,metrics,benchmark]&quot;</span><br><br><span class="hljs-comment"># 全量安装</span><br>pip install -e <span class="hljs-string">&quot;.[all]&quot;</span><br></code></pre></td></tr></table></figure>
+
+<p>检查安装:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">llamafactory-cli version<br></code></pre></td></tr></table></figure>
+
+<h2 id="模型权重拆分"><a href="#模型权重拆分" class="headerlink" title="模型权重拆分"></a>模型权重拆分</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> transformers <span class="hljs-keyword">import</span> AutoModelForCausalLM<br><span class="hljs-keyword">import</span> shutil, os, sys<br><br><span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(sys.argv) != <span class="hljs-number">3</span>:<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;Call as: python3 <span class="hljs-subst">&#123;sys.argv&#125;</span> model_dir target_dir&quot;</span>)<br>    sys.exit(-<span class="hljs-number">1</span>)<br><br>src = sys.argv[<span class="hljs-number">1</span>];<br>dst = sys.argv[<span class="hljs-number">2</span>];<br><br>model = AutoModelForCausalLM.from_pretrained(src, trust_remote_code=<span class="hljs-literal">True</span>, torch_dtype=<span class="hljs-string">&quot;auto&quot;</span>)<br>model.save_pretrained(dst, max_shard_size=<span class="hljs-string">&quot;500MB&quot;</span>)<br></code></pre></td></tr></table></figure>
+
+<p>加载模型进行推理:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> transformers <span class="hljs-keyword">import</span> AutoModelForCausalLM, AutoTokenizer<br><br>model_path = <span class="hljs-string">&quot;/workspace/lf_outputs/biz_sft_full&quot;</span>  <span class="hljs-comment"># 或分片后的目录</span><br><br>model = AutoModelForCausalLM.from_pretrained(<br>    model_path,<br>    torch_dtype=<span class="hljs-string">&quot;auto&quot;</span>,        <span class="hljs-comment"># 自动用 bf16/fp16</span><br>    device_map=<span class="hljs-string">&quot;auto&quot;</span>,         <span class="hljs-comment"># 自动分配到 GPU</span><br>)<br>tokenizer = AutoTokenizer.from_pretrained(model_path)<br><br>messages = [<br>    &#123;<span class="hljs-string">&quot;role&quot;</span>: <span class="hljs-string">&quot;system&quot;</span>, <span class="hljs-string">&quot;content&quot;</span>: <span class="hljs-string">&quot;你是一个有帮助的助手&quot;</span>&#125;,<br>    &#123;<span class="hljs-string">&quot;role&quot;</span>: <span class="hljs-string">&quot;user&quot;</span>, <span class="hljs-string">&quot;content&quot;</span>: <span class="hljs-string">&quot;你好，介绍一下你自己&quot;</span>&#125;,<br>]<br><br>text = tokenizer.apply_chat_template(messages, tokenize=<span class="hljs-literal">False</span>,<br>add_generation_prompt=<span class="hljs-literal">True</span>)<br>inputs = tokenizer(text, return_tensors=<span class="hljs-string">&quot;pt&quot;</span>).to(model.device)<br><br>outputs = model.generate(**inputs, max_new_tokens=<span class="hljs-number">512</span>, temperature=<span class="hljs-number">0.7</span>)<br><span class="hljs-built_in">print</span>(tokenizer.decode(outputs[<span class="hljs-number">0</span>], skip_special_tokens=<span class="hljs-literal">True</span>))<br></code></pre></td></tr></table></figure>
+
+<p>如果是 LoRA 的话:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> peft <span class="hljs-keyword">import</span> PeftModel<br><br>base_model = AutoModelForCausalLM.from_pretrained(<br>    <span class="hljs-string">&quot;/workspace/model&quot;</span>, torch_dtype=<span class="hljs-string">&quot;auto&quot;</span>, device_map=<span class="hljs-string">&quot;auto&quot;</span><br>)<br>model = PeftModel.from_pretrained(base_model, <span class="hljs-string">&quot;/workspace/lf_outputs/biz_sft_lora&quot;</span>)<br><span class="hljs-comment"># 之后推理代码完全一样</span><br></code></pre></td></tr></table></figure>
+
+<h1 id="LoRA-和全参训练"><a href="#LoRA-和全参训练" class="headerlink" title="LoRA 和全参训练"></a>LoRA 和全参训练</h1><table>
+<thead>
+<tr>
+<th></th>
+<th>LoRA 微调</th>
+<th>全参训练</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>更新的参数</td>
+<td>只更新 LoRA adapter（低秩矩阵），原权重冻结</td>
+<td>更新所有参数量</td>
+</tr>
+<tr>
+<td>显存占用</td>
+<td>低（两张配置中 lora_rank&#x3D;16）</td>
+<td>非常高</td>
+</tr>
+<tr>
+<td>学习率</td>
+<td>较大（2e-4）</td>
+<td>较小（2e-5，防过冲）</td>
+</tr>
+</tbody></table>
+<h1 id="协同相似"><a href="#协同相似" class="headerlink" title="协同相似"></a>协同相似</h1><p>“协同相似” 全称是 “协同过滤中的物品相似度 (Collaborative Item Similarity)”, 核心定义是: 两个物品被同一批用户共同消费过的程度衡量了它们的相似度.</p>
+<p>比如有 10 个人和 10 部电影, 有两部电影这 10 个人都看过, 说明它们相似度高; 有 1 部电影没有和别的电影成对出现过, 那么它与其他电影的相似度都很低.</p>
+<p>注意 “协同相似” 的计算是与内容本身无关的, 而是利用重合程度来判断. 两个物品的受众高度重合, 那么两个物品就很相似; 受众重合度低, 就不相似.</p>
+<p>这里涉及到一个技术叫 “协同对齐”, 假设我们有两个物品的多模态 embedding, 它们从协同的角度来看, 应该是非常相似的, 但在实际的多模态 embedding 空间里可能非常远, 而 “对齐” 则是让这两个本该接近的物品在多模态 embedding 空间里拉近. “协同对齐”, 就是利用协同相似度来指导模型拉近两个物品在空间的位置.</p>
+<p>一个比较直觉的代码示例如下, 两个物品经常被一起点击, 认定它们是协同相似的, 因此需要拉近:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">直觉: 表示对齐 ≈ &quot;协同相似的物品, embedding 也要相似&quot;</span><br><span class="hljs-string">类比内存对齐: address % 4096 == 0</span><br><span class="hljs-string">表示对齐:   cos_sim(co_engaged_pair) &gt;&gt; cos_sim(random_pair)</span><br><span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-keyword">import</span> torch, torch.nn.functional <span class="hljs-keyword">as</span> F<br><br><span class="hljs-comment"># 5 个物品,  每物品 4 维 embedding</span><br>E = torch.randn(<span class="hljs-number">5</span>, <span class="hljs-number">4</span>, requires_grad=<span class="hljs-literal">True</span>)   <span class="hljs-comment"># 原始&quot;多模态&quot;表示</span><br><br><span class="hljs-comment"># 协同信号: (0,1) 和 (2,3) 是常被一起点击的 item pairs</span><br>co_pairs = [(<span class="hljs-number">0</span>,<span class="hljs-number">1</span>),(<span class="hljs-number">2</span>,<span class="hljs-number">3</span>)]<br><br><span class="hljs-comment"># -------- 对齐前 --------</span><br>E_norm = F.normalize(E, dim=<span class="hljs-number">1</span>)<br><span class="hljs-keyword">for</span> i,j <span class="hljs-keyword">in</span> co_pairs:<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;对齐前 pair(<span class="hljs-subst">&#123;i&#125;</span>,<span class="hljs-subst">&#123;j&#125;</span>) cos_sim=<span class="hljs-subst">&#123;E_norm[i]@E_norm[j]:<span class="hljs-number">.3</span>f&#125;</span>&quot;</span>)  <span class="hljs-comment"># 随机值, 不特别高</span><br><br><span class="hljs-comment"># -------- I2I Contrastive Loss (即&quot;对齐&quot;操作) --------</span><br><span class="hljs-comment"># 公式: L = -log(exp(sim(i,j)/τ) / Σ_k exp(sim(i,k)/τ))</span><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">i2i_loss</span>(<span class="hljs-params">E, pairs, τ=<span class="hljs-number">0.1</span></span>):<br>    E = F.normalize(E, dim=<span class="hljs-number">1</span>)<br>    loss = <span class="hljs-number">0</span><br>    <span class="hljs-keyword">for</span> i,j <span class="hljs-keyword">in</span> pairs:<br>        logits = (E[i] @ E.T) / τ          <span class="hljs-comment"># 和所有物品的相似度</span><br>        loss += -logits[j] + logits.logsumexp(dim=<span class="hljs-number">0</span>)  <span class="hljs-comment"># 拉近(i,j), 推开(i,其他)</span><br>    <span class="hljs-keyword">return</span> loss<br><br>opt = torch.optim.Adam([E], lr=<span class="hljs-number">0.01</span>)<br><span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">100</span>):<br>    opt.zero_grad(); i2i_loss(E, co_pairs).backward(); opt.step()<br><br><span class="hljs-comment"># -------- 对齐后 --------</span><br>E_norm = F.normalize(E, dim=<span class="hljs-number">1</span>)<br><span class="hljs-keyword">for</span> i,j <span class="hljs-keyword">in</span> co_pairs:<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;对齐后 pair(<span class="hljs-subst">&#123;i&#125;</span>,<span class="hljs-subst">&#123;j&#125;</span>) cos_sim=<span class="hljs-subst">&#123;E_norm[i]@E_norm[j]:<span class="hljs-number">.3</span>f&#125;</span>&quot;</span>)  <span class="hljs-comment"># 接近 1.0</span><br><br><span class="hljs-comment"># 对比: 非协同 pairs</span><br><span class="hljs-keyword">for</span> i,j <span class="hljs-keyword">in</span> [(<span class="hljs-number">0</span>,<span class="hljs-number">2</span>),(<span class="hljs-number">1</span>,<span class="hljs-number">3</span>),(<span class="hljs-number">0</span>,<span class="hljs-number">4</span>)]:<br>    <span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;对齐后 非协同(<span class="hljs-subst">&#123;i&#125;</span>,<span class="hljs-subst">&#123;j&#125;</span>) cos_sim=<span class="hljs-subst">&#123;E_norm[i]@E_norm[j]:<span class="hljs-number">.3</span>f&#125;</span>&quot;</span>)  <span class="hljs-comment"># 仍然低</span><br></code></pre></td></tr></table></figure>
+
+<h1 id="模型参数的概念"><a href="#模型参数的概念" class="headerlink" title="模型参数的概念"></a>模型参数的概念</h1><p>每一个参数值的大小, 取决于它的精度, 这里以 1B (10亿, $10^9$) 参数量所占大小为例:</p>
+<table>
+<thead>
+<tr>
+<th>精度</th>
+<th>每参数占用</th>
+<th>1B 模型权重大小</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FP32</td>
+<td>4 Byte</td>
+<td>4 GB</td>
+</tr>
+<tr>
+<td>FP16&#x2F;BF16</td>
+<td>2 Byte</td>
+<td>2 GB</td>
+</tr>
+<tr>
+<td>INT8</td>
+<td>1Byte</td>
+<td>1 GB</td>
+</tr>
+<tr>
+<td>INT4</td>
+<td>0.5 Byte</td>
+<td>0.5 GB</td>
+</tr>
+</tbody></table>
+<p>为什么总是以 <code>B</code> 为衡量单位, 可能的原因是 <code>1GB</code> 恰好是 1B bytes (K, M, G, 每个量级都是 $10^3$, 三个就是 $10^9$).</p>
+<p>这样就能很快算出, 比如 0.8B FP16 的模型, 预计参数占用就是 $0.8 \times 2 &#x3D; 1.6 GB$.</p>
+<h1 id="模型参数量估计"><a href="#模型参数量估计" class="headerlink" title="模型参数量估计"></a>模型参数量估计</h1><h2 id="Attention"><a href="#Attention" class="headerlink" title="Attention"></a>Attention</h2><p>Attention 计算的参数:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>W_Q, W_K, W_V \in R^{d_{model} \times d_{model}}<br>\end{aligned}<br>}<br>$$</p>
+<p>参数量 $3 \cdot d^2_{model}$.</p>
+<p>如果是 MultiHead Attention, 还需要一个 Linear 层混合多个头拼接后的结果. 多头拼接得到的维度是 <code>seq x d_model</code> (也就是输入的维度), 为了使混合后的维度不变, 因此 Linear 层该是 <code>d_model x d_model</code>, 参数量是 $d^2_{model}$.</p>
+<h2 id="FFN"><a href="#FFN" class="headerlink" title="FFN"></a>FFN</h2><p>FFN 的参数量就是输入输出维度相乘, 比如 Attention 之后的 FFN 的形状通常也是 <code>d_model x d_model</code>, 因此参数量还是 $d^2_{model}$.</p>
+<h2 id="LayerNorm"><a href="#LayerNorm" class="headerlink" title="LayerNorm"></a>LayerNorm</h2><p>LayerNorm 的数学本质就是, 为每个特征维度学习一个 scale ($\gamma$) 和一个 shift ($\beta$), 因此参数量就是 $2 \times d_{model}$.</p>
+<h2 id="Embedding"><a href="#Embedding" class="headerlink" title="Embedding"></a>Embedding</h2><p>Embedding 的参数量是词表大小乘以 embedding 维度, 比如 $W_{emb} \in R^{V \times d_{model}}}$, 那参数量就是 $V \cdot d_{model}$</p>
+<h2 id="Block"><a href="#Block" class="headerlink" title="Block"></a>Block</h2><p>比如模型有 12 个 attention block, 那么就是 12 乘以 block 内的参数量.</p>
+<h1 id="Semantic-ID"><a href="#Semantic-ID" class="headerlink" title="Semantic ID"></a>Semantic ID</h1><p>Semantic ID (SID, 语义 ID), 是一种用有意义的结构化编码来替代传统任意整数 ID 的物品标识方式 (这个很重要, 其用来标识物品, 找到对应物品). 它不是随机的数字序列, 而是从物品的语义内容 (文本描述, 图像特征, 用户交互模式等) 中提取出来的, 携带语义信息的离散编码.</p>
+<p>比如:</p>
+<ul>
+<li>传统 ID: <code>item_12345</code>, 这个数字本身没有任何含义</li>
+<li>Semantic ID: <code>(3, 17, 42, 8)</code>, 这是一个层次化编码的元组, 是有语义的离散编码, 相似的物品会有相近的前缀, 比如统一类别的物品可能是 <code>(3, 17, 42, 5)</code> 或 <code>(3, 17, 41, 9)</code></li>
+</ul>
+<p>传统的 ID 可能是随机分配, 两个相邻的 ID (如 <code>10001</code> 和 <code>10002</code>) 可能代表完全无关的物品. 模型必须从零学习物品之间的所有关系, 没有任何先验信息的帮助. 对于一个新的物品, 模型如果看到的是传统 ID, 模型从来没见过, 就无法进行有效推荐; 而如果是 semantic ID, 由于有语义, 能够充分利用距离信息.</p>
+<h2 id="得到-Semantic-ID"><a href="#得到-Semantic-ID" class="headerlink" title="得到 Semantic ID"></a>得到 Semantic ID</h2><p>Google 在 TIGER 等论文中用的核心方法是, 先得到 Item Embedding, 然后用 RQ-VAE 逐层量化, 得到 $(c_1, c_2, c_3, c_4)$ 元组. 具体的步骤为:</p>
+<ol>
+<li>用内容特征或协同过滤得到物品的稠密向量 <code>e</code></li>
+<li>第一层量化: 将 <code>e</code> 映射到第一个 codebook 中最近的向量, 得到离散码 $c_1$</li>
+<li>计算残差: $r_1 &#x3D; e - codebook_1[c_1]$</li>
+<li>第二层量化: 将残差 $r_1$ 映射到第二个 codebook, 得到 $c_2$</li>
+<li>重复上述过程, 残差会越来越小</li>
+<li>最终得到 semantic ID: $(c_1, c_2, c_3, c_4)$, 其中 $c_1$ 代表粗粒度语义, $c_4$ 代表细粒度区分</li>
+</ol>
+<p>比如一本书的 semantic ID 为 $(3, 17, 42, 8)$, 其中:</p>
+<ul>
+<li>$c_1 &#x3D; 3$, 表示 “科技类”</li>
+<li>$c_2 &#x3D; 17$, 表示 “计算机科学”</li>
+<li>$c_3 &#x3D; 42$, 表示 “机器学习”</li>
+<li>$c_4 &#x3D; 8$, 区别具体是哪一本 ML 教材</li>
+</ul>
+<h1 id="Embedding-table-与-Codebook-的区别"><a href="#Embedding-table-与-Codebook-的区别" class="headerlink" title="Embedding table 与 Codebook 的区别"></a>Embedding table 与 Codebook 的区别</h1><p>两者的运行方向完全相反:</p>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>Embedding Table</th>
+<th>Codebook</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>核心目的</td>
+<td>学习物品&#x2F;特征的表示</td>
+<td>将连续向量离散化&#x2F;量化</td>
+</tr>
+<tr>
+<td>维度</td>
+<td>行数 &#x3D; 物品&#x2F;特征数量</td>
+<td>行数 &#x3D; 离散码的数量（人为设定）</td>
+</tr>
+<tr>
+<td>输入</td>
+<td>离散索引（如 item_id&#x3D;10001）</td>
+<td>连续向量（如 CLIP embedding）</td>
+</tr>
+<tr>
+<td>输出</td>
+<td>该物品的稠密向量</td>
+<td>离散编码（如 index&#x3D;42）</td>
+</tr>
+<tr>
+<td>方向</td>
+<td>离散 → 稠密</td>
+<td>稠密 → 离散</td>
+</tr>
+</tbody></table>
+<p>Embedding Table 的本质是一个 <code>N x d</code> 的可学习矩阵, 行数 N 是物品总数 (可能百万级); 列数 d 是 embedding 维度 (如 128):</p>
+<ul>
+<li>输入: 离散的整数索引</li>
+<li>输出: 连续的稠密向量</li>
+<li>问题: 当 N 很大时参数量巨大; 且新物品需要新增行, 重新训练</li>
+<li>保存的信息: 每行是一个物品的 “画像向量”, 编码了该物品在协同过滤和用户交互层面的信息</li>
+</ul>
+<p>Codebook 的本质是一个 <code>K x d</code> 的可学习矩阵, 行数 K 是码本大小 (如 256, 1024, 远小于物品数); 列数 d (与输出向量维度相同):</p>
+<ul>
+<li>输入: 连续的稠密向量</li>
+<li>输出: 与该向量最近的原型向量的索引 (离散值), 或量化后的向量</li>
+<li>特点: K 固定且较小, 代表有限的 “模板” 集合</li>
+<li>保存的信息: 每一行是一个 “语义原型”, 是在整个向量空间中挑出的 K 个代表点, 类似于聚类中心. 相当于将向量空间划分为 K 个区域, 每个码是一个区域的中心</li>
+</ul>
+<h1 id="Pre-train"><a href="#Pre-train" class="headerlink" title="Pre-train"></a>Pre-train</h1><p>Pre-train (预训练) 是指用大规模数据 (通常是通用数据或无标签数据) 训练模型, 让模型学到通用的知识, 模式和表示能力.</p>
+<p>之后就能在 pre-train model 的基础上, 用少量目标任务数据进行 fine-tuning. 好处是预训练的权重比随机初始化好得多, 收敛更快, 效果更好.</p>
+<h1 id="SFT"><a href="#SFT" class="headerlink" title="SFT"></a>SFT</h1><p>SFT (Supervised Fine-Tuning, 监督微调), 通常是预训练之后的第二阶段训练. 在模型通过预训练学到通用知识后, 就用高质量的人工标注数据 (Instruction-Response 对) 来教模型 “如何正确地回答问题” 或 “如何完成特定任务”.</p>
+<p>在 SFT 之前, 模型不清楚回答的范式, 比如:</p>
+<figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs livecodeserver">预训练任务: 预测下一个 <span class="hljs-keyword">token</span><br>  <span class="hljs-string">&quot;请帮我写一份...&quot;</span> → 模型可能补全成 → <span class="hljs-string">&quot;...关于如何烤蛋糕的博客文章&quot;</span><br>                     模型也可能补全成 → <span class="hljs-string">&quot;...辞职信，我受够了这个公司&quot;</span><br><br>  模型只是<span class="hljs-string">&quot;续写&quot;</span>，没有<span class="hljs-string">&quot;执行指令&quot;</span>的概念<br></code></pre></td></tr></table></figure>
+
+<p>加入 SFT 的数据如下:</p>
+<figure class="highlight avrasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs avrasm"><span class="hljs-symbol">Q:</span> <span class="hljs-string">&quot;中国的首都是哪里？&quot;</span>       A: <span class="hljs-string">&quot;北京，它是中国的政治和文化中心。&quot;</span><br><span class="hljs-symbol">Q:</span> <span class="hljs-string">&quot;帮我写一份会议纪要&quot;</span>        A: <span class="hljs-string">&quot;【会议纪要】\n时间：...\n地点：...&quot;</span><br><span class="hljs-symbol">Q:</span> <span class="hljs-string">&quot;把这个翻译成英文：你好&quot;</span>     A: <span class="hljs-string">&quot;Hello&quot;</span><br><span class="hljs-symbol">Q:</span> <span class="hljs-string">&quot;为什么天空是蓝色的？&quot;</span>      A: <span class="hljs-string">&quot;这是由于瑞利散射现象...&quot;</span><br></code></pre></td></tr></table></figure>
+
+<p>用 SFT 训练之后:</p>
+<figure class="highlight 1c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs 1c">模型学会了<span class="hljs-string">&quot;问答格式&quot;</span>：用户给指令/问题 → 模型给结构化回答<br>模型学会了<span class="hljs-string">&quot;遵循意图&quot;</span>：不再续写，而是理解并执行用户的意图<br></code></pre></td></tr></table></figure>
+
+<p>SFT 数据格式通常是:</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs json"><span class="hljs-punctuation">&#123;</span><br>  <span class="hljs-attr">&quot;instruction&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;分析以下推荐场景的优缺点&quot;</span><span class="hljs-punctuation">,</span><br>  <span class="hljs-attr">&quot;input&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;基于物品的协同过滤 vs 基于深度学习的推荐&quot;</span><span class="hljs-punctuation">,</span><br>  <span class="hljs-attr">&quot;output&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;基于物品的协同过滤优点是...缺点是...深度学习的优点是...&quot;</span><br><span class="hljs-punctuation">&#125;</span><br></code></pre></td></tr></table></figure>
+
+<p>对比一下预训练的数据:</p>
+<figure class="highlight gherkin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs gherkin">|<span class="hljs-string"> 特性  </span>|<span class="hljs-string"> 预训练数据           </span>|<span class="hljs-string"> SFT 数据          </span>|<br>|<span class="hljs-string">-----</span>|<span class="hljs-string">-----------------</span>|<span class="hljs-string">-----------------</span>|<br>|<span class="hljs-string"> 来源  </span>|<span class="hljs-string"> 互联网爬取（网页/代码/书籍） </span>|<span class="hljs-string"> 人工标注或精选         </span>|<br>|<span class="hljs-string"> 量级  </span>|<span class="hljs-string"> 海量（TB级/万亿token） </span>|<span class="hljs-string"> 少量（通常几万到几十万条）   </span>|<br>|<span class="hljs-string"> 质量  </span>|<span class="hljs-string"> 混杂，大量噪音         </span>|<span class="hljs-string"> 高质量，精心筛选        </span>|<br>|<span class="hljs-string"> 结构  </span>|<span class="hljs-string"> 自由文本            </span>|<span class="hljs-string"> 指令-响应对          </span>|<br>|<span class="hljs-string"> 成本  </span>|<span class="hljs-string"> 低（自动爬取）         </span>|<span class="hljs-string"> 高（需要人标注或用强模型生成） </span>|<br></code></pre></td></tr></table></figure>
+
+<p>蒸馏构造 SFT, 利用已有 Reasoning 能力的 LLM 进行 Reasoning CoT 构造得到数据, 之后驱使模型拟合正确的推理轨迹</p>
+<h2 id="蒸馏构造-SFT"><a href="#蒸馏构造-SFT" class="headerlink" title="蒸馏构造 SFT"></a>蒸馏构造 SFT</h2><p>传统的 SFT 数据, 通常是人工编写 <code>(问题, 答案)</code> pair, 这种方式的成本极高, 且覆盖有限, 人可能写不出复杂的推理过程.</p>
+<p>而蒸馏构造 SFT, 则是让一个强模型来自动生成 <code>(问题, 推理过程, 答案)</code>, 把这些数据作为 SFT 数据, 然后训练另一个模型.</p>
+<p>Knowledge Distillation (知识蒸馏) 的核心思想就是用大模型&#x2F;强模型的输出作为软标签, 去训练小模型.</p>
+<h1 id="CoT"><a href="#CoT" class="headerlink" title="CoT"></a>CoT</h1><p>CoT (Chain-of-Thought, 思维链), 意思是模型不直接给答案, 而是展示推理的中间步骤.</p>
+<p>一个没有 CoT 的数据可能如下 :</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs css">&#123;<br>  &quot;<span class="hljs-selector-tag">Q</span>&quot;: <span class="hljs-string">&quot;用户在过去一周点击了 [篮球, 球鞋, 运动手环]，推荐什么？&quot;</span>,<br>  <span class="hljs-string">&quot;A&quot;</span>: <span class="hljs-string">&quot;推荐运动袜&quot;</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这种情况下模型只能被答案, 但不知道为什么会推荐.</p>
+<p>有 CoT 的数据可能如下:</p>
+<figure class="highlight nestedtext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs nestedtext"><span class="hljs-attribute">&#123;</span><br><span class="hljs-attribute">  &quot;Q&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;用户在过去一周点击了 [篮球, 球鞋, 运动手环]，推荐什么？&quot;,</span><br>  <span class="hljs-attribute">&quot;A&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;我们需要分析用户的兴趣方向。</span><br>        <span class="hljs-attribute">Step 1</span><span class="hljs-punctuation">:</span> <span class="hljs-string">用户点击了篮球和球鞋 → 大球运动 + 运动鞋服品类的强信号</span><br>        <span class="hljs-attribute">Step 2</span><span class="hljs-punctuation">:</span> <span class="hljs-string">用户点击了运动手环 → 健康监测/运动配件品类</span><br>        <span class="hljs-attribute">Step 3</span><span class="hljs-punctuation">:</span> <span class="hljs-string">三个品类交叉 → 用户是活跃运动人群，正在搭建运动装备</span><br>        <span class="hljs-attribute">Step 4</span><span class="hljs-punctuation">:</span> <span class="hljs-string">用户已有球和鞋，有监测设备，但缺少运动服饰</span><br>        <span class="hljs-attribute">Step 5</span><span class="hljs-punctuation">:</span> <span class="hljs-string">基于品类延伸规律 → 推荐运动袜或运动T恤</span><br>        <span class="hljs-attribute">Step 6</span><span class="hljs-punctuation">:</span> <span class="hljs-string">运动袜的购买频率和关联度更高</span><br>        → 推荐：运动袜&quot;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>模型学习到的是 “输入 -&gt; 推理路径 -&gt; 输出” 这个生成过程.</p>
+<h1 id="指令遵循能力"><a href="#指令遵循能力" class="headerlink" title="指令遵循能力"></a>指令遵循能力</h1><p>指令遵循能力 (Instruction Following), 指模型接收到用户的指令后, 能够准确理解指令意图并严格按照指令的约束和要求完成输出的能力. 这通常是 LLM 区别于原始预训练模型的核心.</p>
+<p>比如:</p>
+<figure class="highlight 1c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs 1c">预训练模型:   <span class="hljs-string">&quot;写一首关于春天的诗、五言绝句、押韵&quot;</span> → 可能续写成一篇散文<br>有指令遵循:   <span class="hljs-string">&quot;写一首关于春天的诗、五言绝句、押韵&quot;</span> → 严格按照要求输出五言绝句<br></code></pre></td></tr></table></figure>
+
+<p>预训练模型的核心是 Next Token Prediction, 在看到上文时, 预测下一个词, 因此其学到的模式是:</p>
+<figure class="highlight clean"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs clean">输入文本 -&gt; 继续不全 -&gt; 生成看似合理的续写<br></code></pre></td></tr></table></figure>
+
+<p>而指令遵循能力需要专门的训练. 这需要满足一些约束, 比如:</p>
+<ul>
+<li><p>训练数据的格式约束, 让模型学会按照特定的格式输出:</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs css">指令: <span class="hljs-string">&quot;用 JSON 格式列举三个城市&quot;</span><br>  ✅ 正确: &#123;&quot;cities&quot;: [<span class="hljs-string">&quot;北京&quot;</span>, <span class="hljs-string">&quot;上海&quot;</span>, <span class="hljs-string">&quot;广州&quot;</span>]&#125;<br>  ❌ 没有: <span class="hljs-string">&quot;下面是三个城市：1. 北京 2. 上海 3. 广州&quot;</span><br></code></pre></td></tr></table></figure>
+</li>
+<li><p>语义层面的约束, 比如:</p>
+</li>
+</ul>
+<figure class="highlight 1c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs 1c">指令: <span class="hljs-string">&quot;推荐三部科幻电影，不要推荐诺兰导演的&quot;</span><br>  ✅ 正确: 推荐了《降临》《银翼杀手<span class="hljs-number">2049</span>》《月球》<br>  ❌ 没有: 推荐了《星际穿越》（诺兰导演的）<br><br>学会了：理解并遵守负向约束，不能只看<span class="hljs-string">&quot;推荐科幻电影&quot;</span>而忽略<span class="hljs-string">&quot;不要诺兰&quot;</span>。<br></code></pre></td></tr></table></figure>
+
+<p>(当然还有很多其他的方面)</p>
+<h1 id="RL"><a href="#RL" class="headerlink" title="RL"></a>RL</h1><p>对于一个具有指令遵循能力的模型, 让模型自发&#x2F;探索地生成 CoT 轨迹, 之后通过 GRPO 等强化学习范式优化模型.</p>
+<p>对于上面一句话, 非常重要的一点是 “对一个具有指令遵循能力的模型”. 意思是不能从一个预训练模型上进行 RL (Reinforcement Learning). 比如预训练模型收到 prompt “请推理：用户历史 [A,B,C] → 推荐?”, 他可能直接续写成一篇小说, 根本不按格式走. 此时 RL 探索的空间就是一篇混乱, 输出基本都是垃圾信息, 模型永远拿不到正向奖励信号, 模型不可能收敛.</p>
+<p>SFT 模型知道 “推理的格式”, 它的输出结构是合理的, RL 只需要在此基础上优化推理的质量.</p>
+<p>模型会根据 prompt 输出多个 CoT, 然后让一个强模型对 CoT 进行打分, 计算 reward.</p>
+<h1 id="Pass-64"><a href="#Pass-64" class="headerlink" title="Pass@64"></a>Pass@64</h1><h1 id="F1-Score"><a href="#F1-Score" class="headerlink" title="F1-Score"></a>F1-Score</h1><h1 id="抽取逻辑链条"><a href="#抽取逻辑链条" class="headerlink" title="抽取逻辑链条"></a>抽取逻辑链条</h1><h1 id="Thinking-mode-和-Non-thinkinig-mode"><a href="#Thinking-mode-和-Non-thinkinig-mode" class="headerlink" title="Thinking mode 和 Non-thinkinig mode"></a>Thinking mode 和 Non-thinkinig mode</h1><p>模型推理时是否 think 是由 System prompt 来控制的, 而不是训练内容中的标记. <code>&lt;think&gt;&lt;/think&gt;</code> 这种标记只是让模型知道这是思考内容, 与其他内容做区分, 而不是推理开关.</p>
+<p>对于 <code>im_start</code> 这类标签会由 LLaMA-Factory 的 template 引擎自动添加:</p>
+<figure class="highlight smalltalk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs smalltalk"><span class="hljs-type">Alpaca</span> <span class="hljs-type">JSONL</span> (纯文本)          <span class="hljs-type">LLaMA</span>-<span class="hljs-type">Factory</span> template        训练时的实际输入<br>───────────────────────────    ────────────────────────      ─────────────────<br>&#123;system: <span class="hljs-comment">&quot;你是助手&quot;</span>,        →  qwen3_nothink 模板渲染   →   &lt;|im_start|&gt;system\n你是助手&lt;|im_end|&gt;<br> prompt: <span class="hljs-comment">&quot;请作答...&quot;</span>,                                      &lt;|im_start|&gt;user\n请作答...&lt;|im_end|&gt;<br> response: <span class="hljs-comment">&quot;正确答案是B。&quot;</span>&#125;                                  &lt;|im_start|&gt;assistant\n正确答案是<span class="hljs-type">B</span>。&lt;|im_end|&gt;<br></code></pre></td></tr></table></figure>
+
+<h1 id="Rollout-candidates"><a href="#Rollout-candidates" class="headerlink" title="Rollout candidates"></a>Rollout candidates</h1><p>Rollout candidates (展开候选项) 是指强化学习训练中, 模型对同一个输入 prompt 生成的多个完整输出序列. 这些输出是模型在当前策略下的 “尝试” 或 “推演”, RL 算法会对它们打分, 然后据此更新模型.</p>
+<p>Rollout 一词在强化学习中的定义就是: 从当前状态出发, 遵循某个策略, 执行一系列动作, 直到到达终止状态, 记录整个 trajectory.</p>
+<p>在 LLM 的语境下就是:</p>
+<figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs livecodeserver">当前状态    = 给定的 prompt<br>策略        = 模型的当前参数 θ<br>动作序列    = 逐 <span class="hljs-keyword">token</span> 生成（<span class="hljs-keyword">a</span>₁=第一个词, <span class="hljs-keyword">a</span>₂=第二个词, ...）<br>终止状态    = 生成 &lt;EOS&gt; <span class="hljs-keyword">token</span><br>完整轨迹    = (prompt, <span class="hljs-keyword">token</span>₁, <span class="hljs-keyword">token</span>₂, ..., token_N, &lt;EOS&gt;)<br></code></pre></td></tr></table></figure>
+
+<h1 id="Rejection-sampling"><a href="#Rejection-sampling" class="headerlink" title="Rejection sampling"></a>Rejection sampling</h1>
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/AI/" class="category-chain-item">AI</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>快手LLM-REC挑战赛记录</div>
+      <div>http://example.com/2026/07/03/快手LLM-REC挑战赛记录/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Jie</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年7月3日</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>许可协议</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2026/07/09/Linux-USB-RNDIS-%E7%BD%91%E5%8D%A1/" title="Linux-USB-RNDIS-网卡">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Linux-USB-RNDIS-网卡</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/07/02/%E7%A0%94%E7%A9%B6%E7%94%9F%E5%BC%80%E6%BA%90%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%A4%A7%E8%B5%9B%E8%AE%B0%E5%BD%95/" title="研究生开源操作系统大赛记录">
+                        <span class="hidden-mobile">研究生开源操作系统大赛记录</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zKurisu/comments-utterances');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Jie</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Orkarin</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.1/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

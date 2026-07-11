@@ -1,0 +1,1379 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/wallhaven-j5kjgy_1920x1080.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Jie">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="介绍该 Blog 记录在参加研究生开源操作系统大赛学到的一些知识点. rootfs因为编译 StarryOS 时, 需要先运行 make rootfs, 因此调研下这个概念. rootfs 正如其名, Root FileSystem, 是 Linux 内核启动过程中挂载的第一个文件系统, 它是所有其他文件系统的根. 但 rootfs 和寻常我们理解的文件系统有所不同, 它是一个由内核在启动阶段自动">
+<meta property="og:type" content="article">
+<meta property="og:title" content="研究生开源操作系统大赛记录">
+<meta property="og:url" content="http://example.com/2026/07/02/%E7%A0%94%E7%A9%B6%E7%94%9F%E5%BC%80%E6%BA%90%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%A4%A7%E8%B5%9B%E8%AE%B0%E5%BD%95/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="介绍该 Blog 记录在参加研究生开源操作系统大赛学到的一些知识点. rootfs因为编译 StarryOS 时, 需要先运行 make rootfs, 因此调研下这个概念. rootfs 正如其名, Root FileSystem, 是 Linux 内核启动过程中挂载的第一个文件系统, 它是所有其他文件系统的根. 但 rootfs 和寻常我们理解的文件系统有所不同, 它是一个由内核在启动阶段自动">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-07-02T12:57:04.000Z">
+<meta property="article:modified_time" content="2026-07-11T07:40:33.341Z">
+<meta property="article:author" content="Jie">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>研究生开源操作系统大赛记录 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<!-- hexo injector head_end start --><style>.typst-app {
+  margin: 0;
+  --typst-dom-scale: 1;
+  /* --typst-dom-scale: 1.5; */
+  margin: 5px;
+}
+
+.typst-dom-page {
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  --data-text-width: calc(1px * var(--typst-dom-scale));
+  --data-text-height: calc(1px * var(--typst-dom-scale));
+}
+
+.typst-back-canvas {
+  position: absolute;
+  z-index: -1;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  pointer-events: none;
+}
+
+.typst-svg-page {
+  position: absolute;
+  z-index: 0;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+}
+
+.typst-html-semantics {
+  position: absolute;
+  z-index: 2;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  color: transparent;
+  font-family: monospace;
+  white-space: pre;
+  opacity: 0.62;
+}
+
+.typst-html-semantics span {
+  color: transparent;
+  font-family: monospace;
+  transform-origin: left top;
+  position: absolute;
+  display: inline-block;
+  left: 0;
+  top: 0;
+}
+
+.typst-content-hint {
+  position: absolute;
+  display: inline-block;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.typst-html-semantics a {
+  position: absolute;
+  display: inline-block;
+}
+
+/* set transparent itself */
+.typst-content-group {
+  pointer-events: visible;
+}
+
+.typst-html-semantics span::-moz-selection {
+  color: transparent;
+  background: #7db9de;
+}
+
+.typst-html-semantics span::selection {
+  color: transparent;
+  background: #7db9de;
+}
+
+.typst-html-semantics *::-moz-selection {
+  color: transparent;
+  background: transparent;
+}
+
+.typst-html-semantics *::selection {
+  color: transparent;
+  background: transparent;
+}
+
+.typst-content-fallback {
+  color: transparent;
+  background: transparent;
+}
+
+.pseudo-link,
+.typst-text {
+  pointer-events: none;
+}
+
+.tsel span,
+.tsel {
+  left: 0;
+  position: fixed;
+  text-align: justify;
+  white-space: pre;
+  width: 100%;
+  height: 100%;
+  text-align-last: justify;
+  color: transparent;
+}
+.tsel span::-moz-selection,
+.tsel::-moz-selection {
+  color: transparent;
+  background: #7db9dea0;
+}
+.tsel span::selection,
+.tsel::selection {
+  color: transparent;
+  background: #7db9dea0;
+}
+.pseudo-link {
+  fill: transparent;
+  cursor: pointer;
+  pointer-events: all;
+}
+svg {
+  fill: none;
+}
+
+.outline_glyph path,
+path.outline_glyph {
+  fill: var(--glyph_fill);
+  stroke: var(--glyph_stroke);
+}
+
+.outline_glyph path,
+path.outline_glyph {
+  transition: 0.2s fill stroke;
+}
+.hover .typst-text {
+  --glyph_fill: #66bab7;
+  --glyph_stroke: #66bab7;
+}
+
+.typst-jump-ripple,
+.typst-debug-react-ripple {
+  width: 0;
+  height: 0;
+  background-color: transparent;
+  position: absolute;
+  border-radius: 50%;
+}
+.typst-jump-ripple {
+  border: 1px solid #66bab7;
+}
+.typst-debug-react-ripple {
+  border: 1px solid #cb1b45;
+}
+@keyframes typst-jump-ripple-effect {
+  to {
+    width: 10vw;
+    height: 10vw;
+    opacity: 0.01;
+    margin: -5vw;
+  }
+}
+@keyframes typst-debug-react-ripple-effect {
+  to {
+    width: 3vw;
+    height: 3vw;
+    opacity: 0.01;
+    margin: -1.5vw;
+  }
+}
+</style>
+<script>/// https://segmentfault.com/a/1190000016574288
+(function () {
+  var ie = !!(window.attachEvent && !window.opera);
+  var wk = /webkit\/(\d+)/i.test(navigator.userAgent) && RegExp.$1 < 525;
+  var fn = [];
+  var run = function () {
+    for (var i = 0; i < fn.length; i++) fn[i]();
+  };
+  var d = document;
+  d.ready = function (f) {
+    if (!ie && !wk && d.addEventListener) return d.addEventListener('DOMContentLoaded', f, false);
+    if (fn.push(f) > 1) return;
+    if (ie)
+      (function () {
+        try {
+          d.documentElement.doScroll('left');
+          run();
+        } catch (err) {
+          setTimeout(arguments.callee, 0);
+        }
+      })();
+    else if (wk)
+      var t = setInterval(function () {
+        if (/^(loaded|complete)$/.test(d.readyState)) clearInterval(t), run();
+      }, 0);
+  };
+})();
+</script>
+<script type="module" src="/typst/typst-main.js"></script><script src="/typst/svg-utils.js"></script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Jie</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/SteinsGate_all.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="研究生开源操作系统大赛记录"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-07-02 20:57" pubdate>
+          2026年7月2日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          18k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          147 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">研究生开源操作系统大赛记录</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>该 Blog 记录在参加研究生开源操作系统大赛学到的一些知识点.</p>
+<h1 id="rootfs"><a href="#rootfs" class="headerlink" title="rootfs"></a>rootfs</h1><p>因为编译 StarryOS 时, 需要先运行 <code>make rootfs</code>, 因此调研下这个概念.</p>
+<p>rootfs 正如其名, Root FileSystem, 是 Linux 内核启动过程中挂载的第一个文件系统, 它是所有其他文件系统的根.</p>
+<p>但 rootfs 和寻常我们理解的文件系统有所不同, 它是一个由内核在启动阶段自动创建的存在于内存中的临时文件系统 (类型是 <code>tmpfs</code>), 而非磁盘上. 特点就是它不依赖任何块设备&#x2F;磁盘驱动, 并且内容为空. 没错, 它是空的.</p>
+<p>尽管 rootfs 为空, 但它确实作为了文件系统的根节点了, 其下可以放置文件了. </p>
+<p>这里从 Linux 内核启动再理一边. Linux 内核在编译时会链接一个 <code>initramfs</code> (或者是一个独立的 <code>initramfs</code> 文件), 其本质是一个 <code>cpio</code> 压缩包. 内核在启动后, 会进行下面操作:</p>
+<ol>
+<li>创建空的 <code>rootfs</code> (<code>tmpfs</code>)</li>
+<li>把 <code>initramfs</code> 的内容解压到 <code>rootfs</code> 中</li>
+<li>此时 <code>rootfs</code> (<code>/</code>) 之下, 就有了 <code>/init</code>, <code>/bin/</code>, <code>/lib/</code> 等基本内容</li>
+</ol>
+<p>之后内核会执行 <code>/init</code> 文件 (一个 <code>shell</code> 脚本或编译好的二进制), 其会进行:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-comment"># 1. 挂载 proc、sys 等虚拟文件系统</span><br>mount -t proc none /proc<br>mount -t sysfs none /sys<br><br><span class="hljs-comment"># 2. 加载必要的内核模块（块设备驱动、ext4 驱动等）</span><br>modprobe virtio_blk<br>modprobe ext4<br><br><span class="hljs-comment"># 3. 挂载真正的根文件系统（临时挂到某个位置）</span><br>mount -t ext4 /dev/vda /mnt/realroot<br></code></pre></td></tr></table></figure>
+
+<p>之后内核会用 <code>switch_root</code> 或 <code>pivot_root</code> (函数), 把根从 <code>initramfs</code> 的 <code>tmpfs</code> 切换到 <code>/mnt/realroot</code> 上.</p>
+<p><code>switch_root</code> 干了 3 件事情:</p>
+<ol>
+<li>把 <code>/mnt/realroot</code> 移动为 <code>/</code></li>
+<li>清空旧的 <code>initramfs</code> 内容 (释放内存)</li>
+<li>执行新根下的 <code>/sbin/init</code> (系统真正的 <code>init</code> 进程)</li>
+</ol>
+<p>之后系统就开始正常运行了.</p>
+<h1 id="musl-libc"><a href="#musl-libc" class="headerlink" title="musl libc"></a>musl libc</h1><p><code>musl</code> 是一个为 Linux 设计的轻量级, 标准兼容的 C 标准库. 其设计哲学是: 正确性优先, 简洁, 高效. 正因如此, 它对静态链接非常友好, 编译后体积小.</p>
+<p>这里与常见的 <code>glibc</code> 对比:</p>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>glibc</th>
+<th>musl</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>代码量</td>
+<td>约 150 万行</td>
+<td>约 30 万行（去掉 arch 代码约 8 万行）</td>
+</tr>
+<tr>
+<td>二进制大小</td>
+<td>动态库 ~2 MB</td>
+<td>动态库 ~0.6 MB，静态链接后仍很小</td>
+</tr>
+<tr>
+<td>线程实现</td>
+<td>NPTL (1:1 线程模型)，复杂</td>
+<td>轻量级 1:1 线程，代码极简</td>
+</tr>
+<tr>
+<td>malloc</td>
+<td>ptmalloc，复杂，fork 可继承</td>
+<td>mallocng (2019 年后)，简单高效</td>
+</tr>
+<tr>
+<td>DNS 解析</td>
+<td>libnss (NSS 框架)，支持插件</td>
+<td>内置实现，无外部依赖，无 nscd</td>
+</tr>
+<tr>
+<td>locale</td>
+<td>完整 locale 支持，数据文件数百 MB</td>
+<td>精简 locale，数据内嵌</td>
+</tr>
+<tr>
+<td>数学库</td>
+<td>多年累计，悠久但部分代码陈旧</td>
+<td>正确舍入优先，现代算法</td>
+</tr>
+<tr>
+<td>静态链接</td>
+<td>不鼓励（NSS 等导致行为异常）</td>
+<td>设计目标之一，静态链接完美工作</td>
+</tr>
+<tr>
+<td>动态链接器</td>
+<td>&#x2F;lib&#x2F;ld-linux-x86-64.so (~200 KB)</td>
+<td>&#x2F;lib&#x2F;ld-musl-x86_64.so.1 (~30 KB)</td>
+</tr>
+<tr>
+<td>源码组织</td>
+<td>较松散，多目录，多年遗留</td>
+<td>极简扁平的代码结构</td>
+</tr>
+<tr>
+<td>标准兼容</td>
+<td>GNU 扩展多，某些地方偏离标准</td>
+<td>严格遵循 POSIX&#x2F;C11&#x2F;C17 标准</td>
+</tr>
+<tr>
+<td>性能</td>
+<td>大规模并行场景优化好</td>
+<td>小&#x2F;中等规模场景通常更优</td>
+</tr>
+<tr>
+<td>许可证</td>
+<td>LGPL</td>
+<td>MIT</td>
+</tr>
+</tbody></table>
+<h1 id="ONNX"><a href="#ONNX" class="headerlink" title="ONNX"></a>ONNX</h1><p>ONNX (Open Neural Network Exchange) 是一个深度学习模型的中间表示 (Intermediate Representation, IR), 由微软和 Facebook 于 2017 年联合发布, 目的是解决 “每个框架训练出来的模型, 如何在其他框架&#x2F;运行时中使用” 的问题.</p>
+<p>比如原先会有下面问题:</p>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs jboss-cli">训练                      模型文件         推理部署<br><br>PyTorch        ──────→  model.pt ──────→ PyTorch <span class="hljs-params">(libtorch)</span><br>TensorFlow     ──────→  model.pb ──────→ TensorFlow Serving<br>Keras          ──────→  model.h5 ──────→ Keras Runtime<br>JAX            ──────→  <span class="hljs-string">...</span>     ──────→ <span class="hljs-string">...</span><br>PaddlePaddle   ──────→  <span class="hljs-string">...</span>     ──────→ <span class="hljs-string">...</span><br><br>         ↑ 各玩各的，不互通 ↑<br></code></pre></td></tr></table></figure>
+
+<p>不同框架训练的模型格式不同, 只能在自己框架下进行推理.</p>
+<p>而 ONNX 要做的事, 就是:</p>
+<ul>
+<li>PyTorch $\rightarrow$ <code>model.pt</code> $\rightarrow$ <code>[export]</code> $\rightarrow$ <code>model.onnx</code> $\rightarrow$ <code>[import]</code> $\rightarrow$ 任意支持 ONNX 的运行时</li>
+<li>TensorFlow $\rightarrow$ <code>model.pb</code> $\rightarrow$ <code>[export]</code> $\rightarrow$ <code>model.onnx</code> $\rightarrow$ <code>[import]</code> $\rightarrow$ 任意支持 ONNX 的运行时</li>
+</ul>
+<p><code>[export]</code> (导出), 就是模型转换的过程, 而 <code>[import]</code> (导入) 就是模型加载的过程.</p>
+<p>比如 <code>model.pt</code> 文件的本质, 就是:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> torch<br><br><span class="hljs-comment"># 保存模型</span><br>torch.save(&#123;<br>    <span class="hljs-string">&#x27;model_state_dict&#x27;</span>: model.state_dict(),         <span class="hljs-comment"># 模型参数 (权重/偏置, tensor)</span><br>    <span class="hljs-string">&#x27;optimizer_state_dict&#x27;</span>: optimizer.state_dict(), <span class="hljs-comment"># 优化器状态</span><br>    <span class="hljs-string">&#x27;epoch&#x27;</span>: <span class="hljs-number">10</span>,                                    <span class="hljs-comment"># 其他元数据</span><br>    <span class="hljs-string">&#x27;loss&#x27;</span>: <span class="hljs-number">0.05</span>,<br>&#125;, <span class="hljs-string">&#x27;model.pt&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<p>它是框架绑定的, 只有 PyTorch 能加载它, 计算图的存储也是由 <code>class MyModel(nn.Module)</code> 的 Python 代码定义的.</p>
+<p>而 <code>model.onnx</code> 的本质是 <code>protobuf</code> 序列化的二进制文件. ProtoBuf 本身也是跨语言的, 并且其会显示存储计算图:</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><code class="hljs stylus">┌─────────────────────────────────────────────────────────────┐<br>│ model<span class="hljs-selector-class">.onnx</span>                                                   │<br>│                                                              │<br>│ graph &#123;                                                      │<br>│   node &#123;                                                     │<br>│     op_type: <span class="hljs-string">&quot;Conv&quot;</span>          ← 每个节点=一个算子(operation)    │<br>│     <span class="hljs-selector-tag">input</span>: <span class="hljs-selector-attr">[<span class="hljs-string">&quot;input&quot;</span>, <span class="hljs-string">&quot;W&quot;</span>, <span class="hljs-string">&quot;b&quot;</span>]</span>                               │<br>│     output: <span class="hljs-selector-attr">[<span class="hljs-string">&quot;conv_out&quot;</span>]</span>                                     │<br>│     attribute &#123; name: <span class="hljs-string">&quot;kernel_shape&quot;</span> value: <span class="hljs-selector-attr">[3,3]</span> &#125;          │<br>│   &#125;                                                          │<br>│   node &#123;                                                     │<br>│     op_type: <span class="hljs-string">&quot;Relu&quot;</span>                                          │<br>│     <span class="hljs-selector-tag">input</span>: <span class="hljs-selector-attr">[<span class="hljs-string">&quot;conv_out&quot;</span>]</span>                                      │<br>│     output: <span class="hljs-selector-attr">[<span class="hljs-string">&quot;relu_out&quot;</span>]</span>                                     │<br>│   &#125;                                                          │<br>│   node &#123;                                                     │<br>│     op_type: <span class="hljs-string">&quot;MaxPool&quot;</span>                                       │<br>│     <span class="hljs-selector-tag">input</span>: <span class="hljs-selector-attr">[<span class="hljs-string">&quot;relu_out&quot;</span>]</span>                                      │<br>│     output: <span class="hljs-selector-attr">[<span class="hljs-string">&quot;pool_out&quot;</span>]</span>                                     │<br>│     ...                                                      │<br>│   &#125;                                                          │<br>│   ...                                                        │<br>│                                                              │<br>│   initializer &#123;             ← 权重也嵌在同一个文件中           │<br>│     name: <span class="hljs-string">&quot;W&quot;</span>                                                 │<br>│     data_type: FLOAT                                          │<br>│     dims: <span class="hljs-selector-attr">[64, 3, 3, 3]</span>                                     │<br>│     raw_data: <span class="hljs-selector-attr">[二进制权重数据]</span>                                 │<br>│   &#125;                                                          │<br>│ &#125;                                                            │<br>│                                                              │<br>│ opset_import &#123; version: <span class="hljs-number">17</span> &#125;   ← 算子集版本<br>│ 自包含: 图结构 + 算子 + 权重全部在一个文件中                     │<br>└─────────────────────────────────────────────────────────────┘<br></code></pre></td></tr></table></figure>
+
+<p>ONNX 在转换时, 会运行模型进行前向传播, 记录所有经过的算子, 然后将 <code>torch</code> 算子映射为 <code>ONNX</code> 算子.</p>
+<p>支持 <code>ONNX</code> 的 runtime 有很多, 比如 <code>ONNX Runtime</code>, <code>TensorRT</code>, <code>OpenVINO</code> 等.</p>
+<h1 id="tract-crate"><a href="#tract-crate" class="headerlink" title="tract crate"></a>tract crate</h1><p><code>tract</code> crate 是 Sonos 公司开源的一个 Rust 推理引擎, 全称是 Tiny, Runnable, And Connective. 它可以在纯 Rust 环境中加载 ONNX 和 TensorFlow 模型并执行推理.</p>
+<p><code>tract</code> 的设计理念并不是追求极致的推理速度, 而是追求嵌入便利性和部署简单. 其后端是 CPU (意思是在 CPU 上推理), 也可选 WASM. 由纯 Rust 编写, 因此几乎零系统依赖.</p>
+<p>比如下面是一个使用示例:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> tract_onnx::prelude::*;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() <span class="hljs-punctuation">-&gt;</span> TractResult&lt;()&gt; &#123;<br>    <span class="hljs-comment">// 直接加载 .onnx 文件</span><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">model</span> = tract_onnx::<span class="hljs-title function_ invoke__">onnx</span>()<br>        .<span class="hljs-title function_ invoke__">model_for_path</span>(<span class="hljs-string">&quot;resnet50.onnx&quot;</span>)?<br>        <span class="hljs-comment">// 优化并转换为 tract 内部格式</span><br>        .<span class="hljs-title function_ invoke__">into_optimized</span>()?<br>        <span class="hljs-comment">// 准备为单 batch 推理</span><br>        .<span class="hljs-title function_ invoke__">into_runnable</span>()?;<br><br>    <span class="hljs-comment">// 准备输入，直接使用 ndarray 兼容的 Tensor</span><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">input</span> = tract_ndarray::Array4::&lt;<span class="hljs-type">f32</span>&gt;::<span class="hljs-title function_ invoke__">zeros</span>((<span class="hljs-number">1</span>, <span class="hljs-number">3</span>, <span class="hljs-number">224</span>, <span class="hljs-number">224</span>));<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">input</span> = input.<span class="hljs-title function_ invoke__">into_tensor</span>();<br><br>    <span class="hljs-comment">// 执行推理</span><br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">result</span> = model.<span class="hljs-title function_ invoke__">run</span>(tvec!(input))?;<br><br>    <span class="hljs-title function_ invoke__">Ok</span>(())<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>与其他引擎的对比如下:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>ONNX Runtime</th>
+<th>TensorRT</th>
+<th>tract</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>语言</td>
+<td>C++</td>
+<td>C++&#x2F;CUDA</td>
+<td>纯 Rust</td>
+</tr>
+<tr>
+<td>编译</td>
+<td>cmake + 复杂依赖</td>
+<td>闭源 SDK</td>
+<td>cargo build</td>
+</tr>
+<tr>
+<td>后端</td>
+<td>CPU&#x2F;CUDA&#x2F;TensorRT&#x2F;MIGraphX 等</td>
+<td>CUDA only</td>
+<td>CPU (可选 WASM)</td>
+</tr>
+<tr>
+<td>典型体积</td>
+<td>&gt;10 MB 共享库</td>
+<td>~1 GB SDK</td>
+<td>静态编译可控</td>
+</tr>
+<tr>
+<td>交叉编译</td>
+<td>困难</td>
+<td>不支持</td>
+<td>简单</td>
+</tr>
+<tr>
+<td>WASM 支持</td>
+<td>有限</td>
+<td>无</td>
+<td>原生支持</td>
+</tr>
+<tr>
+<td>推理速度</td>
+<td>基准</td>
+<td>最快</td>
+<td>够用但不极致</td>
+</tr>
+<tr>
+<td>依赖</td>
+<td>protobuf 等系统库</td>
+<td>CUDA 驱动</td>
+<td>几乎零系统依赖</td>
+</tr>
+</tbody></table>
+<h1 id="SG2002-Linux-镜像烧录和启动"><a href="#SG2002-Linux-镜像烧录和启动" class="headerlink" title="SG2002 Linux 镜像烧录和启动"></a>SG2002 Linux 镜像烧录和启动</h1><p>烧录之前首先要构建系统镜像. 系统镜像就是一个磁盘上的文件, 包含 u-boot, OpenSBI, StarryOS 内核本身, 将这些内容打包作为一个 image, 便于一并写入磁盘. 比如打包为:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ file milkv-duo256m-musl-riscv64-sd_v2.0.1.img<br>milkv-duo256m-musl-riscv64-sd_v2.0.1.img: DOS/MBR boot sector; partition 1 : ID=0xc, active, start-CHS (0x0,0,2), end-CHS (0x10,81,2), startsector 1, 262144 sectors; partition 2 : ID=0x83, start-CHS (0x10,81,3), end-CHS (0x72,57,8), startsector 262145, 1572864 sectors<br></code></pre></td></tr></table></figure>
+
+<p>这里把一张 SD 卡作为 SG2002 的磁盘, 写入过程就如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">dd</span> <span class="hljs-keyword">if</span>=milkv-duo256m-musl-riscv64-sd_v2.0.1.img of=/dev/sda status=progress conv=<span class="hljs-built_in">sync</span><br></code></pre></td></tr></table></figure>
+
+<p>校验写入完整性:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo cmp milkv-duo256m-musl-riscv64-sd_v2.0.1.img /dev/sda<br>cmp: EOF on ‘milkv-duo256m-musl-riscv64-sd_v2.0.1.img’ after byte 939524608, <span class="hljs-keyword">in</span> line 1985191<br></code></pre></td></tr></table></figure>
+<p>这个输出是正常的, 意思是:</p>
+<ul>
+<li>镜像文件大小是 ~896 MB（939,524,608 字节）</li>
+<li>SD 卡容量更大（16GB）</li>
+<li>cmp 逐字节对比，走到镜像末尾时，SD 卡后面还有数据，所以报 EOF</li>
+<li>镜像覆盖的 896 MB 范围内，完全一致，没有差异</li>
+</ul>
+<p>之后将 SD 卡插入到 SG2002 的槽位中, 然后用 USB-TTL 转换器的串口连接 SG2002 的 UART 引脚, USB 端连接电脑, 这里先不给 SG2002 供电, 先用 <code>screen</code> 连接串口观测输出:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo screen /dev/ttypUSB0 115200<br></code></pre></td></tr></table></figure>
+
+<p>需要注意这里的 <code>sudo</code>, 不然 <code>screen</code> 会直接退出, 而不是爆权限不足的错误.</p>
+<p>将 SG2002 的 Type-C 接口用 USB-Type C 线连电脑作为供电, 之后就能在终端看到系统启动的输出.</p>
+<p>Linux 内核默认编译有 SG2002 需要的相关驱动:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ lsmod | grep -E <span class="hljs-string">&#x27;cdc|usb|ch341&#x27;</span><br>cdc_mbim               20480  0<br>cdc_wdm                36864  1 cdc_mbim<br>cdc_ncm                53248  1 cdc_mbim<br>cdc_ether              28672  1 cdc_ncm<br>usbnet                 65536  3 cdc_mbim,cdc_ncm,cdc_ether<br>mii                    20480  1 usbnet<br>ch341                  28672  1<br>cdc_acm                49152  0<br>usb_storage            94208  1 uas<br>btusb                  86016  0<br>btmtk                  32768  1 btusb<br>btrtl                  32768  1 btusb<br>btbcm                  24576  1 btusb<br>btintel                73728  1 btusb<br>bluetooth            1204224  32 btrtl,btmtk,btintel,btbcm,bnep,btusb,rfcomm<br></code></pre></td></tr></table></figure>
+
+<p>对于带 wifi 模块的 SG2002, 默认地址是 <code>192.168.42.1/24</code>, 可以在宿主机配置一个相同网段的网络接口, 然后就可以 <code>ssh</code> 连接:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo ip addr add 192.168.42.100/24 dev enp0s20f0u1<br>sudo ip <span class="hljs-built_in">link</span> <span class="hljs-built_in">set</span> enp0s20f0u1 up<br><br><span class="hljs-comment"># 测试连通性</span><br>ping 192.168.42.1<br><br>ssh root@192.168.42.1<br></code></pre></td></tr></table></figure>
+
+<p>Milk-V 官方镜像默认 root 密码是 <code>milkv</code>.</p>
+<h1 id="BootROM"><a href="#BootROM" class="headerlink" title="BootROM"></a>BootROM</h1><p>BootROM (Boot Read-Only Memory) 是嵌入式&#x2F;计算机体系结构中 CPU 上电后执行的第一段代码所在的只读寄存器, 也叫 ROM bootloader 或 Stage 1 Bootloader 这是芯片出厂时就烧死在 ROM 里的代码, 不可修改.</p>
+<p>BootROM 负责把真正的 Bootloader 加载到内存并跳转运行, 它是 “引导程序的第0步”, 早于 BIOS&#x2F;UEFI&#x2F;SPL&#x2F;U-Boot.</p>
+<h1 id="FIP"><a href="#FIP" class="headerlink" title="FIP"></a>FIP</h1><p>FIP (Firmware Image Package), 是一种固件的打包格式 (由 ARM Trusted Firmware 定义), 用于将多个固件镜像打包成一个文件. 比如将 <code>OpenSBI</code> 和 <code>U-Boot</code> 打包成 <code>fip.bin</code>, 作为 Boot Loader Stage 2 来使用.</p>
+<p>FIP 的原始概念是: ARM 启动有多个安全级别 (EL3, EL2, EL1 等), 每级需要不同的固件. FIP 将这些固件打成一个包, BootROM 或上一级固件可以从包中提取自己需要的部分. 这里借用了这个术语, 只包含了 <code>OpenSBI</code> 和 <code>U-Boot</code> 两部分.</p>
+<p>OpenSBI (Open Source Supervisor Binary Interface), 是 RISC-V 的标准 SBI 固件, 为操作系统提供底层服务 (定时器, IPI, 电源管理等).</p>
+<p>U-Boot (Das Universal Bootloader), 是一个开源通用的引导程序, 支持从 SD 卡&#x2F;NAND&#x2F;NFS 等加载内核.</p>
+<p>从这两个软件的作用也可以看出:</p>
+<ul>
+<li><p>OpenSBI (SBI Runtime) 会一直驻留内存 (运行在 M Mode), 内核会持续调用它, 设备树中常用 <code>/reserved-memory</code> 来标记:</p>
+<figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs dts"><span class="hljs-title class_">reserved-memory</span> <span class="hljs-punctuation">&#123;</span><br>    <span class="hljs-title class_">opensbi@80000000</span> <span class="hljs-punctuation">&#123;</span><br>        <span class="hljs-attr">reg</span> <span class="hljs-operator">=</span> <span class="hljs-params">&lt;<span class="hljs-number">0x80000000</span> <span class="hljs-number">0x20000</span>&gt;</span><span class="hljs-punctuation">;</span><br>        <span class="hljs-attr">no-map</span><span class="hljs-punctuation">;</span><br>    <span class="hljs-punctuation">&#125;;</span><br><span class="hljs-punctuation">&#125;;</span><br></code></pre></td></tr></table></figure>
+</li>
+<li><p>U-Boot 会在启动完成后退出执行, 通常被覆盖或丢弃</p>
+</li>
+</ul>
+<p>BootROM 解析 FIP 的流程如下:</p>
+<ol>
+<li>读取 <code>fip.bin</code></li>
+<li>解析 FIP 头</li>
+<li>把 OpenSBI 放到 RAM 的一个保留区域</li>
+<li>把 U-Boot 放到 DRAM 可执行地址</li>
+<li>跳转到 U-Boot</li>
+<li>U-Boot 加载内核并跳转</li>
+</ol>
+<p>构建 <code>fip.bin</code> 需要了解下面信息:</p>
+<table>
+<thead>
+<tr>
+<th>需要了解</th>
+<th>具体内容</th>
+<th>来源</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>芯片的 BootROM 行为</td>
+<td>SG2002 BootROM 会从 SD 卡 FAT32 分区读取哪个文件来启动</td>
+<td>SG2002 TRM</td>
+</tr>
+<tr>
+<td>OpenSBI 的平台支持</td>
+<td>OpenSBI 需要知道 PLIC、CLINT 的 MMIO 地址、串口地址等</td>
+<td>SG2002 TRM + 设备树</td>
+</tr>
+<tr>
+<td>U-Boot 支持的板卡</td>
+<td>U-Boot 需要有 cvitek_cv181x 的板级支持（DDR 初始化、pinmux 等）</td>
+<td>U-Boot 主线或 Sophgo SDK</td>
+</tr>
+<tr>
+<td>DDR 内存参数</td>
+<td>U-Boot SPL 需要初始化 DDR 控制器</td>
+<td>SG2002 TRM &#x2F; 参考 BSP</td>
+</tr>
+<tr>
+<td>链接地址</td>
+<td>OpenSBI 和 U-Boot 分别加载到哪段内存</td>
+<td>由 BootROM 和 SRAM 布局决定</td>
+</tr>
+</tbody></table>
+<h1 id="FIT"><a href="#FIT" class="headerlink" title="FIT"></a>FIT</h1><p>FIT (Flattened Image Tree), 是 U-Boot 的一种内核打包格式, 将内核镜像, 设备树, ramdisk 等打包到一个二进制文件中. 注意区分前面的 FIP (Firmware Image Package), 其用来打包 Stage 2 Bootloader 和 SBI.</p>
+<p>这里又涉及到了几个格式和术语:</p>
+<ul>
+<li>ITS (Image Tree Source), 是 FIT 镜像的文本描述文件 (类似源文件, 描述包含哪些组件, 如何加载, 加载到哪里等), U-Boot 的 <code>mkimage</code> 工具将其编译为 FIT</li>
+<li>DTS (Device Tree Source), 设备树的文本源代码, 编译后得到 <code>.dtb</code></li>
+<li>DTB&#x2F;FDT (Device Tree Blob&#x2F;Flattened Device Tree), 一个描述硬件拓扑的数据结构, 由内核在启动时解析</li>
+</ul>
+<p>比如构建一个 <code>FIT</code>:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">mkimage -f boot.its boot.sd<br></code></pre></td></tr></table></figure>
+
+<p><code>mkimage</code> 是 U-Boot 项目自带的工具, 通过安装 <code>u-boot-tools</code> 包 (通常 Linux 发行版都会提供) 获得. 它会读取 <code>.its</code> 文件, 把其中的 <code>/incbin/(&quot;kernel&quot;)</code> 和 <code>/incbin/(&quot;fdt.dtb&quot;)</code> 引用的二进制文件读取进来, 打包成 FIT 格式.</p>
+<p>FIT 镜像的后缀通常是 <code>.itb</code> (Image Tree Blob), 但在这里命名为 <code>boot.sd</code>, 表示这是从 SD 卡启动的引导镜像.</p>
+<p>FIT 的设计思想来源于 Device Tree, 用树状结构描述镜像中的各个组件. 示例如下:</p>
+<figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><code class="hljs stata"><span class="hljs-keyword">boot</span>.sd (<span class="hljs-keyword">FIT</span> image)<br>│<br>├── FDT Header (magic: 0xd00dfeed)<br>│   └── 描述 <span class="hljs-keyword">FIT</span> 的整体结构，指向 images 和 configurations 节点<br>│<br>├── images/                          ← 镜像池（所有可用的组件）<br>│   ├── kernel-1 &#123;                   ← 内核镜像<br>│   │     data: starryos.bin 的二进制内容<br>│   │     <span class="hljs-keyword">type</span>: <span class="hljs-string">&quot;kernel&quot;</span><br>│   │     <span class="hljs-keyword">arch</span>: <span class="hljs-string">&quot;riscv&quot;</span><br>│   │     os: <span class="hljs-string">&quot;linux&quot;</span>               ← 告诉 <span class="hljs-keyword">U</span>-<span class="hljs-keyword">Boot</span> 按 Linux 协议启动<br>│   │     compression: <span class="hljs-string">&quot;none&quot;</span>        ← 未压缩<br>│   │     load:  0x80200000         ← 加载到物理地址 0x80200000<br>│   │     entry: 0x80200000         ← 入口地址 = 0x80200000<br>│   │     hash: crc32               ← 完整性校验<br>│   │   &#125;<br>│   │<br>│   └── fdt-sg2002_licheervnano_sd &#123; ← 设备树 (Device Tree Blob)<br>│         data: fdt.dtb 的二进制内容<br>│         <span class="hljs-keyword">type</span>: <span class="hljs-string">&quot;flat_dt&quot;</span>           ← 平坦设备树<br>│         <span class="hljs-keyword">arch</span>: <span class="hljs-string">&quot;riscv&quot;</span><br>│         hash: sha256              ← 完整性校验<br>│       &#125;<br>│<br>└── configurations/                  ← 启动配置（组合 images 中的组件）<br>    └── default = <span class="hljs-string">&quot;config-sg2002_licheervnano_sd&quot;</span><br>        └── config-sg2002_licheervnano_sd &#123;<br>              kernel = <span class="hljs-string">&quot;kernel-1&quot;</span><br>              fdt    = <span class="hljs-string">&quot;fdt-sg2002_licheervnano_sd&quot;</span><br>            &#125;<br></code></pre></td></tr></table></figure>
+
+<p>这里用一个 <code>its</code> 文件示例来说明其描述的信息:</p>
+<figure class="highlight llvm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><code class="hljs llvm">/dts-v<span class="hljs-number">1</span>/<span class="hljs-comment">;           ← 声明这是设备树 v1 语法</span><br><br>/ &#123;                                         ← 根节点<br>    description <span class="hljs-operator">=</span> <span class="hljs-string">&quot;Various kernels, ...&quot;</span><span class="hljs-comment">;</span><br>    #address-cells <span class="hljs-operator">=</span> &lt;<span class="hljs-number">1</span>&gt;<span class="hljs-comment">;</span><br><span class="hljs-comment"></span><br>    images &#123;                                ← 镜像池<br>        kernel<span class="hljs-number">-1</span> &#123;                          ← 第一个镜像：内核<br>            description <span class="hljs-operator">=</span> <span class="hljs-string">&quot;cvitek kernel&quot;</span><span class="hljs-comment">;</span><br>            data <span class="hljs-operator">=</span> /incbin/(<span class="hljs-string">&quot;kernel&quot;</span>)<span class="hljs-comment">;       ← 将 uboot/kernel 文件读入</span><br>            <span class="hljs-keyword">type</span> <span class="hljs-operator">=</span> <span class="hljs-string">&quot;kernel&quot;</span><span class="hljs-comment">;                ← 告诉 U-Boot 这是内核</span><br>            arch <span class="hljs-operator">=</span> <span class="hljs-string">&quot;riscv&quot;</span><span class="hljs-comment">;                 ← RISC-V 架构</span><br>            os <span class="hljs-operator">=</span> <span class="hljs-string">&quot;linux&quot;</span><span class="hljs-comment">;                   ← OS 类型：Linux 协议</span><br>            compression <span class="hljs-operator">=</span> <span class="hljs-string">&quot;none&quot;</span><span class="hljs-comment">;           ← 未压缩</span><br>            <span class="hljs-keyword">load</span> <span class="hljs-operator">=</span> &lt;<span class="hljs-number">0x80200000</span>&gt;<span class="hljs-comment">;            ← 加载到 0x80200000</span><br>            entry <span class="hljs-operator">=</span> &lt;<span class="hljs-number">0x80200000</span>&gt;<span class="hljs-comment">;           ← 从 0x80200000 开始执行</span><br>            hash<span class="hljs-number">-1</span> &#123; algo <span class="hljs-operator">=</span> <span class="hljs-string">&quot;crc32&quot;</span><span class="hljs-comment">; &#125;;     ← CRC32 校验</span><br>        &#125;<span class="hljs-comment">;</span><br><span class="hljs-comment"></span><br>        fdt-sg<span class="hljs-number">2002</span>_licheervnano_sd &#123;        ← 第二个镜像：设备树<br>            data <span class="hljs-operator">=</span> /incbin/(<span class="hljs-string">&quot;fdt.dtb&quot;</span>)<span class="hljs-comment">;      ← 将 uboot/fdt.dtb 文件读入</span><br>            <span class="hljs-keyword">type</span> <span class="hljs-operator">=</span> <span class="hljs-string">&quot;flat_dt&quot;</span><span class="hljs-comment">;               ← 平坦设备树</span><br>            arch <span class="hljs-operator">=</span> <span class="hljs-string">&quot;riscv&quot;</span><span class="hljs-comment">;</span><br>            hash<span class="hljs-number">-1</span> &#123; algo <span class="hljs-operator">=</span> <span class="hljs-string">&quot;sha256&quot;</span><span class="hljs-comment">; &#125;;    ← SHA256 校验</span><br>        &#125;<span class="hljs-comment">;</span><br>    &#125;<span class="hljs-comment">;</span><br><span class="hljs-comment"></span><br>    configurations &#123;                        ← 启动配置<br>        <span class="hljs-keyword">default</span> <span class="hljs-operator">=</span> <span class="hljs-string">&quot;config-sg2002_licheervnano_sd&quot;</span><span class="hljs-comment">;</span><br>        config-sg<span class="hljs-number">2002</span>_licheervnano_sd &#123;<br>            kernel <span class="hljs-operator">=</span> <span class="hljs-string">&quot;kernel-1&quot;</span><span class="hljs-comment">;            ← 使用 kernel-1 镜像</span><br>            fdt <span class="hljs-operator">=</span> <span class="hljs-string">&quot;fdt-sg2002_licheervnano_sd&quot;</span><span class="hljs-comment">; ← 使用该设备树</span><br>        &#125;<span class="hljs-comment">;</span><br>    &#125;<span class="hljs-comment">;</span><br>&#125;<span class="hljs-comment">;</span><br></code></pre></td></tr></table></figure>
+
+<p>编写 <code>boot.its</code> 需要知道:</p>
+<table>
+<thead>
+<tr>
+<th>信息</th>
+<th>值</th>
+<th>如何获得</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>内核加载地址</td>
+<td>0x80200000</td>
+<td>SG2002 DRAM 从 0x80000000 开始，低 2MB 留给 OpenSBI 固件。查看 OpenSBI 的 FW_JUMP_ADDR 编译选项或 SG2002 TRM 内存映射</td>
+</tr>
+<tr>
+<td>内核入口地址</td>
+<td>0x80200000</td>
+<td>等于加载地址，因为 _start 在 .text.boot 段被放到最前面</td>
+</tr>
+<tr>
+<td>架构</td>
+<td>riscv</td>
+<td>SG2002 内嵌玄铁 C906 RISC-V 核心</td>
+</tr>
+<tr>
+<td>OS 类型</td>
+<td>linux</td>
+<td>并非必须叫 “Linux”，这里设 linux 是因为 U-Boot 会用 Linux 内核加载协议（设置 a0&#x3D;hartid, a1&#x3D;dtb_addr）</td>
+</tr>
+</tbody></table>
+<h1 id="从硬件到-Shell-的完整启动流程"><a href="#从硬件到-Shell-的完整启动流程" class="headerlink" title="从硬件到 Shell 的完整启动流程"></a>从硬件到 Shell 的完整启动流程</h1><p>SD 卡的布局可能如下:</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs awk">┌─────────────────────────────────────────────────────────────┐<br>│                        SD 卡                                │<br>│                                                             │<br>│  ┌─────────────── 分区表 (MBR) ──────────────────┐          │<br>│  │                                                │          │<br>│  ├─────────────── <span class="hljs-regexp">/dev/</span>sda1 ─────────────────────┤          │<br>│  │  FAT32, <span class="hljs-number">256</span>MB, boot flag                      │          │<br>│  │  ┌──────┐  ┌─────────┐                       │          │<br>│  │  │fip.bin│  │boot.sd  │                       │          │<br>│  │  │<span class="hljs-number">441</span>KB │  │(FIT镜像) │                       │          │<br>│  │  └──────┘  └─────────┘                       │          │<br>│  │                                                │          │<br>│  ├─────────────── <span class="hljs-regexp">/dev/</span>sda2 ─────────────────────┤          │<br>│  │  ext4, <span class="hljs-number">1</span>GB, label <span class="hljs-string">&quot;rootfs&quot;</span>                    │          │<br>│  │  ┌────────────────────────────┐               │          │<br>│  │  │ BusyBox 根文件系统:          │               │          │<br>│  │  │  <span class="hljs-regexp">/bin/</span>busybox              │               │          │<br>│  │  │  <span class="hljs-regexp">/bin/</span>sh → <span class="hljs-regexp">/bin/</span>busybox    │               │          │<br>│  │  │  <span class="hljs-regexp">/sbin/i</span>nit                │               │          │<br>│  │  │  <span class="hljs-regexp">/dev/</span>                     │               │          │<br>│  │  │  <span class="hljs-regexp">/etc/</span>                     │               │          │<br>│  │  └────────────────────────────┘               │          │<br>│  └────────────────────────────────────────────────┘          │<br>└─────────────────────────────────────────────────────────────┘<br></code></pre></td></tr></table></figure>
+
+<p>启动流程如:</p>
+<figure class="highlight dns"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br></pre></td><td class="code"><pre><code class="hljs dns">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━<br><br>阶段 <span class="hljs-number">0</span>: BootROM (BL1) —— 芯片硬件固化的代码<br>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━<br><br>SG2002 上电<br>  │<br>  │  BootROM 运行（烧死在芯片 ROM 里，不可修改）<br>  │  • 初始化最小硬件：SD 控制器、少量 SRAM<br>  │  • 扫描 SD 卡 FAT32 分区 (分区<span class="hljs-number">1</span>)<br>  │  • 寻找并加载 fip.bin 到 SRAM<br>  v<br><br>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━<br><br>阶段 <span class="hljs-number">1</span>: fip.bin = OpenSBI + U-Boot (BL2)<br>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━<br><br>BootROM 跳转到 fip.bin<br>  │<br>  ├── <span class="hljs-number">1</span>a. OpenSBI 先运行 (M-mode, 最高特权级)<br>  │      • 初始化 PLIC (中断控制器 @ <span class="hljs-number">0x70000000</span>)<br>  │      • 初始化 CLINT (定时器 @ <span class="hljs-number">0x74000000</span>)<br>  │      • 初始化 UART 串口 (用于调试输出)<br>  │      • 初始化 DDR 控制器，使能全部 <span class="hljs-number">254</span>MB 内存<br>  │      • 设置中断/异常委托<br>  │      • 注册 SBI 服务（timer、IPI、shutdown 等）<br>  │      • 切换到 S-mode，跳转到 U-Boot<br>  │<br>  └── <span class="hljs-number">1</span>b. U-Boot 运行 (S-mode)<br>         • 初始化更多硬件（GPIO、引脚复用等）<br>         • 挂载 SD 卡 FAT32 分区 (分区<span class="hljs-number">1</span>)<br>         • 读取 boot.sd (FIT 镜像)<br>         • 解析 FIT 镜像头，提取内核和设备树<br>  v<br><br>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━<br><br>阶段 <span class="hljs-number">2</span>: boot.sd 被加载 → StarryOS 内核启动<br>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━<br><br>U-Boot 将内核二进制写到 <span class="hljs-number">0x80200000</span>，设备树写到指定地址<br>然后跳转到 <span class="hljs-number">0x80200000</span>:<br>  │<br>  │  寄存器约定（Linux 内核加载协议）：<br>  │    a0 = hartid (硬件线程 ID，SG2002 单核 = <span class="hljs-number">0</span>)<br>  │    a1 = DTB 指针 (设备树在内存中的地址)<br>  │    MMU = 关闭<br>  │    PC = <span class="hljs-number">0x80200000</span><br>  v<br><br>StarryOS _start (boot.rs:<span class="hljs-number">46</span>)<br>  │<br>  ├── 保存 hartid 和 DTB 地址<br>  ├── 设置启动栈 (BSS 段的 <span class="hljs-number">512</span>KB 栈空间)<br>  ├── init_boot_page_table(): 建立 Sv39 引导页表<br>  │     • 物理地址 <span class="hljs-number">0x00000000</span>–<span class="hljs-number">0</span>xC<span class="hljs-number">0000000</span> (地址空间低区)<br>  │     • 虚拟地址 <span class="hljs-number">0</span>xFFFF_FFC0_<span class="hljs-number">0000_0000</span>–<span class="hljs-number">0</span>xFFFF_FFC0_C<span class="hljs-number">000_0000</span> (高区)<br>  │     • 使用 <span class="hljs-number">1</span>GB 大页映射 (Gigapage), R/W/X 权限全开<br>  │<br>  ├── init_mmu(): 写 satp 寄存器开启 MMU<br>  │     • 写内核页表 -&gt; satp<br>  │     • flush TLB<br>  │<br>  ├── 调整 SP 到虚拟高地址 (加 PHYS_VIRT_OFFSET = <span class="hljs-number">0</span>xFFFF_FFC0_<span class="hljs-number">0000_0000</span>)<br>  ├── 跳转到 ax_plat<span class="hljs-number">::</span>call_main(dtb)<br>  v<br><br>ax_plat<span class="hljs-number">::</span>call_main() → axruntim<span class="hljs-number">e::</span>rust_main()<br>  │<br>  ├── 清零 BSS 段<br>  ├── 初始化 per-CPU 数据结构<br>  ├── init_early():<br>  │     • 串口控制台初始化 (DW APB UART @ <span class="hljs-number">0x04140000</span>)<br>  │     • 定时器中断初始化 (CLINT, SBI timer)<br>  │     • 异常向量表 setup<br>  │     • 中断控制器初始化 (PLIC @ <span class="hljs-number">0x70000000</span>)<br>  │<br>  ├── 内存分配器初始化 (buddy-slab allocator)<br>  │     • 可用物理内存：<span class="hljs-number">0x80200000</span> – <span class="hljs-number">0</span>x8FE00000 (~<span class="hljs-number">254</span>MB)<br>  │<br>  ├── init_later():<br>  │     • IRQ 注册和使能<br>  │     • 每 CPU 定时器设置<br>  │<br>  ├── 设备驱动初始化：<br>  │     • SDMMC 驱动 (CVitek CV181x-SD @ <span class="hljs-number">0x04310000</span>, IRQ <span class="hljs-number">36</span>)<br>  │     • 扫描 SD 卡，识别分区表<br>  │     • 挂载 ext4 文件系统 (分区<span class="hljs-number">2</span>, label &quot;rootfs&quot;)<br>  │     • USB 初始化 (可选, DWC2 @ <span class="hljs-number">0x04340000</span>)<br>  │<br>  ├── 文件系统初始化 (VFS + ext4)<br>  ├── 网络初始化 (可选)<br>  ├── 执行静态构造函数<br>  v<br><br>starryos<span class="hljs-number">::</span>main()<br>  │<br>  ├── 解析 DTB，从中获取硬件配置<br>  ├── 执行 /etc/init.sh (内核内嵌的 init 脚本)<br>  │     • mount -t devfs devfs /dev<br>  │     • mount -t procfs procfs /proc<br>  │     • mount -t sysfs sysfs /sys<br>  │<br>  └── 启动 /bin/sh (BusyBox shell)<br>  │<br>  v<br><br>╔══════════════════════════════════════╗<br>║  / #                                ║  ← BusyBox  shell 提示符<br>╚══════════════════════════════════════╝<br></code></pre></td></tr></table></figure>
+
+<h1 id="USB-Gadget-Ethernet"><a href="#USB-Gadget-Ethernet" class="headerlink" title="USB Gadget Ethernet"></a>USB Gadget Ethernet</h1><p>比如下面接口名, 就表明其为 USB 虚拟以太网卡:</p>
+<figure class="highlight armasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs armasm"><span class="hljs-symbol">en</span>  <span class="hljs-built_in">p0</span>  <span class="hljs-built_in">s20</span>  <span class="hljs-built_in">f0</span>  u4<br>│   │    │    │   └── USB 端口 <span class="hljs-number">4</span><br>│   │    │    └── <span class="hljs-meta">function</span> <span class="hljs-number">0</span><br>│   │    └── slot <span class="hljs-number">20</span><br>│   └── PCI bus <span class="hljs-number">0</span><br>└── Ethernet 类型<br></code></pre></td></tr></table></figure>
+
+<p>USB Controller 是 SoC 内部的一个外设模块, 管理从 <code>Type-A/Type-C/Micro-USB</code> 等接口传来的数据, 提供设备枚举等功能.</p>
+<p>USB 是主从 (Master-Slave) 总线:</p>
+<ul>
+<li>Host (主机), 负责发起通信事务 (主导通信), 如 PC, 路由器</li>
+<li>Device (外设), 被动响应 (接收数据等), 如键盘, U 盘, 开发板 Gadget</li>
+</ul>
+<p>USB 不允许两个 Host 直接相连.</p>
+<p>USB Controller 工作在 Host Mode 时, 会负责检测插入, 复位设备, 读描述符, 分配地址, 调度数据传输等.</p>
+<p>工作在 Device Mode 时, 不主动发数据, 会响应 Host 的 Token, 向 Host 汇报描述符等.</p>
+<p>如果开发板上运行的是 Linux 内核, 可以通过加载 <code>g_ether</code> 内核模块让其 USB Controller 工作在 Device 模式:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">modprobe g_ether<br></code></pre></td></tr></table></figure>
+
+<p>内核完成后, 后创建 <code>usb0</code> 接口, 并分配 IP (可通过 <code>dnsmasq</code> 或手动 ifconfig).</p>
+<p>宿主机这边, USB Controller 工作在 Host Mode, 其通过读取设备描述符得知加载驱动和创建网络接口:</p>
+<figure class="highlight armasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs armasm">插线 → USB Host 控制器检测到新设备<br>     → 读取设备描述符:<span class="hljs-string">&quot;我是 CDC Ethernet 设备&quot;</span><br>     → 内核匹配 cdc_ether 驱动<br>     → 创建网络接口 enp0s20f0u4<br>     → NetworkManager 自动通过 DHCP 获取 <span class="hljs-built_in">IP</span><br>     → ssh 即可连接<br></code></pre></td></tr></table></figure>
+
+<h1 id="Loop-Device-的作用"><a href="#Loop-Device-的作用" class="headerlink" title="Loop Device 的作用"></a>Loop Device 的作用</h1><p>在制作 image 的时候, 需要对 image 文件做分区操作. 但 Linux 只能对 block device 做分区解析, 挂载, 制作文件系统等操作, 因此需要某种方法将文件映射到 block device 上.</p>
+<p><code>/dev/loopN</code> 是内核提供的 loopback block device, 其不用做存储, 而是对文件偏移和块设备扇号做 <code>1:1</code> 映射, 此时对文件某位置的操作, 就会转换为对块设备某个扇区的操作.</p>
+<p>绑定操作需要 <code>losetup</code> 命令, 比如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sh">losetup -fP rootfs.img<br><span class="hljs-comment"># -P : 自动扫描分区</span><br><br><span class="hljs-built_in">ls</span> /dev/loop0*<br><span class="hljs-comment"># /dev/loop0</span><br><span class="hljs-comment"># /dev/loop0p1  ← 分区 1</span><br></code></pre></td></tr></table></figure>
+
+<p>之后就能进行挂载或者分区等操作了:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">mount /dev/loop0p1 /mnt<br>fdisk /dev/loop0<br></code></pre></td></tr></table></figure>
+
+<p><code>mount -o loop</code> 的本质也是调用 <code>losetup</code>:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">mount -o loop rootfs.img /mnt<br></code></pre></td></tr></table></figure>
+
+<p>实际上是在:</p>
+<ol>
+<li>找一个空闲 <code>/dev/loopN</code></li>
+<li><code>losetup /dev/loopN rootfs.img</code></li>
+<li><code>mount /dev/loopN /mnt</code></li>
+<li>自动管理释放</li>
+</ol>
+<h1 id="虚拟文件系统"><a href="#虚拟文件系统" class="headerlink" title="虚拟文件系统"></a>虚拟文件系统</h1><p>虚拟文件系统 (Virtual File System) 是指不存在于磁盘上的文件系统, 其内容由内核在访问时动态生成. 其只存在于内存中, 内核会向用户空间暴露内部数据结构的接口.</p>
+<p>常见的虚拟文件系统有:</p>
+<table>
+<thead>
+<tr>
+<th>文件系统</th>
+<th>典型挂载点</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>proc</td>
+<td>&#x2F;proc</td>
+<td>进程信息和内核参数</td>
+</tr>
+<tr>
+<td>sysfs</td>
+<td>&#x2F;sys</td>
+<td>设备、驱动、内核子系统信息</td>
+</tr>
+<tr>
+<td>devtmpfs&#x2F;tmpfs</td>
+<td>&#x2F;dev</td>
+<td>设备节点</td>
+</tr>
+<tr>
+<td>tmpfs</td>
+<td>&#x2F;tmp, &#x2F;run, &#x2F;dev&#x2F;shm</td>
+<td>临时文件（内存文件系统）</td>
+</tr>
+<tr>
+<td>cgroupfs</td>
+<td>&#x2F;sys&#x2F;fs&#x2F;cgroup</td>
+<td>控制组资源管理</td>
+</tr>
+<tr>
+<td>debugfs</td>
+<td>&#x2F;sys&#x2F;kernel&#x2F;debug</td>
+<td>内核调试信息</td>
+</tr>
+<tr>
+<td>tracefs</td>
+<td>&#x2F;sys&#x2F;kernel&#x2F;tracing</td>
+<td>内核追踪</td>
+</tr>
+<tr>
+<td>securityfs</td>
+<td>&#x2F;sys&#x2F;kernel&#x2F;security</td>
+<td>安全模块接口</td>
+</tr>
+<tr>
+<td>hugetlbfs</td>
+<td>&#x2F;dev&#x2F;hugepages</td>
+<td>大页内存</td>
+</tr>
+</tbody></table>
+<p>虚拟文件系统主要便于用户能用标准的文件操作来访问内核数据, 比如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-comment"># 读取 CPU 信息 —— 不需要系统调用，直接读文件</span><br><span class="hljs-built_in">cat</span> /proc/cpuinfo<br><br><span class="hljs-comment"># 修改内核参数 —— 一行命令搞定</span><br><span class="hljs-built_in">echo</span> 1 &gt; /proc/sys/net/ipv4/ip_forward<br></code></pre></td></tr></table></figure>
+
+
+<p>手动挂载示例如下:</p>
+<figure class="highlight tcl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs tcl"><span class="hljs-comment"># procfs</span><br>mount -t <span class="hljs-keyword">proc</span><span class="hljs-title"> proc</span> /<span class="hljs-keyword">proc</span><br><br>#<span class="hljs-title"> sysfs</span><br>mount -t<span class="hljs-title"> sysfs</span> sysfs /sys<br><br>#<span class="hljs-title"> devtmpfs（内核自动处理，一般不手动挂）</span><br>mount -t<span class="hljs-title"> devtmpfs</span> devtmpfs /dev<br><br>#<span class="hljs-title"> tmpfs（可指定大小）</span><br>mount -t<span class="hljs-title"> tmpfs</span> tmpfs /tmp -o<span class="hljs-title"> size=2G</span><br><br>#<span class="hljs-title"> debugfs</span><br>mount -t<span class="hljs-title"> debugfs</span> debugfs /sys/kernel/debug<br><br>#<span class="hljs-title"> cgroup</span> v2（统一层级）<span class="hljs-title"></span><br><span class="hljs-title">mount</span> -t<span class="hljs-title"> cgroup2</span> cgroup2 /sys/fs/cgroup<br></code></pre></td></tr></table></figure>
+
+<p><code>mount -t</code> 的语法是:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">mount -t <span class="hljs-built_in">type</span> device_name mount_point<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>-t</code> 会告诉内核用哪个文件系统的驱动来处理这个挂载点</li>
+</ul>
+<p>但由于虚拟文件系统没有对应的物理设备, 所以这里传入什么字符串其实并不重要, 它只是一个占位符, 约定俗成就是写成类型名, 下面几种写法是等价的:</p>
+<figure class="highlight tcl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs tcl">mount -t <span class="hljs-keyword">proc</span><span class="hljs-title"> proc</span>  /<span class="hljs-keyword">proc</span><span class="hljs-title"></span><br><span class="hljs-title">mount</span> -t<span class="hljs-title"> proc</span> none  /<span class="hljs-keyword">proc</span><span class="hljs-title"></span><br><span class="hljs-title">mount</span> -t<span class="hljs-title"> proc</span> procfs /<span class="hljs-keyword">proc</span><br></code></pre></td></tr></table></figure>
+
+<p>虚拟文件系统都可以挂载到多个独立的位置, 比如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ mount -t proc proc /mnt/newproc<br>$ mount | grep proc<br>proc on /proc <span class="hljs-built_in">type</span> proc (rw)<br>proc on /mnt/newproc <span class="hljs-built_in">type</span> proc (rw)<br></code></pre></td></tr></table></figure>
+
+
+<h1 id="FAT-和-EXT4-这些的区别"><a href="#FAT-和-EXT4-这些的区别" class="headerlink" title="FAT 和 EXT4 这些的区别"></a>FAT 和 EXT4 这些的区别</h1><h1 id="Hook"><a href="#Hook" class="headerlink" title="Hook"></a>Hook</h1><p>Hook 在编程里是一种在主干程序中, 留位置便于外部代码 “挂入 (hook into)” 的机制. 核心思想就是程序留出一系列 “挂载点”, 允许使用者把自己的逻辑插入.</p>
+<p>比如最简单的, 利用条件编译决定一个函数是否执行:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-title function_ invoke__">init_core</span>();<br><br>    <span class="hljs-meta">#[cfg(feature = <span class="hljs-string">&quot;board_late_init&quot;</span>)]</span><br>    <span class="hljs-title function_ invoke__">board_late_init</span>();  <span class="hljs-comment">// 编译时决定是否存在这个钩子</span><br><br>    <span class="hljs-title function_ invoke__">run_main_loop</span>();<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>这里的 <code>board_late_init()</code> 就是一个 Hook, 在外部定义, 程序主体中只是留了执行的位置, 可以控制是否注入</p>
+<p><code>Drop</code> trait 也相当于一个 Hook, 是否为类型实现 <code>Drop</code> 就是控制是否运行 hook:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">struct</span> <span class="hljs-title class_">Connection</span>;<br><br><span class="hljs-keyword">impl</span> <span class="hljs-title class_">Drop</span> <span class="hljs-keyword">for</span> <span class="hljs-title class_">Connection</span> &#123;<br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">drop</span>(&amp;<span class="hljs-keyword">mut</span> <span class="hljs-keyword">self</span>) &#123;<br>        <span class="hljs-comment">//              ↑ 对象销毁时自动执行，无需手动调用</span><br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;连接已关闭（自动清理）&quot;</span>);<br>    &#125;<br>&#125;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    &#123;<br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">_conn</span> = Connection;<br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;工作中...&quot;</span>);<br>    &#125; <span class="hljs-comment">// ← 离开作用域，drop 自动触发</span><br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;已退出&quot;</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h1 id="weak-默认实现"><a href="#weak-默认实现" class="headerlink" title="__weak 默认实现"></a>__weak 默认实现</h1><p><code>__weak</code> 是一个编译器的属性, 允许定义一个函数的 “弱符号” 默认实现, 如果用户在其他文件中定义了同名函数 (只要别的地方定义了就是强符号), 链接器会用强符号覆盖弱符号, 否则使用弱符号作为默认.</p>
+<p>比如框架代码通常会定义弱符号已提供一个基础的默认实现:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// board_common.c — 框架提供默认实现</span><br>__weak <span class="hljs-type">void</span> <span class="hljs-title function_">board_late_init</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> &#123;<br>    <span class="hljs-comment">// 什么都不做，默认行为</span><br>&#125;<br><br>__weak <span class="hljs-type">void</span> <span class="hljs-title function_">init_sdram</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> &#123;<br>    <span class="hljs-comment">// 通用的 SDRAM 初始化</span><br>    set_default_timing();<br>&#125;<br><br><span class="hljs-comment">// 系统代码无条件调用</span><br><span class="hljs-type">void</span> <span class="hljs-title function_">board_init_r</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> &#123;<br>    init_sdram();       <span class="hljs-comment">// 如果用户没覆盖，走默认</span><br>    board_late_init();  <span class="hljs-comment">// 如果用户覆盖了，走自定义</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h1 id="虚函数和虚表"><a href="#虚函数和虚表" class="headerlink" title="虚函数和虚表"></a>虚函数和虚表</h1><p>虚函数 (Virtual function), 这里的 virtual 和 VFS (Virtual File System) 这些概念一致, 表示提供一个接口. 在 C++ 里, class 定义中给函数加上 <code>virtual</code> 关键字, 就相当于定义了一个接口, 其子类可以 <code>override</code>.</p>
+<p>虚函数的实现需要借助虚表. 虚表本质上就是一个函数数组, 编译器会按照声明顺序为每一个虚函数分配一个固定的槽位号, 对于 sub class 而言, 这个槽位号也是一样的:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Animal</span> &#123;<br><span class="hljs-keyword">public</span>:<br>    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-type">void</span> <span class="hljs-title">speak</span><span class="hljs-params">()</span>  </span>&#123; &#125;  <span class="hljs-comment">// slot 0</span><br>    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-type">void</span> <span class="hljs-title">eat</span><span class="hljs-params">()</span>    </span>&#123; &#125;  <span class="hljs-comment">// slot 1</span><br>    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-type">void</span> <span class="hljs-title">sleep</span><span class="hljs-params">()</span>  </span>&#123; &#125;  <span class="hljs-comment">// slot 2</span><br>&#125;;<br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">Dog</span> : <span class="hljs-keyword">public</span> Animal &#123;<br><span class="hljs-keyword">public</span>:<br>    <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">speak</span><span class="hljs-params">()</span> <span class="hljs-keyword">override</span> </span>&#123; &#125;  <span class="hljs-comment">// 覆盖 slot 0，位置不变</span><br>    <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">eat</span><span class="hljs-params">()</span>   <span class="hljs-keyword">override</span> </span>&#123; &#125;  <span class="hljs-comment">// 覆盖 slot 1，位置不变</span><br>    <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">bark</span><span class="hljs-params">()</span>           </span>&#123; &#125;  <span class="hljs-comment">// 新增 → 追加到 slot 3</span><br>    <span class="hljs-comment">// sleep() 未覆盖，虚表里保留 Animal::sleep</span><br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<p>内存布局如下:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs cpp">───────────────────        ───────────────────<br> Animal 虚表                Dog 虚表<br>───────────────────        ───────────────────<br> slot <span class="hljs-number">0</span>: Animal::speak     slot <span class="hljs-number">0</span>: Dog::speak    ← 同位置，不同实现<br> slot <span class="hljs-number">1</span>: Animal::eat       slot <span class="hljs-number">1</span>: Dog::eat      ← 同位置，不同实现<br> slot <span class="hljs-number">2</span>: Animal::sleep     slot <span class="hljs-number">2</span>: Animal::sleep ← 同位置，相同实现（未覆盖）<br>───────────────────        slot <span class="hljs-number">3</span>: Dog::bark     ← 追加在末尾<br>                           ───────────────────<br></code></pre></td></tr></table></figure>
+
+<p>在函数调用时, 程序会根据对象的 class 去查虚表, 比如:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">make_speak</span><span class="hljs-params">(Animal* a)</span> </span>&#123;<br>    a-&gt;<span class="hljs-built_in">speak</span>();  <span class="hljs-comment">// 对调用方来说，speak 永远是 slot 0</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>等价于:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-comment">// 调用方只知道：speak = vptr[0]</span><br>a-&gt;vptr[<span class="hljs-number">0</span>](a);<br></code></pre></td></tr></table></figure>
+
+<p>如果 <code>a</code> 是 <code>Animal</code>, 调用 <code>vptr[0]</code>, 其指向 <code>Animal::speak</code>; 如果 <code>a</code> 是 <code>Dog</code>, 同样调用 <code>vptr[0]</code>, 但现在指向 <code>Dog::speak</code>.</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/OS/" class="category-chain-item">OS</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>研究生开源操作系统大赛记录</div>
+      <div>http://example.com/2026/07/02/研究生开源操作系统大赛记录/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Jie</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年7月2日</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>许可协议</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2026/07/03/%E5%BF%AB%E6%89%8BLLM-REC%E6%8C%91%E6%88%98%E8%B5%9B%E8%AE%B0%E5%BD%95/" title="快手LLM-REC挑战赛记录">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">快手LLM-REC挑战赛记录</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/06/28/StarryOS-%E7%BB%84%E4%BB%B6%E5%8C%96%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" title="StarryOS-组件化操作系统">
+                        <span class="hidden-mobile">StarryOS-组件化操作系统</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zKurisu/comments-utterances');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Jie</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Orkarin</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.1/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

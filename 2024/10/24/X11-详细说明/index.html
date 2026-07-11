@@ -26,7 +26,7 @@
 <meta property="og:image" content="http://example.com/img/how-x11-server-and-client-works.png">
 <meta property="og:image" content="http://example.com/img/display-manager-example.png">
 <meta property="article:published_time" content="2024-10-24T05:40:00.000Z">
-<meta property="article:modified_time" content="2025-06-08T03:38:42.873Z">
+<meta property="article:modified_time" content="2026-07-09T02:11:00.857Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/how-x11-server-and-client-works.png">
@@ -440,7 +440,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.3k 字
+          5.1k 字
         
       </span>
     
@@ -451,7 +451,7 @@ path.outline_glyph {
         
         
         
-          20 分钟
+          43 分钟
         
       </span>
     
@@ -554,18 +554,153 @@ path.outline_glyph {
 <h1 id="认证"><a href="#认证" class="headerlink" title="认证"></a>认证</h1><p>X11 使用一种称 X11 cookie 的机制来进行身份验证, 可以用 <code>xauth</code> 来生成, 添加和管理这些 cookie.</p>
 <h2 id="查看当前-X11-cookie"><a href="#查看当前-X11-cookie" class="headerlink" title="查看当前 X11 cookie"></a>查看当前 X11 cookie</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">xauth list<br></code></pre></td></tr></table></figure>
 
+<h1 id="xhost"><a href="#xhost" class="headerlink" title="xhost"></a>xhost</h1><p><code>xhost</code> 是 X Window System (X11) 的一个访问控制程序, 用于管理哪些客户端 (主机或用户) 能被允许连接到 X 服务器.</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs routeros">┌─────────────────────────────────────────────┐<br>│  X<span class="hljs-built_in"> Server </span>(运行在你面前的机器上)              │<br>│  - 管理显示器、键盘、鼠标等硬件               │<br>│  - 渲染图形到屏幕                            │<br>│                                             │<br>│  xhost 控制谁能连接到这里 ←──                 │<br>└─────────────────────────────────────────────┘<br>        ▲                    ▲<br>        │ 网络 / UNIX Socket │<br>        │                    │<br>  ┌─────┴──────┐      ┌─────┴──────┐<br>  │ X<span class="hljs-built_in"> Client </span>A │      │ X<span class="hljs-built_in"> Client </span>B │<br>  │ (本地应用)  │      │ (远程应用)  │<br>  └────────────┘      └────────────┘<br></code></pre></td></tr></table></figure>
 
+<p>X11 本身有两层访问控制机制:</p>
+<ol>
+<li>基于主机的访问控制 (Host-based), 这个由 <code>xhost</code> 管理, 它维护一个允许连接的主机名&#x2F;IP 列表. 如果一台主机在列表中, 则允许连接; 反之</li>
+<li>基于 cookie 的认证, 由 <code>xauth</code> 管理, 使用 <code>.Xauthority</code> 文件中的加密 <code>cookie</code> 进行认证, 通常是更安全的机制</li>
+</ol>
+<p>整个访问控制流为:</p>
+<figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs scss">X Client 尝试连接<br>       │<br>       ▼<br>  Host-based 检查 (xhost 管理)<br>       │<br>       ├── 通过 ──→ Cookie 认证检查 (xauth 管理)<br>       │                  │<br>       │                  ├── 通过 ──→ 允许连接 ✓<br>       │                  └── 失败 ──→ 拒绝连接 ✗<br>       │<br>       └── 拒绝 ──→ 拒绝连接 ✗<br></code></pre></td></tr></table></figure>
 
+<h2 id="常见用法"><a href="#常见用法" class="headerlink" title="常见用法"></a>常见用法</h2><p><code>xhost</code> 有一套命名规范来描述连接源, 语法为:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">xhost +&lt;family&gt;:&lt;name&gt;<br></code></pre></td></tr></table></figure>
 
+<p>所有的 family 定义在 X11 协议的头文件中:</p>
+<table>
+<thead>
+<tr>
+<th>family</th>
+<th>含义</th>
+<th>格式示例</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>inet 或 inet6</td>
+<td>TCP&#x2F;IP 地址</td>
+<td>xhost +inet:192.168.1.5</td>
+<td>IPv4 地址</td>
+</tr>
+<tr>
+<td>inet 或 inet6</td>
+<td>TCP&#x2F;IP 地址</td>
+<td>xhost +inet6:fe80::1</td>
+<td>IPv6 地址</td>
+</tr>
+<tr>
+<td>dnet</td>
+<td>DECnet 地址</td>
+<td>xhost +dnet:nodea::user</td>
+<td>已废弃，几乎不用</td>
+</tr>
+<tr>
+<td>nis</td>
+<td>NIS&#x2F;YP 主机名</td>
+<td>xhost +nis:hostname</td>
+<td>从 NIS 查询主机名</td>
+</tr>
+<tr>
+<td>krb</td>
+<td>Kerberos principal</td>
+<td>xhost +krb:user@REALM</td>
+<td>Kerberos 认证主体</td>
+</tr>
+<tr>
+<td>local</td>
+<td>本地连接</td>
+<td>xhost +local:docker</td>
+<td>本机上的组&#x2F;用户</td>
+</tr>
+<tr>
+<td>SI</td>
+<td>Server Interpreted</td>
+<td>见下文</td>
+<td>服务器自行解释的地址</td>
+</tr>
+<tr>
+<td>si</td>
+<td>同上（小写也可）</td>
+<td>xhost +si:localuser:bob</td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="查看当前状态"><a href="#查看当前状态" class="headerlink" title="查看当前状态"></a>查看当前状态</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">xhost<br><span class="hljs-comment"># access control enabled, only authorized clients can connect</span><br></code></pre></td></tr></table></figure>
 
+<h3 id="完全关闭访问控制"><a href="#完全关闭访问控制" class="headerlink" title="完全关闭访问控制"></a>完全关闭访问控制</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">xhost +<br><span class="hljs-comment"># 允许任何主机连接</span><br></code></pre></td></tr></table></figure>
 
+<h3 id="允许特定主机连接"><a href="#允许特定主机连接" class="headerlink" title="允许特定主机连接"></a>允许特定主机连接</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">xhost +192.168.1.100        <span class="hljs-comment"># 允许 IP</span><br>xhost +remote-server        <span class="hljs-comment"># 允许主机名</span><br>xhost +remote-server:1      <span class="hljs-comment"># 允许特定 display</span><br>xhost +SI:localuser:bob     <span class="hljs-comment"># 允许本机的 bob 用户</span><br></code></pre></td></tr></table></figure>
 
+<h3 id="撤销权限"><a href="#撤销权限" class="headerlink" title="撤销权限"></a>撤销权限</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">xhost -192.168.1.100        <span class="hljs-comment"># 移除特定主机</span><br>xhost -                     <span class="hljs-comment"># 移除所有远程主机，恢复默认（仅允许本机）</span><br></code></pre></td></tr></table></figure>
 
+<h3 id="Docker-x2F-GUI-容器"><a href="#Docker-x2F-GUI-容器" class="headerlink" title="Docker&#x2F;GUI 容器"></a>Docker&#x2F;GUI 容器</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-comment"># 允许本地 Docker 容器连接 X Server</span><br>xhost +<span class="hljs-built_in">local</span>:docker <span class="hljs-comment"># 允许本地 docker 组所有用户</span><br><br><span class="hljs-comment"># 或者更精确地</span><br>xhost +SI:localuser:root    <span class="hljs-comment"># 允许本机 root 用户</span><br><br>xhost +<span class="hljs-built_in">local</span>:             <span class="hljs-comment"># 允许所有本地连接（注意末尾的冒号）</span><br><br><span class="hljs-comment"># 容器启动后记得恢复</span><br>xhost -<span class="hljs-built_in">local</span>:docker<br></code></pre></td></tr></table></figure>
 
+<h3 id="SI-类型"><a href="#SI-类型" class="headerlink" title="SI 类型"></a>SI 类型</h3><p>SI (Server interpreted) 是 xhost 中最特殊的 fmaily, 它会让 X Server 自己去判断是否允许此连接, Server 内置了几种解释器:</p>
+<ul>
+<li><code>SI:localuser:</code>, 允许本机的特定系统用户连接, 不管是 TCP 还是 UNIX socket</li>
+</ul>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">xhost +SI:localuser:bob        <span class="hljs-comment"># 允许本机 bob 用户</span><br>xhost +SI:localuser:root       <span class="hljs-comment"># 允许本机 root 用户</span><br>xhost +SI:localuser:dockerd    <span class="hljs-comment"># 允许 dockerd 用户</span><br></code></pre></td></tr></table></figure>
+<p>(本质上, X Server 接收到连接时, 会检查对端进程的 UID, 然后通过 <code>/etc/passwd</code> 查找对应用户名进行匹配)</p>
+<ul>
+<li><code>SI:localgroup</code>, 允许本机的特定 group 连接</li>
+</ul>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">xhost +SI:localgroup:docker    <span class="hljs-comment"># 允许 docker 组的所有成员</span><br>xhost +SI:localgroup:staff     <span class="hljs-comment"># 允许 staff 组成员</span><br></code></pre></td></tr></table></figure>
 
+<p>其他的就不太常用了.</p>
+<h1 id="ssh-X"><a href="#ssh-X" class="headerlink" title="ssh -X"></a>ssh -X</h1><p><code>ssh -X</code> 可以在本地机器上显示远程服务器上运行的 GUI 应用窗口, 且所有的 X11 协议流量都通过 SSH 加密隧道传输. 核心原理是:</p>
+<ul>
+<li>本地 X Server 端. sshd 会伪装成一个 X Client, 把转发过来的数据交给 X Server</li>
+<li>远程 X Client 端. sshd 会伪装成一个 X Server, 与 X Client 对话并完成数据转发</li>
+</ul>
+<h2 id="远端配置"><a href="#远端配置" class="headerlink" title="远端配置"></a>远端配置</h2><p>远端需要安装 <code>xauth</code>, 然后修改 <code>sshd</code> 的配置:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo apt install xauth<br></code></pre></td></tr></table></figure>
 
+<p><code>sshd</code> 额外启用的配置如下:</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs nginx"><span class="hljs-attribute">X11Forwarding</span> <span class="hljs-literal">yes</span>          <span class="hljs-comment"># ← 必须开启，很多发行版默认 no</span><br>X11DisplayOffset <span class="hljs-number">10</span>        <span class="hljs-comment"># 显示偏移（从 :10 开始）</span><br>X11UseLocalhost <span class="hljs-literal">yes</span>        <span class="hljs-comment"># 绑定到 localhost（安全，推荐）</span><br><span class="hljs-comment"># AddressFamily inet       # 如果值为 inet，确保 inet6 可用或直接注释掉</span><br></code></pre></td></tr></table></figure>
 
+<h2 id="本地配置"><a href="#本地配置" class="headerlink" title="本地配置"></a>本地配置</h2><p>本地需要确保安装了 x server, 也要修改 <code>ssh</code> 配置:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-comment"># X Server 必须运行</span><br><span class="hljs-built_in">echo</span> <span class="hljs-variable">$DISPLAY</span><br><span class="hljs-comment"># 输出类似 :0 或 :1 说明 X Server 在跑</span><br><br><span class="hljs-comment"># SSH 客户端配置 — /etc/ssh/ssh_config 或 ~/.ssh/config</span><br>ForwardX11 <span class="hljs-built_in">yes</span>          <span class="hljs-comment"># 可以写死，或者用 -X 参数</span><br>ForwardX11Trusted <span class="hljs-built_in">yes</span>   <span class="hljs-comment"># 对应 ssh -Y（信任模式）</span><br></code></pre></td></tr></table></figure>
 
+<p>之后就能连接了:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-comment"># -X: 不可信模式（对应 ForwardX11Trusted no）</span><br>ssh -X user@server<br><br><span class="hljs-comment"># -Y: 可信模式（ForwardX11Trusted yes）</span><br>ssh -Y user@server<br></code></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th></th>
+<th><code>-X</code> (不可信)</th>
+<th><code>-Y</code> (可信)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>X11 SECURITY 扩展</td>
+<td>启用</td>
+<td>禁用</td>
+</tr>
+<tr>
+<td>远程应用能的权限</td>
+<td>只能读自己的窗口和资源</td>
+<td>可以做任何事（截图、截键盘等）</td>
+</tr>
+<tr>
+<td>部分应用兼容性</td>
+<td>有些应用因受限而崩溃</td>
+<td>全部正常</td>
+</tr>
+<tr>
+<td>安全性</td>
+<td>较高</td>
+<td>较低（远程 root 可截获你的输入）</td>
+</tr>
+<tr>
+<td>cookie 超时</td>
+<td>有时间限制（默认 20 分钟）</td>
+<td>无时间限制</td>
+</tr>
+</tbody></table>
+<p>通常用 <code>-Y</code> 会更好.</p>
 
                 
               </div>
