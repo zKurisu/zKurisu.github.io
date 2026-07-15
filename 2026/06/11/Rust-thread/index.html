@@ -25,7 +25,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/rust-thread-concurrent-and-parallel-explain.png">
 <meta property="article:published_time" content="2026-06-11T05:19:17.000Z">
-<meta property="article:modified_time" content="2026-06-12T01:38:03.454Z">
+<meta property="article:modified_time" content="2026-07-14T14:52:05.779Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/rust-thread-concurrent-and-parallel-explain.png">
@@ -439,7 +439,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          11k 字
+          12k 字
         
       </span>
     
@@ -450,7 +450,7 @@ path.outline_glyph {
         
         
         
-          95 分钟
+          103 分钟
         
       </span>
     
@@ -631,6 +631,56 @@ path.outline_glyph {
 
 <p>编译期不会报错, 会在运行时得到下面信息:</p>
 <figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs lasso"><span class="hljs-keyword">thread</span> <span class="hljs-string">&#x27;main&#x27;</span> panicked at <span class="hljs-string">&#x27;already borrowed: BorrowMutError&#x27;</span>, src/main.rs:<span class="hljs-number">6</span>:<span class="hljs-number">16</span><br>note: run <span class="hljs-keyword">with</span> <span class="hljs-string">`RUST_BACKTRACE=1`</span> environment <span class="hljs-built_in">variable</span> <span class="hljs-keyword">to</span> display a backtrace<br></code></pre></td></tr></table></figure>
+
+<h1 id="Send-trait"><a href="#Send-trait" class="headerlink" title="Send trait"></a>Send trait</h1><p><code>Send</code> trait 是 Rust 中的一个标记 trait, 没有任何方法, 其告诉编译器, 该类型的值可以安全地在不同线程之间转移所有权. 如果没有实现 <code>Send</code>, 编译器则会禁止该操作.</p>
+<figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs lasso"><span class="hljs-keyword">Thread</span> A               <span class="hljs-keyword">Thread</span> B<br>┌──────┐               ┌──────┐<br>│ <span class="hljs-built_in">data</span> │ ──移动──→     │ <span class="hljs-built_in">data</span> │   所有权转移，A 不能再访问<br>└──────┘               └──────┘<br></code></pre></td></tr></table></figure>
+
+<p><code>Send</code> 解决的是: 一个值在移动到另一个线程之后, 会不会破坏内存安全或导致未定义行为 (是否会发生数据竞争).</p>
+<p>通常编译器会自动为 “安全” 的类型实现 <code>Send</code>, 核心规则是:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// 1. 如果类型的所有字段都是 Send，编译器自动为该类型实现 Send</span><br><span class="hljs-keyword">struct</span> <span class="hljs-title class_">Safe</span> &#123; x: <span class="hljs-type">i32</span>, y: <span class="hljs-type">String</span> &#125;   <span class="hljs-comment">// i32: Send ✓, String: Send ✓ → Safe: Send ✓</span><br><br><span class="hljs-comment">// 2. 如果包含非 Send 字段，类型也不是 Send</span><br><span class="hljs-keyword">use</span> std::rc::Rc;<br><span class="hljs-keyword">struct</span> <span class="hljs-title class_">Unsafe</span> &#123; x: Rc&lt;<span class="hljs-type">i32</span>&gt; &#125;        <span class="hljs-comment">// Rc&lt;i32&gt;: !Send → Unsafe: !Send ✗</span><br></code></pre></td></tr></table></figure>
+
+<p>常见的有:</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>Send？</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>i32, bool, f64</code></td>
+<td><code>Send</code></td>
+<td>值类型，复制走就行</td>
+</tr>
+<tr>
+<td><code>String, Vec&lt;T&gt;, Box&lt;T&gt;</code></td>
+<td>若 <code>T: Send</code> 则 <code>Send</code></td>
+<td>堆数据有唯一所有权</td>
+</tr>
+<tr>
+<td><code>Arc&lt;T&gt;</code></td>
+<td>若 <code>T: Send + Sync</code> 则 <code>Send</code></td>
+<td>原子引用计数，线程安全</td>
+</tr>
+<tr>
+<td><code>Rc&lt;T&gt;</code></td>
+<td>不是 <code>Send</code></td>
+<td>非原子引用计数，并发递增会导致数据竞争</td>
+</tr>
+<tr>
+<td><code>*const T, *mut T</code></td>
+<td>不是 <code>Send</code></td>
+<td>裸指针，编译器无法保证安全</td>
+</tr>
+<tr>
+<td><code>MutexGuard&lt;T&gt;</code></td>
+<td>若 <code>T: Send</code> 则 <code>Send</code></td>
+<td>持锁跨线程是安全的</td>
+</tr>
+</tbody></table>
+<h1 id="Sync-trait"><a href="#Sync-trait" class="headerlink" title="Sync trait"></a>Sync trait</h1><p><code>Sync</code> trait 也是一个标记引用, 其告诉编译器, 该类型的引用可以在多个线程间共享:</p>
+<figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs lasso"><span class="hljs-keyword">Thread</span> A               <span class="hljs-keyword">Thread</span> B<br>┌──────┐               ┌──────┐<br>│  &amp;T  │               │  &amp;T  │   两个线程同时持有同数据引用<br>└──┬───┘               └──┬───┘<br>   └─────────┬───────────┘<br>             │<br>        ┌────┴────┐<br>        │  <span class="hljs-built_in">data</span>   │                只读，原线程仍然拥有<br>        └─────────┘<br></code></pre></td></tr></table></figure>
 
                 
               </div>

@@ -24,7 +24,7 @@
 <meta property="og:description" content="介绍Process macro (过程宏), 指用 Rust 扩展一段 Rust. 语法是 #[xxx], 其主要分三类:  Derive macro, 用于给类型 “自动增加实现” Attribute macro, 定义处理函数接收 Item 和属性参数, 返回新的 Item Function-like macro, 定义一个函数, 但可以用宏的方式调用  一些 attribute 与 Rust">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-06-12T06:01:38.000Z">
-<meta property="article:modified_time" content="2026-06-12T14:12:19.830Z">
+<meta property="article:modified_time" content="2026-07-12T12:09:15.614Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -437,7 +437,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          9k 字
+          11k 字
         
       </span>
     
@@ -448,7 +448,7 @@ path.outline_glyph {
         
         
         
-          76 分钟
+          88 分钟
         
       </span>
     
@@ -618,6 +618,33 @@ path.outline_glyph {
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">// 库里提供弱符号</span><br><span class="hljs-meta">#[linkage = <span class="hljs-string">&quot;weak&quot;</span>]</span><br><span class="hljs-meta">#[no_mangle]</span><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">platform_init</span>() <span class="hljs-punctuation">-&gt;</span> &amp;<span class="hljs-symbol">&#x27;static</span> <span class="hljs-type">str</span> &#123;<br>    <span class="hljs-string">&quot;默认平台初始化 (weak 符号，可被覆盖)&quot;</span><br>&#125;<br></code></pre></td></tr></table></figure>
 
 <p>如果用户在自己的程序里定义了 <code>platform_init</code>, 那么链接器就不会管库中的实现了.</p>
+<h2 id="unsafe-naked"><a href="#unsafe-naked" class="headerlink" title="#[unsafe(naked)]"></a><code>#[unsafe(naked)]</code></h2><p>我们知道对于普通的函数, 编译器在编译时会自动插入一些指令来简化程序员的工作:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">unsafe</span> <span class="hljs-keyword">extern</span> <span class="hljs-string">&quot;C&quot;</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">normal</span>() <span class="hljs-punctuation">-&gt;</span> ! &#123;<br>    <span class="hljs-title function_ invoke__">kmain</span>();<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>编译器生成的汇编大概是:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs asm">normal:<br>    addi  sp, sp, -16      # ← 编译器自动插入: 开辟栈帧<br>    sd    ra, 8(sp)         # ← 编译器自动插入: 保存返回地址<br>    sd    s0, 0(sp)         # ← 编译器自动插入: 保存帧指针<br>    addi  s0, sp, 16        # ← 编译器自动插入: 设置帧指针<br><br>    call  kmain             #   你写的代码<br><br>    ld    ra, 8(sp)         # ← 编译器自动插入: 恢复<br>    ld    s0, 0(sp)<br>    addi  sp, sp, 16<br>    ret<br></code></pre></td></tr></table></figure>
+<p><code>call kmain</code> 之前的部分称为 <code>prologue</code>, 之后的部分称为 <code>epilogue</code>. 这些汇编用于函数调用栈帧的创建和弹出.</p>
+<p>若函数用 <code>#[unsafe(naked)]</code> 处理, 则编译器不会自动插入 prologue 和 epilogue:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#[unsafe(naked)]</span><br><span class="hljs-keyword">unsafe</span> <span class="hljs-keyword">extern</span> <span class="hljs-string">&quot;C&quot;</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">normal</span>() <span class="hljs-punctuation">-&gt;</span> ! &#123;<br>    <span class="hljs-title function_ invoke__">kmain</span>();<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>产生的汇编是:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs asm">normal:<br>    call  kmain  # 这里应该也不是 call, 但意会一下<br></code></pre></td></tr></table></figure>
+
+<p>通常会在 <code>#[unsafe(naked)]</code> 里搭配 <code>naked_asm!</code>, 其与 <code>asm!</code> 的区别在于, <code>asm!</code> 会假设编译器把栈帧管理好了 (就是 prologue 和 epilogue 部分), 因此对寄存器进行读写后, 也能在栈帧弹出时恢复. 同时也能进行变量映射.</p>
+<p>而 <code>naked_asm!</code> 假设 <code>sp</code> 为初始化, <code>ra</code> 是随机值, 没有栈帧:</p>
+<ul>
+<li>不能用 <code>in/out</code> 这些变量映射, 此时编译器也无法知道</li>
+<li>不能 <code>ret</code>, 栈上没有返回地址</li>
+<li>只能跳转到别的地方, 用 <code>tail</code> 或 <code>j</code>, 又或者 <code>wfi</code> 死循环</li>
+<li><code>t0</code> 和 <code>t1</code> 等临时寄存器可以随意使用</li>
+</ul>
+<p>比如:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#[unsafe(naked)]</span><br><span class="hljs-meta">#[no_mangle]</span><br><span class="hljs-meta">#[link_section = <span class="hljs-string">&quot;.text._start&quot;</span>]</span><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">unsafe</span> <span class="hljs-keyword">extern</span> <span class="hljs-string">&quot;C&quot;</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">_start</span>() <span class="hljs-punctuation">-&gt;</span> ! &#123;<br>    naked_asm!(<br>        <span class="hljs-comment">// 1. Set stack pointer</span><br>        <span class="hljs-string">&quot;la   sp, _stack_top&quot;</span>, <span class="hljs-comment">// Load Address, 把 _stack_top 所在地址复制给 sp</span><br><br>        <span class="hljs-comment">// 2. Zero BSS</span><br>        <span class="hljs-string">&quot;la   t0, _bss_start&quot;</span>,<br>        <span class="hljs-string">&quot;la   t1, _bss_end&quot;</span>,<br>        <span class="hljs-string">&quot;1:&quot;</span>,<br>        <span class="hljs-string">&quot;bge  t0, t1, 2f&quot;</span>, <span class="hljs-comment">// Branch if Greater or Equal; 2f 是跳到前方下一个 `2:` 标签</span><br>        <span class="hljs-string">&quot;sd   zero, 0(t0)&quot;</span>,<br>        <span class="hljs-string">&quot;addi t0, t0, 8&quot;</span>,<br>        <span class="hljs-string">&quot;j    1b&quot;</span>,<br>        <span class="hljs-string">&quot;2:&quot;</span>,<br><br>        <span class="hljs-comment">// 3. Jump to Rust</span><br>        <span class="hljs-string">&quot;tail kmain&quot;</span>,<br>    )<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>注意 <code>1:</code> 和 <code>2:</code> 之间是一个循环, 直到 <code>t0 &gt;= t1</code>, 即超过 <code>_bss_end</code> 的地址, <code>sd zero, 0(t0)</code> 是对这片空间清零的操作.</p>
+<p><code>tail</code> 也是个伪指令, 展开为 <code>auipc t1, ... + jr t1</code>, 不会修改 <code>ra</code>, 也不会压栈:</p>
+<figure class="highlight llvm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs llvm"><span class="hljs-keyword">call</span> kmain     # 等价于: auipc ra<span class="hljs-punctuation">,</span> ... <span class="hljs-comment">; jalr ra, kmain  —— 会写 ra</span><br><span class="hljs-keyword">tail</span> kmain     # 等价于: auipc t<span class="hljs-number">1</span><span class="hljs-punctuation">,</span> ... <span class="hljs-comment">; jr t1           —— 不写 ra</span><br></code></pre></td></tr></table></figure>
+
+<p>从 <code>tail</code> 这个名字也能看出, 其就是最后一个函数调用, 不会返回了.</p>
 <h1 id="proc-macro-基本使用"><a href="#proc-macro-基本使用" class="headerlink" title="proc_macro 基本使用"></a><code>proc_macro</code> 基本使用</h1><p><code>proc_macro</code> 是编译器提供的 API, 用来写 “生成代码的代码”.</p>
 <p>核心是:</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">extern</span> <span class="hljs-keyword">crate</span> proc_macro;<br><br><span class="hljs-keyword">use</span> proc_macro::TokenStream;<br><br><span class="hljs-comment">// 三个入口函数形式：</span><br><span class="hljs-meta">#[proc_macro]</span>            <span class="hljs-comment">// 函数式宏：  my_macro!(...)</span><br><span class="hljs-meta">#[proc_macro_derive]</span>     <span class="hljs-comment">// derive 宏：  #[derive(MyDerive)]</span><br><span class="hljs-meta">#[proc_macro_attribute]</span>  <span class="hljs-comment">// 属性宏：    #[my_attribute]</span><br></code></pre></td></tr></table></figure>

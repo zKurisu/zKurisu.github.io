@@ -16,12 +16,12 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="参考科普视频1参考科普视频2 介绍该 Blog 说明一下 USB 协议和 RNDIS 协议 (将 USB 设备视为网卡) 涉及的一些概念, 以及如何在 Linux 上实际创建 USB 网卡. 相关概念USBUSB (Universal Serial Bus) 是一种串行总线标准, 用于连接计算机和外部设备, 支持数据传输和供电. 1.0 版本在 1996 年由因特尔, 微软, IBM 等多家公司联">
+    <meta name="description" content="参考科普视频1参考科普视频2 介绍该 Blog 说明一下 USB 协议和 RNDIS 协议 (将 USB 设备视为网卡) 涉及的一些概念, 以及如何在 Linux 上实际创建 USB 网卡. 这里先积累一些概念, 后续补充具体实操部分. 相关概念USBUSB (Universal Serial Bus) 是一种串行总线标准, 用于连接计算机和外部设备, 支持数据传输和供电. 1.0 版本在 199">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Linux-USB-RNDIS-网卡">
 <meta property="og:url" content="http://example.com/2026/07/09/Linux-USB-RNDIS-%E7%BD%91%E5%8D%A1/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="参考科普视频1参考科普视频2 介绍该 Blog 说明一下 USB 协议和 RNDIS 协议 (将 USB 设备视为网卡) 涉及的一些概念, 以及如何在 Linux 上实际创建 USB 网卡. 相关概念USBUSB (Universal Serial Bus) 是一种串行总线标准, 用于连接计算机和外部设备, 支持数据传输和供电. 1.0 版本在 1996 年由因特尔, 微软, IBM 等多家公司联">
+<meta property="og:description" content="参考科普视频1参考科普视频2 介绍该 Blog 说明一下 USB 协议和 RNDIS 协议 (将 USB 设备视为网卡) 涉及的一些概念, 以及如何在 Linux 上实际创建 USB 网卡. 这里先积累一些概念, 后续补充具体实操部分. 相关概念USBUSB (Universal Serial Bus) 是一种串行总线标准, 用于连接计算机和外部设备, 支持数据传输和供电. 1.0 版本在 199">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/usb-universal-example.png">
 <meta property="og:image" content="http://example.com/img/usb-port-example-before-usb.png">
@@ -44,7 +44,7 @@
 <meta property="og:image" content="http://example.com/img/usb-endpoint-example.png">
 <meta property="og:image" content="http://example.com/img/usb-data-package-example.png">
 <meta property="article:published_time" content="2026-07-09T03:16:07.000Z">
-<meta property="article:modified_time" content="2026-07-11T08:25:52.757Z">
+<meta property="article:modified_time" content="2026-07-13T06:13:08.125Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/usb-universal-example.png">
@@ -469,7 +469,7 @@ path.outline_glyph {
         
         
         
-          94 分钟
+          96 分钟
         
       </span>
     
@@ -514,6 +514,7 @@ path.outline_glyph {
                 
                 <p><a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1ArvTzwEse/?spm_id_from=333.337.search-card.all.click&vd_source=bc8ddbb1a08707dc809c3fd9bb85290d">参考科普视频1</a><br><a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1b44y1E7XF/?spm_id_from=333.1391.0.0">参考科普视频2</a></p>
 <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>该 Blog 说明一下 USB 协议和 RNDIS 协议 (将 USB 设备视为网卡) 涉及的一些概念, 以及如何在 Linux 上实际创建 USB 网卡.</p>
+<p>这里先积累一些概念, 后续补充具体实操部分.</p>
 <h1 id="相关概念"><a href="#相关概念" class="headerlink" title="相关概念"></a>相关概念</h1><h2 id="USB"><a href="#USB" class="headerlink" title="USB"></a>USB</h2><p>USB (Universal Serial Bus) 是一种串行总线标准, 用于连接计算机和外部设备, 支持数据传输和供电. 1.0 版本在 1996 年由因特尔, 微软, IBM 等多家公司联合敲定. 其设计初衷主要就是为了通用.</p>
 <p><img src="/../img/usb-universal-example.png" srcset="/img/loading.gif" lazyload></p>
 <p>在 USB 诞生之前, 键盘鼠标多用 <code>PS/2</code> 接口, 游戏手柄有 Game Port 接口, 打印机等也有串行接口和并行接口, 这些接口规范各不相同, 也有各种缺陷, 比如:</p>
@@ -696,6 +697,9 @@ path.outline_glyph {
 </ul>
 <p>其作用等价于 <code>FSBL</code>, 负责加载和跳转到 U-Boot.</p>
 <p>需要 SPL 的主要原因是很多 SoC 的片上 SRAM (Static Random Access Memory, 内容用触发器存储, 不需要刷新, 存储密度低, 速度快) 太小 (通常 32KB-128KB), 装不下完整的 U-Boot (~500KB+). 而 SPL 被精简到只包含硬件初始化代码, 加载完 DDR 和 U-Boot 后就会退出.</p>
+<h2 id="Memory-Barrier"><a href="#Memory-Barrier" class="headerlink" title="Memory Barrier"></a>Memory Barrier</h2><p>Memory Barrier, 指一条能够用来强制限制 “内存访问的执行顺序” 的 CPU 指令 (或编译器指令). 它告诉 CPU (或编译器), Barrier 之前的访存必须真的完成, 然后才能开始 Barrier 后的访存. 其目的不是 “挡住数据”, 而是防止 “乱序”.</p>
+<p>想像 CPU 的执行流是公路上的车, Barrier 就是一个检查站, 会将想要超车的拦截下来, 前车全部通过后, 才放行.</p>
+<p>很多时候程序看似是顺序运行的, 但可能因为编译器的优化 (合并多次读, 删除 “看似无用” 的读, 重排读写顺序) 以及现代 CPU 的缓存等 (读取缓存里的旧状态), 需要 Barrier 来保证执行顺序.</p>
 <h1 id="DWC2"><a href="#DWC2" class="headerlink" title="DWC2"></a>DWC2</h1><p>对于 Synopsys DesignWare DWC2 USB 2.0 HS OTG 这个硬件的详细内容, 可以查看 <a target="_blank" rel="noopener" href="https://elixir.bootlin.com/linux/v7.2-rc1/source/drivers/usb/dwc2">Linux 源码中 dwc2 相关驱动部分</a>, 比如:</p>
 <figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs awk">linux<span class="hljs-regexp">/drivers/u</span>sb<span class="hljs-regexp">/dwc2/</span>hw.h       ← 完整的寄存器位域定义<br>linux<span class="hljs-regexp">/drivers/u</span>sb<span class="hljs-regexp">/dwc2/</span>core.h     ← 数据结构<br>linux<span class="hljs-regexp">/drivers/u</span>sb<span class="hljs-regexp">/dwc2/g</span>adget.c   ← Device 模式实现<br>...<br></code></pre></td></tr></table></figure>
 
@@ -828,6 +832,25 @@ path.outline_glyph {
 <li><code>writel()</code>, 写 32-bit</li>
 <li><code>writeq()</code>, 写 64-bit</li>
 </ul>
+<h2 id="mmio-read-32"><a href="#mmio-read-32" class="headerlink" title="mmio_read_32()"></a><code>mmio_read_32()</code></h2><p><code>mmio_read_32()</code> 这类函数是从 MMIO (Memory-Mapped I&#x2F;O) 地址读取一个 32 位值, 带内存屏障&#x2F;volatile 语义, 专用于访问硬件寄存器.</p>
+<p>简化实现可能为:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">uint32_t</span> <span class="hljs-title function_">mmio_read_32</span><span class="hljs-params">(<span class="hljs-type">uintptr_t</span> addr)</span><br>&#123;<br>    dsb();       <span class="hljs-comment">// 数据屏障</span><br>    <span class="hljs-keyword">return</span> *(<span class="hljs-keyword">volatile</span> <span class="hljs-type">uint32_t</span> *)addr;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>mmio</code> 意思是把地址当作 mmio 映射的内存地址</li>
+<li><code>dsb()</code> 加内存屏障, 保证顺序正确</li>
+<li><code>volatile</code> 防止编译器优化掉</li>
+</ul>
+<p>类似的函数通常还有:</p>
+<ul>
+<li><code>mmio_read_8()</code></li>
+<li><code>mmio_read_16()</code></li>
+<li><code>mmio_read_32()</code></li>
+<li><code>mmio_read_64()</code></li>
+<li><code>mmio_write_8()</code></li>
+<li><code>mmio_write_16()</code></li>
+<li><code>mmio_write_32()</code></li>
+<li><code>mmio_write_64()</code></li>
+</ul>
 <h2 id="Shared-DFIFO-RAM"><a href="#Shared-DFIFO-RAM" class="headerlink" title="Shared DFIFO RAM"></a>Shared DFIFO RAM</h2><p>Shared DFIFO RAM 是 DWC2 内部一块统一的双端口 RAM, 用来做 USB 数据包的临时缓存. 双端口, 意思是这个 RAM 在同一时间允许两个不同的访问操作, 每个 port 有独立的地址线, 数据线, 读写控制信号灯:</p>
 <figure class="highlight crmsh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs crmsh">┌──────────────────────────────┐<br>│       Dual-Port RAM           │<br>│                               │<br>│  Port A ◄── USB MAC ───────► │  ← 写收到的 USB 包 / 读待发 USB 包<br>│                               │<br>│  Port B ◄── AHB <span class="hljs-keyword">Master</span> <span class="hljs-title">────► │  ← DMA</span> 把数据搬到/来自系统内存<br>└──────────────────────────────┘<br></code></pre></td></tr></table></figure>
 
@@ -908,24 +931,6 @@ path.outline_glyph {
 <p>On-chip memory, 片上存储, SRAM&#x2F;ROM</p>
 <p>On-chip peripheral, 片上外设</p>
 <p>DWC2 就是片上 USB 控制器, 它和 CPU 在同一个硅片里, 通过 AHB 总线直连, 不需要外部引脚中转.</p>
-<h1 id="TMP"><a href="#TMP" class="headerlink" title="TMP"></a>TMP</h1><p> 是什么, <code>reconfig_usbd()</code> 函数的调用时机, 调用链是什么</p>
-<p><code>dwc2_set_cv182x_params</code> 函数是什么, 调用关系是什么, cv182x 是什么</p>
-<p><code>USB_CONNECT_TIMEOUT</code> 影响的是什么</p>
-<p><code>CONFIG_SYS_HZ</code> 是什么</p>
-<p>什么是 RNDIS 状态机</p>
-<p>变更5有必要吗, 不更改会出现什么问题</p>
-<p><code>_usb_eth_halt()</code> 函数的作用</p>
-<p><code>_usb_eth_init()</code> 函数的作用</p>
-<p><code>usb_gadget_initialize(0)</code> 函数</p>
-<p>DM 路径是什么</p>
-<p><code>board_usb_init()</code> USB 控制器硬件复位的作用是什么</p>
-<p><code>dwc2_udc_probe()</code> 是在做什么</p>
-<p><code>reconfig_usbd()</code></p>
-<p><code>otg_phy_init()</code> 函数的作用</p>
-<p><code>reg</code> 应该是寄存器组, <code>&amp;reg-&gt;gintsts</code> 是取 <code>GINTSTS</code> 寄存器的内容, 同理 <code>&amp;reg-&gt;gintmsk</code></p>
-<p><code>dwc2_udc_irq</code> 中断函数的内容可能要了解一下. </p>
-<p><code>board_late_init()</code>  是 u-boot 提供的一个 hook, 便于用户嵌入一些初始化代码</p>
-<p><code>usb_ether_init()</code></p>
 
                 
               </div>
@@ -1006,6 +1011,12 @@ path.outline_glyph {
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2026/07/12/Rust-alloc-crate/" title="Rust-alloc-crate">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Rust-alloc-crate</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">
