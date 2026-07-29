@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="在远程服务器上建 Git 仓库比如你想将仓库上传到 server1 而非 Github. 先在 server1 上建一个裸仓库: 1234567891011121314$ mkdir hello$ git init --bare hello$ cd hello$ tree -L 1.├── config├── description├── HEAD├── hooks├── info├── obje">
+    <meta name="description" content="生成 patch 以及打上 patch把指定 commit 导出为 patch1git format-patch -1 &lt;commit&gt;  比如: 1git format-patch -1 a1b2c3d  -1 表示只取这一个 commit -N 表示取包含该 commit 的前 N 个 commit, 分别产生 patch  会生成类似下面命名的文件: 10001-Fix-null">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Git-技巧积累">
 <meta property="og:url" content="http://example.com/2023/01/19/Git-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="在远程服务器上建 Git 仓库比如你想将仓库上传到 server1 而非 Github. 先在 server1 上建一个裸仓库: 1234567891011121314$ mkdir hello$ git init --bare hello$ cd hello$ tree -L 1.├── config├── description├── HEAD├── hooks├── info├── obje">
+<meta property="og:description" content="生成 patch 以及打上 patch把指定 commit 导出为 patch1git format-patch -1 &lt;commit&gt;  比如: 1git format-patch -1 a1b2c3d  -1 表示只取这一个 commit -N 表示取包含该 commit 的前 N 个 commit, 分别产生 patch  会生成类似下面命名的文件: 10001-Fix-null">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-01-19T08:54:40.000Z">
-<meta property="article:modified_time" content="2026-04-29T13:01:32.327Z">
+<meta property="article:modified_time" content="2026-07-23T02:24:21.561Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -437,7 +437,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          7.5k 字
+          8.9k 字
         
       </span>
     
@@ -448,7 +448,7 @@ path.outline_glyph {
         
         
         
-          63 分钟
+          74 分钟
         
       </span>
     
@@ -491,7 +491,56 @@ path.outline_glyph {
             
               <div class="markdown-body">
                 
-                <h1 id="在远程服务器上建-Git-仓库"><a href="#在远程服务器上建-Git-仓库" class="headerlink" title="在远程服务器上建 Git 仓库"></a>在远程服务器上建 Git 仓库</h1><p>比如你想将仓库上传到 <code>server1</code> 而非 Github. 先在 <code>server1</code> 上建一个裸仓库:</p>
+                <h1 id="生成-patch-以及打上-patch"><a href="#生成-patch-以及打上-patch" class="headerlink" title="生成 patch 以及打上 patch"></a>生成 patch 以及打上 patch</h1><h2 id="把指定-commit-导出为-patch"><a href="#把指定-commit-导出为-patch" class="headerlink" title="把指定 commit 导出为 patch"></a>把指定 commit 导出为 patch</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">git format-patch -1 &lt;commit&gt;<br></code></pre></td></tr></table></figure>
+
+<p>比如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">git format-patch -1 a1b2c3d<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>-1</code> 表示只取这一个 commit</li>
+<li><code>-N</code> 表示取包含该 commit 的前 N 个 commit, 分别产生 patch</li>
+</ul>
+<p>会生成类似下面命名的文件:</p>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs pgsql"><span class="hljs-number">0001</span>-Fix-<span class="hljs-keyword">null</span>-pointer-<span class="hljs-keyword">in</span>-<span class="hljs-keyword">parser</span>.patch<br></code></pre></td></tr></table></figure>
+<ul>
+<li>文件名来自 commit message</li>
+<li>patch 包含作者, 时间, commit msg (适合邮件&#x2F;code review)</li>
+</ul>
+<h2 id="生成多个-patch"><a href="#生成多个-patch" class="headerlink" title="生成多个 patch"></a>生成多个 patch</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">git format-patch &lt;start-commit&gt;..&lt;end-commit&gt;<br></code></pre></td></tr></table></figure>
+
+<p>每个 commit 都会生成一个对应的 patch, 比如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ git branch<br>* main<br>  try_driver<br>$ <span class="hljs-built_in">rm</span> 0001-chore-release-1539.patch<br>$ git format-patch main..try_driver<br>0001-fix-axfs-ng-use-SleepMutex-for-FAT-FS-and-add-MBR-pa.patch<br>0002-feat-basic-bare-driver-example.patch<br>0003-feat-add-register-code-for-FakeDisk.patch<br>0004-feat-call-fakedisk-register-in-rust_main.patch<br>0005-feat-create-fakedisk-at-dev-point.patch<br></code></pre></td></tr></table></figure>
+
+<h2 id="取最近-N-个-commit-为-N-个-patch"><a href="#取最近-N-个-commit-为-N-个-patch" class="headerlink" title="取最近 N 个 commit 为 N 个 patch"></a>取最近 N 个 commit 为 N 个 patch</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">git format-patch -N HEAD<br></code></pre></td></tr></table></figure>
+
+<h2 id="查看-patch-的变更统计"><a href="#查看-patch-的变更统计" class="headerlink" title="查看 patch 的变更统计"></a>查看 patch 的变更统计</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">git apply --<span class="hljs-built_in">stat</span> 0001-Fix-null-pointer.patch<br></code></pre></td></tr></table></figure>
+
+<p>比如:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ git apply --<span class="hljs-built_in">stat</span> 0001-feat-create-fakedisk-at-dev-point.patch<br> os/StarryOS/kernel/src/pseudofs/dev/mod.rs |   30 ++++++++++++++++++++++++++++<br> 1 file changed, 30 insertions(+)<br></code></pre></td></tr></table></figure>
+
+<h2 id="检查能否干净应用-不真正应用"><a href="#检查能否干净应用-不真正应用" class="headerlink" title="检查能否干净应用 (不真正应用)"></a>检查能否干净应用 (不真正应用)</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">git apply --check 0001-Fix-null-pointer.patch<br></code></pre></td></tr></table></figure>
+
+<h2 id="轻量级应用-不生成-commit"><a href="#轻量级应用-不生成-commit" class="headerlink" title="轻量级应用 (不生成 commit)"></a>轻量级应用 (不生成 commit)</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">git apply 0001-Fix-null-pointer.patch<br></code></pre></td></tr></table></figure>
+
+<p>之后可以自己 <code>add</code> 和 <code>commit</code>:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">git add .<br>git commit -m <span class="hljs-string">&quot;Apply fix from patch&quot;</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="应用-patch-保留-commit-信息"><a href="#应用-patch-保留-commit-信息" class="headerlink" title="应用 patch (保留 commit 信息)"></a>应用 patch (保留 commit 信息)</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">git am 0001-Fix-null-pointer.patch<br></code></pre></td></tr></table></figure>
+<ul>
+<li>会保留原作者, 日期, commit message 等</li>
+</ul>
+<p>应用多个 patch 可直接:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">git am *.patch<br></code></pre></td></tr></table></figure>
+
+<p>如果遇到冲突并解决, 可以:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-comment"># 解决冲突后</span><br>git add &lt;conflicted-files&gt;<br>git am --<span class="hljs-built_in">continue</span><br></code></pre></td></tr></table></figure>
+
+<p>如果想放弃该 <code>patch</code> 可以:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">git am --skip<br></code></pre></td></tr></table></figure>
+
+<p>彻底终止用:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">git am --abort<br></code></pre></td></tr></table></figure>
+
+<h1 id="在远程服务器上建-Git-仓库"><a href="#在远程服务器上建-Git-仓库" class="headerlink" title="在远程服务器上建 Git 仓库"></a>在远程服务器上建 Git 仓库</h1><p>比如你想将仓库上传到 <code>server1</code> 而非 Github. 先在 <code>server1</code> 上建一个裸仓库:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ <span class="hljs-built_in">mkdir</span> hello<br>$ git init --bare hello<br>$ <span class="hljs-built_in">cd</span> hello<br>$ tree -L 1<br>.<br>├── config<br>├── description<br>├── HEAD<br>├── hooks<br>├── info<br>├── objects<br>└── refs<br><br>5 directories, 3 files<br></code></pre></td></tr></table></figure>
 
 <p>然后就能在本地 <code>clone</code> 和 <code>push</code> 等操作了:</p>
