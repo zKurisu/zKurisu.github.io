@@ -28,7 +28,7 @@
 <meta property="og:image" content="http://example.com/img/rl-mario-test-model-run.png">
 <meta property="og:image" content="http://example.com/img/rl-mario-basic-train-process.png">
 <meta property="article:published_time" content="2026-05-09T06:27:46.000Z">
-<meta property="article:modified_time" content="2026-05-11T07:21:53.145Z">
+<meta property="article:modified_time" content="2026-08-25T10:44:48.491Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/reinforcement-learning-AE_loop.png">
@@ -442,7 +442,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          6.1k 字
+          6.8k 字
         
       </span>
     
@@ -453,7 +453,7 @@ path.outline_glyph {
         
         
         
-          51 分钟
+          57 分钟
         
       </span>
     
@@ -514,6 +514,19 @@ path.outline_glyph {
 <h2 id="完整的官方示例"><a href="#完整的官方示例" class="headerlink" title="完整的官方示例"></a>完整的官方示例</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># Run `pip install &quot;gymnasium[classic-control]&quot;` for this example.</span><br><span class="hljs-keyword">import</span> gymnasium <span class="hljs-keyword">as</span> gym<br><br><span class="hljs-comment"># Create our training environment - a cart with a pole that needs balancing</span><br>env = gym.make(<span class="hljs-string">&quot;CartPole-v1&quot;</span>, render_mode=<span class="hljs-string">&quot;human&quot;</span>)<br><br><span class="hljs-comment"># Reset environment to start a new episode</span><br>observation, info = env.reset()<br><span class="hljs-comment"># observation: what the agent can &quot;see&quot; - cart position, velocity, pole angle, etc.</span><br><span class="hljs-comment"># info: extra debugging information (usually not needed for basic learning)</span><br><br><span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;Starting observation: <span class="hljs-subst">&#123;observation&#125;</span>&quot;</span>)<br><span class="hljs-comment"># Example output: [ 0.01234567 -0.00987654  0.02345678  0.01456789]</span><br><span class="hljs-comment"># [cart_position, cart_velocity, pole_angle, pole_angular_velocity]</span><br><br>episode_over = <span class="hljs-literal">False</span><br>total_reward = <span class="hljs-number">0</span><br><br><span class="hljs-keyword">while</span> <span class="hljs-keyword">not</span> episode_over:<br>    <span class="hljs-comment"># Choose an action: 0 = push cart left, 1 = push cart right</span><br>    action = env.action_space.sample()  <span class="hljs-comment"># Random action for now - real agents will be smarter!</span><br><br>    <span class="hljs-comment"># Take the action and see what happens</span><br>    observation, reward, terminated, truncated, info = env.step(action)<br><br>    <span class="hljs-comment"># reward: +1 for each step the pole stays upright</span><br>    <span class="hljs-comment"># terminated: True if pole falls too far (agent failed)</span><br>    <span class="hljs-comment"># truncated: True if we hit the time limit (500 steps)</span><br><br>    total_reward += reward<br>    episode_over = terminated <span class="hljs-keyword">or</span> truncated<br><br><span class="hljs-built_in">print</span>(<span class="hljs-string">f&quot;Episode finished! Total reward: <span class="hljs-subst">&#123;total_reward&#125;</span>&quot;</span>)<br>env.close()<br></code></pre></td></tr></table></figure>
 
 <p>在 Gymnasium 中, 如果 environment 因 task 正常结束或失败而终止, 那么 <code>step()</code> 会返回 <code>terminated=True</code>. 如果想要 environment 在固定 timestep 后结束, 则等待 <code>truncated=True</code> 这个信号. 通常这两个有一个为 <code>True</code>, 则考虑终止该 episode.</p>
+<h3 id="Policy-变更"><a href="#Policy-变更" class="headerlink" title="Policy 变更"></a>Policy 变更</h3><p>上述例子中, 采取的 policy 是 random action, 这里只有两个 action:</p>
+<ul>
+<li><code>0</code> 表示让 cart 左移</li>
+<li><code>1</code> 表示让 cart 右移</li>
+</ul>
+<p>而 <code>env.action_space.sample()</code> 则是从 <code>[0, 1]</code> 中随机返回一个.</p>
+<p>可以将 policy 改为简单的启发式方法, 比如 pole 往右倒就往右边移动 cart, 往左倒就往左边移动:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">policy</span>(<span class="hljs-params">observation</span>):<br>    angle = observation[<span class="hljs-number">2</span>]<br>    <span class="hljs-keyword">if</span> angle &gt; <span class="hljs-number">0</span>:<br>        <span class="hljs-keyword">return</span> <span class="hljs-number">1</span><br>    <span class="hljs-keyword">else</span>:<br>        <span class="hljs-keyword">return</span> <span class="hljs-number">0</span><br></code></pre></td></tr></table></figure>
+
+<p>此时循环主体改为:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">while</span> <span class="hljs-keyword">not</span> episode_over:<br>    action = policy(observation)        <span class="hljs-comment"># ← 现在 policy 开始&quot;看&quot;状态了</span><br>    observation, reward, terminated, truncated, info = env.step(action)<br>    total_reward += reward<br>    episode_over = terminated <span class="hljs-keyword">or</span> truncated<br></code></pre></td></tr></table></figure>
+
+<p>但 reinforcement learninig 的核心是 learning, 意思是携带参数, 而这里相当于只是手动规则的命中.</p>
 <h2 id="Action-和-observation-spaces"><a href="#Action-和-observation-spaces" class="headerlink" title="Action 和 observation spaces"></a>Action 和 observation spaces</h2><p>每个 environment 都会特别指出 <code>action_space</code> 和 <code>observation_space</code> (state space) 这两个 attributes 的格式. 便于了解该 environment 的输入和输出.</p>
 <p>Action space 说明了 agent 能干什么. 而 observation space 说明了 agent 能看到什么 (比如图像, structured data).</p>
 <p><code>Env.action_space</code> 和 <code>Env.observation_space</code> 都是 <code>Space</code> 类的 instance (其实基本都是 <code>Space</code> 的子类的 instance), 有两个重要的 functions: <code>Space.contains()</code> 和 <code>Space.sample()</code>.</p>
@@ -542,6 +555,17 @@ path.outline_glyph {
 </ul>
 <p>若想获取 wrapper 内部的原始 environment, 访问 <code>unwrapped</code> attribute 即可:</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">&gt;&gt;&gt; wrapped_env<br>&lt;FlattenObservation&lt;TimeLimit&lt;OrderEnforcing&lt;PassiveEnvChecker&lt;CarRacing&lt;CarRacing-v3&gt;&gt;&gt;&gt;&gt;&gt;<br>&gt;&gt;&gt; wrapped_env.unwrapped<br>&lt;gymnasium.envs.box2d.car_racing.CarRacing object at 0x7f04efcb8850&gt;<br></code></pre></td></tr></table></figure>
+
+<h1 id="基本编写框架"><a href="#基本编写框架" class="headerlink" title="基本编写框架"></a>基本编写框架</h1><p>一个自定义 gymnasium Env 最少需要:</p>
+<ul>
+<li>继承 <code>gymnasium.Env</code> class</li>
+<li>定义 <code>action_space</code> 和 <code>observation_space</code> 两个属性</li>
+<li>定义 <code>reset</code> 方法, 返回 <code>(obs, info)</code> 二元组, 其中 <code>info</code> 是 <code>dict</code></li>
+<li>定义 <code>step</code> 方法, 返回 <code>(obs, reward, terminated, truncated, info)</code> 五元组</li>
+</ul>
+<p>之后可以用 <code>gymnasium</code> 自带的检查工具检验:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> gymnasium.utils.env_checker <span class="hljs-keyword">import</span> check_env<br><br>env = MyEnv()<br>check_env(env)<br></code></pre></td></tr></table></figure>
+
 <h1 id="重要类"><a href="#重要类" class="headerlink" title="重要类"></a>重要类</h1><h2 id="Env"><a href="#Env" class="headerlink" title="Env"></a>Env</h2><h2 id="Wrapper"><a href="#Wrapper" class="headerlink" title="Wrapper"></a>Wrapper</h2><h2 id="Space"><a href="#Space" class="headerlink" title="Space"></a>Space</h2><h1 id="Gym-Super-mario-bros"><a href="#Gym-Super-mario-bros" class="headerlink" title="Gym Super mario bros"></a>Gym Super mario bros</h1><p><a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1CERYY3EjA?spm_id_from=333.788.player.switch&vd_source=bc8ddbb1a08707dc809c3fd9bb85290d&p=5">B 站参考教程</a><br><a target="_blank" rel="noopener" href="https://github.com/Kautenja/gym-super-mario-bros">gym-super-mario-bros Github</a></p>
 <p>注意该教程使用的还是 Gym 而不是 Gymnasium, 但用来入门还是很可以.</p>
 <h2 id="环境安装"><a href="#环境安装" class="headerlink" title="环境安装"></a>环境安装</h2><p>我的宿主机是 Archlinux 比较新的环境, 预先安装有 miniconda 和 cuda:</p>
