@@ -1,0 +1,1140 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/wallhaven-j5kjgy_1920x1080.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Jie">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="B 站参考视频 介绍Binary Indexed Tree (BIT, 又称 Fenwick 树, 树状数组) 是一种比较巧妙的数据结构, 能够以 $O(logn)$ 做元素修改和前缀和查询. 之所以设计这么个数据结构, 想象下面场景, 假设我们有一个长度为 n 的数组 a, 需要反复做两类操作:  修改: a[i] +&#x3D; delta 查询: 求 a[l] + a[l+1] + ... + a[r">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Binary-indexed-tree">
+<meta property="og:url" content="http://example.com/2026/09/14/Binary-indexed-tree/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="B 站参考视频 介绍Binary Indexed Tree (BIT, 又称 Fenwick 树, 树状数组) 是一种比较巧妙的数据结构, 能够以 $O(logn)$ 做元素修改和前缀和查询. 之所以设计这么个数据结构, 想象下面场景, 假设我们有一个长度为 n 的数组 a, 需要反复做两类操作:  修改: a[i] +&#x3D; delta 查询: 求 a[l] + a[l+1] + ... + a[r">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/bit-length-n-array-example.png">
+<meta property="og:image" content="http://example.com/img/bit-length-half-array-example.png">
+<meta property="og:image" content="http://example.com/img/bit-length-quad-array-example.png">
+<meta property="og:image" content="http://example.com/img/bit-overlay-to-only-one-digit.png">
+<meta property="og:image" content="http://example.com/img/bit-remove-unused-element.png">
+<meta property="article:published_time" content="2026-09-14T05:03:06.000Z">
+<meta property="article:modified_time" content="2026-09-15T05:27:25.947Z">
+<meta property="article:author" content="Jie">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/img/bit-length-n-array-example.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>Binary-indexed-tree - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.2","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<!-- hexo injector head_end start --><style>.typst-app {
+  margin: 0;
+  --typst-dom-scale: 1;
+  /* --typst-dom-scale: 1.5; */
+  margin: 5px;
+}
+
+.typst-dom-page {
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  --data-text-width: calc(1px * var(--typst-dom-scale));
+  --data-text-height: calc(1px * var(--typst-dom-scale));
+}
+
+.typst-back-canvas {
+  position: absolute;
+  z-index: -1;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  pointer-events: none;
+}
+
+.typst-svg-page {
+  position: absolute;
+  z-index: 0;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+}
+
+.typst-html-semantics {
+  position: absolute;
+  z-index: 2;
+  width: calc(var(--data-page-width, 100%) * var(--typst-dom-scale));
+  height: calc(var(--data-page-height) * var(--typst-dom-scale));
+  color: transparent;
+  font-family: monospace;
+  white-space: pre;
+  opacity: 0.62;
+}
+
+.typst-html-semantics span {
+  color: transparent;
+  font-family: monospace;
+  transform-origin: left top;
+  position: absolute;
+  display: inline-block;
+  left: 0;
+  top: 0;
+}
+
+.typst-content-hint {
+  position: absolute;
+  display: inline-block;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.typst-html-semantics a {
+  position: absolute;
+  display: inline-block;
+}
+
+/* set transparent itself */
+.typst-content-group {
+  pointer-events: visible;
+}
+
+.typst-html-semantics span::-moz-selection {
+  color: transparent;
+  background: #7db9de;
+}
+
+.typst-html-semantics span::selection {
+  color: transparent;
+  background: #7db9de;
+}
+
+.typst-html-semantics *::-moz-selection {
+  color: transparent;
+  background: transparent;
+}
+
+.typst-html-semantics *::selection {
+  color: transparent;
+  background: transparent;
+}
+
+.typst-content-fallback {
+  color: transparent;
+  background: transparent;
+}
+
+.pseudo-link,
+.typst-text {
+  pointer-events: none;
+}
+
+.tsel span,
+.tsel {
+  left: 0;
+  position: fixed;
+  text-align: justify;
+  white-space: pre;
+  width: 100%;
+  height: 100%;
+  text-align-last: justify;
+  color: transparent;
+}
+.tsel span::-moz-selection,
+.tsel::-moz-selection {
+  color: transparent;
+  background: #7db9dea0;
+}
+.tsel span::selection,
+.tsel::selection {
+  color: transparent;
+  background: #7db9dea0;
+}
+.pseudo-link {
+  fill: transparent;
+  cursor: pointer;
+  pointer-events: all;
+}
+svg {
+  fill: none;
+}
+
+.outline_glyph path,
+path.outline_glyph {
+  fill: var(--glyph_fill);
+  stroke: var(--glyph_stroke);
+}
+
+.outline_glyph path,
+path.outline_glyph {
+  transition: 0.2s fill stroke;
+}
+.hover .typst-text {
+  --glyph_fill: #66bab7;
+  --glyph_stroke: #66bab7;
+}
+
+.typst-jump-ripple,
+.typst-debug-react-ripple {
+  width: 0;
+  height: 0;
+  background-color: transparent;
+  position: absolute;
+  border-radius: 50%;
+}
+.typst-jump-ripple {
+  border: 1px solid #66bab7;
+}
+.typst-debug-react-ripple {
+  border: 1px solid #cb1b45;
+}
+@keyframes typst-jump-ripple-effect {
+  to {
+    width: 10vw;
+    height: 10vw;
+    opacity: 0.01;
+    margin: -5vw;
+  }
+}
+@keyframes typst-debug-react-ripple-effect {
+  to {
+    width: 3vw;
+    height: 3vw;
+    opacity: 0.01;
+    margin: -1.5vw;
+  }
+}
+</style>
+<script>/// https://segmentfault.com/a/1190000016574288
+(function () {
+  var ie = !!(window.attachEvent && !window.opera);
+  var wk = /webkit\/(\d+)/i.test(navigator.userAgent) && RegExp.$1 < 525;
+  var fn = [];
+  var run = function () {
+    for (var i = 0; i < fn.length; i++) fn[i]();
+  };
+  var d = document;
+  d.ready = function (f) {
+    if (!ie && !wk && d.addEventListener) return d.addEventListener('DOMContentLoaded', f, false);
+    if (fn.push(f) > 1) return;
+    if (ie)
+      (function () {
+        try {
+          d.documentElement.doScroll('left');
+          run();
+        } catch (err) {
+          setTimeout(arguments.callee, 0);
+        }
+      })();
+    else if (wk)
+      var t = setInterval(function () {
+        if (/^(loaded|complete)$/.test(d.readyState)) clearInterval(t), run();
+      }, 0);
+  };
+})();
+</script>
+<script type="module" src="/typst/typst-main.js"></script><script src="/typst/svg-utils.js"></script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Jie</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/SteinsGate_all.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Binary-indexed-tree"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-09-14 13:03" pubdate>
+          2026年9月14日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          9.8k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          82 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">Binary-indexed-tree</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p><a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1ce411u7qP/?spm_id_from=333.337.search-card.all.click&vd_source=bc8ddbb1a08707dc809c3fd9bb85290d">B 站参考视频</a></p>
+<h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>Binary Indexed Tree (BIT, 又称 Fenwick 树, 树状数组) 是一种比较巧妙的数据结构, 能够以 $O(logn)$ 做元素修改和前缀和查询.</p>
+<p>之所以设计这么个数据结构, 想象下面场景, 假设我们有一个长度为 n 的数组 a, 需要反复做两类操作:</p>
+<ol>
+<li>修改: <code>a[i] += delta</code></li>
+<li>查询: 求 <code>a[l] + a[l+1] + ... + a[r-1]</code> (即区间 <code>[l,r)</code>)</li>
+</ol>
+<p>上面的两个操作只是示例, 比如修改也可以是 <code>a[i] = new_val</code>, 查询也可以是 <code>max(a[l..r])</code> 等等. 核心思路是利用二进制拆分进行前缀信息维护.</p>
+<p>如果是普通数组的形式:</p>
+<ul>
+<li>修改是 $O(1)$</li>
+<li>查询是 $O(n)$ 需要把区间扫一遍</li>
+</ul>
+<p>如果是直接存储前缀和 <code>pre[i] = a[0] + ... + a[i-1]</code>:</p>
+<ul>
+<li>查询变成 <code>pre[r] - pre[l]</code>, $O(1)$</li>
+<li>但只要 <code>a[i]</code> 变更, <code>pre[i+1]</code>, <code>pre[i+2]</code>, …, <code>pre[n]</code> 全部都得改, 修改退化到 $O(n)$</li>
+</ul>
+<p>为此, 就需要有一种折中的办法, 虽然修改和查询都不能到 $O(1)$, 但都能优化到 $O(logn)$, 不至于是 $O(n)$.</p>
+<h1 id="思路"><a href="#思路" class="headerlink" title="思路"></a>思路</h1><p>从一些简单的方法开始想:</p>
+<p><img src="/../img/bit-length-n-array-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>对于一个上万长度的数组, 要是挨个遍历求和会比较慢 (假设长度为 10000, 那么就得计算 10000 次), 那么要是先预处理每两个之间的求和得到一个新数组 (新数组长度就是 5000 了), 之后遍历求和的次数相当于减半了 (从 10000 变成了 5000):</p>
+<p><img src="/../img/bit-length-half-array-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>此时空间多了 $\frac{n}{2}$, 修改数据也就是多改一个数字. 比如 数组第一个元素 <code>8</code> 变成了 5, 还需要把新数组的 <code>14</code> 改成 <code>11</code>.</p>
+<p>既然预先计算两个之和能减少一半遍历次数, 那么计算四个之和呢:</p>
+<p><img src="/../img/bit-length-quad-array-example.png" srcset="/img/loading.gif" lazyload></p>
+<p>又减少了一半, 那么按照这个思路, 可以一路向上叠, 直到只剩下一个元素为止:</p>
+<p><img src="/../img/bit-overlay-to-only-one-digit.png" srcset="/img/loading.gif" lazyload></p>
+<p>此时比如要想求 <code>[0..3]</code> 的和, 可以直接取 <code>19</code>. 如果想求 <code>[0..5]</code>, 可以取 <code>19 + 10</code>. 前提是能够根据索引范围找到对应的块.</p>
+<p>上述预计算的这些空间占用挺大的, 还得想办法精简一些压缩到一个数组中, 既然目的是快速查找前缀和, 那么只要一部分元素能够表达所有的区间, 剩下的元素就可以舍弃.</p>
+<p>我们先考虑前缀和 $S(x)$ 的数学定义:</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs stylus"><span class="hljs-function"><span class="hljs-title">S</span><span class="hljs-params">(x)</span></span> = A<span class="hljs-selector-attr">[1]</span> + A<span class="hljs-selector-attr">[2]</span> + ... + A<span class="hljs-selector-attr">[x]</span><br></code></pre></td></tr></table></figure>
+
+<p>比如 <code>S(3) = A[1] + A[2] + A[3]</code>, 又比如 <code>S(4) = A[1] + A[2] + A[3] + A[4]</code>. 这里的左端点都是固定的, 右端点在变化, 因此想要将金字塔的内容压缩到一个数组内, 按照右端点来存比较好. 而且需要存区间覆盖面积最大的, 比如有一个位置, 存 <code>[1..4]</code> 好还是 <code>[2..4]</code> 好, 那当然是前者, 因为包含了后者.</p>
+<p>这里我们有哪些区间 (从图中列出来):</p>
+<ul>
+<li>长度为 1 的区间有 16 个, 比如 <code>[1..1]</code>, <code>[2..2]</code></li>
+<li>长度为 2 的区间有 8 个, 比如 <code>[1..2]</code>, <code>[3..4]</code></li>
+<li>长度为 4 的区间有 4 个, 比如 <code>[1..4]</code>, <code>[5..8]</code></li>
+<li>长度为 8 的区间有 2 个, <code>[1..8]</code>, <code>[9..16]</code></li>
+<li>长度为 16 的区间只有 1 个, <code>[1..16]</code></li>
+</ul>
+<p>其中:</p>
+<ul>
+<li>以 1 为右端点的只有 <code>[1..1]</code>, 因此 <code>tmp[1]</code> 就存 <code>[1..1]</code></li>
+<li>以 2 为右端点的有 <code>[2..2]</code>, <code>[1..2]</code>, 其中 <code>[1..2] = A[1] + A[2]</code>, 明显信息量更大, 因此选这个覆盖信息更多的, <code>tmp[2]</code> 存 <code>[1..2]</code></li>
+<li>以 3 为右端点的只有 <code>[3..3]</code>, 因此 <code>tmp[3]</code> 存 <code>[3..3]</code></li>
+<li>以 4 为右端点的有 <code>[4..4]</code>, <code>[3..4]</code>, <code>[1..4]</code>, 这里 <code>tmp[4]</code> 存 <code>[1..4]</code></li>
+</ul>
+<p>覆盖所有的右端点后, 其实相当于每个位置选了一个区间来存:</p>
+<p><img src="/../img/bit-remove-unused-element.png" srcset="/img/loading.gif" lazyload></p>
+<p>剩下的元素个数恰好是 <code>n</code> 个.</p>
+<p>但我们怎么知道 <code>tmp[x]</code> 实际存储的区间长度是多少呢? 这个需要观察点规律:</p>
+<table>
+<thead>
+<tr>
+<th>索引 $x$ (十进制)</th>
+<th>索引 $x$ (二进制)</th>
+<th>区间长度 (十进制)</th>
+<th>区间长度 (二进制)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>1</strong></td>
+<td>$(0001)_2$</td>
+<td><strong>1</strong></td>
+<td>$(0001)_2$</td>
+</tr>
+<tr>
+<td><strong>2</strong></td>
+<td>$(0010)_2$</td>
+<td><strong>2</strong></td>
+<td>$(0010)_2$</td>
+</tr>
+<tr>
+<td><strong>3</strong></td>
+<td>$(0011)_2$</td>
+<td><strong>1</strong></td>
+<td>$(0001)_2$</td>
+</tr>
+<tr>
+<td><strong>4</strong></td>
+<td>$(0100)_2$</td>
+<td><strong>4</strong></td>
+<td>$(0100)_2$</td>
+</tr>
+<tr>
+<td><strong>5</strong></td>
+<td>$(0101)_2$</td>
+<td><strong>1</strong></td>
+<td>$(0001)_2$</td>
+</tr>
+<tr>
+<td><strong>6</strong></td>
+<td>$(0110)_2$</td>
+<td><strong>2</strong></td>
+<td>$(0010)_2$</td>
+</tr>
+<tr>
+<td><strong>7</strong></td>
+<td>$(0111)_2$</td>
+<td><strong>1</strong></td>
+<td>$(0001)_2$</td>
+</tr>
+<tr>
+<td><strong>8</strong></td>
+<td>$(1000)_2$</td>
+<td><strong>8</strong></td>
+<td>$(1000)_2$</td>
+</tr>
+</tbody></table>
+<p>可以发现, 区间长度就是 2 以索引二进制末尾 <code>1</code> 的位置为幂, 比如 <code>x = 5</code>, 二进制是 <code>0101</code>, 区间长度就是 $2^0 &#x3D; 0$, 本质就是 <code>0001</code> 的值.</p>
+<p>而末尾 <code>1</code> 的值通常就称 <code>lowbit</code>. 计算公式在下一小节.</p>
+<p>在得到 <code>lowbit</code> 值之后, <code>tmp[i]</code> 就能够表示 <code>(i - lowbit(i), i]</code> 的区间和.</p>
+<p>有了这些东西, 就能开始修改和查询的思路说明. 同样在后面的章节.</p>
+<h2 id="lowbit"><a href="#lowbit" class="headerlink" title="lowbit"></a>lowbit</h2><p><code>lowbit</code> 的计算公式是:</p>
+<figure class="highlight llvm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs llvm">lowbit(<span class="hljs-keyword">x</span>) <span class="hljs-operator">=</span> <span class="hljs-keyword">x</span> &amp; (-<span class="hljs-keyword">x</span>)<br></code></pre></td></tr></table></figure>
+
+<p>推理如下, 我们的目的是保留 <code>x</code> 二进制里最低位的那个 <code>1</code>, 其他位全部清零.</p>
+<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs abnf"><span class="hljs-attribute">x</span> <span class="hljs-operator">=</span> <span class="hljs-number">12</span> <span class="hljs-operator">=</span> <span class="hljs-number">1100</span><br>预期得到 <span class="hljs-number">0100</span> <span class="hljs-operator">=</span> <span class="hljs-number">4</span><br></code></pre></td></tr></table></figure>
+
+<p>首先我们知道 <code>x + (-x) = 0</code>, <code>-x</code> 是补码, 先按位取反, 然后加上 1:</p>
+<p>先看 <code>~x</code> 按位取反. 由于 <code>x</code> 和 <code>~x</code> 每一位都相反, 因此必定会有 1, 所以:</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">x</span> + ~x = <span class="hljs-number">1111</span>...<span class="hljs-number">1111</span> = <span class="hljs-number">2</span>^w - <span class="hljs-number">1</span><br></code></pre></td></tr></table></figure>
+
+<p>此时两边加上 <code>1</code> 就有:</p>
+<figure class="highlight llvm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs llvm"><span class="hljs-keyword">x</span> + (~<span class="hljs-keyword">x</span> + <span class="hljs-number">1</span>) <span class="hljs-operator">=</span> <span class="hljs-number">0</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">x</span> + (-<span class="hljs-keyword">x</span>)<br>-<span class="hljs-keyword">x</span> <span class="hljs-operator">=</span> ~<span class="hljs-keyword">x</span> + <span class="hljs-number">1</span><br></code></pre></td></tr></table></figure>
+
+<p>我们把 <code>x</code> 从最低位那个 <code>1</code> 处切开有:</p>
+<figure class="highlight abnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs abnf"><span class="hljs-attribute">x</span> <span class="hljs-operator">=</span> [高位部分] <span class="hljs-number">1</span> [k 个 <span class="hljs-number">0</span>]<br></code></pre></td></tr></table></figure>
+
+<p>其中 <code>k</code> 是最低位 <code>1</code> 右边 0 的个数, 例如 <code>x = 12 = 1100</code>, 右边有两个 <code>0</code>, <code>k = 2</code>.</p>
+<p>第一步取反:</p>
+<figure class="highlight inform7"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs inform7">~x = <span class="hljs-comment">[高位部分的反码]</span> 0 <span class="hljs-comment">[k 个 1]</span><br></code></pre></td></tr></table></figure>
+
+<p>第二步, 加上 <code>1</code>, 此时末尾连续的 <code>1</code> 会变成 <code>0</code>, 并且把那个 <code>0</code> 顶成 <code>1</code>:</p>
+<figure class="highlight inform7"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs inform7">-x = ~x + 1 = <span class="hljs-comment">[高位部分的反码]</span> 1 <span class="hljs-comment">[k 个 0]</span><br></code></pre></td></tr></table></figure>
+
+<p>现在把 <code>x</code> 和 <code>-x</code> 按位与:</p>
+<figure class="highlight inform7"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs inform7">x   = <span class="hljs-comment">[高位部分]</span>    1 <span class="hljs-comment">[k 个 0]</span><br>-x  = <span class="hljs-comment">[高位部分反码]</span> 1 <span class="hljs-comment">[k 个 0]</span><br>AND = <span class="hljs-comment">[全 0]</span>        1 <span class="hljs-comment">[k 个 0]</span><br></code></pre></td></tr></table></figure>
+<p>结果就是单独一个 <code>1</code> 留在第 <code>k</code> 位, 这正是 lowbit.</p>
+<h2 id="Query"><a href="#Query" class="headerlink" title="Query"></a>Query</h2><p>求前缀和的公式为:</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs stylus"><span class="hljs-function"><span class="hljs-title">S</span><span class="hljs-params">(x)</span></span> = A<span class="hljs-selector-attr">[1]</span> + A<span class="hljs-selector-attr">[2]</span> + ... + A<span class="hljs-selector-attr">[x]</span><br></code></pre></td></tr></table></figure>
+
+<p>也就是区间 <code>(0, x]</code> 的所有元素和. 右端点在 <code>tmp[x]</code> 处恰好对应, 且它维护的范围是 <code>(x - lowbit(x), x]</code>, 先把这部分加上:</p>
+<figure class="highlight arcade"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs arcade"><span class="hljs-built_in">sum</span> = <span class="hljs-built_in">sum</span> + tmp[x]<br></code></pre></td></tr></table></figure>
+
+<p>剩下还需要加上 <code>(0, x - lowbit(x)]</code>, 其实就是再加上 <code>tmp[x - lowbit(x)]</code>:</p>
+<figure class="highlight arcade"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs arcade"><span class="hljs-built_in">sum</span> = <span class="hljs-built_in">sum</span> + tmp[x - lowbit(x)]<br></code></pre></td></tr></table></figure>
+
+<p>接着往后面加, 直到 <code>x = 0</code> 说明加完了.</p>
+<p>每次减去 <code>lowbit(x)</code>, 本质上就是把 <code>x</code> 的二进制表示里的每一个 <code>1</code> 拆出来.</p>
+<h2 id="Update"><a href="#Update" class="headerlink" title="Update"></a>Update</h2><p>修改位置 <code>x</code> 的元素, 那么所有包括 <code>x</code> 的区间和也会发生变化, 那么 <code>tmp</code> 中哪些包含了位置 <code>x</code> 呢:</p>
+<ul>
+<li>首先以 <code>x</code> 为端点的 <code>tmp[x]</code> 肯定要更新</li>
+<li>以 <code>i</code> 为端点且 <code>i &lt; x</code> 的 <code>tmp[i]</code> 不用更新, 毕竟 <code>tmp[i]</code> 都没有包含 <code>x</code>, 它改变了也没影响</li>
+<li>那么 <code>i &gt; x</code> 就有可能更新, 前提是 <code>i - lowbit(i)</code> 需要小于 <code>x</code></li>
+</ul>
+<p>针对上面的第三点, <code>i - lowbit(i) &lt; x</code>, 意味着 <code>tmp[i]</code> 的区间需要大, 而我们知道区间长度是 <code>i</code> 二进制表示的最低位 <code>1</code>, 比如 <code>100100</code> 如果让它进位为 <code>101000</code>, 那么 <code>lowbit</code> 就会变大, 而 <code>i + lowbit(i)</code> 就能实现这个进位 (<code>100100 + 000100</code>).</p>
+<p>比如 <code>k = x + lowbit(x)</code>, 由于进位, 一定就有 <code>lowbit(k) &gt;= 2 * lowbit(x)</code> (比如 <code>lowbit(0b1001) = 2^1</code>, 进位后 <code>lowbit(0b1010) = 2^2</code>), 那么就有 <code>k - lowbit(k) = x + lowbit(x) - lowbit(k) &lt;= x - lowbit(x) &lt; x</code>, 既然左区间小于 <code>x</code>, 说明就是包含了 <code>x</code>. 因此 <code>tmp(x + lowbit(x))</code> 也需要更新. 直到右边界更新到超出 n.</p>
+<p>这里可能会有一个疑惑, 直接改 <code>x + lowbit(x)</code>, 那 <code>x + 1</code>, <code>x + 2</code> 这些中间值需要改吗? 答案是不需要. 假设我们加上了一个比 <code>lowbit(x)</code> 小的数 $\Delta$ (即 $0 &lt; \Delta &lt; lowbit(x)$), 令 $k &#x3D; x + \Delta$, 根据二进制性质, 因为 $\Delta$ 太小, 无法让 <code>x</code> 的低位 <code>1</code> 发生进位, 就会有:</p>
+<ul>
+<li><code>k</code> 的右边界挪到了 $x + \Delta$</li>
+<li><code>lowbit(k)</code> 最多只能等于 $lowbit(\Delta)$</li>
+<li>左边界为 $k - lowbit(k) \ge (x + \Delta) - \Delta &#x3D; x$, 即左边界最小也就是 <code>x</code>, 但是是开区间所以不包括</li>
+</ul>
+<h1 id="实现示例"><a href="#实现示例" class="headerlink" title="实现示例"></a>实现示例</h1><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-comment">/// 树状数组 (Fenwick Tree / Binary Indexed Tree)</span><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">struct</span> <span class="hljs-title class_">FenwickTree</span> &#123;<br>    tree: <span class="hljs-type">Vec</span>&lt;<span class="hljs-type">i64</span>&gt;,<br>    n: <span class="hljs-type">usize</span>,<br>&#125;<br><br><span class="hljs-keyword">impl</span> <span class="hljs-title class_">FenwickTree</span> &#123;<br>    <span class="hljs-comment">/// 计算 lowbit</span><br>    <span class="hljs-meta">#[inline]</span><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">lowbit</span>(x: <span class="hljs-type">usize</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">usize</span> &#123;<br>        <span class="hljs-comment">// 利用 Rust 补码位运算求 lowbit</span><br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">x_i</span> = x <span class="hljs-keyword">as</span> <span class="hljs-type">isize</span>;<br>        (x_i &amp; -x_i) <span class="hljs-keyword">as</span> <span class="hljs-type">usize</span><br>    &#125;<br><br>    <span class="hljs-comment">/// 初始化指定大小为 n 的树状数组（内部使用 1-based 索引，所以开辟 n + 1 空间）</span><br>    <span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">new</span>(n: <span class="hljs-type">usize</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-keyword">Self</span> &#123;<br>        <span class="hljs-keyword">Self</span> &#123;<br>            tree: <span class="hljs-built_in">vec!</span>[<span class="hljs-number">0</span>; n + <span class="hljs-number">1</span>],<br>            n,<br>        &#125;<br>    &#125;<br><br>    <span class="hljs-comment">/// 单点增加：在原数组第 idx (1-based) 位置增加 val</span><br>    <span class="hljs-comment">/// 复杂度: O(log N)</span><br>    <span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">add</span>(&amp;<span class="hljs-keyword">mut</span> <span class="hljs-keyword">self</span>, <span class="hljs-keyword">mut</span> idx: <span class="hljs-type">usize</span>, val: <span class="hljs-type">i64</span>) &#123;<br>        <span class="hljs-built_in">assert!</span>(idx &gt; <span class="hljs-number">0</span> &amp;&amp; idx &lt;= <span class="hljs-keyword">self</span>.n, <span class="hljs-string">&quot;Index out of bounds&quot;</span>);<br>        <span class="hljs-keyword">while</span> idx &lt;= <span class="hljs-keyword">self</span>.n &#123;<br>            <span class="hljs-keyword">self</span>.tree[idx] += val;<br>            idx += <span class="hljs-keyword">Self</span>::<span class="hljs-title function_ invoke__">lowbit</span>(idx); <span class="hljs-comment">// 向右向上更新覆盖区间</span><br>        &#125;<br>    &#125;<br><br>    <span class="hljs-comment">/// 查询前缀和：求区间 [1, idx] 的元素之和</span><br>    <span class="hljs-comment">/// 复杂度: O(log N)</span><br>    <span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">query_prefix</span>(&amp;<span class="hljs-keyword">self</span>, <span class="hljs-keyword">mut</span> idx: <span class="hljs-type">usize</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">i64</span> &#123;<br>        <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">sum</span> = <span class="hljs-number">0</span>;<br>        <span class="hljs-keyword">while</span> idx &gt; <span class="hljs-number">0</span> &#123;<br>            sum += <span class="hljs-keyword">self</span>.tree[idx];<br>            idx -= <span class="hljs-keyword">Self</span>::<span class="hljs-title function_ invoke__">lowbit</span>(idx); <span class="hljs-comment">// 向左向剥离二进制 1</span><br>        &#125;<br>        sum<br>    &#125;<br><br>    <span class="hljs-comment">/// 区间和查询：求闭区间 [left, right] (1-based) 的元素之和</span><br>    <span class="hljs-comment">/// 利用前缀和性质：Sum(left..right) = Prefix(right) - Prefix(left - 1)</span><br>    <span class="hljs-comment">/// 复杂度: O(log N)</span><br>    <span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">query_range</span>(&amp;<span class="hljs-keyword">self</span>, left: <span class="hljs-type">usize</span>, right: <span class="hljs-type">usize</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">i64</span> &#123;<br>        <span class="hljs-keyword">if</span> left &gt; right &#123;<br>            <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>        &#125;<br>        <span class="hljs-keyword">self</span>.<span class="hljs-title function_ invoke__">query_prefix</span>(right) - <span class="hljs-keyword">self</span>.<span class="hljs-title function_ invoke__">query_prefix</span>(left - <span class="hljs-number">1</span>)<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h1 id="抽象"><a href="#抽象" class="headerlink" title="抽象"></a>抽象</h1><p>Binary Indexed Tree 本质上是一个基于二进制拆分的 “动态前缀信息维护器”, 因此肯定不限于之前示例的累加和查询区间和操作.</p>
+<p>设计 BIT 时, 核心是抽象出 index (索引), value (值), <code>update &amp; query</code> (操作语义):</p>
+<ul>
+<li>Index (下标), 通常不是原数组的简单序号, 而是某种被排序, 离散化或状态化后的指标 (比如数值大小, 时间戳, 坐标等, 通常需要反问: 我要按什么做前缀统计)</li>
+<li>Value (数值), 树状数组中保存的统计量 (比如频次&#x2F;计数, 最大值, 概率, 某种权重的累加和等, 需要反问: 我要在这个 index 范围内统计什么)</li>
+<li>Update &amp; Query, update 指在产生一个新的数据点时, 如何在某个 index 上增加&#x2F;覆盖 Value; 而 query 指查询 index 在 <code>[1, k]</code> 范围内 (即前缀) 的 value 合并结果</li>
+</ul>
+<p>一个经典的例子是求 “无序数组中的逆序对数量”, 比如: 给定一个无序数组 <code>[5, 2, 6, 1]</code>, 求逆序对 (即满足 <code>i &lt; j</code> 且 <code>A[i] &gt; A[j]</code> 的下标对数).</p>
+<p>如果我们从左到右遍历数组, 对于当前遍历到的数 <code>v</code>, 我们需要知道在它左边已经出现的数里, 有多少个数比 <code>v</code> 大 (比如 <code>1</code>, 它左边有 3 个数比它大, 那么至少就有 3 个逆序对).</p>
+<p>一个重要的思考是: 原数组的下标顺序关系不重要, 也不需要存储. 因为我们会顺序遍历原数组来构建 BIT, 数据点的出现已经是顺序的了, 此时的统计信息, 就一定是前缀的统计量.</p>
+<p>比如这个问题可以这样设计:</p>
+<ul>
+<li>Index 是数值本身的大小</li>
+<li>Value 是该数值出现的频次</li>
+<li><code>Update(v, 1)</code> 表示该数值出现了一次, 在该位置计数 <code>+1</code></li>
+<li><code>Query(v)</code> 查询当前已遍历的数中, 数值 $\le v$ 的数字一共有多少个 (前缀频次和)</li>
+</ul>
+<p>以 <code>[5, 2, 6, 1]</code> 为例, 执行过程为:</p>
+<figure class="highlight tap"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs tap">1. 处理数字 5:<br>   - 比<span class="hljs-number"> 5 </span>小或等于的数有：Query(5) =<span class="hljs-number"> 0 </span>个。<br>   - 当前已出现的总数：0 个。比<span class="hljs-number"> 5 </span>大的个数 =<span class="hljs-number"> 0 </span>-<span class="hljs-number"> 0 </span>= 0。 (逆序对 +0)<br>   - 执行 Update(5, 1)：在 Index=5 处计数 +1。<br><br>2. 处理数字 2:<br>   - 比<span class="hljs-number"> 2 </span>小或等于的数有：Query(2) =<span class="hljs-number"> 0 </span>个。<br>   - 当前已出现的总数：1 个（即之前的 5）。比<span class="hljs-number"> 2 </span>大的个数 =<span class="hljs-number"> 1 </span>-<span class="hljs-number"> 0 </span>= 1。 (逆序对 +1)<br>   - 执行 Update(2, 1)：在 Index=2 处计数 +1。<br><br>3. 处理数字 6:<br>   - 比<span class="hljs-number"> 6 </span>小或等于的数有：Query(6) =<span class="hljs-number"> 2 </span>个（2 和 5）。<br>   - 当前已出现的总数：2 个。比<span class="hljs-number"> 6 </span>大的个数 =<span class="hljs-number"> 2 </span>-<span class="hljs-number"> 2 </span>= 0。 (逆序对 +0)<br>   - 执行 Update(6, 1)：在 Index=6 处计数 +1。<br><br>4. 处理数字 1:<br>   - 比<span class="hljs-number"> 1 </span>小或等于的数有：Query(1) =<span class="hljs-number"> 0 </span>个。<br>   - 当前已出现的总数：3 个（5, 2, 6）。比<span class="hljs-number"> 1 </span>大的个数 =<span class="hljs-number"> 3 </span>-<span class="hljs-number"> 0 </span>= 3。 (逆序对 +3)<br>   - 执行 Update(1, 1)：在 Index=1 处计数 +1。<br><br>总逆序对个数 =<span class="hljs-number"> 0 </span>+<span class="hljs-number"> 1 </span>+<span class="hljs-number"> 0 </span>+<span class="hljs-number"> 3 </span>= 4。<br></code></pre></td></tr></table></figure>
+
+<h1 id="最长递增子序列长度"><a href="#最长递增子序列长度" class="headerlink" title="最长递增子序列长度"></a>最长递增子序列长度</h1><p>求最长递增子序列长度的朴素动态规划思路是: 令 <code>dp[i]</code> 表示以第 <code>i</code> 个数 <code>A[i]</code> 结尾的最长递增子序列长度. 为了求 <code>dp[i]</code>, 就需要在前 <code>i-1</code> 个数里面, 找到一个满足 <code>A[j] &lt; A[i]</code> 的位置 <code>j</code>, 并取出最大的 <code>dp[j]</code>. 伪代码是:</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs stylus"><span class="hljs-keyword">for</span> <span class="hljs-selector-tag">i</span> from <span class="hljs-number">1</span> to N:<br>    <span class="hljs-keyword">for</span> j from <span class="hljs-number">1</span> to i-<span class="hljs-number">1</span>:    &lt;-- 痛点在这里！<br>        <span class="hljs-keyword">if</span> A<span class="hljs-selector-attr">[j]</span> &lt; A<span class="hljs-selector-attr">[i]</span>:<br>            dp<span class="hljs-selector-attr">[i]</span> = <span class="hljs-built_in">max</span>(dp<span class="hljs-selector-attr">[i]</span>, dp<span class="hljs-selector-attr">[j]</span> + <span class="hljs-number">1</span>)<br></code></pre></td></tr></table></figure>
+
+<p>内层循环会把前面所有的 j 都线性扫描一遍, 这导致 $O(n)$ 的时间复杂度. 因为这里有两个限制条件:</p>
+<ol>
+<li>位置限制: <code>j &lt; i</code> (j 必须在当前数的前面出现)</li>
+<li>数值限制: <code>A[j] &lt; A[i]</code> (j 位置的数值必须比当前数值小)</li>
+</ol>
+<p>如果我们是从左往右遍历数组 A 的, 并且每次都会从元素中取出统计信息存入某个数据结构, 那么 <code>j &lt; i</code> 天然就是满足的, 因为遍历到当前数时, 前面的数的信息已经处理保存了.</p>
+<p>这里有很明显的要使用 “前缀的统计信息” 这个标志, 并且要一个一个追加, 说明可以用 BIT 来优化.</p>
+<p>因此只剩下 <code>A[j] &lt; A[i]</code> 这个条件, 数据结构中我们需要存储的统计信息就是 dp 值 (最长递增子序列长度), 那要如何存才能在前缀中快速找到 “所有数值比 <code>A[i]</code> 小的那些 dp 值的最大值” 呢?</p>
+<p>假设直接用 “数组下标” 作为 index, 此时数据结构中存的是 <code>[dp[1], dp[2], dp[3], ...]</code>, 当你处理到 <code>A[i] = 5</code> 时, 还是需要从数据结构中顺序遍历, 因为此时的 <code>index</code> 不具备判断信息.</p>
+<p>要让 <code>index</code> 具有数值顺序信息, 那么就用 “数值本身” 作为 index (这里的一个启示是, index 的设计需要考虑判断条件的顺序关系).</p>
+<p>此时 <code>tree[v]</code> 表示在已经处理的数中, 数值为 v 的那个数对应的最大 DP 值. .</p>
+<p>此时 “比当前数值 <code>A[i]</code> 小这个条件”, 在 index 上就变成了: 寻找 Index 落在 <code>[1, A[i]-1]</code> 范围内的最大值.</p>
+<p>需要注意, 如果一个数值是 <code>10000</code>, 是不是要创建一个大小为 <code>10000</code> 的数组呢? 肯定不能这样做. 我们可以发现 LIS 根本不在意具体数值大小, 而只是关注其相对顺序 (比如 <code>[100, 200, 500]</code> 和 <code>[1, 2, 3]</code> 在这里是完全等价的). 因此可以做一次离散化, 把真实的数值映射为它们的排名 (rank).</p>
+<p>实现示例:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">impl</span> <span class="hljs-title class_">Solution</span> &#123;<br>    <span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">length_of_lis</span>(nums: <span class="hljs-type">Vec</span>&lt;<span class="hljs-type">i32</span>&gt;) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">i32</span> &#123;<br>        <span class="hljs-keyword">if</span> nums.<span class="hljs-title function_ invoke__">is_empty</span>() &#123; <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>; &#125;<br><br>        <span class="hljs-comment">// 1. 离散化：将数值映射到 [1, M] 的排名，解决大数/负数下标问题</span><br>        <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">sorted_nums</span> = nums.<span class="hljs-title function_ invoke__">clone</span>();<br>        sorted_nums.<span class="hljs-title function_ invoke__">sort_unstable</span>();<br>        sorted_nums.<span class="hljs-title function_ invoke__">dedup</span>();<br><br>        <span class="hljs-comment">// 2. 初始化树状数组（维护前缀最大值）</span><br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">m</span> = sorted_nums.<span class="hljs-title function_ invoke__">len</span>();<br>        <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">bit</span> = BIT::<span class="hljs-title function_ invoke__">new</span>(m);<br>        <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">max_lis</span> = <span class="hljs-number">0</span>;<br><br>        <span class="hljs-comment">// 3. 按顺序遍历 nums，进行 DP 转移</span><br>        <span class="hljs-keyword">for</span> &amp;num <span class="hljs-keyword">in</span> &amp;nums &#123;<br>            <span class="hljs-comment">// 获取当前 num 离散化后的 1-based 索引</span><br>            <span class="hljs-keyword">let</span> <span class="hljs-variable">rank</span> = sorted_nums.<span class="hljs-title function_ invoke__">binary_search</span>(&amp;num).<span class="hljs-title function_ invoke__">unwrap</span>() + <span class="hljs-number">1</span>;<br><br>            <span class="hljs-comment">// 查询严格小于 current num 的最大 DP 值（即区间 [1, rank - 1]）</span><br>            <span class="hljs-keyword">let</span> <span class="hljs-variable">prev_max</span> = bit.<span class="hljs-title function_ invoke__">query</span>(rank - <span class="hljs-number">1</span>);<br>            <span class="hljs-keyword">let</span> <span class="hljs-variable">cur_dp</span> = prev_max + <span class="hljs-number">1</span>;<br><br>            <span class="hljs-comment">// 更新树状数组在 rank 位置上的 DP 值</span><br>            bit.<span class="hljs-title function_ invoke__">update</span>(rank, cur_dp);<br><br>            max_lis = max_lis.<span class="hljs-title function_ invoke__">max</span>(cur_dp);<br>        &#125;<br><br>        max_lis<br>    &#125;<br>&#125;<br><br><span class="hljs-comment">// 维护前缀最大值的树状数组 (Fenwick Tree)</span><br><span class="hljs-keyword">struct</span> <span class="hljs-title class_">BIT</span> &#123;<br>    tree: <span class="hljs-type">Vec</span>&lt;<span class="hljs-type">i32</span>&gt;,<br>&#125;<br><br><span class="hljs-keyword">impl</span> <span class="hljs-title class_">BIT</span> &#123;<br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">new</span>(size: <span class="hljs-type">usize</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-keyword">Self</span> &#123;<br>        BIT &#123; tree: <span class="hljs-built_in">vec!</span>[<span class="hljs-number">0</span>; size + <span class="hljs-number">1</span>] &#125;<br>    &#125;<br><br>    <span class="hljs-comment">// 更新 index 位置的最大值</span><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">update</span>(&amp;<span class="hljs-keyword">mut</span> <span class="hljs-keyword">self</span>, <span class="hljs-keyword">mut</span> idx: <span class="hljs-type">usize</span>, val: <span class="hljs-type">i32</span>) &#123;<br>        <span class="hljs-keyword">while</span> idx &lt; <span class="hljs-keyword">self</span>.tree.<span class="hljs-title function_ invoke__">len</span>() &#123;<br>            <span class="hljs-keyword">self</span>.tree[idx] = <span class="hljs-keyword">self</span>.tree[idx].<span class="hljs-title function_ invoke__">max</span>(val);<br>            idx += idx &amp; (!idx + <span class="hljs-number">1</span>); <span class="hljs-comment">// lowbit</span><br>        &#125;<br>    &#125;<br><br>    <span class="hljs-comment">// 查询区间 [1, idx] 内的最大值</span><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">query</span>(&amp;<span class="hljs-keyword">self</span>, <span class="hljs-keyword">mut</span> idx: <span class="hljs-type">usize</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">i32</span> &#123;<br>        <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">max_val</span> = <span class="hljs-number">0</span>;<br>        <span class="hljs-keyword">while</span> idx &gt; <span class="hljs-number">0</span> &#123;<br>            max_val = max_val.<span class="hljs-title function_ invoke__">max</span>(<span class="hljs-keyword">self</span>.tree[idx]);<br>            idx -= idx &amp; (!idx + <span class="hljs-number">1</span>); <span class="hljs-comment">// lowbit</span><br>        &#125;<br>        max_val<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h1 id="最长数对链"><a href="#最长数对链" class="headerlink" title="最长数对链"></a>最长数对链</h1><p>这道题的启示是, <code>tree</code> 的大小是 $O(n)$ 而不是死死的 <code>n</code>. 比如这里就是 <code>2n</code>.</p>
+<p>给一个由 <code>n</code> 个 pair 组成的数组 <code>pairs</code>&lt; 其中 <code>pairs[i] = [left_i, right_i]</code> 且 <code>left_i &lt; right_i</code>.</p>
+<p>对于两个 pair <code>p1 = [a, b]</code>, <code>p2 = [c, d]</code>, 如果 <code>b &lt; c</code>, 则可以形成 <code>p1 -&gt; p2</code> 的链.</p>
+<p>要求找出数组中能形成的最长数对链的长度.</p>
+<p>示例:</p>
+<figure class="highlight inform7"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs inform7">输入：pairs = <span class="hljs-comment">[<span class="hljs-comment">[1,2]</span>, <span class="hljs-comment">[2,3]</span>, <span class="hljs-comment">[3,4]</span>]</span><br>输出：2<br>解释：最长的数对链是 <span class="hljs-comment">[1,2]</span> -&gt; <span class="hljs-comment">[3,4]</span> <br><br>输入：pairs = <span class="hljs-comment">[<span class="hljs-comment">[1,2]</span>,<span class="hljs-comment">[7,8]</span>,<span class="hljs-comment">[4,5]</span>]</span><br>输出：3<br>解释：最长的数对链是 <span class="hljs-comment">[1,2]</span> -&gt; <span class="hljs-comment">[4,5]</span> -&gt; <span class="hljs-comment">[7,8]</span><br></code></pre></td></tr></table></figure>
+
+<p>实现示例:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">impl</span> <span class="hljs-title class_">Solution</span> &#123;<br>    <span class="hljs-keyword">pub</span> <span class="hljs-keyword">fn</span> <span class="hljs-title function_">find_longest_chain</span>(pairs: <span class="hljs-type">Vec</span>&lt;<span class="hljs-type">Vec</span>&lt;<span class="hljs-type">i32</span>&gt;&gt;) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">i32</span> &#123;<br>        <span class="hljs-keyword">if</span> pairs.<span class="hljs-title function_ invoke__">is_empty</span>() &#123; <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>; &#125;<br><br>        <span class="hljs-comment">// 1. 收集所有出现过的坐标（包括 left 和 right），进行统一离散化</span><br>        <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">coords</span> = <span class="hljs-type">Vec</span>::<span class="hljs-title function_ invoke__">new</span>();<br>        <span class="hljs-keyword">for</span> <span class="hljs-variable">p</span> <span class="hljs-keyword">in</span> &amp;pairs &#123;<br>            coords.<span class="hljs-title function_ invoke__">push</span>(p[<span class="hljs-number">0</span>]);<br>            coords.<span class="hljs-title function_ invoke__">push</span>(p[<span class="hljs-number">1</span>]);<br>        &#125;<br>        coords.<span class="hljs-title function_ invoke__">sort_unstable</span>();<br>        coords.<span class="hljs-title function_ invoke__">dedup</span>();<br><br>        <span class="hljs-comment">// 2. 按左端点从小到大排序；若左端点相同，按右端点从小到大排序</span><br>        <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">sorted_pairs</span> = pairs;<br>        sorted_pairs.<span class="hljs-title function_ invoke__">sort_unstable_by</span>(|a, b| a[<span class="hljs-number">0</span>].<span class="hljs-title function_ invoke__">cmp</span>(&amp;b[<span class="hljs-number">0</span>]).<span class="hljs-title function_ invoke__">then</span>(a[<span class="hljs-number">1</span>].<span class="hljs-title function_ invoke__">cmp</span>(&amp;b[<span class="hljs-number">1</span>])));<br><br>        <span class="hljs-comment">// 3. 初始化维护前缀最大值的 BIT</span><br>        <span class="hljs-keyword">let</span> <span class="hljs-variable">m</span> = coords.<span class="hljs-title function_ invoke__">len</span>();<br>        <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">bit</span> = BIT::<span class="hljs-title function_ invoke__">new</span>(m);<br>        <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">ans</span> = <span class="hljs-number">0</span>;<br><br>        <span class="hljs-comment">// 4. 按顺序遍历每个数对</span><br>        <span class="hljs-keyword">for</span> <span class="hljs-variable">p</span> <span class="hljs-keyword">in</span> &amp;sorted_pairs &#123;<br>            <span class="hljs-keyword">let</span> <span class="hljs-variable">left</span> = p[<span class="hljs-number">0</span>];<br>            <span class="hljs-keyword">let</span> <span class="hljs-variable">right</span> = p[<span class="hljs-number">1</span>];<br><br>            <span class="hljs-comment">// 获取 left 和 right 离散化后的 1-based rank</span><br>            <span class="hljs-keyword">let</span> <span class="hljs-variable">rank_l</span> = coords.<span class="hljs-title function_ invoke__">binary_search</span>(&amp;left).<span class="hljs-title function_ invoke__">unwrap</span>() + <span class="hljs-number">1</span>;<br>            <span class="hljs-keyword">let</span> <span class="hljs-variable">rank_r</span> = coords.<span class="hljs-title function_ invoke__">binary_search</span>(&amp;right).<span class="hljs-title function_ invoke__">unwrap</span>() + <span class="hljs-number">1</span>;<br><br>            <span class="hljs-comment">// 查询右端点 &lt; left 的所有数对中的最大 DP 值</span><br>            <span class="hljs-comment">// 即：查询区间 [1, rank_l - 1] 的前缀最大值</span><br>            <span class="hljs-keyword">let</span> <span class="hljs-variable">prev_max</span> = bit.<span class="hljs-title function_ invoke__">query</span>(rank_l - <span class="hljs-number">1</span>);<br>            <span class="hljs-keyword">let</span> <span class="hljs-variable">cur_dp</span> = prev_max + <span class="hljs-number">1</span>;<br><br>            <span class="hljs-comment">// 更新当前右端点 rank_r 位置上的 DP 值</span><br>            bit.<span class="hljs-title function_ invoke__">update</span>(rank_r, cur_dp);<br><br>            ans = ans.<span class="hljs-title function_ invoke__">max</span>(cur_dp);<br>        &#125;<br><br>        ans<br>    &#125;<br>&#125;<br><br><span class="hljs-comment">// 维护前缀最大值的树状数组 (BIT)</span><br><span class="hljs-keyword">struct</span> <span class="hljs-title class_">BIT</span> &#123;<br>    tree: <span class="hljs-type">Vec</span>&lt;<span class="hljs-type">i32</span>&gt;,<br>&#125;<br><br><span class="hljs-keyword">impl</span> <span class="hljs-title class_">BIT</span> &#123;<br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">new</span>(size: <span class="hljs-type">usize</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-keyword">Self</span> &#123;<br>        BIT &#123; tree: <span class="hljs-built_in">vec!</span>[<span class="hljs-number">0</span>; size + <span class="hljs-number">1</span>] &#125;<br>    &#125;<br><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">update</span>(&amp;<span class="hljs-keyword">mut</span> <span class="hljs-keyword">self</span>, <span class="hljs-keyword">mut</span> idx: <span class="hljs-type">usize</span>, val: <span class="hljs-type">i32</span>) &#123;<br>        <span class="hljs-keyword">while</span> idx &lt; <span class="hljs-keyword">self</span>.tree.<span class="hljs-title function_ invoke__">len</span>() &#123;<br>            <span class="hljs-keyword">self</span>.tree[idx] = <span class="hljs-keyword">self</span>.tree[idx].<span class="hljs-title function_ invoke__">max</span>(val);<br>            idx += idx &amp; (!idx + <span class="hljs-number">1</span>); <span class="hljs-comment">// lowbit</span><br>        &#125;<br>    &#125;<br><br>    <span class="hljs-keyword">fn</span> <span class="hljs-title function_">query</span>(&amp;<span class="hljs-keyword">self</span>, <span class="hljs-keyword">mut</span> idx: <span class="hljs-type">usize</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">i32</span> &#123;<br>        <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">max_val</span> = <span class="hljs-number">0</span>;<br>        <span class="hljs-keyword">while</span> idx &gt; <span class="hljs-number">0</span> &#123;<br>            max_val = max_val.<span class="hljs-title function_ invoke__">max</span>(<span class="hljs-keyword">self</span>.tree[idx]);<br>            idx -= idx &amp; (!idx + <span class="hljs-number">1</span>); <span class="hljs-comment">// lowbit</span><br>        &#125;<br>        max_val<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><code>left</code> 和 <code>right</code> 都需要用于判定, 因此都要存储. 之所以用 <code>right</code> 来保存, 是因为别人需要用到的是 <code>right</code> 信息, 比如要求 <code>[7, 13]</code> 的最长数对链, 那么需要找的是其他 <code>right &lt; 7</code> 的, 用到的是 <code>right</code>.</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Algorithm/" class="category-chain-item">Algorithm</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Binary-indexed-tree</div>
+      <div>http://example.com/2026/09/14/Binary-indexed-tree/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Jie</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年9月14日</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>许可协议</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2026/09/09/Google-colab-%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8/" title="Google-colab-基本使用">
+                        <span class="hidden-mobile">Google-colab-基本使用</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zKurisu/comments-utterances');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Jie</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Orkarin</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.1/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
