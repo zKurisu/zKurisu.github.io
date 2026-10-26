@@ -24,7 +24,7 @@
 <meta property="og:description" content="介绍该 Blog 记录在参加研究生开源操作系统大赛学到的一些知识点. rootfs因为编译 StarryOS 时, 需要先运行 make rootfs, 因此调研下这个概念. rootfs 正如其名, Root FileSystem, 是 Linux 内核启动过程中挂载的第一个文件系统, 它是所有其他文件系统的根. 但 rootfs 和寻常我们理解的文件系统有所不同, 它是一个由内核在启动阶段自动">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-07-02T12:57:04.000Z">
-<meta property="article:modified_time" content="2026-07-13T06:13:46.548Z">
+<meta property="article:modified_time" content="2026-10-19T07:44:57.634Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -437,7 +437,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          22k 字
+          42k 字
         
       </span>
     
@@ -448,7 +448,7 @@ path.outline_glyph {
         
         
         
-          182 分钟
+          350 分钟
         
       </span>
     
@@ -971,6 +971,433 @@ path.outline_glyph {
 <li><code>let (reply_tx, reply_rx) = oneshot::channel()</code> 得到一对 <code>oneshot::Sender&lt;()&gt;</code> 和 <code>oneshot::Receiver&lt;()&gt;</code></li>
 </ul>
 <h1 id="Middleware"><a href="#Middleware" class="headerlink" title="Middleware"></a>Middleware</h1><p>Middleware (中间件), 是 “Middle” (中间) 和 “Ware” (Software, 软件) 的组合, 意思就是 “处于中间的软件”. 通常位于操作系统和应用程序之间, 或者是请求和响应之间.</p>
+<ul>
+<li>C906 系列是什么, 还有哪些系列, 是哪个公司的产品</li>
+<li>25MHz 8051 是什么</li>
+<li>什么是 RTOS, 与普通 OS 的本质区别是什么, OS 的实现上有很大区别吗</li>
+</ul>
+<h1 id="dev-mem-字符设备"><a href="#dev-mem-字符设备" class="headerlink" title="/dev/mem 字符设备"></a><code>/dev/mem</code> 字符设备</h1><p><code>/dev/mem</code> 是 Linux 中对内存的文件抽象, 编号为 <code>1:1</code> (格式是 <code>major:minor</code>, 即 <code>主设备号:次设备号</code>):</p>
+<ul>
+<li>major 是 <code>1</code>, 表示这是 Linux 内存类字符设备 (memory devices). 告诉内核使用哪个驱动程序</li>
+<li>minor 是 <code>1</code>, 仅用于区分 major device number 下的不同设备节点. 告诉驱动操作哪一个具体的设备</li>
+</ul>
+<p><code>/dev/mem</code> 的设计目的是: 把物理地址空间当成一个文件. 在 <code>open(&quot;/dev/mem&quot;)</code> 之后, <code>lseek/read/write</code> 的 <code>offset</code> 就是物理地址, <code>mmap</code> 会把这段物理区间映射到用户态. 其诞生于驱动生态不够完善的年代, 用于 “绕过驱动直接摸硬件”. 它是用户态接口, 存在的意义就是 “没有驱动时先干活”.</p>
+<p>在 Linux 上, <code>x86/arm64</code> 默认会开 <code>CONFIG_STRICT_DEVMEM</code> 编译选项, 禁止通过它访问 RAM (只允许 MMIO 区域). 设置内核参数 <code>iomem=relaxed</code> 时可以放宽限制.</p>
+<p>内核中的外设驱动在访问物理内存时不会走 <code>/dev/mem</code> 接口, 而是直接用 <code>ioremap</code> 等 API. 用于把一段物理地址映射进内核虚拟地址空间, 属性是 <code>device/uncached</code>.</p>
+<p>由于 <code>/dev/mem</code> 直接暴露给用户态脚本而绕过了驱动层, 就必须让内核保证一些性质:</p>
+<ol>
+<li><code>uncached</code>. 如果 <code>/dev/mem</code> 对应的物理内存被映射为 <code>cachable</code>, 那么用户利用 <code>/dev/mem</code> 向 MMIO 进行写操作时, 可能直接停在了 D-Cache 中, 此时设备读取的就是旧副本, 导致操作滞留.</li>
+<li>宽度与对齐. 利用 <code>/dev/mem</code> 来访问 32 位寄存器时, 如果访问长度不对齐, 可能会直接报总线错误, 此时内核可以保证只用 <code>32</code> 位进行操作</li>
+<li>范围. 用户态想操作的物理地址不一定是 “已映射且合法” 的. 如果对未映射或保留区解引用, 用户态会报 <code>SIGBUS</code>, 内核会直接 <code>page fault</code>, 因此内核需要对范围进行校验, 还需要完成 VA 分配, PTE 属性设置和可能的失败处理等</li>
+</ol>
+<p>StarryOS 上游有提到为什么没有实现 <code>/dev/mem</code>, 因为他们设计为 “不开放任意物理内存”, 而是为具体设备加 “受控的窄接口”.</p>
+<p>这里给出 Linux 上用户态的命令示例 (如果是在 busybox 环境可以用更简洁的 <code>devmem</code> 命令).</p>
+<p>查看设备:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ <span class="hljs-built_in">ls</span> -l /dev/mem<br>crw------- root root 1, 1 Apr 1 10:00 /dev/mem<br></code></pre></td></tr></table></figure>
+<p><code>c</code> 表示字符设备 (char device), <code>rw-------</code> 权限表示只有 root 可读写. <code>1, 1</code> 是 <code>major = 1, minor = 1</code> 的意思.</p>
+<p>从物理地址 <code>0xc0000</code> 开始读取 64 字节, 并以十六进制和 ASCII 显示:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ sudo hexdump -C -s 0xc0000 -n 64 /dev/mem<br>000c0000  <span class="hljs-built_in">df</span> 41 95 6c 20 <span class="hljs-built_in">fc</span> 62 b6  <span class="hljs-built_in">dd</span> 61 97 48 32 dc 60 96  |.A.l .b..a.H2.`.|<br>000c0010  fd e1 b7 c8 12 5c 40 36  fd e0 b7 c9 12 7d 40 17  |.....\@6.....&#125;@.|<br>000c0020  fd e4 b7 <span class="hljs-built_in">cd</span> 12 59 60 13  <span class="hljs-built_in">fc</span> c6 b6 ed 13 79 41 33  |.....Y`......yA3|<br>000c0030  dc 84 96 ad 33 39 61 73  dc 84 96 ad 33 39 61 73  |....39as....39as|<br>000c0040<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>-C</code>, 显示用 canonical hex 和 ASCII</li>
+<li><code>-s</code> (skip), 指定偏移, <code>0xc0000</code> 是传统 PC 的 BIOS&#x2F;VGA ROM 区域</li>
+<li><code>-n 64</code> (number), 只读取 64 字节</li>
+</ul>
+<p>读取某个地址偏移开始的内容, 还可以用 <code>od</code> 命令 (更底层, 格式可控):</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ sudo <span class="hljs-built_in">od</span> -A x -t x1z -j 0xc0000 -N 64 /dev/mem<br>0c0000 <span class="hljs-built_in">df</span> 41 95 6c 20 <span class="hljs-built_in">fc</span> 62 b6 <span class="hljs-built_in">dd</span> 61 97 48 32 dc 60 96  &gt;.A.l .b..a.H2.`.&lt;<br>0c0010 fd e1 b7 c8 12 5c 40 36 fd e0 b7 c9 12 7d 40 17  &gt;.....\@6.....&#125;@.&lt;<br>0c0020 fd e4 b7 <span class="hljs-built_in">cd</span> 12 59 60 13 <span class="hljs-built_in">fc</span> c6 b6 ed 13 79 41 33  &gt;.....Y`......yA3&lt;<br>0c0030 dc 84 96 ad 33 39 61 73 dc 84 96 ad 33 39 61 73  &gt;....39as....39as&lt;<br>0c0040<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>-A x</code> (address), 指定 address 的显式格式为十六进制</li>
+<li><code>-t x1z</code> (format), 显示指定排版格式, <code>x1</code> 表示单字节 hex, <code>z</code> 表示末尾 ASCII</li>
+<li><code>-j 0xc0000</code> (jump), 跳转到偏移处</li>
+<li><code>-N 64</code> (number), 读取的字节数</li>
+</ul>
+<p>还可以用 <code>xxd</code> (VIM 作者编写的经典 hex dump 工具) 来查看:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ sudo xxd -s 0xc0000 -l 64 /dev/mem<br>000c0000: df41 956c 20fc 62b6 dd61 9748 32dc 6096  .A.l .b..a.H2.`.<br>000c0010: fde1 b7c8 125c 4036 fde0 b7c9 127d 4017  .....\@6.....&#125;@.<br>000c0020: fde4 b7cd 1259 6013 fcc6 b6ed 1379 4133  .....Y`......yA3<br>000c0030: dc84 96ad 3339 6173 dc84 96ad 3339 6173  ....39as....39as<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>-s</code> (skip), 跳转到指定偏移</li>
+<li><code>-l</code> (len), 读取的长度</li>
+</ul>
+<p>还能组合 <code>dd</code> 和其他命令:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ sudo <span class="hljs-built_in">dd</span> <span class="hljs-keyword">if</span>=/dev/mem \<br>    iflag=skip_bytes,count_bytes \<br>    skip=$((<span class="hljs-number">0</span>xc0000)) \<br>    count=64 \<br>    status=none \<br>| hexdump -C<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>if=/dev/mem</code> (input file) 指定输入文件</li>
+<li><code>iflag=skip_bytes,count_bytes</code>:<ul>
+<li><code>skip_bytes</code>, 指定后续 <code>skip=</code> 的单位是字节</li>
+<li><code>count_bytes</code>, 指定后续 <code>count=</code> 的单位是字节</li>
+</ul>
+</li>
+<li><code>skip=$((0xc0000))</code>, shell 算术展开为 10 进制</li>
+<li><code>count=64</code> 表示只读 64 字节</li>
+<li><code>status=none</code> 表示不输出 <code>dd</code> 的统计信息, 只保留 <code>hex</code> 数据</li>
+</ul>
+<p>写入的示例 (不要真的运行, 可能宕机):</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-comment"># 32 位小端写：bs=1 让 seek 就是字节偏移，conv=notrunc 表示不截断</span><br><span class="hljs-built_in">printf</span> <span class="hljs-string">&#x27;\x06\x00\x00\x00&#x27;</span> | sudo <span class="hljs-built_in">dd</span> of=/dev/mem bs=1 seek=$((<span class="hljs-number">0</span>x03001064)) conv=notrunc status=none<br></code></pre></td></tr></table></figure>
+
+<h1 id="dev-gpio"><a href="#dev-gpio" class="headerlink" title="/dev/gpio*"></a><code>/dev/gpio*</code></h1><p><code>/dev/gpio</code> 抽象了连接引脚的 line (线) 并暴露给用户态程序. 通常线层需要完成电流方向控制, 电平读写, 电平触发类型设置, 所有权控制 (请求&#x2F;释放一条线并记录使用者, 避免两个消费者抢同一根线) 等功能.</p>
+<p>多一根线可以连接同一个 pad (引脚), 以完成引脚复用. 当然一根线也可以不连接 pad, 只作为内部信号线.</p>
+<p>标准 Linux 里没有统一的 <code>/dev/gpio</code>:</p>
+<ul>
+<li>现代接口通常是 <code>/dev/gpiochipN</code> (字符设备), 每个 GPIO 控制器对应一个 chip 设备, 用 <code>ioctl</code> 来请求 “线”</li>
+<li>旧接口是 <code>/sys/class/gpio</code> (<code>sysfs</code>), 每条线对应其下的一个目录, 读写线的操作都对应为对目录下的文件进行操作</li>
+</ul>
+<p>它们也都同样是用户态入口, 可以用 <code>open/read/write/ioctl</code> 操作, 由 VFS 暴露给进程.</p>
+<p>内核驱动并不会使用 <code>/dev/gpio</code> 作为接口, <code>/dev/*</code> 都是 VFG 留给用户态使用的, 内核内部会走其他的 API.</p>
+<p>Linux 上的用户态程序示例如下.</p>
+<p>查看设备文件:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ <span class="hljs-built_in">ls</span> -l /dev/gpiochip*<br></code></pre></td></tr></table></figure>
+
+<p>或者查看老版本的目录:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ <span class="hljs-built_in">ls</span> /sys/bus/gpio/devices/<br></code></pre></td></tr></table></figure>
+
+<p>查看 GPIO 控制器芯片的内核调试信息:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ sudo <span class="hljs-built_in">cat</span> /sys/kernel/debug/gpio<br>gpiochip0: GPIOs 0-31, parent: platform/fe310000.gpio<br> gpio-0   (                    |led0                ) out lo<br> gpio-1   (                    |button0             ) <span class="hljs-keyword">in</span>  hi<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>gpio-0</code> 是 GPIO 编号</li>
+<li><code>led0</code> 是内核给它起的名字</li>
+<li><code>out lo</code> (output lower), 输出低电平</li>
+<li><code>in hi</code> (input high), 输入高电平</li>
+</ul>
+<p>可以用 <code>gpiodetect</code> 命令列出系统中所有 GPIO 控制器:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ gpiodetect<br>gpiochip0 [INT3450:00] (364 lines)<br></code></pre></td></tr></table></figure>
+
+<p>可以用 <code>gpioinfo</code> 查看每一根 GPIO line 的信息:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ gpioinfo<br>gpiochip0 - 364 lines:<br>line   0: <span class="hljs-string">&quot;LED0&quot;</span> unused input active-high<br>line   1: <span class="hljs-string">&quot;BTN0&quot;</span> unused input active-low<br>line  12: unnamed output active-high<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>0:</code> 是 line 编号</li>
+<li><code>LED0</code> 这一栏是板级定义的名字</li>
+<li><code>used/unused</code> 是使用状态</li>
+<li><code>input/output</code> 是电信号方向</li>
+<li><code>active-high/low</code> 是电平</li>
+</ul>
+<p>可以用 <code>gpioget</code> 读取 GPIO 控制器上某一条 line 的信息:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ gpioget -c gpiochip0 12<br><span class="hljs-string">&quot;12&quot;</span>=inactive<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>-c</code> 指定 controller</li>
+<li><code>12</code> 是 line number</li>
+</ul>
+<p>可以用 <code>gpiomon</code> 监听 GPIO 的边沿变化:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ gpiomon -c gpiochip0 12<br>event: RISING EDGE offset=12 timestamp=[...]<br>event: FALLING EDGE offset=12 timestamp=[...]<br></code></pre></td></tr></table></figure>
+<p>常用于按键, 中断输入, 传感器触发等.</p>
+<p>用 <code>gpioset</code> 进行写入 (该操作有危险, 因为这条 line 可能控制电源, 复位, LED 等):</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ gpioset -c gpiochip0 12=1<br></code></pre></td></tr></table></figure>
+
+<h1 id="dev-pinmux"><a href="#dev-pinmux" class="headerlink" title="/dev/pinmux"></a><code>/dev/pinmux</code></h1><p><code>/dev/pinmux</code> 抽象了引脚 (pad&#x2F;pin) 的复用 (mux) 功能并暴露给用户态程序. 引脚层通常还包含电气配置的功能, 比如上拉&#x2F;下拉, 驱动能力等. 复用和电气配置这些都属于 <code>pinctrl</code> 子系统 (pin control).</p>
+<p>引脚 (pad&#x2F;pin) 是芯片封装上的一根物理焊盘, 程序里通常会用 <code>PinID</code> 来标识. 一根 pad 可以复用做多种功能, 取决于哪根连接它的 “线” 起作用. 比如一个 pad 既可以是 <code>UART1_TX</code>, 也可以是 <code>GPIO</code>, 时钟等.</p>
+<p>Pad 和线 (抽象为 GPIO) 的对应由一张显式的映射表完成, 在 Linux 中叫做 <code>gpio-ranges</code>.</p>
+<p>对 Pad 的抽象需要能够:</p>
+<ul>
+<li>枚举和身份验证, 查看有哪些引脚&#x2F;引脚组&#x2F;功能, 每 bank 多少线</li>
+<li>复用 (mux), 把某组引脚的功能进行切换, 比如 <code>UART1_TX</code> 变为 <code>GPIO</code></li>
+<li>电气配置, 对引脚施加偏置 (上拉&#x2F;下拉&#x2F;保持&#x2F;禁用), 控制驱动强度, 输入使能, 输出使能, 低功耗模式, 查阅厂商参数等</li>
+</ul>
+<p>这里给出 Linux pinctrl 子系统的用户态程序示例.</p>
+<p>查看有哪些 <code>pinctrl</code> 控制器:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ sudo <span class="hljs-built_in">ls</span> /sys/kernel/debug/pinctrl/<br>total 0<br>drwxr-xr-x 2 root root 0 Oct  8 18:24 INT3450:00<br>-r--r--r-- 1 root root 0 Oct  8 18:24 pinctrl-devices<br>-r--r--r-- 1 root root 0 Oct  8 18:24 pinctrl-handles<br>-r--r--r-- 1 root root 0 Oct  8 18:24 pinctrl-maps<br><br>$ sudo <span class="hljs-built_in">cat</span> /sys/kernel/debug/pinctrl/pinctrl-devices<br>name [pinmux] [pinconf]<br>INT3450:00 <span class="hljs-built_in">yes</span> <span class="hljs-built_in">yes</span><br>$ sudo <span class="hljs-built_in">cat</span> /sys/kernel/debug/pinctrl/pinctrl-handles<br>Requested pin control handlers their pinmux maps:<br>device: INT3450:00 current state: none<br>$ sudo <span class="hljs-built_in">cat</span> /sys/kernel/debug/pinctrl/pinctrl-maps<br>Pinctrl maps:<br><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>INT3450:00</code> 是一个 pinctrl 控制器实例</li>
+<li><code>pinctrl-devices</code> 是一个全局文件, 列表包含所有 pinctrl 设备</li>
+<li><code>pinctrl-handles</code> 也是全局文件, 含所有 pinctrl 句柄</li>
+<li><code>pinctrl-maps</code> 也是全局文件, 包含所有 pinctrl 映射</li>
+</ul>
+<p>查看控制器下的引脚总表:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ sudo <span class="hljs-built_in">cat</span> /sys/kernel/debug/pinctrl/INT3450:00/pins | <span class="hljs-built_in">head</span> -n 5<br>registered pins: 299<br>pin 0 (RCINB) 0:INT3450:00 mode 1 0x84000702 0x00000018 0x00000000 [LOCKED full]<br>pin 1 (LAD_0) 1:INT3450:00 mode 1 0x84000702 0x00000019 0x00000000 [LOCKED full, ACPI]<br>pin 2 (LAD_1) 2:INT3450:00 mode 1 0x84000702 0x0000001a 0x00000000 [LOCKED full, ACPI]<br>pin 3 (LAD_2) 3:INT3450:00 mode 1 0x84000702 0x0000001b 0x00000000 [LOCKED full, ACPI]<br></code></pre></td></tr></table></figure>
+
+<p>查看引脚组:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ sudo <span class="hljs-built_in">cat</span> /sys/kernel/debug/pinctrl/INT3450:00/pingroups | <span class="hljs-built_in">head</span> -n 7<br>registered pin <span class="hljs-built_in">groups</span>:<br>group: spi0_grp<br>pin 40 (GSPI0_CS0B)<br>pin 41 (GSPI0_CLK)<br>pin 42 (GSPI0_MISO)<br>pin 43 (GSPI0_MOSI)<br><br></code></pre></td></tr></table></figure>
+
+<p>查看引脚的功能列表:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ sudo <span class="hljs-built_in">cat</span> /sys/kernel/debug/pinctrl/INT3450:00/pinmux-functions<br><span class="hljs-keyword">function</span> 0: spi0, <span class="hljs-built_in">groups</span> = [ spi0_grp ]<br><span class="hljs-keyword">function</span> 1: spi1, <span class="hljs-built_in">groups</span> = [ spi1_grp ]<br><span class="hljs-keyword">function</span> 2: spi2, <span class="hljs-built_in">groups</span> = [ spi2_grp ]<br><span class="hljs-keyword">function</span> 3: uart0, <span class="hljs-built_in">groups</span> = [ uart0_grp ]<br><span class="hljs-keyword">function</span> 4: uart1, <span class="hljs-built_in">groups</span> = [ uart1_grp ]<br><span class="hljs-keyword">function</span> 5: uart2, <span class="hljs-built_in">groups</span> = [ uart2_grp ]<br><span class="hljs-keyword">function</span> 6: i2c0, <span class="hljs-built_in">groups</span> = [ i2c0_grp ]<br><span class="hljs-keyword">function</span> 7: i2c1, <span class="hljs-built_in">groups</span> = [ i2c1_grp ]<br><span class="hljs-keyword">function</span> 8: i2c2, <span class="hljs-built_in">groups</span> = [ i2c2_grp ]<br><span class="hljs-keyword">function</span> 9: i2c3, <span class="hljs-built_in">groups</span> = [ i2c3_grp ]<br></code></pre></td></tr></table></figure>
+
+<p>查看引脚当前的复用状态:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ sudo <span class="hljs-built_in">cat</span> /sys/kernel/debug/pinctrl/INT3450:00/pinmux-pins | <span class="hljs-built_in">head</span> -n 5<br>Pinmux settings per pin<br>Format: pin (name): mux_owner gpio_owner hog?<br>pin 0 (RCINB): (MUX UNCLAIMED) (GPIO UNCLAIMED)<br>pin 1 (LAD_0): (MUX UNCLAIMED) (GPIO UNCLAIMED)<br>pin 2 (LAD_1): (MUX UNCLAIMED) (GPIO UNCLAIMED)<br></code></pre></td></tr></table></figure>
+
+<p>查看引脚和 line 的映射:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ sudo <span class="hljs-built_in">cat</span> /sys/kernel/debug/pinctrl/INT3450:00/gpio-ranges<br>GPIO ranges handled:<br>0: INT3450:00 GPIOS [512 - 536] PINS [0 - 24]<br>32: INT3450:00 GPIOS [544 - 569] PINS [25 - 50]<br>64: INT3450:00 GPIOS [576 - 599] PINS [51 - 74]<br>96: INT3450:00 GPIOS [608 - 631] PINS [75 - 98]<br>128: INT3450:00 GPIOS [640 - 647] PINS [99 - 106]<br>160: INT3450:00 GPIOS [672 - 703] PINS [115 - 146]<br>192: INT3450:00 GPIOS [704 - 727] PINS [155 - 178]<br>224: INT3450:00 GPIOS [736 - 759] PINS [179 - 202]<br>256: INT3450:00 GPIOS [768 - 780] PINS [203 - 215]<br>288: INT3450:00 GPIOS [800 - 823] PINS [216 - 239]<br>320: INT3450:00 GPIOS [832 - 849] PINS [269 - 286]<br>352: INT3450:00 GPIOS [864 - 875] PINS [287 - 298]<br></code></pre></td></tr></table></figure>
+
+<p>查看引脚的电气配置:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sh">sudo <span class="hljs-built_in">cat</span> /sys/kernel/debug/pinctrl/INT3450:00/pinconf-pins | <span class="hljs-built_in">head</span> -n 5<br>Pin config settings per pin<br>Format: pin (name): configs<br>pin 0 (RCINB): input bias disabled, input bias high impedance<br>pin 1 (LAD_0): input bias disabled, input bias high impedance<br>pin 2 (LAD_1): input bias disabled, input bias high impedance<br></code></pre></td></tr></table></figure>
+
+<p>按组聚合显示引脚配置:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ sudo <span class="hljs-built_in">cat</span> /sys/kernel/debug/pinctrl/INT3450:00/pinconf-groups<br>Pin config settings per pin group<br>Format: group (name): configs<br>0 (spi0_grp):<br>1 (spi1_grp):<br>2 (spi2_grp):<br>3 (uart0_grp):<br>4 (uart1_grp):<br>5 (uart2_grp):<br>6 (i2c0_grp):<br>7 (i2c1_grp):<br>8 (i2c2_grp):<br>9 (i2c3_grp):<br></code></pre></td></tr></table></figure>
+
+<p>进行复用切换:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-comment"># 格式：echo &quot;function group&quot; &gt; pinmux-select</span><br><span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;uart0 uart0_grp&quot;</span> | sudo <span class="hljs-built_in">tee</span> /sys/kernel/debug/pinctrl/INT3450:00/pinmux-select<br></code></pre></td></tr></table></figure>
+
+<h1 id="wext"><a href="#wext" class="headerlink" title="wext"></a>wext</h1><p>wext, Wireless Extensions, 是 Linux 早期的无线配置接口:</p>
+<ul>
+<li>走 socket 的 <code>ioctl</code> (<code>SIOCSIW*/SIOCGIW*</code>, <code>SIOC</code> 指 socket ioctl, <code>SIOCS</code> 指 Set, <code>SIOCG</code> 指 Get, <code>IW</code> 是 wireless)</li>
+<li>参数装在 <code>struct iwreq</code> 里</li>
+</ul>
+<p>wext setter 是指 <code>ioctl</code> 子命令中与 <code>Set</code> 相关的实现 (有多个), 而 wext getter 指与 <code>Get</code> 相关的实现 (有多个).</p>
+<p><code>iwconfig</code>, <code>wpa_supplicant</code> 等命令都会调用这些 wext ioctl:</p>
+<ul>
+<li>用 <code>SIOCGIW*</code> 查询:<ul>
+<li><code>SIOCGIWESSID</code> 读回 SSID</li>
+<li><code>SIOCGIWFREQ</code> 读回频率</li>
+<li>等</li>
+</ul>
+</li>
+<li>用 <code>SIOCSIW*</code> 写入配置.<ul>
+<li><code>SIOCSIWAP</code> 指定 BSSID</li>
+<li>等</li>
+</ul>
+</li>
+</ul>
+<p>Linux 无线栈分层自下往上 (并不是严谨的版本):</p>
+<ul>
+<li>驱动, 直接操作硬件 (比如 <code>aic8800</code> 驱动)</li>
+<li><code>cfg80211</code>, 内核里的无线配置核心, 注册驱动后, 提供扫描&#x2F;连接&#x2F;信道等能力与状态机</li>
+<li><code>nl80211</code>, 是 <code>cfg80211</code> 对用户态的 netlink ABI, 支持扫描结果, 站点信息, 事件推送等. <code>iw</code>, <code>wpa_supplicant -D nl80211</code>, <code>hostapd</code>, <code>NetworkManager</code> 都走这个接口</li>
+<li><code>wext</code>, 更早的 ioctl ABI, 只有 <code>iwconfig</code>, <code>wpa_supplicant -D wext</code>, 和自写工具在用</li>
+</ul>
+<h1 id="启动熵"><a href="#启动熵" class="headerlink" title="启动熵"></a>启动熵</h1><p>启动熵是开机早期由固件&#x2F;平台交给内核的一份种子, 用来给内核 CSPRNG (Cryptographically Secure Pseudo-Random Number Generator, 密码学安全伪随机数生成器) 播种 (seeding, 指把 seed 喂给某个确定性算法). 由确定性算法和秘密种子得到的输出, 能够达成真随机的效果, 就算知道历史输出也推不出下一个.</p>
+<p>对于密钥, <code>nonce</code>, 会话 ID, ASLR, TCP ISN, UUID 等都要求不可预测, 即不能用时间戳&#x2F;地址&#x2F;计数器这类可重放状态去拼凑得到, 避免攻击者的枚举或重放.</p>
+<h1 id="页缓存"><a href="#页缓存" class="headerlink" title="页缓存"></a>页缓存</h1><p>Page cache (页缓存) 是内核给 “文件内容” 准备的内存副本, 按页管理. 磁盘 I&#x2F;O 的粒度也是块&#x2F;页 (比如 4 KiB), 而文件对用户是字节流, 如果每次 <code>read/write</code> 都直接碰 SD 卡会很慢且造成性能浪费.</p>
+<p>页缓存按照 <code>(文件身份, 页号)</code> 进行索引, 作用有 4 个:</p>
+<ol>
+<li>读命中不碰盘 (直接读缓存)</li>
+<li>写先落内存 (延迟写&#x2F;write-back), 等攒够再批量落盘</li>
+<li>支撑文件映射, <code>mmap</code> 的 PTE 就是指向页缓存里的页帧</li>
+<li>多进程共享一份数据, 同一个文件如果被多次打开也是复用同一缓存对象, 而非多次从磁盘读取</li>
+</ol>
+<p>脏页是指页的内容比磁盘上的新 (写进了页, 但还没有写回磁盘). 在淘汰一个脏页前必须先将其写回, 不然会丢失尚未落盘的修改.</p>
+<p>Pinned page 是指页被 “缓存之外的人” 持有着 (有人在用这个缓存页), 比如 <code>mmap</code> 做了文件映射, 有 PTE 正指向该页时, <code>pins</code> 字段会加一, 并且教给一个守卫, 在 <code>Drop</code> 时 <code>pins</code> 会减一. 此时不能淘汰该页, 不然持有者会看到悬空&#x2F;错乱的数据.</p>
+<h1 id="LRU"><a href="#LRU" class="headerlink" title="LRU"></a>LRU</h1><p>LRU, Least Recently Used (最近最少使用), 是一种淘汰策略: 当空间不够时, 丢掉 “最久没被访问” 的那一个. 这是一种符合直觉的思路, 刚用过的很可能马上再用, 而很久没碰的多半不再碰.</p>
+<h1 id="fence-i-指令"><a href="#fence-i-指令" class="headerlink" title="fence.i 指令"></a>fence.i 指令</h1><p>程序就是内存里的一堆字节, CPU 的 PC 寄存器负责指向 “下一条要执行的指令的地址 (也可能是相对某个 base address 的偏移)”, 然后反复做五件事:</p>
+<ul>
+<li>取指 (fetch), 按 PC 从内存读取指令字节 (也可能命中缓存, 从缓存读取)</li>
+<li>译码 (decode), 把指令字节拆开送给 CPU 各个组件</li>
+<li>执行 (execute), CPU 按照指令内容执行行为</li>
+<li>访存 (memory), CPU 用 <code>load/store</code> 指令对内存进行读写操作</li>
+<li>写回 (writeback), CPU 将结果写回内存</li>
+</ul>
+<p>对于内存的一个地址, CPU 会有两份备份路径:</p>
+<ul>
+<li>I-cache, Instruction cache (指令缓存), CPU 读指令时, 会先将其放入 I-cache, 然后再进行后续流程. 如果 PC 又指向了该取指地址, 就能直接从 I-cache 快速取出</li>
+<li>D-cache, Data cache (数据缓存), CPU 用 <code>load/store</code> 读写的字节先放入 D-cache. 如果后续又 <code>load/store</code> 该地址, 就能直接取出</li>
+</ul>
+<p>也就是说, 如果向一个内存地址取过指令, 那么该地址会在 I-cache 中有一个备份; 如果从该地址 <code>load</code> 过数据, 就会在 D-cache 中存在一个备份.</p>
+<p><code>fence.i</code> 主要与 I-cache 相关, 想象一个场景:</p>
+<ul>
+<li>CPU 执行 <code>store</code> 指令, 向内存 (或者缓存) 的一个地址 A 写入了新的指令</li>
+<li>CPU 想要 <code>fetch</code> A 地址处的指令, 发现 <code>I-cache</code> 中恰好有条目, 因此直接读取了 <code>I-cache</code></li>
+<li>但是 <code>I-cache</code> 中存放的是老指令</li>
+</ul>
+<p>除了 CPU 会读取 <code>I-cache</code> 中老指令这个问题外, 还会有别的情况导致新指令得不到运行: <code>store</code> 指令可能运行在 CPU <code>fetch</code> 之后, 也就是说, 新指令还没写入, CPU 却从地址取出了内容.</p>
+<p>因此 <code>fence.i</code> 会做两件事来保证新指令能得到运行:</p>
+<ol>
+<li>调整指令顺序, 让 <code>fence.i</code> 指令之前的 <code>store</code> 都保证运行</li>
+<li>清空 <code>I-cache</code>, 当前 <code>I-cache</code> 失效, CPU 需要重新从其他缓存或内存读取指令</li>
+</ol>
+<p>这里要理解 “一致点” 这个概念: 前面提到的 <code>store</code> 不一定是把新指令放到内存, 也可能是 L2 缓存; CPU <code>fetch</code> 也不一定是从内存, 而是从 L2 缓存获取.</p>
+<ul>
+<li>存到 L2 缓存, 并从 L2 缓存读取, 那么此时 “一致点” 就是 L2 缓存</li>
+<li>存到内存, 并从内存读取, 那么此时 “一致点” 就是内存</li>
+</ul>
+<p><code>fence.i</code> 虽然能保证顺序以及 CPU 能取到最新指令, 但也有坏处: I-cache 需要重新填充, 即需要重新预热.</p>
+<p>另外还需要注意, 每一个 hart 都有自己的 I-cache 和 D-cache, 因此一个 hart 执行 <code>fence.i</code> 并不会影响别的 hart. 如果要实现跨核同步, 则需要完成其他一致性的对齐 (这部分暂时不深究).</p>
+<h1 id="exec-页"><a href="#exec-页" class="headerlink" title="exec 页"></a>exec 页</h1><p><code>exec 页</code> 不是一个通用的术语, 其想表达的是: <code>execve</code> 系统调用要处理的内存页.</p>
+<p><code>execve</code> 会为新程序创建地址空间并且覆盖掉当前的地址空间, 像 <code>.text</code>, <code>.rodata</code>, <code>.data</code>, <code>.bss</code> 等 section 覆盖的那些虚拟页, 就是 <code>execve</code> 涉及的全部 “页”. 比如 803KB 的 busybox, 只读段就约 175 页.</p>
+<p>另一个概念是 “物化 (materialize&#x2F;populate)”: 意思是为虚拟地址真的分配物理页. 物化一个虚拟地址需要做 4 件事:</p>
+<ol>
+<li>分配物理帧</li>
+<li>放内容, 完成内容拷贝或者清空</li>
+<li>在页表中完成映射</li>
+<li>在虚拟地址所在的 PTE 中填入物理页号</li>
+</ol>
+<p>对于一个程序所涉及的页, 并不需要一次性全部 “物化”, 而是 “按需缺页”, 用到哪页时再触发缺页异常去补.</p>
+<p>比如 static-PIE 的重定向要写 <code>.got/.data.rel.ro/.bss</code>, 这部分先进行物化, 而剩下的 <code>.rodata</code> 等只读段, 则是按需缺页处理.</p>
+<h1 id="按需缺页"><a href="#按需缺页" class="headerlink" title="按需缺页"></a>按需缺页</h1><p>按需缺页 (demand paging) 是虚拟内存中最核心的机制之一. 内核先登记某段虚拟地址将来会由什么内容填充, 但是不马上给它物理内存; 等程序真的访问到某页, 且页表中不存在有效映射时, CPU 触发一次缺页异常, 内核这时才分配物理帧, 填内容, 装页表项.</p>
+<p>需要有一个认知: 缺页异常并不是 “错误”, 而是设计中的正常流程. 在一次缺页处理完成后, 内核会返回用户态, 重新执行刚才那条指令, 此时就能成功, 而用户态程序自己感觉不到.</p>
+<p>这是一种必要的设计: 用户态程序看到的地址空间很大, 且连续, 但物理内存只有 256MiB (一个例子). 如果 <code>mmap</code> 一调用就把物理内存全部用上, 程序连启动都做不到. 因此统一的策略都是 “延迟承诺”: 先记下需要多大, 内容在哪里, 然后在用到时再给.</p>
+<p>在一次缺页异常里, 内核会:</p>
+<ol>
+<li>看访问的地址是否落在某个合法区间 (VMA) 内 (不然返回 <code>SIGSEGV</code>)</li>
+<li>检查地址权限 (读&#x2F;写&#x2F;执行, 是否越权)</li>
+<li>找这个区间的 “内容来源” (匿名零页&#x2F;文件的页缓存&#x2F;COW 私有副本等)</li>
+<li>分配一个物理帧</li>
+<li>把内容弄进去 (清零&#x2F;从页缓存拷&#x2F;从 SD 卡读)</li>
+<li>建立对象与索引, 安装页表项</li>
+<li>返回用户态</li>
+</ol>
+<p>比如程序声明了一个大数组:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">char</span> big[<span class="hljs-number">10</span> * <span class="hljs-number">1024</span> * <span class="hljs-number">1024</span>]; <span class="hljs-comment">// 全是 0, 写在 .bss 里</span><br></code></pre></td></tr></table></figure>
+
+<p>此时 ELF 里 <code>.bss</code> 只记 “大小”, 不占文件空间. 内核不会真的准备 10MiB 物理内存, 而是登记 “这段映射到零页”. 在没有触碰这段空间时, 一个物理页都不会占用.</p>
+<p>需要注意一点, 外部 I&#x2F;O 设备访问内存时不会触发缺页, 缺页异常只能由 CPU 访问触发 (毕竟 CPU 运行的才是内核代码, 内核里写了缺页异常的处理逻辑). DMA, TPU, VPSS 这些单元直接按物理地址读写内存.</p>
+<h1 id="Pin"><a href="#Pin" class="headerlink" title="Pin"></a>Pin</h1><p>Pin (钉住), 指的是把一个物理页帧从 “可以被回收&#x2F;淘汰” 的集合里摘出来. 意思是一个物理页原本被 LRU (Least Recently Used) 等策略放入了一个 “这个页暂时不会有人用, 可以回收掉释放物理空间” 的集合中, pin 这个操作则可以将其从集合中取出, 不被释放.</p>
+<p>Pin 的本质就是增加引用计数, <code>pins += 1</code> 表示 “有人正拿着它”, 而 <code>pins -= 1</code> 表示 “放开了”. 只有 <code>pins == 0</code> 且不脏的页才允许淘汰.</p>
+<p>注意 <code>pin</code> 的对象是物理帧, 不是虚拟地址. 因为内核&#x2F;设备真正依赖的是 “这块物理内存还在, 内容没被别人覆盖”.</p>
+<p>Pin 出现的原因就是: 内存随时会因为页缓存淘汰, 地址空间退休, 内存压力回收等机制被清空或重新分配给别的虚拟地址. 如果想持续保留这个物理帧, 就需要额外的字段来标记. 不 <code>pin</code> 住可能会导致:</p>
+<ul>
+<li>手里的指针指向的帧已经被回收, 分配给别的进程了, 此时会读到别人的数据, 或者写坏别人的内存</li>
+<li>页表项还记录了这个帧, 但它已经被回收了, 此时用户访问到的就是悬空数据 (<code>mmap</code> 语义会直接崩)</li>
+<li>设备 DMA 正在往这个帧中写内容, 但帧被回收给了别的用途, 此时会产生静默性错误</li>
+</ul>
+<h1 id="COW"><a href="#COW" class="headerlink" title="COW"></a>COW</h1><p>COW, Copy-On-Write, 写时复制. 即先共享这部分物理页, 等到真要写的时候才复制. 最经典的例子是 <code>fork</code>.</p>
+<p><code>fork</code> 的语义是把父进程的整个地址空间复制一遍得到子进程. 但现实里, <code>fork</code> 之后绝大多数情况都会立刻 <code>exec</code>, 创建新的地址空间来覆盖掉子进程的地址空间. 因此复制出来的这些页立马就会丢弃掉. COW 就是为这种场景设计的.</p>
+<p>COW 的实施分四步:</p>
+<ol>
+<li><code>fork</code> 时, 只复制页表结构, 物理页帧父子共享 (引用计数 <code>+1</code>), 把这些 <code>PTE</code> 改成只读 (写就会触发异常).</li>
+<li>写时: 谁先写哪一页, 就触发写保护缺页异常 (此时就是按需复制)</li>
+<li>判断: 内核会检查 “这一帧还有没有别的持有者”:<ul>
+<li>如果只有我一个持有者, 直接把 PTE 改成可写, 就地转换, 不需要复制</li>
+<li>如果还有别人 (比如父进程, 或者另一个子进程), 则分配新帧, 把 4 KiB 内容复制过去, 装入新的 PTE 并设置为可写</li>
+</ul>
+</li>
+<li>之后: 父子各自写自己的那一份, 互不影响. 每页只在写时有一次缺页成本</li>
+</ol>
+<p>这里为了判断 “物理帧有哪些所有者”, 还需要维护一张 “物理帧 -&gt; 持有者” 的表, 这就是页索引:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">struct</span> <span class="hljs-title class_">CowPageIndexEntry</span> &#123;<br>    paddr: PhysAddr,          <span class="hljs-comment">// 帧基址（key）</span><br>    size: <span class="hljs-type">usize</span>,<br>    owner: CowPageIndexOwner, <span class="hljs-comment">// Pending(Arc&lt;PageObject&gt;) 或 Published(Weak&lt;PageObject&gt;)</span><br>&#125;<br><span class="hljs-keyword">struct</span> <span class="hljs-title class_">CowPageIndex</span> &#123;<br>    <span class="hljs-comment">/// Sorted by frame base. …</span><br>    pages: <span class="hljs-type">Vec</span>&lt;CowPageIndexEntry&gt;,<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h1 id="内存原语"><a href="#内存原语" class="headerlink" title="内存原语"></a>内存原语</h1><p>内存原语 (memory primitive) 是指内核自己实现的, 最底层的搬运函数, 比如导出成 C 符号的 <code>memcpy/memmove/memset/memcmp</code>. 内核中几乎所有拷贝和清零都会链接到它们, 比如页缓存填充, 页复制, <code>fork</code> 的拷贝, <code>.bss</code> 清零, 缓冲区比较等.</p>
+<h1 id="UVC"><a href="#UVC" class="headerlink" title="UVC"></a>UVC</h1><p>UVC, USB Video Class, 是 USB-IF 定义的 USB 视频类标准. 摄像头设备输出标准类请求, 标准描述符, 主机侧只需要用一套通用的驱动就能输出流, 厂商不必为每个型号写驱动.</p>
+<p>UVC 在 Linux 上表现为标准 <code>/dev/videoN</code> (<code>V4L2</code>), 而 StarryOS 没有 V4L2 子系统, 只能自己编写 CVI ioctl 字符设备 <code>/dev/cvi-usb-camera0</code>.</p>
+<h1 id="Motion-Coompensation"><a href="#Motion-Coompensation" class="headerlink" title="Motion Coompensation"></a>Motion Coompensation</h1><p>Motion Compensation (运动补偿), 是视频压缩里的概念. 其本质是重用已有的像素. 比如视频第 1 帧里有一个人在走路, 第 2 帧里他只向右移动了 10 个像素. 如果直接处理, 第 2 帧会重新整张编码, 大量像素其实和第 1 帧几乎一样. 如果做运动补偿, 编译器会只记录参考帧编号, 运动矢量 (往哪移, 移多少), 算残差 (剩下的微小差异). 也就是说复用之前某帧的信息, 减少编码.</p>
+<h1 id="MJPEG"><a href="#MJPEG" class="headerlink" title="MJPEG"></a>MJPEG</h1><p>MJPEG, Motion JPEG, 是逐帧确立的 JPEG 序列, 即每一帧都是一张完整的 JPEG, 帧与帧之间不做运动补偿 (MJPEG 本身的设计目标只是为了简单, 稳定地逐帧访问 JPEG 序列, 而不是 “最小码率”, 因此不需要做运动补偿).</p>
+<p>JPEG, Joint Photographic Experts Group, 本身既是一个委员会的名字, 也指代它制定的静态图像压缩标准. 其目标是在尽量不损失人眼可感知画质的前提下, 把一张图片压到很小.</p>
+<h1 id="VPU-JPU"><a href="#VPU-JPU" class="headerlink" title="VPU, JPU"></a>VPU, JPU</h1><p>VPU, Video Processing Unit (视频处理单元), 通常在 SoC 中负责 <code>H.264</code>&#x2F;<code>H.265</code>&#x2F;<code>VP8</code>&#x2F;<code>VP9</code>&#x2F;<code>MPEG</code> 等视频流的硬编码&#x2F;解码. 驱动通常暴露为 <code>/dev/vpu*</code> 或 <code>v4l2</code> 节点.</p>
+<p>JPU, JPEG Processing Unit, 是一种专用硬件模块, 负责 JPEG 静态图&#x2F;MJPEG 帧序列的硬编解码. 驱动通常暴露为 <code>jpu_enc</code>&#x2F;<code>jpu_dec</code> 或挂在 V4L2 的 MJPEG 节点下.</p>
+<p>这里说明下软解和硬解的区别.</p>
+<p>软解指 CPU 负责解码, 通常借助专用的 lib 比如 <code>zune-jpeg</code>&#x2F;<code>libjpeg</code>, 每个像素都有固定成本. 好处在于灵活性高, 可以处理任何参数和变体, 并且可以观测到错误输出. 缺点就是占用 CPU 运行时间, 效率不高.</p>
+<p>硬解指专用硬件负责解码, CPU 只搬运. 好处是专用硬件效率更高, 并且能空出 CPU. 缺点就是只能处理固定参数的输入, 灵活性较差.</p>
+<h1 id="MPP"><a href="#MPP" class="headerlink" title="MPP"></a>MPP</h1><p>MPP, Media Process Platform (海思) &#x2F; Multimedia Processing Platform (部分厂商), 其不是一个硬件, 而是绑定软件驱动到硬件模块的框架.</p>
+<p>MPP 框架里按照视频数据流顺序排布了一些模块名, 每个模块都代表 “一段职责”, 而非单纯一个芯片:</p>
+<ul>
+<li>Sensor, 摄像头感光元件, 输出 RAW Bayer 数据</li>
+<li>VI, Video Input, 视频输入模块, 接 <code>MIPI CSI</code>&#x2F;<code>BT.1120</code>&#x2F;<code>LVDS</code> 等物理接口, 收集 Sensor 送来的时序数据, 做简单裁剪并将其绑定到 Pipe (数据采集和通道管理)</li>
+<li>ISP, Image Signal Processor (图像信号处理器), 是最关键的前端画质模块, 调用 AE, AWB, AF, HDR&#x2F;WDR 等画面处理技巧, 并将 RAW 转为 YUV 传递给后续流程使用</li>
+<li>VPSS, Video Process Sub-System (视频处理子系统), 对 YUV 进行缩放 (scale), 裁剪 (crop), 降噪, 锐化, 帧率控制等, 并且分发出多路不同分辨率, 比如:<ul>
+<li>输出 1080P 到主码流 VENC</li>
+<li>输出 <code>640x360</code> 给子码流 VENC</li>
+<li>输出 <code>640x640</code> 给算法&#x2F;AI</li>
+</ul>
+</li>
+<li>VENC, Video Encoder (视频编码器), 负责消耗 YUV 帧, 输出 <code>H.264</code>&#x2F;<code>H.265</code>&#x2F;<code>MJPEG</code> 码流, 做帧间预测, 运动补偿, 码率控制等</li>
+<li>VDEC, Video Decoder (视频解码器, 反向链路才用), 消耗 <code>H.264</code>&#x2F;<code>H.265</code>&#x2F;<code>MJPEG</code> 等码流, 输出 YUV</li>
+<li>VO, Video Output (视频输出模块), 把 YUV&#x2F;解码帧送到显示设备, 管 HDMI&#x2F;LCD&#x2F;CVBS 时序</li>
+</ul>
+<p>这里还涉及到了一些术语:</p>
+<ul>
+<li>YUV, 是一种颜色编码方式, Y 表示 Luma (亮度), 黑白信息, 人眼比较敏感; U&#x2F;V 表示 Chroma (色度), 颜色偏差信息; 由于人对亮度细节敏感, 对色彩位置不敏感, 所以可以通过少存一些 UV 来压缩 (画质看着差不多, 数据量减半), 比如 <code>J:a:b</code> 色度子采样比例:<ul>
+<li><code>4:4:4</code> 表示每像素独立 YUV, 无压缩</li>
+<li><code>4:2:2</code> 横向上每 2 个 Y 共用 1 组 UV, 带宽 2&#x2F;3</li>
+<li><code>4:2:0</code> <code>2x2</code> 共 4 个 Y 共用 1 组 UV, 带宽只有 RGB 的一半</li>
+</ul>
+</li>
+<li>RGB (Red, Green, Blue), 也是一种颜色编码方式, 每个像素存 R&#x2F;G&#x2F;B, 适合屏幕显示, OpenCV, 神经网络处理</li>
+<li>NV12, 指 YUV <code>4:2:0</code> 的一种内存排布方式<figure class="highlight tp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs tp">[<span class="hljs-keyword">Y</span> <span class="hljs-keyword">Y</span> <span class="hljs-keyword">Y</span> <span class="hljs-keyword">Y</span> ... <span class="hljs-keyword">Y</span>]   ← 亮度平面，<span class="hljs-keyword">W</span>×H 字节<br>[U V U V U V ...] ← 色度平面，<span class="hljs-keyword">W</span>×H/<span class="hljs-number">2</span> 字节，UV 交错<br></code></pre></td></tr></table></figure></li>
+<li>NV21, 是 NV12 内存排布中 <code>UV</code> 顺序颠倒过来</li>
+<li>AE, Auto Exposure (自动曝光), 决定快门时间, 传感器增益, 光圈等, 让画面整体不太暗也不过曝</li>
+<li>AWB, Auto White Balance (自动白平衡), 决定 R&#x2F;G&#x2F;B 增益怎么配, 让白纸在不同光源下看起来还是白的</li>
+<li>AF, Auto Focus (自动对焦), 内部对焦算法</li>
+</ul>
+<h1 id="TLB"><a href="#TLB" class="headerlink" title="TLB"></a>TLB</h1><p>TLB, Translation Lookaside Buffer, 是页表的缓存. 现代 CPU 跑程序用的都是虚拟地址, 但内存硬件只认物理地址, 中间需要借助页表和 MMU 完成翻译. 但页表在内存中, 每一次查表很慢, 对于多级页表而言, 一次地址翻译等于多次内存访问. 因此 CPU 在 MMU 里加了一层极小的缓存 TLB, 其缓存了虚拟地址到 PTE (页表项) 的映射关系.</p>
+<p>CPU 在访问内存时, 会先看 TLB 里有没有这个虚拟页的映射:</p>
+<ul>
+<li>命中 (TLB Hit), 则直接拿物理地址</li>
+<li>未命中 (TLB Miss), 此时去内存查页表, 再把结果填进 TLB</li>
+</ul>
+<p>通常在页表变更后 (比如释放了部分内存), 就需要让 TLB 中的对应项失效, 避免让 CPU 读到旧的翻译 (riscv64 上是 <code>sfence.vma</code>).</p>
+<h1 id="等待锁"><a href="#等待锁" class="headerlink" title="等待锁"></a>等待锁</h1><p>等待一个锁空闲有两种方式:</p>
+<ul>
+<li>自旋, 反复执行指令读取一个原子变量, 空转烧 CPU</li>
+<li>睡眠, 把当前任务挂起, 登记到等待队列中, 让出 CPU, 等持有者唤醒</li>
+</ul>
+<p>只要环境支持指令的执行, 就能够自旋等待. 而睡眠则需要调度器, 任务身份, 可保存&#x2F;恢复的上下文, 调度安全点等.</p>
+<p>因此在 interrupt handler 中, 通常只能自旋而不能睡眠: interrupt handler 本身不是调度器管理的执行流 (不是一个可调度的实体), 不会放入运行队列中, 没法挂起和唤醒 (但可以被更高优先级中断).</p>
+<p>硬中断 (hard irq) 是指设备 (比如定时器, 串口, 网卡, SD 控制器) 向中断控制器 (这里是 PLIC) 拉一根电信号, CPU 会在当前指令的边界停下正在跑的东西, 跳到内核预先注册的入口去处理. 特点是异步, 随时发生, 由硬件触发, 运行在 S mode, 且会借用被中断线程的栈执行, 进入 trap 时硬件会清掉 SIE, 所以 handler 全程关闭本地中断. 比如串口受到一个字节, SD 卡写完一个块, 网卡收到包等都会触发.</p>
+<p>一个硬件事件分两部分:</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs css">硬件事件<br> → <span class="hljs-selector-attr">[上半部]</span>  hardirq：claim、取数据、清设备状态、raise_softirq 或唤醒线程（不能睡）<br> → <span class="hljs-selector-attr">[下半部]</span>  二选一（也可以都不用）<br>      ├─ softirq / tasklet：硬中断返回前 inline 跑，或由 ksoftirqd 跑<br>      │                     —— 仍在 softirq 上下文，不能睡<br>      └─ 线程化下半部：workqueue / threaded IRQ 的 thread_fn<br>                            —— 是内核线程，可以睡<br></code></pre></td></tr></table></figure>
+
+<p>下半部分通常分两种:</p>
+<ul>
+<li><code>softirq</code>, 靠每 CPU 的 pending 位图和 <code>raise_softirq()</code> 来触发</li>
+<li><code>ksoftirqd</code>, 交给内核线程, 可以睡眠和等 I&#x2F;O</li>
+</ul>
+<p>(对于 hardirq 和 softirq 都无法睡眠)</p>
+<h1 id="IRQ-save-自旋锁"><a href="#IRQ-save-自旋锁" class="headerlink" title="IRQ-save 自旋锁"></a>IRQ-save 自旋锁</h1><p>由于 interrupt handler 无法睡眠, 其使用自旋锁就需要考虑一直占用 CPU 导致死锁的问题.</p>
+<p>比如一个普通的线程拿到了自旋锁, 正在执行任务, 此时被中断, 如果 interrupt handler 此时也去请求自旋锁, 那么就会忙等. 但是普通线程还没有释放该锁, 所以 interrupt handler 就会一直等待, 此时就宕机了.</p>
+<p>因此在普通线程和 interrupt handler 都会访问同一个数据区域时, 需要用 IRQ-save 自旋锁先关闭中断: 此时普通线程会拿到锁, 完成任务, 释放锁, 然后再执行 interrupt handler 的逻辑.</p>
+<p>IRQ-save 会清除 SIE 等中断相关内容, 然后再释放时恢复. 虽然中断被关闭, 但是并不会丢失, 硬件和 PLIC 的 pending 位会记住这条中断线, 在 SIE 重新打开时照常投递, 相当于只是推迟了几个周期.</p>
+<h1 id="嵌套中断"><a href="#嵌套中断" class="headerlink" title="嵌套中断"></a>嵌套中断</h1><p>现在主流的内核都不做嵌套中断, 因为:</p>
+<ul>
+<li>handler 可被重入后, 所有共享结构都得按照 “可重入” 设计, 死锁面成倍扩大</li>
+<li>嵌套深度不可控, 栈溢出的风险上升</li>
+<li>当前 handler 的延迟增高, 被高优先级中断插队的次数越多, 正在处理的设备响应越不确定</li>
+</ul>
+<p>现在的设计通常是: 同一 CPU 上的 handler 不会被再次中断, 即 handler 执行期间, 当前 hart 不会开始第二个 handler. 这通常靠两层来保证:</p>
+<ol>
+<li>硬件层: RISC-V trap 入口会把 <code>sstatus.SIE</code> 清零 (原值存入 <code>SPIE</code>)</li>
+<li>内核层: handler 分发前用 <code>IrqSaveGuard</code> 保证比关闭本地中断</li>
+</ol>
+<p>需要注意其他的 hart 可以并行跑自己的 handler.</p>
+<h1 id="可重入"><a href="#可重入" class="headerlink" title="可重入"></a>可重入</h1><p>可重入 (reentrant), 是指同一个函数&#x2F;代码段, 在被 “打断 -&gt; 再次进入 -&gt; 再返回” 的过程中, 结果仍然正确.</p>
+<p>中断, 递归, 多线程, 信号处理, 都会涉及到 “被打断后再进入”.</p>
+<p>一个函数被称为 “可重入函数 (reentrant function)”, 需要满足: 能够在任意时刻被中断, 且在中断返回前再次进入该函数, 结果不受影响.</p>
+<p>可重入函数通常只使用参数, 局部变量和传入的指针所指内容, 不依赖全局变量 (static 变量), 堆上共享且无同步的数据和外部状态 (文件 offset, 硬件寄存器等).</p>
+<p>比如下面是一个可重入的简单函数:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">add</span><span class="hljs-params">(<span class="hljs-type">int</span> a, <span class="hljs-type">int</span> b)</span><br>&#123;<br>    <span class="hljs-keyword">return</span> a + b;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>这里只用了参数, 没有全局状态, 被中断, 递归, 多线程同时调用都安全.</p>
+<p>另一个例子则是不可重入的:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">static</span> <span class="hljs-type">int</span> sum = <span class="hljs-number">0</span>;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">add</span><span class="hljs-params">(<span class="hljs-type">int</span> a)</span><br>&#123;<br>    sum += a;   <span class="hljs-comment">// ❌ 全局状态</span><br>    <span class="hljs-keyword">return</span> sum;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h1 id="proc"><a href="#proc" class="headerlink" title="/proc"></a><code>/proc</code></h1><p>这里要区分几类文件系统:</p>
+<ul>
+<li>磁盘文件系统, 比如 <code>ext4</code>, 内存存放在硬盘, 持久化存储 (重启后仍然在)</li>
+<li>内存文件系统, 比如 <code>/tmp</code>, <code>/dev/shm</code>, RAM 里真实存在的数据, 非持久化 (重启后消失)</li>
+<li>伪文件系统 (按需生成), 比如 <code>/proc</code>, 不会真实存储到一个地方, 而是在读取时由内核直接生成</li>
+</ul>
+<p>伪文件系统和另外两个文件系统最大的区别就是 “不落盘”, 不会写入到一个存储实体中, 其通过给 VFS 的 <code>open/read/write</code> 接口注册回调函数来生成内容. 因此其文件大小为 0:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs sh"><span class="hljs-built_in">ls</span> -l /proc | <span class="hljs-built_in">tail</span> -n 5<br>.r--r--r--    0 root             19 Oct 09:32 <span class="hljs-built_in">uptime</span><br>.r--r--r--    0 root             19 Oct 09:32 version<br>.r--------    0 root             19 Oct 14:06 vmallocinfo<br>.r--r--r--    0 root             19 Oct 14:06 vmstat<br>.r--r--r--    0 root             19 Oct 09:42 zoneinfo<br></code></pre></td></tr></table></figure>
+
+<p>对于 <code>/proc</code> 而言, <code>struct inode</code> 是内存中临时构建的, <code>inode</code> 号是动态分配的计数器 (不是磁盘 inode 号), 且 <code>dentry</code> 也只在 <code>dcache</code> 里缓存一下, 方便路径查找. 在一个进程死后, <code>/proc/&lt;pid&gt;</code> 目录会立刻消失.</p>
+<p><code>/proc</code> 下有很多系统级的只读快照:</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs sh">$ <span class="hljs-built_in">cat</span> /proc/meminfo | <span class="hljs-built_in">head</span> -n 5<br>MemTotal:       16269676 kB<br>MemFree:         1413536 kB<br>MemAvailable:    7040268 kB<br>Buffers:          663580 kB<br>Cached:          4983744 kB<br><br>$ <span class="hljs-built_in">cat</span> /proc/cpuinfo | <span class="hljs-built_in">head</span> -n 5<br>processor       : 0<br>vendor_id       : GenuineIntel<br>cpu family      : 6<br>model           : 165<br>model name      : Intel(R) Core(TM) i7-10875H CPU @ 2.30GHz<br><br>$ <span class="hljs-built_in">cat</span> /proc/stat | <span class="hljs-built_in">head</span> -n 5<br>cpu  2265892 247 209680 16709716 20028 47035 18465 0 0 0<br>cpu0 93299 17 13125 1071872 1218 10032 9867 0 0 0<br>cpu1 140399 2 13044 1043690 1001 1803 1909 0 0 0<br>cpu2 134969 8 14182 1047578 978 12304 791 0 0 0<br>cpu3 160343 0 13921 1028355 862 1795 519 0 0 0<br></code></pre></td></tr></table></figure>
+
+<p>也有一些可写接口, 此时 <code>write</code> 本质就是修改内核参数, 比如 <code>/proc/sys/net/ipv4/ip_forward</code> (重启后会丢失, 除非写入 <code>sysctl.conf</code> 之类的).</p>
+<p><code>/sys</code> 也是伪文件系统 (sysfs), 抽象了设备&#x2F;驱动&#x2F;内核对象模型, 通常一个文件一个值, 层次清晰.</p>
+<p><code>/sys/kernel/debug</code> 也是伪文件系统 (debugfs), 可用于内核调试.</p>
+<h1 id="dev"><a href="#dev" class="headerlink" title="/dev"></a><code>/dev</code></h1><p><code>/dev</code> 也是伪文件系统, 在 Linux 里对应 <code>devtmpfs</code>, 节点由内核创建, 不落盘, 重启后重建. 但要注意 <code>/dev</code> 下面还有别的文件系统挂载, 比如 <code>/dev/shm</code> (tmpfs, 内存文件).</p>
+<p>用 <code>ls -l /dev</code> 查看时, 能看到大小信息, 确切来说, 这些表示的是设备节点的设备号 (major, minor), 而不是字节数.</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sh">crw------- 1    root root 10, 58  /dev/cvi-rtos-cmdqu<br>│└─ 权限          │    │   └─ 这不是大小，是 major, minor<br>└─ c = 字符设备 owner group<br></code></pre></td></tr></table></figure>
+
+<p>设备节点包含:</p>
+<ul>
+<li>inode 元信息</li>
+<li>设备号</li>
+<li>驱动操作表</li>
+</ul>
+<p>本身不装数据, 只有元数据 (类型, 设备号, 权限) 和一张指向驱动操作表的指针, 比如:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">pub</span> <span class="hljs-keyword">struct</span> <span class="hljs-title class_">Device</span> &#123;<br>    node: SimpleFsNode,          <span class="hljs-comment">// 元数据，其中 rdev = DeviceId(major, minor)</span><br>    ops: Arc&lt;<span class="hljs-keyword">dyn</span> DeviceOps&gt;,     <span class="hljs-comment">// 驱动操作表</span><br>&#125;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">read_at</span>(...)  &#123; <span class="hljs-keyword">self</span>.ops.<span class="hljs-title function_ invoke__">read_at</span>(...) &#125;<br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">write_at</span>(...) &#123; <span class="hljs-keyword">self</span>.ops.<span class="hljs-title function_ invoke__">write_at</span>(...) &#125;<br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">mmap</span>(...)     &#123; <span class="hljs-keyword">self</span>.ops.<span class="hljs-title function_ invoke__">mmap</span>(...) &#125;      <span class="hljs-comment">// → DeviceMmap::&#123;Physical, Cache, None, ...&#125;</span><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">ioctl</span>(...)    &#123; <span class="hljs-keyword">self</span>.ops.<span class="hljs-title function_ invoke__">ioctl</span>(current, cmd, arg) &#125;<br></code></pre></td></tr></table></figure>
+
+<p>VFS 的接口会路由到 “驱动的操作函数” 中, 注意这里不会直接操作 MMIO 地址. 物理地址只会出现在驱动内部 (通过 <code>iomap</code> 访问寄存器) 或者驱动 <code>mmap</code> 返回物理地址映射.</p>
+<h1 id="对齐要求"><a href="#对齐要求" class="headerlink" title="对齐要求"></a>对齐要求</h1><p>在操作地址时, 通常有 “对齐的要求”. 这是硬件层面的限制, 根据访问宽度不同, 对齐的要求也不同:</p>
+<ul>
+<li>用 <code>lb/sb</code> (load byte&#x2F;store byte) 指令时, 每次只访问一个字节, 永远合法</li>
+<li>用 <code>ld/sd</code> (load double&#x2F;store double) 指令时, 要求地址时 8 的倍数</li>
+</ul>
+<p>当地址不对齐时, 硬件有两条路:</p>
+<ul>
+<li>直接 <code>trap</code>, 把这件事交给软件的未对齐处理程序</li>
+<li>内部拆成两次总线访问, 然后把结果拼起来. 这里要解释一下: 比如我们访问的是地址 <code>1</code>, 如果要读 <code>8</code> 字节, 则是 <code>1~8</code> 这几个地址的内容. 在访问宽度是 8 字节时, 内存地址都是 8 字节的块, 比如 <code>0~7</code> 是一个块, <code>8~15</code> 是一个块. 如果访问地址时 8 的倍数, 也就是对齐, 那么此次访问直接取一个块. 但这里 <code>1</code> 不是 8 的倍数, 那么其访问就会跨两个块, 因此这里会分别访问两个块然后将结果合起来<br>(这些方式都会让程序更慢)</li>
+</ul>
+<p>不同的访问宽度需要不同的地址对齐:</p>
+<ul>
+<li><code>u8</code>, 1 字节对齐, 访问永远合法</li>
+<li><code>u16</code>, 2 字节对齐, 要求访问地址 <code>% 2 == 0</code></li>
+<li><code>u32</code>, 4 字节对齐, 需要 <code>% 4 == 0</code></li>
+<li><code>u64</code>, 8 字节对齐, 需要 <code>% 8 == 0</code></li>
+</ul>
+<p>对齐可以更大, 但不能更小. 比如 <code>u16</code> 访问可以 4 字节对齐, 8 字节对齐, 但是不能 1 字节对齐.</p>
+<h1 id="iomap"><a href="#iomap" class="headerlink" title="iomap"></a>iomap</h1><p><code>iomap</code>, I&#x2F;O memory map, 用于将一段物理地址 (寄存器窗口, 跨核共享 RAM 等) 映射成内核可访问的虚拟地址. Linux 里对应的是 <code>ioremap()</code> 家族.</p>
+<p>内核在启动之后, 可以操控一片线性映射的物理地址, 但并不包括 MMIO 地址和固件保留区. 因此需要 <code>iomap</code> 来完成映射.</p>
+<p>这里需要对比一下 <code>mmap</code>:</p>
+<ul>
+<li><code>iomap</code> 由内核代码发起, 映射到内核地址空间, 还可以设置 <code>DEVICE</code>, <code>UNCACHED</code>, <code>CACHED</code> 等属性. 生命周期随驱动 (与进程无关), 只有内核能访问</li>
+<li><code>mmap</code> 由用户进程发起, 映射到调用者进程的用户地址空间, 属性由驱动决定. 生命周期随进程的 VMA (virtual memory area), 该进程可以访问</li>
+</ul>
+<h1 id="First-touch"><a href="#First-touch" class="headerlink" title="First touch"></a>First touch</h1><p>First touch (首触), 是指某个虚拟页第一次被访问 (读或写都算). 此时由于按需缺页 (一个页在第一次被访问之前, 既没有物理帧, 也没有页表项), 会触发缺页异常, 让内核分配帧, 填充内容, 建立页对象和索引, 装 PTE 等. 之后的访问就能 “命中”, 只剩 MMU 翻译开销.</p>
+<p>因此可以用 first touch 来计算缺页的开销.</p>
 
                 
               </div>
