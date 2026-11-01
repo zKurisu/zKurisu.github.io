@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="为什么 String 不实现 CloneRust 中的 String 需要管理堆内存 (Heap), 而 Copy 的语义只允许在栈 (Stack) 上进行廉价的, 逐字节的浅拷贝. String 的本质是一个胖指针结构体 (类似 Vec&lt;u8&gt;), 在栈上只占 24 字节 (64 位系统), 包含 3 个核心字段:  指针 (Pointer): 指向堆内存中真实存储字符的地址 长度">
+    <meta name="description" content="Auto-refAuto-ref 是 Rust 在方法调用时, 自动调整 receiver 类型的一套规则, 目的是让方法调用看起来自然, 同时仍然保证所有权和借用安全. Rust 中方法调用的语法为: 1receiver.method(args...)  当 method 需要 &amp;self 或 &amp;mut self 时, 如果此时的 receiver 是值&#x2F;可变绑定 (有">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Rust-技巧积累">
 <meta property="og:url" content="http://example.com/2026/09/02/Rust-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="为什么 String 不实现 CloneRust 中的 String 需要管理堆内存 (Heap), 而 Copy 的语义只允许在栈 (Stack) 上进行廉价的, 逐字节的浅拷贝. String 的本质是一个胖指针结构体 (类似 Vec&lt;u8&gt;), 在栈上只占 24 字节 (64 位系统), 包含 3 个核心字段:  指针 (Pointer): 指向堆内存中真实存储字符的地址 长度">
+<meta property="og:description" content="Auto-refAuto-ref 是 Rust 在方法调用时, 自动调整 receiver 类型的一套规则, 目的是让方法调用看起来自然, 同时仍然保证所有权和借用安全. Rust 中方法调用的语法为: 1receiver.method(args...)  当 method 需要 &amp;self 或 &amp;mut self 时, 如果此时的 receiver 是值&#x2F;可变绑定 (有">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-09-02T11:15:22.000Z">
-<meta property="article:modified_time" content="2026-10-24T02:01:45.726Z">
+<meta property="article:modified_time" content="2026-10-29T08:03:01.248Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -437,7 +437,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          129k 字
+          132k 字
         
       </span>
     
@@ -448,7 +448,7 @@ path.outline_glyph {
         
         
         
-          1073 分钟
+          1099 分钟
         
       </span>
     
@@ -491,7 +491,78 @@ path.outline_glyph {
             
               <div class="markdown-body">
                 
-                <h1 id="为什么-String-不实现-Clone"><a href="#为什么-String-不实现-Clone" class="headerlink" title="为什么 String 不实现 Clone"></a>为什么 String 不实现 Clone</h1><p>Rust 中的 String 需要管理堆内存 (Heap), 而 <code>Copy</code> 的语义只允许在栈 (Stack) 上进行廉价的, 逐字节的浅拷贝.</p>
+                <h1 id="Auto-ref"><a href="#Auto-ref" class="headerlink" title="Auto-ref"></a>Auto-ref</h1><p>Auto-ref 是 Rust 在方法调用时, 自动调整 receiver 类型的一套规则, 目的是让方法调用看起来自然, 同时仍然保证所有权和借用安全.</p>
+<p>Rust 中方法调用的语法为:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust">receiver.<span class="hljs-title function_ invoke__">method</span>(args...)<br></code></pre></td></tr></table></figure>
+
+<p>当 method 需要 <code>&amp;self</code> 或 <code>&amp;mut self</code> 时, 如果此时的 <code>receiver</code> 是值&#x2F;可变绑定 (有所有权), 则 Rust 会进行 auto-ref (自动借用), 比如:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">opt</span>: <span class="hljs-type">Option</span>&lt;<span class="hljs-type">i32</span>&gt; = <span class="hljs-title function_ invoke__">Some</span>(<span class="hljs-number">42</span>);<br>opt.<span class="hljs-title function_ invoke__">as_ref</span>();<br></code></pre></td></tr></table></figure>
+
+<p><code>as_ref()</code> 的签名是:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">as_ref</span>(&amp;<span class="hljs-keyword">self</span>) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">Option</span>&lt;&amp;<span class="hljs-type">i32</span>&gt;;<br></code></pre></td></tr></table></figure>
+
+<p>因此这里在调用 <code>as_ref()</code> 之前, Rust 做了:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust">opt: <span class="hljs-type">Option</span>&lt;<span class="hljs-type">i32</span>&gt;<br> ↓ auto-<span class="hljs-keyword">ref</span><br>&amp;opt: &amp;<span class="hljs-type">Option</span>&lt;<span class="hljs-type">i32</span>&gt;<br></code></pre></td></tr></table></figure>
+
+<h1 id="从-amp-mut-Option-lt-T-gt-得到-Option-lt-T-gt"><a href="#从-amp-mut-Option-lt-T-gt-得到-Option-lt-T-gt" class="headerlink" title="从 &amp;mut Option&lt;T&gt; 得到 Option&lt;T&gt;"></a>从 <code>&amp;mut Option&lt;T&gt;</code> 得到 <code>Option&lt;T&gt;</code></h1><p>有时候不想管前面那个 <code>&amp;mut</code>, 可以用下面方式进行转换, 假设 <code>root</code> 是 <code>&amp;mut Option&lt;T&gt;</code> 类型:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust">root.<span class="hljs-title function_ invoke__">as_ref</span>().<span class="hljs-title function_ invoke__">cloned</span>()<br></code></pre></td></tr></table></figure>
+<p><code>root.as_ref()</code>, Rust 会先做重新借用, 将可变借用转换为不可变借用, 即等价于 <code>(&amp;*root).as_ref()</code>.</p>
+<p><code>as_ref()</code> 的签名是:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-type">Option</span>&lt;T&gt;::<span class="hljs-title function_ invoke__">as_ref</span>(&amp;<span class="hljs-type">Option</span>&lt;T&gt;) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">Option</span>&lt;&amp;T&gt;<br></code></pre></td></tr></table></figure>
+
+<p>其会从 <code>&amp;Option&lt;T&gt;</code> 返回一个 <code>Option&lt;&amp;T&gt;</code>. 这里我们就完成了第一步, 去除了 <code>&amp;mut</code>. 但我们想要的是 <code>T</code> 而非 <code>&amp;T</code>.</p>
+<p><code>cloned()</code> 会把 <code>Option&lt;&amp;T&gt;</code> 转换为 <code>Option&lt;T&gt;</code>, 此时转换完成.</p>
+<p>这里可能会疑惑一点, 平时 <code>Option&lt;T&gt;</code> 也能直接调用 <code>as_ref()</code>, 但这似乎不符合参数. 因为 Rust 会自动进行借用, 把 <code>Option&lt;T&gt;</code> 变成 <code>&amp;Option&lt;T&gt;</code> 来匹配 <code>as_ref(&amp;self)</code> 的参数.</p>
+<h1 id="Option-的-cloned-方法"><a href="#Option-的-cloned-方法" class="headerlink" title="Option 的 cloned 方法"></a>Option 的 cloned 方法</h1><p>我们知道, 对 <code>Vec&lt;&amp;i32&gt;</code> 调用 <code>arr.iter().cloned()</code> 能得到 <code>Vec&lt;i32&gt;</code>, 把内部包裹的值 clone 一份.</p>
+<p>对于 <code>Option&lt;&amp;T&gt;</code> 也是一样的道理, <code>Some(&amp;i32).cloned()</code> 能得到 <code>Some(i32)</code>.</p>
+<h1 id="let-else-语句"><a href="#let-else-语句" class="headerlink" title="let-else 语句"></a>let-else 语句</h1><p>基本形式是:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">PATTERN</span> = EXPRESSION <span class="hljs-keyword">else</span> &#123;<br>    DIVERGING_BLOCK<br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<p>它的含义是:</p>
+<ol>
+<li>尝试用 <code>PATTERN</code> 匹配 <code>EXPRESSION</code></li>
+<li>匹配成功时, 就绑定变量, 并继续执行后面代码</li>
+<li>匹配失败时, 执行 <code>else</code> 块</li>
+<li><code>else</code> 块必须立即退出当前控制流, 不能执行完后继续往下走</li>
+</ol>
+<p>比如:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">Some</span>(node) = root <span class="hljs-keyword">else</span> &#123;<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>可以理解为一种紧凑的 <code>match</code>:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">node</span> = <span class="hljs-keyword">match</span> root &#123;<br>    <span class="hljs-title function_ invoke__">Some</span>(node) =&gt; node,<br>    <span class="hljs-literal">None</span> =&gt; <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>,<br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<h1 id="为什么-Rc-x2F-Weak-需要配合-RefCell-来使用"><a href="#为什么-Rc-x2F-Weak-需要配合-RefCell-来使用" class="headerlink" title="为什么 Rc&#x2F;Weak 需要配合 RefCell 来使用"></a>为什么 Rc&#x2F;Weak 需要配合 RefCell 来使用</h1><p><code>Rc/Weak</code> 和 <code>RefCell</code> 解决的是三个不同的问题:</p>
+<ul>
+<li><code>Rc&lt;T&gt;</code>: 多个所有者共享同一个值, 但只提供不可变的 <code>&amp;T</code></li>
+<li><code>Weak&lt;T&gt;</code>: 非拥有型引用, 用于避免循环引用, 使用时通过 <code>upgrade()</code> 临时变成 <code>Rc&lt;T&gt;</code></li>
+<li><code>RefCell&lt;T&gt;</code>: 在只有 <code>&amp;T</code> 的情况下, 通过运行时借用检查提供 <code>borrow_mut()</code></li>
+</ul>
+<p>由于 <code>Rc</code> 不提供共享可变性, 因此无法取得 <code>&amp;mut T</code>, 但很多时候需要变更 <code>T</code> 的内容, 因此通常定义有:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust">Rc&lt;RefCell&lt;T&gt;&gt;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>Rc</code> 负责管理 “谁拥有这个节点, 何时销毁”</li>
+<li><code>RefCell</code> 负责管理 “多个持有者如何修改节点内容”</li>
+</ul>
+<h1 id="无法-Move-裸指针指向的内存"><a href="#无法-Move-裸指针指向的内存" class="headerlink" title="无法 Move 裸指针指向的内存"></a>无法 Move 裸指针指向的内存</h1><p>比如在 <code>unsafe</code> 下写了:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">if</span> <span class="hljs-keyword">let</span> <span class="hljs-variable">Some</span>(target) = (*slow).next &#123;<br>    (*slow).next = target.next;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>需要从 <code>(*slow).next</code> 直接移出所有权到 <code>target</code> 变量, 这会编译报错:</p>
+<figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs applescript">cannot move <span class="hljs-keyword">out of</span> ... which <span class="hljs-keyword">is</span> <span class="hljs-keyword">behind</span> a raw pointer<br></code></pre></td></tr></table></figure>
+
+<p>因为在 Rust 中, 只有拥有明确所有权的变量或通过安全可变引用 (<code>&amp;mut</code>) 才能进行按值移动 (Move), 而裸指针在 Rust 看来只是一个没有安全保证的纯内存地址, 当对裸指针进行解引用 <code>(*slow)</code> 并试图把里面的值 “Move” 走时, Rust 无法追踪这块内存的所有权状态. 它不知道移走之后, 原先的内存槽该如何被安全地标记为空, 或者是否会引发重复释放 (double free) 等内存安全问题.</p>
+<p>上述代码可以改写为:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">if</span> <span class="hljs-keyword">let</span> <span class="hljs-variable">Some</span>(<span class="hljs-keyword">mut</span> target) = (&amp;<span class="hljs-title function_ invoke__">mut</span> (*slow).next).<span class="hljs-title function_ invoke__">take</span>() &#123;<br>    (*slow).next = target.next;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h1 id="for-each-的一些局限"><a href="#for-each-的一些局限" class="headerlink" title="for_each 的一些局限"></a><code>for_each</code> 的一些局限</h1><p>原因是我在写下面代码时遇到报错:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">left_tail</span> = &amp;<span class="hljs-keyword">mut</span> dummy;<br><span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">middle_head</span> = &#123;<br>    (<span class="hljs-number">0</span>..left-<span class="hljs-number">1</span>).<span class="hljs-title function_ invoke__">for_each</span>(|_| left_tail = &amp;<span class="hljs-keyword">mut</span> left_tail.<span class="hljs-title function_ invoke__">as_mut</span>().<span class="hljs-title function_ invoke__">unwrap</span>().next);<br>    left_tail.<span class="hljs-title function_ invoke__">as_mut</span>().<span class="hljs-title function_ invoke__">unwrap</span>().next.<span class="hljs-title function_ invoke__">take</span>()<br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<p>当时只是不想用 <code>for</code> 循环, 编译报错为:</p>
+<figure class="highlight latex"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs latex">Line 25: Char 38: error: borrowed data escapes outside of closure (solution.rs)<br>   |<br>23 |         let mut left<span class="hljs-built_in">_</span>tail = <span class="hljs-built_in">&amp;</span>mut dummy;<br>   |             ------------- `left<span class="hljs-built_in">_</span>tail` declared here, outside of the closure body<br>24 |         let mut middle<span class="hljs-built_in">_</span>head = &#123;<br>25 |             (0..left-1).for<span class="hljs-built_in">_</span>each(|<span class="hljs-built_in">_</span>| left<span class="hljs-built_in">_</span>tail = <span class="hljs-built_in">&amp;</span>mut left<span class="hljs-built_in">_</span>tail.as<span class="hljs-built_in">_</span>mut().unwrap().next);<br>   |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^<span class="hljs-built_in">^</span><br></code></pre></td></tr></table></figure>
+
+<p>原因是 Rust 的借用检查 (Borrow Checker): 在 <code>for_each</code> 闭包里修改外部变量会触发复杂的生命周期和多次可变借用错误 (细节暂时不深究). </p>
+<p>因此还是替换会 <code>for</code> 循环:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">left_tail</span> = &amp;<span class="hljs-keyword">mut</span> dummy;<br><span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">middle_head</span> = &#123;<br>    <span class="hljs-keyword">for</span> <span class="hljs-variable">_</span> <span class="hljs-keyword">in</span> <span class="hljs-number">0</span>..left-<span class="hljs-number">1</span> &#123; <span class="hljs-comment">// 将 for_each 改为普通 for 循环</span><br>        left_tail = &amp;<span class="hljs-keyword">mut</span> left_tail.<span class="hljs-title function_ invoke__">as_mut</span>().<span class="hljs-title function_ invoke__">unwrap</span>().next;<br>    &#125;<br>    left_tail.<span class="hljs-title function_ invoke__">as_mut</span>().<span class="hljs-title function_ invoke__">unwrap</span>().next.<span class="hljs-title function_ invoke__">take</span>()<br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<h1 id="为什么-String-不实现-Clone"><a href="#为什么-String-不实现-Clone" class="headerlink" title="为什么 String 不实现 Clone"></a>为什么 String 不实现 Clone</h1><p>Rust 中的 String 需要管理堆内存 (Heap), 而 <code>Copy</code> 的语义只允许在栈 (Stack) 上进行廉价的, 逐字节的浅拷贝.</p>
 <p><code>String</code> 的本质是一个胖指针结构体 (类似 <code>Vec&lt;u8&gt;</code>), 在栈上只占 24 字节 (64 位系统), 包含 3 个核心字段:</p>
 <ul>
 <li>指针 (Pointer): 指向堆内存中真实存储字符的地址</li>
