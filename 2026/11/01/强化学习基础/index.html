@@ -72,8 +72,12 @@
 <meta property="og:image" content="http://example.com/img/reinforcement-learning-deep-q-learning-pseudocode.png">
 <meta property="og:image" content="http://example.com/img/reinforcement-learning-tabular-based-policy-example.png">
 <meta property="og:image" content="http://example.com/img/reinforcement-learning-REINFORCE-algorithm-pseudocode.png">
+<meta property="og:image" content="http://example.com/img/reinforcement-learning-simplest-actor-critic-algorithm-pseudo.png">
+<meta property="og:image" content="http://example.com/img/reinforcement-learning-advantage-actor-critic-pseudocode.png">
+<meta property="og:image" content="http://example.com/img/reinforcement-learning-off-policy-actor-crithc-based-on-importance-sampling.png">
+<meta property="og:image" content="http://example.com/img/reinforcement-learning-deterministic-actor-critic-algorith.png">
 <meta property="article:published_time" content="2026-11-01T05:41:41.000Z">
-<meta property="article:modified_time" content="2026-11-01T03:42:48.299Z">
+<meta property="article:modified_time" content="2026-11-02T03:01:37.323Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/reinforcement-learning-intro-structure.png">
@@ -487,7 +491,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          73k 字
+          85k 字
         
       </span>
     
@@ -498,7 +502,7 @@ path.outline_glyph {
         
         
         
-          606 分钟
+          705 分钟
         
       </span>
     
@@ -1795,6 +1799,164 @@ path.outline_glyph {
 <h3 id="REINFORCE-algorithm"><a href="#REINFORCE-algorithm" class="headerlink" title="REINFORCE algorithm"></a>REINFORCE algorithm</h3><p>REINFORCE 是最早最简单的 policy gradient algorithm 之一.</p>
 <p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\theta_{t+1} &#x3D; \theta_t + \alpha \nabla_\theta \ln \pi (a_t | s_t, \theta_t) q_t (s_t, a_t)<br>\end{aligned}<br>}<br>$$</p>
 <p><img src="/../img/reinforcement-learning-REINFORCE-algorithm-pseudocode.png" srcset="/img/loading.gif" lazyload></p>
+<h1 id="Lecture-10-Actor-Critic-Methods"><a href="#Lecture-10-Actor-Critic-Methods" class="headerlink" title="Lecture 10: Actor-Critic Methods"></a>Lecture 10: Actor-Critic Methods</h1><h2 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h2><p>Actor-Critic methods 本质还是 Policy Gradient 方法, 它只是额外将 value function approximation 的思路引入进来.</p>
+<ul>
+<li>Actor 在这里对应 policy update. 之所以称 actor, 是因为 policies 用于取 action (action 从 actor 中拿)</li>
+<li>Critic 对应 policy evaluation 或 value estimation (评论家就是评判策略好坏, 也就是实际跑一下策略)</li>
+</ul>
+<h2 id="The-simplest-actor-critic-QAC"><a href="#The-simplest-actor-critic-QAC" class="headerlink" title="The simplest actor-critic (QAC)"></a>The simplest actor-critic (QAC)</h2><p>假设我们有一个 scalar metric $J(\theta)$, 其可以是 $\overline{v}_\pi$ (average state value) 或 $\overline{r}_\pi$ (average reward).</p>
+<p>我们可以用 gradient-ascent algorithm 来最大化 $J(\theta)$:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\theta_{t+1} &amp;&#x3D; \theta_t + \alpha \nabla_\theta J(\theta_t) \newline \newline<br>&amp;&#x3D; \theta_t + \alpha E_{S \sim \eta, A \sim \pi} [\nabla_\theta \ln \pi (A|S, \theta_t) q_\pi (S,A)]<br>\end{aligned}<br>}<br>$$</p>
+<p>将这里的 expectation 换成 stochastic gradient-ascent algorithm 有:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\theta_{t+1} &#x3D; \theta_t + \alpha \nabla_\theta \ln \pi (a_t | s_t, \theta_t) q_t (s_t, a_t)<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>这个式子本身是 actor, 因为 $\theta_{t+1} \leftarrow \theta_t …$ 这个动作在更新策略</li>
+<li>对 $q_t(s, a)$ 的估计就是 critic, 因为它是 $q_\pi (S,A)$ 的近似, 相当于是拿策略算出了一个值 (evaluation)</li>
+</ul>
+<p>估计一个 action value $q_t (s_t, a_t)$, 前面介绍了两种方法:</p>
+<ul>
+<li>Monte Carlo learning: 如果用 MC 来近似, 并且用前面的 policy function 方法, 那这个算法整体就称作 REINFORCE 或 Monte Carlo policy gradient</li>
+<li>Temporal-Difference: 如果用 TD 来近似, 那么这个算法整体就称作 actor-critic</li>
+</ul>
+<p><img src="/../img/reinforcement-learning-simplest-actor-critic-algorithm-pseudo.png" srcset="/img/loading.gif" lazyload></p>
+<ul>
+<li>先生成 $(s_t, a_t, r_{t+1}, s_{t+1}, a_{t+1})$ 这种 experience sample</li>
+<li>Critic (Value update) 部分是 Sarsa 算法结合 value function approximation</li>
+<li>Actor (Policy update) 部分就是将估计的 action value 带入, 更新参数</li>
+<li>之后开始下一轮更新</li>
+</ul>
+<p>注意这个算法是 on-policy 的 (视频中说 target policy 等于 behavior policy, 这些概念还不太明白).</p>
+<p>这个算法有时也称 Q Actor-Critic (QAC), Q 是指更新 q value (即 action value).</p>
+<h2 id="Advantage-actor-critic-A2C"><a href="#Advantage-actor-critic-A2C" class="headerlink" title="Advantage actor-critic (A2C)"></a>Advantage actor-critic (A2C)</h2><h3 id="Baseline-invariance"><a href="#Baseline-invariance" class="headerlink" title="Baseline invariance"></a>Baseline invariance</h3><p>之所以简称 A2C, 是因为 Advantage 和 actor 这两个单词的首字母都是 A, 即有两个 A.</p>
+<p>A2C 的核心思想是给 QAC 引入一个 baseline (一个偏置), 从而减少 variance.</p>
+<p>这得益于 policy gradient 的一个性质: 引入 additional baseline 不会影响梯度值. 即:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\nabla_\theta J(\theta) &amp;&#x3D; E_{S \sim \eta, A \sim \pi} [\nabla_\theta \ln \pi (A|S, \theta_t) q_\pi (S,A)] \newline \newline<br>&amp;&#x3D; E_{S \sim \eta, A \sim \pi} [\nabla_\theta \ln \pi (A|S, \theta_t) (q_\pi (S,A) - b(S))] \newline \newline<br>\end{aligned}<br>}<br>$$</p>
+<p>这里证明下为什么不受影响, 也就是证明:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>E_{S \sim \eta, A \sim \pi} [\nabla_\theta \ln \pi (A|S, \theta_t)b(S)] &#x3D; 0<br>\end{aligned}<br>}<br>$$</p>
+<p>把 expectation 展开来算:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>E_{S \sim \eta, A \sim \pi} [\nabla_\theta \ln \pi (A|S, \theta_t)b(S)] &amp;&#x3D; \sum_{s \in S} \eta (s) \sum_{a \in A} \pi (a|s,\theta_t) \nabla_\theta \ln \pi (a|s, \theta_t) b(s) \newline \newline<br>&amp;&#x3D; \sum_{s \in S} \eta (s) \sum_{a \in A} \nabla_\theta \pi (a | s, \theta_t) b(s) \newline \newline<br>&amp;&#x3D; \sum_{s \in S} \eta (s) b(s) \sum_{a \in A} \nabla_\theta \pi (a | s, \theta_t) \newline \newline<br>&amp;&#x3D; \sum_{s \in S} \eta(s) b(s) \nabla_\theta \sum_{a \in A} \pi (a | s, \theta_t) \newline \newline<br>&amp;&#x3D; \sum_{s \in S} \eta (s) b(s) \nabla_\theta 1 &#x3D; 0<br>\end{aligned}<br>}<br>$$</p>
+<p>下面说明一下引入 baseline 有什么作用.</p>
+<p>首先做一个替换, $\nabla_\theta J(\theta) &#x3D; E[X]$, 其中 $X$ 表示:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>X(S,A) &#x3D; \nabla_\theta \ln \pi (A|S,\theta_t) [q(S,A) - b(S)]<br>\end{aligned}<br>}<br>$$</p>
+<p>$E[X]$ 与 $b(S)$ 是无关的. 但 $var(X)$ 与 $b(S)$ 有关, 因为 $tr[var(X)] &#x3D; E[X^T X] - \overline{x}^T \overline{x}$, 以及:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>E[X^T X] &amp;&#x3D; E[(\nabla_\theta \ln \pi)^T (\nabla_\theta \ln \pi) (q(S,A) - b(S))^2]  \newline \newline<br>&amp;&#x3D; E[||\nabla_\theta \ln \pi||^2 (q(S,A) - b(S))^2]<br>\end{aligned}<br>}<br>$$<br>(视频课没有细讲, 上面式子为了说明 baseline 对方差有影响)</p>
+<p>我们的目标设计找到一个 optimal baseline $b$, 来最小化 $var(X)$, 这样采样时的误差最小.</p>
+<p>对于 REINFORCE 和 QAC, 等价于 $b &#x3D; 0$, 但这其实并不是最好的取值 (可能 variance 大).</p>
+<p>对任意 $s \in S$, optimal baseline 的计算如下:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>b^* (s) &#x3D; \frac{E_{A \sim \pi} [|| \nabla_\theta \ln \pi (A|s, \theta_t) ||^2 q(s,A)]}{E_{A \sim \pi} [|| \nabla_\theta \ln \pi (A|s, \theta_t) ||^2]}<br>\end{aligned}<br>}<br>$$</p>
+<p>(视频课没细讲, 似乎不是重点)</p>
+<p>这个式子比较复杂, 通常会把权重 $|| \nabla_\theta \ln \pi (A|s, \theta_t) ||^2$ 去掉, 然后计算一个 suboptimal baseline:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>b(s) &#x3D; E_{A \sim \pi} [q(s,A)] &#x3D; v_\pi (s)<br>\end{aligned}<br>}<br>$$</p>
+<p>也就是 $s$ 的 state value.</p>
+<h3 id="The-algorithm-of-advantage-actor-critic"><a href="#The-algorithm-of-advantage-actor-critic" class="headerlink" title="The algorithm of advantage actor-critic"></a>The algorithm of advantage actor-critic</h3><p>我们令 $b(s) &#x3D; v_\pi (s)$, 此时 gradient-ascent algorithm 有:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\theta_{t+1} &amp;&#x3D; \theta_t + \alpha E[ \nabla_\theta \ln \pi (A|S, \theta_t) [q_\pi (S,A) - v_\pi (S)] ] \newline \newline<br>&amp;&#x3D; \theta_t + \alpha E[\nabla_\theta \ln \pi (A|S, \theta_t) \delta_\pi (S,A)]<br>\end{aligned}<br>}<br>$$</p>
+<p>where</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\delta_\pi (S,A) &#x3D; q_\pi (S,A) - v_\pi (S)<br>\end{aligned}<br>}<br>$$</p>
+<p>这个式子称 advantage function (优势函数). $v_\pi (S)$ 本质是 $\sum_a \pi (a|S) q_\pi (s,a)$, 也就是 $q_\pi (s,a)$ 的一个加权平均值, 如果 $q_\pi (S,A)$ 比这个平均值更大, 那就说明它更好.</p>
+<p>同样将 expectation 换成 stochastic 的形式:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\theta_{t+1} &amp;&#x3D; \theta_t + \alpha \nabla_\theta \ln \pi (A|S, \theta_t) [q_\pi (S,A) - v_\pi (S)] \newline \newline<br>&amp;&#x3D; \theta_t + \alpha \nabla_\theta \ln \pi (A|S, \theta_t) \delta_\pi (S,A)<br>\end{aligned}<br>}<br>$$</p>
+<p>这个式子可以重新整理为:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\theta_{t+1} &amp;&#x3D; \theta_t + \alpha \nabla_\theta \ln \pi (A|S, \theta_t) [q_\pi (S,A) - v_\pi (S)] \newline \newline<br>&amp;&#x3D; \theta_t + \alpha \frac{\nabla_\theta \pi (a_t | s_t, \theta_t)}{\pi (a_t | s_t, \theta_t)} \delta_t (s_t, a_t) \newline \newline<br>&amp;&#x3D; \theta_t + \underbrace{\alpha (\frac{\delta_t (s_t, a_t)}{\pi (a_t | s_t, \theta_t)})}_\text{step size}  \nabla_\theta \pi (a_t | s_t, \theta_t)<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>$\delta_t$ 增大时, step size 变大, 让 $\theta_t$ 更新比较多, 下一次迭代时 $\pi (a_t |s_t)$ 也会比较大, 此时倾向于 exploitation</li>
+<li>而 $\pi (a_t | s_t)$ 又会导致 step size 的分母变大, 进而又让 step size 变小, $\theta_t$ 更新变慢, 倾向于 $\pi (a_t | s_t)$ 变小, 此时则是 exploration<br>(exploration 和 exploitation 的平衡)</li>
+</ul>
+<p>这里我们让 step size 正比于 $\delta_t$ 而不是 $q_t$, 这是更好的 (可能得理解下原因).</p>
+<p>这个 advantage function 还可以近似替换为 TD error:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\delta_t &#x3D; q_t (s_t, a_t) - v_t (s_t) \rightarrow r_{t+1} + \gamma v_t (s_{t+1}) - v_t (s_t)<br>\end{aligned}<br>}<br>$$</p>
+<p>之所以近似能成立, 是因为:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>E[q_\pi (S,A) - v_\pi (S) | S &#x3D; s_t, A &#x3D; a_t] &#x3D; E [R + \gamma v_\pi (S’) - v_\pi (S) | S &#x3D; s_t, A &#x3D; a_t]<br>\end{aligned}<br>}<br>$$</p>
+<p>这个近似的好处是, 只需要用一个 network 来近似 $v_\pi (s)$, 而非用两个网络来近似 $q_\pi (s,a)$ 和 $v_\pi (s)$.</p>
+<p>该算法的 pseudocode 如下:</p>
+<p><img src="/../img/reinforcement-learning-advantage-actor-critic-pseudocode.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="Off-policy-actor-critic"><a href="#Off-policy-actor-critic" class="headerlink" title="Off-policy actor-critic"></a>Off-policy actor-critic</h2><h3 id="importance-sampling"><a href="#importance-sampling" class="headerlink" title="importance sampling"></a>importance sampling</h3><p>之前介绍的 policy gradient 是 on-policy 的, 因为 $\nabla_\theta J(\theta) &#x3D; E_{S \sim \eta, A \sim \pi} [*]$ 这里的 $\pi$ 既是 behavior policy (从中进行采样), 也是 target policy (需要更新), 两者相同.</p>
+<p>这里可以用 importance sampling 来讲其转换为 off-policy 的方法 (任何涉及 expectation 计算的, 都能应用 importance sampling).</p>
+<p>这里考虑一个问题, 如何用 $\{x_i\} \sim p_1$ (从 $p_1$ 这个分布中采样一些 $x_i$ 样本) 来估计 $E_{X \sim p_0} [X]$ (服从 $p_0$ 这个分布的随机变量的 expectation) 呢?</p>
+<p>之所以考虑这个, 是因为 off-policy 算法的 target policy 和 behavior policy 不同. 比如要估计的 $E_{A \sim \pi} [*]$, 这里的 $\pi$ 是 target policy ($p_0$), 而采样样本的是 behavior policy $\beta$ ($p_1$).</p>
+<p>如果直接求平均, 肯定是不行的:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\overline{x} \rightarrow E_{X \sim p_1} [X] &#x3D; 0.6 \ne E_{X \sim p_0} [X]<br>\end{aligned}<br>}<br>$$</p>
+<p>而可行的一个方法就是 importance sampling, 转换公式如下:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>E_{X \sim p_0} [X] &#x3D; \sum_x p_0 (x) x &#x3D; \sum_x p_1 (x) \underbrace{\frac{p_0 (x)}{p_1 (x)} x}<em>\text{f(x)} &#x3D; E</em>{X \sim p_1} [f(X)]<br>\end{aligned}<br>}<br>$$</p>
+<p>此时就能通过求 $E_{X \sim p_1} [f(X)]$ 来估计 $E_{X \sim p_0} [X]$.</p>
+<p>估计 $E_{X \sim p_1} [f(X)]$ 有:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\overline{f} &#x3D; \frac{1}{n} \sum_{i&#x3D;1}^n f(x_i), where\ x_i \sim p_1<br>\end{aligned}<br>}<br>$$</p>
+<p>有:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>E_{X \sim p_1} [\overline{f}] &amp;&#x3D; E_{X \sim p_1} [f(X)] \newline \newline<br>var_{X \sim p_1} [\overline{f}] &amp;&#x3D; \frac{1}{n} var_{X \sim p_1} [f(X)]<br>\end{aligned}<br>}<br>$$</p>
+<p>(大数定理)</p>
+<p>整理一下, 最终我们能得到:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>E_{X \sim p_0} [X] \sim \overline{f} &#x3D; \frac{1}{n} \sim_{i&#x3D;1}^n f(x_i) &#x3D; \frac{1}{n} \sum_{i&#x3D;1}^n \frac{p_0 (x_i)}{p_1 (x_i)} x_i<br>\end{aligned}<br>}<br>$$</p>
+<p>这里的 $\frac{p_0 (x_i)}{p_1 (x_i)}$ 称为 importance weight:</p>
+<ul>
+<li>当 $p_0(x_i) &#x3D; p_1 (x_i)$ 时, importance weight 是 1, 此时 $\overline{f}$ 就是 $\overline{x}$</li>
+<li>当 $p_0(x_i) \ge p_1 (x_i)$ 时, importance weight 大于 1 (这里的直观解释我没有太懂)</li>
+</ul>
+<p>在这里很容易想到, 既然 $\overline{f} &#x3D; \frac{1}{n} \sum_{i&#x3D;1}^n \frac{p_0 (x_i)}{p_1 (x_i)} x_i$ 这里需要 $p_0 (x)$, 也就是我们知道 $p_0$ 这个分布, 那么可以直接求 $E_{X \sim p_0} [X] &#x3D; \sum p_0 (x) x$, 为什么还要费劲求 $\overline{f}$ 呢.</p>
+<p>这里有个例子来说明, 即使知道分布, 求 expectation 也是非常困难的. 因为求 expectation 需要用到具体的公式, 进而求和或者积分. 但如果我们是一个 neural network, 输入一个 $x$, 输出 $p_0(x)$ 概率, 此时没有具体表达式, 因此也没法计算 expectation.</p>
+<p>再总结下就是, 我们有 $\{x_i\} \sim p_1$, 进而得到:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\overline{x} &#x3D; \frac{1}{n} \sum_{i&#x3D;1}^n x_i \rightarrow E_{X \sim p_1} [X] \newline \newline<br>\overline{f} &#x3D; \frac{1}{n} \sum_{i&#x3D;1}^n \frac{p_0 (x_i)}{p_1 (x_i)} x_i \rightarrow E_{X \sim p_0} [X]<br>\end{aligned}<br>}<br>$$</p>
+<h3 id="The-theorem-of-off-policy-policy-gradient"><a href="#The-theorem-of-off-policy-policy-gradient" class="headerlink" title="The theorem of off-policy policy gradient"></a>The theorem of off-policy policy gradient</h3><p>考虑这个场景, 用 $\beta$ 这个 behavior policy 来生成 experience samples, 目标是用这些 samples 来更新 target policy $\pi$, 来最小化下面 metric:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>J(\theta) &#x3D; \sum_{s \in S} d_{\beta} (x) v_\pi (s) &#x3D; E_{S \sim d_\beta} [v_\pi (S)]<br>\end{aligned}<br>}<br>$$</p>
+<p>$d_\beta$ 是 policy $\beta$ 下的 stationary distribution.</p>
+<p>这个 objective function 的 gradient 计算如下 (视频没有细讲):</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\nabla_\theta J(\theta) &#x3D; E_{S \sim \rho, A \sim \beta} [\frac{\pi (A|S,\theta)}{\beta (A |S)} \nabla_\theta \ln \pi (A|S,\theta) q_\pi (S,A)]<br>\end{aligned}<br>}<br>$$<br>其中 $\beta$ 是 behavior policy, $\pho$ 是 state distribution. $\frac{\pi (A|S,\theta)}{\beta (A|S)}$ 就是前面的重要性采样.</p>
+<h3 id="The-algorithm-of-off-policy-actor-critic"><a href="#The-algorithm-of-off-policy-actor-critic" class="headerlink" title="The algorithm of off-policy actor-critic"></a>The algorithm of off-policy actor-critic</h3><p>有了 gradient, 就能带到 gradient-ascent 算法中进行优化.</p>
+<p>先是加上 baseline (这里感觉视频没讲清楚):</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\nabla_\theta J(\theta) &#x3D; E_{S \sim \pho, A \sim \beta} [\frac{\pi (A|S, \theta)}{\beta (A|S)} \nabla_\theta \ln \pi (A|S,\theta)(q_\pi (S,A) - b(S))]<br>\end{aligned}<br>}<br>$$</p>
+<p>为了消除 estimation variance, 可以取 $b(S) &#x3D; v_\pi (S)$, 得到:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\nabla_\theta J(\theta) &#x3D; E_{S \sim \pho, A \sim \beta} [\frac{\pi (A|S, \theta)}{\beta (A|S)} \nabla_\theta \ln \pi (A|S,\theta)(q_\pi (S,A) - v_\pi (S))]<br>\end{aligned}<br>}<br>$$</p>
+<p>此时 stochastic gradient-ascent algorithm 公式如下 (off-policy case):</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\theta_{t+1} &#x3D; \theta_t + \alpha_\theta \frac{\pi (a_t | s_t, \theta_t)}{\beta (a_t | s_t)} \nabla_\theta \ln \pi (a_t | s_t, \theta_t) (q_t(s_t, a_t) - v_t (s_t))<br>\end{aligned}<br>}<br>$$</p>
+<p>和 on-policy case 一样, 可以把 $q_t (s_t, a_t) - v_t (s_t)$ 做转换:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>q_t (s_t, a_t) - v_t (s_t) \approx r_{t+1} + \gamma v_t (s_{t+1}) - v_t (s_t) &#x3D; \delta_t (s_t, a_t)<br>\end{aligned}<br>}<br>$$</p>
+<p>此时 algorithm 变为:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\theta_{t+1} &#x3D; \theta_t + \alpha_\theta \frac{\pi (a_t | s_t, \theta_t)}{\beta (a_t | s_t)} \nabla_\theta \ln \pi (a_t | s_t, \theta_t) \delta_t (s_t, a_t)<br>\end{aligned}<br>}<br>$$</p>
+<p>再变形, 把 $\ln \pi$ 的梯度解出:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\theta_{t+1} &#x3D; \theta_t + \alpha_\theta \frac{\pi (a_t | s_t, \theta_t)}{\beta (a_t | s_t)} \nabla_\theta \pi (a_t | s_t, \theta_t)<br>\end{aligned}<br>}<br>$$</p>
+<p>注意由于 $\beta(a_t | s_t)$ 是不可变的, 因此没有太多 exploration, 都是 exploitation.</p>
+<p>pseudocode 如下:</p>
+<p><img src="/../img/reinforcement-learning-off-policy-actor-crithc-based-on-importance-sampling.png" srcset="/img/loading.gif" lazyload></p>
+<h2 id="Deterministic-actor-critic-DPG"><a href="#Deterministic-actor-critic-DPG" class="headerlink" title="Deterministic actor-critic (DPG)"></a>Deterministic actor-critic (DPG)</h2><p>之前讲的 policy gradient methods 都是优化 stochastic policies 的, 即对于任意 $(s, a)$, 都有 $\pi (a | s, \theta) &gt; 0$.</p>
+<p>这些方法也能用于 deterministic policies. Deterministic 意思就是概率为 1, 因此 deterministic policy 可以记为:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>a &#x3D; \mu (s, \theta) &#x3D; u(s)<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>$\mu$ 直接将 $s$ 映射为 $a$ (不是输出概率), $\mu: S \rightarrow A$</li>
+<li>$\mu$ 可以视为 neural network, 参数为 $\theta$</li>
+<li>有时可以隐藏参数, 写作 $\mu(s)$</li>
+</ul>
+<p>下面的介绍思路还是, 先求 gradient, 然后带入 gradient-ascent algorithm.</p>
+<h3 id="The-theorem-of-deterministic-policy-gradient"><a href="#The-theorem-of-deterministic-policy-gradient" class="headerlink" title="The theorem of deterministic policy gradient"></a>The theorem of deterministic policy gradient</h3><p>考虑 objective function 为 average state value in the discounted case:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>J(\theta) &#x3D; E[v_\mu (s)] &#x3D; \sum_{s \in S} d_0 (s) v_\mu (s)<br>\end{aligned}<br>}<br>$$</p>
+<ul>
+<li>$d_0 (s)$ 是一个 probability distribution, 满足 $\sum_{s \in S} d_0 (s) &#x3D; 1$</li>
+<li>$v_\mu (s)$ 是策略 $\mu$ 下的 state value</li>
+</ul>
+<p>这里的 $d_0 (s)$ 的选取有两种情况:</p>
+<ul>
+<li>只关注从 $s_0$ 出发的 state value, 那么就有 $d_0 (s_0) &#x3D; 1$ 和 $d_0 (s \ne s_0) &#x3D; 0$</li>
+<li>$d_0$ 可以是一个 behavior policy 下的 stationary distribution (不是 $\mu$, 比如 $\beta$)</li>
+</ul>
+<p>后面会讲到, deterministic policy gradient 天然就是 off-policy 的, 不需要用 importance sampling 来转换.</p>
+<p>上面 objective function 的 gradient 如下 (视频课没有讲如何推导的):</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\nabla_\theta J (\theta) &amp;&#x3D; \sum_{s \in S} \rho_\mu (s) \nabla_\theta \mu (s) (\nabla_a q_\mu (s,a)) |<em>{a &#x3D; \mu(s)} \newline \newline<br>&amp;&#x3D; E</em>{S \sim \rho_\mu} [\nabla_\theta \mu (S) (\nabla_\a q_\mu (S,a))|_{a &#x3D; \mu (S)}]<br>\end{aligned}<br>}<br>$$</p>
+<p>其中 $\rho$ 是 state distribution.</p>
+<p>相比于 stochastic case, 有两个重要区别:</p>
+<ul>
+<li>gradient 不涉及 distribution of the action A, 因为直接用 $\mu (S)$ 替换掉了</li>
+<li>它是天然的 off-policy 算法</li>
+</ul>
+<h3 id="The-algorithm-of-deterministic-actor-critic"><a href="#The-algorithm-of-deterministic-actor-critic" class="headerlink" title="The algorithm of deterministic actor-critic"></a>The algorithm of deterministic actor-critic</h3><p>用 gradient-ascent algorithm 来最大化 $J(\theta)$:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\theta_{t+1} &#x3D; \theta_t + \alpha_\theta E_{S \sim \rho_\mu} [\nabla_\theta \mu (S) (\nabla_a q_\mu (S,a))|_{a &#x3D; \mu (s)}]<br>\end{aligned}<br>}<br>$$</p>
+<p>对应的 stochastic gradient-ascent algorithm 是:</p>
+<p>$$<br>\displaylines<br>{<br>\begin{aligned}<br>\theta_{t+1} &#x3D; \theta_t + \alpha_\theta \nabla_\theta \mu (S) (\nabla_a q_\mu (S,a))|_{a &#x3D; \mu (s)}<br>\end{aligned}<br>}<br>$$</p>
+<p>对应的 pseudocode 如下:</p>
+<p><img src="/../img/reinforcement-learning-deterministic-actor-critic-algorith.png" srcset="/img/loading.gif" lazyload></p>
+<p>需要注意这是 off-policy 的, 即 behavior policy $\beta$ 不同于 target policy $\mu$.</p>
+<p>$\beta$ 又是可以用 $\mu + noise$ 得到, 以增加一些探索性, 变成 on-policy 的算法.</p>
+<p>$q(s, a, w)$ 的选取有两种:</p>
+<ul>
+<li>Linear function: $q(s,a,w) &#x3D; \phi^T (s,a) w$, 其中 $\phi (s,a)$ 是一个 feature vector. 由于其是线性的, 逼近能力会比较有限</li>
+<li>Neural networks: deep deterministic policy gradient method (DDPG)</li>
+</ul>
 
                 
               </div>
@@ -1875,6 +2037,12 @@ path.outline_glyph {
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2026/11/01/%E5%8A%A8%E6%89%8B%E5%AD%A6%E4%B9%A0%E5%BC%BA%E5%8C%96%E5%AD%A6%E4%B9%A0/" title="动手学习强化学习">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">动手学习强化学习</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">
