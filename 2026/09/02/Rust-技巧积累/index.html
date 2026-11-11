@@ -16,15 +16,15 @@
   <meta name="author" content="Jie">
   <meta name="keywords" content="">
   
-    <meta name="description" content="Auto-refAuto-ref 是 Rust 在方法调用时, 自动调整 receiver 类型的一套规则, 目的是让方法调用看起来自然, 同时仍然保证所有权和借用安全. Rust 中方法调用的语法为: 1receiver.method(args...)  当 method 需要 &amp;self 或 &amp;mut self 时, 如果此时的 receiver 是值&#x2F;可变绑定 (有">
+    <meta name="description" content="切片左端点的范围下面代码是符合 Rust 规范的: 12let arr &#x3D; vec![1,2,3];let sli &#x3D; &amp;arr[3..];  只要 start 不超过 arr.len() 就是合法的. 下面代码则会 panic: 12let arr &#x3D; vec![1,2,3];let sli &#x3D; &amp;arr[4..];  Box 的自动解引用比如: 1234567891011121">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Rust-技巧积累">
 <meta property="og:url" content="http://example.com/2026/09/02/Rust-%E6%8A%80%E5%B7%A7%E7%A7%AF%E7%B4%AF/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="Auto-refAuto-ref 是 Rust 在方法调用时, 自动调整 receiver 类型的一套规则, 目的是让方法调用看起来自然, 同时仍然保证所有权和借用安全. Rust 中方法调用的语法为: 1receiver.method(args...)  当 method 需要 &amp;self 或 &amp;mut self 时, 如果此时的 receiver 是值&#x2F;可变绑定 (有">
+<meta property="og:description" content="切片左端点的范围下面代码是符合 Rust 规范的: 12let arr &#x3D; vec![1,2,3];let sli &#x3D; &amp;arr[3..];  只要 start 不超过 arr.len() 就是合法的. 下面代码则会 panic: 12let arr &#x3D; vec![1,2,3];let sli &#x3D; &amp;arr[4..];  Box 的自动解引用比如: 1234567891011121">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-09-02T11:15:22.000Z">
-<meta property="article:modified_time" content="2026-10-29T08:03:01.248Z">
+<meta property="article:modified_time" content="2026-11-10T12:39:28.688Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -437,7 +437,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          132k 字
+          134k 字
         
       </span>
     
@@ -448,7 +448,7 @@ path.outline_glyph {
         
         
         
-          1099 分钟
+          1114 分钟
         
       </span>
     
@@ -491,7 +491,40 @@ path.outline_glyph {
             
               <div class="markdown-body">
                 
-                <h1 id="Auto-ref"><a href="#Auto-ref" class="headerlink" title="Auto-ref"></a>Auto-ref</h1><p>Auto-ref 是 Rust 在方法调用时, 自动调整 receiver 类型的一套规则, 目的是让方法调用看起来自然, 同时仍然保证所有权和借用安全.</p>
+                <h1 id="切片左端点的范围"><a href="#切片左端点的范围" class="headerlink" title="切片左端点的范围"></a>切片左端点的范围</h1><p>下面代码是符合 Rust 规范的:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">arr</span> = <span class="hljs-built_in">vec!</span>[<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>];<br><span class="hljs-keyword">let</span> <span class="hljs-variable">sli</span> = &amp;arr[<span class="hljs-number">3</span>..];<br></code></pre></td></tr></table></figure>
+
+<p>只要 <code>start</code> 不超过 <code>arr.len()</code> 就是合法的.</p>
+<p>下面代码则会 panic:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">arr</span> = <span class="hljs-built_in">vec!</span>[<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>];<br><span class="hljs-keyword">let</span> <span class="hljs-variable">sli</span> = &amp;arr[<span class="hljs-number">4</span>..];<br></code></pre></td></tr></table></figure>
+
+<h1 id="Box-的自动解引用"><a href="#Box-的自动解引用" class="headerlink" title="Box 的自动解引用"></a>Box 的自动解引用</h1><p>比如:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">list_ave</span>(head: &amp;<span class="hljs-type">Option</span>&lt;<span class="hljs-type">Box</span>&lt;ListNode&gt;&gt;) <span class="hljs-punctuation">-&gt;</span> <span class="hljs-type">Option</span>&lt;<span class="hljs-type">i32</span>&gt; &#123;<br>    <span class="hljs-keyword">if</span> head.<span class="hljs-title function_ invoke__">is_none</span>() &#123; <span class="hljs-keyword">return</span> <span class="hljs-literal">None</span>; &#125;<br><br>    <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">sum</span> = <span class="hljs-number">0</span>;<br>    <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">count</span> = <span class="hljs-number">0</span>;<br>    <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">curr</span> = head;<br>    <span class="hljs-keyword">while</span> <span class="hljs-keyword">let</span> <span class="hljs-variable">Some</span>(node) = curr.<span class="hljs-title function_ invoke__">as_ref</span>() &#123;<br>        sum += node.val;<br>        count += <span class="hljs-number">1</span>;<br>        curr = &amp;node.next;<br>    &#125;<br>    <span class="hljs-title function_ invoke__">Some</span>(sum / count)<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>这里的 <code>curr.as_ref()</code> 是 <code>Option&lt;&amp;Box&lt;ListNode&gt;&gt;</code>, 而 <code>node</code> 自动从 <code>&amp;Box&lt;ListNode&gt;</code> 转换为了 <code>&amp;ListNode</code>.</p>
+<p>因为 <code>Box</code> 实现了 <code>Deref</code>:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">impl</span>&lt;T&gt; Deref <span class="hljs-keyword">for</span> <span class="hljs-title class_">Box</span>&lt;T&gt; &#123;<br>    <span class="hljs-keyword">type</span> <span class="hljs-title class_">Target</span> = T;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>自动打开了 <code>Box</code>.</p>
+<h1 id="理解-queue-pop-front-unwrap-borrow"><a href="#理解-queue-pop-front-unwrap-borrow" class="headerlink" title="理解 queue.pop_front().unwrap().borrow()"></a>理解 <code>queue.pop_front().unwrap().borrow()</code></h1><p>下面代码会报错变量已经被销毁:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">node</span> = queue.<span class="hljs-title function_ invoke__">pop_front</span>().<span class="hljs-title function_ invoke__">unwrap</span>().<span class="hljs-title function_ invoke__">borrow</span>();<br><br><span class="hljs-keyword">if</span> <span class="hljs-keyword">let</span> <span class="hljs-variable">Some</span>(left) = &amp;node.left &#123;<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>因为 <code>queue.pop_front().unwrap()</code> 返回一个 <code>Rc&lt;RefCell&lt;TreeNode&gt;&gt;</code>, 但它是一个纯右值 (临时值), 除非绑定到变量, 否则在完整表达式结束时就被 drop.</p>
+<p>而 <code>borrow()</code> 的签名是 <code>fn borrow(&amp;self) -&gt; Ref&lt;&#39;_, T&gt;</code>, 这里的 <code>&#39;_</code> 生命周期来自 <code>&amp;self</code>. 这里的 <code>&amp;self</code> 取自一个右值 (临时值), 因此 <code>Ref&lt;T&gt;</code> 会在这一行代码后被销毁.</p>
+<p>正确写法是拆成两行:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">let</span> <span class="hljs-variable">node_rc</span> = queue.<span class="hljs-title function_ invoke__">pop_front</span>().<span class="hljs-title function_ invoke__">unwrap</span>();<br><span class="hljs-keyword">let</span> <span class="hljs-variable">node</span> = node_rc.<span class="hljs-title function_ invoke__">borrow</span>();<br></code></pre></td></tr></table></figure>
+
+<p>先把临时值绑定到变量上, 然后再借用处理.</p>
+<h1 id="理解-node-borrow-left-as-ref-unwrap"><a href="#理解-node-borrow-left-as-ref-unwrap" class="headerlink" title="理解 node.borrow().left.as_ref().unwrap()"></a>理解 <code>node.borrow().left.as_ref().unwrap()</code></h1><p>这里的 <code>node</code> 类型为 <code>Rc&lt;RefCell&lt;TreeNode&gt;&gt;</code>, 另外, <code>TreeNode</code> 定义为:</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-meta">#[derive(Debug, PartialEq, Eq)]</span><br><span class="hljs-keyword">pub</span> <span class="hljs-keyword">struct</span> <span class="hljs-title class_">TreeNode</span> &#123;<br>  <span class="hljs-keyword">pub</span> val: <span class="hljs-type">i32</span>,<br>  <span class="hljs-keyword">pub</span> left: <span class="hljs-type">Option</span>&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;,<br>  <span class="hljs-keyword">pub</span> right: <span class="hljs-type">Option</span>&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;,<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>我之前的疑惑是, <code>unwrap()</code> 会消耗掉 <code>Option</code>, 那么 <code>node.borrow().left.as_ref().unwrap()</code> 是否会消耗掉 <code>left</code> 节点呢? 答案是不会的.</p>
+<ul>
+<li><code>node.borrow()</code> 返回 <code>Ref&lt;TreeNode&gt;</code>, 请行为类似 <code>&amp;TreeNode</code></li>
+<li><code>.left</code> 返回一个 <code>Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;</code>, 且由于是 <code>borrow()</code>, 这里没有所有权</li>
+<li><code>.as_ref()</code> 会先 <code>auto-ref</code> 自动将 <code>Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;</code> 转换为 <code>&amp;Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;</code>, 然后再返回一个新的 <code>Option&lt;&amp;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;</code>. 注意他会用新的 <code>Option</code> 包裹引用</li>
+<li><code>.unwrap()</code> 消耗的就是 <code>as_ref()</code> 返回的新的 <code>Option</code></li>
+</ul>
+<h1 id="Auto-ref"><a href="#Auto-ref" class="headerlink" title="Auto-ref"></a>Auto-ref</h1><p>Auto-ref 是 Rust 在方法调用时, 自动调整 receiver 类型的一套规则, 目的是让方法调用看起来自然, 同时仍然保证所有权和借用安全.</p>
 <p>Rust 中方法调用的语法为:</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs rust">receiver.<span class="hljs-title function_ invoke__">method</span>(args...)<br></code></pre></td></tr></table></figure>
 
@@ -889,7 +922,7 @@ path.outline_glyph {
 <p>如果想要可复现的种子, 需要用:</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">use</span> rand::SeedableRng;<br><span class="hljs-keyword">use</span> rand_chacha::ChaCha8Rng;<br><br><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-comment">// 同一种子 → 同一序列</span><br>    <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut </span><span class="hljs-variable">rng</span> = ChaCha8Rng::<span class="hljs-title function_ invoke__">seed_from_u64</span>(<span class="hljs-number">42</span>);<br><br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;&#125;&quot;</span>, rng.random::&lt;<span class="hljs-type">u32</span>&gt;());<br>    <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;&#125;&quot;</span>, rng.random::&lt;<span class="hljs-type">u32</span>&gt;());<br>&#125;<br></code></pre></td></tr></table></figure>
 
-<h1 id="window-迭代器"><a href="#window-迭代器" class="headerlink" title="window 迭代器"></a>window 迭代器</h1><p>Rust 中的 <code>slice::windows</code> 方法能在切片上按固定 <code>size</code> 大小, 从左往右每次滑动一步, 返回连续子切片.</p>
+<h1 id="windows-迭代器"><a href="#windows-迭代器" class="headerlink" title="windows 迭代器"></a>windows 迭代器</h1><p>Rust 中的 <code>slice::windows</code> 方法能在切片上按固定 <code>size</code> 大小, 从左往右每次滑动一步, 返回连续子切片.</p>
 <p>比如:</p>
 <figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs rust"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">main</span>() &#123;<br>    <span class="hljs-keyword">let</span> <span class="hljs-variable">v</span> = <span class="hljs-built_in">vec!</span>[<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">5</span>];<br><br>    <span class="hljs-keyword">for</span> <span class="hljs-variable">w</span> <span class="hljs-keyword">in</span> v.<span class="hljs-title function_ invoke__">windows</span>(<span class="hljs-number">3</span>) &#123;<br>        <span class="hljs-built_in">println!</span>(<span class="hljs-string">&quot;&#123;:?&#125;&quot;</span>, w);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
 
