@@ -25,7 +25,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/cpp-header-file-style.png">
 <meta property="article:published_time" content="2025-03-24T03:49:46.000Z">
-<meta property="article:modified_time" content="2025-12-06T12:28:16.586Z">
+<meta property="article:modified_time" content="2026-11-24T09:29:23.527Z">
 <meta property="article:author" content="Jie">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="http://example.com/img/cpp-header-file-style.png">
@@ -439,7 +439,7 @@ path.outline_glyph {
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          46k 字
+          48k 字
         
       </span>
     
@@ -450,7 +450,7 @@ path.outline_glyph {
         
         
         
-          385 分钟
+          402 分钟
         
       </span>
     
@@ -516,7 +516,57 @@ path.outline_glyph {
 <p>自定义一个命名空间如:</p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">namespace</span> MyNamespace &#123;<br>    <span class="hljs-type">int</span> var = <span class="hljs-number">20</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
 
-<h1 id="指针和引用的区别"><a href="#指针和引用的区别" class="headerlink" title="指针和引用的区别"></a>指针和引用的区别</h1><p>指针 (pointer) 和引用 (reference) 都能用于访问变量.</p>
+<h1 id="指针和引用的区别"><a href="#指针和引用的区别" class="headerlink" title="指针和引用的区别"></a>指针和引用的区别</h1><p>左值引用和指针, 从底层来看都是通过地址访问对象, 甚至生成完全相同的机器指令, 区别在于 C++ 对于他们的使用规则.</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> x = <span class="hljs-number">10</span>;<br><br><span class="hljs-type">int</span>* p = &amp;x;<br><span class="hljs-type">int</span>&amp; r = x;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>p</code> 是一个指针变量, 保存 <code>x</code> 的地址</li>
+<li><code>r</code> 绑定到 <code>x</code> 的引用, 访问 <code>r</code> 就是访问 <code>x</code></li>
+</ul>
+<p>下面两句都能修改 x:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c">*p = <span class="hljs-number">20</span>;<br>r = <span class="hljs-number">30</span>;<br></code></pre></td></tr></table></figure>
+
+<p>可以把区别理解为: 指针需要显式操作 “地址”, 而引用可以让你直接操作 “地址对应的对象”.</p>
+<p>在语言上, 引用和指针还存在下面差异:</p>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>指针 <code>int*p</code></th>
+<th>引用 <code>int&amp; r</code></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>初始化</td>
+<td>可以先声明后, 稍后赋值</td>
+<td>定义局部引用时必须绑定目标</td>
+</tr>
+<tr>
+<td>表示 “没有对象”</td>
+<td>可以用 <code>nullptr</code></td>
+<td>没有合法的空引用状态</td>
+</tr>
+<tr>
+<td>改为指向另一个对象</td>
+<td>可以</td>
+<td>绑定后不能重新绑定</td>
+</tr>
+<tr>
+<td>访问目标</td>
+<td><code>*p</code></td>
+<td><code>r</code></td>
+</tr>
+<tr>
+<td>取地址</td>
+<td><code>&amp;p</code> 是指针变量自身的地址</td>
+<td><code>&amp;r</code> 是被引用对象的地址</td>
+</tr>
+<tr>
+<td>目标销毁后</td>
+<td>可能成为悬空指针</td>
+<td>可能成为悬空引用</td>
+</tr>
+</tbody></table>
+<h2 id="以前的记录"><a href="#以前的记录" class="headerlink" title="以前的记录"></a>以前的记录</h2><p>指针 (pointer) 和引用 (reference) 都能用于访问变量.</p>
 <p>对于指针:</p>
 <ul>
 <li>一个变量, 存储另一个变量在内存中的地址</li>
@@ -1551,6 +1601,47 @@ path.outline_glyph {
 <li>C++ 编译器：<code>__cplusplus</code> 被定义, 会使用 <code>extern &quot;C&quot;</code></li>
 <li>C 编译器：<code>__cplusplus</code> 未定义, 忽略 <code>extern &quot;C&quot;</code> (C 不认识这个语法)</li>
 </ul>
+<h1 id="迭代器失效"><a href="#迭代器失效" class="headerlink" title="迭代器失效"></a>迭代器失效</h1><p>迭代器失效是指在使用迭代器遍历或操作容器时, 由于对容器进行了修改 (如插入, 删除, 扩容等), 导致之前获取的迭代器不再指向有效的元素或内存位置. 继续使用可能会导致未定义行为 (Undefined Behavior).</p>
+<p>由于不同容器的底层数据结构不同, 其迭代器失效的规则也不同.</p>
+<p><code>std::vector</code>, <code>std::string</code> 是连续内存分配, 如果插入导致容器容量不足并触发内存重新分配, 则会导致所有迭代器, 指针, 引用失效. 若没触发扩容, 插入&#x2F;删除会导致插入点及之后的迭代器失效.</p>
+<p><code>std::list</code>, <code>std::forward_list</code>, <code>std::map</code>, <code>std::set</code> 等不会因插入和删除而导致迭代器失效.</p>
+<p>对于 <code>std::unordered_map</code>, <code>std::unordered_set</code> 这种无序关联容器, 如果触发重新哈希, 则会导致所有迭代器失效.</p>
+<p>通常用 <code>erase</code> 的返回值来更新迭代器避免失效带来的问题, <code>erase</code> 会返回指向下一个有效元素的迭代器:</p>
+<figure class="highlight livescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs livescript"><span class="hljs-keyword">for</span> (auto <span class="hljs-literal">it</span>=v.begin(); <span class="hljs-literal">it</span> != v.end(); ) &#123;<br>    <span class="hljs-keyword">if</span> (*<span class="hljs-literal">it</span> == val) &#123;<br>        <span class="hljs-literal">it</span> = v.erase(<span class="hljs-literal">it</span>);<br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>        ++<span class="hljs-literal">it</span>;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h1 id="详细类型说明符"><a href="#详细类型说明符" class="headerlink" title="详细类型说明符"></a>详细类型说明符</h1><p>详细类型说明符 (elaborated-type-specifier), 语法如下:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">xxx</span></span><br></code></pre></td></tr></table></figure>
+
+<p>比如:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c">TSharedPtr&lt;<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">IOnlineSession</span>, <span class="hljs-title">ESPMode</span>:</span>:ThreadSafe&gt; OnlineSessionInterface;<br></code></pre></td></tr></table></figure>
+
+<p>主要有两个作用:</p>
+<ul>
+<li>如果该类已经声明, 就引用这个类类型</li>
+<li>如果该类还没有声明, 则引入前置声明</li>
+</ul>
+<p>前置声明如下:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">IOnlineSession</span>;</span><br></code></pre></td></tr></table></figure>
+
+<p>它不等于定义类, 只是告诉编译器 “存在这个类”, 并没有提供成员, 大小等信息.</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Foo</span>;</span>          <span class="hljs-comment">// 前置声明，此时 Foo 是不完整类型</span><br><br><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Foo</span> &#123;</span>         <span class="hljs-comment">// 类定义，提供完整信息</span><br>public:<br>    <span class="hljs-type">int</span> value;<br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<h1 id="Overload-hiding-和-override"><a href="#Overload-hiding-和-override" class="headerlink" title="Overload, hiding 和 override"></a>Overload, hiding 和 override</h1><p>Overload 是指, 定义同名但不同参数的函数, 调用时会根据参数自动选择.</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">attack</span><span class="hljs-params">(<span class="hljs-type">int</span> damage)</span>;<br><span class="hljs-type">void</span> <span class="hljs-title function_">attack</span><span class="hljs-params">(<span class="hljs-type">double</span> multiplier)</span>;<br><br>attack(<span class="hljs-number">10</span>);<br>attack(<span class="hljs-number">1.5</span>);<br></code></pre></td></tr></table></figure>
+
+<p>注意不能只通过返回值区分 overload. 需要注意析构函数不能 overload, 因为其不带参数 (没法同时有多个版本).</p>
+<p>Hiding 是指, 派生类只要声明了同名函数, 就可能挡住基类的整个同名函数集合. 比如:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Base</span> &#123;</span><br>    <span class="hljs-type">void</span> <span class="hljs-title function_">attack</span><span class="hljs-params">(<span class="hljs-type">int</span> damage)</span> &#123;&#125;<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Derived</span> :</span> Base &#123;<br>    <span class="hljs-type">void</span> <span class="hljs-title function_">attack</span><span class="hljs-params">(<span class="hljs-type">double</span> multiplier)</span> &#123;&#125;<br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<p>现在调用:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c">Derived d;<br>d.attack(<span class="hljs-number">10</span>);<br></code></pre></td></tr></table></figure>
+
+<p>这里实际调用的是 <code>Derived::attack(double)</code>, 因为编译器会现在 <code>Derived</code> 中查找 <code>attack</code>, 找到这个名字后, 就不会继续向基类查找同名函数.</p>
+<p>如果希望基类版本不被 hiding, 可以用 <code>using</code> 手动导入:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Derived</span> :</span> Base &#123;<br>    using Base::attack;<br><br>    <span class="hljs-type">void</span> <span class="hljs-title function_">attack</span><span class="hljs-params">(<span class="hljs-type">double</span> multiplier)</span> &#123;&#125;<br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<p>Override 是派生类提供了基类虚函数的新实现, 并且可以通过基类指针或引用调用派生实现.</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Base</span> &#123;</span><br>    virtual <span class="hljs-type">void</span> <span class="hljs-title function_">update</span><span class="hljs-params">()</span> &#123;&#125;<br>&#125;;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Derived</span> :</span> Base &#123;<br>    <span class="hljs-type">void</span> <span class="hljs-title function_">update</span><span class="hljs-params">()</span> override &#123;&#125;<br>&#125;;<br><br>Derived d;<br>Base&amp; base = d;<br>base.update();<br></code></pre></td></tr></table></figure>
 
                 
               </div>
